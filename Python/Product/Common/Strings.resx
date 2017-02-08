@@ -496,6 +496,44 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="MixedModeDebugSymbolsRequiredDownloadSymbols" xml:space="preserve">
     <value>Download symbols for my interpreter</value>
   </data>
+  <data name="WaitForCompleteAnalysisDialog_Waiting" xml:space="preserve">
+    <value>Waiting for analysis to complete...</value>
+  </data>
+  <data name="WaitForCompleteAnalysisDialog_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="FindReferencesCaretMustBeOnValidExpression" xml:space="preserve">
+    <value>The caret must be on valid expression to find all references.</value>
+  </data>
+  <data name="SourceAnalysisNotUpToDate" xml:space="preserve">
+    <value>Python source analysis is not up to date</value>
+  </data>
+  <data name="PythonNavigateToItemDisplay_ProjectHeader" xml:space="preserve">
+    <value>Project:</value>
+  </data>
+  <data name="PythonNavigateToItemDisplay_FileHeader" xml:space="preserve">
+    <value>File:</value>
+  </data>
+  <data name="PythonNavigateToItemDisplay_LineHeader" xml:space="preserve">
+    <value>Line:</value>
+  </data>
+  <data name="PythonNavigateToItemDisplay_ProjectInfo" xml:space="preserve">
+    <value>Project: {0}</value>
+    <comment>{0} is project name</comment>
+  </data>
+  <data name="PythonNavigateToItemDisplay_FileInfo" xml:space="preserve">
+    <value>File: {0}</value>
+    <comment>{0} is file name</comment>
+  </data>
+  <data name="SymbolListDefinitions" xml:space="preserve">
+    <value>Definitions</value>
+  </data>
+  <data name="SymbolListValues" xml:space="preserve">
+    <value>Values</value>
+  </data>
+  <data name="SymbolListReferences" xml:space="preserve">
+    <value>References</value>
+  </data>
   <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
     <value>An error occurred opening this interactive window.</value>
   </data>

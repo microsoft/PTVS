@@ -18,22 +18,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Refactoring;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -168,14 +164,14 @@ namespace Microsoft.PythonTools.Language {
                         MessageBox.Show(Strings.CannotGoToDefn_Name.FormatUI(defs.Expression), Strings.ProductTitle);
                     }
                 } else if (definitions.Count == 0) {
-                    ShowFindSymbolsDialog(defs.Expression, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
+                    ShowFindSymbolsDialog(defs.Expression, new SymbolList(Strings.SymbolListValues, StandardGlyphGroup.GlyphForwardType, values.Values));
                 } else if (values.Count == 0) {
-                    ShowFindSymbolsDialog(defs.Expression, new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values));
+                    ShowFindSymbolsDialog(defs.Expression, new SymbolList(Strings.SymbolListDefinitions, StandardGlyphGroup.GlyphLibrary, definitions.Values));
                 } else {
                     ShowFindSymbolsDialog(defs.Expression,
-                        new LocationCategory("Goto Definition",
-                            new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
-                            new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values)
+                        new LocationCategory(
+                            new SymbolList(Strings.SymbolListDefinitions, StandardGlyphGroup.GlyphLibrary, definitions.Values),
+                            new SymbolList(Strings.SymbolListValues, StandardGlyphGroup.GlyphForwardType, values.Values)
                         )
                     );
                 }
@@ -228,11 +224,11 @@ namespace Microsoft.PythonTools.Language {
             Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
             GetDefsRefsAndValues(analyzer, serviceProvider, expr, analysis, out definitions, out references, out values);
 
-            var locations = new LocationCategory("Find All References",
-                    new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
-                    new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values),
-                    new SymbolList("References", StandardGlyphGroup.GlyphReference, references.Values)
-                );
+            var locations = new LocationCategory(
+                new SymbolList(Strings.SymbolListDefinitions, StandardGlyphGroup.GlyphLibrary, definitions.Values),
+                new SymbolList(Strings.SymbolListValues, StandardGlyphGroup.GlyphForwardType, values.Values),
+                new SymbolList(Strings.SymbolListReferences, StandardGlyphGroup.GlyphReference, references.Values)
+            );
             return locations;
         }
 
@@ -296,16 +292,12 @@ namespace Microsoft.PythonTools.Language {
                 ErrorHandler.ThrowOnFailure(findSym.DoSearch(new Guid(CommonConstants.LibraryGuid), new VSOBSEARCHCRITERIA2[] { searchCriteria }));
             } else {
                 var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
-                statusBar.SetText("The caret must be on valid expression to find all references.");
+                statusBar.SetText(Strings.FindReferencesCaretMustBeOnValidExpression);
             }
         }
 
         internal class LocationCategory : SimpleObjectList<SymbolList>, IVsNavInfo, ICustomSearchListProvider {
-            private readonly string _name;
-
-            internal LocationCategory(string name, params SymbolList[] locations) {
-                _name = name;
-
+            internal LocationCategory(params SymbolList[] locations) {
                 foreach (var location in locations) {
                     if (location.Children.Count > 0) {
                         Children.Add(location);
@@ -628,7 +620,7 @@ namespace Microsoft.PythonTools.Language {
             var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
             var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
             if (analyzer != null && analyzer.IsAnalyzing) {
-                statusBar.SetText("Python source analysis is not up to date");
+                statusBar.SetText(Strings.SourceAnalysisNotUpToDate);
             }
         }
 

@@ -1092,6 +1092,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The caret must be on valid expression to find all references..
+        /// </summary>
+        public static string FindReferencesCaretMustBeOnValidExpression {
+            get {
+                return ResourceManager.GetString("FindReferencesCaretMustBeOnValidExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to # The existing formatting will not be altered:
         ///
         ///{0}
@@ -2069,6 +2078,51 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File:.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_FileHeader {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_FileHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File: {0}.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_FileInfo {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_FileInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line:.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_LineHeader {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_LineHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project:.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_ProjectHeader {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_ProjectHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project: {0}.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_ProjectInfo {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_ProjectInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launches web sites using the Python debugger. This enables launching and starting a web browser automatically, using the commands specified in the project file..
         /// </summary>
         public static string PythonWebLauncherDescription {
@@ -2890,6 +2944,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Python source analysis is not up to date.
+        /// </summary>
+        public static string SourceAnalysisNotUpToDate {
+            get {
+                return ResourceManager.GetString("SourceAnalysisNotUpToDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified pattern is an invalid regular expression..
         /// </summary>
         public static string StaticPatternError {
@@ -2942,6 +3005,33 @@ namespace Microsoft.PythonTools {
         public static string SurroundWith {
             get {
                 return ResourceManager.GetString("SurroundWith", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Definitions.
+        /// </summary>
+        public static string SymbolListDefinitions {
+            get {
+                return ResourceManager.GetString("SymbolListDefinitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to References.
+        /// </summary>
+        public static string SymbolListReferences {
+            get {
+                return ResourceManager.GetString("SymbolListReferences", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values.
+        /// </summary>
+        public static string SymbolListValues {
+            get {
+                return ResourceManager.GetString("SymbolListValues", resourceCulture);
             }
         }
         
@@ -3284,6 +3374,24 @@ namespace Microsoft.PythonTools {
         public static string VirtualEnvCreationSucceeded {
             get {
                 return ResourceManager.GetString("VirtualEnvCreationSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string WaitForCompleteAnalysisDialog_Cancel {
+            get {
+                return ResourceManager.GetString("WaitForCompleteAnalysisDialog_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for analysis to complete....
+        /// </summary>
+        public static string WaitForCompleteAnalysisDialog_Waiting {
+            get {
+                return ResourceManager.GetString("WaitForCompleteAnalysisDialog_Waiting", resourceCulture);
             }
         }
         
