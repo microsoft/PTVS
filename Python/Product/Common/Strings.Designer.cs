@@ -1758,6 +1758,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download symbols for my interpreter.
+        /// </summary>
+        public static string MixedModeDebugSymbolsRequiredDownloadSymbols {
+            get {
+                return ResourceManager.GetString("MixedModeDebugSymbolsRequiredDownloadSymbols", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python/native mixed-mode debugging requires symbol files for the Python interpreter that is being debugged. Please add the folder containing those symbol files to your symbol search path, and force a reload of symbols for {0}..
+        /// </summary>
+        public static string MixedModeDebugSymbolsRequiredMessage {
+            get {
+                return ResourceManager.GetString("MixedModeDebugSymbolsRequiredMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open symbol settings dialog.
+        /// </summary>
+        public static string MixedModeDebugSymbolsRequiredOpenSymbolSettings {
+            get {
+                return ResourceManager.GetString("MixedModeDebugSymbolsRequiredOpenSymbolSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Symbols Required.
+        /// </summary>
+        public static string MixedModeDebugSymbolsRequiredTitle {
+            get {
+                return ResourceManager.GetString("MixedModeDebugSymbolsRequiredTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Module.
         /// </summary>
         public static string ModuleClassificationType {

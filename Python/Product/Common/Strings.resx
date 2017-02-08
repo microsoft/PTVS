@@ -484,6 +484,18 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="DebugLaunchWorkingDirectoryMissing_Path" xml:space="preserve">
     <value>The project cannot be launched because the specified working directory "{0}" does not exist. Please check the Project Properties window and correct any configuration errors.</value>
   </data>
+  <data name="MixedModeDebugSymbolsRequiredTitle" xml:space="preserve">
+    <value>Python Symbols Required</value>
+  </data>
+  <data name="MixedModeDebugSymbolsRequiredMessage" xml:space="preserve">
+    <value>Python/native mixed-mode debugging requires symbol files for the Python interpreter that is being debugged. Please add the folder containing those symbol files to your symbol search path, and force a reload of symbols for {0}.</value>
+  </data>
+  <data name="MixedModeDebugSymbolsRequiredOpenSymbolSettings" xml:space="preserve">
+    <value>Open symbol settings dialog</value>
+  </data>
+  <data name="MixedModeDebugSymbolsRequiredDownloadSymbols" xml:space="preserve">
+    <value>Download symbols for my interpreter</value>
+  </data>
   <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
     <value>An error occurred opening this interactive window.</value>
   </data>
