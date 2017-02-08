@@ -3,9 +3,9 @@
                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-                xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
                 xmlns:l="clr-namespace:Microsoft.PythonTools.Intellisense"
                 xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+                xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
                 mc:Ignorable="d"
                 SizeChanged="OnSizeChanged"
                 HorizontalContentAlignment="Stretch"
@@ -33,19 +33,12 @@
                         Background="{DynamicResource {x:Static wpf:Controls.TooltipBackgroundKey}}"
                         TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.TooltipTextKey}}">
                     <StackPanel Orientation="Vertical">
-                        <TextBlock>
-                            The completion DB needs to be refreshed.
-                        </TextBlock>
+                        <TextBlock Text="{x:Static common:Strings.CompletionControl_NeedsRefresh}"/>
                         <StackPanel Orientation="Horizontal" Margin="0 3 0 0">
-                            <TextBlock Padding="0 0 3 0">
-                                Open
-                            </TextBlock>
-                            <Button Style="{StaticResource NavigationButton}" GotFocus="Button_GotFocus">
-                                Python Environments
-                            </Button>
-                            <TextBlock Padding="3 0 0 0">
-                                for more details.
-                            </TextBlock>
+                            <Button Margin="0 3 0 0"
+                                    Style="{StaticResource NavigationButton}"
+                                    GotFocus="Button_GotFocus"
+                                    Content="{x:Static common:Strings.CompletionControl_OpenEnvironmentsWindowForDetails}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.Utilities;
 namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IQuickInfoSourceProvider)), ContentType(PythonCoreConstants.ContentType), Order, Name("Python Quick Info Source")]
     class QuickInfoSourceProvider : IQuickInfoSourceProvider {
-        internal readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
         public QuickInfoSourceProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {

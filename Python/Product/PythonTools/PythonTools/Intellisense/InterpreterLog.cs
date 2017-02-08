@@ -15,11 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -37,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Log(string msg) {
             _activityLog.LogEntry(
                 (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
-                "Python Tools",
+                "Python Tools", // TODO: Localization - use ProductTitle for this?
                 msg
             );
         }

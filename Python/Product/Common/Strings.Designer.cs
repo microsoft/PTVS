@@ -207,6 +207,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The completion DB needs to be refreshed..
+        /// </summary>
+        public static string CompletionControl_NeedsRefresh {
+            get {
+                return ResourceManager.GetString("CompletionControl_NeedsRefresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Python Environments for more details..
+        /// </summary>
+        public static string CompletionControl_OpenEnvironmentsWindowForDetails {
+            get {
+                return ResourceManager.GetString("CompletionControl_OpenEnvironmentsWindowForDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot create thread in debuggee process.
         /// </summary>
         public static string ConnErrorMessages_CannotInjectThread {
@@ -883,6 +901,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot open file.
+        /// </summary>
+        public static string ErrorTaskItemZipArchiveNotSupportedCaption {
+            get {
+                return ResourceManager.GetString("ErrorTaskItemZipArchiveNotSupportedCaption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Opening source files contained in .zip archives is not supported.
+        /// </summary>
+        public static string ErrorTaskItemZipArchiveNotSupportedMessage {
+            get {
+                return ResourceManager.GetString("ErrorTaskItemZipArchiveNotSupportedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ----- Failed to run &apos;{0}&apos; -----
         ///
         ///.
@@ -1173,6 +1209,15 @@ namespace Microsoft.PythonTools {
         public static string FormattingOptionsDefaultText {
             get {
                 return ResourceManager.GetString("FormattingOptionsDefaultText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import all members from the module.
+        /// </summary>
+        public static string FromImportCompletionImportAllMembersFromModuleTooltip {
+            get {
+                return ResourceManager.GetString("FromImportCompletionImportAllMembersFromModuleTooltip", resourceCulture);
             }
         }
         
@@ -1700,6 +1745,24 @@ namespace Microsoft.PythonTools {
         public static string InstallRequirementsShowPackages {
             get {
                 return ResourceManager.GetString("InstallRequirementsShowPackages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Already detached from text view.
+        /// </summary>
+        public static string IntellisenseControllerAlreadyDetachedException {
+            get {
+                return ResourceManager.GetString("IntellisenseControllerAlreadyDetachedException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not attached to specified text view.
+        /// </summary>
+        public static string IntellisenseControllerNotAttachedToSpecifiedTextViewException {
+            get {
+                return ResourceManager.GetString("IntellisenseControllerNotAttachedToSpecifiedTextViewException", resourceCulture);
             }
         }
         
@@ -2729,6 +2792,15 @@ namespace Microsoft.PythonTools {
         public static string Retry {
             get {
                 return ResourceManager.GetString("Retry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get classifier from buffer.
+        /// </summary>
+        public static string ReverseExpressionParserFailedToGetClassifierFromBufferException {
+            get {
+                return ResourceManager.GetString("ReverseExpressionParserFailedToGetClassifierFromBufferException", resourceCulture);
             }
         }
         

@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text;
