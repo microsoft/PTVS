@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -264,7 +265,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     // change is applied
                     updater.Replace(item.Line - 1, item.Column - 1, item.Length, Engine.Request.Name);
 
-                    updater.Log(String.Format("{0}({1},{2}): updated {3}", Filename, item.Line, item.Column, item.Type == Analysis.VariableType.Definition ? "definition" : "reference"));
+                    updater.Log(Strings.RefactorPreviewUpdatedLogEntry.FormatUI(Filename, item.Line, item.Column, item.Type == Analysis.VariableType.Definition ? Strings.RefactorPreviewUpdatedLogEntryDefinition : Strings.RefactorPreviewUpdatedLogEntryReference));
                 }
             }
 

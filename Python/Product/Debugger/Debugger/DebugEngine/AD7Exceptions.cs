@@ -19,11 +19,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
-    sealed class AD7DebugExceptionEvent : AD7StoppingEvent,
-#if DEV15_OR_LATER
-        IDebugExceptionEvent150,
-#endif
-        IDebugExceptionEvent2 {
+    sealed class AD7DebugExceptionEvent : AD7StoppingEvent, IDebugExceptionEvent150, IDebugExceptionEvent2 {
         public const string IID = "51A94113-8788-4A54-AE15-08B74FF922D0";
         private readonly AD7Engine _engine;
         private readonly PythonException _exception;
@@ -34,7 +30,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         #region IDebugExceptionEvent150 Members
-#if DEV15_OR_LATER
 
         int IDebugExceptionEvent150.GetException(EXCEPTION_INFO150[] pExceptionInfo) {
             var info = new EXCEPTION_INFO[1];
@@ -57,7 +52,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-#endif
         #endregion
 
         #region IDebugExceptionEvent2 Members
@@ -102,7 +96,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #endregion
     }
 
-#if DEV15_OR_LATER
     sealed class AD7DebugExceptionDetails : IDebugExceptionDetails {
         private readonly PythonException _exception;
 
@@ -123,7 +116,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return string.IsNullOrEmpty(_exception.ExceptionObjectExpression) ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
 
-        int IDebugExceptionDetails.GetFormattedDescription(out string pbstrDescription) {
+        int IDebugExceptionDetails.GetFormattedDescription(IDebugStackFrame2 pStackFrameContext, out string pbstrDescription) {
             pbstrDescription = _exception.GetDescription(true);
             return VSConstants.S_OK;
         }
@@ -161,5 +154,4 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return string.IsNullOrEmpty(_exception.TypeName) ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
     }
-#endif
 }

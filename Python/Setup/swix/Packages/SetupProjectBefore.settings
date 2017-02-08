@@ -1,6 +1,12 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <IntermediateOutputPathSuffix Condition="$(IntermediateOutputPathSuffix) == ''">setup_Package_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
+    <OutputArchitecture Condition="$(OutputArchitecture) == ''">neutral</OutputArchitecture>
+    <OutputLocalized Condition="$(OutputLocalized) == ''">false</OutputLocalized>
+    <OutputType Condition="$(OutputType) == ''">vsix</OutputType>
   </PropertyGroup>
   <Import Project="..\SetupProjectBefore.settings" />
+  <PropertyGroup>
+    <PackagePreprocessorDefinitions>$(PackagePreprocessorDefinitions);VSTarget=$(VSTarget);Version=$(FileVersion)</PackagePreprocessorDefinitions>
+  </PropertyGroup>
 </Project>

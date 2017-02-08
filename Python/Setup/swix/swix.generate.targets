@@ -2,9 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SwrFile>$(IntermediateOutputPath)package.g.swr</SwrFile>
-    <Python>"$(PackagesPath)python\tools\python.exe"</Python>
-    <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py"</GenerateCommand>
-    <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
+    <SwrFile Condition="$(OutputLocalized)">$(IntermediateOutputPath)package.g.$(lang).swr</SwrFile>
     <SwixPackageType Condition="$(SwixPackageType) == ''">component</SwixPackageType>
     <SwixVersion Condition="$(SwixVersion) == ''">$(VSTarget).$(BuildNumber)</SwixVersion>
   </PropertyGroup>
@@ -27,7 +25,8 @@
   <Target Name="_GenerateSwrMetadata" Condition="@(SwrSource) != '' or @(Dependency) != ''">
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
 
-    <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs%0D%0A%0D%0Apackage name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName)))%0D%0A  version=$(SwixVersion)%0D%0A  vs.package.type=$(SwixPackageType)%0D%0A" Overwrite="yes" Encoding="ASCII" />
+    <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs%0D%0A%0D%0Apackage name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName)))%0D%0A  version=$(SwixVersion)%0D%0A  vs.package.type=$(SwixPackageType)" Overwrite="yes" Encoding="ASCII" />
+    <WriteLinesToFile File="$(SwrFile).tmp" Lines="%20%20vs.package.language=$(LangCountry)" Overwrite="no" Encoding="ASCII" Condition="$(OutputLocalized) and $(LangCountry) != ''" />
 
     <PropertyGroup>
       <_Dependencies Condition="@(Dependency) != ''">@(Dependency->'%20%20vs.dependency id=%(Identity) version=%(Version) type=%(Type)', '%0D%0A')</_Dependencies>
@@ -35,7 +34,12 @@
 <WriteLinesToFile File="$(SwrFile).tmp" Lines="%0D%0Avs.dependencies%0D%0A$(_Dependencies)%0D%0A" Overwrite="no" Encoding="ASCII" Condition="$(_Dependencies) != ''" />
   </Target>
 
-  <Target Name="_GenerateSwrFromSources" Condition="@(SwrSource) != ''">
+  <Target Name="_GenerateSwrFromSources" Condition="@(SwrSource) != ''" DependsOnTargets="$(GenerateSwrDependsOnTargets)">
+    <PropertyGroup>
+      <Python>"$(PackagesPath)python\tools\python.exe"</Python>
+      <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py" $(GenerateCommand)</GenerateCommand>
+      <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
+    </PropertyGroup>
     <Exec Command="$(GenerateCommand) %(SwrSource.ExtraOptions) -s &quot;%(SwrSource.FullPath)&quot; -b &quot;%(SwrSource.BaseInstall)&quot; -o &quot;$(SwrFile).tmp&quot;" />
   </Target>
 

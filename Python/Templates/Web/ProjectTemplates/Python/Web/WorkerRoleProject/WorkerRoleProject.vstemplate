@@ -16,7 +16,7 @@
       <ProjectItem>worker.py</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
       <Folder Name="Bin">
-        <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WorkerRoleConfiguration.mht</ProjectItem>
+        <ProjectItem OpenInWebBrowser="true">readme.html</ProjectItem>
         <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
         <ProjectItem>LaunchWorker.ps1</ProjectItem>
         <ProjectItem>ps.cmd</ProjectItem>

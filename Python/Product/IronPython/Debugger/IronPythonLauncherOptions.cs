@@ -28,22 +28,17 @@ namespace Microsoft.IronPythonTools.Debugger {
         public IronPythonLauncherOptions() {
             InitializeComponent();
 
-            const string searchPathHelp = "Specifies additional directories which are added to sys.path for making libraries available for importing.";
-            const string argumentsHelp = "Specifies arguments which are passed to the script and available via sys.argv.";
-            const string interpArgsHelp = "Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).";
-            const string interpPathHelp = "Overrides the interpreter executable which is used for launching the project.";
+            _toolTip.SetToolTip(_searchPathLabel, Strings.Launcher_SearchPathHelp);
+            _toolTip.SetToolTip(_searchPaths, Strings.Launcher_SearchPathHelp);
 
-            _toolTip.SetToolTip(_searchPathLabel, searchPathHelp);
-            _toolTip.SetToolTip(_searchPaths, searchPathHelp);
+            _toolTip.SetToolTip(_arguments, Strings.Launcher_ArgumentsHelp);
+            _toolTip.SetToolTip(_argumentsLabel, Strings.Launcher_ArgumentsHelp);
 
-            _toolTip.SetToolTip(_arguments, argumentsHelp);
-            _toolTip.SetToolTip(_argumentsLabel, argumentsHelp);
+            _toolTip.SetToolTip(_interpArgsLabel, Strings.Launcher_InterpreterArgsHelp);
+            _toolTip.SetToolTip(_interpArgs, Strings.Launcher_InterpreterArgsHelp);
 
-            _toolTip.SetToolTip(_interpArgsLabel, interpArgsHelp);
-            _toolTip.SetToolTip(_interpArgs, interpArgsHelp);
-
-            _toolTip.SetToolTip(_interpreterPath, interpPathHelp);
-            _toolTip.SetToolTip(_interpreterPathLabel, interpPathHelp);
+            _toolTip.SetToolTip(_interpreterPath, Strings.Launcher_InterpreterPathHelp);
+            _toolTip.SetToolTip(_interpreterPathLabel, Strings.Launcher_InterpreterPathHelp);
         }
 
         public IronPythonLauncherOptions(IPythonProject properties) : this() {

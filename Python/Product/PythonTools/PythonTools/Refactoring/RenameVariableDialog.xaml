@@ -5,12 +5,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:ui="clr-namespace:Microsoft.VisualStudioTools"
+    xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
     mc:Ignorable="d" 
     Width="511" Height="auto"
     MinWidth="240" MinHeight="185"
     SizeToContent="Height"
     x:ClassModifier="internal"
-    Title="Rename"
+    Title="{x:Static common:Strings.RenameVariable_Title}"
     ShowInTaskbar="False"
     WindowStartupLocation="CenterOwner"
     TextOptions.TextFormattingMode="Display"
@@ -26,19 +27,19 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <Label Grid.Row="0" Padding="0 4">_New name:</Label>
+        <Label Grid.Row="0" Padding="0 4" Content="{x:Static common:Strings.RenameVariable_NewName}"/>
         <TextBox Grid.Row="1" MinHeight="23" Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}"
                  Name="_newName" AutomationProperties.AutomationId="Name"
                  VerticalContentAlignment="Center" />
         <StackPanel Grid.Row="2" Margin="0 4">
-            <CheckBox Content="Pre_view reference changes" IsChecked="{Binding PreviewChanges}"
+            <CheckBox Content="{x:Static common:Strings.RenameVariable_PreviewReferenceChanges}" IsChecked="{Binding PreviewChanges}"
                       AutomationProperties.AutomationId="PreviewChanges"
                       Margin="0 6 0 0" HorizontalAlignment="Left" />
-            <CheckBox Content="Search in _comments" IsChecked="{Binding SearchInComments}"
+            <CheckBox Content="{x:Static common:Strings.RenameVariable_SearchComments}" IsChecked="{Binding SearchInComments}"
                       AutomationProperties.AutomationId="SearchInComments"
                       Visibility="Collapsed"
                       Margin="0 6 0 0" HorizontalAlignment="Left" />
-            <CheckBox Content="Search in _strings" IsChecked="{Binding SearchInStrings}"
+            <CheckBox Content="{x:Static common:Strings.RenameVariable_SearchStrings}" IsChecked="{Binding SearchInStrings}"
                       AutomationProperties.AutomationId="SearchInStrings"
                       Visibility="Collapsed"
                       Margin="0 6 0 0" HorizontalAlignment="Left" />
@@ -46,13 +47,11 @@
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 12 0 0">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                     MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                    AutomationProperties.AutomationId="Ok">
-                _OK
-            </Button>
+                    Content="{x:Static common:Strings.RenameVariable_OK}"
+                    AutomationProperties.AutomationId="Ok"/>
             <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
-                    AutomationProperties.AutomationId="Cancel">
-                _Cancel
-            </Button>
+                    Content="{x:Static common:Strings.RenameVariable_Cancel}"
+                    AutomationProperties.AutomationId="Cancel"/>
         </StackPanel>
     </Grid>
 </ui:DialogWindowVersioningWorkaround>

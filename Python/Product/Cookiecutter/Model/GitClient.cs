@@ -52,7 +52,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var arguments = new string[] { "clone", repoUrl };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, redirector)) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, GetEnvironment(), false, redirector)) {
                 await output;
 
                 var r = new ProcessOutputResult() {
@@ -84,7 +84,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task<string> GetRemoteOriginAsync(string repoFolderPath) {
             var arguments = new string[] { "remote", "-v" };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null)) {
                 await output;
                 foreach (var remote in output.StandardOutputLines) {
                     string origin;
@@ -102,7 +102,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 arguments.Add(branch);
             }
 
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null)) {
                 await output;
                 foreach (var line in output.StandardOutputLines) {
                     // Line with date starts with 'Date'. Example:
@@ -122,7 +122,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task FetchAsync(string repoFolderPath) {
             var arguments = new string[] { "fetch" };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null)) {
                 await output;
                 if (output.ExitCode < 0 || HasFatalError(output.StandardErrorLines)) {
                     throw new ProcessException(new ProcessOutputResult() {
@@ -137,7 +137,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task MergeAsync(string repoFolderPath) {
             var arguments = new string[] { "merge" };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector)) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, _redirector)) {
                 if (await output < 0) {
                     throw new ProcessException(new ProcessOutputResult() {
                         ExeFileName = _gitExeFilePath,
@@ -145,6 +145,16 @@ namespace Microsoft.CookiecutterTools.Model {
                     });
                 }
             }
+        }
+
+        private Dictionary<string, string> GetEnvironment() {
+            var path =
+                Path.GetDirectoryName(_gitExeFilePath) + ";" +
+                Environment.GetEnvironmentVariable("PATH") ?? "";
+
+            return new Dictionary<string, string>() {
+                { "PATH", path },
+            };
         }
 
         private static bool HasFatalError(IEnumerable<string> standardErrorLines) {
@@ -169,7 +179,7 @@ namespace Microsoft.CookiecutterTools.Model {
             url = null;
 
             if (remote.StartsWith("origin")) {
-                int start = remote.IndexOf("https");
+                int start = remote.IndexOf("https", StringComparison.InvariantCultureIgnoreCase);
                 if (start >= 0) {
                     int end = remote.IndexOf(' ', start);
                     if (end >= 0) {

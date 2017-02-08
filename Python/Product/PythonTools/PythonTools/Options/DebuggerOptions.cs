@@ -15,8 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class DebuggerOptions {

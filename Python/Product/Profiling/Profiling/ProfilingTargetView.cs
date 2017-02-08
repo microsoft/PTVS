@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// Provides a view model for the ProfilingTarget class.
     /// </summary>
     public sealed class ProfilingTargetView : INotifyPropertyChanged {
-        private ReadOnlyCollection<ProjectTargetView> _availableProjects;
+        private readonly ReadOnlyCollection<ProjectTargetView> _availableProjects;
         
         private ProjectTargetView _project;
         private bool _isProjectSelected, _isStandaloneSelected;
@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Profiling {
                 IsProjectSelected = false;
                 IsStandaloneSelected = true;
             }
-            _startText = "_Start";
+            _startText = Strings.LaunchProfiling_Start;
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Profiling {
                 IsProjectSelected = false;
                 IsStandaloneSelected = true;
             }
-            _startText = "_OK";
+            _startText = Strings.LaunchProfiling_OK;
         }
 
         /// <summary>

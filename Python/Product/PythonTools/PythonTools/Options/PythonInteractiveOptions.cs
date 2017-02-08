@@ -26,9 +26,8 @@ namespace Microsoft.PythonTools.Options {
         private ReplIntellisenseMode _completionMode;
         private string _scripts;
 
-        internal readonly PythonToolsService _pyService;
-
-        internal readonly string _category;
+        private readonly PythonToolsService _pyService;
+        private readonly string _category;
 
         private const string CompletionModeSetting = "CompletionMode";
         private const string UseSmartHistorySetting = "UseSmartHistory";

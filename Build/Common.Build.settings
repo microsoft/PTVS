@@ -62,6 +62,7 @@
     <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
+    <PackagesPath Condition="Exists('$(BuildRoot)\packages.$(VSTarget)')">$(BuildRoot)\packages.$(VSTarget)\</PackagesPath>
     <PackagesPath Condition="'$(PackagesPath)' == ''">$(BUILD_BINARIESDIRECTORY)</PackagesPath>
     <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\packages\</PackagesPath>
     <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
@@ -104,6 +105,8 @@
 
     <OutDir>$(OutputPath)</OutDir>
     <IntDir>$(IntermediateOutputPath)</IntDir>
+
+    <Languages Condition="$(Languages) == ''">ENU,CHS,CHT,DEU,ESN,FRA,ITA,JPN,KOR,RUS,CSY,PTB,PLK,TRK</Languages>
 
     <!-- Allows assemblies to specify their own version -->
     <SuppressCommonAssemblyVersion Condition="'$(SuppressCommonAssemblyVersion)' == ''">false</SuppressCommonAssemblyVersion>

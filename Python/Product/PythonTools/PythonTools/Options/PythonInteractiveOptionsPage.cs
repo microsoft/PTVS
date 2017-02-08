@@ -16,11 +16,7 @@
 
 namespace Microsoft.PythonTools.Options {
     class PythonInteractiveOptionsPage : PythonDialogPage {
-        internal PythonInteractiveOptionsControl _window;
-
-        public PythonInteractiveOptionsPage()
-            : base("Interactive Windows") {
-        }
+        private PythonInteractiveOptionsControl _window;
 
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {

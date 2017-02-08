@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
     class DjangoUrlBlock : DjangoBlock {
@@ -125,7 +126,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
         }
 
         private IEnumerable<CompletionInfo> GetUrlCompletion(IDjangoCompletionContext context) {
-            return CompletionInfo.ToCompletionInfo(context.Urls.Select(url => string.Format("'{0}'", url.FullName)), StandardGlyphGroup.GlyphGroupField);
+            return CompletionInfo.ToCompletionInfo(context.Urls.Select(url => "'{0}'".FormatInvariant(url.FullName)), StandardGlyphGroup.GlyphGroupField);
         }
 
         private BlockClassification? GetArgBeforePosition(int position) {

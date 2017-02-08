@@ -22,14 +22,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Provides a view model for the StandaloneTarget class.
     /// </summary>
     public sealed class StandaloneTargetView : INotifyPropertyChanged {
-        private ReadOnlyCollection<PythonInterpreterView> _availableInterpreters;
+        private readonly ReadOnlyCollection<PythonInterpreterView> _availableInterpreters;
         private readonly PythonInterpreterView _customInterpreter;
 
         private PythonInterpreterView _interpreter;
@@ -65,7 +64,7 @@ namespace Microsoft.PythonTools.Profiling {
                 )
             ).ToList();
 
-            _customInterpreter = new PythonInterpreterView("Other...", "", null);
+            _customInterpreter = new PythonInterpreterView(Strings.LaunchProfiling_OtherInterpreter, "", null);
             availableInterpreters.Add(_customInterpreter);
             _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(availableInterpreters);
 

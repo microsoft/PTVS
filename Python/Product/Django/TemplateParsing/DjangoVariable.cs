@@ -131,6 +131,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// <summary>
         /// Gets the trimmed filter text and passes back the position in the buffer where the first
         /// character of the filter actually starts.
+        /// </summary>
         internal static string GetTrimmedFilterText(string text, ref int start) {
             start = 0;
 

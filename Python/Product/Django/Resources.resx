@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -181,5 +181,23 @@ NOTE: This pattern is applied in addition to the static URI specified in the Dja
   </data>
   <data name="ValidateAppLabel" xml:space="preserve">
     <value>&amp;Validate Django App... (Django &lt;= 1.6)</value>
+  </data>
+  <data name="UnsupportedTemplateTokenKind" xml:space="preserve">
+    <value>Unsupported TemplateTokenKind</value>
+  </data>
+  <data name="CannotFindPythonWebLauncher" xml:space="preserve">
+    <value>Cannot find Python Web launcher</value>
+  </data>
+  <data name="DjangoTagsCompletionSetDisplayName" xml:space="preserve">
+    <value>Django Tags</value>
+  </data>
+  <data name="NewAppDialog_NewAppName" xml:space="preserve">
+    <value>New App Name:</value>
+  </data>
+  <data name="NewAppDialog_OK" xml:space="preserve">
+    <value>O_K</value>
+  </data>
+  <data name="NewAppDialog_Cancel" xml:space="preserve">
+    <value>C_ancel</value>
   </data>
 </root>

@@ -110,7 +110,8 @@
         <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
       </ItemGroup>
     </When>
-  </Choose>  <ItemGroup>
+  </Choose>
+  <ItemGroup>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="Profiling\AutomationProfiling.cs" />
     <Compile Include="Profiling\AutomationReport.cs" />
@@ -145,17 +146,18 @@
     <Compile Include="PythonProfilingPackage.cs" />
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="Profiling\SessionsNode.cs" />
-    <Compile Include="Resources.Designer.cs">
+    <Compile Include="Strings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
+      <DependentUpon>Strings.resx</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+    <EmbeddedResource Include="Strings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.PythonTools.Profiling</CustomToolNamespace>
     </EmbeddedResource>
     <ConditionalEmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>

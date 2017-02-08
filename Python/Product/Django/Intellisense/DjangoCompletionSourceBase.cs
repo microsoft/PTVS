@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                     "tag"));
             return new FuzzyCompletionSet(
                 "PythonDjangoTags",
-                "Django Tags",
+                Resources.DjangoTagsCompletionSetDisplayName,
                 applicableSpan,
                 completions,
                 options,

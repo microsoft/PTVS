@@ -15,20 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonFormattingGeneralOptionsPage : PythonDialogPage {
         private PythonFormattingGeneralOptionsControl _window;
-
-        public PythonFormattingGeneralOptionsPage()
-            : base("Advanced") {
-        }
 
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {

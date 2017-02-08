@@ -924,6 +924,116 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _Cancel.
+        /// </summary>
+        public static string ExtractMethod_Cancel {
+            get {
+                return ResourceManager.GetString("ExtractMethod_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot extract method.
+        /// </summary>
+        public static string ExtractMethod_CannotExtractMethod {
+            get {
+                return ResourceManager.GetString("ExtractMethod_CannotExtractMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Closure _Variables:.
+        /// </summary>
+        public static string ExtractMethod_ClosureVariables {
+            get {
+                return ResourceManager.GetString("ExtractMethod_ClosureVariables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extract _to:.
+        /// </summary>
+        public static string ExtractMethod_ExtractTo {
+            get {
+                return ResourceManager.GetString("ExtractMethod_ExtractTo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;failed to get preview&gt;.
+        /// </summary>
+        public static string ExtractMethod_FailedToGetPreview {
+            get {
+                return ResourceManager.GetString("ExtractMethod_FailedToGetPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The method name is not valid..
+        /// </summary>
+        public static string ExtractMethod_InvalidMethodName {
+            get {
+                return ResourceManager.GetString("ExtractMethod_InvalidMethodName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New method _name:.
+        /// </summary>
+        public static string ExtractMethod_NewMethodName {
+            get {
+                return ResourceManager.GetString("ExtractMethod_NewMethodName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _OK.
+        /// </summary>
+        public static string ExtractMethod_OK {
+            get {
+                return ResourceManager.GetString("ExtractMethod_OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Preview:.
+        /// </summary>
+        public static string ExtractMethod_Preview {
+            get {
+                return ResourceManager.GetString("ExtractMethod_Preview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected text does not cover an entire expression.
+        ///
+        ///Would you like the selection to be extended to a valid expression?.
+        /// </summary>
+        public static string ExtractMethod_ShouldExpandSelection {
+            get {
+                return ResourceManager.GetString("ExtractMethod_ShouldExpandSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expand extract method selection?.
+        /// </summary>
+        public static string ExtractMethod_ShouldExpandSelectionTitle {
+            get {
+                return ResourceManager.GetString("ExtractMethod_ShouldExpandSelectionTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extract Method.
+        /// </summary>
+        public static string ExtractMethod_Title {
+            get {
+                return ResourceManager.GetString("ExtractMethod_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to collect files to publish..
         /// </summary>
         public static string FailedToCollectFilesForPublish {
@@ -982,6 +1092,91 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to # The existing formatting will not be altered:
+        ///
+        ///{0}
+        ///    # or
+        ///{1}.
+        /// </summary>
+        public static string FormattingOptionPreviewNotAltered {
+            get {
+                return ResourceManager.GetString("FormattingOptionPreviewNotAltered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class Definitions.
+        /// </summary>
+        public static string FormattingOptionsCategoryClassDefinitions {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryClassDefinitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression Spacing.
+        /// </summary>
+        public static string FormattingOptionsCategoryExpressionSpacing {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryExpressionSpacing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Function Definitions.
+        /// </summary>
+        public static string FormattingOptionsCategoryFunctionDefinitions {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryFunctionDefinitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operators.
+        /// </summary>
+        public static string FormattingOptionsCategoryOperators {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryOperators", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Statements.
+        /// </summary>
+        public static string FormattingOptionsCategoryStatements {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryStatements", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrapping.
+        /// </summary>
+        public static string FormattingOptionsCategoryWrapping {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryWrapping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class Declarations.
+        /// </summary>
+        public static string FormattingOptionsClassDeclarations {
+            get {
+                return ResourceManager.GetString("FormattingOptionsClassDeclarations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # Select an option to see a preview.
+        /// </summary>
+        public static string FormattingOptionsDefaultText {
+            get {
+                return ResourceManager.GetString("FormattingOptionsDefaultText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Function.
         /// </summary>
         public static string FunctionClassificationType {
@@ -1005,6 +1200,240 @@ namespace Microsoft.PythonTools {
         public static string GroupingClassificationType {
             get {
                 return ResourceManager.GetString("GroupingClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Back.
+        /// </summary>
+        public static string ImportWizard_BackButton {
+            get {
+                return ResourceManager.GetString("ImportWizard_BackButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Cancel.
+        /// </summary>
+        public static string ImportWizard_CancelButton {
+            get {
+                return ResourceManager.GetString("ImportWizard_CancelButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Welcome to the Create New Project from Existing Python Code Wizard.
+        /// </summary>
+        public static string ImportWizard_CreateProjectFromExistingCodeDescription {
+            get {
+                return ResourceManager.GetString("ImportWizard_CreateProjectFromExistingCodeDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create New Project from Existing Python Code.
+        /// </summary>
+        public static string ImportWizard_CreateProjectFromExistingCodeTitle {
+            get {
+                return ResourceManager.GetString("ImportWizard_CreateProjectFromExistingCodeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Customize Project _Type:.
+        /// </summary>
+        public static string ImportWizard_CustomizeProjectType {
+            get {
+                return ResourceManager.GetString("ImportWizard_CustomizeProjectType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detect _Virtual Environments.
+        /// </summary>
+        public static string ImportWizard_DetectVirtualEnvironment {
+            get {
+                return ResourceManager.GetString("ImportWizard_DetectVirtualEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter the filter for files to include..
+        /// </summary>
+        public static string ImportWizard_FileSourceFilter {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files with the .py extension are always included..
+        /// </summary>
+        public static string ImportWizard_FileSourceFilterHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceFilterHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter or browse to the folder containing your Python code..
+        /// </summary>
+        public static string ImportWizard_FileSourceLocation {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified path does not exist.
+        /// </summary>
+        public static string ImportWizard_FileSourceLocationDoesntExistHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceLocationDoesntExistHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We won&apos;t move any files from where they are now..
+        /// </summary>
+        public static string ImportWizard_FileSourceLocationHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceLocationHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Finish.
+        /// </summary>
+        public static string ImportWizard_FinishButton {
+            get {
+                return ResourceManager.GetString("ImportWizard_FinishButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Global default or an auto-detected virtual environment).
+        /// </summary>
+        public static string ImportWizard_GlobalOrAutoDetectedVirtualEnvironment {
+            get {
+                return ResourceManager.GetString("ImportWizard_GlobalOrAutoDetectedVirtualEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Next.
+        /// </summary>
+        public static string ImportWizard_NextButton {
+            get {
+                return ResourceManager.GetString("ImportWizard_NextButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Project Files (*.pyproj)|*.pyproj|All Files (*.*)|*.*.
+        /// </summary>
+        public static string ImportWizard_ProjectFileFilter {
+            get {
+                return ResourceManager.GetString("ImportWizard_ProjectFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save Project.
+        /// </summary>
+        public static string ImportWizard_SaveProjectPageTitle {
+            get {
+                return ResourceManager.GetString("ImportWizard_SaveProjectPageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter any search paths your project needs..
+        /// </summary>
+        public static string ImportWizard_SearchPath {
+            get {
+                return ResourceManager.GetString("ImportWizard_SearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One on each line, and we&apos;ll make them relative to the project file for you..
+        /// </summary>
+        public static string ImportWizard_SearchPathHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SearchPathHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select any other features for your project..
+        /// </summary>
+        public static string ImportWizard_SelectFeatures {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These can not be changed later without creating a new project..
+        /// </summary>
+        public static string ImportWizard_SelectFeaturesHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectFeaturesHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the Python interpreter and version to use..
+        /// </summary>
+        public static string ImportWizard_SelectInterpreter {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This setting can be changed later in Project Properties..
+        /// </summary>
+        public static string ImportWizard_SelectInterpreterHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectInterpreterHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select where to save your project file..
+        /// </summary>
+        public static string ImportWizard_SelectProjectFileLocation {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectProjectFileLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We won&apos;t move any files, and you can use Save As to move the project file later..
+        /// </summary>
+        public static string ImportWizard_SelectProjectFileLocationHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectProjectFileLocationHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose which file to run when F5 is pressed..
+        /// </summary>
+        public static string ImportWizard_SelectStartupFile {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectStartupFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If it is not in this list, you can right-click any file in your project and choose &quot;Set as startup file&quot;.
+        /// </summary>
+        public static string ImportWizard_SelectStartupFileHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectStartupFileHelp", resourceCulture);
             }
         }
         
@@ -1649,6 +2078,96 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refactor.
+        /// </summary>
+        public static string RefactorPaneName {
+            get {
+                return ResourceManager.GetString("RefactorPaneName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rename variable.
+        /// </summary>
+        public static string RefactorPreviewChangesRenameVariableTitle {
+            get {
+                return ResourceManager.GetString("RefactorPreviewChangesRenameVariableTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renaming &apos;{0}&apos; to &apos;{1}&apos;.
+        /// </summary>
+        public static string RefactorPreviewChangesRenaming {
+            get {
+                return ResourceManager.GetString("RefactorPreviewChangesRenaming", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apply.
+        /// </summary>
+        public static string RefactorPreviewChangesRenamingConfirmationButton {
+            get {
+                return ResourceManager.GetString("RefactorPreviewChangesRenamingConfirmationButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Rename &apos;{0}&apos; to &apos;{1}&apos;.
+        /// </summary>
+        public static string RefactorPreviewChangesRenamingDescription {
+            get {
+                return ResourceManager.GetString("RefactorPreviewChangesRenamingDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Preview Code Changes:.
+        /// </summary>
+        public static string RefactorPreviewChangesTextViewDescription {
+            get {
+                return ResourceManager.GetString("RefactorPreviewChangesTextViewDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}({1},{2}): updated {3}.
+        /// </summary>
+        public static string RefactorPreviewUpdatedLogEntry {
+            get {
+                return ResourceManager.GetString("RefactorPreviewUpdatedLogEntry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to definition.
+        /// </summary>
+        public static string RefactorPreviewUpdatedLogEntryDefinition {
+            get {
+                return ResourceManager.GetString("RefactorPreviewUpdatedLogEntryDefinition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to reference.
+        /// </summary>
+        public static string RefactorPreviewUpdatedLogEntryReference {
+            get {
+                return ResourceManager.GetString("RefactorPreviewUpdatedLogEntryReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rename Variable.
+        /// </summary>
+        public static string RefactorRenameVariableUndoDescription {
+            get {
+                return ResourceManager.GetString("RefactorRenameVariableUndoDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [Deprecated].
         /// </summary>
         public static string RefDeprecatedMessage {
@@ -1717,6 +2236,114 @@ namespace Microsoft.PythonTools {
         public static string RemoteUnsupportedServer_Host {
             get {
                 return ResourceManager.GetString("RemoteUnsupportedServer_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Cancel.
+        /// </summary>
+        public static string RenameVariable_Cancel {
+            get {
+                return ResourceManager.GetString("RenameVariable_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot rename a module name.
+        /// </summary>
+        public static string RenameVariable_CannotRenameModuleName {
+            get {
+                return ResourceManager.GetString("RenameVariable_CannotRenameModuleName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot rename.
+        /// </summary>
+        public static string RenameVariable_CannotRenameTitle {
+            get {
+                return ResourceManager.GetString("RenameVariable_CannotRenameTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _New name:.
+        /// </summary>
+        public static string RenameVariable_NewName {
+            get {
+                return ResourceManager.GetString("RenameVariable_NewName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No information is available for the variable &apos;{0}&apos;..
+        /// </summary>
+        public static string RenameVariable_NoInformationAvailableForVariable {
+            get {
+                return ResourceManager.GetString("RenameVariable_NoInformationAvailableForVariable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _OK.
+        /// </summary>
+        public static string RenameVariable_OK {
+            get {
+                return ResourceManager.GetString("RenameVariable_OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pre_view reference changes.
+        /// </summary>
+        public static string RenameVariable_PreviewReferenceChanges {
+            get {
+                return ResourceManager.GetString("RenameVariable_PreviewReferenceChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search in _comments.
+        /// </summary>
+        public static string RenameVariable_SearchComments {
+            get {
+                return ResourceManager.GetString("RenameVariable_SearchComments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search in _strings.
+        /// </summary>
+        public static string RenameVariable_SearchStrings {
+            get {
+                return ResourceManager.GetString("RenameVariable_SearchStrings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a symbol to be renamed..
+        /// </summary>
+        public static string RenameVariable_SelectSymbol {
+            get {
+                return ResourceManager.GetString("RenameVariable_SelectSymbol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rename.
+        /// </summary>
+        public static string RenameVariable_Title {
+            get {
+                return ResourceManager.GetString("RenameVariable_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get analysis for current text view..
+        /// </summary>
+        public static string RenameVariable_UnableGetAnalysisCurrentTextView {
+            get {
+                return ResourceManager.GetString("RenameVariable_UnableGetAnalysisCurrentTextView", resourceCulture);
             }
         }
         

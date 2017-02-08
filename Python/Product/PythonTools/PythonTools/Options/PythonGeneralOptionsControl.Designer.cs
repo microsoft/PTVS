@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Options {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonGeneralOptionsControl));
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this._showOutputWindowForVirtualEnvCreate = new System.Windows.Forms.CheckBox();
             this._showOutputWindowForPackageInstallation = new System.Windows.Forms.CheckBox();
@@ -42,11 +43,7 @@ namespace Microsoft.PythonTools.Options {
             // 
             // tableLayoutPanel3
             // 
-            this.tableLayoutPanel3.AutoSize = true;
-            this.tableLayoutPanel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel3.ColumnCount = 2;
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            resources.ApplyResources(this.tableLayoutPanel3, "tableLayoutPanel3");
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForVirtualEnvCreate, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForPackageInstallation, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._autoAnalysis, 0, 4);
@@ -60,205 +57,113 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 7);
             this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 5);
             this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 10);
-            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel3.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 12;
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(381, 290);
-            this.tableLayoutPanel3.TabIndex = 0;
             // 
             // _showOutputWindowForVirtualEnvCreate
             // 
-            this._showOutputWindowForVirtualEnvCreate.AutoSize = true;
+            resources.ApplyResources(this._showOutputWindowForVirtualEnvCreate, "_showOutputWindowForVirtualEnvCreate");
             this.tableLayoutPanel3.SetColumnSpan(this._showOutputWindowForVirtualEnvCreate, 2);
-            this._showOutputWindowForVirtualEnvCreate.Location = new System.Drawing.Point(6, 3);
-            this._showOutputWindowForVirtualEnvCreate.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._showOutputWindowForVirtualEnvCreate.Name = "_showOutputWindowForVirtualEnvCreate";
-            this._showOutputWindowForVirtualEnvCreate.Size = new System.Drawing.Size(294, 17);
-            this._showOutputWindowForVirtualEnvCreate.TabIndex = 0;
-            this._showOutputWindowForVirtualEnvCreate.Text = "Show Output window when creating &virtual environments";
             this._showOutputWindowForVirtualEnvCreate.UseVisualStyleBackColor = true;
             // 
             // _showOutputWindowForPackageInstallation
             // 
-            this._showOutputWindowForPackageInstallation.AutoSize = true;
+            resources.ApplyResources(this._showOutputWindowForPackageInstallation, "_showOutputWindowForPackageInstallation");
             this.tableLayoutPanel3.SetColumnSpan(this._showOutputWindowForPackageInstallation, 2);
-            this._showOutputWindowForPackageInstallation.Location = new System.Drawing.Point(6, 26);
-            this._showOutputWindowForPackageInstallation.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._showOutputWindowForPackageInstallation.Name = "_showOutputWindowForPackageInstallation";
-            this._showOutputWindowForPackageInstallation.Size = new System.Drawing.Size(307, 17);
-            this._showOutputWindowForPackageInstallation.TabIndex = 1;
-            this._showOutputWindowForPackageInstallation.Text = "Show Output window when &installing or removing packages";
             this._showOutputWindowForPackageInstallation.UseVisualStyleBackColor = true;
             // 
             // _autoAnalysis
             // 
-            this._autoAnalysis.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._autoAnalysis.AutoSize = true;
+            resources.ApplyResources(this._autoAnalysis, "_autoAnalysis");
             this.tableLayoutPanel3.SetColumnSpan(this._autoAnalysis, 2);
-            this._autoAnalysis.Location = new System.Drawing.Point(6, 95);
-            this._autoAnalysis.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._autoAnalysis.Name = "_autoAnalysis";
-            this._autoAnalysis.Size = new System.Drawing.Size(259, 17);
-            this._autoAnalysis.TabIndex = 4;
-            this._autoAnalysis.Text = "&Automatically generate completion DB on first use";
             this._autoAnalysis.UseVisualStyleBackColor = true;
             // 
             // _updateSearchPathsForLinkedFiles
             // 
-            this._updateSearchPathsForLinkedFiles.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._updateSearchPathsForLinkedFiles.AutoSize = true;
+            resources.ApplyResources(this._updateSearchPathsForLinkedFiles, "_updateSearchPathsForLinkedFiles");
             this.tableLayoutPanel3.SetColumnSpan(this._updateSearchPathsForLinkedFiles, 2);
-            this._updateSearchPathsForLinkedFiles.Location = new System.Drawing.Point(6, 141);
-            this._updateSearchPathsForLinkedFiles.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._updateSearchPathsForLinkedFiles.Name = "_updateSearchPathsForLinkedFiles";
-            this._updateSearchPathsForLinkedFiles.Size = new System.Drawing.Size(241, 17);
-            this._updateSearchPathsForLinkedFiles.TabIndex = 5;
-            this._updateSearchPathsForLinkedFiles.Text = "&Update search paths when adding linked files";
             this._updateSearchPathsForLinkedFiles.UseVisualStyleBackColor = true;
             // 
             // _indentationInconsistentLabel
             // 
-            this._indentationInconsistentLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            resources.ApplyResources(this._indentationInconsistentLabel, "_indentationInconsistentLabel");
             this._indentationInconsistentLabel.AutoEllipsis = true;
-            this._indentationInconsistentLabel.AutoSize = true;
-            this._indentationInconsistentLabel.Location = new System.Drawing.Point(6, 191);
-            this._indentationInconsistentLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this._indentationInconsistentLabel.Name = "_indentationInconsistentLabel";
-            this._indentationInconsistentLabel.Size = new System.Drawing.Size(167, 13);
-            this._indentationInconsistentLabel.TabIndex = 7;
-            this._indentationInconsistentLabel.Text = "&Report inconsistent indentation as";
-            this._indentationInconsistentLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _indentationInconsistentCombo
             // 
-            this._indentationInconsistentCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this._indentationInconsistentCombo, "_indentationInconsistentCombo");
             this._indentationInconsistentCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this._indentationInconsistentCombo.FormattingEnabled = true;
             this._indentationInconsistentCombo.Items.AddRange(new object[] {
-            "Errors",
-            "Warnings",
-            "Don\'t"});
-            this._indentationInconsistentCombo.Location = new System.Drawing.Point(185, 187);
-            this._indentationInconsistentCombo.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.GetString("_indentationInconsistentCombo.Items"),
+            resources.GetString("_indentationInconsistentCombo.Items1"),
+            resources.GetString("_indentationInconsistentCombo.Items2")});
             this._indentationInconsistentCombo.Name = "_indentationInconsistentCombo";
-            this._indentationInconsistentCombo.Size = new System.Drawing.Size(190, 21);
-            this._indentationInconsistentCombo.TabIndex = 8;
             // 
             // _surveyNewsCheckLabel
             // 
-            this._surveyNewsCheckLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._surveyNewsCheckLabel.AutoSize = true;
-            this._surveyNewsCheckLabel.Location = new System.Drawing.Point(6, 218);
-            this._surveyNewsCheckLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            resources.ApplyResources(this._surveyNewsCheckLabel, "_surveyNewsCheckLabel");
             this._surveyNewsCheckLabel.Name = "_surveyNewsCheckLabel";
-            this._surveyNewsCheckLabel.Size = new System.Drawing.Size(117, 13);
-            this._surveyNewsCheckLabel.TabIndex = 9;
-            this._surveyNewsCheckLabel.Text = "&Check for survey/news";
-            this._surveyNewsCheckLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _surveyNewsCheckCombo
             // 
-            this._surveyNewsCheckCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this._surveyNewsCheckCombo, "_surveyNewsCheckCombo");
             this._surveyNewsCheckCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this._surveyNewsCheckCombo.DropDownWidth = 172;
             this._surveyNewsCheckCombo.FormattingEnabled = true;
             this._surveyNewsCheckCombo.Items.AddRange(new object[] {
-            "Never",
-            "Once a day",
-            "Once a week",
-            "Once a month"});
-            this._surveyNewsCheckCombo.Location = new System.Drawing.Point(185, 214);
-            this._surveyNewsCheckCombo.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.GetString("_surveyNewsCheckCombo.Items"),
+            resources.GetString("_surveyNewsCheckCombo.Items1"),
+            resources.GetString("_surveyNewsCheckCombo.Items2"),
+            resources.GetString("_surveyNewsCheckCombo.Items3")});
             this._surveyNewsCheckCombo.Name = "_surveyNewsCheckCombo";
-            this._surveyNewsCheckCombo.Size = new System.Drawing.Size(190, 21);
-            this._surveyNewsCheckCombo.TabIndex = 10;
             // 
             // _elevatePip
             // 
-            this._elevatePip.AutoSize = true;
+            resources.ApplyResources(this._elevatePip, "_elevatePip");
             this.tableLayoutPanel3.SetColumnSpan(this._elevatePip, 2);
-            this._elevatePip.Location = new System.Drawing.Point(6, 49);
-            this._elevatePip.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._elevatePip.Name = "_elevatePip";
-            this._elevatePip.Size = new System.Drawing.Size(170, 17);
-            this._elevatePip.TabIndex = 2;
-            this._elevatePip.Text = "Always run &pip as administrator";
             this._elevatePip.UseVisualStyleBackColor = true;
             // 
             // _elevateEasyInstall
             // 
-            this._elevateEasyInstall.AutoSize = true;
+            resources.ApplyResources(this._elevateEasyInstall, "_elevateEasyInstall");
             this.tableLayoutPanel3.SetColumnSpan(this._elevateEasyInstall, 2);
-            this._elevateEasyInstall.Location = new System.Drawing.Point(6, 72);
-            this._elevateEasyInstall.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._elevateEasyInstall.Name = "_elevateEasyInstall";
-            this._elevateEasyInstall.Size = new System.Drawing.Size(210, 17);
-            this._elevateEasyInstall.TabIndex = 3;
-            this._elevateEasyInstall.Text = "Always run &easy_install as administrator";
             this._elevateEasyInstall.UseVisualStyleBackColor = true;
             // 
             // _unresolvedImportWarning
             // 
-            this._unresolvedImportWarning.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._unresolvedImportWarning.AutoSize = true;
+            resources.ApplyResources(this._unresolvedImportWarning, "_unresolvedImportWarning");
             this.tableLayoutPanel3.SetColumnSpan(this._unresolvedImportWarning, 2);
-            this._unresolvedImportWarning.Location = new System.Drawing.Point(6, 164);
-            this._unresolvedImportWarning.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._unresolvedImportWarning.Name = "_unresolvedImportWarning";
-            this._unresolvedImportWarning.Size = new System.Drawing.Size(242, 17);
-            this._unresolvedImportWarning.TabIndex = 6;
-            this._unresolvedImportWarning.Text = "&Warn when imported module cannot be found";
             this._unresolvedImportWarning.UseVisualStyleBackColor = true;
             // 
             // _clearGlobalPythonPath
             // 
-            this._clearGlobalPythonPath.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._clearGlobalPythonPath.AutoSize = true;
+            resources.ApplyResources(this._clearGlobalPythonPath, "_clearGlobalPythonPath");
             this.tableLayoutPanel3.SetColumnSpan(this._clearGlobalPythonPath, 2);
-            this._clearGlobalPythonPath.Location = new System.Drawing.Point(6, 118);
-            this._clearGlobalPythonPath.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._clearGlobalPythonPath.Name = "_clearGlobalPythonPath";
-            this._clearGlobalPythonPath.Size = new System.Drawing.Size(238, 17);
-            this._clearGlobalPythonPath.TabIndex = 5;
-            this._clearGlobalPythonPath.Text = "&Ignore system-wide PYTHONPATH variables";
             this._clearGlobalPythonPath.UseVisualStyleBackColor = true;
             // 
             // _resetSuppressDialog
             // 
-            this._resetSuppressDialog.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this._resetSuppressDialog.AutoSize = true;
-            this._resetSuppressDialog.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            resources.ApplyResources(this._resetSuppressDialog, "_resetSuppressDialog");
             this.tableLayoutPanel3.SetColumnSpan(this._resetSuppressDialog, 2);
-            this._resetSuppressDialog.Location = new System.Drawing.Point(96, 241);
             this._resetSuppressDialog.Name = "_resetSuppressDialog";
-            this._resetSuppressDialog.Size = new System.Drawing.Size(189, 23);
-            this._resetSuppressDialog.TabIndex = 11;
-            this._resetSuppressDialog.Text = "Reset all permanently hidden dialogs";
             this._resetSuppressDialog.UseVisualStyleBackColor = true;
             this._resetSuppressDialog.Click += new System.EventHandler(this._resetSuppressDialog_Click);
             // 
             // PythonGeneralOptionsControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel3);
-            this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonGeneralOptionsControl";
-            this.Size = new System.Drawing.Size(381, 290);
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel3.PerformLayout();
             this.ResumeLayout(false);

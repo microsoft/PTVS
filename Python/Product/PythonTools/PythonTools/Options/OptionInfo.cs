@@ -15,10 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Shell;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Options {
     abstract class OptionInfo {
@@ -116,14 +113,7 @@ namespace Microsoft.PythonTools.Options {
 
         public override string GetPreviewText(object optionValue) {
             if (optionValue == null) {
-                return "# The existing formatting will not be altered:" +
-                    Environment.NewLine +
-                    Environment.NewLine +
-                    PreviewOn +
-                    Environment.NewLine +
-                    "    # or" +
-                    Environment.NewLine +
-                    PreviewOff;
+                return Strings.FormattingOptionPreviewNotAltered.FormatUI(PreviewOn, PreviewOff);
             } else {
                 return ((bool)optionValue) ? PreviewOn : PreviewOff;
             }

@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Options {
     public class PythonFormattingStatementsOptionsPage : PythonFormattingOptionsPage {
         public PythonFormattingStatementsOptionsPage()
             : base(
-            new OptionCategory("Statements", OptionCategory.GetOptions(CodeFormattingCategory.Statements))
+            new OptionCategory(Strings.FormattingOptionsCategoryStatements, OptionCategory.GetOptions(CodeFormattingCategory.Statements))
             ) {
         }
     }

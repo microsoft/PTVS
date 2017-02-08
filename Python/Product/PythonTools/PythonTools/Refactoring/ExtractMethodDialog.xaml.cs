@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Windows;
-using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Refactoring {

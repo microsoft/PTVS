@@ -15,8 +15,6 @@
 // permissions and limitations under the License.
 
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Debugger.Interop;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Django {
     class ProvideDebugLanguageAttribute : RegistrationAttribute {

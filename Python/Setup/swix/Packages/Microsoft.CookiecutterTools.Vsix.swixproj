@@ -7,6 +7,10 @@
     <SourcePath>$(LayoutOutputPath)Microsoft.CookiecutterTools</SourcePath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageSearchPaths Include="$(SourcePath)" />
+  </ItemGroup>
+
   <Import Project="SetupProjectAfter.settings" />
 </Project>
 

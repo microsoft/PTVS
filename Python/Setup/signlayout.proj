@@ -11,7 +11,15 @@
     <OutDir>$(BinariesOutputPath)</OutDir>
   </PropertyGroup>
   
+  <ItemDefinitionGroup>
+    <ManagedFiles>
+      <ResourceName>%(Filename).resources%(Extension)</ResourceName>
+    </ManagedFiles>
+  </ItemDefinitionGroup>
+  
   <ItemGroup>
+    <_Languages Include="$(Languages)" />
+  
     <ManagedFiles Include="
         Microsoft.PythonTools.Analysis.dll;
         Microsoft.PythonTools.Analyzer.exe;
@@ -20,8 +28,6 @@
         Microsoft.PythonTools.BuildTasks.dll;
         Microsoft.PythonTools.Common.dll;
         Microsoft.PythonTools.Debugger.dll;
-        Microsoft.PythonTools.Django.Analysis.dll;
-        Microsoft.PythonTools.Django.dll;
         Microsoft.PythonTools.dll;
         Microsoft.PythonTools.EnvironmentsList.dll;
         Microsoft.PythonTools.ImportWizard.dll;
@@ -39,7 +45,11 @@
         Microsoft.PythonTools.XamlDesignerSupport.dll;
         Microsoft.CookiecutterTools.dll;
         "/>
-    
+
+    <ManagedFiles Include="
+        Microsoft.PythonTools.Django.Analysis.dll;
+        Microsoft.PythonTools.Django.dll;
+        " Condition="$(IncludeDjango)" />
     <ManagedFiles Include="
         Microsoft.IronPythonTools.Resolver.dll;
         Microsoft.PythonTools.IronPython.dll;
@@ -66,21 +76,32 @@
       <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
       <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
-    
+
     <FilesToSign Include="@(UnmanagedFiles->'$(BinariesOutputPath)%(Identity)')">
       <Authenticode>Microsoft</Authenticode>
       <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
       <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
   </ItemGroup>
-  
-  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.SignedPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
-    <Copy SourceFiles="%(FilesToSign.SignedPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
+
+  <Target Name="_AddLocFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
+    <ItemGroup>
+      <LocFilesToSign Include="$(BinariesOutputPath)localize\**\*.resources.dll" />
+      <FilesToSign Include="@(LocFilesToSign)">
+        <Authenticode>Microsoft</Authenticode>
+        <SignedPath>$(BinariesOutputPath)localize\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
+        <UnsignedPath>$(UnsignedOutputPath)%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
+    <Copy SourceFiles="%(FilesToSign.FullPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
   </Target>
 
   <Target Name="ListFiles">
     <Message Text="OutputPath: $(OutputPath)" Importance="high" />
-    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName))', '
+    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName)) - %(SignedPath)', '
 ')" Importance="high" />
   </Target>
 

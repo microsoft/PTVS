@@ -7,6 +7,10 @@
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageSearchPaths Include="$(SourcePath)" />
+  </ItemGroup>
+
   <Import Project="SetupProjectAfter.settings" />
 </Project>
 

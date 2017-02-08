@@ -548,12 +548,6 @@
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />
-    <Compile Include="PythonTools\Options\NewInterpreter.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\NewInterpreter.Designer.cs">
-      <DependentUpon>NewInterpreter.cs</DependentUpon>
-    </Compile>
     <Compile Include="PythonTools\Project\BaseSearchPathNode.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNode.cs" />
@@ -686,18 +680,18 @@
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <None Include="Theme\contrast.vstheme" />
-    <None Include="NoSurveyNewsFeed.html" />
-    <None Include="NoInterpreters.html" />
+    <None Include="NoSurveyNewsFeed.htmlsrc" />
+    <None Include="NoInterpreters.htmlsrc" />
     <None Include="ptvsd\attach_server.py" />
     <None Include="Theme\Microsoft.PythonTools.theme.v14.0.pkgdef" />
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
-    <Content Include="NoInterpreters.mht">
+    <Content Include="NoInterpreters.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="NoSurveyNewsFeed.mht">
+    <Content Include="NoSurveyNewsFeed.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -869,9 +863,6 @@
     <Resource Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico" />
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\NewInterpreter.resx">
-      <DependentUpon>NewInterpreter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonGeneralOptionsControl.resx">
       <DependentUpon>PythonGeneralOptionsControl.cs</DependentUpon>

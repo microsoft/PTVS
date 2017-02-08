@@ -18,12 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Forms;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Options {
@@ -32,7 +29,7 @@ namespace Microsoft.PythonTools.Options {
         private TreeNode _deactivatedNode;
         private readonly IServiceProvider _serviceProvider;
         private readonly ITextBuffer _buffer;
-        private const string DefaultText = "# Select an option to see a preview";
+        private static readonly string DefaultText = Strings.FormattingOptionsDefaultText;
 
         public PythonFormattingOptionsControl(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;

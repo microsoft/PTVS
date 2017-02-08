@@ -16,15 +16,12 @@
 
 using System;
 using System.Windows;
-using System.Windows.Interop;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudioTools;
-using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
@@ -102,7 +99,7 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public void CannotRename(string message) {
-            MessageBox.Show(message, "Cannot rename", MessageBoxButton.OK);
+            MessageBox.Show(message, Strings.RenameVariable_CannotRenameTitle, MessageBoxButton.OK);
         }
 
         public void OutputLog(string message) {
@@ -130,7 +127,7 @@ namespace Microsoft.PythonTools.Refactoring {
             Guid tmp = RefactorGuid;
 
             if (!ErrorHandler.Succeeded(outWin.GetPane(ref tmp, out pane))) {
-                ErrorHandler.ThrowOnFailure(outWin.CreatePane(ref tmp, "Refactor", 1, 1));
+                ErrorHandler.ThrowOnFailure(outWin.CreatePane(ref tmp, Strings.RefactorPaneName, 1, 1));
 
                 if (!ErrorHandler.Succeeded(outWin.GetPane(ref tmp, out pane))) {
                     return null;
@@ -148,7 +145,7 @@ namespace Microsoft.PythonTools.Refactoring {
             var linkedUndo = (IVsLinkedUndoTransactionManager)_serviceProvider.GetService(typeof(SVsLinkedUndoTransactionManager));
             ErrorHandler.ThrowOnFailure(linkedUndo.OpenLinkedUndo(
                 (uint)LinkedTransactionFlags2.mdtGlobal,
-                "Rename Variable"
+                Strings.RefactorRenameVariableUndoDescription
             ));
             return linkedUndo;
         }

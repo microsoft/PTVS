@@ -83,7 +83,8 @@
         <Strings>
           <ButtonText>&amp;Cookiecutter Explorer</ButtonText>
           <ToolTipText>Opens the Cookiecutter Explorer window.</ToolTipText>
-          <LocCanonicalName>.CookiecutterExplorer</LocCanonicalName>
+          <CanonicalName>.Cookiecutter.Explorer</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.Explorer</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -94,7 +95,8 @@
         <Strings>
           <ButtonText>From &amp;Cookiecutter...</ButtonText>
           <ToolTipText>Creates files using a Cookiecutter template.</ToolTipText>
-          <LocCanonicalName>.CreateFromCookiecutter</LocCanonicalName>
+          <CanonicalName>.Cookiecutter.CreateFrom</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.CreateFrom</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -106,7 +108,8 @@
         <Strings>
           <ButtonText>From &amp;Cookiecutter...</ButtonText>
           <ToolTipText>Adds files using a Cookiecutter template.</ToolTipText>
-          <LocCanonicalName>.AddFromCookiecutter</LocCanonicalName>
+          <CanonicalName>.Cookiecutter.AddFrom</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.AddFrom</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -117,6 +120,8 @@
         <Strings>
           <ButtonText>Home</ButtonText>
           <MenuText>&amp;Home</MenuText>
+          <CanonicalName>.Cookiecutter.Home</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.Home</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -127,6 +132,8 @@
         <Strings>
           <ButtonText>Run</ButtonText>
           <MenuText>&amp;Run</MenuText>
+          <CanonicalName>.Cookiecutter.RunTemplate</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.RunTemplate</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -137,6 +144,8 @@
         <Strings>
           <ButtonText>Check for Updates</ButtonText>
           <MenuText>&amp;Check for Updates</MenuText>
+          <CanonicalName>.Cookiecutter.CheckForUpdates</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.CheckForUpdates</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -147,6 +156,8 @@
         <Strings>
           <ButtonText>Update</ButtonText>
           <MenuText>&amp;Update</MenuText>
+          <CanonicalName>.Cookiecutter.UpdateTemplate</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.UpdateTemplate</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -157,6 +168,8 @@
         <Strings>
           <ButtonText>GitHub Home</ButtonText>
           <MenuText>&amp;GitHub Home</MenuText>
+          <CanonicalName>.Cookiecutter.GitHubHome</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.GitHubHome</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -167,6 +180,8 @@
         <Strings>
           <ButtonText>GitHub Issues</ButtonText>
           <MenuText>&amp;GitHub Issues</MenuText>
+          <CanonicalName>.Cookiecutter.GitHubIssues</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.GitHubIssues</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -177,6 +192,8 @@
         <Strings>
           <ButtonText>GitHub Wiki</ButtonText>
           <MenuText>&amp;GitHub Wiki</MenuText>
+          <CanonicalName>.Cookiecutter.GitHubWiki</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.GitHubWiki</LocCanonicalName>
         </Strings>
       </Button>
 

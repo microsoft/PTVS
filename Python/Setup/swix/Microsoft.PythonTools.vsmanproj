@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MergeManifest Include="$(OutputPath)*.json" />
+    <MergeManifest Include="$(OutDir)*.json" />
   </ItemGroup>
 
   <Import Project="..\SetupProjectAfter.settings" />

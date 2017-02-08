@@ -18,7 +18,7 @@
   <TemplateContent>
     <Project File="PollsDjango.pyproj" ReplaceParameters="true">
       <ProjectItem ReplaceParameters="true">manage.py</ProjectItem>
-      <ProjectItem OpenInWebBrowser="true">readme.mht</ProjectItem>
+      <ProjectItem OpenInWebBrowser="true">readme.html</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
       <Folder Name="app" TargetFolderName="app">
         <Folder Name="migrations" TargetFolderName="migrations">

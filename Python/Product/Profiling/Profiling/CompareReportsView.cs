@@ -15,11 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using System.IO;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Profiling {
     public sealed class CompareReportsView : INotifyPropertyChanged {
@@ -53,8 +51,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// <returns></returns>
         public string GetComparisonUri() {
             if (IsValid) {
-                return String.Format(
-                    "vsp://diff/?baseline={0}&comparison={1}",
+                return "vsp://diff/?baseline={0}&comparison={1}".FormatInvariant(
                     Uri.EscapeDataString(BaselineFile),
                     Uri.EscapeDataString(ComparisonFile)
                 );

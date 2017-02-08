@@ -22,10 +22,10 @@ namespace Microsoft.PythonTools.Options {
     public class PythonFormattingSpacingOptionsPage : PythonFormattingOptionsPage {
         public PythonFormattingSpacingOptionsPage()
             : base( 
-            new OptionCategory("Class Definitions", OptionCategory.GetOptions(CodeFormattingCategory.Classes)),
-            new OptionCategory("Function Definitions", OptionCategory.GetOptions(CodeFormattingCategory.Functions)),
-            new OptionCategory("Operators", OptionCategory.GetOptions(CodeFormattingCategory.Operators)),
-            new OptionCategory("Expression Spacing", OptionCategory.GetOptions(CodeFormattingCategory.Spacing))
+            new OptionCategory(Strings.FormattingOptionsCategoryClassDefinitions, OptionCategory.GetOptions(CodeFormattingCategory.Classes)),
+            new OptionCategory(Strings.FormattingOptionsCategoryFunctionDefinitions, OptionCategory.GetOptions(CodeFormattingCategory.Functions)),
+            new OptionCategory(Strings.FormattingOptionsCategoryOperators, OptionCategory.GetOptions(CodeFormattingCategory.Operators)),
+            new OptionCategory(Strings.FormattingOptionsCategoryExpressionSpacing, OptionCategory.GetOptions(CodeFormattingCategory.Spacing))
             )
         
         {

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.ComponentModel;
-using Microsoft.VisualStudio.Imaging.Interop;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
     class ErrorViewModel : INotifyPropertyChanged {

@@ -23,7 +23,7 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.IronPythonTools.Debugger {
     [Export(typeof(IPythonLauncherProvider))]
-    class IronPythonLauncherProvider : IPythonLauncherProvider {
+    class IronPythonLauncherProvider : IPythonLauncherProvider2 {
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
 
@@ -39,15 +39,13 @@ namespace Microsoft.IronPythonTools.Debugger {
             return new IronPythonLauncherOptions(properties);
         }
 
-        public string Name {
-            get { return "IronPython (.NET) launcher"; }
-        }
+        public string Name => "IronPython (.NET) launcher";
 
-        public string Description {
-            get {
-                return "Launches IronPython scripts using the .NET debugger.  This enables debugging both IronPython code as well as other .NET code such as C# or VB.NET.";
-            }
-        }
+        public string LocalizedName => Strings.IronPythonLauncherName;
+
+        public int SortPriority => 300;
+
+        public string Description => Strings.IronPythonLauncherDescription;
 
         public IProjectLauncher CreateLauncher(IPythonProject project) {
             return new IronPythonLauncher(_serviceProvider, _pyService, project);

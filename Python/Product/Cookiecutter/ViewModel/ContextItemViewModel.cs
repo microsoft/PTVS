@@ -27,7 +27,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _url;
         private string _val;
         private string _default;
-        private List<string> _items;
+        private readonly List<string> _items;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
