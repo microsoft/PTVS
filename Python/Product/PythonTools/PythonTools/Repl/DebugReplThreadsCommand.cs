@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Lists the threads currently being debugged."; }
+            get { return Strings.DebugReplThreadsCommandDescription; }
         }
 
         public string Command {

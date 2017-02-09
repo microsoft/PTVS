@@ -320,7 +320,7 @@ namespace Microsoft.PythonTools.Project {
 
             var id = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(BuildProject.FullPath, config.Id);
             if (string.IsNullOrEmpty(id)) {
-                throw new InvalidOperationException("Adding project environment {0} to wrong project {1}".FormatInvariant(config.Id, BuildProject.FullPath));
+                throw new InvalidOperationException(Strings.AddingProjectEnvironmentToWrongProjectException.FormatUI(config.Id, BuildProject.FullPath));
             }
 
             BuildProject.AddItem(MSBuildConstants.InterpreterItem,
@@ -1942,7 +1942,7 @@ namespace Microsoft.PythonTools.Project {
         internal int AddSearchPathZip() {
             var fileName = Site.BrowseForFileOpen(
                 IntPtr.Zero,
-                "Zip Archives (*.zip;*.egg)|*.zip;*.egg|All Files (*.*)|*.*",
+                Strings.ZipAndEggArchiveFileFilter,
                 ProjectHome
             );
             if (!string.IsNullOrEmpty(fileName)) {
@@ -2734,7 +2734,7 @@ namespace Microsoft.PythonTools.Project {
             bool isWeb = roleType == "Web";
             bool isWorker = roleType == "Worker";
             if (isWeb == isWorker) {
-                throw new ArgumentException("Unknown role type: " + (roleType ?? "(null)"), "roleType");
+                throw new ArgumentException(Strings.UnknownRoleTypeException.FormatUI(roleType ?? "(null)"), nameof(roleType));
             }
 
             var nav = doc.CreateNavigator();
@@ -2747,7 +2747,7 @@ namespace Microsoft.PythonTools.Project {
             ), ns);
 
             if (role == null) {
-                throw new InvalidOperationException("Missing role entry");
+                throw new InvalidOperationException(Strings.MissingRoleEntryException);
             }
 
             var startup = role.SelectSingleNode("sd:Startup", ns);
@@ -2758,7 +2758,7 @@ namespace Microsoft.PythonTools.Project {
             role.AppendChildElement(null, "Startup", null, null);
             startup = role.SelectSingleNode("sd:Startup", ns);
             if (startup == null) {
-                throw new InvalidOperationException("Missing Startup entry");
+                throw new InvalidOperationException(Strings.MissingStartupEntryException);
             }
 
             startup.AppendChildElement(null, "Task", null, null);

@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Steps out of the current function."; }
+            get { return Strings.DebugReplStepOutCommandDescription; }
         }
 
         public string Command {

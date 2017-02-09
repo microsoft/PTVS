@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Uwp {
     [ProvideObject(typeof(PythonUwpPropertyPage))]
     [ProvideObject(typeof(PythonUwpProject))]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasAppContainerProject_string)]
-    [Description("Python - UWP support")]
+    [Description("Python - UWP support")] // TODO: Localization (this may not be needed)
     [ProvideProjectFactory(typeof(PythonUwpProjectFactory), null, null, null, null, ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
     public sealed class PythonUwpPackage : Package {

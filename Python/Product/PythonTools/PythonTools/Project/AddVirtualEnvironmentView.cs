@@ -15,14 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -31,10 +28,10 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged, IDisposable {
-        readonly IInterpreterRegistryService _interpreterService;
+        private readonly IInterpreterRegistryService _interpreterService;
         private readonly PythonProjectNode _project;
         private readonly string _requirementsPath;
-        internal readonly string _projectHome;
+        private readonly string _projectHome;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
         private InterpreterView _lastUserSelectedBaseInterpreter;
 

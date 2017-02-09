@@ -18,13 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -87,7 +84,7 @@ namespace Microsoft.PythonTools.Repl {
                         continue;
                     }
                     yield return new KeyValuePair<string, string>(
-                        "Project: " + project.Caption,
+                        Strings.ReplProjectProjectCaption.FormatUI(project.Caption),
                         GetEvaluatorId(project)
                     );
                 }

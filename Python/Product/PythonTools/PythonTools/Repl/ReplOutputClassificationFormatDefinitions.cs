@@ -20,6 +20,8 @@ using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
+// TODO: Localization - How to localize the different classification names
+
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Project {

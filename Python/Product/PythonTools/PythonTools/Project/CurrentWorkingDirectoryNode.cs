@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -28,7 +29,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Caption {
             get {
-                return "Working Directory (" + base.Caption + ")";
+                return Strings.CurrentWorkingDirectoryCaption.FormatUI(base.Caption);
             }
         }
 

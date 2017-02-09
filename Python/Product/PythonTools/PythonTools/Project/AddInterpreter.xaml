@@ -7,7 +7,8 @@
     xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
-    Title="Add/Remove Python Environments"
+    xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
+    Title="{x:Static common:Strings.AddInterpreterWindow_Title}"
     MinWidth="300" Width="500"
     MinHeight="250" Height="400"
     ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -50,11 +51,8 @@
         </Grid.RowDefinitions>
 
         <wpf:LabelledControl Grid.Row="0"
-                             Title="Python environments associated with my project">
-            <wpf:LabelledControl.HelpText>
-                Select the environments to associate with this project. These
-                environments will be shown in Solution Explorer.
-            </wpf:LabelledControl.HelpText>
+                             Title="{x:Static common:Strings.AddInterpreterWindow_AssociatedEnvironments}"
+                             HelpText="{x:Static common:Strings.AddInterpreterWindow_AssociatedEnvironmentsHelp}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Interpreters}"
                               ItemTemplate="{StaticResource ItemTemplate}"
@@ -66,23 +64,20 @@
                 Style="{StaticResource NavigationButton}"
                 HorizontalAlignment="Center"
                 Margin="6"
-                Command="{x:Static l:AddVirtualEnvironment.WebChooseInterpreter}">
-            Go online and help me find another one
-        </Button>
+                Content="{x:Static common:Strings.AddInterpreterWindow_HelpFind}"
+                Command="{x:Static l:AddVirtualEnvironment.WebChooseInterpreter}"/>
 
         <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="0 12 0 0">
             <Button IsDefault="True"
                     Command="ApplicationCommands.Save"
                     MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                    AutomationProperties.AutomationId="Ok">
-                _OK
-            </Button>
+                    Content="{x:Static common:Strings.AddInterpreterWindow_OK}"
+                    AutomationProperties.AutomationId="Ok"/>
             <Button IsCancel="True"
                     Command="ApplicationCommands.Close"
                     MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                    AutomationProperties.AutomationId="Cancel">
-                _Cancel
-            </Button>
+                    Content="{x:Static common:Strings.AddInterpreterWindow_Cancel}"
+                    AutomationProperties.AutomationId="Cancel"/>
         </StackPanel>
     </Grid>
 </vstools:DialogWindowVersioningWorkaround>

@@ -20,7 +20,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Security;
 using System.Text;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
