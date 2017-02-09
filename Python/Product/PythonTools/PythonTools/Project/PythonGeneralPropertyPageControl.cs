@@ -15,20 +15,18 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     public partial class PythonGeneralPropertyPageControl : UserControl {
         static readonly IPythonInterpreterFactory Separator =
-            new InterpreterPlaceholder("", " -- Other installed interpreters --");
+            new InterpreterPlaceholder("", Strings.PythonGeneralPropertyPageControl_OtherInterpretersSeparator);
         static readonly IPythonInterpreterFactory GlobalDefault =
-            new InterpreterPlaceholder("", "(Use global default)");
+            new InterpreterPlaceholder("", Strings.PythonGeneralPropertyPageControl_UseGlobalDefaultInterpreter);
 
         private IInterpreterRegistryService _service;
         private readonly PythonGeneralPropertyPage _propPage;

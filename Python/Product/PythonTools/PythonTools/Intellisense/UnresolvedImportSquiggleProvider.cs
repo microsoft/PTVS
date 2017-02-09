@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public UnresolvedImportSquiggleProvider(IServiceProvider serviceProvider, TaskProvider taskProvider) {
             if (taskProvider == null) {
-                throw new ArgumentNullException("taskProvider");
+                throw new ArgumentNullException(nameof(taskProvider));
             }
             _serviceProvider = serviceProvider;
             _taskProvider = taskProvider;

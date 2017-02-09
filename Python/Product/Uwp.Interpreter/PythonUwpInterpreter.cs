@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
 
         public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
             if (reference == null) {
-                return MakeExceptionTask(new ArgumentNullException("reference"));
+                return MakeExceptionTask(new ArgumentNullException(nameof(reference)));
             }
 
             if (_references == null) {

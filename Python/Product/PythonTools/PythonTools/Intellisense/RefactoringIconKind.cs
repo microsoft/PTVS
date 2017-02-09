@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Corresponds to IDBMP_REFACTOR_IMAGES bitmap defined in SharedCmdDef.vsct 

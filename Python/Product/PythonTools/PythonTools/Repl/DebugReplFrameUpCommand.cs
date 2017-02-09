@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Move the current frame one level up in the stack trace."; }
+            get { return Strings.DebugReplFrameUpCommandDescription; }
         }
 
         public string Command {

@@ -16,14 +16,12 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Flavor;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Uwp.Project {
     [Guid(GuidList.guidUwpFactoryString)]
     public class PythonUwpProjectFactory : FlavoredProjectFactoryBase {
-        private PythonUwpPackage _package;
+        private readonly PythonUwpPackage _package;
 
         public PythonUwpProjectFactory(PythonUwpPackage package) {
             _package = package;

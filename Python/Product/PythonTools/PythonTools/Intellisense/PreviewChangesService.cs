@@ -15,22 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Controls;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Refactoring;
-using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>

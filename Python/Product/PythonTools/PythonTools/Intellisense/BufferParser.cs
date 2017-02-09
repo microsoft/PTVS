@@ -23,7 +23,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools;
 
@@ -36,7 +35,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Timer _timer;
         internal readonly AnalysisEntry AnalysisEntry;
 
-        internal readonly VsProjectAnalyzer _parser;
+        private readonly VsProjectAnalyzer _parser;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
         private ITextDocument _document;

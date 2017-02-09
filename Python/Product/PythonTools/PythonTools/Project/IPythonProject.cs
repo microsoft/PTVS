@@ -15,12 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using Microsoft.Build.Execution;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
