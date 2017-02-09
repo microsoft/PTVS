@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
@@ -39,7 +40,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (int.TryParse(arguments, out id)) {
                         eval.ChangeActiveProcess(id, true);
                     } else {
-                        window.WriteError(String.Format("Invalid arguments '{0}'. Expected process id.", arguments));
+                        window.WriteError(Strings.DebugReplProcessCommandInvalidArguments.FormatUI(arguments));
                     }
                 }
             }
@@ -47,7 +48,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Switches the current process to the specified process id."; }
+            get { return Strings.DebugReplProcessCommandDescription; }
         }
 
         public string Command {

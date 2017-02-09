@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Lists the processes currently being debugged."; }
+            get { return Strings.DebugReplProcessesCommandDescription; }
         }
 
         public string Command {

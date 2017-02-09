@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public string Description {
             get {
-                return "A comment marker";
+                return Strings.ReplCommentCommandDescription;
             }
         }
 
@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public string Description {
             get {
-                return "Wait for at least the specified number of milliseconds";
+                return Strings.ReplWaitCommandDescription;
             }
         }
 
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
             get {
-                yield return new KeyValuePair<string, string>("timeout", "Milliseconds to wait before continuing");
+                yield return new KeyValuePair<string, string>("timeout", Strings.ReplWaitCommandTimeoutParameterDescription);
             }
         }
 

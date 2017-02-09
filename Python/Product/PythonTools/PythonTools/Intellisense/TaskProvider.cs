@@ -910,8 +910,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (string.Equals(ext, ".zip", StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(ext, ".egg", StringComparison.OrdinalIgnoreCase)) {
                         MessageBox.Show(
-                            "Opening source files contained in .zip archives is not supported",
-                            "Cannot open file",
+                            Strings.ErrorTaskItemZipArchiveNotSupportedMessage,
+                            Strings.ErrorTaskItemZipArchiveNotSupportedCaption,
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Information
                         );

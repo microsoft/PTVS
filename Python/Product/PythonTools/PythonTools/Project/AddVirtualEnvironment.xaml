@@ -6,10 +6,9 @@
     xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
     xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
-    xmlns:il="clr-namespace:Microsoft.PythonTools.InterpreterList"
-    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
-    Title="Add Virtual Environment"
+    xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
+    Title="{x:Static common:Strings.AddVirtualEnvironmentWindow_Title}"
     SizeToContent="Height"
     MinWidth="300" Width="500"
     MinHeight="330"
@@ -53,13 +52,13 @@
                         <Grid TextElement.FontWeight="Bold"
                               TextElement.FontSize="14">
                             <Label Visibility="Collapsed"
-                                   Name="BrowsePathError">
-                                We could not identify a virtual environment in the selected path.
-                            </Label>
+                                   Name="BrowsePathError"
+                                   Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_BrowsePathError}"/>
 
                             <Label Name="BrowsePathOrigPrefixError">
                                 <TextBlock TextWrapping="Wrap">
-                                    <Run>We could not find a base interpreter at </Run>
+                                    <!-- TODO: Localization make this a single string -->
+                                    <Run Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError}"/>
                                     <Run Text="{Binding BrowseOrigPrefix}" />
                                 </TextBlock>
                             </Label>
@@ -78,48 +77,37 @@
                                 <RowDefinition Height="auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Label Grid.Row="0" Name="ActionsLabel">
-                                Actions we will perform:
-                            </Label>
+                            <Label Grid.Row="0" Name="ActionsLabel"
+                                   Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_Actions}"/>
                             <StackPanel Grid.Row="1" Name="Actions" Margin="12 3" Orientation="Vertical">
                                 <StackPanel.Resources>
                                     <Style TargetType="Label" BasedOn="{StaticResource BulletedLabel}">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                     </Style>
                                 </StackPanel.Resources>
-                                <Label Name="InstallPipAndVirtualEnv">
-                                    Install pip and virtualenv packages
-                                </Label>
-                                <Label Name="InstallPip">
-                                    Install pip
-                                </Label>
-                                <Label Name="InstallVirtualEnv">
-                                    Install the virtualenv package
-                                </Label>
-                                <Label Name="AddVirtualEnvironment">
-                                    Add the virtual environment
-                                </Label>
-                                <Label Name="CreateVirtualEnv">
-                                    Create a virtual environment
-                                </Label>
-                                <Label Name="CreateVEnv">
-                                    Create a virtual environment using venv
-                                </Label>
-                                <Label Name="InstallRequirements">
-                                    Install packages from requirements.txt
-                                </Label>
-                                <Label Name="CannotCreate">
-                                    No action will be taken.
-                                </Label>
-                                <Label Name="MayNotSupportWarning">
-                                    WARNING - the selected interpreter may not
-                                    support virtual environments.
-                                </Label>
+                                <Label Name="InstallPipAndVirtualEnv"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv}"/>
+                                <Label Name="InstallPip"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPip}"/>
+                                <Label Name="InstallVirtualEnv"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallVirtualEnv}"/>
+                                <Label Name="AddVirtualEnvironment"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_AddVirtualEnvironment}"/>
+                                <Label Name="CreateVirtualEnv"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVirtualEnv}"/>
+                                <Label Name="CreateVEnv"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVEnv}"/>
+                                <Label Name="InstallRequirements"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallRequirements}"/>
+                                <Label Name="CannotCreate"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_CannotCreate}"/>
+                                <Label Name="MayNotSupportWarning"
+                                       Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_MayNotSupportWarning}"/>
                             </StackPanel>
-
-                            <Label Grid.Row="0" Name="ProgressLabel" Visibility="Collapsed">
-                                Working...
-                            </Label>
+                            <Label Grid.Row="0"
+                                   Name="ProgressLabel"
+                                   Visibility="Collapsed"
+                                   Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_Working}"/>
                             <ProgressBar Grid.Row="1" Name="Progress"
                                          Visibility="Hidden"
                                          IsIndeterminate="True"
@@ -193,31 +181,35 @@
                             </Style>
                         </DataTemplate.Resources>
                         <StackPanel Orientation="Horizontal">
-                            <Button Name="Add" IsDefault="True" Command="ApplicationCommands.Save" AutomationProperties.AutomationId="Add">
-                                _Add
-                            </Button>
-                            <Button Name="Create" IsDefault="True" Command="ApplicationCommands.Save" AutomationProperties.AutomationId="Create">
+                            <Button Name="Add"
+                                    IsDefault="True"
+                                    Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_Add}"
+                                    Command="ApplicationCommands.Save"
+                                    AutomationProperties.AutomationId="Add"/>
+                            <Button Name="Create"
+                                    IsDefault="True"
+                                    Command="ApplicationCommands.Save"
+                                    AutomationProperties.AutomationId="Create">
                                 <StackPanel Orientation="Horizontal">
                                     <Image Name="UACShield"
                                            Source="{x:Static wpf:Controls.UacShield}"
                                            Width="16" Height="16"
                                            VerticalAlignment="Center"
                                            Visibility="Collapsed"/>
-                                    <AccessText Text="C_reate" VerticalAlignment="Center" />
+                                    <AccessText Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_Create}"
+                                                VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Name="Close"
                                     Visibility="Collapsed"
+                                    Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_Close}"
                                     Command="ApplicationCommands.Close"
-                                    AutomationProperties.AutomationId="Close">
-                                _Close
-                            </Button>
+                                    AutomationProperties.AutomationId="Close"/>
                             <Button Name="Cancel"
                                     Visibility="Visible"
+                                    Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_Cancel}"
                                     Command="ApplicationCommands.Close"
-                                    AutomationProperties.AutomationId="Cancel">
-                                _Cancel
-                            </Button>
+                                    AutomationProperties.AutomationId="Cancel"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding WillAddVirtualEnv}" Value="True">
@@ -267,11 +259,8 @@
                         Visibility="{Binding ShowBrowsePathError,Converter={StaticResource BoolToVisibleOrCollapsed}}" />
         
         <wpf:LabelledControl Grid.Row="1"
-                             Title="Location of the virtual environment">
-            <wpf:LabelledControl.HelpText>
-                Specify the name or location of the virtual environment. If one
-                already exists, we will detect the base interpreter for you.
-            </wpf:LabelledControl.HelpText>
+                             Title="{x:Static common:Strings.AddVirtualEnvironmentWindow_VirtualEnvLocation}"
+                             HelpText="{x:Static common:Strings.AddVirtualEnvironmentWindow_VirtualEnvLocationHelp}">
             <Grid Margin="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -292,11 +281,8 @@
         <wpf:LabelledControl Grid.Row="2"
                              Visibility="{Binding WillCreateVirtualEnv,Converter={StaticResource BoolToVisible}}"
                              VerticalAlignment="Stretch"
-                             Title="Select an interpreter to create the virtual environment from.">
-            <wpf:LabelledControl.HelpText>
-                Packages in your base interpreter will not be available in the
-                virtual environment until you install them.
-            </wpf:LabelledControl.HelpText>
+                             Title="{x:Static common:Strings.AddVirtualEnvironmentWindow_SelectInterpreter}"
+                             HelpText="{x:Static common:Strings.AddVirtualEnvironmentWindow_SelectInterpreterHelp}">
             <ComboBox Grid.Row="3"
                       Margin="3"
                       AutomationProperties.AutomationId="BaseInterpreter"
@@ -309,11 +295,8 @@
         <wpf:LabelledControl Grid.Row="2"
                              Visibility="{Binding WillAddVirtualEnv,Converter={StaticResource BoolToVisible}}"
                              VerticalAlignment="Stretch"
-                             Title="The virtual environment is based on this interpreter.">
-            <wpf:LabelledControl.HelpText>
-                This cannot be changed. To use a different base interpreter, you
-                must create a new virtual environment.
-            </wpf:LabelledControl.HelpText>
+                             Title="{x:Static common:Strings.AddVirtualEnvironmentWindow_BaseInterpreter}"
+                             HelpText="{x:Static common:Strings.AddVirtualEnvironmentWindow_BaseInterpreterHelp}">
             <ComboBox Grid.Row="3"
                       Margin="3"
                       VerticalAlignment="Bottom"
@@ -325,39 +308,27 @@
 
         <wpf:LabelledControl Grid.Row="2"
                              Visibility="{Binding CannotCreateVirtualEnv,Converter={StaticResource BoolToVisible}}"
-                             Title="We cannot create a virtual environment at the specified path.">
-            <wpf:LabelledControl.HelpText>
-                Choose a folder that does not exist, is empty, or contains an
-                existing virtual environment.
-            </wpf:LabelledControl.HelpText>
+                             Title="{x:Static common:Strings.AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPath}"
+                             HelpText="{x:Static common:Strings.AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPathHelp}">
         </wpf:LabelledControl>
 
         <wpf:LabelledControl Grid.Row="2"
                              Visibility="{Binding NoInterpretersInstalled,Converter={StaticResource BoolToVisible}}"
-                             Title="We cannot create a virtual environment.">
-            <wpf:LabelledControl.HelpText>
-                You will need to install a Python interpreter before creating a
-                virtual environment.
-            </wpf:LabelledControl.HelpText>
+                             Title="{x:Static common:Strings.AddVirtualEnvironmentWindow_NoInterpreter}"
+                             HelpText="{x:Static common:Strings.AddVirtualEnvironmentWindow_NoInterpreterHelp}">
             <Button Style="{StaticResource NavigationButton}"
                     Margin="3"
                     VerticalAlignment="Top"
-                    Command="{x:Static l:AddVirtualEnvironment.WebChooseInterpreter}">
-                Go online and help me find a Python interpreter
-            </Button>
+                    Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_NoInterpreterGoOnline}"
+                    Command="{x:Static l:AddVirtualEnvironment.WebChooseInterpreter}"/>
         </wpf:LabelledControl>
 
         <wpf:LabelledControl Grid.Row="3"
                              Visibility="{Binding CanInstallRequirementsTxt,Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                             Title="We found a requirements.txt file.">
-            <wpf:LabelledControl.HelpText>
-                This file contains external packages that are required by your
-                project. We can use pip to download and install these
-                dependencies automatically.
-            </wpf:LabelledControl.HelpText>
-            <CheckBox IsChecked="{Binding WillInstallRequirementsTxt}">
-                Download and _install packages
-            </CheckBox>
+                             Title="{x:Static common:Strings.AddVirtualEnvironmentWindow_FoundRequirements}"
+                             HelpText="{x:Static common:Strings.AddVirtualEnvironmentWindow_FoundRequirementsHelp}">
+            <CheckBox IsChecked="{Binding WillInstallRequirementsTxt}"
+                      Content="{x:Static common:Strings.AddVirtualEnvironmentWindow_DownloadInstallPackages}"/>
         </wpf:LabelledControl>
 
         <ContentControl Grid.Row="4"

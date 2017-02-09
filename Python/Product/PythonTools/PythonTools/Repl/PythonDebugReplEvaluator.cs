@@ -51,8 +51,8 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IServiceProvider _serviceProvider;
         private IInteractiveWindowCommands _commands;
 
-        private const string currentPrefix = "=> ";
-        private const string notCurrentPrefix = "   ";
+        private static readonly string currentPrefix = Strings.DebugReplCurrentIndicator;
+        private static readonly string notCurrentPrefix = Strings.DebugReplNotCurrentIndicator;
 
         public PythonDebugReplEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
@@ -152,11 +152,11 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public void AbortExecution() {
-            CurrentWindow.WriteErrorLine("Abort is not supported.");
+            CurrentWindow.WriteErrorLine(Strings.DebugReplAbortNotSupported);
         }
 
         public Task<ExecutionResult> Reset() {
-            CurrentWindow.WriteErrorLine("Reset is not supported.");
+            CurrentWindow.WriteErrorLine(Strings.DebugReplResetNotSupported);
             return ExecutionResult.Succeeded;
         }
 
@@ -171,6 +171,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IEnumerable<string> GetAvailableScopes() {
+            // TODO: Localization: we may need to do something with <CurrentFrame> string. Is it displayed?
+            // It also appears visualstudio_py_repl.py so it probably needs to be in sync with it.
             string[] fixedScopes = new string[] { "<CurrentFrame>" };
             if (_activeEvaluator != null) {
                 return fixedScopes.Concat(_activeEvaluator.GetAvailableScopes());
@@ -312,7 +314,7 @@ namespace Microsoft.PythonTools.Repl {
             if (_evaluators.Keys.Contains(id)) {
                 SwitchProcess(_evaluators[id].Process, verbose);
             } else {
-                CurrentWindow.WriteError(string.Format("Invalid process id '{0}'.", id));
+                CurrentWindow.WriteError(Strings.DebugReplInvalidProcessId.FormatUI(id));
             }
         }
 
@@ -322,7 +324,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (thread != null) {
                     _activeEvaluator.SwitchThread(thread, verbose);
                 } else {
-                    CurrentWindow.WriteError(String.Format("Invalid thread id '{0}'.", id));
+                    CurrentWindow.WriteError(Strings.DebugReplInvalidThreadId.FormatUI(id));
                 }
             } else {
                 NoProcessError();
@@ -335,7 +337,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (frame != null) {
                     _activeEvaluator.SwitchFrame(frame);
                 } else {
-                    CurrentWindow.WriteError(String.Format("Invalid frame id '{0}'.", id));
+                    CurrentWindow.WriteError(Strings.DebugReplInvalidFrameId.FormatUI(id));
                 }
             } else {
                 NoProcessError();
@@ -346,7 +348,7 @@ namespace Microsoft.PythonTools.Repl {
             if (_activeEvaluator != null) {
                 foreach (var target in _evaluators.Values) {
                     if (target.Process != null) {
-                        _activeEvaluator.WriteOutput(string.Format("{2}Process id={0}, Language version={1}", target.Process.Id, target.Process.LanguageVersion, target.Process.Id == _activeEvaluator.ProcessId ? currentPrefix : notCurrentPrefix));
+                        _activeEvaluator.WriteOutput(Strings.DebugReplProcessesOutput.FormatUI(target.Process.Id, target.Process.LanguageVersion, target.Process.Id == _activeEvaluator.ProcessId ? currentPrefix : notCurrentPrefix));
                     }
                 }
             }
@@ -355,7 +357,7 @@ namespace Microsoft.PythonTools.Repl {
         internal void DisplayThreads() {
             if (_activeEvaluator != null) {
                 foreach (var target in _activeEvaluator.GetThreads()) {
-                    _activeEvaluator.WriteOutput(string.Format("{2}Thread id={0}, name={1}", target.Id, target.Name, target.Id == _activeEvaluator.ThreadId ? currentPrefix : notCurrentPrefix));
+                    _activeEvaluator.WriteOutput(Strings.DebugReplThreadsOutput.FormatUI(target.Id, target.Name, target.Id == _activeEvaluator.ThreadId ? currentPrefix : notCurrentPrefix));
                 }
             } else {
                 NoProcessError();
@@ -365,7 +367,7 @@ namespace Microsoft.PythonTools.Repl {
         internal void DisplayFrames() {
             if (_activeEvaluator != null) {
                 foreach (var target in _activeEvaluator.GetFrames()) {
-                    _activeEvaluator.WriteOutput(string.Format("{2}Frame id={0}, function={1}", target.FrameId, target.FunctionName, target.FrameId == _activeEvaluator.FrameId ? currentPrefix : notCurrentPrefix));
+                    _activeEvaluator.WriteOutput(Strings.DebugReplFramesOutput.FormatUI(target.FrameId, target.FunctionName, target.FrameId == _activeEvaluator.FrameId ? currentPrefix : notCurrentPrefix));
                 }
             } else {
                 NoProcessError();
@@ -396,7 +398,7 @@ namespace Microsoft.PythonTools.Repl {
                 _activeEvaluator = newEvaluator;
                 ActiveProcessChanged();
                 if (verbose) {
-                    CurrentWindow.WriteLine(string.Format("Current process changed to {0}", process.Id));
+                    CurrentWindow.WriteLine(Strings.DebugReplSwitchProcessOutput.FormatUI(process.Id));
                 }
             }
         }
@@ -449,18 +451,18 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void NoProcessError() {
-            CurrentWindow.WriteError("Command only available when a process is being debugged.");
+            CurrentWindow.WriteError(Strings.DebugReplNoProcessError);
         }
 
         private void NoExecutionIfNotStoppedInDebuggerError() {
-            CurrentWindow.WriteError("Code can only be executed while stopped in debugger.");
+            CurrentWindow.WriteError(Strings.DebugReplNoExecutionIfNotStoppedInDebuggerError);
         }
 
         public Task<ExecutionResult> InitializeAsync() {
             _commands = PythonInteractiveEvaluator.GetInteractiveCommands(_serviceProvider, CurrentWindow, this);
 
             CurrentWindow.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, CurrentOptions.UseSmartHistory);
-            CurrentWindow.WriteLine("Python debug interactive window. Type $help for a list of commands.");
+            CurrentWindow.WriteLine(Strings.DebugReplHelpMessage);
 
             CurrentWindow.ReadyForInput += OnReadyForInput;
             return ExecutionResult.Succeeded;
@@ -492,7 +494,7 @@ namespace Microsoft.PythonTools.Repl {
             _threadIdMapper = threadIdMapper;
             _threadId = process.GetThreads()[0].Id;
             _languageVersion = process.LanguageVersion;
-            DisplayName = "Debug";
+            DisplayName = Strings.DebugReplDisplayName;
 
             EnsureConnectedOnCreate();
         }
@@ -605,7 +607,7 @@ namespace Microsoft.PythonTools.Repl {
         internal void SwitchThread(PythonThread thread, bool verbose) {
             var frame = thread.Frames.FirstOrDefault();
             if (frame == null) {
-                WriteError(string.Format("Cannot change current thread to {0}, because it does not have any visible frames.", thread.Id));
+                WriteError(Strings.DebugReplCannotChangeCurrentThreadNoFrame.FormatUI(thread.Id));
                 return;
             }
 
@@ -613,14 +615,14 @@ namespace Microsoft.PythonTools.Repl {
             _frameId = frame.FrameId;
             _thread?.SetThreadAndFrameCommand(thread.Id, _frameId, frame.Kind);
             if (verbose) {
-                WriteOutput(string.Format("Current thread changed to {0}, frame {1}", _threadId, _frameId));
+                WriteOutput(Strings.DebugReplThreadChanged.FormatUI(_threadId, _frameId));
             }
         }
 
         internal void SwitchFrame(PythonStackFrame frame) {
             _frameId = frame.FrameId;
             _thread?.SetThreadAndFrameCommand(frame.Thread.Id, frame.FrameId, frame.Kind);
-            WriteOutput(string.Format("Current frame changed to {0}", frame.FrameId));
+            WriteOutput(Strings.DebugReplFrameChanged.FormatUI(frame.FrameId));
         }
 
         internal void FrameUp() {

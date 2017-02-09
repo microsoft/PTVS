@@ -484,6 +484,60 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="DebugLaunchWorkingDirectoryMissing_Path" xml:space="preserve">
     <value>The project cannot be launched because the specified working directory "{0}" does not exist. Please check the Project Properties window and correct any configuration errors.</value>
   </data>
+  <data name="MixedModeDebugSymbolsRequiredTitle" xml:space="preserve">
+    <value>Python Symbols Required</value>
+  </data>
+  <data name="MixedModeDebugSymbolsRequiredMessage" xml:space="preserve">
+    <value>Python/native mixed-mode debugging requires symbol files for the Python interpreter that is being debugged. Please add the folder containing those symbol files to your symbol search path, and force a reload of symbols for {0}.</value>
+  </data>
+  <data name="MixedModeDebugSymbolsRequiredOpenSymbolSettings" xml:space="preserve">
+    <value>Open symbol settings dialog</value>
+  </data>
+  <data name="MixedModeDebugSymbolsRequiredDownloadSymbols" xml:space="preserve">
+    <value>Download symbols for my interpreter</value>
+  </data>
+  <data name="WaitForCompleteAnalysisDialog_Waiting" xml:space="preserve">
+    <value>Waiting for analysis to complete...</value>
+  </data>
+  <data name="WaitForCompleteAnalysisDialog_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="FindReferencesCaretMustBeOnValidExpression" xml:space="preserve">
+    <value>The caret must be on valid expression to find all references.</value>
+  </data>
+  <data name="SourceAnalysisNotUpToDate" xml:space="preserve">
+    <value>Python source analysis is not up to date</value>
+  </data>
+  <data name="PythonNavigateToItemDisplay_ProjectHeader" xml:space="preserve">
+    <value>Project:</value>
+  </data>
+  <data name="PythonNavigateToItemDisplay_FileHeader" xml:space="preserve">
+    <value>File:</value>
+  </data>
+  <data name="PythonNavigateToItemDisplay_LineHeader" xml:space="preserve">
+    <value>Line:</value>
+  </data>
+  <data name="PythonNavigateToItemDisplay_ProjectInfo" xml:space="preserve">
+    <value>Project: {0}</value>
+    <comment>{0} is project name</comment>
+  </data>
+  <data name="PythonNavigateToItemDisplay_FileInfo" xml:space="preserve">
+    <value>File: {0}</value>
+    <comment>{0} is file name</comment>
+  </data>
+  <data name="SymbolListDefinitions" xml:space="preserve">
+    <value>Definitions</value>
+  </data>
+  <data name="SymbolListValues" xml:space="preserve">
+    <value>Values</value>
+  </data>
+  <data name="SymbolListReferences" xml:space="preserve">
+    <value>References</value>
+  </data>
+  <data name="LibraryNodeAliasOf" xml:space="preserve">
+    <value>{0} (alias of {1})</value>
+    <comment>{0} and {1} or python data types</comment>
+  </data>
   <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
     <value>An error occurred opening this interactive window.</value>
   </data>
@@ -494,6 +548,221 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   </data>
   <data name="AddWebRoleSupportFiles" xml:space="preserve">
     <value>To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.</value>
+  </data>
+  <data name="AddInterpreterWindow_AssociatedEnvironments" xml:space="preserve">
+    <value>Python environments associated with my project</value>
+  </data>
+  <data name="AddInterpreterWindow_AssociatedEnvironmentsHelp" xml:space="preserve">
+    <value>Select the environments to associate with this project. These environments will be shown in Solution Explorer.</value>
+  </data>
+  <data name="AddInterpreterWindow_HelpFind" xml:space="preserve">
+    <value>Go online and help me find another one</value>
+  </data>
+  <data name="AddInterpreterWindow_OK" xml:space="preserve">
+    <value>_OK</value>
+  </data>
+  <data name="AddInterpreterWindow_Cancel" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="AddInterpreterWindow_Title" xml:space="preserve">
+    <value>Add/Remove Python Environments</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_BrowsePathError" xml:space="preserve">
+    <value>We could not identify a virtual environment in the selected path.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError" xml:space="preserve">
+    <value>We could not find a base interpreter at </value>
+    <comment>A folder path is concatenated to the end of this string</comment>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Actions" xml:space="preserve">
+    <value>Actions we will perform:</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv" xml:space="preserve">
+    <value>Install pip and virtualenv packages</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_InstallPip" xml:space="preserve">
+    <value>Install pip</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_InstallVirtualEnv" xml:space="preserve">
+    <value>Install the virtualenv package</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_AddVirtualEnvironment" xml:space="preserve">
+    <value>Add the virtual environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CreateVirtualEnv" xml:space="preserve">
+    <value>Create a virtual environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CreateVEnv" xml:space="preserve">
+    <value>Create a virtual environment using venv</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_InstallRequirements" xml:space="preserve">
+    <value>Install packages from requirements.txt</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CannotCreate" xml:space="preserve">
+    <value>No action will be taken.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_MayNotSupportWarning" xml:space="preserve">
+    <value>WARNING - the selected interpreter may not support virtual environments.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Working" xml:space="preserve">
+    <value>Working...</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Add" xml:space="preserve">
+    <value>_Add</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Create" xml:space="preserve">
+    <value>C_reate</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Close" xml:space="preserve">
+    <value>_Close</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Cancel" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_VirtualEnvLocation" xml:space="preserve">
+    <value>Location of the virtual environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_VirtualEnvLocationHelp" xml:space="preserve">
+    <value>Specify the name or location of the virtual environment. If one already exists, we will detect the base interpreter for you.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_SelectInterpreter" xml:space="preserve">
+    <value>Select an interpreter to create the virtual environment from.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_SelectInterpreterHelp" xml:space="preserve">
+    <value>Packages in your base interpreter will not be available in the virtual environment until you install them.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_BaseInterpreter" xml:space="preserve">
+    <value>The virtual environment is based on this interpreter.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_BaseInterpreterHelp" xml:space="preserve">
+    <value>This cannot be changed. To use a different base interpreter, you must create a new virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPath" xml:space="preserve">
+    <value>We cannot create a virtual environment at the specified path.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPathHelp" xml:space="preserve">
+    <value>Choose a folder that does not exist, is empty, or contains an existing virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_NoInterpreter" xml:space="preserve">
+    <value>We cannot create a virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_NoInterpreterHelp" xml:space="preserve">
+    <value>You will need to install a Python interpreter before creating a virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_NoInterpreterGoOnline" xml:space="preserve">
+    <value>Go online and help me find a Python interpreter</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_FoundRequirements" xml:space="preserve">
+    <value>We found a requirements.txt file.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_FoundRequirementsHelp" xml:space="preserve">
+    <value>This file contains external packages that are required by your project. We can use pip to download and install these dependencies automatically.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_DownloadInstallPackages" xml:space="preserve">
+    <value>Download and _install packages</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Title" xml:space="preserve">
+    <value>Add Virtual Environment</value>
+  </data>
+  <data name="CannotFindConda" xml:space="preserve">
+    <value>Cannot find conda</value>
+  </data>
+  <data name="CurrentWorkingDirectoryCaption" xml:space="preserve">
+    <value>Working Directory ({0})</value>
+    <comment>{0} is a folder path</comment>
+  </data>
+  <data name="ProjectDoesNotSupportedMSBuild" xml:space="preserve">
+    <value>Project does not support MSBuild</value>
+  </data>
+  <data name="CustomCommandExecutingScript" xml:space="preserve">
+    <value>Executing {0} {1}</value>
+    <comment>{0} is filename
+{1} is arguments</comment>
+  </data>
+  <data name="CustomCommandExecutingModule" xml:space="preserve">
+    <value>Executing -m {0} {1}</value>
+    <comment>{0} is module name
+{1} is arguments</comment>
+  </data>
+  <data name="CustomCommandExecutingOther" xml:space="preserve">
+    <value>Executing {0} {1}</value>
+    <comment>{0} is filename
+{1} is arguments</comment>
+  </data>
+  <data name="FilePublisherIncorrectUsernameOrPassword" xml:space="preserve">
+    <value>Incorrect user name or password: {0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="FilePublisherDestinationDescription" xml:space="preserve">
+    <value>file path</value>
+  </data>
+  <data name="FtpPublisherDestinationDescription" xml:space="preserve">
+    <value>ftp server</value>
+  </data>
+  <data name="FtpPublisherDirExistsCheckException" xml:space="preserve">
+    <value>Failed to check if directory exists: {0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="FtpPublisherDirCreateException" xml:space="preserve">
+    <value>Failed to create directory: {0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="FtpPublisherUploadFileException" xml:space="preserve">
+    <value>Failed to upload file: {0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="PublishPropertyControl_LocationLabel" xml:space="preserve">
+    <value>Publishing folder location ({0}): </value>
+    <comment>{0} is a dynamically built list of location types
+Location types examples:
+ftp or file
+web, ftp or file
+azure, web, ftp or file</comment>
+  </data>
+  <data name="PublishPropertyControl_LocationTypeSeparatorLast" xml:space="preserve">
+    <value> or </value>
+    <comment>This is used to concatenate a dynamically built list of location types.
+This separator is used before the last element.
+See PublishPropertyControl_LocationLabel for examples.</comment>
+  </data>
+  <data name="PublishPropertyControl_LocationTypeSeparator" xml:space="preserve">
+    <value>, </value>
+    <comment>This is used to concatenate a dynamically built list of location types.
+This separator is used between all elements except before the last element.
+See PublishPropertyControl_LocationLabel for examples.</comment>
+  </data>
+  <data name="PythonPublishPropertyPageLabel" xml:space="preserve">
+    <value>Publish</value>
+  </data>
+  <data name="PythonDebugPropertyPageLabel" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="PythonGeneralPropertyPageLabel" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="PythonGeneralPropertyPageControl_OtherInterpretersSeparator" xml:space="preserve">
+    <value> -- Other installed interpreters --</value>
+  </data>
+  <data name="PythonGeneralPropertyPageControl_UseGlobalDefaultInterpreter" xml:space="preserve">
+    <value>(Use global default)</value>
+  </data>
+  <data name="AddingProjectEnvironmentToWrongProjectException" xml:space="preserve">
+    <value>Adding project environment {0} to wrong project {1}</value>
+    <comment>{0} is environment id
+{1} is project path</comment>
+  </data>
+  <data name="ZipAndEggArchiveFileFilter" xml:space="preserve">
+    <value>Zip Archives (*.zip;*.egg)|*.zip;*.egg|All Files (*.*)|*.*</value>
+  </data>
+  <data name="UnknownRoleTypeException" xml:space="preserve">
+    <value>Unknown role type: {0}</value>
+    <comment>{0} is role type</comment>
+  </data>
+  <data name="MissingRoleEntryException" xml:space="preserve">
+    <value>Missing role entry</value>
+  </data>
+  <data name="MissingStartupEntryException" xml:space="preserve">
+    <value>Missing Startup entry</value>
   </data>
   <data name="ClassClassificationType" xml:space="preserve">
     <value>Python Class</value>
@@ -1099,6 +1368,30 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
   <data name="CannotGoToDefn_Name" xml:space="preserve">
     <value>Cannot go to definition of "{0}".</value>
   </data>
+  <data name="FromImportCompletionImportAllMembersFromModuleTooltip" xml:space="preserve">
+    <value>Import all members from the module</value>
+  </data>
+  <data name="IntellisenseControllerAlreadyDetachedException" xml:space="preserve">
+    <value>Already detached from text view</value>
+  </data>
+  <data name="IntellisenseControllerNotAttachedToSpecifiedTextViewException" xml:space="preserve">
+    <value>Not attached to specified text view</value>
+  </data>
+  <data name="ReverseExpressionParserFailedToGetClassifierFromBufferException" xml:space="preserve">
+    <value>Failed to get classifier from buffer</value>
+  </data>
+  <data name="ErrorTaskItemZipArchiveNotSupportedMessage" xml:space="preserve">
+    <value>Opening source files contained in .zip archives is not supported</value>
+  </data>
+  <data name="ErrorTaskItemZipArchiveNotSupportedCaption" xml:space="preserve">
+    <value>Cannot open file</value>
+  </data>
+  <data name="CompletionControl_NeedsRefresh" xml:space="preserve">
+    <value>The completion DB needs to be refreshed.</value>
+  </data>
+  <data name="CompletionControl_OpenEnvironmentsWindowForDetails" xml:space="preserve">
+    <value>Open Python Environments for more details.</value>
+  </data>
   <data name="ConnErrorMessages_CannotInjectThread" xml:space="preserve">
     <value>Cannot create thread in debuggee process</value>
   </data>
@@ -1466,5 +1759,150 @@ Would you like the selection to be extended to a valid expression?</value>
   </data>
   <data name="RefactorPreviewUpdatedLogEntryReference" xml:space="preserve">
     <value>reference</value>
+  </data>
+  <data name="DebugReplFrameCommandInvalidArguments" xml:space="preserve">
+    <value>Invalid arguments '{0}'. Expected frame id.</value>
+    <comment>{0} is the full argument string that was passed by the user.</comment>
+  </data>
+  <data name="DebugReplFrameCommandDescription" xml:space="preserve">
+    <value>Switches the current frame to the specified frame id.</value>
+  </data>
+  <data name="DebugReplFrameDownCommandDescription" xml:space="preserve">
+    <value>Move the current frame one level down in the stack trace.</value>
+  </data>
+  <data name="DebugReplFramesCommandDescription" xml:space="preserve">
+    <value>Lists the frames for the current thread.</value>
+  </data>
+  <data name="DebugReplFrameUpCommandDescription" xml:space="preserve">
+    <value>Move the current frame one level up in the stack trace.</value>
+  </data>
+  <data name="DebugReplGoCommandDescription" xml:space="preserve">
+    <value>Starts executing the program from the current statement.</value>
+  </data>
+  <data name="DebugReplProcessCommandDescription" xml:space="preserve">
+    <value>Switches the current process to the specified process id.</value>
+  </data>
+  <data name="DebugReplProcessCommandInvalidArguments" xml:space="preserve">
+    <value>Invalid arguments '{0}'. Expected process id.</value>
+    <comment>{0} is the full argument string that was passed by the user.</comment>
+  </data>
+  <data name="DebugReplProcessesCommandDescription" xml:space="preserve">
+    <value>Lists the processes currently being debugged.</value>
+  </data>
+  <data name="DebugReplStepIntoCommandDescription" xml:space="preserve">
+    <value>Steps into the next function call, if possible.</value>
+  </data>
+  <data name="DebugReplStepOutCommandDescription" xml:space="preserve">
+    <value>Steps out of the current function.</value>
+  </data>
+  <data name="DebugReplStepOverCommandDescription" xml:space="preserve">
+    <value>Steps over the next function call.</value>
+  </data>
+  <data name="DebugReplThreadCommandDescription" xml:space="preserve">
+    <value>Switches the current thread to the specified thread id.</value>
+  </data>
+  <data name="DebugReplThreadCommandInvalidArguments" xml:space="preserve">
+    <value>Invalid arguments '{0}'. Expected thread id.</value>
+    <comment>{0} is the full argument string that was passed by the user.</comment>
+  </data>
+  <data name="DebugReplThreadsCommandDescription" xml:space="preserve">
+    <value>Lists the threads currently being debugged.</value>
+  </data>
+  <data name="DebugReplInvalidProcessId" xml:space="preserve">
+    <value>Invalid process id '{0}'.</value>
+    <comment>{0} is the invalid id passed by the user.</comment>
+  </data>
+  <data name="DebugReplInvalidThreadId" xml:space="preserve">
+    <value>Invalid thread id '{0}'.</value>
+    <comment>{0} is the invalid id passed by the user.</comment>
+  </data>
+  <data name="DebugReplInvalidFrameId" xml:space="preserve">
+    <value>Invalid frame id '{0}'.</value>
+    <comment>{0} is the invalid id passed by the user.</comment>
+  </data>
+  <data name="DebugReplProcessesOutput" xml:space="preserve">
+    <value>{2}Process id={0}, Language version={1}</value>
+    <comment>{0} is the process id.
+{1} is the language version.
+{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplAbortNotSupported" xml:space="preserve">
+    <value>Abort is not supported.</value>
+  </data>
+  <data name="DebugReplResetNotSupported" xml:space="preserve">
+    <value>Reset is not supported.</value>
+  </data>
+  <data name="DebugReplThreadsOutput" xml:space="preserve">
+    <value>{2}Thread id={0}, name={1}</value>
+    <comment>{0} is the thread id.
+{1} is the name of the thread.
+{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplFramesOutput" xml:space="preserve">
+    <value>{2}Frame id={0}, function={1}</value>
+    <comment>{0} is the frame  id.
+{1} is the name of the function..
+{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplCurrentIndicator" xml:space="preserve">
+    <value>=&gt; </value>
+    <comment>Do not translate. This is a prefix that indicates that the following value is 'current'. Should be same length as DebugReplNotCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplNotCurrentIndicator" xml:space="preserve">
+    <value>   </value>
+    <comment>Do not translate. This is a prefix that indicates that the following value is not 'current'. Should be same length as DebugReplCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplSwitchProcessOutput" xml:space="preserve">
+    <value>Current process changed to {0}</value>
+    <comment>{0} is the process id.</comment>
+  </data>
+  <data name="DebugReplNoProcessError" xml:space="preserve">
+    <value>Command only available when a process is being debugged.</value>
+  </data>
+  <data name="DebugReplNoExecutionIfNotStoppedInDebuggerError" xml:space="preserve">
+    <value>Code can only be executed while stopped in debugger.</value>
+  </data>
+  <data name="DebugReplHelpMessage" xml:space="preserve">
+    <value>Python debug interactive window. Type $help for a list of commands.</value>
+  </data>
+  <data name="DebugReplCannotChangeCurrentThreadNoFrame" xml:space="preserve">
+    <value>Cannot change current thread to {0}, because it does not have any visible frames.</value>
+    <comment>{0} is a thread id.</comment>
+  </data>
+  <data name="DebugReplThreadChanged" xml:space="preserve">
+    <value>Current thread changed to {0}, frame {1}</value>
+    <comment>{0} is a thread id, {1} is a frame id.</comment>
+  </data>
+  <data name="DebugReplFrameChanged" xml:space="preserve">
+    <value>Current frame changed to {0}</value>
+    <comment>{0} is a frame id.</comment>
+  </data>
+  <data name="ReplCommentCommandDescription" xml:space="preserve">
+    <value>A comment marker</value>
+  </data>
+  <data name="ReplWaitCommandDescription" xml:space="preserve">
+    <value>Wait for at least the specified number of milliseconds</value>
+  </data>
+  <data name="ReplWaitCommandTimeoutParameterDescription" xml:space="preserve">
+    <value>Milliseconds to wait before continuing</value>
+  </data>
+  <data name="ReplWindowOutOfIds" xml:space="preserve">
+    <value>Congratulations, you opened over 2 billion interactive windows this session! Now you need to restart Visual Studio to open any more.</value>
+  </data>
+  <data name="ReplLoadCommandDescription" xml:space="preserve">
+    <value>Loads commands from file and executes until complete</value>
+  </data>
+  <data name="ReplLoadCommandFileNotFoundException" xml:space="preserve">
+    <value>Cannot find file.</value>
+  </data>
+  <data name="ReplDisconnectedFromRemoteProcessError" xml:space="preserve">
+    <value>The interactive window has become disconnected from the remote process. Please reset the window.</value>
+  </data>
+  <data name="ReplProjectProjectCaption" xml:space="preserve">
+    <value>Project: {0}</value>
+    <comment>{0} is the name of the project</comment>
+  </data>
+  <data name="ReplSwitchModuleCommandDescription" xml:space="preserve">
+    <value>Switches the current scope to the specified module name.</value>
   </data>
 </root>

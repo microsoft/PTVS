@@ -31,12 +31,10 @@ using Microsoft.Build.Logging;
 using Microsoft.PythonTools.BuildTasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
@@ -478,7 +476,7 @@ namespace Microsoft.PythonTools.Project {
         internal static IDictionary<string, TargetResult> BuildTarget(IPythonProject project, string target) {
             var config = project.GetMSBuildProjectInstance();
             if (config == null) {
-                throw new ArgumentException("Project does not support MSBuild", "project");
+                throw new ArgumentException(Strings.ProjectDoesNotSupportedMSBuild, nameof(project));
             }
 
             IDictionary<string, TargetResult> outputs;
@@ -642,18 +640,18 @@ namespace Microsoft.PythonTools.Project {
                     var arguments = startInfo.Arguments ?? string.Empty;
 
                     if (startInfo.IsScript) {
-                        interactive.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
+                        interactive.WriteLine(Strings.CustomCommandExecutingScript.FormatUI(Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
                         await pyEvaluator.ExecuteFileAsync(filename, arguments);
                     } else if (startInfo.IsModule) {
-                        interactive.WriteLine(string.Format("Executing -m {0} {1}", filename, arguments));
+                        interactive.WriteLine(Strings.CustomCommandExecutingModule.FormatUI(filename, arguments));
                         Debug.WriteLine("Executing -m {0} {1}", filename, arguments);
                         await pyEvaluator.ExecuteModuleAsync(filename, arguments);
                     } else if (startInfo.IsCode) {
                         Debug.WriteLine("Executing -c \"{0}\"", filename, arguments);
                         await pyEvaluator.ExecuteCodeAsync(filename);
                     } else {
-                        interactive.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
+                        interactive.WriteLine(Strings.CustomCommandExecutingOther.FormatUI(Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
                         await pyEvaluator.ExecuteProcessAsync(filename, arguments);
                     }

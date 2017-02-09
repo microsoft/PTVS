@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Intellisense {
     class PythonSuggestedActionsSource : ISuggestedActionsSource {
         internal readonly IServiceProvider _provider;
         internal readonly ITextView _view;
-        internal readonly ITextBuffer _textBuffer;
+        private readonly ITextBuffer _textBuffer;
 
         private readonly object _currentLock = new object();
         private IEnumerable<SuggestedActionSet> _current;

@@ -16,17 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Threading;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -59,12 +52,12 @@ namespace Microsoft.PythonTools.Navigation {
     /// the drop down to remove grayed out elements.
     /// </summary>
     class DropDownBarClient : IVsDropdownBarClient {
-        private AnalysisEntry _analysisEntry;                           // analysis entry which gets updated with new ASTs for us to inspect.
+        private readonly AnalysisEntry _analysisEntry;                           // analysis entry which gets updated with new ASTs for us to inspect.
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
         private IWpfTextView _textView;                                 // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
         private NavigationInfo _navigations;
-        private object _navigationsLock = new object();
+        private readonly object _navigationsLock = new object();
         private readonly IServiceProvider _serviceProvider;
         private readonly UIThreadBase _uiThread;
         private IntPtr _imageList;
