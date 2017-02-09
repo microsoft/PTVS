@@ -151,8 +151,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             var reprOptions = new ReprOptions(process);
 
-            // TODO: localization
-            string typeName = "<unknown exception type>";
+            string typeName = Strings.DebugUnknownExceptionType;
             string additionalInfo = "";
             try {
                 var typeObject = exc_type as PyTypeObject;

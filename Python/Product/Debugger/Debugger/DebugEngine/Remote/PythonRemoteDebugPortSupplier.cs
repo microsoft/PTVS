@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetPortSupplierName(out string pbstrName) {
-            // TODO: Localization - translate or not?
+            // TODO: Localization - leave untranslated for now, unsure of impact
             pbstrName = "Python remote (ptvsd)";
             return VSConstants.S_OK;
         }

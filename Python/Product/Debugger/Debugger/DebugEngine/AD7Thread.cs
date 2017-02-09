@@ -124,8 +124,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_STATE;
             }
             if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_PRIORITY) != 0) {
-                // TODO: Localization
-                props.bstrPriority = "Normal";
+                props.bstrPriority = Strings.DebugThreadNormalPriority;
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_PRIORITY;
             }
             if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_NAME) != 0) {

@@ -1188,22 +1188,19 @@ Connect anyway?</value>
   </data>
   <data name="DebugTcpsTransportConnectionError" xml:space="preserve">
     <value>Could not establish secure connection to {0} because of the following SSL issues:
-
+{1}
 </value>
     <comment>{0} is a URI
-A list of issues is concatenated to the message (one per line)</comment>
+{1} is a multi-line list of issues</comment>
   </data>
   <data name="DebugTcpsTransportConnectionErrorRemoteCertificateNotAvailable" xml:space="preserve">
-    <value>- no remote certificate provided
-</value>
+    <value>- no remote certificate provided</value>
   </data>
   <data name="DebugTcpsTransportConnectionErrorRemoteCertificateNameMismatch" xml:space="preserve">
-    <value>- remote certificate name does not match hostname
-</value>
+    <value>- remote certificate name does not match hostname</value>
   </data>
   <data name="DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors" xml:space="preserve">
-    <value>- remote certificate is not trusted
-</value>
+    <value>- remote certificate is not trusted</value>
   </data>
   <data name="DebugTcpTransportUriCannotContainPath" xml:space="preserve">
     <value>tcp:// URI cannot contain a path</value>
@@ -1224,6 +1221,9 @@ A list of issues is concatenated to the message (one per line)</comment>
     <comment>{0} is a character</comment>
   </data>
   <data name="DebugUnknownFunctionName" xml:space="preserve">
+    <value>&lt;unknown&gt;</value>
+  </data>
+  <data name="DebugUnknownModuleName" xml:space="preserve">
     <value>&lt;unknown&gt;</value>
   </data>
   <data name="UnrecognizedEnumValue" xml:space="preserve">
@@ -1282,6 +1282,58 @@ A list of issues is concatenated to the message (one per line)</comment>
   </data>
   <data name="DebugReprMaxLengthAtLeast3" xml:space="preserve">
     <value>MaxLength must be at least 3 (to accomodate '...')</value>
+  </data>
+  <data name="DebugThreadNormalPriority" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="DebugModuleNoSymbolsRequired" xml:space="preserve">
+    <value>No symbols required</value>
+  </data>
+  <data name="DebugStackFrameInfoFunctionNameInFileName" xml:space="preserve">
+    <value>{0} in {1}</value>
+    <comment>{0} is function name
+{1} is filename</comment>
+  </data>
+  <data name="DebugReplModuleName" xml:space="preserve">
+    <value>&lt;REPL&gt;</value>
+  </data>
+  <data name="DebugExecEvalModuleName" xml:space="preserve">
+    <value>&lt;exec/eval&gt;</value>
+  </data>
+  <data name="DebugExecEvalFunctionName" xml:space="preserve">
+    <value>&lt;exec or eval&gt;</value>
+  </data>
+  <data name="DebugReplInputFunctionName" xml:space="preserve">
+    <value>&lt;REPL input&gt;</value>
+  </data>
+  <data name="DebugStackFrameNameInName" xml:space="preserve">
+    <value>{0} in {1}</value>
+    <comment>{0} is a function name
+{1} is a function name</comment>
+  </data>
+  <data name="DebugFileModule" xml:space="preserve">
+    <value>{0} module</value>
+    <comment>{0} is a filename</comment>
+  </data>
+  <data name="DebugFileUnknownCode" xml:space="preserve">
+    <value>{0} unknown code</value>
+    <comment>{0} is filename</comment>
+  </data>
+  <data name="DebugStackFrameFunctionWithLine" xml:space="preserve">
+    <value>{0} line {1}</value>
+    <comment>{0} is a function name
+{1} is a line number</comment>
+  </data>
+  <data name="DebugPythonExceptionStackTraceFileOnly" xml:space="preserve">
+    <value>{0} in {1}</value>
+    <comment>{0} is filename
+{1} is function name</comment>
+  </data>
+  <data name="DebugPythonExceptionStackTraceFileAndLineNumber" xml:space="preserve">
+    <value>{0}:{1} in {2}</value>
+    <comment>{0} is filename
+{1} is line number
+{2} is function name</comment>
   </data>
   <data name="RemoteAzureServiceUnavailable_Host" xml:space="preserve">
     <value>Could not connect to remote Python process at {0}. Make sure that web sockets are enabled for the corresponding web site in Azure portal.</value>

@@ -568,6 +568,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;exec or eval&gt;.
+        /// </summary>
+        public static string DebugExecEvalFunctionName {
+            get {
+                return ResourceManager.GetString("DebugExecEvalFunctionName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;exec/eval&gt;.
+        /// </summary>
+        public static string DebugExecEvalModuleName {
+            get {
+                return ResourceManager.GetString("DebugExecEvalModuleName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} module.
+        /// </summary>
+        public static string DebugFileModule {
+            get {
+                return ResourceManager.GetString("DebugFileModule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} unknown code.
+        /// </summary>
+        public static string DebugFileUnknownCode {
+            get {
+                return ResourceManager.GetString("DebugFileUnknownCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The project cannot be launched because no Python interpreter is specified. Please check the Python Environments window and ensure the version of Python is installed and has all settings specified..
         /// </summary>
         public static string DebugLaunchInterpreterMissing {
@@ -613,6 +649,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No symbols required.
+        /// </summary>
+        public static string DebugModuleNoSymbolsRequired {
+            get {
+                return ResourceManager.GetString("DebugModuleNoSymbolsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not obtain a Python frame object for the current frame..
         /// </summary>
         public static string DebugNoPythonFrameForCurrentFrame {
@@ -627,6 +672,24 @@ namespace Microsoft.PythonTools {
         public static string DebugOnlyBoolNumericStringAndNoneSupported {
             get {
                 return ResourceManager.GetString("DebugOnlyBoolNumericStringAndNoneSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}:{1} in {2}.
+        /// </summary>
+        public static string DebugPythonExceptionStackTraceFileAndLineNumber {
+            get {
+                return ResourceManager.GetString("DebugPythonExceptionStackTraceFileAndLineNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1}.
+        /// </summary>
+        public static string DebugPythonExceptionStackTraceFileOnly {
+            get {
+                return ResourceManager.GetString("DebugPythonExceptionStackTraceFileOnly", resourceCulture);
             }
         }
         
@@ -658,11 +721,56 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;REPL input&gt;.
+        /// </summary>
+        public static string DebugReplInputFunctionName {
+            get {
+                return ResourceManager.GetString("DebugReplInputFunctionName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;REPL&gt;.
+        /// </summary>
+        public static string DebugReplModuleName {
+            get {
+                return ResourceManager.GetString("DebugReplModuleName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MaxLength must be at least 3 (to accomodate &apos;...&apos;).
         /// </summary>
         public static string DebugReprMaxLengthAtLeast3 {
             get {
                 return ResourceManager.GetString("DebugReprMaxLengthAtLeast3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} line {1}.
+        /// </summary>
+        public static string DebugStackFrameFunctionWithLine {
+            get {
+                return ResourceManager.GetString("DebugStackFrameFunctionWithLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1}.
+        /// </summary>
+        public static string DebugStackFrameInfoFunctionNameInFileName {
+            get {
+                return ResourceManager.GetString("DebugStackFrameInfoFunctionNameInFileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1}.
+        /// </summary>
+        public static string DebugStackFrameNameInName {
+            get {
+                return ResourceManager.GetString("DebugStackFrameNameInName", resourceCulture);
             }
         }
         
@@ -695,7 +803,7 @@ namespace Microsoft.PythonTools {
         
         /// <summary>
         ///   Looks up a localized string similar to Could not establish secure connection to {0} because of the following SSL issues:
-        ///
+        ///{1}
         ///.
         /// </summary>
         public static string DebugTcpsTransportConnectionError {
@@ -705,8 +813,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to - remote certificate is not trusted
-        ///.
+        ///   Looks up a localized string similar to - remote certificate is not trusted.
         /// </summary>
         public static string DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors {
             get {
@@ -715,8 +822,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to - remote certificate name does not match hostname
-        ///.
+        ///   Looks up a localized string similar to - remote certificate name does not match hostname.
         /// </summary>
         public static string DebugTcpsTransportConnectionErrorRemoteCertificateNameMismatch {
             get {
@@ -725,8 +831,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to - no remote certificate provided
-        ///.
+        ///   Looks up a localized string similar to - no remote certificate provided.
         /// </summary>
         public static string DebugTcpsTransportConnectionErrorRemoteCertificateNotAvailable {
             get {
@@ -740,6 +845,15 @@ namespace Microsoft.PythonTools {
         public static string DebugTcpTransportUriCannotContainPath {
             get {
                 return ResourceManager.GetString("DebugTcpTransportUriCannotContainPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normal.
+        /// </summary>
+        public static string DebugThreadNormalPriority {
+            get {
+                return ResourceManager.GetString("DebugThreadNormalPriority", resourceCulture);
             }
         }
         
@@ -785,6 +899,15 @@ namespace Microsoft.PythonTools {
         public static string DebugUnknownFunctionName {
             get {
                 return ResourceManager.GetString("DebugUnknownFunctionName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;unknown&gt;.
+        /// </summary>
+        public static string DebugUnknownModuleName {
+            get {
+                return ResourceManager.GetString("DebugUnknownModuleName", resourceCulture);
             }
         }
         

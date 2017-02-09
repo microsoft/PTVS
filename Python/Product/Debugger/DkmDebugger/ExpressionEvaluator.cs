@@ -435,7 +435,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             var globals = pythonFrame.f_globals.TryRead();
             if (globals != null) {
                 var globalsEvalResult = new GlobalsEvaluationResult { Globals = globals };
-                // TODO: Localization
+                // TODO: Localization: is it safe to localize [Globals] ? Appears twice in this file
                 DkmEvaluationResult evalResult = DkmSuccessEvaluationResult.Create(
                     inspectionContext, stackFrame, "[Globals]", null,
                     DkmEvaluationResultFlags.ReadOnly | DkmEvaluationResultFlags.Expandable,
@@ -528,6 +528,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             GetFrameLocals(inspectionContext, workList, stackFrame, getFrameLocalsResult => {
                 getFrameLocalsResult.EnumContext.GetItems(workList, 0, int.MaxValue, localGetItemsResult => {
                     var vars = localGetItemsResult.Items.OfType<DkmSuccessEvaluationResult>();
+                    // TODO: Localization: is it safe to localize [Globals] ? Appears twice in this file
                     var globals = vars.FirstOrDefault(er => er.Name == "[Globals]");
                     if (globals == null) {
                         if (!EvaluateExpressionByWalkingObjects(vars, inspectionContext, workList, expression, stackFrame, completionRoutine)) {

@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonException {
@@ -137,18 +138,15 @@ namespace Microsoft.PythonTools.Debugger {
                     functionName = PythonStackFrame.GetQualifiedFunctionName(process, filename, lineNo, functionName);
                 }
 
-                // TODO: Localization (I verified this is translated in C#)
-                if (!string.IsNullOrEmpty(filename)) {
-                    sb.Append(filename);
-                    if (!string.IsNullOrEmpty(lineNumber)) {
-                        sb.Append(":");
-                        sb.Append(lineNumber);
-                    }
-                    sb.Append(" in ");
+                if (string.IsNullOrEmpty(functionName)) {
+                    functionName = Strings.DebugUnknownFunctionName;
                 }
 
-                if (string.IsNullOrEmpty(functionName)) {
-                    sb.AppendLine("<unknown>");
+                if (!string.IsNullOrEmpty(filename)) {
+                    sb.AppendLine(string.IsNullOrEmpty(lineNumber)
+                        ? Strings.DebugPythonExceptionStackTraceFileOnly.FormatUI(filename, functionName)
+                        : Strings.DebugPythonExceptionStackTraceFileAndLineNumber.FormatUI(filename, lineNumber, functionName)
+                    );
                 } else {
                     sb.AppendLine(functionName);
                 }

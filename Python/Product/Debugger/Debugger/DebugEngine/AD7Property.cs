@@ -58,7 +58,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_TYPE) != 0) {
                 if (_evalResult.ExceptionText != null) {
-                    // TODO: Localization
                     propertyInfo.bstrType = "<error>";
                 } else {
                     propertyInfo.bstrType = _evalResult.TypeName;
@@ -68,7 +67,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE) != 0) {
                 if (_evalResult.ExceptionText != null) {
-                    // TODO: Localization
                     propertyInfo.bstrValue = "error: " + _evalResult.ExceptionText;
                 } else if (radix != 16) {
                     propertyInfo.bstrValue = _evalResult.StringRepr;

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -267,13 +268,14 @@ namespace Microsoft.PythonTools.Debugger {
                 }
 
                 if (_name.Length != 0) {
-                    _name.Append(" in ");
+                    var inner = _name.ToString();
+                    _name.Clear();
+                    _name.Append(Strings.DebugStackFrameNameInName.FormatUI(inner, funcName));
+                } else {
+                    _name.Append(funcName);
                 }
-
-                _name.Append(funcName);
             }
         }
-
     }
 
     class DjangoStackFrame : PythonStackFrame {

@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Net.Security;
 using System.Security.Authentication;
+using System.Text;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger.Transports {
@@ -30,18 +31,18 @@ namespace Microsoft.PythonTools.Debugger.Transports {
                         return true;
                     }
 
-                    string errText = Strings.DebugTcpsTransportConnectionError.FormatUI(uri);
+                    var errorDetails = new StringBuilder();
                     if ((errs & SslPolicyErrors.RemoteCertificateNotAvailable) != 0) {
-                        errText += Strings.DebugTcpsTransportConnectionErrorRemoteCertificateNotAvailable;
+                        errorDetails.AppendLine(Strings.DebugTcpsTransportConnectionErrorRemoteCertificateNotAvailable);
                     }
                     if ((errs & SslPolicyErrors.RemoteCertificateNameMismatch) != 0) {
-                        errText += Strings.DebugTcpsTransportConnectionErrorRemoteCertificateNameMismatch;
+                        errorDetails.AppendLine(Strings.DebugTcpsTransportConnectionErrorRemoteCertificateNameMismatch);
                     }
                     if ((errs & SslPolicyErrors.RemoteCertificateChainErrors) != 0) {
-                        errText += Strings.DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors;
+                        errorDetails.AppendLine(Strings.DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors);
                     }
 
-                    throw new AuthenticationException(errText);
+                    throw new AuthenticationException(Strings.DebugTcpsTransportConnectionError.FormatUI(uri, errorDetails));
                 });
 
                 sslStream.AuthenticateAsClient(uri.Host);
