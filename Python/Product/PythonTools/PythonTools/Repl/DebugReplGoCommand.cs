@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Starts executing the program from the current statement."; }
+            get { return Strings.DebugReplGoCommandDescription; }
         }
 
         public string Command {

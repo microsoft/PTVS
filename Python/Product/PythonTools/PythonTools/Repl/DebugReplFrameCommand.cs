@@ -14,18 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Debugger.DebugEngine;
-using System;
-using Microsoft.PythonTools.Debugger;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Utilities;
+using System.ComponentModel.Composition;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveWindowCommand))]
@@ -42,7 +39,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (int.TryParse(arguments, out id)) {
                         eval.ChangeActiveFrame(id);
                     } else {
-                        window.WriteError(String.Format("Invalid arguments '{0}'. Expected frame id.", arguments));
+                        window.WriteError(Strings.DebugReplFrameCommandInvalidArguments.FormatUI(arguments));
                     }
                 }
             }
@@ -50,7 +47,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Switches the current frame to the specified frame id."; }
+            get { return Strings.DebugReplFrameCommandDescription; }
         }
 
         public string Command {

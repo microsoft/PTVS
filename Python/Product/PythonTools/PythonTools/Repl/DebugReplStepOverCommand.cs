@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Steps over the next function call."; }
+            get { return Strings.DebugReplStepOverCommandDescription; }
         }
 
         public string Command {

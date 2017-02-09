@@ -1294,4 +1294,149 @@ Would you like the selection to be extended to a valid expression?</value>
   <data name="RefactorPreviewUpdatedLogEntryReference" xml:space="preserve">
     <value>reference</value>
   </data>
+  <data name="DebugReplFrameCommandInvalidArguments" xml:space="preserve">
+    <value>Invalid arguments '{0}'. Expected frame id.</value>
+    <comment>{0} is the full argument string that was passed by the user.</comment>
+  </data>
+  <data name="DebugReplFrameCommandDescription" xml:space="preserve">
+    <value>Switches the current frame to the specified frame id.</value>
+  </data>
+  <data name="DebugReplFrameDownCommandDescription" xml:space="preserve">
+    <value>Move the current frame one level down in the stack trace.</value>
+  </data>
+  <data name="DebugReplFramesCommandDescription" xml:space="preserve">
+    <value>Lists the frames for the current thread.</value>
+  </data>
+  <data name="DebugReplFrameUpCommandDescription" xml:space="preserve">
+    <value>Move the current frame one level up in the stack trace.</value>
+  </data>
+  <data name="DebugReplGoCommandDescription" xml:space="preserve">
+    <value>Starts executing the program from the current statement.</value>
+  </data>
+  <data name="DebugReplProcessCommandDescription" xml:space="preserve">
+    <value>Switches the current process to the specified process id.</value>
+  </data>
+  <data name="DebugReplProcessCommandInvalidArguments" xml:space="preserve">
+    <value>Invalid arguments '{0}'. Expected process id.</value>
+    <comment>{0} is the full argument string that was passed by the user.</comment>
+  </data>
+  <data name="DebugReplProcessesCommandDescription" xml:space="preserve">
+    <value>Lists the processes currently being debugged.</value>
+  </data>
+  <data name="DebugReplStepIntoCommandDescription" xml:space="preserve">
+    <value>Steps into the next function call, if possible.</value>
+  </data>
+  <data name="DebugReplStepOutCommandDescription" xml:space="preserve">
+    <value>Steps out of the current function.</value>
+  </data>
+  <data name="DebugReplStepOverCommandDescription" xml:space="preserve">
+    <value>Steps over the next function call.</value>
+  </data>
+  <data name="DebugReplThreadCommandDescription" xml:space="preserve">
+    <value>Switches the current thread to the specified thread id.</value>
+  </data>
+  <data name="DebugReplThreadCommandInvalidArguments" xml:space="preserve">
+    <value>Invalid arguments '{0}'. Expected thread id.</value>
+    <comment>{0} is the full argument string that was passed by the user.</comment>
+  </data>
+  <data name="DebugReplThreadsCommandDescription" xml:space="preserve">
+    <value>Lists the threads currently being debugged.</value>
+  </data>
+  <data name="DebugReplInvalidProcessId" xml:space="preserve">
+    <value>Invalid process id '{0}'.</value>
+    <comment>{0} is the invalid id passed by the user.</comment>
+  </data>
+  <data name="DebugReplInvalidThreadId" xml:space="preserve">
+    <value>Invalid thread id '{0}'.</value>
+    <comment>{0} is the invalid id passed by the user.</comment>
+  </data>
+  <data name="DebugReplInvalidFrameId" xml:space="preserve">
+    <value>Invalid frame id '{0}'.</value>
+    <comment>{0} is the invalid id passed by the user.</comment>
+  </data>
+  <data name="DebugReplProcessesOutput" xml:space="preserve">
+    <value>{2}Process id={0}, Language version={1}</value>
+    <comment>{0} is the process id.
+{1} is the language version.
+{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplAbortNotSupported" xml:space="preserve">
+    <value>Abort is not supported.</value>
+  </data>
+  <data name="DebugReplResetNotSupported" xml:space="preserve">
+    <value>Reset is not supported.</value>
+  </data>
+  <data name="DebugReplThreadsOutput" xml:space="preserve">
+    <value>{2}Thread id={0}, name={1}</value>
+    <comment>{0} is the thread id.
+{1} is the name of the thread.
+{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplFramesOutput" xml:space="preserve">
+    <value>{2}Frame id={0}, function={1}</value>
+    <comment>{0} is the frame  id.
+{1} is the name of the function..
+{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplCurrentIndicator" xml:space="preserve">
+    <value>=&gt; </value>
+    <comment>Do not translate. This is a prefix that indicates that the following value is 'current'. Should be same length as DebugReplNotCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplNotCurrentIndicator" xml:space="preserve">
+    <value>   </value>
+    <comment>Do not translate. This is a prefix that indicates that the following value is not 'current'. Should be same length as DebugReplCurrentIndicator.</comment>
+  </data>
+  <data name="DebugReplSwitchProcessOutput" xml:space="preserve">
+    <value>Current process changed to {0}</value>
+    <comment>{0} is the process id.</comment>
+  </data>
+  <data name="DebugReplNoProcessError" xml:space="preserve">
+    <value>Command only available when a process is being debugged.</value>
+  </data>
+  <data name="DebugReplNoExecutionIfNotStoppedInDebuggerError" xml:space="preserve">
+    <value>Code can only be executed while stopped in debugger.</value>
+  </data>
+  <data name="DebugReplHelpMessage" xml:space="preserve">
+    <value>Python debug interactive window. Type $help for a list of commands.</value>
+  </data>
+  <data name="DebugReplCannotChangeCurrentThreadNoFrame" xml:space="preserve">
+    <value>Cannot change current thread to {0}, because it does not have any visible frames.</value>
+    <comment>{0} is a thread id.</comment>
+  </data>
+  <data name="DebugReplThreadChanged" xml:space="preserve">
+    <value>Current thread changed to {0}, frame {1}</value>
+    <comment>{0} is a thread id, {1} is a frame id.</comment>
+  </data>
+  <data name="DebugReplFrameChanged" xml:space="preserve">
+    <value>Current frame changed to {0}</value>
+    <comment>{0} is a frame id.</comment>
+  </data>
+  <data name="ReplCommentCommandDescription" xml:space="preserve">
+    <value>A comment marker</value>
+  </data>
+  <data name="ReplWaitCommandDescription" xml:space="preserve">
+    <value>Wait for at least the specified number of milliseconds</value>
+  </data>
+  <data name="ReplWaitCommandTimeoutParameterDescription" xml:space="preserve">
+    <value>Milliseconds to wait before continuing</value>
+  </data>
+  <data name="ReplWindowOutOfIds" xml:space="preserve">
+    <value>Congratulations, you opened over 2 billion interactive windows this session! Now you need to restart Visual Studio to open any more.</value>
+  </data>
+  <data name="ReplLoadCommandDescription" xml:space="preserve">
+    <value>Loads commands from file and executes until complete</value>
+  </data>
+  <data name="ReplLoadCommandFileNotFoundException" xml:space="preserve">
+    <value>Cannot find file.</value>
+  </data>
+  <data name="ReplDisconnectedFromRemoteProcessError" xml:space="preserve">
+    <value>The interactive window has become disconnected from the remote process. Please reset the window.</value>
+  </data>
+  <data name="ReplProjectProjectCaption" xml:space="preserve">
+    <value>Project: {0}</value>
+    <comment>{0} is the name of the project</comment>
+  </data>
+  <data name="ReplSwitchModuleCommandDescription" xml:space="preserve">
+    <value>Switches the current scope to the specified module name.</value>
+  </data>
 </root>
