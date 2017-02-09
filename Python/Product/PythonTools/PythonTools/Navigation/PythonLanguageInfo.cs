@@ -17,11 +17,8 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;

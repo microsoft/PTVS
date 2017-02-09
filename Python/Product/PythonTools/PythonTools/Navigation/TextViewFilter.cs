@@ -34,9 +34,9 @@ namespace Microsoft.PythonTools.Language {
     /// Do not use this from VS2010, it will break debugger tooltips!
     /// </summary>
     public sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
-        private IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
-        private IVsDebugger _debugger;
-        private IServiceProvider _serviceProvider;
+        private readonly IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
+        private readonly IVsDebugger _debugger;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IOleCommandTarget _next;
         private readonly IVsTextLines _vsTextLines;
         private readonly IWpfTextView _wpfTextView;

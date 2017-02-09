@@ -19,19 +19,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Navigation {
     internal class PythonLibraryNode : CommonLibraryNode {
@@ -114,20 +111,18 @@ namespace Microsoft.PythonTools.Navigation {
                     }
                 }
 
-                if (isAlias) {
-                    res.Append(Name);
-                    res.Append(" (alias of ");
-                }
-
+                var descriptions = new StringBuilder();
                 foreach (var desc in value.description) {
                     if (desc.kind == "enddecl") {
                         break;
                     }
-                    res.Append(desc.text);
+                    descriptions.Append(desc.text);
                 }
 
                 if (isAlias) {
-                    res.Append(")");
+                    res.Append(Strings.LibraryNodeAliasOf.FormatUI(Name, descriptions));
+                } else {
+                    res.Append(descriptions);
                 }
             }
 

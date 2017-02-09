@@ -1830,6 +1830,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The caret must be on valid expression to find all references..
+        /// </summary>
+        public static string FindReferencesCaretMustBeOnValidExpression {
+            get {
+                return ResourceManager.GetString("FindReferencesCaretMustBeOnValidExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to # The existing formatting will not be altered:
         ///
         ///{0}
@@ -2523,6 +2532,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} (alias of {1}).
+        /// </summary>
+        public static string LibraryNodeAliasOf {
+            get {
+                return ResourceManager.GetString("LibraryNodeAliasOf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
         /// </summary>
         public static string MisconfiguredEnvironment {
@@ -2573,6 +2591,42 @@ namespace Microsoft.PythonTools {
         public static string MissingSuffix {
             get {
                 return ResourceManager.GetString("MissingSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download symbols for my interpreter.
+        /// </summary>
+        public static string MixedModeDebugSymbolsRequiredDownloadSymbols {
+            get {
+                return ResourceManager.GetString("MixedModeDebugSymbolsRequiredDownloadSymbols", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python/native mixed-mode debugging requires symbol files for the Python interpreter that is being debugged. Please add the folder containing those symbol files to your symbol search path, and force a reload of symbols for {0}..
+        /// </summary>
+        public static string MixedModeDebugSymbolsRequiredMessage {
+            get {
+                return ResourceManager.GetString("MixedModeDebugSymbolsRequiredMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open symbol settings dialog.
+        /// </summary>
+        public static string MixedModeDebugSymbolsRequiredOpenSymbolSettings {
+            get {
+                return ResourceManager.GetString("MixedModeDebugSymbolsRequiredOpenSymbolSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Symbols Required.
+        /// </summary>
+        public static string MixedModeDebugSymbolsRequiredTitle {
+            get {
+                return ResourceManager.GetString("MixedModeDebugSymbolsRequiredTitle", resourceCulture);
             }
         }
         
@@ -2920,6 +2974,51 @@ namespace Microsoft.PythonTools {
         public static string PythonMenuLabel {
             get {
                 return ResourceManager.GetString("PythonMenuLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File:.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_FileHeader {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_FileHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File: {0}.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_FileInfo {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_FileInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line:.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_LineHeader {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_LineHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project:.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_ProjectHeader {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_ProjectHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project: {0}.
+        /// </summary>
+        public static string PythonNavigateToItemDisplay_ProjectInfo {
+            get {
+                return ResourceManager.GetString("PythonNavigateToItemDisplay_ProjectInfo", resourceCulture);
             }
         }
         
@@ -3844,6 +3943,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Python source analysis is not up to date.
+        /// </summary>
+        public static string SourceAnalysisNotUpToDate {
+            get {
+                return ResourceManager.GetString("SourceAnalysisNotUpToDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified pattern is an invalid regular expression..
         /// </summary>
         public static string StaticPatternError {
@@ -3896,6 +4004,33 @@ namespace Microsoft.PythonTools {
         public static string SurroundWith {
             get {
                 return ResourceManager.GetString("SurroundWith", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Definitions.
+        /// </summary>
+        public static string SymbolListDefinitions {
+            get {
+                return ResourceManager.GetString("SymbolListDefinitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to References.
+        /// </summary>
+        public static string SymbolListReferences {
+            get {
+                return ResourceManager.GetString("SymbolListReferences", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values.
+        /// </summary>
+        public static string SymbolListValues {
+            get {
+                return ResourceManager.GetString("SymbolListValues", resourceCulture);
             }
         }
         
@@ -4247,6 +4382,24 @@ namespace Microsoft.PythonTools {
         public static string VirtualEnvCreationSucceeded {
             get {
                 return ResourceManager.GetString("VirtualEnvCreationSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string WaitForCompleteAnalysisDialog_Cancel {
+            get {
+                return ResourceManager.GetString("WaitForCompleteAnalysisDialog_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for analysis to complete....
+        /// </summary>
+        public static string WaitForCompleteAnalysisDialog_Waiting {
+            get {
+                return ResourceManager.GetString("WaitForCompleteAnalysisDialog_Waiting", resourceCulture);
             }
         }
         
