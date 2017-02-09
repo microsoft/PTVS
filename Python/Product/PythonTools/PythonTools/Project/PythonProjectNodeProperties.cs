@@ -18,8 +18,6 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudioTools.Project.Automation;

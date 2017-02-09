@@ -495,6 +495,221 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="AddWebRoleSupportFiles" xml:space="preserve">
     <value>To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.</value>
   </data>
+  <data name="AddInterpreterWindow_AssociatedEnvironments" xml:space="preserve">
+    <value>Python environments associated with my project</value>
+  </data>
+  <data name="AddInterpreterWindow_AssociatedEnvironmentsHelp" xml:space="preserve">
+    <value>Select the environments to associate with this project. These environments will be shown in Solution Explorer.</value>
+  </data>
+  <data name="AddInterpreterWindow_HelpFind" xml:space="preserve">
+    <value>Go online and help me find another one</value>
+  </data>
+  <data name="AddInterpreterWindow_OK" xml:space="preserve">
+    <value>_OK</value>
+  </data>
+  <data name="AddInterpreterWindow_Cancel" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="AddInterpreterWindow_Title" xml:space="preserve">
+    <value>Add/Remove Python Environments</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_BrowsePathError" xml:space="preserve">
+    <value>We could not identify a virtual environment in the selected path.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError" xml:space="preserve">
+    <value>We could not find a base interpreter at </value>
+    <comment>A folder path is concatenated to the end of this string</comment>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Actions" xml:space="preserve">
+    <value>Actions we will perform:</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv" xml:space="preserve">
+    <value>Install pip and virtualenv packages</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_InstallPip" xml:space="preserve">
+    <value>Install pip</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_InstallVirtualEnv" xml:space="preserve">
+    <value>Install the virtualenv package</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_AddVirtualEnvironment" xml:space="preserve">
+    <value>Add the virtual environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CreateVirtualEnv" xml:space="preserve">
+    <value>Create a virtual environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CreateVEnv" xml:space="preserve">
+    <value>Create a virtual environment using venv</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_InstallRequirements" xml:space="preserve">
+    <value>Install packages from requirements.txt</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CannotCreate" xml:space="preserve">
+    <value>No action will be taken.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_MayNotSupportWarning" xml:space="preserve">
+    <value>WARNING - the selected interpreter may not support virtual environments.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Working" xml:space="preserve">
+    <value>Working...</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Add" xml:space="preserve">
+    <value>_Add</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Create" xml:space="preserve">
+    <value>C_reate</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Close" xml:space="preserve">
+    <value>_Close</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Cancel" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_VirtualEnvLocation" xml:space="preserve">
+    <value>Location of the virtual environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_VirtualEnvLocationHelp" xml:space="preserve">
+    <value>Specify the name or location of the virtual environment. If one already exists, we will detect the base interpreter for you.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_SelectInterpreter" xml:space="preserve">
+    <value>Select an interpreter to create the virtual environment from.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_SelectInterpreterHelp" xml:space="preserve">
+    <value>Packages in your base interpreter will not be available in the virtual environment until you install them.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_BaseInterpreter" xml:space="preserve">
+    <value>The virtual environment is based on this interpreter.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_BaseInterpreterHelp" xml:space="preserve">
+    <value>This cannot be changed. To use a different base interpreter, you must create a new virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPath" xml:space="preserve">
+    <value>We cannot create a virtual environment at the specified path.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPathHelp" xml:space="preserve">
+    <value>Choose a folder that does not exist, is empty, or contains an existing virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_NoInterpreter" xml:space="preserve">
+    <value>We cannot create a virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_NoInterpreterHelp" xml:space="preserve">
+    <value>You will need to install a Python interpreter before creating a virtual environment.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_NoInterpreterGoOnline" xml:space="preserve">
+    <value>Go online and help me find a Python interpreter</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_FoundRequirements" xml:space="preserve">
+    <value>We found a requirements.txt file.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_FoundRequirementsHelp" xml:space="preserve">
+    <value>This file contains external packages that are required by your project. We can use pip to download and install these dependencies automatically.</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_DownloadInstallPackages" xml:space="preserve">
+    <value>Download and _install packages</value>
+  </data>
+  <data name="AddVirtualEnvironmentWindow_Title" xml:space="preserve">
+    <value>Add Virtual Environment</value>
+  </data>
+  <data name="CannotFindConda" xml:space="preserve">
+    <value>Cannot find conda</value>
+  </data>
+  <data name="CurrentWorkingDirectoryCaption" xml:space="preserve">
+    <value>Working Directory ({0})</value>
+    <comment>{0} is a folder path</comment>
+  </data>
+  <data name="ProjectDoesNotSupportedMSBuild" xml:space="preserve">
+    <value>Project does not support MSBuild</value>
+  </data>
+  <data name="CustomCommandExecutingScript" xml:space="preserve">
+    <value>Executing {0} {1}</value>
+    <comment>{0} is filename
+{1} is arguments</comment>
+  </data>
+  <data name="CustomCommandExecutingModule" xml:space="preserve">
+    <value>Executing -m {0} {1}</value>
+    <comment>{0} is module name
+{1} is arguments</comment>
+  </data>
+  <data name="CustomCommandExecutingOther" xml:space="preserve">
+    <value>Executing {0} {1}</value>
+    <comment>{0} is filename
+{1} is arguments</comment>
+  </data>
+  <data name="FilePublisherIncorrectUsernameOrPassword" xml:space="preserve">
+    <value>Incorrect user name or password: {0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="FilePublisherDestinationDescription" xml:space="preserve">
+    <value>file path</value>
+  </data>
+  <data name="FtpPublisherDestinationDescription" xml:space="preserve">
+    <value>ftp server</value>
+  </data>
+  <data name="FtpPublisherDirExistsCheckException" xml:space="preserve">
+    <value>Failed to check if directory exists: {0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="FtpPublisherDirCreateException" xml:space="preserve">
+    <value>Failed to create directory: {0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="FtpPublisherUploadFileException" xml:space="preserve">
+    <value>Failed to upload file: {0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="PublishPropertyControl_LocationLabel" xml:space="preserve">
+    <value>Publishing folder location ({0}): </value>
+    <comment>{0} is a dynamically built list of location types
+Location types examples:
+ftp or file
+web, ftp or file
+azure, web, ftp or file</comment>
+  </data>
+  <data name="PublishPropertyControl_LocationTypeSeparatorLast" xml:space="preserve">
+    <value> or </value>
+    <comment>This is used to concatenate a dynamically built list of location types.
+This separator is used before the last element.
+See PublishPropertyControl_LocationLabel for examples.</comment>
+  </data>
+  <data name="PublishPropertyControl_LocationTypeSeparator" xml:space="preserve">
+    <value>, </value>
+    <comment>This is used to concatenate a dynamically built list of location types.
+This separator is used between all elements except before the last element.
+See PublishPropertyControl_LocationLabel for examples.</comment>
+  </data>
+  <data name="PythonPublishPropertyPageLabel" xml:space="preserve">
+    <value>Publish</value>
+  </data>
+  <data name="PythonDebugPropertyPageLabel" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="PythonGeneralPropertyPageLabel" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="PythonGeneralPropertyPageControl_OtherInterpretersSeparator" xml:space="preserve">
+    <value> -- Other installed interpreters --</value>
+  </data>
+  <data name="PythonGeneralPropertyPageControl_UseGlobalDefaultInterpreter" xml:space="preserve">
+    <value>(Use global default)</value>
+  </data>
+  <data name="AddingProjectEnvironmentToWrongProjectException" xml:space="preserve">
+    <value>Adding project environment {0} to wrong project {1}</value>
+    <comment>{0} is environment id
+{1} is project path</comment>
+  </data>
+  <data name="ZipAndEggArchiveFileFilter" xml:space="preserve">
+    <value>Zip Archives (*.zip;*.egg)|*.zip;*.egg|All Files (*.*)|*.*</value>
+  </data>
+  <data name="UnknownRoleTypeException" xml:space="preserve">
+    <value>Unknown role type: {0}</value>
+    <comment>{0} is role type</comment>
+  </data>
+  <data name="MissingRoleEntryException" xml:space="preserve">
+    <value>Missing role entry</value>
+  </data>
+  <data name="MissingStartupEntryException" xml:space="preserve">
+    <value>Missing Startup entry</value>
+  </data>
   <data name="ClassClassificationType" xml:space="preserve">
     <value>Python Class</value>
   </data>

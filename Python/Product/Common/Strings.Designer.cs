@@ -61,6 +61,69 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding project environment {0} to wrong project {1}.
+        /// </summary>
+        public static string AddingProjectEnvironmentToWrongProjectException {
+            get {
+                return ResourceManager.GetString("AddingProjectEnvironmentToWrongProjectException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python environments associated with my project.
+        /// </summary>
+        public static string AddInterpreterWindow_AssociatedEnvironments {
+            get {
+                return ResourceManager.GetString("AddInterpreterWindow_AssociatedEnvironments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the environments to associate with this project. These environments will be shown in Solution Explorer..
+        /// </summary>
+        public static string AddInterpreterWindow_AssociatedEnvironmentsHelp {
+            get {
+                return ResourceManager.GetString("AddInterpreterWindow_AssociatedEnvironmentsHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Cancel.
+        /// </summary>
+        public static string AddInterpreterWindow_Cancel {
+            get {
+                return ResourceManager.GetString("AddInterpreterWindow_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Go online and help me find another one.
+        /// </summary>
+        public static string AddInterpreterWindow_HelpFind {
+            get {
+                return ResourceManager.GetString("AddInterpreterWindow_HelpFind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _OK.
+        /// </summary>
+        public static string AddInterpreterWindow_OK {
+            get {
+                return ResourceManager.GetString("AddInterpreterWindow_OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add/Remove Python Environments.
+        /// </summary>
+        public static string AddInterpreterWindow_Title {
+            get {
+                return ResourceManager.GetString("AddInterpreterWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional information:.
         /// </summary>
         public static string AdditionalInformation {
@@ -75,6 +138,294 @@ namespace Microsoft.PythonTools {
         public static string AddReferenceExtensions {
             get {
                 return ResourceManager.GetString("AddReferenceExtensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actions we will perform:.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_Actions {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_Actions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Add.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_Add {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add the virtual environment.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_AddVirtualEnvironment {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_AddVirtualEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The virtual environment is based on this interpreter..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_BaseInterpreter {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_BaseInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This cannot be changed. To use a different base interpreter, you must create a new virtual environment..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_BaseInterpreterHelp {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_BaseInterpreterHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We could not identify a virtual environment in the selected path..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_BrowsePathError {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_BrowsePathError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We could not find a base interpreter at .
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Cancel.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_Cancel {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No action will be taken..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_CannotCreate {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_CannotCreate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We cannot create a virtual environment at the specified path..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPath {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose a folder that does not exist, is empty, or contains an existing virtual environment..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPathHelp {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_CannotCreateAtSpecifiedPathHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Close.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_Close {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_Close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to C_reate.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_Create {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_Create", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a virtual environment using venv.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_CreateVEnv {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_CreateVEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create a virtual environment.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_CreateVirtualEnv {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_CreateVirtualEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download and _install packages.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_DownloadInstallPackages {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_DownloadInstallPackages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We found a requirements.txt file..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_FoundRequirements {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_FoundRequirements", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file contains external packages that are required by your project. We can use pip to download and install these dependencies automatically..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_FoundRequirementsHelp {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_FoundRequirementsHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install pip.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_InstallPip {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_InstallPip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install pip and virtualenv packages.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install packages from requirements.txt.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_InstallRequirements {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_InstallRequirements", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install the virtualenv package.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_InstallVirtualEnv {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_InstallVirtualEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WARNING - the selected interpreter may not support virtual environments..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_MayNotSupportWarning {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_MayNotSupportWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We cannot create a virtual environment..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_NoInterpreter {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_NoInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Go online and help me find a Python interpreter.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_NoInterpreterGoOnline {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_NoInterpreterGoOnline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You will need to install a Python interpreter before creating a virtual environment..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_NoInterpreterHelp {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_NoInterpreterHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select an interpreter to create the virtual environment from..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_SelectInterpreter {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_SelectInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Packages in your base interpreter will not be available in the virtual environment until you install them..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_SelectInterpreterHelp {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_SelectInterpreterHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add Virtual Environment.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_Title {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Location of the virtual environment.
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_VirtualEnvLocation {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_VirtualEnvLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify the name or location of the virtual environment. If one already exists, we will detect the base interpreter for you..
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_VirtualEnvLocationHelp {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_VirtualEnvLocationHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Working....
+        /// </summary>
+        public static string AddVirtualEnvironmentWindow_Working {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentWindow_Working", resourceCulture);
             }
         }
         
@@ -167,6 +518,15 @@ namespace Microsoft.PythonTools {
         public static string Cancel {
             get {
                 return ResourceManager.GetString("Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find conda.
+        /// </summary>
+        public static string CannotFindConda {
+            get {
+                return ResourceManager.GetString("CannotFindConda", resourceCulture);
             }
         }
         
@@ -411,6 +771,42 @@ namespace Microsoft.PythonTools {
         public static string CurrentInterpreterDescription {
             get {
                 return ResourceManager.GetString("CurrentInterpreterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Working Directory ({0}).
+        /// </summary>
+        public static string CurrentWorkingDirectoryCaption {
+            get {
+                return ResourceManager.GetString("CurrentWorkingDirectoryCaption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Executing -m {0} {1}.
+        /// </summary>
+        public static string CustomCommandExecutingModule {
+            get {
+                return ResourceManager.GetString("CustomCommandExecutingModule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Executing {0} {1}.
+        /// </summary>
+        public static string CustomCommandExecutingOther {
+            get {
+                return ResourceManager.GetString("CustomCommandExecutingOther", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Executing {0} {1}.
+        /// </summary>
+        public static string CustomCommandExecutingScript {
+            get {
+                return ResourceManager.GetString("CustomCommandExecutingScript", resourceCulture);
             }
         }
         
@@ -1369,6 +1765,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to file path.
+        /// </summary>
+        public static string FilePublisherDestinationDescription {
+            get {
+                return ResourceManager.GetString("FilePublisherDestinationDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incorrect user name or password: {0}.
+        /// </summary>
+        public static string FilePublisherIncorrectUsernameOrPassword {
+            get {
+                return ResourceManager.GetString("FilePublisherIncorrectUsernameOrPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fill Comment Paragraph fills the text in a contiguous block of comment lines or multiline strings.
         ///
         ///It must be invoked on a comment line or within a triple quoted line..
@@ -1461,6 +1875,42 @@ namespace Microsoft.PythonTools {
         public static string FormattingOptionsDefaultText {
             get {
                 return ResourceManager.GetString("FormattingOptionsDefaultText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ftp server.
+        /// </summary>
+        public static string FtpPublisherDestinationDescription {
+            get {
+                return ResourceManager.GetString("FtpPublisherDestinationDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to create directory: {0}.
+        /// </summary>
+        public static string FtpPublisherDirCreateException {
+            get {
+                return ResourceManager.GetString("FtpPublisherDirCreateException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to check if directory exists: {0}.
+        /// </summary>
+        public static string FtpPublisherDirExistsCheckException {
+            get {
+                return ResourceManager.GetString("FtpPublisherDirExistsCheckException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to upload file: {0}.
+        /// </summary>
+        public static string FtpPublisherUploadFileException {
+            get {
+                return ResourceManager.GetString("FtpPublisherUploadFileException", resourceCulture);
             }
         }
         
@@ -2037,6 +2487,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing role entry.
+        /// </summary>
+        public static string MissingRoleEntryException {
+            get {
+                return ResourceManager.GetString("MissingRoleEntryException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing Startup entry.
+        /// </summary>
+        public static string MissingStartupEntryException {
+            get {
+                return ResourceManager.GetString("MissingStartupEntryException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  (missing).
         /// </summary>
         public static string MissingSuffix {
@@ -2281,6 +2749,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project does not support MSBuild.
+        /// </summary>
+        public static string ProjectDoesNotSupportedMSBuild {
+            get {
+                return ResourceManager.GetString("ProjectDoesNotSupportedMSBuild", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Publishing folder location ({0}): .
+        /// </summary>
+        public static string PublishPropertyControl_LocationLabel {
+            get {
+                return ResourceManager.GetString("PublishPropertyControl_LocationLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to , .
+        /// </summary>
+        public static string PublishPropertyControl_LocationTypeSeparator {
+            get {
+                return ResourceManager.GetString("PublishPropertyControl_LocationTypeSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  or .
+        /// </summary>
+        public static string PublishPropertyControl_LocationTypeSeparatorLast {
+            get {
+                return ResourceManager.GetString("PublishPropertyControl_LocationTypeSeparatorLast", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Publishing Python projects has recently changed..
         /// </summary>
         public static string PublishToAzure30 {
@@ -2312,11 +2816,56 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debug.
+        /// </summary>
+        public static string PythonDebugPropertyPageLabel {
+            get {
+                return ResourceManager.GetString("PythonDebugPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  -- Other installed interpreters --.
+        /// </summary>
+        public static string PythonGeneralPropertyPageControl_OtherInterpretersSeparator {
+            get {
+                return ResourceManager.GetString("PythonGeneralPropertyPageControl_OtherInterpretersSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Use global default).
+        /// </summary>
+        public static string PythonGeneralPropertyPageControl_UseGlobalDefaultInterpreter {
+            get {
+                return ResourceManager.GetString("PythonGeneralPropertyPageControl_UseGlobalDefaultInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to General.
+        /// </summary>
+        public static string PythonGeneralPropertyPageLabel {
+            get {
+                return ResourceManager.GetString("PythonGeneralPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Python.
         /// </summary>
         public static string PythonMenuLabel {
             get {
                 return ResourceManager.GetString("PythonMenuLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Publish.
+        /// </summary>
+        public static string PythonPublishPropertyPageLabel {
+            get {
+                return ResourceManager.GetString("PythonPublishPropertyPageLabel", resourceCulture);
             }
         }
         
@@ -3447,6 +3996,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown role type: {0}.
+        /// </summary>
+        public static string UnknownRoleTypeException {
+            get {
+                return ResourceManager.GetString("UnknownRoleTypeException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to resolve &quot;{0}&quot;. IntelliSense may be missing for this module..
         /// </summary>
         public static string UnresolvedModuleTooltip {
@@ -3653,6 +4211,15 @@ namespace Microsoft.PythonTools {
         public static string WsgiHandlerHelp {
             get {
                 return ResourceManager.GetString("WsgiHandlerHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Zip Archives (*.zip;*.egg)|*.zip;*.egg|All Files (*.*)|*.*.
+        /// </summary>
+        public static string ZipAndEggArchiveFileFilter {
+            get {
+                return ResourceManager.GetString("ZipAndEggArchiveFileFilter", resourceCulture);
             }
         }
     }
