@@ -111,20 +111,18 @@ namespace Microsoft.PythonTools.Navigation {
                     }
                 }
 
-                if (isAlias) {
-                    res.Append(Name);
-                    res.Append(" (alias of "); // TODO: Localization ?
-                }
-
+                var descriptions = new StringBuilder();
                 foreach (var desc in value.description) {
                     if (desc.kind == "enddecl") {
                         break;
                     }
-                    res.Append(desc.text);
+                    descriptions.Append(desc.text);
                 }
 
                 if (isAlias) {
-                    res.Append(")");
+                    res.Append(Strings.LibraryNodeAliasOf.FormatUI(Name, descriptions));
+                } else {
+                    res.Append(descriptions);
                 }
             }
 

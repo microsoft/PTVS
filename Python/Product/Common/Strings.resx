@@ -534,6 +534,10 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="SymbolListReferences" xml:space="preserve">
     <value>References</value>
   </data>
+  <data name="LibraryNodeAliasOf" xml:space="preserve">
+    <value>{0} (alias of {1})</value>
+    <comment>{0} and {1} or python data types</comment>
+  </data>
   <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
     <value>An error occurred opening this interactive window.</value>
   </data>

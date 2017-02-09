@@ -1731,6 +1731,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} (alias of {1}).
+        /// </summary>
+        public static string LibraryNodeAliasOf {
+            get {
+                return ResourceManager.GetString("LibraryNodeAliasOf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
         /// </summary>
         public static string MisconfiguredEnvironment {
