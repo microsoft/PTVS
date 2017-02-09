@@ -35,6 +35,7 @@
                     <StackPanel Orientation="Vertical">
                         <TextBlock Text="{x:Static common:Strings.CompletionControl_NeedsRefresh}"/>
                         <StackPanel Orientation="Horizontal" Margin="0 3 0 0">
+                            <!-- TODO: Localization - restore the clickable part to be just Python Environments -->
                             <Button Margin="0 3 0 0"
                                     Style="{StaticResource NavigationButton}"
                                     GotFocus="Button_GotFocus"
