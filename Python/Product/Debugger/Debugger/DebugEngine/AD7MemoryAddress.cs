@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION) != 0) {
-                pinfo[0].bstrFunction = _frame != null ? _frame.FunctionName : "<unknown>";
+                pinfo[0].bstrFunction = _frame != null ? _frame.FunctionName : Strings.DebugUnknownFunctionName;
                 pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION;
             }
 

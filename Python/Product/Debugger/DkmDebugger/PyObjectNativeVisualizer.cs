@@ -73,6 +73,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return null;
             }
 
+            // TODO: Localization ?
             var pyEvalResult = new PythonEvaluationResult(objRef, "[Python view]")
             {
                 Category = DkmEvaluationResultCategory.Property,
@@ -104,8 +105,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
             resultObject = GetPythonView(visualizedExpression);
             if (resultObject == null) {
                 resultObject = DkmFailedEvaluationResult.Create(
+                    // TODO: Localization ?
                     visualizedExpression.InspectionContext, visualizedExpression.StackFrame, "[Python view]",
-                    null, "Python view is unavailable for this object", DkmEvaluationResultFlags.Invalid, null);
+                    null, Strings.DebugPythonViewNotAvailableForObject, DkmEvaluationResultFlags.Invalid, null);
             }
         }
 

@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -93,7 +92,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-        // 
         int IDebugBoundBreakpoint2.GetState(enum_BP_STATE[] pState) {
             pState[0] = 0;
 

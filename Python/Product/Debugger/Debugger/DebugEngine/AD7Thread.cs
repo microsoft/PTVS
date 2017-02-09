@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -42,7 +41,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (_debuggedThread.Frames != null && _debuggedThread.Frames.Count > 0) {
                 return _debuggedThread.Frames[0].FunctionName;
             }
-            return "<unknown location, not in Python code>";
+            return Strings.DebugThreadUnknownLocation;
         }
 
         internal PythonThread GetDebuggedThread() {
@@ -78,9 +77,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             int numStackFrames = stackFrames.Count;
-            FRAMEINFO[] frameInfoArray;
 
-            frameInfoArray = new FRAMEINFO[numStackFrames];
+            var frameInfoArray = new FRAMEINFO[numStackFrames];
 
             for (int i = 0; i < numStackFrames; i++) {
                 AD7StackFrame frame = new AD7StackFrame(_engine, this, stackFrames[i]);
@@ -126,6 +124,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_STATE;
             }
             if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_PRIORITY) != 0) {
+                // TODO: Localization
                 props.bstrPriority = "Normal";
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_PRIORITY;
             }

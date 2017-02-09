@@ -28,11 +28,11 @@ namespace Microsoft.PythonTools.Debugger {
         internal static void GetLanguageInfo(this FrameKind self, ref string pbstrLanguage, ref Guid pguidLanguage) {
             switch (self) {
                 case FrameKind.Django:
-                    pbstrLanguage = "Django Templates";
+                    pbstrLanguage = DebuggerLanguageNames.DjangoTemplates;
                     pguidLanguage = Guid.Empty;
                     break;
                 case FrameKind.Python:
-                    pbstrLanguage = "Python";
+                    pbstrLanguage = DebuggerLanguageNames.Python;
                     pguidLanguage = DebuggerConstants.guidLanguagePython;
                     break;
                 default:

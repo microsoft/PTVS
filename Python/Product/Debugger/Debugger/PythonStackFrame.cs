@@ -232,9 +232,9 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private class QualifiedFunctionNameWalker : PythonWalker {
-            private PythonAst _ast;
-            private int _lineNumber;
-            private StringBuilder _name = new StringBuilder();
+            private readonly PythonAst _ast;
+            private readonly int _lineNumber;
+            private readonly StringBuilder _name = new StringBuilder();
             private readonly string _expectedFuncName;
 
             public QualifiedFunctionNameWalker(PythonAst ast, int lineNumber, string expectedFuncName) {

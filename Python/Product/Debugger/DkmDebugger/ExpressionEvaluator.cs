@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
@@ -434,6 +435,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             var globals = pythonFrame.f_globals.TryRead();
             if (globals != null) {
                 var globalsEvalResult = new GlobalsEvaluationResult { Globals = globals };
+                // TODO: Localization
                 DkmEvaluationResult evalResult = DkmSuccessEvaluationResult.Create(
                     inspectionContext, stackFrame, "[Globals]", null,
                     DkmEvaluationResultFlags.ReadOnly | DkmEvaluationResultFlags.Expandable,
@@ -656,9 +658,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             if (_evalLoopThreadId.Read() != (ulong)thread.SystemPart.Id) {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
                     inspectionContext, stackFrame, expression.Text, expression.Text,
-                    "Arbitrary Python expressions can only be evaluated on a thread which is stopped in Python code at a breakpoint or " +
-                    "after a step-in or a step-over operation. Only expressions involving global and local variables, object field access, " +
-                    "and indexing of built-in collection types with literals can be evaluated in the current context.",
+                    Strings.DebugArbitraryExpressionOnStoppedThreadOnly,
                     DkmEvaluationResultFlags.Invalid, null)));
                 return;
             }
@@ -666,7 +666,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
             var pythonFrame = PyFrameObject.TryCreate(stackFrame);
             if (pythonFrame == null) {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
-                    inspectionContext, stackFrame, expression.Text, expression.Text, "Could not obtain a Python frame object for the current frame.",
+                    inspectionContext, stackFrame, expression.Text, expression.Text,
+                    Strings.DebugNoPythonFrameForCurrentFrame,
                     DkmEvaluationResultFlags.Invalid, null)));
                 return;
             }
@@ -674,7 +675,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
             byte[] input = Encoding.UTF8.GetBytes(expression.Text + "\0");
             if (input.Length > ExpressionEvaluationBufferSize) {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
-                    inspectionContext, stackFrame, expression.Text, expression.Text, "Expression is too long.",
+                    inspectionContext, stackFrame, expression.Text, expression.Text,
+                    Strings.DebugTooLongExpression,
                     DkmEvaluationResultFlags.Invalid, null)));
                 return;
             }
@@ -703,7 +705,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         _evalAbortedEvent = null;
                         process.Terminate(1);
 
-                        completionRoutine(DkmEvaluateExpressionAsyncResult.CreateErrorResult(new Exception("Couldn't abort a failed expression evaluation.")));
+                        completionRoutine(DkmEvaluateExpressionAsyncResult.CreateErrorResult(
+                            new Exception(Strings.DebugCouldNotAbortFailedExpressionEvaluation)));
                         return;
                     }
 
@@ -711,7 +714,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 }
 
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
-                    inspectionContext, stackFrame, expression.Text, expression.Text, "Evaluation timed out.",
+                    inspectionContext, stackFrame, expression.Text, expression.Text, Strings.DebugEvaluationTimedOut,
                     DkmEvaluationResultFlags.Invalid, null)));
                 return;
             }
@@ -730,13 +733,11 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 _evalLoopResult.Write(0); // don't let the eval loop decref the object - we will do it ourselves later, when eval result is closed
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(evalResult));
             } else if (sehCode != 0) {
-                string errorText = string.Format("Structured exception {0:x08} ", sehCode);
-                if (Enum.IsDefined(typeof(EXCEPTION_CODE), sehCode)) {
-                    errorText += "(" + (EXCEPTION_CODE)sehCode + ") ";
-                }
-                errorText += "raised while evaluating expression";
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
-                    inspectionContext, stackFrame, expression.Text, expression.Text, errorText,
+                    inspectionContext, stackFrame, expression.Text, expression.Text,
+                    Enum.IsDefined(typeof(EXCEPTION_CODE), sehCode)
+                        ? Strings.DebugStructuredExceptionWhileEvaluatingExpression.FormatUI(sehCode, (EXCEPTION_CODE)sehCode)
+                        : Strings.DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue.FormatUI(sehCode),
                     DkmEvaluationResultFlags.Invalid, null)));
             } else if (exc_type != null) {
                 string typeName;
@@ -744,15 +745,17 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 if (typeObject != null) {
                     typeName = typeObject.tp_name.Read().ReadUnicode();
                 } else {
-                    typeName = "<unknown exception type>";
+                    typeName = Strings.DebugUnknownExceptionType;
                 }
 
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
-                    inspectionContext, stackFrame, expression.Text, expression.Text, typeName + " raised while evaluating expression: " + exc_str,
+                    inspectionContext, stackFrame, expression.Text, expression.Text,
+                    Strings.DebugErrorWhileEvaluatingExpression.FormatUI(typeName, exc_str),
                     DkmEvaluationResultFlags.Invalid, null)));
             } else {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
-                    inspectionContext, stackFrame, expression.Text, expression.Text, "Unknown error occurred while evaluating expression.",
+                    inspectionContext, stackFrame, expression.Text, expression.Text,
+                    Strings.DebugUnknownErrorWhileEvaluatingExpression,
                     DkmEvaluationResultFlags.Invalid, null)));
             }
         }
@@ -922,7 +925,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 newObj.ob_refcnt.Increment();
                 proxy.Write(newObj);
             } else {
-                errorText = "Only boolean, numeric or string literals and None are supported.";
+                errorText = Strings.DebugOnlyBoolNumericStringAndNoneSupported;
             }
         }
 

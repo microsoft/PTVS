@@ -17,8 +17,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Sockets;
 using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
     static class Extensions {
@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Debugger {
         private static int HexValue(char ch) {
             int value;
             if (!HexValue(ch, out value)) {
-                throw new ArgumentException("bad char for integer value: " + ch);
+                throw new ArgumentException(Strings.InvalidHexValue.FormatUI(ch), nameof(ch));
             }
             return value;
         }

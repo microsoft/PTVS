@@ -19,9 +19,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -150,13 +149,13 @@ namespace Microsoft.PythonTools.Debugger {
                 }
 
                 if (moduleName != null) {
-                    pane.OutputString(String.Format("Failed to connect to process {0} ({1}): {2}",
+                    pane.OutputString(Strings.DebugConnectionFailedToConnectToProcessWithModule.FormatUI(
                         targetProcess.Id,
                         moduleName,
                         result.GetErrorMessage())
                     );
                 } else {
-                    pane.OutputString(String.Format("Failed to connect to process {0}: {1}",
+                    pane.OutputString(Strings.DebugConnectionFailedToConnectToProcessWithoutModule.FormatUI(
                         targetProcess.Id,
                         result.GetErrorMessage())
                     );

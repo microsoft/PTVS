@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             get { return _maxLength;  }
             set {
                 if (value < 3) {
-                    throw new ArgumentException("MaxLength must be at least 3 (to accomodate '...')");
+                    throw new ArgumentException(Strings.DebugReprMaxLengthAtLeast3);
                 }
                 _maxLength = value;
             }

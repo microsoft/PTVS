@@ -1162,6 +1162,127 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
   <data name="ConnErrorMessages_UnknownVersion" xml:space="preserve">
     <value>Unknown Python version loaded in process</value>
   </data>
+  <data name="RemoteUnrecognizedDebuggingTransport" xml:space="preserve">
+    <value>Unrecognized remote debugging transport '{0}'.</value>
+    <comment>{0} is the uri scheme</comment>
+  </data>
+  <data name="RemoteDebugPortSupplierDescription" xml:space="preserve">
+    <value>Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. </value>
+  </data>
+  <data name="RemoteProcessAuthenticationErrorWarning" xml:space="preserve">
+    <value>{0}
+Connect anyway?</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="FailedToAttachDebugger" xml:space="preserve">
+    <value>Failed to attach debugger:
+{0}</value>
+    <comment>{0} is error details</comment>
+  </data>
+  <data name="DebugStackFrameParseTextError" xml:space="preserve">
+    <value>Error: {0}</value>
+    <comment>{0} is error message</comment>
+  </data>
+  <data name="DebugThreadUnknownLocation" xml:space="preserve">
+    <value>&lt;unknown location, not in Python code&gt;</value>
+  </data>
+  <data name="DebugTcpsTransportConnectionError" xml:space="preserve">
+    <value>Could not establish secure connection to {0} because of the following SSL issues:
+
+</value>
+    <comment>{0} is a URI
+A list of issues is concatenated to the message (one per line)</comment>
+  </data>
+  <data name="DebugTcpsTransportConnectionErrorRemoteCertificateNotAvailable" xml:space="preserve">
+    <value>- no remote certificate provided
+</value>
+  </data>
+  <data name="DebugTcpsTransportConnectionErrorRemoteCertificateNameMismatch" xml:space="preserve">
+    <value>- remote certificate name does not match hostname
+</value>
+  </data>
+  <data name="DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors" xml:space="preserve">
+    <value>- remote certificate is not trusted
+</value>
+  </data>
+  <data name="DebugTcpTransportUriCannotContainPath" xml:space="preserve">
+    <value>tcp:// URI cannot contain a path</value>
+  </data>
+  <data name="DebugConnectionFailedToConnectToProcessWithModule" xml:space="preserve">
+    <value>Failed to connect to process {0} ({1}): {2}</value>
+    <comment>{0} is process id
+{1} is module name
+{2} is error details</comment>
+  </data>
+  <data name="DebugConnectionFailedToConnectToProcessWithoutModule" xml:space="preserve">
+    <value>Failed to connect to process {0}: {1}</value>
+    <comment>{0} is process id
+{1} is error details</comment>
+  </data>
+  <data name="InvalidHexValue" xml:space="preserve">
+    <value>bad char for integer value: {0}</value>
+    <comment>{0} is a character</comment>
+  </data>
+  <data name="DebugUnknownFunctionName" xml:space="preserve">
+    <value>&lt;unknown&gt;</value>
+  </data>
+  <data name="UnrecognizedEnumValue" xml:space="preserve">
+    <value>Unrecognized value for enum type '{0}'.</value>
+    <comment>{0} is the enum type</comment>
+  </data>
+  <data name="DebugCallStackNativeToPythonTransition" xml:space="preserve">
+    <value>[Native to Python Transition]</value>
+  </data>
+  <data name="DebugCallStackPythonToNativeTransition" xml:space="preserve">
+    <value>[Python to Native Transition]</value>
+  </data>
+  <data name="DebugArbitraryExpressionOnStoppedThreadOnly" xml:space="preserve">
+    <value>Arbitrary Python expressions can only be evaluated on a thread which is stopped in Python code at a breakpoint or after a step-in or a step-over operation. Only expressions involving global and local variables, object field access, and indexing of built-in collection types with literals can be evaluated in the current context.</value>
+  </data>
+  <data name="DebugNoPythonFrameForCurrentFrame" xml:space="preserve">
+    <value>Could not obtain a Python frame object for the current frame.</value>
+  </data>
+  <data name="DebugTooLongExpression" xml:space="preserve">
+    <value>Expression is too long.</value>
+  </data>
+  <data name="DebugCouldNotAbortFailedExpressionEvaluation" xml:space="preserve">
+    <value>Couldn't abort a failed expression evaluation.</value>
+  </data>
+  <data name="DebugEvaluationTimedOut" xml:space="preserve">
+    <value>Evaluation timed out.</value>
+  </data>
+  <data name="DebugOnlyBoolNumericStringAndNoneSupported" xml:space="preserve">
+    <value>Only boolean, numeric or string literals and None are supported.</value>
+  </data>
+  <data name="DebugUnknownErrorWhileEvaluatingExpression" xml:space="preserve">
+    <value>Unknown error occurred while evaluating expression.</value>
+  </data>
+  <data name="DebugErrorWhileEvaluatingExpression" xml:space="preserve">
+    <value>{0} raised while evaluating expression: {1}</value>
+    <comment>{0} is a type name
+{1} is the error details</comment>
+  </data>
+  <data name="DebugUnknownExceptionType" xml:space="preserve">
+    <value>&lt;unknown exception type&gt;</value>
+  </data>
+  <data name="DebugStructuredExceptionWhileEvaluatingExpression" xml:space="preserve">
+    <value>Structured exception {0:x08} ({1}) raised while evaluating expression</value>
+    <comment>{0} is the error integer value
+{1} is the error integer value cast as a enum value</comment>
+  </data>
+  <data name="DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue" xml:space="preserve">
+    <value>Structured exception {0:x08} raised while evaluating expression</value>
+    <comment>{0} is the error integer value</comment>
+  </data>
+  <data name="DebugPythonView" xml:space="preserve">
+    <value>[Python view]</value>
+  </data>
+  <data name="DebugPythonViewNotAvailableForObject" xml:space="preserve">
+    <value>Python view is unavailable for this object</value>
+  </data>
+  <data name="DebugReprMaxLengthAtLeast3" xml:space="preserve">
+    <value>MaxLength must be at least 3 (to accomodate '...')</value>
+  </data>
   <data name="RemoteAzureServiceUnavailable_Host" xml:space="preserve">
     <value>Could not connect to remote Python process at {0}. Make sure that web sockets are enabled for the corresponding web site in Azure portal.</value>
   </data>

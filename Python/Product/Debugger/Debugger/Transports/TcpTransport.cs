@@ -16,8 +16,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 
 namespace Microsoft.PythonTools.Debugger.Transports {
@@ -26,7 +24,7 @@ namespace Microsoft.PythonTools.Debugger.Transports {
 
         public Exception Validate(Uri uri) {
             if (uri.AbsolutePath != "/") {
-                return new FormatException("tcp:// URI cannot contain a path");
+                return new FormatException(Strings.DebugTcpTransportUriCannotContainPath);
             }
             return null;
         }

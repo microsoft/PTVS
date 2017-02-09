@@ -30,10 +30,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private readonly PythonStackFrame _stackFrame;
 
         // An array of this frame's parameters
-        private PythonEvaluationResult[] _parameters;
+        private readonly  PythonEvaluationResult[] _parameters;
 
         // An array of this frame's locals
-        private PythonEvaluationResult[] _locals;
+        private readonly PythonEvaluationResult[] _locals;
 
         public AD7StackFrame(AD7Engine engine, AD7Thread thread, PythonStackFrame threadContext) {
             _engine = engine;
@@ -66,6 +66,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Construct a FRAMEINFO for this stack frame with the requested information.
         public void SetFrameInfo(enum_FRAMEINFO_FLAGS dwFieldSpec, out FRAMEINFO frameInfo) {
+            // TODO: Localization: several strings in this method
             frameInfo = new FRAMEINFO();
 
             // The debugger is asking for the formatted name of the function which is displayed in the callstack window.
@@ -369,11 +370,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             string errorMsg;
             if (!_stackFrame.TryParseText(pszCode, out errorMsg)) {
-                pbstrError = "Error: " + errorMsg;
+                pbstrError = Strings.DebugStackFrameParseTextError.FormatUI(errorMsg);
                 pichError = (uint)pbstrError.Length;
             }
 
-            ppExpr = new UncalculatedAD7Expression(this, pszCode);                                    
+            ppExpr = new UncalculatedAD7Expression(this, pszCode);
             return VSConstants.S_OK;
         }
 

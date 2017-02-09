@@ -137,6 +137,7 @@ namespace Microsoft.PythonTools.Debugger {
                     functionName = PythonStackFrame.GetQualifiedFunctionName(process, filename, lineNo, functionName);
                 }
 
+                // TODO: Localization (I verified this is translated in C#)
                 if (!string.IsNullOrEmpty(filename)) {
                     sb.Append(filename);
                     if (!string.IsNullOrEmpty(lineNumber)) {

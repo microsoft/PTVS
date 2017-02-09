@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -25,7 +24,7 @@ namespace Microsoft.PythonTools.Debugger {
     /// handlers.
     /// </summary>
     class TryHandlerWalker : PythonWalker {
-        private List<TryStatement> _statements;
+        private readonly List<TryStatement> _statements;
 
         public TryHandlerWalker() {
             _statements = new List<TryStatement>();

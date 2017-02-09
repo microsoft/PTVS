@@ -91,6 +91,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             pinfo[0] = new MODULE_SYMBOL_SEARCH_INFO();
             pinfo[0].dwValidFields = 1; // SSIF_VERBOSE_SEARCH_INFO;
 
+            // TODO: Localization - check this
             pinfo[0].bstrVerboseSearchInfo = "No symbols required";
             /*
             if (this.DebuggedModule.SymbolsLoaded)

@@ -222,7 +222,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                                 }
                         }
 
-                        DialogResult dlgRes = MessageBox.Show(errText, null, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+                        DialogResult dlgRes = MessageBox.Show(errText, Strings.ProductTitle, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
                         if (dlgRes != DialogResult.Retry) {
                             break;
                         }

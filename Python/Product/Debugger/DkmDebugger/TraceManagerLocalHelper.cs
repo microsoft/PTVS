@@ -17,10 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
