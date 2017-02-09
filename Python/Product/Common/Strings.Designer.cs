@@ -196,7 +196,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to We could not find a base interpreter at .
+        ///   Looks up a localized string similar to We could not find a base interpreter at {0}.
         /// </summary>
         public static string AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError {
             get {

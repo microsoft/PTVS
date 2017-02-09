@@ -517,20 +517,22 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>We could not identify a virtual environment in the selected path.</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError" xml:space="preserve">
-    <value>We could not find a base interpreter at </value>
-    <comment>A folder path is concatenated to the end of this string</comment>
+    <value>We could not find a base interpreter at {0}</value>
+    <comment>{0} is a folder path</comment>
   </data>
   <data name="AddVirtualEnvironmentWindow_Actions" xml:space="preserve">
     <value>Actions we will perform:</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv" xml:space="preserve">
     <value>Install pip and virtualenv packages</value>
+    <comment>'pip' and 'virtualenv' are package names and must not be translated</comment>
   </data>
   <data name="AddVirtualEnvironmentWindow_InstallPip" xml:space="preserve">
     <value>Install pip</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_InstallVirtualEnv" xml:space="preserve">
     <value>Install the virtualenv package</value>
+    <comment>'virtualenv' is a package name and must not be translated</comment>
   </data>
   <data name="AddVirtualEnvironmentWindow_AddVirtualEnvironment" xml:space="preserve">
     <value>Add the virtual environment</value>
@@ -543,6 +545,7 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   </data>
   <data name="AddVirtualEnvironmentWindow_InstallRequirements" xml:space="preserve">
     <value>Install packages from requirements.txt</value>
+    <comment>Do not translate 'requirements.txt'</comment>
   </data>
   <data name="AddVirtualEnvironmentWindow_CannotCreate" xml:space="preserve">
     <value>No action will be taken.</value>

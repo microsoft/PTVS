@@ -57,9 +57,7 @@
 
                             <Label Name="BrowsePathOrigPrefixError">
                                 <TextBlock TextWrapping="Wrap">
-                                    <!-- TODO: Localization make this a single string -->
-                                    <Run Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError}"/>
-                                    <Run Text="{Binding BrowseOrigPrefix}" />
+                                    <Run Text="{Binding BrowseOrigPrefix, StringFormat={x:Static common:Strings.AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError}}" />
                                 </TextBlock>
                             </Label>
                         </Grid>
