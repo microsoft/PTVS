@@ -1314,6 +1314,30 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
   <data name="CannotGoToDefn_Name" xml:space="preserve">
     <value>Cannot go to definition of "{0}".</value>
   </data>
+  <data name="FromImportCompletionImportAllMembersFromModuleTooltip" xml:space="preserve">
+    <value>Import all members from the module</value>
+  </data>
+  <data name="IntellisenseControllerAlreadyDetachedException" xml:space="preserve">
+    <value>Already detached from text view</value>
+  </data>
+  <data name="IntellisenseControllerNotAttachedToSpecifiedTextViewException" xml:space="preserve">
+    <value>Not attached to specified text view</value>
+  </data>
+  <data name="ReverseExpressionParserFailedToGetClassifierFromBufferException" xml:space="preserve">
+    <value>Failed to get classifier from buffer</value>
+  </data>
+  <data name="ErrorTaskItemZipArchiveNotSupportedMessage" xml:space="preserve">
+    <value>Opening source files contained in .zip archives is not supported</value>
+  </data>
+  <data name="ErrorTaskItemZipArchiveNotSupportedCaption" xml:space="preserve">
+    <value>Cannot open file</value>
+  </data>
+  <data name="CompletionControl_NeedsRefresh" xml:space="preserve">
+    <value>The completion DB needs to be refreshed.</value>
+  </data>
+  <data name="CompletionControl_OpenEnvironmentsWindowForDetails" xml:space="preserve">
+    <value>Open Python Environments for more details.</value>
+  </data>
   <data name="ConnErrorMessages_CannotInjectThread" xml:space="preserve">
     <value>Cannot create thread in debuggee process</value>
   </data>

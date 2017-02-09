@@ -18,9 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Intellisense {
     public class FileCookie : IIntellisenseCookie {

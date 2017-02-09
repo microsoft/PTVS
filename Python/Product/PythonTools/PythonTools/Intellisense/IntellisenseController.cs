@@ -198,10 +198,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="textView"></param>
         public void Detach(ITextView textView) {
             if (_textView == null) {
-                throw new InvalidOperationException("Already detached from text view");
+                throw new InvalidOperationException(Strings.IntellisenseControllerAlreadyDetachedException);
             }
             if (textView != _textView) {
-                throw new ArgumentException("Not attached to specified text view", "textView");
+                throw new ArgumentException(Strings.IntellisenseControllerNotAttachedToSpecifiedTextViewException, nameof(textView));
             }
 
             _textView.MouseHover -= TextViewMouseHover;
