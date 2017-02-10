@@ -41,8 +41,6 @@ namespace Microsoft.PythonTools.Commands {
     internal sealed class DiagnosticsCommand : Command {
         private readonly IServiceProvider _serviceProvider;
 
-        private const string PythonProjectKind = "Python";
-
         private static readonly IEnumerable<string> InterestingDteProperties = new[] {
             "InterpreterId",
             "InterpreterVersion",
@@ -104,7 +102,7 @@ namespace Microsoft.PythonTools.Commands {
             InMemoryLogger inMemLogger = null;
             ui.Invoke((Action)(() => {
                 pythonPathIsMasked = _serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath
-                    ? Strings.DiagnosticsWindow_MaskedValue
+                    ? " (masked)"
                     : "";
                 dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                 var model = _serviceProvider.GetComponentModel();
@@ -113,7 +111,7 @@ namespace Microsoft.PythonTools.Commands {
                 inMemLogger = model.GetService<InMemoryLogger>();
             }));
 
-            res.AppendLine(Strings.DiagnosticsWindow_ProjectsHeader);
+            res.AppendLine("Projects: ");
 
             var projects = dte.Solution.Projects;
 
@@ -136,18 +134,18 @@ namespace Microsoft.PythonTools.Commands {
                         // Actually, it was one of our projects, so we do care
                         // about the exception. We'll add it to the output,
                         // rather than crashing.
-                        res.AppendLine(Strings.DiagnosticsWindow_ProjectName.FormatUI(ex.Message));
-                        res.AppendLine(Strings.DiagnosticsWindow_ProjectKind.FormatUI(PythonProjectKind));
+                        res.AppendLine("    Project: " + ex.Message);
+                        res.AppendLine("        Kind: Python");
                     }
                     continue;
                 }
-                res.AppendLine(Strings.DiagnosticsWindow_ProjectName.FormatUI(name));
+                res.AppendLine("    Project: " + name);
 
                 if (Utilities.GuidEquals(PythonConstants.ProjectFactoryGuid, project.Kind)) {
-                    res.AppendLine(Strings.DiagnosticsWindow_ProjectKind.FormatUI(PythonProjectKind));
+                    res.AppendLine("        Kind: Python");
 
                     foreach (var prop in InterestingDteProperties) {
-                        res.AppendLine(Strings.DiagnosticsWindow_PropertyNameAndValueEntry.FormatUI(prop, GetProjectProperty(project, prop)));
+                        res.AppendLine("        " + prop + ": " + GetProjectProperty(project, prop));
                     }
 
                     var pyProj = project.GetPythonProject();
@@ -156,79 +154,75 @@ namespace Microsoft.PythonTools.Commands {
                             foreach (var prop in InterestingProjectProperties) {
                                 var propValue = pyProj.GetProjectProperty(prop);
                                 if (propValue != null) {
-                                    res.AppendLine(Strings.DiagnosticsWindow_PropertyNameAndValueEntry.FormatUI(prop, propValue));
+                                    res.AppendLine("        " + prop + ": " + propValue);
                                 }
                             }
                         }));
 
                         foreach (var factory in pyProj.InterpreterFactories) {
                             res.AppendLine();
-                            res.AppendLine(Strings.DiagnosticsWindow_InterpreterFactoryDetails.FormatUI(
-                                factory.Configuration.Description,
-                                factory.Configuration.Id,
-                                factory.Configuration.Version,
-                                factory.Configuration.Architecture,
-                                factory.Configuration.PrefixPath ?? Strings.DiagnosticsWindow_NullValue,
-                                factory.Configuration.InterpreterPath ?? Strings.DiagnosticsWindow_NullValue,
-                                factory.Configuration.WindowsInterpreterPath ?? Strings.DiagnosticsWindow_NullValue,
-                                factory.Configuration.PathEnvironmentVariable ?? Strings.DiagnosticsWindow_NullValue,
+                            res.AppendLine("        Interpreter: " + factory.Configuration.Description);
+                            res.AppendLine("            Id: " + factory.Configuration.Id);
+                            res.AppendLine("            Version: " + factory.Configuration.Version);
+                            res.AppendLine("            Arch: " + factory.Configuration.Architecture);
+                            res.AppendLine("            Prefix Path: " + factory.Configuration.PrefixPath ?? "(null)");
+                            res.AppendLine("            Path: " + factory.Configuration.InterpreterPath ?? "(null)");
+                            res.AppendLine("            Windows Path: " + factory.Configuration.WindowsInterpreterPath ?? "(null)");
+                            res.AppendLine(string.Format("            Path Env: {0}={1}{2}",
+                                factory.Configuration.PathEnvironmentVariable ?? "(null)",
                                 Environment.GetEnvironmentVariable(factory.Configuration.PathEnvironmentVariable ?? ""),
                                 pythonPathIsMasked
                             ));
                         }
                     }
                 } else {
-                    res.AppendLine(Strings.DiagnosticsWindow_ProjectKind.FormatUI(project.Kind));
+                    res.AppendLine("        Kind: " + project.Kind);
                 }
 
                 res.AppendLine();
             }
 
-            res.AppendLine(Strings.DiagnosticsWindow_EnvironmentsHeader);
+            res.AppendLine("Environments: ");
             foreach (var provider in knownProviders.MaybeEnumerate()) {
                 cancel.ThrowIfCancellationRequested();
 
-                res.AppendLine(Strings.DiagnosticsWindow_InterpreterProviderHeader.FormatUI(provider.GetType().FullName));
+                res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var config in provider.GetInterpreterConfigurations()) {
-                    res.AppendLine(Strings.DiagnosticsWindow_InterpreterConfigurationDetails.FormatUI(
-                        config.Id,
-                        config.Description,
-                        config.Version,
-                        config.Architecture,
-                        config.PrefixPath ?? Strings.DiagnosticsWindow_NullValue,
-                        config.InterpreterPath ?? Strings.DiagnosticsWindow_NullValue,
-                        config.WindowsInterpreterPath ?? Strings.DiagnosticsWindow_NullValue,
-                        config.PathEnvironmentVariable ?? Strings.DiagnosticsWindow_NullValue
-                    ));
+                    res.AppendLine("        Id: " + config.Id);
+                    res.AppendLine("        Factory: " + config.Description);
+                    res.AppendLine("        Version: " + config.Version);
+                    res.AppendLine("        Arch: " + config.Architecture);
+                    res.AppendLine("        Prefix Path: " + config.PrefixPath ?? "(null)");
+                    res.AppendLine("        Path: " + config.InterpreterPath ?? "(null)");
+                    res.AppendLine("        Windows Path: " + config.WindowsInterpreterPath ?? "(null)");
+                    res.AppendLine("        Path Env: " + config.PathEnvironmentVariable ?? "(null)");
                     res.AppendLine();
                 }
             }
 
-            res.AppendLine(Strings.DiagnosticsWindow_LaunchersHeader);
+            res.AppendLine("Launchers:");
             foreach (var launcher in launchProviders.MaybeEnumerate()) {
                 cancel.ThrowIfCancellationRequested();
 
-                res.AppendLine(Strings.DiagnosticsWindow_LauncherDetails.FormatUI(
-                    launcher.GetType().FullName,
-                    launcher.Description,
-                    launcher.Name
-                ));
+                res.AppendLine("    Launcher: " + launcher.GetType().FullName);
+                res.AppendLine("        " + launcher.Description);
+                res.AppendLine("        " + launcher.Name);
                 res.AppendLine();
             }
 
             try {
-                res.AppendLine(Strings.DiagnosticsWindow_LoggedEventsStatsHeader);
+                res.AppendLine("Logged events/stats:");
                 res.AppendLine(inMemLogger.ToString());
                 res.AppendLine();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                res.AppendLine(Strings.DiagnosticsWindow_FailedToAccessEventLog);
+                res.AppendLine("  Failed to access event log.");
                 res.AppendLine(ex.ToString());
                 res.AppendLine();
             }
 
             if (!skipAnalysisLog) {
                 try {
-                    res.AppendLine(Strings.DiagnosticsWindow_SystemEventsHeader);
+                    res.AppendLine("System events:");
 
                     var application = new EventLog("Application");
                     var lastWeek = DateTime.Now.Subtract(TimeSpan.FromDays(7));
@@ -238,7 +232,7 @@ namespace Microsoft.PythonTools.Commands {
                         .Where(e => InterestingApplicationLogEntries.IsMatch(e.Message))
                         .OrderByDescending(e => e.TimeGenerated)
                     ) {
-                        res.AppendLine(Strings.DiagnosticsWindow_TimeEntry.FormatUI(entry.TimeGenerated));
+                        res.AppendLine(string.Format("Time: {0:s}", entry.TimeGenerated));
                         using (var reader = new StringReader(entry.Message.TrimEnd())) {
                             for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
                                 res.AppendLine(line);
@@ -248,31 +242,28 @@ namespace Microsoft.PythonTools.Commands {
                     }
 
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    res.AppendLine(Strings.DiagnosticsWindow_FailedToAccessEventLog);
+                    res.AppendLine("  Failed to access event log.");
                     res.AppendLine(ex.ToString());
                     res.AppendLine();
                 }
             }
 
-            res.AppendLine(Strings.DiagnosticsWindow_LoadedAssembliesHeader);
+            res.AppendLine("Loaded assemblies:");
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {
                 cancel.ThrowIfCancellationRequested();
 
                 AssemblyFileVersionAttribute assemFileVersion;
-                var error = Strings.DiagnosticsWindow_NullValue;
+                var error = "(null)";
                 try {
                     assemFileVersion = assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false)
                         .OfType<AssemblyFileVersionAttribute>()
                         .FirstOrDefault();
                 } catch (Exception e) when (!e.IsCriticalException()) {
                     assemFileVersion = null;
-                    error = Strings.DiagnosticsWindow_AssemblyDetailsException.FormatUI(
-                        e.GetType().Name,
-                        e.Message
-                    );
+                    error = string.Format("{0}: {1}", e.GetType().Name, e.Message);
                 }
 
-                res.AppendLine(Strings.DiagnosticsWindow_AssemblyDetails.FormatUI(
+                res.AppendLine(string.Format("  {0}, FileVersion={1}",
                     assembly.FullName,
                     assemFileVersion?.Version ?? error
                 ));
@@ -281,17 +272,19 @@ namespace Microsoft.PythonTools.Commands {
 
             string globalAnalysisLog = PythonTypeDatabase.GlobalLogFilename;
             if (File.Exists(globalAnalysisLog)) {
-                res.AppendLine(Strings.DiagnosticsWindow_GlobalAnalysisHeader);
+                res.AppendLine("Global Analysis:");
                 try {
                     res.AppendLine(File.ReadAllText(globalAnalysisLog));
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    res.AppendLine(Strings.DiagnosticsWindow_ErrorReadingGlobalAnalysisLog.FormatUI(ex.ToString()));
+                    res.AppendLine("Error reading the global analysis log.");
+                    res.AppendLine("Please wait for analysis to complete and try again.");
+                    res.AppendLine(ex.ToString());
                 }
             }
             res.AppendLine();
 
             if (!skipAnalysisLog) {
-                res.AppendLine(Strings.DiagnosticsWindow_EnvironmentAnalysisLogsHeader);
+                res.AppendLine("Environment Analysis Logs: ");
                 foreach (var provider in knownProviders) {
                     foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
                         cancel.ThrowIfCancellationRequested();
@@ -313,7 +306,7 @@ namespace Microsoft.PythonTools.Commands {
             try {
                 return project.Properties.Item(name).Value.ToString();
             } catch {
-                return Strings.DiagnosticsWindow_UndefinedValue;
+                return "<undefined>";
             }
         }
 
