@@ -66,92 +66,55 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                
-                <Label Grid.Column="0" Grid.Row="0">Description</Label>
+
+                <Label Grid.Column="0" Grid.Row="0" Content="{x:Static l:Resources.ConfigurationExtensionDescriptionLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="1"
                                                   Text="{Binding Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                                  Watermark="e.g. My Custom Environment">
-                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                        The description is displayed throughout Visual Studio to
-                        help you identify the environment.
-                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
-                </wpf:ConfigurationTextBoxWithHelp>
+                                                  HelpText="{x:Static l:Resources.ConfigurationExtensionDescriptionHelp}"
+                                                  Watermark="{x:Static l:Resources.ConfigurationExtensionDescriptionWatermark}"/>
 
-                <Label Grid.Column="0" Grid.Row="2">Prefix path</Label>
+                <Label Grid.Column="0" Grid.Row="2" Content="{x:Static l:Resources.ConfigurationExtensionPrefixPathLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="3"
                                                   Text="{Binding PrefixPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                                  Watermark="e.g. C:\PythonXY"
-                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}">
-                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                        The prefix path specifies the directory containing all files
-                        needed for this environment. It may be used for searching
-                        installed libraries or deploying an environment to another
-                        machine.
-                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
-                </wpf:ConfigurationTextBoxWithHelp>
+                                                  Watermark="{x:Static l:Resources.ConfigurationExtensionPrefixPathWatermark}"
+                                                  HelpText="{x:Static l:Resources.ConfigurationExtensionPrefixPathHelp}"
+                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}"/>
 
-                <Label Grid.Column="0" Grid.Row="4">Interpreter path</Label>
+                <Label Grid.Column="0" Grid.Row="4" Content="{x:Static l:Resources.ConfigurationExtensionInterpreterPathLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="5"
                                                   Text="{Binding InterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                                  Watermark="e.g. C:\PythonXY\python.exe"
+                                                  Watermark="{x:Static l:Resources.ConfigurationExtensionInterpreterPathWatermark}"
+                                                  HelpText="{x:Static l:Resources.ConfigurationExtensionInterpreterPathHelp}"
                                                   BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
-                                                  BrowseCommandParameter="Executable Files (*.exe)|*.exe|All Files (*.*)|*.*">
-                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                        The interpreter path is the executable file normally used to
-                        start Python. Normally this is called "python.exe", but it may
-                        be different for some interpreters.
-                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
-                </wpf:ConfigurationTextBoxWithHelp>
+                                                  BrowseCommandParameter="{x:Static l:Resources.ConfigurationExtensionInterpreterPathBrowseFilter}"/>
 
-                <Label Grid.Column="0" Grid.Row="6">Windowed interpreter</Label>
+                <Label Grid.Column="0" Grid.Row="6" Content="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="7"
                                                   Text="{Binding WindowsInterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                                  Watermark="e.g. C:\PythonXY\pythonw.exe"
+                                                  Watermark="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathWatermark}"
+                                                  HelpText="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathHelp}"
                                                   BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
-                                                  BrowseCommandParameter="Executable Files (*.exe)|*.exe|All Files (*.*)|*.*">
-                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                        The windowed interpreter path is the executable file used to
-                        start Python without displaying a console window. Normally this
-                        is called "pythonw.exe", but it may be different for some
-                        interpreters.
-                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
-                </wpf:ConfigurationTextBoxWithHelp>
+                                                  BrowseCommandParameter="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathBrowseFilter}"/>
 
-                <Label Grid.Column="0" Grid.Row="8">Language version</Label>
+                <Label Grid.Column="0" Grid.Row="8" Content="{x:Static l:Resources.ConfigurationExtensionLanguageVersionLabel}"/>
                 <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="9"
                                                    Value="{Binding VersionName,Mode=TwoWay}"
                                                    Values="{Binding VersionNames}"
-                                                   Watermark="Language version">
-                    <wpf:ConfigurationComboBoxWithHelp.HelpText>
-                        The language version determines whether certain syntax features
-                        are allowed or reported as errors. This should be set to match
-                        the interpreter version.
-                    </wpf:ConfigurationComboBoxWithHelp.HelpText>
-                </wpf:ConfigurationComboBoxWithHelp>
+                                                   Watermark="{x:Static l:Resources.ConfigurationExtensionLanguageVersionWatermark}"
+                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionLanguageVersionHelp}"/>
 
-                <Label Grid.Column="0" Grid.Row="10">Architecture</Label>
+                <Label Grid.Column="0" Grid.Row="10" Content="{x:Static l:Resources.ConfigurationExtensionArchitectureLabel}"/>
                 <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="11"
                                                    Value="{Binding ArchitectureName,Mode=TwoWay}"
                                                    Values="{Binding ArchitectureNames}"
-                                                   Watermark="Architecture">
-                    <wpf:ConfigurationComboBoxWithHelp.HelpText>
-                        The interpreter architecture is used when debugging and
-                        profiling. This should be set to match the target architecture
-                        of the interpreter, rather than the architecture of your
-                        operating system.
-                    </wpf:ConfigurationComboBoxWithHelp.HelpText>
-                </wpf:ConfigurationComboBoxWithHelp>
+                                                   Watermark="{x:Static l:Resources.ConfigurationExtensionArchitectureWatermark}"
+                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionArchitectureHelp}"/>
 
-                <Label Grid.Column="0" Grid.Row="12">Path environment variable</Label>
+                <Label Grid.Column="0" Grid.Row="12" Content="{x:Static l:Resources.ConfigurationExtensionPathEnvVarLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="13"
                                                   Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                                  Watermark="e.g. PYTHONPATH">
-                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                        This environment variable is set to specify search paths that
-                        should be added to sys.path. Normally this should be set to
-                        "PYTHONPATH", but it may be different for some interpreters.
-                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
-                </wpf:ConfigurationTextBoxWithHelp>
+                                                  Watermark="{x:Static l:Resources.ConfigurationExtensionPathEnvVarWatermark}"
+                                                  HelpText="{x:Static l:Resources.ConfigurationExtensionPathEnvVarHelp}"/>
             </Grid>
         </ScrollViewer>
         
@@ -164,24 +127,15 @@
                     <Setter Property="CommandParameter" Value="{Binding}" />
                 </Style>
             </StackPanel.Resources>
-            <Button Command="{x:Static l:ConfigurationExtension.Apply}">
-                _Apply
-                <Button.ToolTip>
-                    Saves the changes that have been made.
-                </Button.ToolTip>
-            </Button>
-            <Button Command="{x:Static l:ConfigurationExtension.Reset}">
-                _Reset
-                <Button.ToolTip>
-                    Clears any changes that have been made.
-                </Button.ToolTip>
-            </Button>
-            <Button Command="{x:Static l:ConfigurationExtension.AutoDetect}">
-                A_uto Detect
-                <Button.ToolTip>
-                    Attempts to fill in blank settings based on those that are
-                    already filled in.
-                </Button.ToolTip>
+            <Button Command="{x:Static l:ConfigurationExtension.Apply}"
+                    Content="{x:Static l:Resources.ConfigurationExtensionApplyLabel}"
+                    ToolTip="{x:Static l:Resources.ConfigurationExtensionApplyTooltip}"/>
+            <Button Command="{x:Static l:ConfigurationExtension.Reset}"
+                    Content="{x:Static l:Resources.ConfigurationExtensionResetLabel}"
+                    ToolTip="{x:Static l:Resources.ConfigurationExtensionResetTooltip}"/>
+            <Button Command="{x:Static l:ConfigurationExtension.AutoDetect}"
+                    Content="{x:Static l:Resources.ConfigurationExtensionAutoDetectLabel}"
+                    ToolTip="{x:Static l:Resources.ConfigurationExtensionAutoDetectTooltip}">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                         <Style.Triggers>
@@ -193,12 +147,9 @@
                 </Button.Style>
             </Button>
             <Border Height="16" Background="Transparent" />
-            <Button Command="{x:Static l:ConfigurationExtension.Remove}">
-                Re_move
-                <Button.ToolTip>
-                    Removes the environment. This operation cannot be undone.
-                </Button.ToolTip>
-            </Button>
+            <Button Command="{x:Static l:ConfigurationExtension.Remove}"
+                    Content="{x:Static l:Resources.ConfigurationExtensionRemoveLabel}"
+                    ToolTip="{x:Static l:Resources.ConfigurationExtensionRemoveTooltip}"/>
         </StackPanel>
     </Grid>
 </UserControl>

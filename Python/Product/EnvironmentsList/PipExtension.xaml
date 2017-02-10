@@ -123,9 +123,9 @@
                                 CommandParameter="{Binding View.SearchQuery,Mode=OneWay}"
                                 Margin="3">
                             <TextBlock>
-                                <Run>"pip install</Run>
-                                <Run Text="{Binding View.SearchQuery,Mode=OneWay}" /><Run>" from</Run>
-                                <Run Text="{Binding IndexName,Mode=OneWay}" />
+                                <!-- TODO: Localization - make this a single string if possible -->
+                                <Run Text="{Binding View.SearchQuery,Mode=OneWay,StringFormat={x:Static l:Resources.PipExtensionPipInstall}}" />
+                                <Run Text="{Binding IndexName,Mode=OneWay,StringFormat={x:Static l:Resources.PipExtensionPipInstallFrom}}" />
                             </TextBlock>
                         </Button>
                         <DataTemplate.Triggers>
@@ -144,8 +144,7 @@
                                 ToolTip="{Binding Package.Description,Mode=OneWay}"
                                 Margin="3">
                             <TextBlock>
-                                <Run>Install</Run>
-                                <Run Text="{Binding Package.DisplayName,Mode=OneWay}" />
+                                <Run Text="{Binding Package.DisplayName,Mode=OneWay,StringFormat={x:Static l:Resources.PipExtensionInstallLabel}}" />
                             </TextBlock>
                         </Button>
                         <DataTemplate.Triggers>
@@ -203,6 +202,7 @@
                         VerticalAlignment="Center"
                         Focusable="False"
                         Cursor="Hand"
+                        ToolTip="{x:Static l:Resources.PipExtensionClearSearchToolTip}"
                         Command="ApplicationCommands.Delete"
                         CommandTarget="{Binding ElementName=SearchQueryText}">
                     <Button.Template>
@@ -217,9 +217,6 @@
                             </Border>
                         </ControlTemplate>
                     </Button.Template>
-                    <Button.ToolTip>
-                        Clear search filter
-                    </Button.ToolTip>
                 </Button>
                 <TextBox x:Name="SearchQueryText"
                          Margin="2"
@@ -240,9 +237,8 @@
                    Margin="8 2"
                    IsHitTestVisible="False"
                    Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}"
-                   Visibility="{Binding Text.IsEmpty,ElementName=SearchQueryText,Converter={StaticResource Visibility}}">
-            Search PyPI and installed packages
-        </TextBlock>
+                   Visibility="{Binding Text.IsEmpty,ElementName=SearchQueryText,Converter={StaticResource Visibility}}"
+                   Text="{x:Static l:Resources.PipExtensionSearchPyPILabel}"/>
 
         <ProgressBar Grid.Row="1"
                      IsIndeterminate="True"
@@ -257,13 +253,9 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Visibility="{Binding IsPipInstalled,Converter={StaticResource Collapsed}}"
-                Command="{x:Static l:PipExtension.InstallPip}">
-            <Button.ToolTip>
-                Install the setuptools and pip packages from PyPI. These
-                packages are required to use this panel.
-            </Button.ToolTip>
-            Download and install pip package manager
-        </Button>
+                Command="{x:Static l:PipExtension.InstallPip}"
+                ToolTip="{x:Static l:Resources.PipExtensionInstallPipToolTip}"
+                Content="{x:Static l:Resources.PipExtensionInstallPipLabel}"/>
 
         <ScrollViewer x:Name="PackagesList"
                       HorizontalAlignment="Stretch"

@@ -39,9 +39,9 @@
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource PythonEnvironmentImage}" />
-                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Make this the default environment for new projects
-                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionMakeDefaultLabel}"/>
                                 </Grid>
                             </Button>
                             <Grid x:Name="IsDefaultMessage"
@@ -54,9 +54,9 @@
                                 <ContentControl Grid.Column="0"
                                                 Margin="3 0"
                                                 Style="{StaticResource ActiveEnvironmentImage}" />
-                                <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                    This is the default environment for new projects
-                                </TextBlock>
+                                <TextBlock Grid.Column="1"
+                                           TextWrapping="WrapWithOverflow"
+                                           Text="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}"/>
                             </Grid>
                             <Grid x:Name="CannotBeDefaultMessage"
                                   Visibility="Collapsed">
@@ -69,9 +69,9 @@
                                                 Margin="3 0"
                                                 Opacity="0.5"
                                                 Style="{StaticResource PythonEnvironmentImage}" />
-                                <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                    This environment cannot be made the default.
-                                </TextBlock>
+                                <TextBlock Grid.Column="1"
+                                           TextWrapping="WrapWithOverflow"
+                                           Text="{x:Static l:Resources.EnvironmentPathsExtensionCannotBeDefaultLabel}"/>
                             </Grid>
                         </Grid>
                         <DataTemplate.Triggers>
@@ -102,9 +102,9 @@
                                     <Control Grid.Column="0"
                                              Margin="3 0"
                                              Style="{StaticResource InteractiveWindowImage}" />
-                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Open interactive window
-                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionOpenInteractiveWindowLabel}"/>
                                 </Grid>
                             </Button>
 
@@ -121,9 +121,9 @@
                                     <Control Grid.Column="0"
                                              Margin="3 0"
                                              Style="{StaticResource SettingsImage}" />
-                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Explore interactive scripts
-                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionOpenInteractiveScriptsLabel}"/>
                                 </Grid>
                             </Button>
 
@@ -146,9 +146,9 @@
                                     <Control Grid.Column="0"
                                              Margin="3 0"
                                              Style="{StaticResource CheckBoxUncheckedImage}" />
-                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Use IPython interactive mode
-                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonLabel}"/>
                                 </Grid>
                             </Button>
                             <Button Command="{x:Static l:EnvironmentView.DisableIPythonInteractive}"
@@ -165,9 +165,9 @@
                                     <Control Grid.Column="0"
                                              Margin="3 0"
                                              Style="{StaticResource CheckBoxCheckedImage}" />
-                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Use IPython interactive mode
-                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionDisableIPythonLabel}"/>
                                 </Grid>
                             </Button>
 
@@ -185,19 +185,16 @@
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource ConsoleImage}" />
-                                    <TextBlock Grid.Column="1">
-                                        Open in PowerShell
-                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionOpenInPowerShell}"/>
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
                                         <MenuItem InputGestureText=""
                                                   Command="{x:Static l:EnvironmentView.OpenInCommandPrompt}"
                                                   CommandParameter="{Binding Mode=OneWay}"
-                                                  CommandTarget="{Binding PlacementTarget,RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
-                                            <MenuItem.Header>
-                                                Open in _Command Prompt
-                                            </MenuItem.Header>
+                                                  CommandTarget="{Binding PlacementTarget,RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                  Header="{x:Static l:Resources.EnvironmentPathsExtensionOpenInCommandPromptMenuItem}">
                                         </MenuItem>
                                     </ContextMenu>
                                 </Button.ContextMenu>
@@ -221,9 +218,9 @@
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource SettingsImage}" />
-                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Configure or remove environment
-                                    </TextBlock>
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionConfigureEnvironmentLabel}"/>
                                 </Grid>
                             </Button>
                             
@@ -352,9 +349,8 @@
                                                     Margin="3 0"
                                                     Style="{StaticResource HelpImage}" />
                                     <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
-                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}">
-                                        Visit the distributor's website
-                                    </Label>
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"/>
                                 </Grid>
                             </Button>
                         </StackPanel>
