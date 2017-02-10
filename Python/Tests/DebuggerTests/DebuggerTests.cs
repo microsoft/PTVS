@@ -1481,6 +1481,25 @@ namespace DebuggerTests {
                 LastLine = lastLine;
                 Expressions = new HashSet<string>(expressions);
             }
+
+            public override bool Equals(object obj) {
+                var other = obj as ExceptionHandlerInfo;
+                if (other == null) {
+                    return false;
+                }
+
+                return FirstLine == other.FirstLine &&
+                    LastLine == other.LastLine &&
+                    Expressions.SetEquals(other.Expressions);
+            }
+
+            public override int GetHashCode() {
+                return FirstLine.GetHashCode() ^ LastLine.GetHashCode();
+            }
+
+            public override string ToString() {
+                return $"new {nameof(ExceptionHandlerInfo)}({FirstLine}, {LastLine}, {string.Join(", ", Expressions.Select(s => $"\"{s}\""))}";
+            }
         }
 
         public string PickleModule {
@@ -1783,19 +1802,22 @@ namespace DebuggerTests {
                 new ExceptionHandlerInfo(165, 166, "ValueError", "TypeError"),
                 new ExceptionHandlerInfo(168, 169, "ValueError", "TypeError"),
 
-                new ExceptionHandlerInfo(171, 172, "is_included", "also.included", "this.one.too.despite.having.lots.of.dots")
+                new ExceptionHandlerInfo(171, 172, "is_included", "also.included", "this.one.too.despite.having.lots.of.dots"),
+
+                Version.Version == PythonLanguageVersion.V25 ? null : new ExceptionHandlerInfo(178, 180, "ValueError", "socket.error")
             );
         }
 
         private void TestGetHandledExceptionRanges(PythonDebugger debugger, string filename, params ExceptionHandlerInfo[] expected) {
             var process = DebugProcess(debugger, filename, (processObj, threadObj) => { });
 
-            var actual = process.GetHandledExceptionRanges(filename);
-            Assert.AreEqual(expected.Length, actual.Count);
 
-            Assert.IsTrue(actual.All(a =>
-                expected.SingleOrDefault(e => e.FirstLine == a.Item1 && e.LastLine == a.Item2 && e.Expressions.ContainsExactly(a.Item3)) != null
-            ));
+            var actual = process.GetHandledExceptionRanges(filename);
+
+            AssertUtil.ContainsExactly(
+                actual.Select(a => new ExceptionHandlerInfo(a.Item1, a.Item2, a.Item3.ToArray())),
+                expected.Where(e => e != null).ToArray()
+            );
         }
 
         #endregion

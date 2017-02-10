@@ -174,3 +174,6 @@ except is_included: pass
 except also.included: pass
 except this.one.too.despite.having.lots.of.dots: pass
 except but().not_me: pass
+
+with ignored(ValueError, not_me(), socket.error, or_().me):
+    pass

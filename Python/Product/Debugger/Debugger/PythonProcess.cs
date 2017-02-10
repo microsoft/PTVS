@@ -497,25 +497,6 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private static string ToDottedNameString(Expression expr, PythonAst ast) {
-            NameExpression name;
-            MemberExpression member;
-            ParenthesisExpression paren;
-            if ((name = expr as NameExpression) != null) {
-                return name.Name;
-            } else if ((member = expr as MemberExpression) != null) {
-                while (member.Target is MemberExpression) {
-                    member = (MemberExpression)member.Target;
-                }
-                if (member.Target is NameExpression) {
-                    return expr.ToCodeString(ast);
-                }
-            } else if ((paren = expr as ParenthesisExpression) != null) {
-                return ToDottedNameString(paren.Expression, ast);
-            }
-            return null;
-        }
-
         internal IList<PythonThread> GetThreads() {
             List<PythonThread> threads = new List<PythonThread>();
             foreach (var thread in _threads.Values) {
@@ -552,72 +533,22 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal IList<Tuple<int, int, IList<string>>> GetHandledExceptionRanges(string filename) {
             PythonAst ast;
-            TryHandlerWalker walker = new TryHandlerWalker();
-            var statements = new List<Tuple<int, int, IList<string>>>();
+            TryHandlerWalker walker;
 
             try {
                 ast = GetAst(filename);
-                if (ast == null) {
-                    return statements;
+                if (ast != null) {
+                    walker = new TryHandlerWalker(ast);
+                    ast.Walk(walker);
+                    return walker.Statements;
                 }
-                ast.Walk(walker);
             } catch (Exception ex) {
                 Debug.WriteLine("Exception in GetHandledExceptionRanges:");
                 Debug.WriteLine(string.Format("Filename: {0}", filename));
                 Debug.WriteLine(ex);
-                return statements;
             }
 
-            foreach (var statement in walker.Statements) {
-                int start = statement.GetStart(ast).Line;
-                int end = statement.Body.GetEnd(ast).Line + 1;
-                var expressions = new List<string>();
-
-                if (statement.Handlers == null) {
-                    if (statement.Finally != null) {
-                        // This is a try/finally block without an except, which
-                        // means that no exceptions are handled.
-                        continue;
-                    } else {
-                        // If Handlers and Finally are null, there was probably
-                        // a parser error. We assume all exceptions are handled
-                        // by default, to avoid bothering the user too much, so
-                        // handle everything here since we can't be more
-                        // accurate.
-                        expressions.Add("*");
-                    }
-                } else {
-                    foreach (var handler in statement.Handlers) {
-                        Expression expr = handler.Test;
-                        TupleExpression tuple;
-                        if (expr == null) {
-                            expressions.Clear();
-                            expressions.Add("*");
-                            break;
-                        } else if ((tuple = handler.Test as TupleExpression) != null) {
-                            foreach (var e in tuple.Items) {
-                                var text = ToDottedNameString(e, ast);
-                                if (text != null) {
-                                    expressions.Add(text);
-                                }
-                            }
-                        
-                        } else {
-                            var text = ToDottedNameString(expr, ast);
-                            if (text != null) {
-                                expressions.Add(text);
-                            }
-                        }
-                    }
-                }
-
-                if (expressions.Count > 0) {
-                    statements.Add(new Tuple<int, int, IList<string>>(start, end, expressions));
-                }
-            }
-
-
-            return statements;
+            return new List<Tuple<int, int, IList<string>>>();
         }
 
         private void HandleRequestHandlers(Stream stream) {
