@@ -19,7 +19,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.PythonTools.EnvironmentsList.Properties;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     sealed class EnvironmentPathsExtensionProvider : IEnvironmentViewExtension {

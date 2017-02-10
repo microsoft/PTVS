@@ -65,11 +65,8 @@
                                  Focusable="False"
                                  Value="{Binding RefreshDBProgress,Mode=OneWay}" Maximum="100"
                                  IsIndeterminate="{Binding IsRefreshDBProgressIndeterminate}"
-                                 Visibility="Hidden">
-                        <ProgressBar.ToolTip>
-                            Refreshing completion DB
-                        </ProgressBar.ToolTip>
-                    </ProgressBar>
+                                 ToolTip="{x:Static l:Resources.EnvironmentViewRefreshDBProgressTooltip}"
+                                 Visibility="Hidden"/>
 
                     <Button x:Name="Icon_NeedRefresh"
                             Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
@@ -79,13 +76,11 @@
                             Margin="1"
                             Command="{x:Static l:DBExtension.StartRefreshDB}"
                             CommandParameter="{Binding}"
+                            ToolTip="{x:Static l:Resources.EnvironmentViewNeedRefreshToolTip}"
                             AutomationProperties.Name="Refresh completion DB"
                             AutomationProperties.HelpText="Completion DB is not up to date. Click to start refreshing"
                             Visibility="Hidden">
                         <Control Style="{StaticResource RefreshImage}" />
-                        <Button.ToolTip>
-                            Completion DB is not up to date. Click to start refreshing.
-                        </Button.ToolTip>
                     </Button>
 
                     <Button x:Name="InteractiveWindowButton"
@@ -95,11 +90,9 @@
                             Margin="1"
                             Command="{x:Static l:EnvironmentView.OpenInteractiveWindow}"
                             CommandParameter="{Binding}"
+                            ToolTip="{x:Static l:Resources.EnvironmentViewInteractiveWindowTooltip}"
                             AutomationProperties.Name="Open Interactive Window">
                         <Control Style="{StaticResource InteractiveWindowImage}" />
-                        <Button.ToolTip>
-                            Open Interactive Window
-                        </Button.ToolTip>
                     </Button>
                 </Grid>
 
@@ -146,9 +139,8 @@
                           Fill="{Binding Foreground,ElementName=CustomLabel}">
                     </Path>
                     <Label Grid.Column="1" VerticalAlignment="Center" Name="CustomLabel"
-                           AutomationProperties.Name="Add new environment">
-                        Custom...
-                    </Label>
+                           Content="{x:Static l:Resources.EnvironmentViewCustomLabel}"
+                           AutomationProperties.Name="Add new environment"/>
                 </Grid>
             </DataTemplate>
 
@@ -159,9 +151,8 @@
                         Command="ApplicationCommands.Help">
                     <Grid Background="Transparent">
                         <Label VerticalAlignment="Center"
-                               Foreground="{Binding Foreground,ElementName=Button}">
-                            Go online and help me find other environments
-                        </Label>
+                               Foreground="{Binding Foreground,ElementName=Button}"
+                               Content="{x:Static l:Resources.EnvironmentViewOnlineHelpLabel}"/>
                     </Grid>
                 </Button>
                 <DataTemplate.Triggers>

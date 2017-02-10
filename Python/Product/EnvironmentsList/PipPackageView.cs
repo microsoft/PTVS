@@ -18,7 +18,6 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.PythonTools.EnvironmentsList.Properties;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
@@ -78,7 +77,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                     return "{0}=={1}".FormatInvariant(_package.Name, _package.ExactVersion);
                 }
-                return "(unknown)";
+                return Resources.PipPackageUnknownPackageSpec;
             }
         }
 

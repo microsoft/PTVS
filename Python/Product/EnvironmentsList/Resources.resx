@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -195,5 +195,174 @@
   <data name="UninstallationFailed" xml:space="preserve">
     <value>Uninstallation failed</value>
     <comment>Used as exception text</comment>
+  </data>
+  <data name="ConfigurationExtensionDescriptionWatermark" xml:space="preserve">
+    <value>e.g. My Custom Environment</value>
+  </data>
+  <data name="ConfigurationExtensionDescriptionLabel" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="ConfigurationExtensionDescriptionHelp" xml:space="preserve">
+    <value>The description is displayed throughout Visual Studio to help you identify the environment.</value>
+  </data>
+  <data name="ConfigurationExtensionPrefixPathLabel" xml:space="preserve">
+    <value>Prefix path</value>
+  </data>
+  <data name="ConfigurationExtensionPrefixPathWatermark" xml:space="preserve">
+    <value>e.g. C:\PythonXY</value>
+  </data>
+  <data name="ConfigurationExtensionPrefixPathHelp" xml:space="preserve">
+    <value>The prefix path specifies the directory containing all files needed for this environment. It may be used for searching installed libraries or deploying an environment to another machine.</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathLabel" xml:space="preserve">
+    <value>Interpreter path</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathWatermark" xml:space="preserve">
+    <value>e.g. C:\PythonXY\python.exe</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathHelp" xml:space="preserve">
+    <value>The interpreter path is the executable file normally used to start Python. Normally this is called &amp;quot;python.exe&amp;quot;, but it may be different for some interpreters.</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathLabel" xml:space="preserve">
+    <value>Windowed interpreter</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathWatermark" xml:space="preserve">
+    <value>e.g. C:\PythonXY\pythonw.exe</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathHelp" xml:space="preserve">
+    <value>The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &amp;quot;pythonw.exe&amp;quot;, but it may be different for some interpreters.</value>
+  </data>
+  <data name="ConfigurationExtensionWindowedInterpreterPathBrowseFilter" xml:space="preserve">
+    <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
+  </data>
+  <data name="ConfigurationExtensionInterpreterPathBrowseFilter" xml:space="preserve">
+    <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
+  </data>
+  <data name="ConfigurationExtensionLanguageVersionLabel" xml:space="preserve">
+    <value>Language version</value>
+  </data>
+  <data name="ConfigurationExtensionLanguageVersionWatermark" xml:space="preserve">
+    <value>Language version</value>
+  </data>
+  <data name="ConfigurationExtensionLanguageVersionHelp" xml:space="preserve">
+    <value>The language version determines whether certain syntax features are allowed or reported as errors. This should be set to match the interpreter version.</value>
+  </data>
+  <data name="ConfigurationExtensionArchitectureLabel" xml:space="preserve">
+    <value>Architecture</value>
+  </data>
+  <data name="ConfigurationExtensionArchitectureWatermark" xml:space="preserve">
+    <value>Architecture</value>
+  </data>
+  <data name="ConfigurationExtensionArchitectureHelp" xml:space="preserve">
+    <value>The interpreter architecture is used when debugging and profiling. This should be set to match the target architecture of the interpreter, rather than the architecture of your operating system.</value>
+  </data>
+  <data name="ConfigurationExtensionPathEnvVarLabel" xml:space="preserve">
+    <value>Path environment variable</value>
+  </data>
+  <data name="ConfigurationExtensionPathEnvVarWatermark" xml:space="preserve">
+    <value>e.g. PYTHONPATH</value>
+  </data>
+  <data name="ConfigurationExtensionPathEnvVarHelp" xml:space="preserve">
+    <value>This environment variable is set to specify search paths that should be added to sys.path. Normally this should be set to &amp;quot;PYTHONPATH&amp;quot;, but it may be different for some interpreters.</value>
+  </data>
+  <data name="ConfigurationExtensionApplyLabel" xml:space="preserve">
+    <value>_Apply</value>
+  </data>
+  <data name="ConfigurationExtensionApplyTooltip" xml:space="preserve">
+    <value>Saves the changes that have been made.</value>
+  </data>
+  <data name="ConfigurationExtensionResetLabel" xml:space="preserve">
+    <value>_Reset</value>
+  </data>
+  <data name="ConfigurationExtensionResetTooltip" xml:space="preserve">
+    <value>Clears any changes that have been made.</value>
+  </data>
+  <data name="ConfigurationExtensionAutoDetectLabel" xml:space="preserve">
+    <value>A_uto Detect</value>
+  </data>
+  <data name="ConfigurationExtensionAutoDetectTooltip" xml:space="preserve">
+    <value>Attempts to fill in blank settings based on those that are already filled in.</value>
+  </data>
+  <data name="ConfigurationExtensionRemoveLabel" xml:space="preserve">
+    <value>Re_move</value>
+  </data>
+  <data name="ConfigurationExtensionRemoveTooltip" xml:space="preserve">
+    <value>Removes the environment. This operation cannot be undone.</value>
+  </data>
+  <data name="EnvironmentViewRefreshDBProgressTooltip" xml:space="preserve">
+    <value>Refreshing completion DB</value>
+  </data>
+  <data name="EnvironmentViewNeedRefreshToolTip" xml:space="preserve">
+    <value>Completion DB is not up to date. Click to start refreshing.</value>
+  </data>
+  <data name="EnvironmentViewInteractiveWindowTooltip" xml:space="preserve">
+    <value>Open Interactive Window</value>
+  </data>
+  <data name="EnvironmentViewCustomLabel" xml:space="preserve">
+    <value>Custom...</value>
+  </data>
+  <data name="EnvironmentViewOnlineHelpLabel" xml:space="preserve">
+    <value>Go online and help me find other environments</value>
+  </data>
+  <data name="EnvironmentPathsExtensionMakeDefaultLabel" xml:space="preserve">
+    <value>Make this the default environment for new projects</value>
+  </data>
+  <data name="EnvironmentPathsExtensionIsDefaultLabel" xml:space="preserve">
+    <value>This is the default environment for new projects</value>
+  </data>
+  <data name="EnvironmentPathsExtensionCannotBeDefaultLabel" xml:space="preserve">
+    <value>This environment cannot be made the default.</value>
+  </data>
+  <data name="EnvironmentPathsExtensionOpenInteractiveWindowLabel" xml:space="preserve">
+    <value>Open interactive window</value>
+  </data>
+  <data name="EnvironmentPathsExtensionOpenInteractiveScriptsLabel" xml:space="preserve">
+    <value>Explore interactive scripts</value>
+  </data>
+  <data name="EnvironmentPathsExtensionEnableIPythonLabel" xml:space="preserve">
+    <value>Use IPython interactive mode</value>
+  </data>
+  <data name="EnvironmentPathsExtensionDisableIPythonLabel" xml:space="preserve">
+    <value>Use IPython interactive mode</value>
+  </data>
+  <data name="EnvironmentPathsExtensionOpenInPowerShell" xml:space="preserve">
+    <value>Open in PowerShell</value>
+  </data>
+  <data name="EnvironmentPathsExtensionOpenInCommandPromptMenuItem" xml:space="preserve">
+    <value>Open in _Command Prompt</value>
+  </data>
+  <data name="EnvironmentPathsExtensionConfigureEnvironmentLabel" xml:space="preserve">
+    <value>Configure or remove environment</value>
+  </data>
+  <data name="EnvironmentPathsExtensionSupportInformationLabel" xml:space="preserve">
+    <value>Visit the distributor's website</value>
+  </data>
+  <data name="PipExtensionClearSearchToolTip" xml:space="preserve">
+    <value>Clear search filter</value>
+  </data>
+  <data name="PipExtensionSearchPyPILabel" xml:space="preserve">
+    <value>Search PyPI and installed packages</value>
+  </data>
+  <data name="PipExtensionInstallPipToolTip" xml:space="preserve">
+    <value>Install the setuptools and pip packages from PyPI. These packages are required to use this panel.</value>
+  </data>
+  <data name="PipExtensionInstallPipLabel" xml:space="preserve">
+    <value>Download and install pip package manager</value>
+  </data>
+  <data name="PipExtensionInstallLabel" xml:space="preserve">
+    <value>Install {0}</value>
+    <comment>{0} is package display name</comment>
+  </data>
+  <data name="PipExtensionPipInstall" xml:space="preserve">
+    <value>"pip install {0}"</value>
+    <comment>Do not translate.
+{0} is the search query</comment>
+  </data>
+  <data name="PipExtensionPipInstallFrom" xml:space="preserve">
+    <value> from {0}</value>
+    <comment>{0} is name of package index. This string is appended to the string resource PipExtensionPipInstall</comment>
+  </data>
+  <data name="PipPackageUnknownPackageSpec" xml:space="preserve">
+    <value>(unknown)</value>
   </data>
 </root>

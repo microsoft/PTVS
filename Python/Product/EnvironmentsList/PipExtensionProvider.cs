@@ -20,7 +20,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.PythonTools.EnvironmentsList.Properties;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
