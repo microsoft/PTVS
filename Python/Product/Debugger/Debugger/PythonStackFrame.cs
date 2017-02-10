@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -232,9 +233,9 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private class QualifiedFunctionNameWalker : PythonWalker {
-            private PythonAst _ast;
-            private int _lineNumber;
-            private StringBuilder _name = new StringBuilder();
+            private readonly PythonAst _ast;
+            private readonly int _lineNumber;
+            private readonly StringBuilder _name = new StringBuilder();
             private readonly string _expectedFuncName;
 
             public QualifiedFunctionNameWalker(PythonAst ast, int lineNumber, string expectedFuncName) {
@@ -267,13 +268,14 @@ namespace Microsoft.PythonTools.Debugger {
                 }
 
                 if (_name.Length != 0) {
-                    _name.Append(" in ");
+                    var inner = _name.ToString();
+                    _name.Clear();
+                    _name.Append(Strings.DebugStackFrameNameInName.FormatUI(inner, funcName));
+                } else {
+                    _name.Append(funcName);
                 }
-
-                _name.Append(funcName);
             }
         }
-
     }
 
     class DjangoStackFrame : PythonStackFrame {

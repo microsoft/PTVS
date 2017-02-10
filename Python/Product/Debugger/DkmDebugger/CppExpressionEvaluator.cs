@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.ObjectModel;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.CustomRuntimes;

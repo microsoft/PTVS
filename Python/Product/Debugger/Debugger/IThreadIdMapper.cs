@@ -14,12 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Microsoft.PythonTools.Debugger {
     /// <summary>
     /// Provides mapping between Python thread IDs (which can be 64-bit if running on a 64-bit Linux system), and

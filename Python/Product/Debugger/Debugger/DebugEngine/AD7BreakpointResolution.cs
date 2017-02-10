@@ -22,9 +22,9 @@ using Microsoft.VisualStudio.Debugger.Interop;
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class represents the information that describes a bound breakpoint.
     class AD7BreakpointResolution : IDebugBreakpointResolution2 {
-        private AD7Engine m_engine;
-        private PythonBreakpoint m_address;
-        private AD7DocumentContext m_documentContext;
+        private readonly AD7Engine m_engine;
+        private readonly PythonBreakpoint m_address;
+        private readonly AD7DocumentContext m_documentContext;
 
         public AD7BreakpointResolution(AD7Engine engine, PythonBreakpoint address, AD7DocumentContext documentContext) {
             m_engine = engine;

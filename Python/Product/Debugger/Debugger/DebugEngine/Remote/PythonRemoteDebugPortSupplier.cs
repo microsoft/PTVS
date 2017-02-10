@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.PythonTools.DkmDebugger;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -53,7 +54,12 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             var uri = new Uri(name, UriKind.Absolute);
             var transport = DebuggerTransportFactory.Get(uri);
             if (transport == null) {
-                MessageBox.Show(string.Format("Unrecognized remote debugging transport '{0}'.", uri.Scheme), null, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    Strings.RemoteUnrecognizedDebuggingTransport.FormatUI(uri.Scheme),
+                    Strings.ProductTitle,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
                 return VSConstants.E_FAIL;
             }
 
@@ -97,6 +103,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetPortSupplierName(out string pbstrName) {
+            // TODO: Localization - leave untranslated for now, unsure of impact
             pbstrName = "Python remote (ptvsd)";
             return VSConstants.S_OK;
         }
@@ -106,10 +113,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetDescription(enum_PORT_SUPPLIER_DESCRIPTION_FLAGS[] pdwFlags, out string pbstrText) {
-            pbstrText =
-                "Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, " +
-                "and remote debugging has been enabled by using the 'ptvsd' module. " +
-                "Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ";
+            pbstrText = Strings.RemoteDebugPortSupplierDescription;
             return VSConstants.S_OK;
         }
     }

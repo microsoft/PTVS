@@ -18,6 +18,8 @@ using System;
 using System.IO;
 using System.Net.Security;
 using System.Security.Authentication;
+using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger.Transports {
     internal class TcpsTransport : TcpTransport {
@@ -29,18 +31,18 @@ namespace Microsoft.PythonTools.Debugger.Transports {
                         return true;
                     }
 
-                    string errText = string.Format("Could not establish secure connection to {0} because of the following SSL issues:\n\n", uri);
+                    var errorDetails = new StringBuilder();
                     if ((errs & SslPolicyErrors.RemoteCertificateNotAvailable) != 0) {
-                        errText += "- no remote certificate provided\n";
+                        errorDetails.AppendLine(Strings.DebugTcpsTransportConnectionErrorRemoteCertificateNotAvailable);
                     }
                     if ((errs & SslPolicyErrors.RemoteCertificateNameMismatch) != 0) {
-                        errText += "- remote certificate name does not match hostname\n";
+                        errorDetails.AppendLine(Strings.DebugTcpsTransportConnectionErrorRemoteCertificateNameMismatch);
                     }
                     if ((errs & SslPolicyErrors.RemoteCertificateChainErrors) != 0) {
-                        errText += "- remote certificate is not trusted\n";
+                        errorDetails.AppendLine(Strings.DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors);
                     }
 
-                    throw new AuthenticationException(errText);
+                    throw new AuthenticationException(Strings.DebugTcpsTransportConnectionError.FormatUI(uri, errorDetails));
                 });
 
                 sslStream.AuthenticateAsClient(uri.Host);

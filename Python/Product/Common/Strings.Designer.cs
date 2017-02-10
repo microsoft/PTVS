@@ -901,11 +901,119 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Arbitrary Python expressions can only be evaluated on a thread which is stopped in Python code at a breakpoint or after a step-in or a step-over operation. Only expressions involving global and local variables, object field access, and indexing of built-in collection types with literals can be evaluated in the current context..
+        /// </summary>
+        public static string DebugArbitraryExpressionOnStoppedThreadOnly {
+            get {
+                return ResourceManager.GetString("DebugArbitraryExpressionOnStoppedThreadOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Getting attach information from web site..
         /// </summary>
         public static string DebugAttachGettingSiteInformation {
             get {
                 return ResourceManager.GetString("DebugAttachGettingSiteInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Native to Python Transition].
+        /// </summary>
+        public static string DebugCallStackNativeToPythonTransition {
+            get {
+                return ResourceManager.GetString("DebugCallStackNativeToPythonTransition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Python to Native Transition].
+        /// </summary>
+        public static string DebugCallStackPythonToNativeTransition {
+            get {
+                return ResourceManager.GetString("DebugCallStackPythonToNativeTransition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to connect to process {0} ({1}): {2}.
+        /// </summary>
+        public static string DebugConnectionFailedToConnectToProcessWithModule {
+            get {
+                return ResourceManager.GetString("DebugConnectionFailedToConnectToProcessWithModule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to connect to process {0}: {1}.
+        /// </summary>
+        public static string DebugConnectionFailedToConnectToProcessWithoutModule {
+            get {
+                return ResourceManager.GetString("DebugConnectionFailedToConnectToProcessWithoutModule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Couldn&apos;t abort a failed expression evaluation..
+        /// </summary>
+        public static string DebugCouldNotAbortFailedExpressionEvaluation {
+            get {
+                return ResourceManager.GetString("DebugCouldNotAbortFailedExpressionEvaluation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} raised while evaluating expression: {1}.
+        /// </summary>
+        public static string DebugErrorWhileEvaluatingExpression {
+            get {
+                return ResourceManager.GetString("DebugErrorWhileEvaluatingExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Evaluation timed out..
+        /// </summary>
+        public static string DebugEvaluationTimedOut {
+            get {
+                return ResourceManager.GetString("DebugEvaluationTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;exec or eval&gt;.
+        /// </summary>
+        public static string DebugExecEvalFunctionName {
+            get {
+                return ResourceManager.GetString("DebugExecEvalFunctionName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;exec/eval&gt;.
+        /// </summary>
+        public static string DebugExecEvalModuleName {
+            get {
+                return ResourceManager.GetString("DebugExecEvalModuleName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} module.
+        /// </summary>
+        public static string DebugFileModule {
+            get {
+                return ResourceManager.GetString("DebugFileModule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} unknown code.
+        /// </summary>
+        public static string DebugFileUnknownCode {
+            get {
+                return ResourceManager.GetString("DebugFileUnknownCode", resourceCulture);
             }
         }
         
@@ -951,6 +1059,69 @@ namespace Microsoft.PythonTools {
         public static string DebugLaunchWorkingDirectoryMissing_Path {
             get {
                 return ResourceManager.GetString("DebugLaunchWorkingDirectoryMissing_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No symbols required.
+        /// </summary>
+        public static string DebugModuleNoSymbolsRequired {
+            get {
+                return ResourceManager.GetString("DebugModuleNoSymbolsRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not obtain a Python frame object for the current frame..
+        /// </summary>
+        public static string DebugNoPythonFrameForCurrentFrame {
+            get {
+                return ResourceManager.GetString("DebugNoPythonFrameForCurrentFrame", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only boolean, numeric or string literals and None are supported..
+        /// </summary>
+        public static string DebugOnlyBoolNumericStringAndNoneSupported {
+            get {
+                return ResourceManager.GetString("DebugOnlyBoolNumericStringAndNoneSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}:{1} in {2}.
+        /// </summary>
+        public static string DebugPythonExceptionStackTraceFileAndLineNumber {
+            get {
+                return ResourceManager.GetString("DebugPythonExceptionStackTraceFileAndLineNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1}.
+        /// </summary>
+        public static string DebugPythonExceptionStackTraceFileOnly {
+            get {
+                return ResourceManager.GetString("DebugPythonExceptionStackTraceFileOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Python view].
+        /// </summary>
+        public static string DebugPythonView {
+            get {
+                return ResourceManager.GetString("DebugPythonView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python view is unavailable for this object.
+        /// </summary>
+        public static string DebugPythonViewNotAvailableForObject {
+            get {
+                return ResourceManager.GetString("DebugPythonViewNotAvailableForObject", resourceCulture);
             }
         }
         
@@ -1072,6 +1243,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;REPL input&gt;.
+        /// </summary>
+        public static string DebugReplInputFunctionName {
+            get {
+                return ResourceManager.GetString("DebugReplInputFunctionName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid frame id &apos;{0}&apos;..
         /// </summary>
         public static string DebugReplInvalidFrameId {
@@ -1095,6 +1275,15 @@ namespace Microsoft.PythonTools {
         public static string DebugReplInvalidThreadId {
             get {
                 return ResourceManager.GetString("DebugReplInvalidThreadId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;REPL&gt;.
+        /// </summary>
+        public static string DebugReplModuleName {
+            get {
+                return ResourceManager.GetString("DebugReplModuleName", resourceCulture);
             }
         }
         
@@ -1248,6 +1437,179 @@ namespace Microsoft.PythonTools {
         public static string DebugReplThreadsOutput {
             get {
                 return ResourceManager.GetString("DebugReplThreadsOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MaxLength must be at least 3 (to accomodate &apos;...&apos;).
+        /// </summary>
+        public static string DebugReprMaxLengthAtLeast3 {
+            get {
+                return ResourceManager.GetString("DebugReprMaxLengthAtLeast3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} line {1}.
+        /// </summary>
+        public static string DebugStackFrameFunctionWithLine {
+            get {
+                return ResourceManager.GetString("DebugStackFrameFunctionWithLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1}.
+        /// </summary>
+        public static string DebugStackFrameInfoFunctionNameInFileName {
+            get {
+                return ResourceManager.GetString("DebugStackFrameInfoFunctionNameInFileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1}.
+        /// </summary>
+        public static string DebugStackFrameNameInName {
+            get {
+                return ResourceManager.GetString("DebugStackFrameNameInName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        public static string DebugStackFrameParseTextError {
+            get {
+                return ResourceManager.GetString("DebugStackFrameParseTextError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Structured exception {0:x08} ({1}) raised while evaluating expression.
+        /// </summary>
+        public static string DebugStructuredExceptionWhileEvaluatingExpression {
+            get {
+                return ResourceManager.GetString("DebugStructuredExceptionWhileEvaluatingExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Structured exception {0:x08} raised while evaluating expression.
+        /// </summary>
+        public static string DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue {
+            get {
+                return ResourceManager.GetString("DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not establish secure connection to {0} because of the following SSL issues:
+        ///{1}
+        ///.
+        /// </summary>
+        public static string DebugTcpsTransportConnectionError {
+            get {
+                return ResourceManager.GetString("DebugTcpsTransportConnectionError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to - remote certificate is not trusted.
+        /// </summary>
+        public static string DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors {
+            get {
+                return ResourceManager.GetString("DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to - remote certificate name does not match hostname.
+        /// </summary>
+        public static string DebugTcpsTransportConnectionErrorRemoteCertificateNameMismatch {
+            get {
+                return ResourceManager.GetString("DebugTcpsTransportConnectionErrorRemoteCertificateNameMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to - no remote certificate provided.
+        /// </summary>
+        public static string DebugTcpsTransportConnectionErrorRemoteCertificateNotAvailable {
+            get {
+                return ResourceManager.GetString("DebugTcpsTransportConnectionErrorRemoteCertificateNotAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to tcp:// URI cannot contain a path.
+        /// </summary>
+        public static string DebugTcpTransportUriCannotContainPath {
+            get {
+                return ResourceManager.GetString("DebugTcpTransportUriCannotContainPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normal.
+        /// </summary>
+        public static string DebugThreadNormalPriority {
+            get {
+                return ResourceManager.GetString("DebugThreadNormalPriority", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;unknown location, not in Python code&gt;.
+        /// </summary>
+        public static string DebugThreadUnknownLocation {
+            get {
+                return ResourceManager.GetString("DebugThreadUnknownLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression is too long..
+        /// </summary>
+        public static string DebugTooLongExpression {
+            get {
+                return ResourceManager.GetString("DebugTooLongExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error occurred while evaluating expression..
+        /// </summary>
+        public static string DebugUnknownErrorWhileEvaluatingExpression {
+            get {
+                return ResourceManager.GetString("DebugUnknownErrorWhileEvaluatingExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;unknown exception type&gt;.
+        /// </summary>
+        public static string DebugUnknownExceptionType {
+            get {
+                return ResourceManager.GetString("DebugUnknownExceptionType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;unknown&gt;.
+        /// </summary>
+        public static string DebugUnknownFunctionName {
+            get {
+                return ResourceManager.GetString("DebugUnknownFunctionName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;unknown&gt;.
+        /// </summary>
+        public static string DebugUnknownModuleName {
+            get {
+                return ResourceManager.GetString("DebugUnknownModuleName", resourceCulture);
             }
         }
         
@@ -1831,6 +2193,16 @@ namespace Microsoft.PythonTools {
         public static string ExtractMethod_Title {
             get {
                 return ResourceManager.GetString("ExtractMethod_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to attach debugger:
+        ///{0}.
+        /// </summary>
+        public static string FailedToAttachDebugger {
+            get {
+                return ResourceManager.GetString("FailedToAttachDebugger", resourceCulture);
             }
         }
         
@@ -2604,6 +2976,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to bad char for integer value: {0}.
+        /// </summary>
+        public static string InvalidHexValue {
+            get {
+                return ResourceManager.GetString("InvalidHexValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search path &apos;{0}&apos; is not a valid directory or file..
         /// </summary>
         public static string InvalidSearchPath {
@@ -3302,6 +3683,25 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the &apos;ptvsd&apos; module. Specify the secret, hostname and port to connect to in the &apos;Qualifier&apos; textbox, e.g. &apos;tcp://secret@localhost:5678&apos;. .
+        /// </summary>
+        public static string RemoteDebugPortSupplierDescription {
+            get {
+                return ResourceManager.GetString("RemoteDebugPortSupplierDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}
+        ///Connect anyway?.
+        /// </summary>
+        public static string RemoteProcessAuthenticationErrorWarning {
+            get {
+                return ResourceManager.GetString("RemoteProcessAuthenticationErrorWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Secret did not match the server secret at {0}. Make sure that the secret is specified correctly in the Qualifier textbox, e.g. tcp://secret@localhost..
         /// </summary>
         public static string RemoteSecretMismatch_Host {
@@ -3316,6 +3716,15 @@ namespace Microsoft.PythonTools {
         public static string RemoteServiceUnavailable_Host {
             get {
                 return ResourceManager.GetString("RemoteServiceUnavailable_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized remote debugging transport &apos;{0}&apos;..
+        /// </summary>
+        public static string RemoteUnrecognizedDebuggingTransport {
+            get {
+                return ResourceManager.GetString("RemoteUnrecognizedDebuggingTransport", resourceCulture);
             }
         }
         
@@ -4298,6 +4707,15 @@ namespace Microsoft.PythonTools {
         public static string UnknownRoleTypeException {
             get {
                 return ResourceManager.GetString("UnknownRoleTypeException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized value for enum type &apos;{0}&apos;..
+        /// </summary>
+        public static string UnrecognizedEnumValue {
+            get {
+                return ResourceManager.GetString("UnrecognizedEnumValue", resourceCulture);
             }
         }
         

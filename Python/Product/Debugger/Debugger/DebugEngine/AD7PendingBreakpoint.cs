@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -26,15 +27,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // become children of the pending breakpoint.
     class AD7PendingBreakpoint : IDebugPendingBreakpoint2 {
         // The breakpoint request that resulted in this pending breakpoint being created.
-        private IDebugBreakpointRequest2 _bpRequest;
+        private readonly IDebugBreakpointRequest2 _bpRequest;
         private BP_REQUEST_INFO _bpRequestInfo;
-        private AD7Engine _engine;
-        private BreakpointManager _bpManager;
+        private readonly AD7Engine _engine;
+        private readonly BreakpointManager _bpManager;
 
-        private List<AD7BoundBreakpoint> _boundBreakpoints;
+        private readonly List<AD7BoundBreakpoint> _boundBreakpoints;
 
         private bool _enabled;
-        private bool _deleted;
+        private readonly bool _deleted;
 
         public AD7PendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, AD7Engine engine, BreakpointManager bpManager) {
             _bpRequest = pBPRequest;
@@ -267,7 +268,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 case enum_BP_COND_STYLE.BP_COND_WHEN_TRUE:
                     return PythonBreakpointConditionKind.WhenTrue;
                 default:
-                    throw new ArgumentException("Unrecognized enum_BP_COND_STYLE value");
+                    throw new ArgumentException(Strings.UnrecognizedEnumValue.FormatUI(typeof(enum_BP_COND_STYLE)), nameof(style));
             }
         }
 
@@ -282,7 +283,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_EQUAL_OR_GREATER:
                     return PythonBreakpointPassCountKind.WhenEqualOrGreater;
                 default:
-                    throw new ArgumentException("Unrecognized enum_BP_PASSCOUNT_STYLE value");
+                    throw new ArgumentException(Strings.UnrecognizedEnumValue.FormatUI(typeof(enum_BP_PASSCOUNT_STYLE)), nameof(style));
             }
         }
     }

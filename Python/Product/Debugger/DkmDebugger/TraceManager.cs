@@ -21,11 +21,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
-using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Stepping;
 
 namespace Microsoft.PythonTools.DkmDebugger {
@@ -50,8 +48,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         private struct CurrentSourceLocation {
-            public int lineNumber;
-            public ulong fileName;
+            public readonly int lineNumber;
+            public readonly ulong fileName;
         }
 
         private readonly DkmProcess _process;

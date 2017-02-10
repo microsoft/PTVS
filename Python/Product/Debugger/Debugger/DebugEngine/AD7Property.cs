@@ -15,13 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // An implementation of IDebugProperty2
@@ -30,7 +28,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
     //
     // The sample engine only supports locals and parameters for functions that have symbols loaded.
     class AD7Property : IDebugProperty2, IDebugProperty3 {
-        private PythonEvaluationResult _evalResult;
+        private readonly PythonEvaluationResult _evalResult;
         private readonly AD7StackFrame _frame;
         private readonly bool _writable;
 

@@ -30,10 +30,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private readonly PythonStackFrame _stackFrame;
 
         // An array of this frame's parameters
-        private PythonEvaluationResult[] _parameters;
+        private readonly  PythonEvaluationResult[] _parameters;
 
         // An array of this frame's locals
-        private PythonEvaluationResult[] _locals;
+        private readonly PythonEvaluationResult[] _locals;
 
         public AD7StackFrame(AD7Engine engine, AD7Thread thread, PythonStackFrame threadContext) {
             _engine = engine;
@@ -75,20 +75,21 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 string funcName = _stackFrame.GetQualifiedFunctionName();
                 if (funcName == "<module>") {
                     if (PathUtils.IsValidPath(_stackFrame.FileName)) {
-                        funcName = Path.GetFileNameWithoutExtension(_stackFrame.FileName) + " module";
+                        funcName = Strings.DebugFileModule.FormatUI(Path.GetFileNameWithoutExtension(_stackFrame.FileName));
                     } else if (_stackFrame.FileName.EndsWith("<string>")) {
-                        funcName = "<exec or eval>";
+                        funcName = Strings.DebugExecEvalFunctionName;
                     } else if (_stackFrame.FileName.EndsWith("<stdin>")) {
-                        funcName = "<REPL input>";
+                        funcName = Strings.DebugReplInputFunctionName;
                     } else {
-                        funcName = _stackFrame.FileName + " unknown code";
+                        funcName = Strings.DebugFileUnknownCode.FormatUI(_stackFrame.FileName);
                     }
                 } else if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE) != 0) {
-                    if (PathUtils.IsValidPath(_stackFrame.FileName)) {
-                        funcName += " in " + Path.GetFileNameWithoutExtension(_stackFrame.FileName);
-                    } else {
-                        funcName += " in " + _stackFrame.FileName;
-                    }
+                    funcName = Strings.DebugStackFrameInfoFunctionNameInFileName.FormatUI(
+                        funcName,
+                        PathUtils.IsValidPath(_stackFrame.FileName)
+                            ? Path.GetFileNameWithoutExtension(_stackFrame.FileName)
+                            : _stackFrame.FileName
+                    );
                     frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
                 }
 
@@ -96,20 +97,19 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME;
 
                 if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES) != 0) {
-                    frameInfo.m_bstrFuncName = funcName + " line " + _stackFrame.LineNo;
+                    frameInfo.m_bstrFuncName = Strings.DebugStackFrameFunctionWithLine.FormatUI(funcName, _stackFrame.LineNo);
                     frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
                 }
             }
 
-            
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_LANGUAGE) != 0) {
                 switch (_stackFrame.Kind) {
                     case FrameKind.Python:
-                        frameInfo.m_bstrLanguage = "Python";
+                        frameInfo.m_bstrLanguage = DebuggerLanguageNames.Python;
                         frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_LANGUAGE;
                         break;
                     case FrameKind.Django:
-                        frameInfo.m_bstrLanguage = "Django Templates";
+                        frameInfo.m_bstrLanguage = DebuggerLanguageNames.DjangoTemplates;
                         frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_LANGUAGE;
                         break;
                 }
@@ -120,11 +120,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 if (PathUtils.IsValidPath(_stackFrame.FileName)) {
                     frameInfo.m_bstrModule = Path.GetFileNameWithoutExtension(this._stackFrame.FileName);
                 } else if (_stackFrame.FileName.EndsWith("<string>")) {
-                    frameInfo.m_bstrModule = "<exec/eval>";
+                    frameInfo.m_bstrModule = Strings.DebugExecEvalModuleName;
                 } else if (_stackFrame.FileName.EndsWith("<stdin>")) {
-                    frameInfo.m_bstrModule = "<REPL>";
+                    frameInfo.m_bstrModule = Strings.DebugReplModuleName;
                 } else {
-                    frameInfo.m_bstrModule = "<unknown>";
+                    frameInfo.m_bstrModule = Strings.DebugUnknownModuleName;
                 }
                 frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_MODULE;
             }
@@ -369,11 +369,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             string errorMsg;
             if (!_stackFrame.TryParseText(pszCode, out errorMsg)) {
-                pbstrError = "Error: " + errorMsg;
+                pbstrError = Strings.DebugStackFrameParseTextError.FormatUI(errorMsg);
                 pichError = (uint)pbstrError.Length;
             }
 
-            ppExpr = new UncalculatedAD7Expression(this, pszCode);                                    
+            ppExpr = new UncalculatedAD7Expression(this, pszCode);
             return VSConstants.S_OK;
         }
 

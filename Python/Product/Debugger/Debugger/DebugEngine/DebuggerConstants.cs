@@ -71,6 +71,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const int E_EVALUATE_TIMEOUT=unchecked((int)0x80040031);
     }
 
+    static class DebuggerLanguageNames {
+        public const string DjangoTemplates = "Django Templates";
+        public const string Python = "Python";
+    }
+
     // Flags passed by the debugger to the engine to describe the desired format and execution options for properties 
     // (locals, arguments, etc...)
     enum DEBUGPROP_INFO_FLAGS {

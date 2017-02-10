@@ -15,18 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.Debugger.Interop;
-using System.Net;
-using System.Net.Sockets;
-using System.Windows.Forms;
-using System.IO;
-using System.Net.Security;
-using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteEnumDebugPrograms : PythonRemoteEnumDebug<IDebugProgram2>, IEnumDebugPrograms2 {

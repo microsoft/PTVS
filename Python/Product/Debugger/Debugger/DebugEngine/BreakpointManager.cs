@@ -20,9 +20,9 @@ using Microsoft.VisualStudio.Debugger.Interop;
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class manages breakpoints for the engine. 
     class BreakpointManager {
-        private AD7Engine m_engine;
-        private System.Collections.Generic.List<AD7PendingBreakpoint> m_pendingBreakpoints;
-        private Dictionary<PythonBreakpoint, AD7BoundBreakpoint> _breakpointMap = new Dictionary<PythonBreakpoint, AD7BoundBreakpoint>();
+        private readonly AD7Engine m_engine;
+        private readonly List<AD7PendingBreakpoint> m_pendingBreakpoints;
+        private readonly Dictionary<PythonBreakpoint, AD7BoundBreakpoint> _breakpointMap = new Dictionary<PythonBreakpoint, AD7BoundBreakpoint>();
 
         public BreakpointManager(AD7Engine engine) {
             m_engine = engine;

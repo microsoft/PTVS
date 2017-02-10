@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
@@ -65,7 +64,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     stackWalkData.IsLastFrameNative = true;
                     if (wasLastFrameNative == false) {
                         result.Add(DkmStackWalkFrame.Create(nativeFrame.Thread, null, nativeFrame.FrameBase, nativeFrame.FrameSize,
-                            DkmStackWalkFrameFlags.NonuserCode, "[Native to Python Transition]", null, null));
+                            DkmStackWalkFrameFlags.NonuserCode, Strings.DebugCallStackNativeToPythonTransition, null, null));
                     } else {
                         stackWalkData.IsLastFrameNative = true;
                     }
@@ -75,7 +74,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     stackWalkData.IsLastFrameNative = false;
                     if (wasLastFrameNative == true) {
                         result.Add(DkmStackWalkFrame.Create(nativeFrame.Thread, null, nativeFrame.FrameBase, nativeFrame.FrameSize,
-                            DkmStackWalkFrameFlags.NonuserCode, "[Python to Native Transition]", null, null));
+                            DkmStackWalkFrameFlags.NonuserCode, Strings.DebugCallStackPythonToNativeTransition, null, null));
                     }
                 }
 

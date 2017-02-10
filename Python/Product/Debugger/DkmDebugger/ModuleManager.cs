@@ -17,7 +17,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.VisualStudio.Debugger;

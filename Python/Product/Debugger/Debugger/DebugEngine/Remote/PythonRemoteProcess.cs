@@ -16,7 +16,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Text;
@@ -24,6 +23,7 @@ using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Transports;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
@@ -81,8 +81,8 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                         throw new ConnectionException(ConnErrorMessages.RemoteSslError, ex);
                     }
 
-                    string errText = ex.Message + "\nConnect anyway?";
-                    var dlgRes = MessageBox.Show(errText, null, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    string errText = Strings.RemoteProcessAuthenticationErrorWarning.FormatUI(ex.Message);
+                    var dlgRes = MessageBox.Show(errText, Strings.ProductTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (dlgRes == DialogResult.Yes) {
                         warnAboutAuthenticationErrors = false;
                     } else {

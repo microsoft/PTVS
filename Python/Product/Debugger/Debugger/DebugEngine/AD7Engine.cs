@@ -26,6 +26,7 @@ using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.PythonTools.Debugger.Remote;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -348,7 +349,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         _process = PythonProcess.Attach(processId, _debugOptions);
                     }
                 } catch (ConnectionException ex) {
-                    MessageBox.Show("Failed to attach debugger:\r\n" + ex.Message, null, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(
+                        Strings.FailedToAttachDebugger.FormatUI(ex.Message),
+                        Strings.ProductTitle,
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
                     return VSConstants.E_FAIL;
                 }
 
