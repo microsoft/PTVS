@@ -17,7 +17,6 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.OLE.Interop;

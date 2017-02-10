@@ -8,8 +8,9 @@
     xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
     xmlns:local="clr-namespace:Microsoft.PythonTools.Commands"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+    xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
     mc:Ignorable="d"
-    Title="Visual Studio - Python Diagnostic Info"
+    Title="{x:Static common:Strings.DiagnosticsWindow_Title}"
     MinWidth="300" Width="600"
     MinHeight="250" Height="400"
     ResizeMode="CanResizeWithGrip"
@@ -49,17 +50,9 @@
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="1" Command="ApplicationCommands.Save">
-                _Save all...
-            </Button>
-
-            <Button Grid.Column="2" Command="ApplicationCommands.Copy">
-                _Copy all...
-            </Button>
-
-            <Button Grid.Column="3" Command="ApplicationCommands.Close">
-                C_lose
-            </Button>
+            <Button Grid.Column="1" Command="ApplicationCommands.Save" Content="{x:Static common:Strings.DiagnosticsWindow_SaveAll}"/>
+            <Button Grid.Column="2" Command="ApplicationCommands.Copy" Content="{x:Static common:Strings.DiagnosticsWindow_CopyAll}"/>
+            <Button Grid.Column="3" Command="ApplicationCommands.Close" Content="{x:Static common:Strings.DiagnosticsWindow_Close}"/>
         </Grid>
     </Grid>
 </vstools:DialogWindowVersioningWorkaround>

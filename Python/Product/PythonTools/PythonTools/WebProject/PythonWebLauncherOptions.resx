@@ -117,13 +117,1347 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="_debugGroup.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="_debugGroup.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="tableLayoutPanel2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="tableLayoutPanel2.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_environment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="_environment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 159</value>
+  </data>
+  <data name="_environment.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_environment.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_environment.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_environment.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
+    <value>Vertical</value>
+  </data>
+  <data name="_environment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>444, 56</value>
+  </data>
+  <data name="_environment.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
   <metadata name="_toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="_toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+  <data name="_environment.ToolTip" xml:space="preserve">
+    <value>Specifies environment variables to be set in the spawned process in the form:
+
+NAME1=value1
+NAME2=value2
+...</value>
+  </data>
+  <data name="&gt;&gt;_environment.Name" xml:space="preserve">
+    <value>_environment</value>
+  </data>
+  <data name="&gt;&gt;_environment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_environment.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_environment.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_searchPaths.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_searchPaths.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 3</value>
+  </data>
+  <data name="_searchPaths.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_searchPaths.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_searchPaths.Size" type="System.Drawing.Size, System.Drawing">
+    <value>444, 20</value>
+  </data>
+  <data name="_searchPaths.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;_searchPaths.Name" xml:space="preserve">
+    <value>_searchPaths</value>
+  </data>
+  <data name="&gt;&gt;_searchPaths.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_searchPaths.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_searchPaths.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="_arguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_arguments.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 29</value>
+  </data>
+  <data name="_arguments.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_arguments.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_arguments.Size" type="System.Drawing.Size, System.Drawing">
+    <value>444, 20</value>
+  </data>
+  <data name="_arguments.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="_arguments.ToolTip" xml:space="preserve">
+    <value>Specifies arguments which are passed to the script and available via sys.argv.</value>
+  </data>
+  <data name="&gt;&gt;_arguments.Name" xml:space="preserve">
+    <value>_arguments</value>
+  </data>
+  <data name="&gt;&gt;_arguments.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_arguments.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_arguments.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="_interpArgs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_interpArgs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 55</value>
+  </data>
+  <data name="_interpArgs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_interpArgs.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_interpArgs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>444, 20</value>
+  </data>
+  <data name="_interpArgs.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="_interpArgs.ToolTip" xml:space="preserve">
+    <value>Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).</value>
+  </data>
+  <data name="&gt;&gt;_interpArgs.Name" xml:space="preserve">
+    <value>_interpArgs</value>
+  </data>
+  <data name="&gt;&gt;_interpArgs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_interpArgs.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_interpArgs.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="_interpreterPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_interpreterPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 81</value>
+  </data>
+  <data name="_interpreterPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_interpreterPath.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_interpreterPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>444, 20</value>
+  </data>
+  <data name="_interpreterPath.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="_interpreterPath.ToolTip" xml:space="preserve">
+    <value>Overrides the interpreter executable which is used for launching the project.</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPath.Name" xml:space="preserve">
+    <value>_interpreterPath</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPath.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPath.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="_interpreterPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_interpreterPathLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_interpreterPathLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 84</value>
+  </data>
+  <data name="_interpreterPathLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_interpreterPathLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 13</value>
+  </data>
+  <data name="_interpreterPathLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="_interpreterPathLabel.Text" xml:space="preserve">
+    <value>&amp;Interpreter Path:</value>
+  </data>
+  <data name="_interpreterPathLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_interpreterPathLabel.ToolTip" xml:space="preserve">
+    <value>Overrides the interpreter executable which is used for launching the project.</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPathLabel.Name" xml:space="preserve">
+    <value>_interpreterPathLabel</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPathLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPathLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPathLabel.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="_interpArgsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_interpArgsLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_interpArgsLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 58</value>
+  </data>
+  <data name="_interpArgsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_interpArgsLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>111, 13</value>
+  </data>
+  <data name="_interpArgsLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="_interpArgsLabel.Text" xml:space="preserve">
+    <value>Interpreter Ar&amp;guments:</value>
+  </data>
+  <data name="_interpArgsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_interpArgsLabel.ToolTip" xml:space="preserve">
+    <value>Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).</value>
+  </data>
+  <data name="&gt;&gt;_interpArgsLabel.Name" xml:space="preserve">
+    <value>_interpArgsLabel</value>
+  </data>
+  <data name="&gt;&gt;_interpArgsLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_interpArgsLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_interpArgsLabel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="_argumentsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_argumentsLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_argumentsLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 32</value>
+  </data>
+  <data name="_argumentsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_argumentsLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 13</value>
+  </data>
+  <data name="_argumentsLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_argumentsLabel.Text" xml:space="preserve">
+    <value>Script &amp;Arguments:</value>
+  </data>
+  <data name="_argumentsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_argumentsLabel.ToolTip" xml:space="preserve">
+    <value>Specifies arguments which are passed to the script and available via sys.argv.</value>
+  </data>
+  <data name="&gt;&gt;_argumentsLabel.Name" xml:space="preserve">
+    <value>_argumentsLabel</value>
+  </data>
+  <data name="&gt;&gt;_argumentsLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_argumentsLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_argumentsLabel.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="_searchPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_searchPathLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_searchPathLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 6</value>
+  </data>
+  <data name="_searchPathLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_searchPathLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 13</value>
+  </data>
+  <data name="_searchPathLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="_searchPathLabel.Text" xml:space="preserve">
+    <value>Search &amp;Paths:</value>
+  </data>
+  <data name="_searchPathLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;_searchPathLabel.Name" xml:space="preserve">
+    <value>_searchPathLabel</value>
+  </data>
+  <data name="&gt;&gt;_searchPathLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_searchPathLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_searchPathLabel.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="_portNumberLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_portNumberLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_portNumberLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 136</value>
+  </data>
+  <data name="_portNumberLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_portNumberLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 13</value>
+  </data>
+  <data name="_portNumberLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="_portNumberLabel.Text" xml:space="preserve">
+    <value>Port Nu&amp;mber:</value>
+  </data>
+  <data name="_portNumberLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_portNumberLabel.ToolTip" xml:space="preserve">
+    <value>The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.</value>
+  </data>
+  <data name="&gt;&gt;_portNumberLabel.Name" xml:space="preserve">
+    <value>_portNumberLabel</value>
+  </data>
+  <data name="&gt;&gt;_portNumberLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_portNumberLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_portNumberLabel.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="_portNumber.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_portNumber.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 133</value>
+  </data>
+  <data name="_portNumber.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_portNumber.Size" type="System.Drawing.Size, System.Drawing">
+    <value>444, 20</value>
+  </data>
+  <data name="_portNumber.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="_portNumber.ToolTip" xml:space="preserve">
+    <value>The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.</value>
+  </data>
+  <data name="&gt;&gt;_portNumber.Name" xml:space="preserve">
+    <value>_portNumber</value>
+  </data>
+  <data name="&gt;&gt;_portNumber.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_portNumber.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_portNumber.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="_launchUrl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_launchUrl.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 107</value>
+  </data>
+  <data name="_launchUrl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_launchUrl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>444, 20</value>
+  </data>
+  <data name="_launchUrl.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="_launchUrl.ToolTip" xml:space="preserve">
+    <value>The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.</value>
+  </data>
+  <data name="&gt;&gt;_launchUrl.Name" xml:space="preserve">
+    <value>_launchUrl</value>
+  </data>
+  <data name="&gt;&gt;_launchUrl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_launchUrl.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_launchUrl.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="_launchUrlLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_launchUrlLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_launchUrlLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 110</value>
+  </data>
+  <data name="_launchUrlLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_launchUrlLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>71, 13</value>
+  </data>
+  <data name="_launchUrlLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="_launchUrlLabel.Text" xml:space="preserve">
+    <value>Launch &amp;URL:</value>
+  </data>
+  <data name="_launchUrlLabel.ToolTip" xml:space="preserve">
+    <value>The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.</value>
+  </data>
+  <data name="&gt;&gt;_launchUrlLabel.Name" xml:space="preserve">
+    <value>_launchUrlLabel</value>
+  </data>
+  <data name="&gt;&gt;_launchUrlLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_launchUrlLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_launchUrlLabel.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="_environmentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_environmentLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_environmentLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 180</value>
+  </data>
+  <data name="_environmentLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_environmentLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 13</value>
+  </data>
+  <data name="_environmentLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="_environmentLabel.Text" xml:space="preserve">
+    <value>&amp;Environment:</value>
+  </data>
+  <data name="_environmentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_environmentLabel.ToolTip" xml:space="preserve">
+    <value>Specifies environment variables to be set in the spawned process in the form:
+
+NAME1=value1
+NAME2=value2
+...</value>
+  </data>
+  <data name="&gt;&gt;_environmentLabel.Name" xml:space="preserve">
+    <value>_environmentLabel</value>
+  </data>
+  <data name="&gt;&gt;_environmentLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_environmentLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_environmentLabel.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="tableLayoutPanel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanel2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 21</value>
+  </data>
+  <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>579, 218</value>
+  </data>
+  <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Name" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Parent" xml:space="preserve">
+    <value>_debugGroup</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_environment" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_searchPaths" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_arguments" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpArgs" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpreterPath" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpreterPathLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_interpArgsLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_argumentsLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_searchPathLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_portNumberLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_portNumber" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_launchUrl" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_launchUrlLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_environmentLabel" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="_debugGroup.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="_debugGroup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 8</value>
+  </data>
+  <data name="_debugGroup.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="_debugGroup.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="_debugGroup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>591, 247</value>
+  </data>
+  <data name="_debugGroup.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="_debugGroup.Text" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="&gt;&gt;_debugGroup.Name" xml:space="preserve">
+    <value>_debugGroup</value>
+  </data>
+  <data name="&gt;&gt;_debugGroup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugGroup.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_debugGroup.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="_debugServerTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_debugServerTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>87, 3</value>
+  </data>
+  <data name="_debugServerTarget.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_debugServerTarget.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_debugServerTarget.Size" type="System.Drawing.Size, System.Drawing">
+    <value>320, 20</value>
+  </data>
+  <data name="_debugServerTarget.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="_debugServerTarget.ToolTip" xml:space="preserve">
+    <value>The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTarget.Name" xml:space="preserve">
+    <value>_debugServerTarget</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTarget.Parent" xml:space="preserve">
+    <value>tableLayoutPanel4</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTarget.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_debugServerArguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="tableLayoutPanel4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="tableLayoutPanel4.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="tableLayoutPanel4.ColumnCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="_debugServerEnvironment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_debugServerEnvironment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>87, 56</value>
+  </data>
+  <data name="_debugServerEnvironment.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_debugServerEnvironment.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_debugServerEnvironment.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_debugServerEnvironment.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
+    <value>Vertical</value>
+  </data>
+  <data name="_debugServerEnvironment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>486, 56</value>
+  </data>
+  <data name="_debugServerEnvironment.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="_debugServerEnvironment.ToolTip" xml:space="preserve">
+    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
+  </data>
+  <data name="&gt;&gt;_debugServerEnvironment.Name" xml:space="preserve">
+    <value>_debugServerEnvironment</value>
+  </data>
+  <data name="&gt;&gt;_debugServerEnvironment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugServerEnvironment.Parent" xml:space="preserve">
+    <value>tableLayoutPanel4</value>
+  </data>
+  <data name="&gt;&gt;_debugServerEnvironment.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 77</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 13</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.Text" xml:space="preserve">
+    <value>En&amp;vironment:</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_debugServerEnvironmentLabel.ToolTip" xml:space="preserve">
+    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
+  </data>
+  <data name="&gt;&gt;_debugServerEnvironmentLabel.Name" xml:space="preserve">
+    <value>_debugServerEnvironmentLabel</value>
+  </data>
+  <data name="&gt;&gt;_debugServerEnvironmentLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugServerEnvironmentLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel4</value>
+  </data>
+  <data name="&gt;&gt;_debugServerEnvironmentLabel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 33</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 13</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.Text" xml:space="preserve">
+    <value>Arg&amp;uments:</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_debugServerArgumentsLabel.ToolTip" xml:space="preserve">
+    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
+  </data>
+  <data name="&gt;&gt;_debugServerArgumentsLabel.Name" xml:space="preserve">
+    <value>_debugServerArgumentsLabel</value>
+  </data>
+  <data name="&gt;&gt;_debugServerArgumentsLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugServerArgumentsLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel4</value>
+  </data>
+  <data name="&gt;&gt;_debugServerArgumentsLabel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="_debugServerTargetLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_debugServerTargetLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_debugServerTargetLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 7</value>
+  </data>
+  <data name="_debugServerTargetLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_debugServerTargetLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>57, 13</value>
+  </data>
+  <data name="_debugServerTargetLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="_debugServerTargetLabel.Text" xml:space="preserve">
+    <value>C&amp;ommand:</value>
+  </data>
+  <data name="_debugServerTargetLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_debugServerTargetLabel.ToolTip" xml:space="preserve">
+    <value>The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTargetLabel.Name" xml:space="preserve">
+    <value>_debugServerTargetLabel</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTargetLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTargetLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel4</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTargetLabel.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="_debugServerTargetType.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="_debugServerTargetType.Items" xml:space="preserve">
+    <value />
+  </data>
+  <data name="_debugServerTargetType.Items1" xml:space="preserve">
+    <value>script</value>
+  </data>
+  <data name="_debugServerTargetType.Items2" xml:space="preserve">
+    <value>module</value>
+  </data>
+  <data name="_debugServerTargetType.Items3" xml:space="preserve">
+    <value>code</value>
+  </data>
+  <data name="_debugServerTargetType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>419, 3</value>
+  </data>
+  <data name="_debugServerTargetType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_debugServerTargetType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 21</value>
+  </data>
+  <data name="_debugServerTargetType.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_debugServerTargetType.ToolTip" xml:space="preserve">
+    <value>The type of the command. If no command is specified, this value is always treated as "script".</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTargetType.Name" xml:space="preserve">
+    <value>_debugServerTargetType</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTargetType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTargetType.Parent" xml:space="preserve">
+    <value>tableLayoutPanel4</value>
+  </data>
+  <data name="&gt;&gt;_debugServerTargetType.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="tableLayoutPanel4.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanel4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 21</value>
+  </data>
+  <data name="tableLayoutPanel4.RowCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tableLayoutPanel4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>579, 115</value>
+  </data>
+  <data name="tableLayoutPanel4.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel4.Name" xml:space="preserve">
+    <value>tableLayoutPanel4</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel4.Parent" xml:space="preserve">
+    <value>_debugServerGroup</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel4.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanel4.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_debugServerTarget" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_debugServerArguments" Row="1" RowSpan="1" Column="1" ColumnSpan="2" /&gt;&lt;Control Name="_debugServerEnvironment" Row="2" RowSpan="1" Column="1" ColumnSpan="2" /&gt;&lt;Control Name="_debugServerEnvironmentLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugServerArgumentsLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugServerTargetLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugServerTargetType" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100,Percent,50" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20,Absolute,20,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="_debugServerArguments.Location" type="System.Drawing.Point, System.Drawing">
+    <value>87, 30</value>
+  </data>
+  <data name="_debugServerArguments.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_debugServerArguments.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_debugServerArguments.Size" type="System.Drawing.Size, System.Drawing">
+    <value>486, 20</value>
+  </data>
+  <data name="_debugServerArguments.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="_debugServerArguments.ToolTip" xml:space="preserve">
+    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
+  </data>
+  <data name="&gt;&gt;_debugServerArguments.Name" xml:space="preserve">
+    <value>_debugServerArguments</value>
+  </data>
+  <data name="&gt;&gt;_debugServerArguments.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugServerArguments.Parent" xml:space="preserve">
+    <value>tableLayoutPanel4</value>
+  </data>
+  <data name="&gt;&gt;_debugServerArguments.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="_runServerTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_runServerTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>87, 3</value>
+  </data>
+  <data name="_runServerTarget.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_runServerTarget.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_runServerTarget.Size" type="System.Drawing.Size, System.Drawing">
+    <value>320, 20</value>
+  </data>
+  <data name="_runServerTarget.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="_runServerTarget.ToolTip" xml:space="preserve">
+    <value>The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+  </data>
+  <data name="&gt;&gt;_runServerTarget.Name" xml:space="preserve">
+    <value>_runServerTarget</value>
+  </data>
+  <data name="&gt;&gt;_runServerTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_runServerTarget.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_runServerTarget.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_runServerArguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="tableLayoutPanel3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="tableLayoutPanel3.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="tableLayoutPanel3.ColumnCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="_runServerEnvironment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_runServerEnvironment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>87, 56</value>
+  </data>
+  <data name="_runServerEnvironment.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_runServerEnvironment.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_runServerEnvironment.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_runServerEnvironment.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
+    <value>Vertical</value>
+  </data>
+  <data name="_runServerEnvironment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>486, 56</value>
+  </data>
+  <data name="_runServerEnvironment.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="_runServerEnvironment.ToolTip" xml:space="preserve">
+    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
+  </data>
+  <data name="&gt;&gt;_runServerEnvironment.Name" xml:space="preserve">
+    <value>_runServerEnvironment</value>
+  </data>
+  <data name="&gt;&gt;_runServerEnvironment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_runServerEnvironment.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_runServerEnvironment.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 77</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 13</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.Text" xml:space="preserve">
+    <value>E&amp;nvironment:</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_runServerEnvironmentLabel.ToolTip" xml:space="preserve">
+    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
+  </data>
+  <data name="&gt;&gt;_runServerEnvironmentLabel.Name" xml:space="preserve">
+    <value>_runServerEnvironmentLabel</value>
+  </data>
+  <data name="&gt;&gt;_runServerEnvironmentLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_runServerEnvironmentLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_runServerEnvironmentLabel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="_runServerArgumentsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_runServerArgumentsLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_runServerArgumentsLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 33</value>
+  </data>
+  <data name="_runServerArgumentsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_runServerArgumentsLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 13</value>
+  </data>
+  <data name="_runServerArgumentsLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="_runServerArgumentsLabel.Text" xml:space="preserve">
+    <value>A&amp;rguments:</value>
+  </data>
+  <data name="_runServerArgumentsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_runServerArgumentsLabel.ToolTip" xml:space="preserve">
+    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
+  </data>
+  <data name="&gt;&gt;_runServerArgumentsLabel.Name" xml:space="preserve">
+    <value>_runServerArgumentsLabel</value>
+  </data>
+  <data name="&gt;&gt;_runServerArgumentsLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_runServerArgumentsLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_runServerArgumentsLabel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="_runServerTargetLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_runServerTargetLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_runServerTargetLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 7</value>
+  </data>
+  <data name="_runServerTargetLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_runServerTargetLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>57, 13</value>
+  </data>
+  <data name="_runServerTargetLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="_runServerTargetLabel.Text" xml:space="preserve">
+    <value>&amp;Command:</value>
+  </data>
+  <data name="_runServerTargetLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_runServerTargetLabel.ToolTip" xml:space="preserve">
+    <value>The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+  </data>
+  <data name="&gt;&gt;_runServerTargetLabel.Name" xml:space="preserve">
+    <value>_runServerTargetLabel</value>
+  </data>
+  <data name="&gt;&gt;_runServerTargetLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_runServerTargetLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_runServerTargetLabel.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="_runServerTargetType.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="_runServerTargetType.Items" xml:space="preserve">
+    <value />
+  </data>
+  <data name="_runServerTargetType.Items1" xml:space="preserve">
+    <value>script</value>
+  </data>
+  <data name="_runServerTargetType.Items2" xml:space="preserve">
+    <value>module</value>
+  </data>
+  <data name="_runServerTargetType.Items3" xml:space="preserve">
+    <value>code</value>
+  </data>
+  <data name="_runServerTargetType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>419, 3</value>
+  </data>
+  <data name="_runServerTargetType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_runServerTargetType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 21</value>
+  </data>
+  <data name="_runServerTargetType.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_runServerTargetType.ToolTip" xml:space="preserve">
+    <value>The type of the command. If no command is specified, this value is always treated as "script".</value>
+  </data>
+  <data name="&gt;&gt;_runServerTargetType.Name" xml:space="preserve">
+    <value>_runServerTargetType</value>
+  </data>
+  <data name="&gt;&gt;_runServerTargetType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_runServerTargetType.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_runServerTargetType.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="tableLayoutPanel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanel3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 21</value>
+  </data>
+  <data name="tableLayoutPanel3.RowCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tableLayoutPanel3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>579, 115</value>
+  </data>
+  <data name="tableLayoutPanel3.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel3.Name" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel3.Parent" xml:space="preserve">
+    <value>_runServerGroup</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel3.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanel3.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_runServerTarget" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_runServerArguments" Row="1" RowSpan="1" Column="1" ColumnSpan="2" /&gt;&lt;Control Name="_runServerEnvironment" Row="2" RowSpan="1" Column="1" ColumnSpan="2" /&gt;&lt;Control Name="_runServerEnvironmentLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_runServerArgumentsLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_runServerTargetLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_runServerTargetType" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100,Percent,50" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20,Absolute,20,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <data name="_runServerArguments.Location" type="System.Drawing.Point, System.Drawing">
+    <value>87, 30</value>
+  </data>
+  <data name="_runServerArguments.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_runServerArguments.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 4</value>
+  </data>
+  <data name="_runServerArguments.Size" type="System.Drawing.Size, System.Drawing">
+    <value>486, 20</value>
+  </data>
+  <data name="_runServerArguments.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="_runServerArguments.ToolTip" xml:space="preserve">
+    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
+  </data>
+  <data name="&gt;&gt;_runServerArguments.Name" xml:space="preserve">
+    <value>_runServerArguments</value>
+  </data>
+  <data name="&gt;&gt;_runServerArguments.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_runServerArguments.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_runServerArguments.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanel1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="tableLayoutPanel1.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="_debugServerGroup.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_debugServerGroup.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="_debugServerGroup.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="_debugServerGroup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 431</value>
+  </data>
+  <data name="_debugServerGroup.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="_debugServerGroup.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="_debugServerGroup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>591, 144</value>
+  </data>
+  <data name="_debugServerGroup.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_debugServerGroup.Text" xml:space="preserve">
+    <value>Debug Server Command</value>
+  </data>
+  <data name="&gt;&gt;_debugServerGroup.Name" xml:space="preserve">
+    <value>_debugServerGroup</value>
+  </data>
+  <data name="&gt;&gt;_debugServerGroup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_debugServerGroup.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_debugServerGroup.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_runServerGroup.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_runServerGroup.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="_runServerGroup.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="_runServerGroup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 271</value>
+  </data>
+  <data name="_runServerGroup.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="_runServerGroup.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="_runServerGroup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>591, 144</value>
+  </data>
+  <data name="_runServerGroup.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="_runServerGroup.Text" xml:space="preserve">
+    <value>Run Server Command</value>
+  </data>
+  <data name="&gt;&gt;_runServerGroup.Name" xml:space="preserve">
+    <value>_runServerGroup</value>
+  </data>
+  <data name="&gt;&gt;_runServerGroup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_runServerGroup.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_runServerGroup.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 4, 3, 4</value>
+  </data>
+  <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>603, 603</value>
+  </data>
+  <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_debugServerGroup" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_runServerGroup" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugGroup" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
   </metadata>
-  <metadata name="_toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="$this.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>603, 603</value>
+  </data>
+  <data name="&gt;&gt;_toolTip.Name" xml:space="preserve">
+    <value>_toolTip</value>
+  </data>
+  <data name="&gt;&gt;_toolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>PythonWebLauncherOptions</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

@@ -258,6 +258,7 @@ permissions and limitations under the License.
           <ButtonText>Existing &amp;Folder...</ButtonText>
           <MenuText>Existing &amp;Folder...</MenuText>
           <ToolTipText>Adds a folder and its contents to this project.</ToolTipText>
+          <CanonicalName>.Project.AddExistingFolder</CanonicalName>
           <LocCanonicalName>.Project.AddExistingFolder</LocCanonicalName>
         </Strings>
       </Button>
@@ -273,6 +274,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Execute File in Python &amp;Interactive</ButtonText>
           <ToolTipText>Execute File in Python Interactive</ToolTipText>
+          <CanonicalName>.Python.ExecuteInInteractive</CanonicalName>
           <LocCanonicalName>.Python.ExecuteInInteractive</LocCanonicalName>
         </Strings>
       </Button>
@@ -285,6 +287,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Send to &amp;Interactive</ButtonText>
           <ToolTipText>Sends the current editor selection to a Python Interactive window.</ToolTipText>
+          <CanonicalName>.Python.SendSelectionToInteractive</CanonicalName>
           <LocCanonicalName>.Python.SendSelectionToInteractive</LocCanonicalName>
         </Strings>
       </Button>
@@ -296,6 +299,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Fill Comment Paragraph</ButtonText>
           <ToolTipText>Reflows the selected paragraph to adjust its width.</ToolTipText>
+          <CanonicalName>.Python.FillCommentParagraph</CanonicalName>
           <LocCanonicalName>.Python.FillCommentParagraph</LocCanonicalName>
         </Strings>
       </Button>
@@ -308,6 +312,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Add/Remove Python &amp;Environments...</ButtonText>
           <ToolTipText>Allows Python environments to be added or removed from this project.</ToolTipText>
+          <CanonicalName>.Python.AddRemoveEnvironments</CanonicalName>
           <LocCanonicalName>.Python.AddRemoveEnvironments</LocCanonicalName>
         </Strings>
       </Button>
@@ -317,6 +322,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Add &amp;Virtual Environment...</ButtonText>
           <ToolTipText>Adds a new or existing virtual environment to this project.</ToolTipText>
+          <CanonicalName>.Python.AddVirtualEnvironment</CanonicalName>
           <LocCanonicalName>.Python.AddVirtualEnvironment</LocCanonicalName>
         </Strings>
       </Button>
@@ -326,6 +332,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Add Existing &amp;Virtual Environment...</ButtonText>
           <ToolTipText>Browses for an existing virtual environment to add to this project.</ToolTipText>
+          <CanonicalName>.Python.AddExistingVirtualEnvironment</CanonicalName>
           <LocCanonicalName>.Python.AddExistingVirtualEnvironment</LocCanonicalName>
         </Strings>
       </Button>
@@ -338,6 +345,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Vie&amp;w All Python Environments</ButtonText>
           <ToolTipText>Open the Python Environments window.</ToolTipText>
+          <CanonicalName>.Python.ViewEnvironments</CanonicalName>
           <LocCanonicalName>.Python.ViewEnvironments</LocCanonicalName>
         </Strings>
       </Button>
@@ -348,6 +356,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Activate Environment</ButtonText>
           <ToolTipText>Makes this environment the active environment for the project.</ToolTipText>
+          <CanonicalName>.Python.ActivateEnvironment</CanonicalName>
           <LocCanonicalName>.Python.ActivateEnvironment</LocCanonicalName>
         </Strings>
       </Button>
@@ -361,6 +370,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Open I&amp;nteractive Window</ButtonText>
           <ToolTipText>Opens an Interactive Window for this environment.</ToolTipText>
+          <CanonicalName>.Python.Interactive</CanonicalName>
           <LocCanonicalName>.Python.Interactive</LocCanonicalName>
         </Strings>
       </Button>
@@ -371,6 +381,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Install Python Package...</ButtonText>
           <ToolTipText>Installs a package into this environment.</ToolTipText>
+          <CanonicalName>.Python.InstallPackage</CanonicalName>
           <LocCanonicalName>.Python.InstallPackage</LocCanonicalName>
         </Strings>
       </Button>
@@ -381,6 +392,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Ins&amp;tall from requirements.txt</ButtonText>
           <ToolTipText>Installs from dependencies from a requirements.txt file into this environment.</ToolTipText>
+          <CanonicalName>.Python.InstallRequirementsTxt</CanonicalName>
           <LocCanonicalName>.Python.InstallRequirementsTxt</LocCanonicalName>
         </Strings>
       </Button>
@@ -391,6 +403,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Generate requirements.txt</ButtonText>
           <ToolTipText>Generates or updates a requirements.txt file for this environment.</ToolTipText>
+          <CanonicalName>.Python.GenerateRequirementsTxt</CanonicalName>
           <LocCanonicalName>.Python.GenerateRequirementsTxt</LocCanonicalName>
         </Strings>
       </Button>
@@ -404,6 +417,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Diagnostic Info...</ButtonText>
           <ToolTipText>Displays detailed diagnostic information about PTVS.</ToolTipText>
+          <CanonicalName>.Python.DiagnosticInfo</CanonicalName>
           <LocCanonicalName>.Python.DiagnosticInfo</LocCanonicalName>
         </Strings>
       </Button>
@@ -414,6 +428,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Import coverage file...</ButtonText>
           <ToolTipText>Imports a coverage.xml file produced by coverage.py.</ToolTipText>
+          <CanonicalName>.Python.ImportCoverage</CanonicalName>
           <LocCanonicalName>.Python.ImportCoverage</LocCanonicalName>
         </Strings>
       </Button>
@@ -423,6 +438,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Survey/&amp;News...</ButtonText>
           <ToolTipText>Displays recent news and surveys from the PTVS team.</ToolTipText>
+          <CanonicalName>.Python.SurveyNews</CanonicalName>
           <LocCanonicalName>.Python.SurveyNews</LocCanonicalName>
         </Strings>
       </Button>
@@ -433,6 +449,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Import Existing &amp;Project...</ButtonText>
           <ToolTipText>Starts the New Project from Existing Code wizard.</ToolTipText>
+          <CanonicalName>.Python.ImportExistingProject</CanonicalName>
           <LocCanonicalName>.Python.ImportExistingProject</LocCanonicalName>
         </Strings>
       </Button>
@@ -448,6 +465,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Current &amp;Scope</ButtonText>
           <ToolTipText>Remove unused imports in the current scope.</ToolTipText>
+          <CanonicalName>CurrentScope</CanonicalName>
           <LocCanonicalName>CurrentScope</LocCanonicalName>
         </Strings>
       </Button>
@@ -461,6 +479,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;All Scopes</ButtonText>
           <ToolTipText>Remove unused imports in all scopes.</ToolTipText>
+          <CanonicalName>AllScopes</CanonicalName>
           <LocCanonicalName>AllScopes</LocCanonicalName>
         </Strings>
       </Button>
@@ -472,6 +491,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>P&amp;ython Debug Interactive</ButtonText>
           <ToolTipText>Opens the Python Debug Interactive window.</ToolTipText>
+          <CanonicalName>.Python.DebugInteractive</CanonicalName>
           <LocCanonicalName>.Python.DebugInteractive</LocCanonicalName>
         </Strings>
       </Button>
@@ -485,6 +505,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Python &amp;Environments</ButtonText>
           <ToolTipText>Python Environments</ToolTipText>
+          <CanonicalName>.Python.ViewEnvironments</CanonicalName>
           <LocCanonicalName>.Python.ViewEnvironments</LocCanonicalName>
         </Strings>
       </Button>
@@ -497,6 +518,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>P&amp;ython Interactive Window</ButtonText>
           <ToolTipText>Open the Python Interactive window.</ToolTipText>
+          <CanonicalName>.Python.InteractiveOpen</CanonicalName>
           <LocCanonicalName>.Python.InteractiveOpen</LocCanonicalName>
         </Strings>
       </Button>
@@ -512,6 +534,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Python products and information</ButtonText>
           <ToolTipText>Opens a web site to help you discover Python-related products and information from Microsoft.</ToolTipText>
+          <CanonicalName>.Python.OpenPythonProductsSite</CanonicalName>
           <LocCanonicalName>.Python.OpenPythonProductsSite</LocCanonicalName>
         </Strings>
       </Button>
@@ -523,6 +546,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Issues and suggestions</ButtonText>
           <ToolTipText>Opens a web site where you can report issues and suggestions for Python support in Visual Studio.</ToolTipText>
+          <CanonicalName>.Python.OpenPTVSSupportSite</CanonicalName>
           <LocCanonicalName>.Python.OpenPTVSSupportSite</LocCanonicalName>
         </Strings>
       </Button>
@@ -534,6 +558,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Microsoft &amp;Data products</ButtonText>
           <ToolTipText>Opens a web site to help you discover data-related products from Microsoft.</ToolTipText>
+          <CanonicalName>.Python.OpenDataProductsSite</CanonicalName>
           <LocCanonicalName>.Python.OpenDataProductsSite</LocCanonicalName>
         </Strings>
       </Button>
@@ -549,6 +574,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>S&amp;et as Startup File</ButtonText>
           <ToolTipText>Set as Startup File</ToolTipText>
+          <CanonicalName>.Project.SetPythonStartupFile</CanonicalName>
           <LocCanonicalName>.Project.SetPythonStartupFile</LocCanonicalName>
         </Strings>
       </Button>
@@ -558,6 +584,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Add Folder to Search &amp;Path...</ButtonText>
           <ToolTipText>Add Folder to Search Path...</ToolTipText>
+          <CanonicalName>.Project.AddSearchPathFolder</CanonicalName>
           <LocCanonicalName>.Project.AddSearchPathFolder</LocCanonicalName>
         </Strings>
       </Button>
@@ -567,6 +594,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Add &amp;Zip Archive to Search Path...</ButtonText>
           <ToolTipText>Add Zip Archive to Search Path...</ToolTipText>
+          <CanonicalName>.Project.AddSearchPathZip</CanonicalName>
           <LocCanonicalName>.Project.AddSearchPathZip</LocCanonicalName>
         </Strings>
       </Button>
@@ -576,6 +604,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Add P&amp;YTHONPATH to Search Path</ButtonText>
           <ToolTipText>Add PYTHONPATH to Search Path</ToolTipText>
+          <CanonicalName>.Project.AddSearchPathPYTHONPATH</CanonicalName>
           <LocCanonicalName>.Project.AddSearchPathPYTHONPATH</LocCanonicalName>
         </Strings>
       </Button>
@@ -587,6 +616,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Start without Debugging</ButtonText>
           <ToolTipText>Start without Debugging</ToolTipText>
+          <CanonicalName>.Python.StartWithoutDebugging</CanonicalName>
           <LocCanonicalName>.Python.StartWithoutDebugging</LocCanonicalName>
         </Strings>
       </Button>
@@ -598,6 +628,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Start with &amp;Debugging</ButtonText>
           <ToolTipText>Start with Debugging</ToolTipText>
+          <CanonicalName>.Python.StartWithDebugging</CanonicalName>
           <LocCanonicalName>.Python.StartWithDebugging</LocCanonicalName>
         </Strings>
       </Button>
@@ -609,6 +640,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Open Command &amp;Prompt Here...</ButtonText>
           <ToolTipText>Open Command Prompt Here</ToolTipText>
+          <CanonicalName>.File.OpenCommandPromptHere</CanonicalName>
           <LocCanonicalName>.File.OpenCommandPromptHere</LocCanonicalName>
         </Strings>
       </Button>
@@ -620,6 +652,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Copy F&amp;ull Path</ButtonText>
           <ToolTipText>Copy Full Path</ToolTipText>
+          <CanonicalName>.Python.CopyFullPath</CanonicalName>
           <LocCanonicalName>.Python.CopyFullPath</LocCanonicalName>
         </Strings>
       </Button>
@@ -630,6 +663,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Ins&amp;tall Project Requirements</ButtonText>
           <ToolTipText>Install Project Requirements</ToolTipText>
+          <CanonicalName>.Python.InstallProjectRequirements</CanonicalName>
           <LocCanonicalName>.Python.InstallProjectRequirements</LocCanonicalName>
         </Strings>
       </Button>
@@ -660,6 +694,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Extract &amp;Method...</ButtonText>
           <ToolTipText>Extract Method...</ToolTipText>
+          <CanonicalName>RefactorExtractMethod</CanonicalName>
           <LocCanonicalName>RefactorExtractMethod</LocCanonicalName>
         </Strings>
       </Button>
@@ -673,6 +708,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Rename...</ButtonText>
           <ToolTipText>Rename...</ToolTipText>
+          <CanonicalName>RefactorRename</CanonicalName>
           <LocCanonicalName>RefactorRename</LocCanonicalName>
         </Strings>
       </Button>
@@ -688,6 +724,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Show &amp;C++ View Nodes</ButtonText>
           <ToolTipText>Shows variable details in C++ format</ToolTipText>
+          <CanonicalName>ShowCppViewNodes</CanonicalName>
           <LocCanonicalName>ShowCppViewNodes</LocCanonicalName>
         </Strings>
       </Button>
@@ -699,6 +736,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Show &amp;Python View Nodes</ButtonText>
           <ToolTipText>Shows variable details in Python format</ToolTipText>
+          <CanonicalName>ShowPythonViewNodes</CanonicalName>
           <LocCanonicalName>ShowPythonViewNodes</LocCanonicalName>
         </Strings>
       </Button>
@@ -710,6 +748,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Show &amp;Native Python Frames</ButtonText>
           <ToolTipText>Shows native Python stack frames.</ToolTipText>
+          <CanonicalName>ShowNativePythonFrames</CanonicalName>
           <LocCanonicalName>ShowNativePythonFrames</LocCanonicalName>
         </Strings>
       </Button>
@@ -721,6 +760,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Use Python &amp;Stepping</ButtonText>
           <ToolTipText>Enable Python semantics for code stepping.</ToolTipText>
+          <CanonicalName>UsePythonStepping</CanonicalName>
           <LocCanonicalName>UsePythonStepping</LocCanonicalName>
         </Strings>
       </Button>
@@ -736,6 +776,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Attach Debugger (&amp;Python)</ButtonText>
           <ToolTipText>Attach the Python debugger to the remote Microsoft Azure site</ToolTipText>
+          <CanonicalName>.Python.AttachDebuggerToWebSite</CanonicalName>
           <LocCanonicalName>.Python.AttachDebuggerToWebSite</LocCanonicalName>
         </Strings>
       </Button>
@@ -753,6 +794,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>New Window</ButtonText>
           <ToolTipText>Create a new interactive window</ToolTipText>
+          <CanonicalName>.Python.NewInteractive</CanonicalName>
           <LocCanonicalName>.Python.NewInteractive</LocCanonicalName>
         </Strings>
       </Button>
@@ -767,6 +809,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Open module in editor</ButtonText>
           <ToolTipText>Opens the current module in the editor</ToolTipText>
+          <CanonicalName>.Python.OpenInteractiveScopeInEditor</CanonicalName>
           <LocCanonicalName>.Python.OpenInteractiveScopeInEditor</LocCanonicalName>
         </Strings>
       </Button>
@@ -788,6 +831,7 @@ permissions and limitations under the License.
           <ButtonText>Environment:</ButtonText>
           <ToolTipText>Select the environment to execute against.</ToolTipText>
           <CanonicalName>InteractiveEnvironment</CanonicalName>
+          <LocCanonicalName>InteractiveEnvironment</LocCanonicalName>
         </Strings>
       </Combo>
       
@@ -806,6 +850,7 @@ permissions and limitations under the License.
           <ButtonText>Module: </ButtonText>
           <ToolTipText>Selects the current file scope that the interactive window is executing against.</ToolTipText>
           <CanonicalName>InteractiveScope</CanonicalName>
+          <LocCanonicalName>InteractiveScope</LocCanonicalName>
         </Strings>
       </Combo>
     </Combos>

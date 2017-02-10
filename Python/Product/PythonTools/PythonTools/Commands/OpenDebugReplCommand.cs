@@ -15,12 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio;
 using Microsoft.PythonTools.InteractiveWindow.Shell;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {

@@ -1288,6 +1288,60 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to C_lose.
+        /// </summary>
+        public static string DiagnosticsWindow_Close {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_Close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Copy all....
+        /// </summary>
+        public static string DiagnosticsWindow_CopyAll {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_CopyAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Diagnostic Info {0:yyyy-MM-dd&apos;T&apos;HHmmss}.txt.
+        /// </summary>
+        public static string DiagnosticsWindow_DefaultFileName {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_DefaultFileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Save all....
+        /// </summary>
+        public static string DiagnosticsWindow_SaveAll {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_SaveAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Text Files (*.txt)|*.txt|All Files (*.*)|*.*.
+        /// </summary>
+        public static string DiagnosticsWindow_TextFileFilter {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_TextFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Visual Studio - Python Diagnostic Info.
+        /// </summary>
+        public static string DiagnosticsWindow_Title {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do not show this warning again..
         /// </summary>
         public static string DontShowAgain {
@@ -1599,6 +1653,33 @@ namespace Microsoft.PythonTools {
         public static string ErrorTaskItemZipArchiveNotSupportedMessage {
             get {
                 return ResourceManager.GetString("ErrorTaskItemZipArchiveNotSupportedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Execute File in P&amp;ython Interactive.
+        /// </summary>
+        public static string ExecuteInReplCommand_ExecuteFile {
+            get {
+                return ResourceManager.GetString("ExecuteInReplCommand_ExecuteFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Execute Project in P&amp;ython Interactive.
+        /// </summary>
+        public static string ExecuteInReplCommand_ExecuteProject {
+            get {
+                return ResourceManager.GetString("ExecuteInReplCommand_ExecuteProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Running {0}.
+        /// </summary>
+        public static string ExecuteInReplCommand_RunningMessage {
+            get {
+                return ResourceManager.GetString("ExecuteInReplCommand_RunningMessage", resourceCulture);
             }
         }
         
@@ -1992,6 +2073,15 @@ namespace Microsoft.PythonTools {
         public static string GroupingClassificationType {
             get {
                 return ResourceManager.GetString("GroupingClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*.
+        /// </summary>
+        public static string ImportCoverageCommandFileFilter {
+            get {
+                return ResourceManager.GetString("ImportCoverageCommandFileFilter", resourceCulture);
             }
         }
         

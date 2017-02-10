@@ -1477,6 +1477,39 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
     <value> (missing)</value>
     <comment>Leading space is important</comment>
   </data>
+  <data name="DiagnosticsWindow_SaveAll" xml:space="preserve">
+    <value>_Save all...</value>
+  </data>
+  <data name="DiagnosticsWindow_CopyAll" xml:space="preserve">
+    <value>_Copy all...</value>
+  </data>
+  <data name="DiagnosticsWindow_Close" xml:space="preserve">
+    <value>C_lose</value>
+  </data>
+  <data name="DiagnosticsWindow_Title" xml:space="preserve">
+    <value>Visual Studio - Python Diagnostic Info</value>
+  </data>
+  <data name="DiagnosticsWindow_TextFileFilter" xml:space="preserve">
+    <value>Text Files (*.txt)|*.txt|All Files (*.*)|*.*</value>
+  </data>
+  <data name="DiagnosticsWindow_DefaultFileName" xml:space="preserve">
+    <value>Diagnostic Info {0:yyyy-MM-dd'T'HHmmss}.txt</value>
+  </data>
+  <data name="ExecuteInReplCommand_ExecuteProject" xml:space="preserve">
+    <value>Execute Project in P&amp;ython Interactive</value>
+    <comment>Use ampersand for accelerator key</comment>
+  </data>
+  <data name="ExecuteInReplCommand_ExecuteFile" xml:space="preserve">
+    <value>Execute File in P&amp;ython Interactive</value>
+    <comment>Use ampersand for accelerator key</comment>
+  </data>
+  <data name="ExecuteInReplCommand_RunningMessage" xml:space="preserve">
+    <value>Running {0}</value>
+    <comment>{0} is the name of the script that is being run</comment>
+  </data>
+  <data name="ImportCoverageCommandFileFilter" xml:space="preserve">
+    <value>Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*</value>
+  </data>
   <data name="RenameVariable_NewName" xml:space="preserve">
     <value>_New name:</value>
   </data>

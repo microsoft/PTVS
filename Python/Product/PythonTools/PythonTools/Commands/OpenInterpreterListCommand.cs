@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.InterpreterList;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
@@ -31,12 +30,6 @@ namespace Microsoft.PythonTools.Commands {
 
         public override void DoCommand(object sender, EventArgs args) {
             _provider.ShowInterpreterList();
-        }
-
-        public string Description {
-            get {
-                return "Python Environments";
-            }
         }
 
         public override int CommandId {
