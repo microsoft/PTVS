@@ -9,7 +9,7 @@ $packages = @(
     @{ name="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime"; version=@{ "14.0"="14.2.25123"; "15.0"="14.2.25123" }; required=$true },
     @{ name="Microsoft.VisualStudio.Shell.Interop.12.1.DesignTime"; version=@{ "14.0"="12.1.30328"; "15.0"="12.1.30328" }; required=$true },
     @{ name="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime"; version=@{ "14.0"="14.2.25123"; "15.0"="14.2.25123" }; required=$true },
-    @{ name="Microsoft.VisualStudio.Debugger.Interop.15.0"; version=@{ "14.0"="15.0.26105-RC3" }; required=$true },
+    @{ name="Microsoft.VisualStudio.Debugger.Interop.15.0"; version=@{ "14.0"="15.0.26201" }; required=$true },
     @{ name="Microsoft.VisualStudio.TextManager.Interop.12.1.DesignTime"; version=@{ "14.0"="12.1.30328"; "15.0"="12.1.30328" }; required=$true },
     @{ name="Microsoft.VisualStudio.Workspaces"; version=@{ "14.0"="15.0.198-pre"; "15.0"="15.0.198-pre" }; required=$true },
     @{ name="Microsoft.VisualStudio.Workspace.VSIntegration"; version=@{ "14.0"="15.0.198-pre"; "15.0"="15.0.198-pre" }; required=$true },
