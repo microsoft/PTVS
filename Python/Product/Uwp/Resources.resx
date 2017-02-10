@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -125,5 +125,23 @@
   </data>
   <data name="UwpRemotePortHelp" xml:space="preserve">
     <value>Remote debug port to use for Python debugger</value>
+  </data>
+  <data name="CouldNotAttachToRemotePythonDebugSession" xml:space="preserve">
+    <value>Could not attach to remote Python debug session.</value>
+  </data>
+  <data name="FailedToGetUniqueProjectNameException" xml:space="preserve">
+    <value>Failed to get an unique project name.</value>
+  </data>
+  <data name="NoRemoteMachine" xml:space="preserve">
+    <value>The project cannot be deployed or debugged because there is not a remote machine specified in Debug settings.</value>
+  </data>
+  <data name="ProductTitle" xml:space="preserve">
+    <value>Visual Studio - Python support</value>
+  </data>
+  <data name="CannotInitializeUwpProjectException" xml:space="preserve">
+    <value>Cannot initialize Uwp project</value>
+  </data>
+  <data name="PackageMustOnlyBeSetOnce" xml:space="preserve">
+    <value>PythonUwpProject.Package must only be set once</value>
   </data>
 </root>

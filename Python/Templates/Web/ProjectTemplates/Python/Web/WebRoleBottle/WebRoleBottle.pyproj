@@ -36,7 +36,7 @@
     <Content Include="bin\ps.cmd" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\Readme.mht">
+    <None Include="bin\readme.html">
       <SubType>WebBrowser</SubType>
     </None>
   </ItemGroup>

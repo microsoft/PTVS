@@ -3,8 +3,8 @@
 # in this directory. Modifications should be checked in.
 #
 
-$web_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'WebRoleConfiguration.mht') | %{ gi $_ }
-$worker_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'LaunchWorker.ps1', 'WorkerRoleConfiguration.mht') | %{ gi $_ }
+$web_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'WebRoleConfiguration.html') | %{ gi $_ }
+$worker_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'LaunchWorker.ps1', 'WorkerRoleConfiguration.html') | %{ gi $_ }
 
 $web_role_targets = @(
     "..\Web\ItemTemplates\Python\AzureCSWebRole",

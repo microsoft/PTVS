@@ -16,12 +16,9 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     public static class CompletionSessionExtensions {

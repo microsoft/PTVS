@@ -22,12 +22,8 @@ using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Navigation;
 using AnalysisReference = Microsoft.PythonTools.Intellisense.AnalysisProtocol.AnalysisReference;
 using Completion = Microsoft.PythonTools.Intellisense.AnalysisProtocol.Completion;
 
@@ -64,23 +60,23 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
 
             if (!string.IsNullOrEmpty(tag.ProjectName)) {
                 descrItems.Add(new DescriptionItem(
-                    Array.AsReadOnly(new[] { new DescriptionRun("Project:", bold: true) }),
+                    Array.AsReadOnly(new[] { new DescriptionRun(Strings.PythonNavigateToItemDisplay_ProjectHeader, bold: true) }),
                     Array.AsReadOnly(new[] { new DescriptionRun(tag.ProjectName) })
                 ));
-                AdditionalInformation = "Project: " + tag.ProjectName;
+                AdditionalInformation = Strings.PythonNavigateToItemDisplay_ProjectInfo.FormatUI(tag.ProjectName);
             }
 
             if (!string.IsNullOrEmpty(_location?.file)) {
                 descrItems.Add(new DescriptionItem(
-                    Array.AsReadOnly(new[] { new DescriptionRun("File:", bold: true) }),
+                    Array.AsReadOnly(new[] { new DescriptionRun(Strings.PythonNavigateToItemDisplay_FileHeader, bold: true) }),
                     Array.AsReadOnly(new[] { new DescriptionRun(_location.file) })
                 ));
                 if (string.IsNullOrEmpty(AdditionalInformation)) {
-                    AdditionalInformation = "File: " + _location.file;
+                    AdditionalInformation = Strings.PythonNavigateToItemDisplay_FileInfo.FormatUI(_location.file);
                 }
                 if (_location.line > 0) {
                     descrItems.Add(new DescriptionItem(
-                        Array.AsReadOnly(new[] { new DescriptionRun("Line:", bold: true) }),
+                        Array.AsReadOnly(new[] { new DescriptionRun(Strings.PythonNavigateToItemDisplay_LineHeader, bold: true) }),
                         Array.AsReadOnly(new[] { new DescriptionRun(_location.line.ToString()) })
                     ));
                 }

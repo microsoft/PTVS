@@ -21,7 +21,7 @@ permissions and limitations under the License.
 <head>
     <meta charset="utf-8" />
     <title>Python Worker Role Configuration</title>
-    <link rel="stylesheet" href="../../Product/PythonTools/ReadmeStyle.css" type="text/css" />
+    <style type="text/css" />
 </head>
 <body>
     <h1 class="top">Configuring Deployment</h1>

@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class CompletionUIElementProvider : IUIElementProvider<CompletionSet, ICompletionSession> {
         [ImportMany]
         internal List<Lazy<IUIElementProvider<CompletionSet, ICompletionSession>, IOrderableContentTypeMetadata>> UnOrderedCompletionSetUIElementProviders { get; set; }
-        private static bool _isPreSp1 = CheckPreSp1();
+        private static readonly bool _isPreSp1 = CheckPreSp1();
         private bool _gettingUIElement;
         private readonly IServiceProvider _serviceProvider;
 

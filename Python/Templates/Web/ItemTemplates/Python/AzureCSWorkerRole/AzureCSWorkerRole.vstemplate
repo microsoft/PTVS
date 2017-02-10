@@ -10,7 +10,7 @@ These files are always added to a folder 'bin' at the root of your project.</Des
     <SortOrder>100</SortOrder>
   </TemplateData>
   <TemplateContent>
-    <ProjectItem ReplaceParameters="true" SubType="WebBrowser" OpenInWebBrowser="true" TargetFileName="\bin\Readme.mht">WorkerRoleConfiguration.mht</ProjectItem>
+    <ProjectItem ReplaceParameters="true" SubType="WebBrowser" OpenInWebBrowser="true" TargetFileName="\bin\readme.html">readme.html</ProjectItem>
     <ProjectItem ReplaceParameters="true" TargetFileName="\bin\ConfigureCloudService.ps1" ItemType="Content">ConfigureCloudService.ps1</ProjectItem>
     <ProjectItem ReplaceParameters="true" TargetFileName="\bin\LaunchWorker.ps1" ItemType="Content">LaunchWorker.ps1</ProjectItem>
     <ProjectItem ReplaceParameters="true" TargetFileName="\bin\ps.cmd" ItemType="Content">ps.cmd</ProjectItem>

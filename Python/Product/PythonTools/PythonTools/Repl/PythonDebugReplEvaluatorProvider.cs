@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
 

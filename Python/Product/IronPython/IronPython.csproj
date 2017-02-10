@@ -165,10 +165,10 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <None Include="NoIronPython.html" />
+    <None Include="NoIronPython.htmlsrc" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NoIronPython.mht">
+    <Content Include="NoIronPython.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

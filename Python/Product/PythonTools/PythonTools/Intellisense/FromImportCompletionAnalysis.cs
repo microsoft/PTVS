@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var completions = GetModules(_namespace, false).Select(m => PythonCompletion(glyphService, m));
 
             if (_includeStar) {
-                var completion = new[] { PythonCompletion(glyphService, "*", "Import all members from the module", StandardGlyphGroup.GlyphArrow) };
+                var completion = new[] { PythonCompletion(glyphService, "*", Strings.FromImportCompletionImportAllMembersFromModuleTooltip, StandardGlyphGroup.GlyphArrow) };
                 completions = completions.Concat(completion);
             }
 

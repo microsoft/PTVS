@@ -27,7 +27,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Uwp.Project {
@@ -42,7 +41,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
-        private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
+        private static readonly Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private IOleCommandTarget _menuService;
         private FileSystemWatcher _sitePackageWatcher;
         private readonly TaskScheduler _scheduler;
@@ -58,7 +57,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
             set {
                 Debug.Assert(_package == null);
                 if (_package != null) {
-                    throw new InvalidOperationException("PythonUwpProject.Package must only be set once");
+                    throw new InvalidOperationException(Resources.PackageMustOnlyBeSetOnce);
                 }
                 _package = value;
             }
@@ -160,7 +159,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
             // (This must run after we called base.SetInnerProject)
             _menuService = (IOleCommandTarget)((IServiceProvider)this).GetService(typeof(IMenuCommandService));
             if (_menuService == null) {
-                throw new InvalidOperationException("Cannot initialize Uwp project");
+                throw new InvalidOperationException(Resources.CannotInitializeUwpProjectException);
             }
         }
 

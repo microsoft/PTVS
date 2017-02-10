@@ -18,9 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -32,10 +30,10 @@ namespace Microsoft.PythonTools.Intellisense {
     internal sealed class AnalysisEntry : IDisposable {
         private readonly int _fileId;
         private readonly string _path;
-        public readonly VsProjectAnalyzer _analyzer;
+        private readonly VsProjectAnalyzer _analyzer;
         private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
 
-        internal IIntellisenseCookie _cookie;
+        private IIntellisenseCookie _cookie;
         private readonly object _bufferParserLock = new object();
         private BufferParser _bufferParser;
         private TaskCompletionSource<BufferParser> _bufferParserTask, _createBufferParserTask;

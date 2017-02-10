@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override string Name {
-            get { return "Debug"; }
+            get { return Strings.PythonDebugPropertyPageLabel; }
         }
 
         public override void Apply() {

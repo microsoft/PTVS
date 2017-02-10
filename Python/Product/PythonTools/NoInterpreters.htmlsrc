@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<!--
+Python Tools for Visual Studio
+Copyright(c) Microsoft Corporation
+All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the License); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing
+permissions and limitations under the License.
+-->
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>No Python interpreters found</title>
+    <style type="text/css" />
+</head>
+
+<body>
+    <h1 class="top">We didn't find any interpreters</h1>
+    <p>
+        Installing a Python interpreter will let you run your project, and will
+        include useful libraries and tools.
+    </p>
+    
+    <h2>
+        <a href="http://go.microsoft.com/fwlink/?LinkId=299430">
+            Download and install Python
+        </a>
+    </h2>
+    <p>
+        This will install the latest version (32-bit) from the
+        <a href="http://go.microsoft.com/fwlink/?LinkId=301496">Python
+        homepage</a>.
+    </p>
+    <p class="hint">
+        CPython is the most commonly used interpreter and has the most
+        up-to-date set of language features.
+    </p>
+    
+    <h2>
+        <a href="http://go.microsoft.com/fwlink/?LinkId=299429">
+            Help me choose one
+        </a>
+    </h2>
+    <p>
+        There are other interpreters and bundles that may better suit your
+        needs.
+    </p>
+    <p class="hint">
+        This link will take you to a web page that explains the differences and
+        will help you download and install a bundle.
+    </p>
+
+    <h2>
+        <a href="http://go.microsoft.com/fwlink/?LinkId=301497">
+            I already have one
+        </a>
+    </h2>
+    <p>
+        Sorry, but we did not detect it automatically. We can use it, but you'll
+        need to add it yourself.
+    </p>
+    <p class="hint">
+        This link will take you to a web page that will help you add your
+        existing interpreter.
+    </p>
+
+    <h2>
+        <a href="http://go.microsoft.com/fwlink/?LinkId=293415">
+            Still stuck?
+        </a>
+    </h2>
+    <p>
+        Visit our discussion forum and we'll be able to help you.
+    </p>
+    <p class="hint">
+        This link will take you to our homepage, where you can find more 
+        documentation, discussion forums, and updates.
+    </p>
+</body>
+</html>

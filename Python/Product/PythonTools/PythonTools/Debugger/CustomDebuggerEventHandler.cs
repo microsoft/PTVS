@@ -53,21 +53,16 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void WarnAboutPythonSymbols(string moduleName) {
-            const string content =
-                "Python/native mixed-mode debugging requires symbol files for the Python interpreter that is being debugged. Please add the folder " +
-                "containing those symbol files to your symbol search path, and force a reload of symbols for {0}.";
-
             var dialog = new TaskDialog(_serviceProvider);
 
-            var openSymbolSettings = new TaskDialogButton("Open symbol settings dialog");
-            var downloadSymbols = new TaskDialogButton("Download symbols for my interpreter");
+            var openSymbolSettings = new TaskDialogButton(Strings.MixedModeDebugSymbolsRequiredOpenSymbolSettings);
+            var downloadSymbols = new TaskDialogButton(Strings.MixedModeDebugSymbolsRequiredDownloadSymbols);
             dialog.Buttons.Add(openSymbolSettings);
             dialog.Buttons.Add(downloadSymbols);
-
             dialog.Buttons.Add(TaskDialogButton.Close);
             dialog.UseCommandLinks = true;
-            dialog.Title = "Python Symbols Required";
-            dialog.Content = string.Format(content, moduleName);
+            dialog.Title = Strings.MixedModeDebugSymbolsRequiredTitle;
+            dialog.Content = Strings.MixedModeDebugSymbolsRequiredMessage.FormatUI(moduleName);
             dialog.Width = 0;
 
             dialog.ShowModal();

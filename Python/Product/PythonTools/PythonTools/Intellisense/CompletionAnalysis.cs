@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IServiceProvider _serviceProvider;
         private readonly ITrackingSpan _span;
         private readonly ITextBuffer _textBuffer;
-        internal readonly CompletionOptions _options;
+        protected readonly CompletionOptions _options;
         internal const Int64 TooMuchTime = 50;
         protected static Stopwatch _stopwatch = MakeStopWatch();
 

@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Switches the current scope to the specified module name."; }
+            get { return Strings.ReplSwitchModuleCommandDescription; }
         }
 
         public string Command {
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public IEnumerable<string> DetailedDescription {
             get {
-                return new[] { "Switches the current scope to the specified module name." };
+                yield return Description;
             }
         }
 

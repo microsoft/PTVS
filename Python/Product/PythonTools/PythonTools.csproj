@@ -680,18 +680,18 @@
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <None Include="Theme\contrast.vstheme" />
-    <None Include="NoSurveyNewsFeed.html" />
-    <None Include="NoInterpreters.html" />
+    <None Include="NoSurveyNewsFeed.htmlsrc" />
+    <None Include="NoInterpreters.htmlsrc" />
     <None Include="ptvsd\attach_server.py" />
     <None Include="Theme\Microsoft.PythonTools.theme.v14.0.pkgdef" />
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
-    <Content Include="NoInterpreters.mht">
+    <Content Include="NoInterpreters.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="NoSurveyNewsFeed.mht">
+    <Content Include="NoSurveyNewsFeed.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

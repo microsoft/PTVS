@@ -19,8 +19,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
@@ -78,8 +76,7 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 } while (_nextId < int.MaxValue);
             }
-            throw new InvalidOperationException("Congratulations, you opened over 2 billion interactive windows this " +
-                "session! Now you need to restart Visual Studio to open any more.");
+            throw new InvalidOperationException(Strings.ReplWindowOutOfIds);
         }
 
         private bool EnsureInterpretersAvailable() {

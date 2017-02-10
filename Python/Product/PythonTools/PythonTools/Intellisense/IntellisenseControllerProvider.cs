@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -113,7 +112,7 @@ namespace Microsoft.PythonTools.Intellisense {
     [ContentType(PythonCoreConstants.ContentType)]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     class TextViewCreationListener : IVsTextViewCreationListener {
-        internal readonly IVsEditorAdaptersFactoryService _adaptersFactory;
+        private readonly IVsEditorAdaptersFactoryService _adaptersFactory;
 
         [ImportingConstructor]
         public TextViewCreationListener(IVsEditorAdaptersFactoryService adaptersFactory) {
