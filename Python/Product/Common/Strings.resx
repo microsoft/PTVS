@@ -1136,6 +1136,37 @@ but your command history will be preserved.</value>
   <data name="ExtractMethod" xml:space="preserve">
     <value>Extract Method</value>
   </data>
+  <data name="ExtractMethodInvalidTargetSelected" xml:space="preserve">
+    <value>Invalid target selected</value>
+  </data>
+  <data name="ExtractMethodInvalidExpressionSelected" xml:space="preserve">
+    <value>Invalid expression selected</value>
+  </data>
+  <data name="ExtractMethodAssignsVariablesAndReturns" xml:space="preserve">
+    <value>Cannot extract method that assigns to variables and returns</value>
+  </data>
+  <data name="ExtractMethodStatementsFromClassDefinition" xml:space="preserve">
+    <value>Cannot extract statements from a class definition</value>
+  </data>
+  <data name="ExtractMethodSelectionContainsBreakButNotEnclosingLoop" xml:space="preserve">
+    <value>The selection contains a "break" statement, but not the enclosing loop</value>
+  </data>
+  <data name="ExtractMethodSelectionContainsContinueButNotEnclosingLoop" xml:space="preserve">
+    <value>The selection contains a "continue" statement, but not the enclosing loop</value>
+  </data>
+  <data name="ExtractMethodContainsYieldExpression" xml:space="preserve">
+    <value>Cannot extract code containing "yield" expression</value>
+  </data>
+  <data name="ExtractMethodContainsFromImportStar" xml:space="preserve">
+    <value>Cannot extract method containing from ... import * statement</value>
+  </data>
+  <data name="ExtractMethodSelectionContainsReturn" xml:space="preserve">
+    <value>When the selection contains a return statement, all code paths must be terminated by a return statement too.</value>
+  </data>
+  <data name="ExtractMethodCannotExtract" xml:space="preserve">
+    <value>Cannot extract {0}</value>
+    <comment>{0} is the name of a code element</comment>
+  </data>
   <data name="ReplScriptPathIPythonModeTxtContents" xml:space="preserve">
     <value>#
 # This file specifies the REPL backend, which is an callable that

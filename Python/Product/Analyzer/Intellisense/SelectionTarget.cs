@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -119,7 +120,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public override string InvalidExtractionMessage {
             get {
                 if (!(_node is Expression || _node is Statement)) {
-                    return "Cannot extract " + _node.NodeName;
+                    return Strings.ExtractMethodCannotExtract.FormatUI(_node.NodeName);
                 }
                 return null;
             }
