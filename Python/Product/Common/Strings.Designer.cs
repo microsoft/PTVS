@@ -2197,6 +2197,96 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot extract method that assigns to variables and returns.
+        /// </summary>
+        public static string ExtractMethodAssignsVariablesAndReturns {
+            get {
+                return ResourceManager.GetString("ExtractMethodAssignsVariablesAndReturns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot extract {0}.
+        /// </summary>
+        public static string ExtractMethodCannotExtract {
+            get {
+                return ResourceManager.GetString("ExtractMethodCannotExtract", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot extract method containing from ... import * statement.
+        /// </summary>
+        public static string ExtractMethodContainsFromImportStar {
+            get {
+                return ResourceManager.GetString("ExtractMethodContainsFromImportStar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot extract code containing &quot;yield&quot; expression.
+        /// </summary>
+        public static string ExtractMethodContainsYieldExpression {
+            get {
+                return ResourceManager.GetString("ExtractMethodContainsYieldExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid expression selected.
+        /// </summary>
+        public static string ExtractMethodInvalidExpressionSelected {
+            get {
+                return ResourceManager.GetString("ExtractMethodInvalidExpressionSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid target selected.
+        /// </summary>
+        public static string ExtractMethodInvalidTargetSelected {
+            get {
+                return ResourceManager.GetString("ExtractMethodInvalidTargetSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selection contains a &quot;break&quot; statement, but not the enclosing loop.
+        /// </summary>
+        public static string ExtractMethodSelectionContainsBreakButNotEnclosingLoop {
+            get {
+                return ResourceManager.GetString("ExtractMethodSelectionContainsBreakButNotEnclosingLoop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selection contains a &quot;continue&quot; statement, but not the enclosing loop.
+        /// </summary>
+        public static string ExtractMethodSelectionContainsContinueButNotEnclosingLoop {
+            get {
+                return ResourceManager.GetString("ExtractMethodSelectionContainsContinueButNotEnclosingLoop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to When the selection contains a return statement, all code paths must be terminated by a return statement too..
+        /// </summary>
+        public static string ExtractMethodSelectionContainsReturn {
+            get {
+                return ResourceManager.GetString("ExtractMethodSelectionContainsReturn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot extract statements from a class definition.
+        /// </summary>
+        public static string ExtractMethodStatementsFromClassDefinition {
+            get {
+                return ResourceManager.GetString("ExtractMethodStatementsFromClassDefinition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to attach debugger:
         ///{0}.
         /// </summary>

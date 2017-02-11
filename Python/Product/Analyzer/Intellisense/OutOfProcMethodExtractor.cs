@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(walker.Target != null);
             if (walker.Target == null) {
                 return new AP.ExtractMethodResponse() {
-                    cannotExtractMsg = "Invalid target selected"
+                    cannotExtractMsg = Strings.ExtractMethodInvalidTargetSelected
                 };
             }
 
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // expand the selection if we aren't currently covering a full expression/statement
             if (!walker.Target.IsValidSelection) {
                 return new AP.ExtractMethodResponse() {
-                    cannotExtractMsg = "Invalid expression selected"
+                    cannotExtractMsg = Strings.ExtractMethodInvalidExpressionSelected
                 };
             }
 
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (outputCollector._outputVars.Count > 0 &&
                 walker.Target.ContainsReturn) {
                 return new AP.ExtractMethodResponse() {
-                    cannotExtractMsg = "Cannot extract method that assigns to variables and returns"
+                    cannotExtractMsg = Strings.ExtractMethodAssignsVariablesAndReturns
                 };
             }
 
@@ -275,7 +275,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static bool IsValidExtraction(SelectionTarget target, out string failureReason) {
             if (target.Parents[target.Parents.Length - 1] is ClassDefinition) {
-                failureReason = "Cannot extract statements from a class definition";
+                failureReason = Strings.ExtractMethodStatementsFromClassDefinition;
                 return false;
             }
 
@@ -288,31 +288,31 @@ namespace Microsoft.PythonTools.Intellisense {
             var breakContinueWalker = new ContinueBreakWalker();
             target.Walk(breakContinueWalker);
             if (breakContinueWalker.ContainsBreak) {
-                failureReason = "The selection contains a \"break\" statement, but not the enclosing loop";
+                failureReason = Strings.ExtractMethodSelectionContainsBreakButNotEnclosingLoop;
                 return false;
             } else if (breakContinueWalker.ContainsContinue) {
-                failureReason = "The selection contains a \"continue\" statement, but not the enclosing loop";
+                failureReason = Strings.ExtractMethodSelectionContainsContinueButNotEnclosingLoop;
                 return false;
             }
 
             var yieldWalker = new YieldWalker();
             target.Walk(yieldWalker);
             if (yieldWalker.ContainsYield) {
-                failureReason = "Cannot extract code containing \"yield\" expression";
+                failureReason = Strings.ExtractMethodContainsYieldExpression;
                 return false;
             }
 
             var importStarWalker = new ImportStarWalker();
             target.Walk(importStarWalker);
             if (importStarWalker.ContainsImportStar) {
-                failureReason = "Cannot extract method containing from ... import * statement";
+                failureReason = Strings.ExtractMethodContainsFromImportStar;
                 return false;
             }
 
             var returnWalker = new ReturnWalker();
             target.Walk(returnWalker);
             if (returnWalker.ContainsReturn && !returnWalker.Returns) {
-                failureReason = "When the selection contains a return statement, all code paths must be terminated by a return statement too.";
+                failureReason = Strings.ExtractMethodSelectionContainsReturn;
                 return false;
             }
 
