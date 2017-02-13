@@ -479,6 +479,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Output folder path.
+        /// </summary>
+        public static string OptionsPage_CreateToAutomationName {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreateToAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Folder location where the files will be created. Files may be replaced if the folder is not empty, but a backup of the existing files will be created as needed..
         /// </summary>
         public static string OptionsPage_CreateToTooltip {
@@ -817,6 +826,15 @@ namespace Microsoft.CookiecutterTools {
         public static string SearchPage_Search {
             get {
                 return ResourceManager.GetString("SearchPage_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search terms.
+        /// </summary>
+        public static string SearchPage_SearchAutomationName {
+            get {
+                return ResourceManager.GetString("SearchPage_SearchAutomationName", resourceCulture);
             }
         }
         

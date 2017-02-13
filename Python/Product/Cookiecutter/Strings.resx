@@ -304,6 +304,9 @@ Please delete the installed template and try again.</value>
   <data name="SearchPage_SearchTooltip" xml:space="preserve">
     <value>Enter search terms or template location (git repository URL or path to local folder)</value>
   </data>
+  <data name="SearchPage_SearchAutomationName" xml:space="preserve">
+    <value>Search terms</value>
+  </data>
   <data name="SearchPage_OpenInSolutionExplorer" xml:space="preserve">
     <value>Open in Solution Explorer</value>
   </data>
@@ -400,6 +403,9 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="OptionsPage_CreateToTooltip" xml:space="preserve">
     <value>Folder location where the files will be created. Files may be replaced if the folder is not empty, but a backup of the existing files will be created as needed.</value>
+  </data>
+  <data name="OptionsPage_CreateToAutomationName" xml:space="preserve">
+    <value>Output folder path</value>
   </data>
   <data name="OptionsPage_AddingToProject" xml:space="preserve">
     <value>Files will be added to your project.</value>
