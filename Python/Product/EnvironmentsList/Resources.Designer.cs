@@ -376,6 +376,51 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The completion DB does not have analysis results for all modules in this package..
+        /// </summary>
+        public static string DBExtensionIsNotUpToDateToolTip {
+            get {
+                return ResourceManager.GetString("DBExtensionIsNotUpToDateToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This package is up to date in the completion DB..
+        /// </summary>
+        public static string DBExtensionIsUpToDateToolTip {
+            get {
+                return ResourceManager.GetString("DBExtensionIsUpToDateToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ({0} modules).
+        /// </summary>
+        public static string DBExtensionModuleCountLabel {
+            get {
+                return ResourceManager.GetString("DBExtensionModuleCountLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh completion DB.
+        /// </summary>
+        public static string DBExtensionRefreshDBAutomationName {
+            get {
+                return ResourceManager.GetString("DBExtensionRefreshDBAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Refresh DB.
+        /// </summary>
+        public static string DBExtensionRefreshDBLabel {
+            get {
+                return ResourceManager.GetString("DBExtensionRefreshDBLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This environment cannot be made the default..
         /// </summary>
         public static string EnvironmentPathsExtensionCannotBeDefaultLabel {
@@ -493,6 +538,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add new environment.
+        /// </summary>
+        public static string EnvironmentViewCustomAutomationName {
+            get {
+                return ResourceManager.GetString("EnvironmentViewCustomAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Custom....
         /// </summary>
         public static string EnvironmentViewCustomLabel {
@@ -504,9 +558,36 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         ///   Looks up a localized string similar to Open Interactive Window.
         /// </summary>
+        public static string EnvironmentViewInteractiveWindowAutomationName {
+            get {
+                return ResourceManager.GetString("EnvironmentViewInteractiveWindowAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Interactive Window.
+        /// </summary>
         public static string EnvironmentViewInteractiveWindowTooltip {
             get {
                 return ResourceManager.GetString("EnvironmentViewInteractiveWindowTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Completion DB is not up to date. Click to start refreshing.
+        /// </summary>
+        public static string EnvironmentViewNeedRefreshAutomationHelp {
+            get {
+                return ResourceManager.GetString("EnvironmentViewNeedRefreshAutomationHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh completion DB.
+        /// </summary>
+        public static string EnvironmentViewNeedRefreshAutomationName {
+            get {
+                return ResourceManager.GetString("EnvironmentViewNeedRefreshAutomationName", resourceCulture);
             }
         }
         
@@ -745,6 +826,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Standard Library).
+        /// </summary>
+        public static string StandardLibraryModuleListItem {
+            get {
+                return ResourceManager.GetString("StandardLibraryModuleListItem", resourceCulture);
             }
         }
         

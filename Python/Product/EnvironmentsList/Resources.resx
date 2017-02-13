@@ -129,6 +129,21 @@
   <data name="DBExtensionHelpContent" xml:space="preserve">
     <value>This list shows the modules as detected by IntelliSense. If you do not see your library here, it may not be installed correctly.</value>
   </data>
+  <data name="DBExtensionRefreshDBLabel" xml:space="preserve">
+    <value>_Refresh DB</value>
+  </data>
+  <data name="DBExtensionRefreshDBAutomationName" xml:space="preserve">
+    <value>Refresh completion DB</value>
+  </data>
+  <data name="DBExtensionModuleCountLabel" xml:space="preserve">
+    <value>({0} modules)</value>
+  </data>
+  <data name="DBExtensionIsUpToDateToolTip" xml:space="preserve">
+    <value>This package is up to date in the completion DB.</value>
+  </data>
+  <data name="DBExtensionIsNotUpToDateToolTip" xml:space="preserve">
+    <value>The completion DB does not have analysis results for all modules in this package.</value>
+  </data>
   <data name="EnvironmentPathsExtensionDisplayName" xml:space="preserve">
     <value>Overview</value>
   </data>
@@ -304,6 +319,18 @@
   <data name="EnvironmentViewOnlineHelpLabel" xml:space="preserve">
     <value>Go online and help me find other environments</value>
   </data>
+  <data name="EnvironmentViewNeedRefreshAutomationName" xml:space="preserve">
+    <value>Refresh completion DB</value>
+  </data>
+  <data name="EnvironmentViewNeedRefreshAutomationHelp" xml:space="preserve">
+    <value>Completion DB is not up to date. Click to start refreshing</value>
+  </data>
+  <data name="EnvironmentViewInteractiveWindowAutomationName" xml:space="preserve">
+    <value>Open Interactive Window</value>
+  </data>
+  <data name="EnvironmentViewCustomAutomationName" xml:space="preserve">
+    <value>Add new environment</value>
+  </data>
   <data name="EnvironmentPathsExtensionMakeDefaultLabel" xml:space="preserve">
     <value>Make this the default environment for new projects</value>
   </data>
@@ -364,5 +391,8 @@
   </data>
   <data name="PipPackageUnknownPackageSpec" xml:space="preserve">
     <value>(unknown)</value>
+  </data>
+  <data name="StandardLibraryModuleListItem" xml:space="preserve">
+    <value>(Standard Library)</value>
   </data>
 </root>
