@@ -208,7 +208,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             IPythonInterpreterFactoryWithDatabase factory
         ) {
             var stdLib = new HashSet<string>(stdLibModules, StringComparer.Ordinal);
-            var stdLibPackage = new DBPackageView("(Standard Library)");
+            var stdLibPackage = new DBPackageView(Resources.StandardLibraryModuleListItem);
             yield return stdLibPackage;
 #if DEBUG
             var seenPackages = new HashSet<string>(StringComparer.Ordinal);

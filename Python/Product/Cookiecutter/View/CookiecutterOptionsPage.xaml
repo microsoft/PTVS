@@ -188,7 +188,7 @@
                                               IsReadOnly="{Binding Path=FixedOutputFolder}"
                                               Watermark="{x:Static cct:Strings.OptionsPage_CreateToWatermark}"
                                               BrowseButtonStyle="{StaticResource BrowseFolderButton}"
-                                              AutomationProperties.Name="Output folder path"
+                                              AutomationProperties.Name="{x:Static cct:Strings.OptionsPage_CreateToAutomationName}"
                                               HelpText="{x:Static cct:Strings.OptionsPage_CreateToTooltip}">
                 <wpf:ConfigurationTextBoxWithHelp.Resources>
                     <Style TargetType="{x:Type Button}">

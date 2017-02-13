@@ -30,29 +30,20 @@
 
                             <TextBlock Grid.Column="2"
                                        VerticalAlignment="Center"
-                                       x:Name="ModuleCount">
-                                <Run>(</Run><Run Text="{Binding TotalModules,Mode=OneWay}" />
-                                <Run> modules)</Run>
-                            </TextBlock>
+                                       x:Name="ModuleCount"
+                                       Text="{Binding TotalModules,Mode=OneWay,StringFormat={x:Static l:Resources.DBExtensionModuleCountLabel}}"/>
 
                             <Control Grid.Column="0"
                                      x:Name="IsUpToDate"
                                      Margin="2"
-                                     Style="{StaticResource CheckMarkImage}">
-                                <Control.ToolTip>
-                                    This package is up to date in the completion DB.
-                                </Control.ToolTip>
-                            </Control>
+                                     Style="{StaticResource CheckMarkImage}"
+                                     ToolTip="{x:Static l:Resources.DBExtensionIsUpToDateToolTip}"/>
                             <Control Grid.Column="0"
                                      x:Name="IsNotUpToDate"
                                      Visibility="Hidden"
                                      Margin="2"
-                                     Style="{StaticResource ExclamationPointImage}">
-                                <Control.ToolTip>
-                                    The completion DB does not have analysis
-                                    results for all modules in this package.
-                                </Control.ToolTip>
-                            </Control>
+                                     Style="{StaticResource ExclamationPointImage}"
+                                     ToolTip="{x:Static l:Resources.DBExtensionIsNotUpToDateToolTip}"/>
                         </Grid>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding TotalModules,Mode=OneWay}" Value="1">
@@ -72,7 +63,7 @@
                                     CommandParameter="{Binding EnvironmentView}"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    AutomationProperties.Name="Refresh completion DB">
+                                    AutomationProperties.Name="{x:Static l:Resources.DBExtensionRefreshDBAutomationName}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -82,9 +73,8 @@
                                              Margin="3"
                                              Style="{StaticResource RefreshImage}" />
                                     <AccessText Grid.Column="1"
-                                                VerticalAlignment="Center">
-                                        _Refresh DB
-                                    </AccessText>
+                                                VerticalAlignment="Center"
+                                                Text="{x:Static l:Resources.DBExtensionRefreshDBLabel}"/>
                                 </Grid>
                             </Button>
 
