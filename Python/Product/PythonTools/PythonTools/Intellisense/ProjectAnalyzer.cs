@@ -2082,8 +2082,12 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal static void ApplyChanges(AP.ChangeInfo[] changes, ITextBuffer textBuffer, LocationTracker translator) {
+            if (translator == null) {
+                throw new ArgumentNullException(nameof(translator));
+            }
+
             using (var edit = textBuffer.CreateEdit()) {
-                foreach (var change in changes) {
+                foreach (var change in changes.MaybeEnumerate()) {
                     edit.Replace(
                         translator.TranslateForward(new Span(change.start, change.length)),
                         change.newText
