@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools {
             _advancedOptions = new Lazy<AdvancedEditorOptions>(CreateAdvancedEditorOptions);
             _debuggerOptions = new Lazy<DebuggerOptions>(CreateDebuggerOptions);
             _generalOptions = new Lazy<GeneralOptions>(CreateGeneralOptions);
-            _surveyNews = new Lazy<SurveyNewsService>(() => new SurveyNewsService(container));
+            _surveyNews = new Lazy<SurveyNewsService>(() => new SurveyNewsService(this));
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
@@ -475,10 +475,14 @@ namespace Microsoft.PythonTools {
 
         internal event EventHandler<ComponentManagerEventArgs> OnIdle {
             add {
-                _idleManager.OnIdle += value;
+                lock (_idleManager) {
+                    _idleManager.OnIdle += value;
+                }
             }
             remove {
-                _idleManager.OnIdle -= value;
+                lock (_idleManager) {
+                    _idleManager.OnIdle -= value;
+                }
             }
         }
 
