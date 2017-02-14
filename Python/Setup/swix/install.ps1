@@ -6,6 +6,7 @@ if (-not $vs) {
 }
 
 $install_dirs = @(
+    "Common7\IDE\Extensions\Microsoft\Cookiecutter",
     "Common7\IDE\Extensions\Microsoft\Python",
     "Common7\IDE\ProjectTemplates\Python",
     "Common7\IDE\ProjectTemplatesCache\Python",
