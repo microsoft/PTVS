@@ -106,6 +106,18 @@ namespace Microsoft.VisualStudioTools {
         }
 
         [Conditional("DEBUG")]
+        // Available on serviceProvider so we can avoid the GetUIThread call on release builds
+        public static void MustBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = "Invalid cross-thread call") {
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread(message);
+        }
+
+        [Conditional("DEBUG")]
+        // Available on serviceProvider so we can avoid the GetUIThread call on release builds
+        public static void MustNotBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = "Invalid cross-thread call") {
+            serviceProvider.GetUIThread().MustNotBeCalledFromUIThread(message);
+        }
+
+        [Conditional("DEBUG")]
         public static void MustBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
             Debug.Assert(self is MockUIThreadBase || !self.InvokeRequired, message);
         }
