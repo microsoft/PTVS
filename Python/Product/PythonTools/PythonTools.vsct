@@ -36,8 +36,11 @@ permissions and limitations under the License.
 
     <Menus>
       <!-- Menus -->
-      <Menu guid="guidPythonToolsCmdSet" id="PythonMenu" priority="0xF000" type="Menu">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS"/>
+      <Menu guid="guidPythonToolsCmdSet" id="PythonMenu" priority="0x0000" type="Menu">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_PROJECT"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>AllowVisibilityChangeOnToolBar</CommandFlag>
         <Strings>
           <ButtonText>P&amp;ython</ButtonText>
           <CanonicalName>Python</CanonicalName>
@@ -45,19 +48,12 @@ permissions and limitations under the License.
         </Strings>
       </Menu>
 
-      <Menu guid="guidPythonToolsCmdSet" id="PythonProjectMenu" priority="0xF001" type="Menu">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS"/>
-        <Strings>
-          <ButtonText>Project</ButtonText>
-          <CanonicalName>Project</CanonicalName>
-          <LocCanonicalName>Project</LocCanonicalName>
-        </Strings>
-      </Menu>
-
       <Menu guid="guidPythonToolsCmdSet" id="ToolsMenu" priority="0x8008" type="Menu">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_TOOLS_OTHER2"/>
         <Strings>
           <ButtonText>&amp;Python</ButtonText>
+          <CanonicalName>Python</CanonicalName>
+          <LocCanonicalName>Python</LocCanonicalName>
         </Strings>
       </Menu>
 
@@ -176,8 +172,8 @@ permissions and limitations under the License.
       <!--
         Search Path Container context menu
       -->
-      <Group guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup" priority="0x0007">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonProjectMenu"/>
+      <Group guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup" priority="0xE100">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
       </Group>
 
       <!--
@@ -216,7 +212,7 @@ permissions and limitations under the License.
     
     <Buttons>
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingFolder" priority="0x0500" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonProjectMenu"/>
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_PROJ_ADD"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>CommandWellOnly</CommandFlag>
@@ -236,7 +232,6 @@ permissions and limitations under the License.
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Execute File in Python &amp;Interactive</ButtonText>
           <ToolTipText>Execute File in Python Interactive</ToolTipText>
@@ -250,7 +245,6 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Send to &amp;Interactive</ButtonText>
           <ToolTipText>Sends the current editor selection to a Python Interactive window.</ToolTipText>
@@ -263,7 +257,6 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>&amp;Fill Comment Paragraph</ButtonText>
           <ToolTipText>Reflows the selected paragraph to adjust its width.</ToolTipText>
@@ -277,7 +270,6 @@ permissions and limitations under the License.
       <!--================================================================================================================-->
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add/Remove Python &amp;Environments...</ButtonText>
           <ToolTipText>Allows Python environments to be added or removed from this project.</ToolTipText>
@@ -288,7 +280,6 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddVirtualEnv" priority="0x0110" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Virtual Environment...</ButtonText>
           <ToolTipText>Adds a new or existing virtual environment to this project.</ToolTipText>
@@ -299,7 +290,6 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingVirtualEnv" priority="0x0120" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsAddCommandsGroup"/>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add Existing &amp;Virtual Environment...</ButtonText>
           <ToolTipText>Browses for an existing virtual environment to add to this project.</ToolTipText>
@@ -313,7 +303,6 @@ permissions and limitations under the License.
         <!-- No PYEnvironment image yet -->
         <Icon guid="ImageCatalogGuid" id="DockPanel"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Vie&amp;w All Python Environments</ButtonText>
           <ToolTipText>Open the Python Environments window.</ToolTipText>
@@ -325,7 +314,7 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidActivateEnvironment" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>&amp;Activate Environment</ButtonText>
           <ToolTipText>Makes this environment the active environment for the project.</ToolTipText>
@@ -340,7 +329,7 @@ permissions and limitations under the License.
         <CommandFlag>AllowParams</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Open I&amp;nteractive Window</ButtonText>
           <ToolTipText>Opens an interactive window for this environment.</ToolTipText>
@@ -352,7 +341,7 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidInstallPythonPackage" priority="0x0300" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>&amp;Install Python Package...</ButtonText>
           <ToolTipText>Installs a package into this environment.</ToolTipText>
@@ -364,7 +353,7 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidInstallRequirementsTxt" priority="0x0400" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Ins&amp;tall from requirements.txt</ButtonText>
           <ToolTipText>Installs from dependencies from a requirements.txt file into this environment.</ToolTipText>
@@ -376,7 +365,7 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidGenerateRequirementsTxt" priority="0x0410" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>&amp;Generate requirements.txt</ButtonText>
           <ToolTipText>Generates or updates a requirements.txt file for this environment.</ToolTipText>
@@ -391,7 +380,6 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidDiagnostics" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>&amp;Diagnostic Info...</ButtonText>
           <ToolTipText>Displays detailed diagnostic information.</ToolTipText>
@@ -403,7 +391,6 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidImportCoverage" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>&amp;Import coverage file...</ButtonText>
           <ToolTipText>Imports a coverage.xml file produced by coverage.py.</ToolTipText>
@@ -414,7 +401,6 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidSurveyNews" priority="0x0200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Survey/&amp;News...</ButtonText>
           <ToolTipText>Displays recent news and surveys from the Python tools team.</ToolTipText>
@@ -426,7 +412,6 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidImportWizard" priority="0x0300" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Import Existing &amp;Project...</ButtonText>
           <ToolTipText>Starts the New Project from Existing Code wizard.</ToolTipText>
@@ -471,7 +456,6 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
         <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>P&amp;ython Debug Interactive</ButtonText>
           <ToolTipText>Opens the Python Debug Interactive window.</ToolTipText>
@@ -486,7 +470,6 @@ permissions and limitations under the License.
         <Icon guid="ImageCatalogGuid" id="DockPanel"/>
         <CommandFlag>TextChanges</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Python &amp;Environments</ButtonText>
           <ToolTipText>View all Python environments.</ToolTipText>
@@ -500,7 +483,6 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
         <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>P&amp;ython Interactive Window</ButtonText>
           <ToolTipText>Opens the Python Interactive window.</ToolTipText>
@@ -517,7 +499,6 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="WebGroup"/>
         <Icon guid="ImageCatalogGuid" id="WebDestination"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>&amp;Python products and information</ButtonText>
           <ToolTipText>Opens a web site to help you discover Python-related products and information from Microsoft.</ToolTipText>
@@ -530,7 +511,6 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="WebGroup"/>
         <Icon guid="ImageCatalogGuid" id="Bug"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>&amp;Issues and suggestions</ButtonText>
           <ToolTipText>Opens a web site where you can report issues and suggestions for Python support in Visual Studio.</ToolTipText>
@@ -543,7 +523,6 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="WebGroup"/>
         <Icon guid="ImageCatalogGuid" id="WebDestination"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Microsoft &amp;Data products</ButtonText>
           <ToolTipText>Opens a web site to help you discover data-related products from Microsoft.</ToolTipText>
@@ -557,7 +536,7 @@ permissions and limitations under the License.
       <!--================================================================================================================-->
       
       <Button guid="guidPythonToolsCmdSet" id="cmdidSetAsStartupFile" priority="0x0300" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonProjectMenu"/>
+        <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>CommandWellOnly</CommandFlag>
@@ -571,7 +550,7 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x0301" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup"/>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Add Folder to Search &amp;Path...</ButtonText>
           <ToolTipText>Adds a folder to the search path.</ToolTipText>
@@ -582,7 +561,7 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPathZip" priority="0x0302" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup"/>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Zip Archive to Search Path...</ButtonText>
           <ToolTipText>Adds a zip or egg file to the search path.</ToolTipText>
@@ -593,7 +572,7 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdIdAddPythonPathToSearchPath" priority="0x0303" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup"/>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Add P&amp;YTHONPATH to Search Path</ButtonText>
           <ToolTipText>Adds the current global PYTHONPATH to the search path.</ToolTipText>
@@ -606,7 +585,7 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>&amp;Start without Debugging</ButtonText>
           <ToolTipText>Starts executing this file without debugging.</ToolTipText>
@@ -619,7 +598,7 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Start with &amp;Debugging</ButtonText>
           <ToolTipText>Starts executing this file with debugging.</ToolTipText>
@@ -632,7 +611,7 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Open Command &amp;Prompt Here...</ButtonText>
           <ToolTipText>Opens Command Prompt at the selected file or directory.</ToolTipText>
@@ -645,7 +624,7 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Copy F&amp;ull Path</ButtonText>
           <ToolTipText>Copies the full path of the selected item to the clipboard.</ToolTipText>
@@ -657,7 +636,6 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidInstallProjectRequirements" priority="0x0610" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <CommandFlag>AllowParams</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Ins&amp;tall Project Requirements</ButtonText>
@@ -686,8 +664,6 @@ permissions and limitations under the License.
       <!--================================================================================================================-->
       <Button guid="guidPythonToolsCmdSet" id="cmdidExtractMethod" priority="0x200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RefactoringCommon"/>
-
-        <!-- <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" /> -->
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>CommandWellOnly</CommandFlag>
@@ -701,8 +677,6 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidRefactorRename" priority="0x100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RefactoringCommon"/>
-
-        <!-- <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" /> -->
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>CommandWellOnly</CommandFlag>
@@ -1174,7 +1148,6 @@ permissions and limitations under the License.
       <IDSymbol name="EnvironmentPackageMenu" value="0x2008" />
       <IDSymbol name="SearchPathContainerMenu" value="0x2009" />
       <IDSymbol name="SearchPathMenu" value="0x200A" />
-      <IDSymbol name="PythonProjectMenu" value="0x200B"/>
 
       <!-- combos -->
       <IDSymbol name="comboIdReplScopes" value="0x5000"/>
