@@ -92,8 +92,8 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="WindowsBase" />
-    <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
-    <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureWebRoleTests.cs" />

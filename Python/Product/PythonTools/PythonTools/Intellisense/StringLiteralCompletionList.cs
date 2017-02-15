@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;

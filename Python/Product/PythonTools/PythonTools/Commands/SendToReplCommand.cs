@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;

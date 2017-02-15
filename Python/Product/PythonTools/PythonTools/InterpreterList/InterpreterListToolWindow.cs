@@ -25,7 +25,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;

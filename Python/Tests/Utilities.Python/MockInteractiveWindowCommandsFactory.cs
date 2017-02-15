@@ -20,8 +20,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.InteractiveWindow;
-using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 

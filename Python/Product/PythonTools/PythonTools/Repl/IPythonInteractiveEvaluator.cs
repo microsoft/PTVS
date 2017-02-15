@@ -16,7 +16,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Repl {
     /// <summary>

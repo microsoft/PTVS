@@ -31,8 +31,8 @@ using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.InteractiveWindow;
-using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
@@ -661,7 +661,9 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal Task InvokeAsync(Action action) {
-            return ((System.Windows.UIElement)_window.GetTextViewHost()).Dispatcher.InvokeAsync(action).Task;
+            // TOOD: Verify this
+            return _window.TextView.VisualElement.Dispatcher.InvokeAsync(action).Task;
+            //return ((System.Windows.UIElement)_window.GetTextViewHost()).Dispatcher.InvokeAsync(action).Task;
         }
 
         internal void WriteFrameworkElement(System.Windows.UIElement control, System.Windows.Size desiredSize) {
