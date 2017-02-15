@@ -550,7 +550,7 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x0301" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add Folder to Search &amp;Path...</ButtonText>
           <ToolTipText>Adds a folder to the search path.</ToolTipText>
@@ -561,7 +561,7 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPathZip" priority="0x0302" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Zip Archive to Search Path...</ButtonText>
           <ToolTipText>Adds a zip or egg file to the search path.</ToolTipText>
@@ -572,7 +572,7 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdIdAddPythonPathToSearchPath" priority="0x0303" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup"/>
-        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add P&amp;YTHONPATH to Search Path</ButtonText>
           <ToolTipText>Adds the current global PYTHONPATH to the search path.</ToolTipText>
@@ -856,17 +856,17 @@ permissions and limitations under the License.
       <Parent guid="guidPythonToolsCmdSet" id="EnvironmentsContainerMenu"/>
     </CommandPlacement>
 
-    
+
     <CommandPlacement guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup" priority="0x0006">
       <Parent guid="guidPythonToolsCmdSet" id="EnvironmentMenu"/>
     </CommandPlacement>
 
-    
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup" priority="0x0007">
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup" priority="0x0000">
       <Parent guid="guidPythonToolsCmdSet" id="SearchPathContainerMenu"/>
     </CommandPlacement>
 
-    
+
     <CommandPlacement guid="guidPythonToolsCmdSet" id="WebGroup" priority="0x0080">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenu"/>
     </CommandPlacement>
@@ -1032,7 +1032,6 @@ permissions and limitations under the License.
     <CommandPlacement guid="guidPythonToolsCmdSet" id="comboIdReplScopes" priority="0x0300">
       <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
     </CommandPlacement>
-
   </CommandPlacements>
 
   <KeyBindings>

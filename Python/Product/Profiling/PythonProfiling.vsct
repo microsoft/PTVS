@@ -94,54 +94,57 @@
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <Strings>
           <ButtonText>Launch &amp;Python Profiling...</ButtonText>
-          <CanonicalName>.Python.LaunchProfiling</CanonicalName>
-          <LocCanonicalName>.Python.LaunchProfiling</LocCanonicalName>
+          <CanonicalName>Launch Profiling</CanonicalName>
+          <LocCanonicalName>Launch Profiling</LocCanonicalName>
         </Strings>
       </Button>
       
       <!-- View->Other Windows items -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <Icon guid="ImageCatalogGuid" id="Performance"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Performance Explorer</ButtonText>
-          <CanonicalName>.Python.PerformanceExplorer</CanonicalName>
-          <LocCanonicalName>.Python.PerformanceExplorer</LocCanonicalName>
+          <CanonicalName>Performance Explorer</CanonicalName>
+          <LocCanonicalName>Performance Explorer</LocCanonicalName>
         </Strings>
       </Button>
 
       <!-- Toolbar Buttons -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidAddPerfSession" priority="0x0000" type="Button">
-        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Icon guid="ImageCatalogGuid" id="NewPerformanceReport"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add Performance Session</ButtonText>
-          <CanonicalName>.Python.AddPerformanceSession</CanonicalName>
-          <LocCanonicalName>.Python.AddPerformanceSession</LocCanonicalName>
+          <CanonicalName>Add Performance Session</CanonicalName>
+          <LocCanonicalName>Add Performance Session</LocCanonicalName>
         </Strings>
       </Button>
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidStartProfiling" priority="0x0000" type="Button">
-        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidStartProfiling" priority="0x0100" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Icon guid="ImageCatalogGuid" id="RunPerformance"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Start Profiling</ButtonText>
-          <CanonicalName>.Python.StartProfiling</CanonicalName>
-          <LocCanonicalName>.Python.StartProfiling</LocCanonicalName>
+          <CanonicalName>Start Profiling</CanonicalName>
+          <LocCanonicalName>Start Profiling</LocCanonicalName>
         </Strings>
       </Button>
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidStopProfiling" priority="0x0000" type="Button">
-        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidStopProfiling" priority="0x0200" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Icon guid="ImageCatalogGuid" id="StopFilter"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Stop Profiling</ButtonText>
-          <CanonicalName>.Python.StopProfiling</CanonicalName>
-          <LocCanonicalName>.Python.StopProfiling</LocCanonicalName>
+          <CanonicalName>Stop Profiling</CanonicalName>
+          <LocCanonicalName>Stop Profiling</LocCanonicalName>
         </Strings>
       </Button>
       
@@ -163,31 +166,31 @@
       
       <!-- Context menu items for reports folder -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button">
-        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Strings>
           <ButtonText>&amp;Add Report...</ButtonText>
-          <CanonicalName>.Python.AddPerformanceReport</CanonicalName>
-          <LocCanonicalName>.Python.AddPerformanceReport</LocCanonicalName>
+          <CanonicalName>Add Performance Report</CanonicalName>
+          <LocCanonicalName>Add Performance Report</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x0000" type="Button">
-        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Icon guid="ImageCatalogGuid" id="PerformanceReport"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;Compare Performance Reports...</ButtonText>
-          <CanonicalName>.Python.ComparePerformanceReports</CanonicalName>
-          <LocCanonicalName>.Python.ComparePerformanceReports</LocCanonicalName>
+          <CanonicalName>Compare Performance Reports</CanonicalName>
+          <LocCanonicalName>Compare Performance Reports</LocCanonicalName>
         </Strings>
       </Button>
       
       <!-- Context menu items for report item -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button">
-        <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Strings>
           <ButtonText>&amp;Open</ButtonText>
-          <CanonicalName>.Python.OpenPerformanceReport</CanonicalName>
-          <LocCanonicalName>.Python.OpenPerformanceReport</LocCanonicalName>
+          <CanonicalName>Open Performance Report</CanonicalName>
+          <LocCanonicalName>Open Performance Report</LocCanonicalName>
         </Strings>
       </Button>
     </Buttons>
@@ -222,6 +225,31 @@
     </CommandPlacement>
     <CommandPlacement guid="guidVSStd97" id="cmdidRename" priority="0x10">
       <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidAddPerfSession" priority="0x0100">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartProfiling" priority="0x0200">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStopProfiling" priority="0x0300">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0100">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x0200">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000">
+      <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
     </CommandPlacement>
   </CommandPlacements>
 
@@ -277,6 +305,7 @@
     <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
       <IDSymbol name="ToolsGroup" value="0x1012" />
       <IDSymbol name="WindowCommandsGroup" value="0x1014" />
+      <IDSymbol name="PythonMenu" value="0x2000"/>
     </GuidSymbol>
   </Symbols>
 
