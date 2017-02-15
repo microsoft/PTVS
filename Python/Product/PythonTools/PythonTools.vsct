@@ -110,6 +110,19 @@ permissions and limitations under the License.
           <ButtonText>Search Path</ButtonText>
         </Strings>
       </Menu>
+
+      <!-- REPL window toolbar -->
+      <Menu Condition="Defined(DEV15_OR_LATER)" guid="guidPythonToolsCmdSet" id="ReplWindowToolbar" type="ToolWindowToolbar" priority="0x100">
+        <Parent guid="guidPythonToolsCmdSet" id="0" />
+        <CommandFlag>DefaultDocked</CommandFlag>
+        <CommandFlag>NoToolbarClose</CommandFlag>
+        <CommandFlag>AlwaysCreate</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Python Interactive Window</ButtonText>
+          <CommandName>Python Interactive Window</CommandName>
+        </Strings>
+      </Menu>
     </Menus>
 
     <Groups>
@@ -246,6 +259,26 @@ permissions and limitations under the License.
       </Group>
       <Group guid="guidSHLMainMenu" id="IDG_VS_CTXT_ITEM_PROPERTIES" priority="0x0300">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathMenu" />
+      </Group>
+
+      <!-- Interactive Window groups for Dev15 -->
+      <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarWindowGroup" priority="0x0100" Condition="Defined(DEV15_OR_LATER)">
+        <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+      </Group>
+      <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup" priority="0x0200" Condition="Defined(DEV15_OR_LATER)">
+        <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+      </Group>
+      <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup" priority="0x0300" Condition="Defined(DEV15_OR_LATER)">
+        <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+      </Group>
+
+      <!-- Interactive Window groups for Dev14 -->
+      <!-- Note: Built in standard group has priority 0, so ordering of groups is slightly different -->
+      <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarWindowGroup" priority="0x0100" Condition="Defined(DEV14)">
+        <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
+      </Group>
+      <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup" priority="0x0200" Condition="Defined(DEV14)">
+        <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
       </Group>
     </Groups>
     
@@ -786,7 +819,7 @@ permissions and limitations under the License.
       <!--===========================================================================================================-->
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidNewInteractiveWindow" priority="0x0100" type="Button">
-        <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarWindowGroup"/>
         <Icon guid="ImageCatalogGuid" id="NewWindow"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -800,7 +833,7 @@ permissions and limitations under the License.
       </Button>
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveScopeInEditor" priority="0x0301" type="Button">
-        <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup"/>
         <Icon guid="ImageCatalogGuid" id="Open"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
@@ -822,7 +855,7 @@ permissions and limitations under the License.
              priority="0x0200" 
              type="DropDownCombo" 
              defaultWidth="150">
-        <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
@@ -841,7 +874,7 @@ permissions and limitations under the License.
              priority="0x0300" 
              type="DropDownCombo" 
              defaultWidth="130">
-        <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
@@ -887,6 +920,23 @@ permissions and limitations under the License.
     </CommandPlacement>
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveForEnvironment" priority="0x0020">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
+    </CommandPlacement>
+
+    <!-- Interactive Window -->
+    <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidAbortExecution" priority="0x0110">
+      <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidReset" priority="0x0120">
+      <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidClearScreen" priority="0x0130">
+      <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidHistoryPrevious" priority="0x0140">
+      <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidHistoryNext" priority="0x0150">
+      <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup"/>
     </CommandPlacement>
   </CommandPlacements>
 
@@ -989,6 +1039,9 @@ permissions and limitations under the License.
       <IDSymbol name="EnvironmentCommandsGroup" value="0x105E" />
       <IDSymbol name="SearchPathCommandsGroup" value="0x1060" />
       <IDSymbol name="WebGroup" value="0x1061" />
+      <IDSymbol name="InteractiveToolbarWindowGroup" value="0x1062" />
+      <IDSymbol name="InteractiveToolbarStandardGroup" value="0x1063" />
+      <IDSymbol name="InteractiveToolbarPythonGroup" value="0x1064" />
 
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value="0x2001" />
@@ -1001,6 +1054,7 @@ permissions and limitations under the License.
       <IDSymbol name="EnvironmentPackageMenu" value="0x2008" />
       <IDSymbol name="SearchPathContainerMenu" value="0x2009" />
       <IDSymbol name="SearchPathMenu" value="0x200A" />
+      <IDSymbol name="ReplWindowToolbar" value="0x200B"/>
 
       <!-- combos -->
       <IDSymbol name="comboIdReplScopes" value="0x5000"/>
@@ -1019,8 +1073,15 @@ permissions and limitations under the License.
       <IDSymbol name="groupAzureDiagnostics" value="400" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidInteractiveWindowCmdSet" value="{F27554FA-3DF4-4649-A81C-1B97C932E78B}">
-      <IDSymbol name="InteractiveToolbarGroup" value="0x1053"/>
+    <!-- InteractiveWindow Guid -->
+    <GuidSymbol name="guidInteractiveWindowCmdSet" value="{00B8868B-F9F5-4970-A048-410B05508506}">
+      <!-- https://github.com/dotnet/roslyn/blob/releases/VS2015/src/InteractiveWindow/VisualStudio/InteractiveWindow.vsct -->
+      <IDSymbol name="menuIdInteractiveToolbar" value="0x2000"/>
+      <IDSymbol name="cmdidAbortExecution" value="0x0104"/>
+      <IDSymbol name="cmdidReset" value="0x0105"/>
+      <IDSymbol name="cmdidHistoryNext" value="0x0106"/>
+      <IDSymbol name="cmdidHistoryPrevious" value="0x0107"/>
+      <IDSymbol name="cmdidClearScreen" value="0x0108"/>
     </GuidSymbol>
   </Symbols>
 </CommandTable>

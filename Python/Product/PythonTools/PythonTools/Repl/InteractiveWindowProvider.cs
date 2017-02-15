@@ -230,7 +230,29 @@ namespace Microsoft.PythonTools.Repl {
                 creationFlags |= __VSCREATETOOLWIN.CTW_fForceCreate;
             }
 
-            var replWindow = _windowFactory.Create(GuidList.guidPythonInteractiveWindowGuid, id, title, evaluator, creationFlags);
+#if DEV15_OR_LATER
+            var windowFactory2 = _windowFactory as IVsInteractiveWindowFactory2;
+            var replWindow = windowFactory2.Create(
+                GuidList.guidPythonInteractiveWindowGuid,
+                id,
+                title,
+                evaluator,
+                creationFlags,
+                GuidList.guidPythonToolsCmdSet,
+                PythonConstants.ReplWindowToolbar,
+                null
+            );
+
+#else
+            var replWindow = _windowFactory.Create(
+                GuidList.guidPythonInteractiveWindowGuid,
+                id,
+                title,
+                evaluator,
+                creationFlags
+            );
+#endif
+
             replWindow.InteractiveWindow.Properties[VsInteractiveWindowKey] = replWindow;
             var toolWindow = replWindow as ToolWindowPane;
             if (toolWindow != null) {
