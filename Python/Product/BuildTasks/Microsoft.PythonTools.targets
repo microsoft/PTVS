@@ -150,7 +150,7 @@ permissions and limitations under the License.
   </PropertyGroup>
 
   <Target Name="PythonRunPyLintCommand"
-          Label="Run PyLint"
+          Label="resource:Microsoft.PythonTools.Common;Microsoft.PythonTools.Common.Strings;RunPyLintLabel"
           Returns="@(Commands)">
     <CreatePythonCommandItem Target="pylint.lint"
                              TargetType="module"
