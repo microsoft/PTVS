@@ -27,9 +27,6 @@ if (-not $uninstall) {
 
     $source = $MyInvocation.MyCommand.Definition | Split-Path -Parent
 
-    "Installing core dependencies..."
-    " (for native dependencies, install Desktop development with C++ workload)"
-    " (for IoT dependencies, install Universal Windows Platform workload)"
     $dep_args = @(
         "modify",
         "--quiet",
@@ -52,9 +49,16 @@ if (-not $uninstall) {
     if (-not (Test-Path $installer)) {
         $installer = "${env:ProgramFiles}\Microsoft Visual Studio\Installer\vs_installer.exe"
     }
-    Start-Process -Wait $installer -ArgumentList $dep_args -NoNewWindow
-    if (-not $?) {
-        "WARNING: Error installing dependencies. Review log files in %TEMP% for more information."
+    if (Test-Path $installer) {
+        "Installing core dependencies..."
+        " (for native dependencies, install Desktop development with C++ workload)"
+        " (for IoT dependencies, install Universal Windows Platform workload)"
+        Start-Process -Wait $installer -ArgumentList $dep_args -NoNewWindow
+        if (-not $?) {
+            "WARNING: Error installing dependencies. Review log files in %TEMP% for more information."
+        }
+    } else {
+        "WARNING: Unable to install dependencies. Python support may not work."
     }
 
     # Need to use top level directory to avoid exceeding MAX_PATH
