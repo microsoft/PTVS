@@ -661,9 +661,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal Task InvokeAsync(Action action) {
-            // TOOD: Verify this
             return _window.TextView.VisualElement.Dispatcher.InvokeAsync(action).Task;
-            //return ((System.Windows.UIElement)_window.GetTextViewHost()).Dispatcher.InvokeAsync(action).Task;
         }
 
         internal void WriteFrameworkElement(System.Windows.UIElement control, System.Windows.Size desiredSize) {
