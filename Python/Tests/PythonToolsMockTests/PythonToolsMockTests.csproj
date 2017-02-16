@@ -99,8 +99,8 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
-    <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
-    <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
   </ItemGroup>
   <Choose>
     <When Condition="$(VSTarget) == '15.0'">

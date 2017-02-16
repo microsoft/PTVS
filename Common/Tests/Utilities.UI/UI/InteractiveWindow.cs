@@ -32,8 +32,8 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Repl;
 #endif
 #if DEV14_OR_LATER
-using Microsoft.PythonTools.InteractiveWindow;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 #else
 using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
 using InteractiveWindowProvider = Microsoft.VisualStudio.Repl.IReplWindowProvider;

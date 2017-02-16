@@ -23,12 +23,10 @@
                    !(bindpath.bin)\Microsoft.PythonTools.EnvironmentsList.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.Ipc.Json.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.ImportWizard.dll;
-                   !(bindpath.bin)\Microsoft.PythonTools.InteractiveWindow.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.WebRole.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.ProjectWizards.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.VSCommon.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.VSInterpreters.dll;
-                   !(bindpath.bin)\Microsoft.PythonTools.VsInteractiveWindow.dll;
                    !(bindpath.bin)\Newtonsoft.Json.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.XamlDesignerSupport.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.RunElevated.exe;

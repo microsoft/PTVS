@@ -20,7 +20,7 @@ using System.ComponentModel.Composition;
 using System.Windows.Media;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;

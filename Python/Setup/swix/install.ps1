@@ -32,6 +32,7 @@ if (-not $uninstall) {
         "--quiet",
         "--installpath", "`"$($vs.TrimEnd('\'))`"",
         # Core dependencies
+        "--add", "Microsoft.VisualStudio.InteractiveWindow",
         "--add", "Microsoft.VisualStudio.PackageGroup.Debugger.Core",
         "--add", "Microsoft.VisualStudio.PackageGroup.TestTools.Core",
         "--add", "Microsoft.VisualStudio.PackageGroup.TestTools.CodeCoverage",
