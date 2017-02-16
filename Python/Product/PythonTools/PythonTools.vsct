@@ -1013,10 +1013,6 @@ permissions and limitations under the License.
       <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSetAsStartupFile" priority="0x0300">
-      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
-    </CommandPlacement>
-
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x0100">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup2"/>
     </CommandPlacement>
