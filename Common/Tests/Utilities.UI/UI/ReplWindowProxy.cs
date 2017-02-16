@@ -33,8 +33,8 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 #if DEV14_OR_LATER
-using Microsoft.PythonTools.InteractiveWindow;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 #else
 using Microsoft.VisualStudio.Repl;
 using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;

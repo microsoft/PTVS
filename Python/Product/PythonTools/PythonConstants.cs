@@ -80,6 +80,7 @@ namespace Microsoft.PythonTools {
         internal const int EnvironmentPackageMenuId = 0x2008;
         internal const int SearchPathContainerMenuId = 0x2009;
         internal const int SearchPathMenuId = 0x200A;
+        internal const int ReplWindowToolbar = 0x200B;
 
         // Custom (per-project) commands
         internal const int FirstCustomCmdId = 0x4010;

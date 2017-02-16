@@ -16,7 +16,7 @@
 
 using System;
 using Microsoft.PythonTools.Repl;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {

@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.InteractiveWindow;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
@@ -230,7 +230,29 @@ namespace Microsoft.PythonTools.Repl {
                 creationFlags |= __VSCREATETOOLWIN.CTW_fForceCreate;
             }
 
-            var replWindow = _windowFactory.Create(GuidList.guidPythonInteractiveWindowGuid, id, title, evaluator, creationFlags);
+#if DEV15_OR_LATER
+            var windowFactory2 = _windowFactory as IVsInteractiveWindowFactory2;
+            var replWindow = windowFactory2.Create(
+                GuidList.guidPythonInteractiveWindowGuid,
+                id,
+                title,
+                evaluator,
+                creationFlags,
+                GuidList.guidPythonToolsCmdSet,
+                PythonConstants.ReplWindowToolbar,
+                null
+            );
+
+#else
+            var replWindow = _windowFactory.Create(
+                GuidList.guidPythonInteractiveWindowGuid,
+                id,
+                title,
+                evaluator,
+                creationFlags
+            );
+#endif
+
             replWindow.InteractiveWindow.Properties[VsInteractiveWindowKey] = replWindow;
             var toolWindow = replWindow as ToolWindowPane;
             if (toolWindow != null) {

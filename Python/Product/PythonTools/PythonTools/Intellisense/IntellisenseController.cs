@@ -24,7 +24,7 @@ using System.Threading;
 using System.Windows.Input;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
-using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;

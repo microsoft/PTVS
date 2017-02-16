@@ -26,7 +26,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;

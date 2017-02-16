@@ -53,8 +53,8 @@
     <Reference Include="Microsoft.Dynamic">
       <Private>true</Private>
     </Reference>
-    <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
-    <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.Scripting">
       <Private>true</Private>
     </Reference>

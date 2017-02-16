@@ -189,14 +189,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.InteractiveWindow.dll">
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.VsInteractiveWindow.dll">
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="Microsoft.PythonTools.VsInteractiveWindow.pkgdef">
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
