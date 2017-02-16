@@ -293,7 +293,7 @@
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Cookiecutter.vsct">
-      <ResourceName>1000</ResourceName>
+      <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
       <Generator>VsctGenerator</Generator>
       <LastGenOutput>Cookiecutter.cs</LastGenOutput>
