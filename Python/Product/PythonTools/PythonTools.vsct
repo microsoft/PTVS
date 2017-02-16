@@ -218,28 +218,28 @@ permissions and limitations under the License.
       <!--
           Interactive window toolbar
       -->
-      <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarGroup" priority="0x0100">
+      <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarWindowGroup" priority="0x0100">
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
 
       <!-- Interactive Window groups for Dev15 -->
       <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarWindowGroup" priority="0x0100" Condition="Defined(DEV15_OR_LATER)">
-        <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
       <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup" priority="0x0200" Condition="Defined(DEV15_OR_LATER)">
-        <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
       <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup" priority="0x0300" Condition="Defined(DEV15_OR_LATER)">
-        <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
 
       <!-- Interactive Window groups for Dev14 -->
       <!-- Note: Built in standard group has priority 0, so ordering of groups is slightly different -->
       <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarWindowGroup" priority="0x0100" Condition="Defined(DEV14)">
-        <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
       <Group guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup" priority="0x0200" Condition="Defined(DEV14)">
-        <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
     </Groups>
     
@@ -814,7 +814,7 @@ permissions and limitations under the License.
       </Button>
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveScopeInEditor" priority="0x0301" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Icon guid="ImageCatalogGuid" id="Open"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
@@ -1054,6 +1054,26 @@ permissions and limitations under the License.
     </CommandPlacement>
 
     <!-- Interactive Window -->
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveScopeInEditor" priority="0x0301">
+      <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="InteractiveToolbarWindowGroup" priority="0x0100" Condition="Defined(DEV15_OR_LATER)">
+      <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup" priority="0x0200" Condition="Defined(DEV15_OR_LATER)">
+      <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup" priority="0x0300" Condition="Defined(DEV15_OR_LATER)">
+      <Parent guid="guidPythonToolsCmdSet" id="ReplWindowToolbar"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="InteractiveToolbarWindowGroup" priority="0x0100" Condition="Defined(DEV14)">
+      <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="InteractiveToolbarPythonGroup" priority="0x0200" Condition="Defined(DEV14)">
+      <Parent guid="guidInteractiveWindowCmdSet" id="menuIdInteractiveToolbar"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidAbortExecution" priority="0x0110">
       <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup"/>
     </CommandPlacement>
@@ -1068,19 +1088,6 @@ permissions and limitations under the License.
     </CommandPlacement>
     <CommandPlacement guid="guidInteractiveWindowCmdSet" id="cmdidHistoryNext" priority="0x0150">
       <Parent guid="guidPythonToolsCmdSet" id="InteractiveToolbarStandardGroup"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidNewInteractiveWindow" priority="0x0100">
-      <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveScopeInEditor" priority="0x0301">
-      <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="comboIdReplEvaluators" priority="0x0200">
-      <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="comboIdReplScopes" priority="0x0300">
-      <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
     </CommandPlacement>
   </CommandPlacements>
 
