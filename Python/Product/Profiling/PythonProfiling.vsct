@@ -34,18 +34,17 @@
     with command ids defined by other packages. -->
     <Groups>
       <Group guid="guidPythonProfilingCmdSet" id="perfToolbarGroup" priority="0x0000">
-        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfToolbar"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
       <Group guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup" priority="0x0000">
-        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfContext"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
       <Group guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup" priority="0x0000">
-        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfReportsContext"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
       <Group guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup" priority="0x0000">
-        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfSingleReportContext"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
-
     </Groups>
     <Menus>
       <Menu guid="guidPythonProfilingCmdSet" id="menuIdPerfToolbar" priority="0x0000" type="ToolWindowToolbar">
@@ -91,7 +90,7 @@
     <Buttons>
       <!-- Analyze menu items -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x0100" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Strings>
           <ButtonText>Launch &amp;Python Profiling...</ButtonText>
           <CanonicalName>Launch Profiling</CanonicalName>
@@ -101,49 +100,47 @@
       
       <!-- View->Other Windows items -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Icon guid="ImageCatalogGuid" id="Performance"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Performance Explorer</ButtonText>
-          <CanonicalName>Performance Explorer</CanonicalName>
+          <CanonicalName>.Python.PerformanceExplorer</CanonicalName>
           <LocCanonicalName>Performance Explorer</LocCanonicalName>
         </Strings>
       </Button>
 
       <!-- Toolbar Buttons -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidAddPerfSession" priority="0x0000" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
         <Icon guid="ImageCatalogGuid" id="NewPerformanceReport"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add Performance Session</ButtonText>
-          <CanonicalName>Add Performance Session</CanonicalName>
+          <CanonicalName>.Python.AddPerformanceSession</CanonicalName>
           <LocCanonicalName>Add Performance Session</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStartProfiling" priority="0x0100" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
         <Icon guid="ImageCatalogGuid" id="RunPerformance"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Start Profiling</ButtonText>
-          <CanonicalName>Start Profiling</CanonicalName>
+          <CanonicalName>.Python.StartProfiling</CanonicalName>
           <LocCanonicalName>Start Profiling</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStopProfiling" priority="0x0200" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
         <Icon guid="ImageCatalogGuid" id="StopFilter"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Stop Profiling</ButtonText>
-          <CanonicalName>Stop Profiling</CanonicalName>
+          <CanonicalName>.Python.StopProfiling</CanonicalName>
           <LocCanonicalName>Stop Profiling</LocCanonicalName>
         </Strings>
       </Button>
@@ -165,16 +162,16 @@
       </Button>
       
       <!-- Context menu items for reports folder -->
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0100" type="Button">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
         <Strings>
           <ButtonText>&amp;Add Report...</ButtonText>
           <CanonicalName>Add Performance Report</CanonicalName>
           <LocCanonicalName>Add Performance Report</LocCanonicalName>
         </Strings>
       </Button>
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x0000" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x0200" type="Button">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
         <Icon guid="ImageCatalogGuid" id="PerformanceReport"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -186,7 +183,7 @@
       
       <!-- Context menu items for report item -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+        <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
         <Strings>
           <ButtonText>&amp;Open</ButtonText>
           <CanonicalName>Open Performance Report</CanonicalName>
@@ -197,6 +194,19 @@
   </Commands>
 
   <CommandPlacements>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="perfToolbarGroup" priority="0x0000">
+      <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfToolbar"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup" priority="0x0000">
+      <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfContext"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup" priority="0x0000">
+      <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfReportsContext"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup" priority="0x0000">
+      <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfSingleReportContext"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x10">
       <Parent guid="guidPerfMenuGroup" id="IDG_PERF_BAR_GENERAL" />
     </CommandPlacement>
@@ -225,31 +235,6 @@
     </CommandPlacement>
     <CommandPlacement guid="guidVSStd97" id="cmdidRename" priority="0x10">
       <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidAddPerfSession" priority="0x0100">
-      <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartProfiling" priority="0x0200">
-      <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStopProfiling" priority="0x0300">
-      <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0100">
-      <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x0200">
-      <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000">
-      <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
-    </CommandPlacement>
-
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000">
-      <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
     </CommandPlacement>
   </CommandPlacements>
 
@@ -287,7 +272,6 @@
       <IDSymbol name="perfSingleReportCtxMenuGroup" value="0x3002"/>
       <IDSymbol name="perfToolbarGroup" value="0x3003"/>
 
-
     </GuidSymbol>
 
     <!-- External Guids and IDs which we need to hook into -->
@@ -303,9 +287,8 @@
     </GuidSymbol>
 
     <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
-      <IDSymbol name="ToolsGroup" value="0x1012" />
-      <IDSymbol name="WindowCommandsGroup" value="0x1014" />
       <IDSymbol name="PythonMenu" value="0x2000"/>
+      <IDSymbol name="ToolsMenu" value="0x2001" />
     </GuidSymbol>
   </Symbols>
 

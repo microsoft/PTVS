@@ -51,12 +51,11 @@
         </Strings>
       </Menu>
 
-      <Menu guid="guidCookiecutterCmdSet" id="CookiecutterMenu" priority="0x0000" type="Menu">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_REFACTORING"/>
-        <CommandFlag>AlwaysCreate</CommandFlag>
-        <!--<CommandFlag>DefaultInvisible</CommandFlag>
+      <Menu guid="guidCookiecutterCmdSet" id="CookiecutterMenu" priority="0x0001" type="Menu">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_PROJECT"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>AllowVisibilityChangeOnToolBar</CommandFlag>-->
+        <CommandFlag>AllowVisibilityChangeOnToolBar</CommandFlag>
         <Strings>
           <ButtonText>C&amp;ookiecutter</ButtonText>
           <CanonicalName>Cookiecutter</CanonicalName>
@@ -149,8 +148,8 @@
         <Strings>
           <ButtonText>Run</ButtonText>
           <MenuText>&amp;Run</MenuText>
-          <CanonicalName>RunTemplate</CanonicalName>
-          <LocCanonicalName>RunTemplate</LocCanonicalName>
+          <CanonicalName>Run Template</CanonicalName>
+          <LocCanonicalName>Run Template</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -225,7 +224,7 @@
         <Strings>
           <ButtonText>Open in External Browser</ButtonText>
           <MenuText>&amp;Open in External Browser</MenuText>
-          <CanonicalName>External Web Browser</CanonicalName>
+          <CanonicalName>.Cookiecutter.ExternalWebBrowser</CanonicalName>
           <LocCanonicalName>External Web Browser</LocCanonicalName>
         </Strings>
       </Button>

@@ -165,6 +165,10 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
       </Group>
 
+      <Group guid="guidPythonToolsCmdSet" id="MiscCommandsGroup" priority="0x0000">
+        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+      </Group>
+
       <!-- 
           Python Environments context menu
       -->
@@ -640,21 +644,21 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidOpenCommandPromptHere" priority="0x0600" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+      <Button guid="guidPythonToolsCmdSet" id="cmdidOpenCommandPromptHere" priority="0x0000" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="MiscCommandsGroup"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Open Command &amp;Prompt Here...</ButtonText>
           <ToolTipText>Opens Command Prompt at the selected file or directory.</ToolTipText>
-          <CanonicalName>Open Command Prompt Here</CanonicalName>
-          <LocCanonicalName>Open Command Prompt Here</LocCanonicalName>
+          <CanonicalName>.Python.Open Command Prompt Here</CanonicalName>
+          <LocCanonicalName>.Python.Open Command Prompt Here</LocCanonicalName>
         </Strings>
       </Button>
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x0610" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+        <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup2"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
@@ -667,13 +671,13 @@ permissions and limitations under the License.
       </Button>
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidInstallProjectRequirements" priority="0x0610" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
+        <Parent guid="guidPythonToolsCmdSet" id="MiscCommandsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Ins&amp;tall Project Requirements</ButtonText>
           <ToolTipText>Installs project requirements.</ToolTipText>
-          <CanonicalName>Install Project Requirements</CanonicalName>
+          <CanonicalName>.Python.InstallProjectRequirements</CanonicalName>
           <LocCanonicalName>Install Project Requirements</LocCanonicalName>
         </Strings>
       </Button>
@@ -1013,10 +1017,6 @@ permissions and limitations under the License.
       <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x0100">
-      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup2"/>
-    </CommandPlacement>
-
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" priority="0x0E7F">
       <Parent guid="guidVSDebugGroup" id="IDG_EXECUTION"/>
     </CommandPlacement>
@@ -1189,6 +1189,7 @@ permissions and limitations under the License.
       <IDSymbol name="InteractiveToolbarWindowGroup" value="0x1062" />
       <IDSymbol name="InteractiveToolbarStandardGroup" value="0x1063" />
       <IDSymbol name="InteractiveToolbarPythonGroup" value="0x1064" />
+      <IDSymbol name="MiscCommandsGroup" value="0x1065" />
 
       <!-- Menus -->
       <IDSymbol name="PythonMenu" value="0x2000"/>
