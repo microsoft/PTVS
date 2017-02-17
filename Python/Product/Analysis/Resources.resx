@@ -121,7 +121,7 @@
     <value>If checked, statements separated by semicolons are moved onto individual lines. If unchecked, lines with multiple statements are not modified.</value>
   </data>
   <data name="BreakMultipleStatementsPerLineShort" xml:space="preserve">
-    <value>Place multiple statements on new lines</value>
+    <value>Place statements on separate lines</value>
   </data>
   <data name="RemoveTrailingSemicolonsLong" xml:space="preserve">
     <value>If checked, semicolons at the end of lines will be removed. If unchecked, unnecessary semicolons are not modified.</value>
@@ -136,7 +136,7 @@
     <value>Place imported modules on new line</value>
   </data>
   <data name="SpaceAroundAnnotationArrowLong" xml:space="preserve">
-    <value>If checked, a space is added before and after '->' operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+    <value>If checked, a space is added before and after '-&gt;' operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
   </data>
   <data name="SpaceAroundAnnotationArrowShort" xml:space="preserve">
     <value>Insert space before and after return annotation operators</value>
@@ -151,19 +151,19 @@
     <value>If checked, a space is added between the name and opening parenthesis of the argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
   </data>
   <data name="SpaceBeforeCallParenShort" xml:space="preserve">
-    <value>Insert space between a function call's name and argument list</value>
+    <value>Insert space between the function name and argument list in calls</value>
   </data>
   <data name="SpaceBeforeClassDeclarationParenLong" xml:space="preserve">
     <value>If checked, a space is added between the name and opening parenthesis of the bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
   </data>
   <data name="SpaceBeforeClassDeclarationParenShort" xml:space="preserve">
-    <value>Insert space between a class declaration's name and bases list</value>
+    <value>Insert space between a class name and bases list</value>
   </data>
   <data name="SpaceBeforeFunctionDeclarationParenLong" xml:space="preserve">
     <value>If checked, a space is added between the name and opening parenthesis of the parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
   </data>
   <data name="SpaceBeforeFunctionDeclarationParenShort" xml:space="preserve">
-    <value>Insert space between a function declaration's name and parameter list</value>
+    <value>Insert space between a function name and parameter list in declarations</value>
   </data>
   <data name="SpaceBeforeIndexBracketLong" xml:space="preserve">
     <value>If checked, a space is added before an open square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
