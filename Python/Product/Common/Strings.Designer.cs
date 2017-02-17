@@ -4411,6 +4411,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Run PyLint.
+        /// </summary>
+        public static string RunPyLintLabel {
+            get {
+                return ResourceManager.GetString("RunPyLintLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Start server.
         /// </summary>
         public static string RunWebServerLabel {

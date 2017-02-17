@@ -1972,4 +1972,8 @@ Would you like the selection to be extended to a valid expression?</value>
   <data name="ReplSwitchModuleCommandDescription" xml:space="preserve">
     <value>Switches the current scope to the specified module name.</value>
   </data>
+  <data name="RunPyLintLabel" xml:space="preserve">
+    <value>Run PyLint</value>
+    <comment>PyLint is a product name and should not be localized</comment>
+  </data>
 </root>

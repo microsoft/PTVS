@@ -315,7 +315,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="License_en-US.rtf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>

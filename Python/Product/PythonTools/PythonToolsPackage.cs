@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools {
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
 
     // This attribute is needed to let the shell know that this package exposes some menus.
-    [ProvideMenuResource(1000, 1)]
+    [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideKeyBindingTable(PythonConstants.EditorFactoryGuid, 3004, AllowNavKeyBinding = true)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]

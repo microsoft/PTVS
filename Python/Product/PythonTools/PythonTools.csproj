@@ -831,10 +831,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="License_en-US.rtf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonFile.ico">
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
@@ -850,7 +846,7 @@
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <VSCTCompile Include="PythonTools.vsct">
-      <ResourceName>1000</ResourceName>
+      <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>

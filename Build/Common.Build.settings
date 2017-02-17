@@ -18,7 +18,7 @@
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
     <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
     
-    <VSTargetName Condition="'$(VSTarget)' == '15.0'">15</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '15.0'">2017</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '14.0'">2015</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '12.0'">2013</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
