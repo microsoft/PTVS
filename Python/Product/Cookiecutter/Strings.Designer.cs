@@ -452,7 +452,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cookiecutter was invoked using the Add From Cookiecutter command. To return to the global mode where files are not added to an existing project, click on Cancel or Home..
+        ///   Looks up a localized string similar to Cookiecutter was invoked using the Add From Cookiecutter command. To restart and create a new project, click Home or Cancel..
         /// </summary>
         public static string OptionsPage_AddingToProjectTooltip {
             get {
@@ -533,7 +533,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error creating files. See output window for details..
+        ///   Looks up a localized string similar to Error creating files. See the Output Window for details..
         /// </summary>
         public static string OptionsPage_CreatingFilesError {
             get {
@@ -614,7 +614,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The following files were replaced, and a backup of the original file was created:.
+        ///   Looks up a localized string similar to The following files were backed up and then replaced:.
         /// </summary>
         public static string ReplacedFilesHeader {
             get {
@@ -695,7 +695,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error checking for updates. See output window for details..
+        ///   Looks up a localized string similar to Error checking for updates. See the Output Window for details..
         /// </summary>
         public static string SearchPage_ErrorCheckingUpdates {
             get {
@@ -704,7 +704,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error cloning repository. See output window for details..
+        ///   Looks up a localized string similar to Error cloning repository. See the Output Window for details..
         /// </summary>
         public static string SearchPage_ErrorCloningRepository {
             get {
@@ -713,7 +713,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error installing cookiecutter. See output window for details..
+        ///   Looks up a localized string similar to Error installing Cookiecutter. See the Output Window for details..
         /// </summary>
         public static string SearchPage_ErrorInstallingCookiecutter {
             get {
@@ -722,7 +722,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error loading template. See output window for details..
+        ///   Looks up a localized string similar to Error loading template. See the Output Window for details..
         /// </summary>
         public static string SearchPage_ErrorLoadingTemplate {
             get {
@@ -902,7 +902,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error updating template. See output window for details..
+        ///   Looks up a localized string similar to Error updating template. See the Output Window for details..
         /// </summary>
         public static string SearchPage_UpdatingTemplateError {
             get {
@@ -940,7 +940,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Check for Template Update.
+        ///   Looks up a localized string similar to Check for updated templates.
         /// </summary>
         public static string Settings_CheckForTemplateUpdate_Name {
             get {
@@ -949,7 +949,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Location of the feed. The contents of the feed consists of line separated URLs of template locations..
+        ///   Looks up a localized string similar to Location of the feed file. Feed files have one template URLs on each line..
         /// </summary>
         public static string Settings_FeedUrl_Description {
             get {
@@ -958,7 +958,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Recommended Feed URL.
+        ///   Looks up a localized string similar to Recommended feed URL.
         /// </summary>
         public static string Settings_FeedUrl_Name {
             get {

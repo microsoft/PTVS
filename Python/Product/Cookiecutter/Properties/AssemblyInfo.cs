@@ -22,7 +22,7 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 
 [assembly: AssemblyTitle("Visual Studio - Cookiecutter integration")]
-[assembly: AssemblyDescription("Provides tools for finding, instantiating and customizing templates in cookiecutter format.")]
+[assembly: AssemblyDescription("Provides tools for finding, instantiating and customizing Cookiecutter templates.")]
 [assembly: ComVisible(false)]     
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]

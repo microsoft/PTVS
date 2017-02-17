@@ -203,7 +203,7 @@ Please delete the installed template and try again.</value>
     <value>----- Failed to create files using template '{0}' -----</value>
   </data>
   <data name="ReplacedFilesHeader" xml:space="preserve">
-    <value>The following files were replaced, and a backup of the original file was created:</value>
+    <value>The following files were backed up and then replaced:</value>
   </data>
   <data name="ReplacedFile" xml:space="preserve">
     <value> - '{0}' was saved as '{1}'.</value>
@@ -332,19 +332,19 @@ Please delete the installed template and try again.</value>
     <value>Downloading and installing the cookiecutter package from the Python Package Index. This may take a few minutes.</value>
   </data>
   <data name="SearchPage_ErrorInstallingCookiecutter" xml:space="preserve">
-    <value>Error installing cookiecutter. See output window for details.</value>
+    <value>Error installing Cookiecutter. See the Output Window for details.</value>
   </data>
   <data name="SearchPage_CloningRepository" xml:space="preserve">
     <value>Cloning repository...</value>
   </data>
   <data name="SearchPage_ErrorCloningRepository" xml:space="preserve">
-    <value>Error cloning repository. See output window for details.</value>
+    <value>Error cloning repository. See the Output Window for details.</value>
   </data>
   <data name="SearchPage_LoadingTemplate" xml:space="preserve">
     <value>Loading template...</value>
   </data>
   <data name="SearchPage_ErrorLoadingTemplate" xml:space="preserve">
-    <value>Error loading template. See output window for details.</value>
+    <value>Error loading template. See the Output Window for details.</value>
   </data>
   <data name="SearchPage_CheckingUpdates" xml:space="preserve">
     <value>Checking for updates...</value>
@@ -353,7 +353,7 @@ Please delete the installed template and try again.</value>
     <value>Check for updates completed.</value>
   </data>
   <data name="SearchPage_ErrorCheckingUpdates" xml:space="preserve">
-    <value>Error checking for updates. See output window for details.</value>
+    <value>Error checking for updates. See the Output Window for details.</value>
   </data>
   <data name="SearchPage_UpdatingTemplate" xml:space="preserve">
     <value>Updating template...</value>
@@ -362,7 +362,7 @@ Please delete the installed template and try again.</value>
     <value>Template updated.</value>
   </data>
   <data name="SearchPage_UpdatingTemplateError" xml:space="preserve">
-    <value>Error updating template. See output window for details.</value>
+    <value>Error updating template. See the Output Window for details.</value>
   </data>
   <data name="SearchPage_LinksGitHub" xml:space="preserve">
     <value>GitHub</value>
@@ -411,7 +411,7 @@ Please delete the installed template and try again.</value>
     <value>Files will be added to your project.</value>
   </data>
   <data name="OptionsPage_AddingToProjectTooltip" xml:space="preserve">
-    <value>Cookiecutter was invoked using the Add From Cookiecutter command. To return to the global mode where files are not added to an existing project, click on Cancel or Home.</value>
+    <value>Cookiecutter was invoked using the Add From Cookiecutter command. To restart and create a new project, click Home or Cancel.</value>
   </data>
   <data name="OptionsPage_RunAdditionalTasks" xml:space="preserve">
     <value>Run additional tasks on completion</value>
@@ -426,7 +426,7 @@ Please delete the installed template and try again.</value>
     <value>Creating files...</value>
   </data>
   <data name="OptionsPage_CreatingFilesError" xml:space="preserve">
-    <value>Error creating files. See output window for details.</value>
+    <value>Error creating files. See the Output Window for details.</value>
   </data>
   <data name="OptionsPage_Create" xml:space="preserve">
     <value>Create</value>
@@ -447,13 +447,13 @@ Please delete the installed template and try again.</value>
     <value>Show the help information bar.</value>
   </data>
   <data name="Settings_FeedUrl_Name" xml:space="preserve">
-    <value>Recommended Feed URL</value>
+    <value>Recommended feed URL</value>
   </data>
   <data name="Settings_FeedUrl_Description" xml:space="preserve">
-    <value>Location of the feed. The contents of the feed consists of line separated URLs of template locations.</value>
+    <value>Location of the feed file. Feed files have one template URLs on each line.</value>
   </data>
   <data name="Settings_CheckForTemplateUpdate_Name" xml:space="preserve">
-    <value>Check for Template Update</value>
+    <value>Check for updated templates</value>
   </data>
   <data name="Settings_CheckForTemplateUpdate_Description" xml:space="preserve">
     <value>Automatically check online for updates to installed templates.</value>
