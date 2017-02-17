@@ -416,6 +416,24 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help me install Python.
+        /// </summary>
+        public static string MissingDependenciesPage_InstallPython {
+            get {
+                return ResourceManager.GetString("MissingDependenciesPage_InstallPython", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please install Python 3.5 or later and restart Visual Studio to use this feature..
+        /// </summary>
+        public static string MissingDependenciesPage_Message {
+            get {
+                return ResourceManager.GetString("MissingDependenciesPage_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Would you like to open the generated folder in Solution Explorer?.
         /// </summary>
         public static string OpenInSolutionExplorerQuestion {

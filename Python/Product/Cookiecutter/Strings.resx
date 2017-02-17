@@ -458,4 +458,10 @@ Please delete the installed template and try again.</value>
   <data name="Settings_CheckForTemplateUpdate_Description" xml:space="preserve">
     <value>Automatically check online for updates to installed templates.</value>
   </data>
+  <data name="MissingDependenciesPage_InstallPython" xml:space="preserve">
+    <value>Help me install Python</value>
+  </data>
+  <data name="MissingDependenciesPage_Message" xml:space="preserve">
+    <value>Please install Python 3.5 or later and restart Visual Studio to use this feature.</value>
+  </data>
 </root>
