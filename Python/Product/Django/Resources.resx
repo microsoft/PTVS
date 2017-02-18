@@ -154,7 +154,7 @@
     <value>Django</value>
   </data>
   <data name="DjangoSettingsModuleHelp" xml:space="preserve">
-    <value>The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided, the DJANGO_SETTINGS_MODULE environment variable will be used.</value>
+    <value>The full name of your settings module, for example, "myproject.settings". If not provided, the DJANGO_SETTINGS_MODULE environment variable will be used.</value>
   </data>
   <data name="MakeMigrationsLabel" xml:space="preserve">
     <value>Django Ma&amp;ke Migrations (Django &gt;= 1.7)</value>
