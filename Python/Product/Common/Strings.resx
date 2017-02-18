@@ -182,7 +182,7 @@ No files will be deleted from disk.</value>
     <value>Installing '{0}'</value>
   </data>
   <data name="PackageInstallingSeeOutputWindow" xml:space="preserve">
-    <value>Installing '{0}'. See output window for more information.</value>
+    <value>Installing '{0}'. See the Output Window for more information.</value>
   </data>
   <data name="PackageInstallSucceeded" xml:space="preserve">
     <value>'{0}' was installed successfully.</value>
@@ -197,7 +197,7 @@ No files will be deleted from disk.</value>
     <value>Unnstalling '{0}'</value>
   </data>
   <data name="PackageUninstallingSeeOutputWindow" xml:space="preserve">
-    <value>Unnstalling '{0}'. See output window for more information.</value>
+    <value>Unnstalling '{0}'. See the Output Window for more information.</value>
   </data>
   <data name="PackageUninstallSucceeded" xml:space="preserve">
     <value>'{0}' was uninstalled successfully.</value>
@@ -236,7 +236,7 @@ No files will be deleted from disk.</value>
     <value>Virtual environment was successfully created at '{0}'</value>
   </data>
   <data name="WarningAnalysisNotCurrent" xml:space="preserve">
-    <value>Warning: the IntelliSense database is currently not up to date and completions may be missing.</value>
+    <value>Warning: the completion database is currently not up to date. Intellisense may be incomplete.</value>
   </data>
   <data name="InstallEasyInstall" xml:space="preserve">
     <value>To install your Python package, we will install setuptools and the pip package manager.
@@ -297,7 +297,7 @@ Try moving your source code to a location where you can read and write files.</v
     <value>Standard Python launcher</value>
   </data>
   <data name="PythonWebLauncherDescription" xml:space="preserve">
-    <value>Launches web sites using the Python debugger. This enables launching and starting a web browser automatically, using the commands specified in the project file.</value>
+    <value>Launches web sites using the Python debugger. This enables the web server commands specified in the project file, and launches a browser window when the server has started.</value>
   </data>
   <data name="PythonWebLauncherName" xml:space="preserve">
     <value>Web launcher</value>
@@ -466,7 +466,7 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>Select a .zip file to add to the Search Path</value>
   </data>
   <data name="ReplOpeningError" xml:space="preserve">
-    <value>An error occurred opening this interactive window.
+    <value>An error occurred opening the interactive window.
 
 {0}</value>
   </data>
@@ -629,7 +629,7 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>Specify the name or location of the virtual environment. If one already exists, we will detect the base interpreter for you.</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_SelectInterpreter" xml:space="preserve">
-    <value>Select an interpreter to create the virtual environment from.</value>
+    <value>Select a base interpreter for your virtual environment.</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_SelectInterpreterHelp" xml:space="preserve">
     <value>Packages in your base interpreter will not be available in the virtual environment until you install them.</value>
@@ -946,7 +946,7 @@ Packages that cannot be installed using pip may prevent all listed packages from
   <data name="SeeActivityLog" xml:space="preserve">
     <value>An unexpected error occurred.
 
-You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking the Event Log.</value>
+You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking Event Viewer.</value>
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>&amp;Cancel</value>
@@ -1072,19 +1072,19 @@ Your web browser will not be opened.</value>
     <value>Current interactive window is disconnected.</value>
   </data>
   <data name="ReplDisconnectedReset" xml:space="preserve">
-    <value>This interactive window has encountered an issue. Please Reset the window.</value>
+    <value>The interactive window has encountered an issue. Please reset the window</value>
   </data>
   <data name="ReplExited" xml:space="preserve">
     <value>The interactive Python process has exited.</value>
   </data>
   <data name="ReplModuleCannotChange" xml:space="preserve">
-    <value>Cannot change module, interactive window is disconnected</value>
+    <value>Cannot change module because the interactive window needs to be reset.</value>
   </data>
   <data name="ReplModuleChanged" xml:space="preserve">
     <value>Current module changed to {0}</value>
   </data>
   <data name="ReplNotStarted" xml:space="preserve">
-    <value>Interactive window is not yet started.</value>
+    <value>The interactive window has not yet started.</value>
   </data>
   <data name="ReplReset" xml:space="preserve">
     <value>Resetting Python state.</value>
@@ -1158,13 +1158,13 @@ but your command history will be preserved.</value>
     <value>Cannot extract code containing "yield" expression</value>
   </data>
   <data name="ExtractMethodContainsFromImportStar" xml:space="preserve">
-    <value>Cannot extract method containing from ... import * statement</value>
+    <value>Cannot extract method containing "from ... import *" statement</value>
   </data>
   <data name="ExtractMethodSelectionContainsReturn" xml:space="preserve">
-    <value>When the selection contains a return statement, all code paths must be terminated by a return statement too.</value>
+    <value>When the selection contains a return statement, all code paths must return.</value>
   </data>
   <data name="ExtractMethodCannotExtract" xml:space="preserve">
-    <value>Cannot extract {0}</value>
+    <value>Cannot extract code containing "{0}"</value>
     <comment>{0} is the name of a code element</comment>
   </data>
   <data name="ReplScriptPathIPythonModeTxtContents" xml:space="preserve">
@@ -1179,6 +1179,7 @@ but your command history will be preserved.</value>
 #
 
 visualstudio_ipython_repl.IPythonBackend</value>
+    <comment>Do not localize</comment>
   </data>
   <data name="ReplScriptPathReadmeContents" xml:space="preserve">
     <value>This directory can contain a set of initialization scripts (Python files) for the Python interactive window in 
@@ -1242,10 +1243,10 @@ modified from these scripts.</value>
     <value>Interpreter path does not exist: {0}</value>
   </data>
   <data name="Test_NoCoverageProduced" xml:space="preserve">
-    <value>Code coverage file not produced...  have you installed coverage.py? http://go.microsoft.com/fwlink/?LinkId=808238</value>
+    <value>Code coverage file not produced. Please install 'coverage' from https://go.microsoft.com/fwlink/?LinkId=808238</value>
   </data>
   <data name="Test_NoTestFinishedNotification" xml:space="preserve">
-    <value>Failed to receive test finish notification.  One or more test results may be missing.</value>
+    <value>Failed to receive test finish notification - some test results may be missing.</value>
   </data>
   <data name="Test_UnableToDetermineInterpreter" xml:space="preserve">
     <value>Unable to determine interpreter to use for {0}</value>
@@ -1356,7 +1357,7 @@ modified from these scripts.</value>
     <value>[Deprecated]</value>
   </data>
   <data name="RefDeprecatedMessageDescription" xml:space="preserve">
-    <value>Explanation of this reference type's deprecation.</value>
+    <value>The reason this item type has been deprecated.</value>
   </data>
   <data name="WebPIReferenceDeprecated" xml:space="preserve">
     <value>WebPI references have been deprecated. We recommend replacing the reference with a custom installation script.</value>
@@ -1436,10 +1437,10 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
     <value>Python interpreter has not been initialized in this process</value>
   </data>
   <data name="ConnErrorMessages_LoadDebuggerBadDebugger" xml:space="preserve">
-    <value>Failed to load debugging script (incorrect version of script?)</value>
+    <value>Debugger script was incorrectly initialized</value>
   </data>
   <data name="ConnErrorMessages_LoadDebuggerFailed" xml:space="preserve">
-    <value>Failed to compile debugging script</value>
+    <value>Failed to initialize debugger script</value>
   </data>
   <data name="ConnErrorMessages_OutOfMemory" xml:space="preserve">
     <value>Out of memory</value>
@@ -1593,12 +1594,12 @@ Connect anyway?</value>
     <value>&lt;unknown exception type&gt;</value>
   </data>
   <data name="DebugStructuredExceptionWhileEvaluatingExpression" xml:space="preserve">
-    <value>Structured exception {0:x08} ({1}) raised while evaluating expression</value>
+    <value>Native exception {0:x08} ({1}) raised while evaluating expression</value>
     <comment>{0} is the error integer value
 {1} is the error integer value cast as a enum value</comment>
   </data>
   <data name="DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue" xml:space="preserve">
-    <value>Structured exception {0:x08} raised while evaluating expression</value>
+    <value>Native exception {0:x08} raised while evaluating expression</value>
     <comment>{0} is the error integer value</comment>
   </data>
   <data name="DebugPythonView" xml:space="preserve">
@@ -1669,10 +1670,10 @@ Connect anyway?</value>
     <value>Secret did not match the server secret at {0}. Make sure that the secret is specified correctly in the Qualifier textbox, e.g. tcp://secret@localhost.</value>
   </data>
   <data name="RemoteServiceUnavailable_Host" xml:space="preserve">
-    <value>Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach().</value>
+    <value>Could not connect to remote Python process at {0}. Make sure the process has called ptvsd.enable_attach() and is still running.</value>
   </data>
   <data name="RemoteUnsupportedServer_Host" xml:space="preserve">
-    <value>The remote server at {0} is not running a remote debugging server, or it is running an unsupported version.</value>
+    <value>The remote server at {0} is not running a remote debugging server, or may be running an unsupported version.</value>
   </data>
   <data name="CustomEnvironmentLabel" xml:space="preserve">
     <value>Custom environment</value>
@@ -1742,7 +1743,7 @@ Connect anyway?</value>
     <value>Cannot rename</value>
   </data>
   <data name="RenameVariable_CannotRenameModuleName" xml:space="preserve">
-    <value>Cannot rename a module name</value>
+    <value>Cannot rename modules</value>
   </data>
   <data name="RenameVariable_UnableGetAnalysisCurrentTextView" xml:space="preserve">
     <value>Unable to get analysis for current text view.</value>
@@ -1783,7 +1784,7 @@ Connect anyway?</value>
   <data name="ExtractMethod_ShouldExpandSelection" xml:space="preserve">
     <value>The selected text does not cover an entire expression.
 
-Would you like the selection to be extended to a valid expression?</value>
+Expand selection to the full expression?</value>
   </data>
   <data name="ExtractMethod_ShouldExpandSelectionTitle" xml:space="preserve">
     <value>Expand extract method selection?</value>
@@ -1810,6 +1811,7 @@ Would you like the selection to be extended to a valid expression?</value>
   </data>
   <data name="RefactorPreviewChangesTextViewDescription" xml:space="preserve">
     <value>&amp;Preview Code Changes:</value>
+    <comment>This is a heading for a text control - Alt+P will activate the control.</comment>
   </data>
   <data name="RefactorPreviewChangesRenameVariableTitle" xml:space="preserve">
     <value>Rename variable</value>
@@ -1835,19 +1837,19 @@ Would you like the selection to be extended to a valid expression?</value>
     <value>Switches the current frame to the specified frame id.</value>
   </data>
   <data name="DebugReplFrameDownCommandDescription" xml:space="preserve">
-    <value>Move the current frame one level down in the stack trace.</value>
+    <value>Move the current frame one level down in the call stack.</value>
   </data>
   <data name="DebugReplFramesCommandDescription" xml:space="preserve">
     <value>Lists the frames for the current thread.</value>
   </data>
   <data name="DebugReplFrameUpCommandDescription" xml:space="preserve">
-    <value>Move the current frame one level up in the stack trace.</value>
+    <value>Move the current frame one level up in the call stack.</value>
   </data>
   <data name="DebugReplGoCommandDescription" xml:space="preserve">
     <value>Starts executing the program from the current statement.</value>
   </data>
   <data name="DebugReplProcessCommandDescription" xml:space="preserve">
-    <value>Switches the current process to the specified process id.</value>
+    <value>Changes the current process to the process with the specified id.</value>
   </data>
   <data name="DebugReplProcessCommandInvalidArguments" xml:space="preserve">
     <value>Invalid arguments '{0}'. Expected process id.</value>
@@ -1866,7 +1868,7 @@ Would you like the selection to be extended to a valid expression?</value>
     <value>Steps over the next function call.</value>
   </data>
   <data name="DebugReplThreadCommandDescription" xml:space="preserve">
-    <value>Switches the current thread to the specified thread id.</value>
+    <value>Changes the current thread to the thread with the specified id.</value>
   </data>
   <data name="DebugReplThreadCommandInvalidArguments" xml:space="preserve">
     <value>Invalid arguments '{0}'. Expected thread id.</value>
@@ -1957,13 +1959,13 @@ Would you like the selection to be extended to a valid expression?</value>
     <value>Congratulations, you opened over 2 billion interactive windows this session! Now you need to restart Visual Studio to open any more.</value>
   </data>
   <data name="ReplLoadCommandDescription" xml:space="preserve">
-    <value>Loads commands from file and executes until complete</value>
+    <value>Executes code and commands from the specified file without resetting the current state</value>
   </data>
   <data name="ReplLoadCommandFileNotFoundException" xml:space="preserve">
     <value>Cannot find file.</value>
   </data>
   <data name="ReplDisconnectedFromRemoteProcessError" xml:space="preserve">
-    <value>The interactive window has become disconnected from the remote process. Please reset the window.</value>
+    <value>The interactive window has become disconnected from the Python process. Please reset the window.</value>
   </data>
   <data name="ReplProjectProjectCaption" xml:space="preserve">
     <value>Project: {0}</value>
