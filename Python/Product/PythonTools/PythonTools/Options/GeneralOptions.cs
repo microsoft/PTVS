@@ -33,7 +33,6 @@ namespace Microsoft.PythonTools.Options {
         private const string ShowOutputWindowForVirtualEnvCreateSetting = "ShowOutputWindowForVirtualEnvCreate";
         private const string ShowOutputWindowForPackageInstallationSetting = "ShowOutputWindowForPackageInstallation";
         private const string ElevatePipSetting = "ElevatePip";
-        private const string ElevateEasyInstallSetting = "ElevateEasyInstall";
         private const string SurveyNewsCheckSetting = "SurveyNewsCheck";
         private const string SurveyNewsLastCheckSetting = "SurveyNewsLastCheck";
         private const string SurveyNewsFeedUrlSetting = "SurveyNewsFeedUrl";
@@ -56,7 +55,6 @@ namespace Microsoft.PythonTools.Options {
             ShowOutputWindowForVirtualEnvCreate = _pyService.LoadBool(ShowOutputWindowForVirtualEnvCreateSetting, GeneralCategory) ?? true;
             ShowOutputWindowForPackageInstallation = _pyService.LoadBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory) ?? true;
             ElevatePip = _pyService.LoadBool(ElevatePipSetting, GeneralCategory) ?? false;
-            ElevateEasyInstall = _pyService.LoadBool(ElevateEasyInstallSetting, GeneralCategory) ?? false;
             UnresolvedImportWarning = _pyService.LoadBool(UnresolvedImportWarningSetting, GeneralCategory) ?? true;
             ClearGlobalPythonPath = _pyService.LoadBool(ClearGlobalPythonPathSetting, GeneralCategory) ?? true;
 
@@ -81,7 +79,6 @@ namespace Microsoft.PythonTools.Options {
             _pyService.SaveBool(ShowOutputWindowForVirtualEnvCreateSetting, GeneralCategory, ShowOutputWindowForVirtualEnvCreate);
             _pyService.SaveBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory, ShowOutputWindowForPackageInstallation);
             _pyService.SaveBool(ElevatePipSetting, GeneralCategory, ElevatePip);
-            _pyService.SaveBool(ElevateEasyInstallSetting, GeneralCategory, ElevateEasyInstall);
             _pyService.SaveBool(UnresolvedImportWarningSetting, GeneralCategory, UnresolvedImportWarning);
             _pyService.SaveBool(ClearGlobalPythonPathSetting, GeneralCategory, ClearGlobalPythonPath);
 
@@ -104,7 +101,6 @@ namespace Microsoft.PythonTools.Options {
             ShowOutputWindowForVirtualEnvCreate = true;
             ShowOutputWindowForPackageInstallation = true;
             ElevatePip = false;
-            ElevateEasyInstall = false;
             UnresolvedImportWarning = true;
             ClearGlobalPythonPath = true;
 
@@ -220,14 +216,6 @@ namespace Microsoft.PythonTools.Options {
         /// packages.
         /// </summary>
         public bool ElevatePip {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// True to always run easy_install elevated when installing packages.
-        /// </summary>
-        public bool ElevateEasyInstall {
             get;
             set;
         }

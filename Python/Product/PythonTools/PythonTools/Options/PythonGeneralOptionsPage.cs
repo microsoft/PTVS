@@ -112,15 +112,6 @@ namespace Microsoft.PythonTools.Options {
         }
 
         /// <summary>
-        /// True to always run easy_install elevated when installing packages.
-        /// </summary>
-        [Obsolete("Use PythonToolsService.GeneralOptions instead")]
-        public bool ElevateEasyInstall {
-            get { return PyService.GeneralOptions.ElevateEasyInstall; }
-            set { PyService.GeneralOptions.ElevateEasyInstall = value; }
-        }
-
-        /// <summary>
         /// True to warn when a module is not resolved.
         /// </summary>
         /// <remarks>New in 2.1</remarks>

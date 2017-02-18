@@ -166,7 +166,7 @@
     <value>Python Editor</value>
   </data>
   <data name="3005" xml:space="preserve">
-    <value>Python windows source file</value>
+    <value>Python File (no console)</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -264,5 +264,8 @@
   </data>
   <data name="106" xml:space="preserve">
     <value>Python</value>
+  </data>
+  <data name="3017" xml:space="preserve">
+    <value>Python File</value>
   </data>
 </root>

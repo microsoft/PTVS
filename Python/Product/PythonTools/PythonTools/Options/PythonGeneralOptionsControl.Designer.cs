@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Options {
             this._surveyNewsCheckLabel = new System.Windows.Forms.Label();
             this._surveyNewsCheckCombo = new System.Windows.Forms.ComboBox();
             this._elevatePip = new System.Windows.Forms.CheckBox();
-            this._elevateEasyInstall = new System.Windows.Forms.CheckBox();
             this._unresolvedImportWarning = new System.Windows.Forms.CheckBox();
             this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._resetSuppressDialog = new System.Windows.Forms.Button();
@@ -46,17 +45,16 @@ namespace Microsoft.PythonTools.Options {
             resources.ApplyResources(this.tableLayoutPanel3, "tableLayoutPanel3");
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForVirtualEnvCreate, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForPackageInstallation, 0, 1);
-            this.tableLayoutPanel3.Controls.Add(this._autoAnalysis, 0, 4);
-            this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 6);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 8);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 8);
-            this.tableLayoutPanel3.Controls.Add(this._surveyNewsCheckLabel, 0, 9);
-            this.tableLayoutPanel3.Controls.Add(this._surveyNewsCheckCombo, 1, 9);
+            this.tableLayoutPanel3.Controls.Add(this._autoAnalysis, 0, 3);
+            this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 5);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 7);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 7);
+            this.tableLayoutPanel3.Controls.Add(this._surveyNewsCheckLabel, 0, 8);
+            this.tableLayoutPanel3.Controls.Add(this._surveyNewsCheckCombo, 1, 8);
             this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 2);
-            this.tableLayoutPanel3.Controls.Add(this._elevateEasyInstall, 0, 3);
-            this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 7);
-            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 5);
-            this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 10);
+            this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 6);
+            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 4);
+            this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 9);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             // 
             // _showOutputWindowForVirtualEnvCreate
@@ -129,13 +127,6 @@ namespace Microsoft.PythonTools.Options {
             this._elevatePip.Name = "_elevatePip";
             this._elevatePip.UseVisualStyleBackColor = true;
             // 
-            // _elevateEasyInstall
-            // 
-            resources.ApplyResources(this._elevateEasyInstall, "_elevateEasyInstall");
-            this.tableLayoutPanel3.SetColumnSpan(this._elevateEasyInstall, 2);
-            this._elevateEasyInstall.Name = "_elevateEasyInstall";
-            this._elevateEasyInstall.UseVisualStyleBackColor = true;
-            // 
             // _unresolvedImportWarning
             // 
             resources.ApplyResources(this._unresolvedImportWarning, "_unresolvedImportWarning");
@@ -183,7 +174,6 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.Label _indentationInconsistentLabel;
         private System.Windows.Forms.ComboBox _indentationInconsistentCombo;
         private System.Windows.Forms.CheckBox _elevatePip;
-        private System.Windows.Forms.CheckBox _elevateEasyInstall;
         private System.Windows.Forms.CheckBox _unresolvedImportWarning;
         private System.Windows.Forms.CheckBox _clearGlobalPythonPath;
         private System.Windows.Forms.Button _resetSuppressDialog;

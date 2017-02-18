@@ -125,7 +125,7 @@
     <comment>Project Property Page Caption</comment>
   </data>
   <data name="ReferenceAlreadyExists" xml:space="preserve">
-    <value>A reference to component '{0}' cannot be added. A reference to the component already exists in the project.</value>
+    <value>A reference to component '{0}' already exists.</value>
     <comment>ReferenceAlreadyExists error message</comment>
   </data>
   <data name="AttributeLoad" xml:space="preserve">
@@ -221,10 +221,10 @@ Files and folders cannot be:
     <comment>The exception message thrown when getting a property from msbuild fails.</comment>
   </data>
   <data name="FileAlreadyExists" xml:space="preserve">
-    <value>A file with the same name '{0}' already exists. Do you want to overwrite it?</value>
+    <value>A file named '{0}' already exists. Do you want to overwrite it?</value>
   </data>
   <data name="FileAlreadyExistsAndCannotBeRenamed" xml:space="preserve">
-    <value>A file with the same name '{0}' already exists.</value>
+    <value>A file named '{0}' already exists.</value>
   </data>
   <data name="FileAlreadyExistsCaption" xml:space="preserve">
     <value>Destination File Exists</value>
@@ -302,7 +302,7 @@ Files and folders cannot be:
     <value>Project</value>
   </data>
   <data name="ProjectContainsCircularReferences" xml:space="preserve">
-    <value>A reference to library '{0}' cannot be added. Adding this project as a reference would cause a circular dependency. </value>
+    <value>A reference to '{0}' cannot be added as it would cause a circular dependency. </value>
   </data>
   <data name="ProjectFile" xml:space="preserve">
     <value>Project File</value>
@@ -356,7 +356,7 @@ Files and folders cannot be:
     <value>Startup file</value>
   </data>
   <data name="StartupFileDescription" xml:space="preserve">
-    <value>The startup file which is launched when running or debugging</value>
+    <value>The file launched when running or debugging</value>
   </data>
   <data name="StartWebBrowser" xml:space="preserve">
     <value>Start web browser</value>
@@ -398,11 +398,11 @@ Files and folders cannot be:
     <value>Automation object invalid.</value>
   </data>
   <data name="CancelQueryEdit" xml:space="preserve">
-    <value>The command you are attempting cannot be completed because the file '{0}' that must be modified cannot be changed. If the file is under source control, you may want to check it out; if the file is read-only on disk, you may want to change its attributes.</value>
+    <value>The command you are attempting cannot be completed because '{0}' cannot be modified. If the file is under source control, you should check it out, or if it is read-only you should change its attributes.</value>
     <comment>MsgBox</comment>
   </data>
   <data name="ParameterMustBeAValidGuid" xml:space="preserve">
-    <value>Parameter must be a valid guid.</value>
+    <value>Parameter must be a valid GUID.</value>
     <comment>Error message in the ArgumentException for a  parameter that is not a valid guid.</comment>
   </data>
   <data name="InvalidLoggerType" xml:space="preserve">
@@ -503,7 +503,7 @@ Files and folders cannot be:
     <value>Contains the XML serialization assemblies for the project.</value>
   </data>
   <data name="QueryReloadNestedProject" xml:space="preserve">
-    <value>The project file '{0}' has been modified outside of Visual Studio.  Do you want to reload the project?</value>
+    <value>The project file '{0}' has been modified outside of Visual Studio.  Reload project?</value>
   </data>
   <data name="NestedProjectFailedToReload" xml:space="preserve">
     <value>The nested project has failed to reload.</value>
@@ -536,7 +536,14 @@ Files and folders cannot be:
     <value>An item referring to the file '{1}' was found in the project file '{0}'.  Since this file is located within a system directory, root directory, or network share, it could be harmful to write to this file.</value>
   </data>
   <data name="ProjectLocationNotTrusted" xml:space="preserve">
-    <value>The project location is not trusted:{0}{0}{1}{0}{0}Running the application may result in security exceptions when it {0}attempts to perform actions which require full trust.{0}{0}Click OK to ignore and continue.</value>
+    <value>The project location is not trusted:
+
+{1}
+
+Running the application may result in security exceptions when it attempts to perform actions which require full trust.
+
+Click OK to ignore and continue.</value>
+    <comment>{0} previously was newline character. {1} is a path</comment>
   </data>
   <data name="BuildEventError" xml:space="preserve">
     <value>Exception was thrown during BuildBegin event\n{0}</value>
@@ -620,7 +627,7 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
     <value>&amp;Cancel</value>
   </data>
   <data name="CancelQueryEditMultiple" xml:space="preserve">
-    <value>The command you are attempting cannot be completed because the files that must be modified cannot be changed. If these files are under source control, you may want to check them out; if the files are read-only on disk, you may want to change their attributes.</value>
+    <value>The command you are attempting cannot be completed because some files cannot be modified. If these files are under source control, you should check them out, or if they are read-only you should change their attributes.</value>
     <comment>MsgBox</comment>
   </data>
   <data name="ErrorDetail" xml:space="preserve">
@@ -633,7 +640,7 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
     <value>Unable to add '{0}'. A file with that name already exists.</value>
   </data>
   <data name="CannotAddFolderAsDescendantOfSelf" xml:space="preserve">
-    <value>Cannot add folder '{0}' as a child or decedent of self.</value>
+    <value>Cannot add folder '{0}' inside itself.</value>
   </data>
   <data name="CannotMoveFolderExists" xml:space="preserve">
     <value>Cannot move the folder '{0}'. A folder with that name already exists in the destination directory.</value>
@@ -654,10 +661,9 @@ Run Visual Studio with the /Log option and check ActivityLog.xml for more detail
     <value>The folder name is too long.</value>
   </data>
   <data name="OverwriteFilesInExistingFolder" xml:space="preserve">
-    <value>This folder already contains a folder called '{0}'
+    <value>The folder '{0}' already exists.
 
-If the files in the existing folder have the same names as files in the 
-folder you are copying, do you want to replace the existing files?</value>
+Replace files in the existing folder with those from the new folder?</value>
   </data>
   <data name="SourceUrlNotFound" xml:space="preserve">
     <value>The source URL '{0}' could not be found.</value>
@@ -665,10 +671,10 @@ folder you are copying, do you want to replace the existing files?</value>
   <data name="SeeActivityLog" xml:space="preserve">
     <value>An unexpected error occurred.
 
-You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking the Event Log.</value>
+You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking Event Viewer.</value>
   </data>
   <data name="FileOpenDoesNotExist" xml:space="preserve">
-    <value>The filename you are renaming to exists in the project, is open in the editor, but does not exist on disk.  Either close the editor window or remove the file from the project before attempting to rename a file to the save name.</value>
+    <value>That filename is in the project or is open in the editor, but does not exist on disk.  Remove the file from the project or close the editor window before attempting to rename to that name.</value>
   </data>
   <data name="UnableToRemoveFile" xml:space="preserve">
     <value>The file does not exist on disk but is present in your project and cannot be removed.  Please remove the item from the project before attempting to rename an item to a filename of the same name.</value>
