@@ -124,7 +124,7 @@
     <value>Specifies arguments which are passed to the script and available via sys.argv.</value>
   </data>
   <data name="Launcher_InterpreterArgsHelp" xml:space="preserve">
-    <value>Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).</value>
+    <value>Specifies arguments which alter how the interpreter is started (for example, -Wall, -O or -B).</value>
   </data>
   <data name="Launcher_InterpreterPathHelp" xml:space="preserve">
     <value>Overrides the interpreter executable which is used for launching the project.</value>
@@ -136,7 +136,7 @@
     <value>Chiron.exe was not found. Ensure the Silverlight Tools component of IronPython has been installed.</value>
   </data>
   <data name="IronPythonLauncherDescription" xml:space="preserve">
-    <value>Launches IronPython scripts using the .NET debugger.  This enables debugging both IronPython code as well as other .NET code such as C# or VB.NET.</value>
+    <value>Use the .NET debugger. This enables debugging IronPython code alongside other .NET code such as C# or VB.NET.</value>
   </data>
   <data name="IronPythonLauncherName" xml:space="preserve">
     <value>IronPython (.NET) launcher</value>

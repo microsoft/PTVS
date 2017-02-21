@@ -61,7 +61,7 @@ namespace Microsoft.IronPythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Launches IronPython scripts using the .NET debugger.  This enables debugging both IronPython code as well as other .NET code such as C# or VB.NET..
+        ///   Looks up a localized string similar to Use the .NET debugger. This enables debugging IronPython code alongside other .NET code such as C# or VB.NET..
         /// </summary>
         internal static string IronPythonLauncherDescription {
             get {
@@ -97,7 +97,7 @@ namespace Microsoft.IronPythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code)..
+        ///   Looks up a localized string similar to Specifies arguments which alter how the interpreter is started (for example, -Wall, -O or -B)..
         /// </summary>
         internal static string Launcher_InterpreterArgsHelp {
             get {
