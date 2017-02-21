@@ -1,8 +1,8 @@
 <VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name>IronPython Application</Name>
-    <Description>A project for creating a command-line IronPython application</Description>
-    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="401" />
+    <Name Package="{af7eaf4b-5af3-3622-b39a-7ae7ed25e7b2}" ID="5002" />
+    <Description Package="{af7eaf4b-5af3-3622-b39a-7ae7ed25e7b2}" ID="5003" />
+    <Icon Package="{af7eaf4b-5af3-3622-b39a-7ae7ed25e7b2}" ID="402" />
     <ProjectType>Python</ProjectType>
     <SortOrder>100</SortOrder>
     <CreateNewFolder>false</CreateNewFolder>

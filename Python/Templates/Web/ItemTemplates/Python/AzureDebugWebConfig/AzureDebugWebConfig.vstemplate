@@ -1,9 +1,7 @@
 <VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name>Azure Remote debugging web.config</Name>
-    <Description>A web.debug.config transform file that enables remote debugging over WebSockets.
-
-The files in this template should be included in the root of your website, alongside the main web.config file.</Description>
+    <Name Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5038" />
+    <Description Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5039" />
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="412" />
     <ProjectType>Python</ProjectType>
     <DefaultName>web.debug.config</DefaultName>

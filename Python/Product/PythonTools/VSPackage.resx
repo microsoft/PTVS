@@ -208,6 +208,12 @@
   <data name="412" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\Config.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="413" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\Txt.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="414" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonMLProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="3006" xml:space="preserve">
     <value>Python</value>
   </data>
@@ -267,5 +273,263 @@
   </data>
   <data name="3017" xml:space="preserve">
     <value>Python File</value>
+  </data>
+  <data name="5000" xml:space="preserve">
+    <value>Python Package</value>
+  </data>
+  <data name="5001" xml:space="preserve">
+    <value>An empty Python package (folder and __init__.py file)</value>
+  </data>
+  <data name="5002" xml:space="preserve">
+    <value>Empty Python File</value>
+  </data>
+  <data name="5003" xml:space="preserve">
+    <value>An empty Python module</value>
+  </data>
+  <data name="5004" xml:space="preserve">
+    <value>Python class</value>
+  </data>
+  <data name="5005" xml:space="preserve">
+    <value>A Python module with an empty class</value>
+  </data>
+  <data name="5006" xml:space="preserve">
+    <value>Text file</value>
+  </data>
+  <data name="5007" xml:space="preserve">
+    <value>An empty text file</value>
+  </data>
+  <data name="5008" xml:space="preserve">
+    <value>Python Unit Test</value>
+  </data>
+  <data name="5009" xml:space="preserve">
+    <value>A Python module containing unit tests</value>
+  </data>
+  <data name="5010" xml:space="preserve">
+    <value>Python Application</value>
+  </data>
+  <data name="5011" xml:space="preserve">
+    <value>A project for creating a command-line application</value>
+  </data>
+  <data name="5012" xml:space="preserve">
+    <value>From Existing Python code</value>
+  </data>
+  <data name="5013" xml:space="preserve">
+    <value>Create a new project using code files that are already in a folder hierarchy</value>
+  </data>
+  <data name="5014" xml:space="preserve">
+    <value>PyGame using PyKinect</value>
+  </data>
+  <data name="5015" xml:space="preserve">
+    <value>A sample Kinect game using PyGame</value>
+  </data>
+  <data name="5016" xml:space="preserve">
+    <value>Pyvot Project</value>
+  </data>
+  <data name="5017" xml:space="preserve">
+    <value>A sample for working with the Pyvot library for Excel</value>
+  </data>
+  <data name="5018" xml:space="preserve">
+    <value>Classifier Project</value>
+  </data>
+  <data name="5019" xml:space="preserve">
+    <value>A project for testing scikit-learn classifiers.
+
+This project requires the pandas, numpy, scikit-learn, and matplotlib packages.</value>
+  </data>
+  <data name="5020" xml:space="preserve">
+    <value>Clustering Project</value>
+  </data>
+  <data name="5021" xml:space="preserve">
+    <value>A project for testing scikit-learn clustering learners.
+
+This project requires the pandas, numpy, scikit-learn, and matplotlib packages.</value>
+  </data>
+  <data name="5022" xml:space="preserve">
+    <value>Regression Project</value>
+  </data>
+  <data name="5023" xml:space="preserve">
+    <value>A project for testing scikit-learn regression learners.
+
+This project requires the pandas, numpy, scikit-learn, and matplotlib packages.</value>
+  </data>
+  <data name="5024" xml:space="preserve">
+    <value>Python Extension Module</value>
+  </data>
+  <data name="5025" xml:space="preserve">
+    <value>Implements a native extension module for CPython 3.5 or later</value>
+  </data>
+  <data name="5026" xml:space="preserve">
+    <value>Bottle Web Role</value>
+  </data>
+  <data name="5027" xml:space="preserve">
+    <value>Service with a web interface using the Bottle web framework</value>
+  </data>
+  <data name="5028" xml:space="preserve">
+    <value>Web Role</value>
+  </data>
+  <data name="5029" xml:space="preserve">
+    <value>Service with a web interface using a Python application</value>
+  </data>
+  <data name="5030" xml:space="preserve">
+    <value>Flask Web Role</value>
+  </data>
+  <data name="5031" xml:space="preserve">
+    <value>Service with a web interface using the Flask web framework.</value>
+  </data>
+  <data name="5032" xml:space="preserve">
+    <value>Worker Role</value>
+  </data>
+  <data name="5033" xml:space="preserve">
+    <value>Python based background processing service</value>
+  </data>
+  <data name="5034" xml:space="preserve">
+    <value>Web Role Support Files</value>
+  </data>
+  <data name="5035" xml:space="preserve">
+    <value>Support files necessary to deploy and run a Python web project on Microsoft Azure Cloud Service.
+
+These files are always added to a folder 'bin' at the root of your project.</value>
+  </data>
+  <data name="5036" xml:space="preserve">
+    <value>Worker Role Support Files</value>
+  </data>
+  <data name="5037" xml:space="preserve">
+    <value>Support files necessary to deploy and run a Python web project on Microsoft Azure Cloud Service.
+
+These files are always added to a folder 'bin' at the root of your project.</value>
+  </data>
+  <data name="5038" xml:space="preserve">
+    <value>Azure Remote debugging web.config</value>
+  </data>
+  <data name="5039" xml:space="preserve">
+    <value>A web.debug.config transform file that enables remote debugging over WebSockets.
+
+The files in this template should be included in the root of your website, alongside the main web.config file.</value>
+  </data>
+  <data name="5040" xml:space="preserve">
+    <value>Azure web.config (FastCGI)</value>
+  </data>
+  <data name="5041" xml:space="preserve">
+    <value>A web.config file that enables FastCGI for your Python app.
+
+This file should normally be deployed at the root of your site. See https://aka.ms/PythonOnAppService for more information.</value>
+  </data>
+  <data name="5042" xml:space="preserve">
+    <value>Azure web.config (HttpPlatformHandler)</value>
+  </data>
+  <data name="5043" xml:space="preserve">
+    <value>A web.config file that enables socket forwarding for your Python app.
+
+This file should normally be deployed at the root of your site. See https://aka.ms/PythonOnAppService for more information.</value>
+  </data>
+  <data name="5044" xml:space="preserve">
+    <value>Azure Static files web.config</value>
+  </data>
+  <data name="5045" xml:space="preserve">
+    <value>A web.config file that disables Python handling for a subdirectory.
+
+This file should normally be deployed in your /static folder. See https://aka.ms/PythonOnAppService for more information.</value>
+  </data>
+  <data name="5046" xml:space="preserve">
+    <value>HTML Page</value>
+  </data>
+  <data name="5047" xml:space="preserve">
+    <value>An HTML page that can include client-side code</value>
+  </data>
+  <data name="5048" xml:space="preserve">
+    <value>JavaScript</value>
+  </data>
+  <data name="5049" xml:space="preserve">
+    <value>A script file containing JavaScript code</value>
+  </data>
+  <data name="5050" xml:space="preserve">
+    <value>Style Sheet</value>
+  </data>
+  <data name="5051" xml:space="preserve">
+    <value>A cascading style sheet used for rich HTML style definitions</value>
+  </data>
+  <data name="5052" xml:space="preserve">
+    <value>Azure Cloud Service</value>
+  </data>
+  <data name="5053" xml:space="preserve">
+    <value>A project for creating a scalable service that runs on Microsoft Azure</value>
+  </data>
+  <data name="5054" xml:space="preserve">
+    <value>Polls Bottle Web Project</value>
+  </data>
+  <data name="5055" xml:space="preserve">
+    <value>A sample polls application using the Bottle web framework. It can be configured to use Azure Table Storage or MongoDB for storage.</value>
+  </data>
+  <data name="5056" xml:space="preserve">
+    <value>Polls Flask Web Project</value>
+  </data>
+  <data name="5057" xml:space="preserve">
+    <value>A sample polls application using the Flask web framework. It can be configured to use Azure Table Storage or MongoDB for storage.</value>
+  </data>
+  <data name="5058" xml:space="preserve">
+    <value>Polls Flask/Jade Web Project</value>
+  </data>
+  <data name="5059" xml:space="preserve">
+    <value>A sample polls application using the Flask web framework with the Jade template engine. It can be configured to use Azure Table Storage or MongoDB for storage.</value>
+  </data>
+  <data name="5060" xml:space="preserve">
+    <value>Bottle Web Project</value>
+  </data>
+  <data name="5061" xml:space="preserve">
+    <value>A project for creating an application using the Bottle web framework. It features sample pages that use the Twitter Bootstrap framework for responsive web design.</value>
+  </data>
+  <data name="5062" xml:space="preserve">
+    <value>Flask/Jade Web Project</value>
+  </data>
+  <data name="5063" xml:space="preserve">
+    <value>A project for creating an application using the Flask web framework with the Jade template engine. It features sample pages that use the Twitter Bootstrap framework for responsive web design.</value>
+  </data>
+  <data name="5064" xml:space="preserve">
+    <value>Flask Web Project</value>
+  </data>
+  <data name="5065" xml:space="preserve">
+    <value>A project for creating an application using the Flask web framework with the Jinja template engine. It features sample pages that use the Twitter Bootstrap framework for responsive web design.</value>
+  </data>
+  <data name="5066" xml:space="preserve">
+    <value>Blank Bottle Web Project</value>
+  </data>
+  <data name="5067" xml:space="preserve">
+    <value>A project for creating a Bottle web project</value>
+  </data>
+  <data name="5068" xml:space="preserve">
+    <value>Web Project</value>
+  </data>
+  <data name="5069" xml:space="preserve">
+    <value>A project for creating a generic Python web project</value>
+  </data>
+  <data name="5070" xml:space="preserve">
+    <value>Blank Flask Web Project</value>
+  </data>
+  <data name="5071" xml:space="preserve">
+    <value>A project for creating a Flask web project</value>
+  </data>
+  <data name="5072" xml:space="preserve">
+    <value>Blank Bottle Web Project</value>
+  </data>
+  <data name="5073" xml:space="preserve">
+    <value>A project for creating a Bottle web project in an Azure Cloud Service</value>
+  </data>
+  <data name="5074" xml:space="preserve">
+    <value>Web Role</value>
+  </data>
+  <data name="5075" xml:space="preserve">
+    <value>A project for creating a generic Python web project in an Azure Cloud Service</value>
+  </data>
+  <data name="5076" xml:space="preserve">
+    <value>Blank Flask Web Project</value>
+  </data>
+  <data name="5077" xml:space="preserve">
+    <value>A project for creating a Flask web project in an Azure Cloud Service</value>
+  </data>
+  <data name="5078" xml:space="preserve">
+    <value>Worker Project</value>
+  </data>
+  <data name="5079" xml:space="preserve">
+    <value>A project for creating a worker role in an Azure Cloud Service</value>
   </data>
 </root>

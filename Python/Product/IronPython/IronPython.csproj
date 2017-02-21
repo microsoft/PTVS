@@ -182,6 +182,7 @@
     </EmbeddedResource>
     <ConditionalEmbeddedResource Include="VSPackage.resx">
       <SubType>Designer</SubType>
+      <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
     </ConditionalEmbeddedResource>
     <EmbeddedResource Include="Strings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
