@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 
 [assembly: AssemblyTitle("Visual Studio - Python environments list")]
-[assembly: AssemblyDescription("Provides the control and functionality for listing and managing multiple Python environments.")]
+[assembly: AssemblyDescription("Provides a tool window for listing and managing multiple Python environments.")]
 
 [assembly: ComVisible(false)]
 

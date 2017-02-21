@@ -121,7 +121,7 @@
     <value>Configure</value>
   </data>
   <data name="ConfigurationExtensionHelpContent" xml:space="preserve">
-    <value>These settings may be configured for this environment. Check the tooltips for each field for more information and examples.</value>
+    <value>These environment settings may be configured. The tooltips on each field include more information and examples.</value>
   </data>
   <data name="DBExtensionDisplayName" xml:space="preserve">
     <value>IntelliSense</value>
@@ -202,7 +202,7 @@
     <value>Packages</value>
   </data>
   <data name="PipExtensionHelpContent" xml:space="preserve">
-    <value>These packages can be managed using your environment's package manager. Type in the search box to install new packages, or use the buttons on the right to manage those that are already installed.</value>
+    <value>These packages can be managed using your environment's package manager. Type in the search box to install new packages, or use the buttons on existing packages to update or remove them.</value>
   </data>
   <data name="ProductTitle" xml:space="preserve">
     <value>Visual Studio</value>
@@ -236,7 +236,7 @@
     <value>e.g. C:\PythonXY\python.exe</value>
   </data>
   <data name="ConfigurationExtensionInterpreterPathHelp" xml:space="preserve">
-    <value>The interpreter path is the executable file normally used to start Python. Normally this is called &amp;quot;python.exe&amp;quot;, but it may be different for some interpreters.</value>
+    <value>The interpreter path is the executable file used to run Python. Normally this is called &amp;quot;python.exe&amp;quot;, but it may be different for some interpreters.</value>
   </data>
   <data name="ConfigurationExtensionWindowedInterpreterPathLabel" xml:space="preserve">
     <value>Windowed interpreter</value>
@@ -269,7 +269,7 @@
     <value>Architecture</value>
   </data>
   <data name="ConfigurationExtensionArchitectureHelp" xml:space="preserve">
-    <value>The interpreter architecture is used when debugging and profiling. This should be set to match the target architecture of the interpreter, rather than the architecture of your operating system.</value>
+    <value>The architecture helps distinguish similar interpreters. This should be set to match the target architecture of the interpreter, rather than the architecture of your operating system.</value>
   </data>
   <data name="ConfigurationExtensionPathEnvVarLabel" xml:space="preserve">
     <value>Path environment variable</value>

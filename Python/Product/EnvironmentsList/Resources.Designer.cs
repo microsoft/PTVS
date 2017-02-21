@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The interpreter architecture is used when debugging and profiling. This should be set to match the target architecture of the interpreter, rather than the architecture of your operating system..
+        ///   Looks up a localized string similar to The architecture helps distinguish similar interpreters. This should be set to match the target architecture of the interpreter, rather than the architecture of your operating system..
         /// </summary>
         public static string ConfigurationExtensionArchitectureHelp {
             get {
@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to These settings may be configured for this environment. Check the tooltips for each field for more information and examples..
+        ///   Looks up a localized string similar to These environment settings may be configured. The tooltips on each field include more information and examples..
         /// </summary>
         public static string ConfigurationExtensionHelpContent {
             get {
@@ -178,7 +178,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The interpreter path is the executable file normally used to start Python. Normally this is called &amp;quot;python.exe&amp;quot;, but it may be different for some interpreters..
+        ///   Looks up a localized string similar to The interpreter path is the executable file used to run Python. Normally this is called &amp;quot;python.exe&amp;quot;, but it may be different for some interpreters..
         /// </summary>
         public static string ConfigurationExtensionInterpreterPathHelp {
             get {
@@ -749,7 +749,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to These packages can be managed using your environment&apos;s package manager. Type in the search box to install new packages, or use the buttons on the right to manage those that are already installed..
+        ///   Looks up a localized string similar to These packages can be managed using your environment&apos;s package manager. Type in the search box to install new packages, or use the buttons on existing packages to update or remove them..
         /// </summary>
         public static string PipExtensionHelpContent {
             get {
