@@ -450,7 +450,7 @@ Please delete the installed template and try again.</value>
     <value>Recommended feed URL</value>
   </data>
   <data name="Settings_FeedUrl_Description" xml:space="preserve">
-    <value>Location of the feed file. Feed files have one template URLs on each line.</value>
+    <value>Location of the feed file. Feed files have one template URL on each line.</value>
   </data>
   <data name="Settings_CheckForTemplateUpdate_Name" xml:space="preserve">
     <value>Check for updated templates</value>

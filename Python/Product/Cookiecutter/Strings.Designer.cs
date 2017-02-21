@@ -949,7 +949,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Location of the feed file. Feed files have one template URLs on each line..
+        ///   Looks up a localized string similar to Location of the feed file. Feed files have one template URL on each line..
         /// </summary>
         public static string Settings_FeedUrl_Description {
             get {
