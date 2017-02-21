@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to open file {0}
+        ///   Looks up a localized string similar to Failed to open file &apos;{0}&apos;
         ///
         ///{1}.
         /// </summary>
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to read performance session {0}
+        ///   Looks up a localized string similar to Failed to read performance session &apos;{0}&apos;
         ///
         ///{1}.
         /// </summary>
@@ -344,7 +344,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Performance Report Files|*.vsp;*.vsps.
+        ///   Looks up a localized string similar to Performance Report Files (*.vsp;*.vsps)|*.vsp;*.vsps|All Files (*.*)|*.*.
         /// </summary>
         public static string PerformanceReportFilesFilter {
             get {
@@ -389,7 +389,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Profiling session is not configured - would you like to configure now and then launch?.
+        ///   Looks up a localized string similar to Profiling session has not been configured. Configure now and launch?.
         /// </summary>
         public static string ProfilingSessionNotConfigured {
             get {
@@ -452,7 +452,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Starting perf cmd failed
+        ///   Looks up a localized string similar to Failed to start performance monitor.
         ///
         ///Output:
         ///{0}
@@ -467,7 +467,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Shutting down perf cmd failed
+        ///   Looks up a localized string similar to Failed to shut down performance monitor.
         ///
         ///Output:
         ///{0}
