@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Microsoft.CookiecutterTools.View"
+             xmlns:cct="clr-namespace:Microsoft.CookiecutterTools"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Page.CommandBindings>
@@ -22,12 +23,13 @@
     <StackPanel Orientation="Vertical" VerticalAlignment="Center">
         <TextBlock Margin="8"
                     TextWrapping="Wrap"
-                    Text="Please install Python 3.3 or later to use this feature (requires VS restart)."
+                    Text="{x:Static cct:Strings.MissingDependenciesPage_Message}"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"/>
         <Button Margin="8"
                 Command="{x:Static local:MissingDependenciesPage.InstallPython}"
                 HorizontalAlignment="Center"
-                Style="{StaticResource NavigationButton}">Help me install Python</Button>
+                Style="{StaticResource NavigationButton}"
+                Content="{x:Static cct:Strings.MissingDependenciesPage_InstallPython}"/>
     </StackPanel>
 </Page>

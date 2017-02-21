@@ -65,10 +65,10 @@ namespace Microsoft.PythonTools.Project {
             this.tableLayoutPanel2.Controls.Add(this._searchPaths, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this._argumentsLabel, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this._arguments, 1, 1);
-            this.tableLayoutPanel2.Controls.Add(this._interpArgsLabel, 0, 2);
-            this.tableLayoutPanel2.Controls.Add(this._interpArgs, 1, 2);
-            this.tableLayoutPanel2.Controls.Add(this._interpreterPath, 1, 3);
-            this.tableLayoutPanel2.Controls.Add(this._interpreterPathLabel, 0, 3);
+            this.tableLayoutPanel2.Controls.Add(this._interpArgs, 1, 3);
+            this.tableLayoutPanel2.Controls.Add(this._interpreterPath, 1, 2);
+            this.tableLayoutPanel2.Controls.Add(this._interpreterPathLabel, 0, 2);
+            this.tableLayoutPanel2.Controls.Add(this._interpArgsLabel, 0, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
             // _envVars

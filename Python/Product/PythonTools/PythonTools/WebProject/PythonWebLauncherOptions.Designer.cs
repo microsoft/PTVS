@@ -83,10 +83,9 @@ namespace Microsoft.PythonTools.Project.Web {
             this.tableLayoutPanel2.Controls.Add(this._environment, 1, 6);
             this.tableLayoutPanel2.Controls.Add(this._searchPaths, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this._arguments, 1, 1);
-            this.tableLayoutPanel2.Controls.Add(this._interpArgs, 1, 2);
-            this.tableLayoutPanel2.Controls.Add(this._interpreterPath, 1, 3);
-            this.tableLayoutPanel2.Controls.Add(this._interpreterPathLabel, 0, 3);
-            this.tableLayoutPanel2.Controls.Add(this._interpArgsLabel, 0, 2);
+            this.tableLayoutPanel2.Controls.Add(this._interpArgs, 1, 3);
+            this.tableLayoutPanel2.Controls.Add(this._interpreterPath, 1, 2);
+            this.tableLayoutPanel2.Controls.Add(this._interpArgsLabel, 0, 3);
             this.tableLayoutPanel2.Controls.Add(this._argumentsLabel, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this._searchPathLabel, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._portNumberLabel, 0, 5);
@@ -94,6 +93,7 @@ namespace Microsoft.PythonTools.Project.Web {
             this.tableLayoutPanel2.Controls.Add(this._launchUrl, 1, 4);
             this.tableLayoutPanel2.Controls.Add(this._launchUrlLabel, 0, 4);
             this.tableLayoutPanel2.Controls.Add(this._environmentLabel, 0, 6);
+            this.tableLayoutPanel2.Controls.Add(this._interpreterPathLabel, 0, 2);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
             // _environment
@@ -107,6 +107,7 @@ namespace Microsoft.PythonTools.Project.Web {
             // 
             resources.ApplyResources(this._searchPaths, "_searchPaths");
             this._searchPaths.Name = "_searchPaths";
+            this._toolTip.SetToolTip(this._searchPaths, resources.GetString("_searchPaths.ToolTip"));
             this._searchPaths.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
             // _arguments
@@ -152,6 +153,7 @@ namespace Microsoft.PythonTools.Project.Web {
             // 
             resources.ApplyResources(this._searchPathLabel, "_searchPathLabel");
             this._searchPathLabel.Name = "_searchPathLabel";
+            this._toolTip.SetToolTip(this._searchPathLabel, resources.GetString("_searchPathLabel.ToolTip"));
             // 
             // _portNumberLabel
             // 

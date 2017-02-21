@@ -3,8 +3,6 @@
 // </copyright>
 
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 // The following assembly information is common to all Python Tools for Visual
 // Studio assemblies.
@@ -12,7 +10,5 @@ using System.Runtime.InteropServices;
 // Properties\AssemblyInfo.cs file and remove any lines duplicating the ones below.
 // (See also AssemblyVersion.cs in this same directory.)
 [assembly: AssemblyCompany("Microsoft Corporation")]
-[assembly: AssemblyProduct("Python support for Visual Studio")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2017")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyProduct("Python support for Microsoft® Visual Studio®")]
+[assembly: AssemblyCopyright("© Microsoft Corporation")]

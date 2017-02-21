@@ -376,7 +376,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select an interpreter to create the virtual environment from..
+        ///   Looks up a localized string similar to Select a base interpreter for your virtual environment..
         /// </summary>
         public static string AddVirtualEnvironmentWindow_SelectInterpreter {
             get {
@@ -612,7 +612,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to load debugging script (incorrect version of script?).
+        ///   Looks up a localized string similar to Debugger script was incorrectly initialized.
         /// </summary>
         public static string ConnErrorMessages_LoadDebuggerBadDebugger {
             get {
@@ -621,7 +621,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to compile debugging script.
+        ///   Looks up a localized string similar to Failed to initialize debugger script.
         /// </summary>
         public static string ConnErrorMessages_LoadDebuggerFailed {
             get {
@@ -1189,7 +1189,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Move the current frame one level down in the stack trace..
+        ///   Looks up a localized string similar to Move the current frame one level down in the call stack..
         /// </summary>
         public static string DebugReplFrameDownCommandDescription {
             get {
@@ -1216,7 +1216,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Move the current frame one level up in the stack trace..
+        ///   Looks up a localized string similar to Move the current frame one level up in the call stack..
         /// </summary>
         public static string DebugReplFrameUpCommandDescription {
             get {
@@ -1315,7 +1315,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Switches the current process to the specified process id..
+        ///   Looks up a localized string similar to Changes the current process to the process with the specified id..
         /// </summary>
         public static string DebugReplProcessCommandDescription {
             get {
@@ -1405,7 +1405,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Switches the current thread to the specified thread id..
+        ///   Looks up a localized string similar to Changes the current thread to the thread with the specified id..
         /// </summary>
         public static string DebugReplThreadCommandDescription {
             get {
@@ -1486,7 +1486,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Structured exception {0:x08} ({1}) raised while evaluating expression.
+        ///   Looks up a localized string similar to Native exception {0:x08} ({1}) raised while evaluating expression.
         /// </summary>
         public static string DebugStructuredExceptionWhileEvaluatingExpression {
             get {
@@ -1495,7 +1495,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Structured exception {0:x08} raised while evaluating expression.
+        ///   Looks up a localized string similar to Native exception {0:x08} raised while evaluating expression.
         /// </summary>
         public static string DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue {
             get {
@@ -2170,7 +2170,7 @@ namespace Microsoft.PythonTools {
         /// <summary>
         ///   Looks up a localized string similar to The selected text does not cover an entire expression.
         ///
-        ///Would you like the selection to be extended to a valid expression?.
+        ///Expand selection to the full expression?.
         /// </summary>
         public static string ExtractMethod_ShouldExpandSelection {
             get {
@@ -2206,7 +2206,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot extract {0}.
+        ///   Looks up a localized string similar to Cannot extract code containing &quot;{0}&quot;.
         /// </summary>
         public static string ExtractMethodCannotExtract {
             get {
@@ -2215,7 +2215,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot extract method containing from ... import * statement.
+        ///   Looks up a localized string similar to Cannot extract method containing &quot;from ... import *&quot; statement.
         /// </summary>
         public static string ExtractMethodContainsFromImportStar {
             get {
@@ -2269,7 +2269,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to When the selection contains a return statement, all code paths must be terminated by a return statement too..
+        ///   Looks up a localized string similar to When the selection contains a return statement, all code paths must return..
         /// </summary>
         public static string ExtractMethodSelectionContainsReturn {
             get {
@@ -3300,7 +3300,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing &apos;{0}&apos;. See output window for more information..
+        ///   Looks up a localized string similar to Installing &apos;{0}&apos;. See the Output Window for more information..
         /// </summary>
         public static string PackageInstallingSeeOutputWindow {
             get {
@@ -3364,7 +3364,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unnstalling &apos;{0}&apos;. See output window for more information..
+        ///   Looks up a localized string similar to Unnstalling &apos;{0}&apos;. See the Output Window for more information..
         /// </summary>
         public static string PackageUninstallingSeeOutputWindow {
             get {
@@ -3593,7 +3593,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Launches web sites using the Python debugger. This enables launching and starting a web browser automatically, using the commands specified in the project file..
+        ///   Looks up a localized string similar to Launches web sites using the Python debugger. This enables the web server commands specified in the project file, and launches a browser window when the server has started..
         /// </summary>
         public static string PythonWebLauncherDescription {
             get {
@@ -3737,7 +3737,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Explanation of this reference type&apos;s deprecation..
+        ///   Looks up a localized string similar to The reason this item type has been deprecated..
         /// </summary>
         public static string RefDeprecatedMessageDescription {
             get {
@@ -3801,7 +3801,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach()..
+        ///   Looks up a localized string similar to Could not connect to remote Python process at {0}. Make sure the process has called ptvsd.enable_attach() and is still running..
         /// </summary>
         public static string RemoteServiceUnavailable_Host {
             get {
@@ -3819,7 +3819,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The remote server at {0} is not running a remote debugging server, or it is running an unsupported version..
+        ///   Looks up a localized string similar to The remote server at {0} is not running a remote debugging server, or may be running an unsupported version..
         /// </summary>
         public static string RemoteUnsupportedServer_Host {
             get {
@@ -3837,7 +3837,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot rename a module name.
+        ///   Looks up a localized string similar to Cannot rename modules.
         /// </summary>
         public static string RenameVariable_CannotRenameModuleName {
             get {
@@ -3981,7 +3981,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The interactive window has become disconnected from the remote process. Please reset the window..
+        ///   Looks up a localized string similar to The interactive window has become disconnected from the Python process. Please reset the window..
         /// </summary>
         public static string ReplDisconnectedFromRemoteProcessError {
             get {
@@ -3990,7 +3990,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This interactive window has encountered an issue. Please Reset the window..
+        ///   Looks up a localized string similar to The interactive window has encountered an issue. Please reset the window.
         /// </summary>
         public static string ReplDisconnectedReset {
             get {
@@ -4040,7 +4040,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loads commands from file and executes until complete.
+        ///   Looks up a localized string similar to Executes code and commands from the specified file without resetting the current state.
         /// </summary>
         public static string ReplLoadCommandDescription {
             get {
@@ -4058,7 +4058,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot change module, interactive window is disconnected.
+        ///   Looks up a localized string similar to Cannot change module because the interactive window needs to be reset..
         /// </summary>
         public static string ReplModuleCannotChange {
             get {
@@ -4076,7 +4076,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Interactive window is not yet started..
+        ///   Looks up a localized string similar to The interactive window has not yet started..
         /// </summary>
         public static string ReplNotStarted {
             get {
@@ -4085,7 +4085,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred opening this interactive window.
+        ///   Looks up a localized string similar to An error occurred opening the interactive window.
         ///
         ///{0}.
         /// </summary>
@@ -4467,7 +4467,7 @@ namespace Microsoft.PythonTools {
         /// <summary>
         ///   Looks up a localized string similar to An unexpected error occurred.
         ///
-        ///You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file &apos;{0}&apos;, or by checking the Event Log..
+        ///You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file &apos;{0}&apos;, or by checking Event Viewer..
         /// </summary>
         public static string SeeActivityLog {
             get {
@@ -4660,7 +4660,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Code coverage file not produced...  have you installed coverage.py? http://go.microsoft.com/fwlink/?LinkId=808238.
+        ///   Looks up a localized string similar to Code coverage file not produced. Please install &apos;coverage&apos; from https://go.microsoft.com/fwlink/?LinkId=808238.
         /// </summary>
         public static string Test_NoCoverageProduced {
             get {
@@ -4669,7 +4669,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to receive test finish notification.  One or more test results may be missing..
+        ///   Looks up a localized string similar to Failed to receive test finish notification - some test results may be missing..
         /// </summary>
         public static string Test_NoTestFinishedNotification {
             get {
@@ -5011,7 +5011,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: the IntelliSense database is currently not up to date and completions may be missing..
+        ///   Looks up a localized string similar to Warning: the completion database is currently not up to date. Intellisense may be incomplete..
         /// </summary>
         public static string WarningAnalysisNotCurrent {
             get {

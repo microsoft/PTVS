@@ -124,7 +124,7 @@
     <value>Cannot locate performance tools.</value>
   </data>
   <data name="StartPerfCmdError" xml:space="preserve">
-    <value>Starting perf cmd failed
+    <value>Failed to start performance monitor.
 
 Output:
 {0}
@@ -133,7 +133,7 @@ Error:
 {1}</value>
   </data>
   <data name="StopPerfMonError" xml:space="preserve">
-    <value>Shutting down perf cmd failed
+    <value>Failed to shut down performance monitor.
 
 Output:
 {0}
@@ -154,12 +154,12 @@ Error:
     <value>Unable to stop performance monitor: {0}</value>
   </data>
   <data name="FailedToOpenPerformanceSessionFile" xml:space="preserve">
-    <value>Failed to open file {0}
+    <value>Failed to open file '{0}'
 
 {1}</value>
   </data>
   <data name="FailedToReadPerformanceSession" xml:space="preserve">
-    <value>Failed to read performance session {0}
+    <value>Failed to read performance session '{0}'
 
 {1}</value>
   </data>
@@ -192,13 +192,13 @@ Error:
     <value>Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*</value>
   </data>
   <data name="PerformanceReportFilesFilter" xml:space="preserve">
-    <value>Performance Report Files|*.vsp;*.vsps</value>
+    <value>Performance Report Files (*.vsp;*.vsps)|*.vsp;*.vsps|All Files (*.*)|*.*</value>
   </data>
   <data name="ProfilingSupportMissingError" xml:space="preserve">
     <value>Profiling support seems to be missing or corrupt. Try repairing your Visual Studio installation.</value>
   </data>
   <data name="ProfilingSessionNotConfigured" xml:space="preserve">
-    <value>Profiling session is not configured - would you like to configure now and then launch?</value>
+    <value>Profiling session has not been configured. Configure now and launch?</value>
   </data>
   <data name="NoProfilingTargetTitle" xml:space="preserve">
     <value>No Profiling Target</value>

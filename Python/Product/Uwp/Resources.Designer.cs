@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Uwp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot initialize Uwp project.
+        ///   Looks up a localized string similar to Cannot initialize UWP project.
         /// </summary>
         internal static string CannotInitializeUwpProjectException {
             get {

@@ -199,6 +199,9 @@ NAME2=value2
   <data name="_searchPaths.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="_searchPaths.ToolTip" xml:space="preserve">
+    <value>Semicolon separated list of import directories to be added to sys.path.</value>
+  </data>
   <data name="&gt;&gt;_searchPaths.Name" xml:space="preserve">
     <value>_searchPaths</value>
   </data>
@@ -248,7 +251,7 @@ NAME2=value2
     <value>Left, Right</value>
   </data>
   <data name="_interpArgs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 55</value>
+    <value>129, 81</value>
   </data>
   <data name="_interpArgs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 3, 6, 3</value>
@@ -260,10 +263,10 @@ NAME2=value2
     <value>444, 20</value>
   </data>
   <data name="_interpArgs.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="_interpArgs.ToolTip" xml:space="preserve">
-    <value>Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).</value>
+    <value>Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)</value>
   </data>
   <data name="&gt;&gt;_interpArgs.Name" xml:space="preserve">
     <value>_interpArgs</value>
@@ -281,7 +284,7 @@ NAME2=value2
     <value>Left, Right</value>
   </data>
   <data name="_interpreterPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 81</value>
+    <value>129, 55</value>
   </data>
   <data name="_interpreterPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 3, 6, 3</value>
@@ -293,10 +296,10 @@ NAME2=value2
     <value>444, 20</value>
   </data>
   <data name="_interpreterPath.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>5</value>
   </data>
   <data name="_interpreterPath.ToolTip" xml:space="preserve">
-    <value>Overrides the interpreter executable which is used for launching the project.</value>
+    <value>Overrides the path of the interpreter to use when launching the project.</value>
   </data>
   <data name="&gt;&gt;_interpreterPath.Name" xml:space="preserve">
     <value>_interpreterPath</value>
@@ -310,45 +313,6 @@ NAME2=value2
   <data name="&gt;&gt;_interpreterPath.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="_interpreterPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_interpreterPathLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_interpreterPathLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 84</value>
-  </data>
-  <data name="_interpreterPathLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
-  </data>
-  <data name="_interpreterPathLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 13</value>
-  </data>
-  <data name="_interpreterPathLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="_interpreterPathLabel.Text" xml:space="preserve">
-    <value>&amp;Interpreter Path:</value>
-  </data>
-  <data name="_interpreterPathLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleLeft</value>
-  </data>
-  <data name="_interpreterPathLabel.ToolTip" xml:space="preserve">
-    <value>Overrides the interpreter executable which is used for launching the project.</value>
-  </data>
-  <data name="&gt;&gt;_interpreterPathLabel.Name" xml:space="preserve">
-    <value>_interpreterPathLabel</value>
-  </data>
-  <data name="&gt;&gt;_interpreterPathLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_interpreterPathLabel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;_interpreterPathLabel.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="_interpArgsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
   </data>
@@ -356,7 +320,7 @@ NAME2=value2
     <value>True</value>
   </data>
   <data name="_interpArgsLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 58</value>
+    <value>6, 84</value>
   </data>
   <data name="_interpArgsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>
@@ -365,7 +329,7 @@ NAME2=value2
     <value>111, 13</value>
   </data>
   <data name="_interpArgsLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="_interpArgsLabel.Text" xml:space="preserve">
     <value>Interpreter Ar&amp;guments:</value>
@@ -374,7 +338,7 @@ NAME2=value2
     <value>MiddleLeft</value>
   </data>
   <data name="_interpArgsLabel.ToolTip" xml:space="preserve">
-    <value>Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).</value>
+    <value>Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)</value>
   </data>
   <data name="&gt;&gt;_interpArgsLabel.Name" xml:space="preserve">
     <value>_interpArgsLabel</value>
@@ -386,7 +350,7 @@ NAME2=value2
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_interpArgsLabel.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="_argumentsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -425,7 +389,7 @@ NAME2=value2
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_argumentsLabel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="_searchPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -451,6 +415,9 @@ NAME2=value2
   <data name="_searchPathLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
+  <data name="_searchPathLabel.ToolTip" xml:space="preserve">
+    <value>Semicolon separated list of import directories to be added to sys.path.</value>
+  </data>
   <data name="&gt;&gt;_searchPathLabel.Name" xml:space="preserve">
     <value>_searchPathLabel</value>
   </data>
@@ -461,7 +428,7 @@ NAME2=value2
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_searchPathLabel.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>7</value>
   </data>
   <data name="_portNumberLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -500,7 +467,7 @@ NAME2=value2
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_portNumberLabel.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="_portNumber.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
@@ -530,7 +497,7 @@ NAME2=value2
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_portNumber.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="_launchUrl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
@@ -560,7 +527,7 @@ NAME2=value2
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_launchUrl.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>10</value>
   </data>
   <data name="_launchUrlLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -596,7 +563,7 @@ NAME2=value2
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_launchUrlLabel.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>11</value>
   </data>
   <data name="_environmentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -639,6 +606,45 @@ NAME2=value2
     <value>tableLayoutPanel2</value>
   </data>
   <data name="&gt;&gt;_environmentLabel.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="_interpreterPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_interpreterPathLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_interpreterPathLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 58</value>
+  </data>
+  <data name="_interpreterPathLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_interpreterPathLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 13</value>
+  </data>
+  <data name="_interpreterPathLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="_interpreterPathLabel.Text" xml:space="preserve">
+    <value>&amp;Interpreter Path:</value>
+  </data>
+  <data name="_interpreterPathLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="_interpreterPathLabel.ToolTip" xml:space="preserve">
+    <value>Overrides the path of the interpreter to use when launching the project.</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPathLabel.Name" xml:space="preserve">
+    <value>_interpreterPathLabel</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPathLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPathLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_interpreterPathLabel.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="tableLayoutPanel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -669,7 +675,7 @@ NAME2=value2
     <value>0</value>
   </data>
   <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_environment" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_searchPaths" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_arguments" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpArgs" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpreterPath" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpreterPathLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_interpArgsLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_argumentsLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_searchPathLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_portNumberLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_portNumber" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_launchUrl" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_launchUrlLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_environmentLabel" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_environment" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_searchPaths" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_arguments" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpArgs" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpreterPath" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_interpArgsLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_argumentsLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_searchPathLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_portNumberLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_portNumber" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_launchUrl" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_launchUrlLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_environmentLabel" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_interpreterPathLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <data name="_debugGroup.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -933,7 +939,7 @@ NAME2=value2
     <value>2</value>
   </data>
   <data name="_debugServerTargetType.ToolTip" xml:space="preserve">
-    <value>The type of the command. If no command is specified, this value is always treated as "script".</value>
+    <value>The type of the command. Default is "script".</value>
   </data>
   <data name="&gt;&gt;_debugServerTargetType.Name" xml:space="preserve">
     <value>_debugServerTargetType</value>
@@ -1236,7 +1242,7 @@ NAME2=value2
     <value>2</value>
   </data>
   <data name="_runServerTargetType.ToolTip" xml:space="preserve">
-    <value>The type of the command. If no command is specified, this value is always treated as "script".</value>
+    <value>The type of the command. Default is "script".</value>
   </data>
   <data name="&gt;&gt;_runServerTargetType.Name" xml:space="preserve">
     <value>_runServerTargetType</value>

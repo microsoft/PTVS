@@ -256,7 +256,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Existing &amp;Folder...</ButtonText>
           <MenuText>Existing &amp;Folder...</MenuText>
-          <ToolTipText>Adds a folder and its contents to this project.</ToolTipText>
+          <ToolTipText>Adds a folder, its files and subdirectories to this project.</ToolTipText>
           <CanonicalName>Add Existing Folder</CanonicalName>
           <LocCanonicalName>Add Existing Folder</LocCanonicalName>
         </Strings>
@@ -393,7 +393,7 @@ permissions and limitations under the License.
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>Ins&amp;tall from requirements.txt</ButtonText>
-          <ToolTipText>Installs from dependencies from a requirements.txt file into this environment.</ToolTipText>
+          <ToolTipText>Installs packages listed in requirements.txt into this environment.</ToolTipText>
           <CanonicalName>Install RequirementsTxt</CanonicalName>
           <LocCanonicalName>Install RequirementsTxt</LocCanonicalName>
         </Strings>
@@ -405,7 +405,7 @@ permissions and limitations under the License.
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>&amp;Generate requirements.txt</ButtonText>
-          <ToolTipText>Generates or updates a requirements.txt file for this environment.</ToolTipText>
+          <ToolTipText>Generates or updates a requirements.txt file listing the packages in this environment.</ToolTipText>
           <CanonicalName>Generate RequirementsTxt</CanonicalName>
           <LocCanonicalName>Generate RequiremenstTxt</LocCanonicalName>
         </Strings>
@@ -601,7 +601,7 @@ permissions and limitations under the License.
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add &amp;Zip Archive to Search Path...</ButtonText>
-          <ToolTipText>Adds a zip or egg file to the search path.</ToolTipText>
+          <ToolTipText>Adds a .zip or .egg file to the search path.</ToolTipText>
           <CanonicalName>Add Search Path Zip</CanonicalName>
           <LocCanonicalName>Add Search Path Zip</LocCanonicalName>
         </Strings>
@@ -612,7 +612,7 @@ permissions and limitations under the License.
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Add P&amp;YTHONPATH to Search Path</ButtonText>
-          <ToolTipText>Adds the current global PYTHONPATH to the search path.</ToolTipText>
+          <ToolTipText>Adds the current global value of PYTHONPATH to the search path.</ToolTipText>
           <CanonicalName>Add Search Path PYTHONPATH</CanonicalName>
           <LocCanonicalName>Add Search Path PYTHONPATH</LocCanonicalName>
         </Strings>
@@ -736,7 +736,7 @@ permissions and limitations under the License.
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Show &amp;C++ View Nodes</ButtonText>
-          <ToolTipText>Shows variable details in C++ format</ToolTipText>
+          <ToolTipText>Enable C++ view of objects when in Python frames.</ToolTipText>
           <CanonicalName>Show Cpp View Nodes</CanonicalName>
           <LocCanonicalName>Show Cpp View Nodes</LocCanonicalName>
         </Strings>
@@ -749,7 +749,7 @@ permissions and limitations under the License.
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Show &amp;Python View Nodes</ButtonText>
-          <ToolTipText>Shows variable details in Python format</ToolTipText>
+          <ToolTipText>Enable Python view of objects when in C++ frames.</ToolTipText>
           <CanonicalName>Show Python View Nodes</CanonicalName>
           <LocCanonicalName>Show Python View Nodes</LocCanonicalName>
         </Strings>
@@ -762,7 +762,7 @@ permissions and limitations under the License.
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Show &amp;Native Python Frames</ButtonText>
-          <ToolTipText>Shows native Python stack frames.</ToolTipText>
+          <ToolTipText>Enable native Python stack frames.</ToolTipText>
           <CanonicalName>Show Native Python Frames</CanonicalName>
           <LocCanonicalName>Show Native Python Frames</LocCanonicalName>
         </Strings>
@@ -792,7 +792,7 @@ permissions and limitations under the License.
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Attach Debugger (&amp;Python)</ButtonText>
-          <ToolTipText>Attach the Python debugger to the remote Microsoft Azure site</ToolTipText>
+          <ToolTipText>Attach the Python debugger to the remote Microsoft Azure App Service site</ToolTipText>
           <CanonicalName>Attach Debugger To Web Site</CanonicalName>
           <LocCanonicalName>Attach Debugger To Web Site</LocCanonicalName>
         </Strings>
@@ -869,7 +869,7 @@ permissions and limitations under the License.
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>
           <ButtonText>Module: </ButtonText>
-          <ToolTipText>Selects the current file scope that the interactive window is executing against.</ToolTipText>
+          <ToolTipText>Selects the current module scope that the interactive window is using.</ToolTipText>
           <CanonicalName>Interactive Scope</CanonicalName>
           <LocCanonicalName>Interactive Scope</LocCanonicalName>
         </Strings>

@@ -133,7 +133,7 @@
     <value>Startup File</value>
   </data>
   <data name="StartupFileDescription" xml:space="preserve">
-    <value>The name of the startup file that you want to be executed when you launch your application.</value>
+    <value>The name of the file to start when launching your application.</value>
   </data>
   <data name="Project" xml:space="preserve">
     <value>Project</value>

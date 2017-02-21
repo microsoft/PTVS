@@ -178,7 +178,7 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Python path to a settings module, e.g. &quot;myproject.settings.main&quot;. If this isn&apos;t provided, the DJANGO_SETTINGS_MODULE environment variable will be used..
+        ///   Looks up a localized string similar to The full name of your settings module, for example, &quot;myproject.settings&quot;. If not provided, the DJANGO_SETTINGS_MODULE environment variable will be used..
         /// </summary>
         public static string DjangoSettingsModuleHelp {
             get {
