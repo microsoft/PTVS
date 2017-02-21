@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Uwp.Wizards {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python Tools for Visual Studio.
+        ///   Looks up a localized string similar to Visual Studio - Python.
         /// </summary>
         internal static string PTVSDialogBoxTitle {
             get {
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Uwp.Wizards {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find CPython UWP SDK.  Please download from &lt;http://go.microsoft.com/fwlink/?LinkID=613495&amp;amp;clcid=0x409&gt; and restart Visual Studio..
+        ///   Looks up a localized string similar to Could not find CPython UWP SDK.  Please download from &lt;http://go.microsoft.com/fwlink/?LinkID=613495&gt; and restart Visual Studio..
         /// </summary>
         internal static string PythonUwpSdkNotFound {
             get {

@@ -139,9 +139,10 @@
     <value>Visual Studio - Python support</value>
   </data>
   <data name="CannotInitializeUwpProjectException" xml:space="preserve">
-    <value>Cannot initialize Uwp project</value>
+    <value>Cannot initialize UWP project</value>
   </data>
   <data name="PackageMustOnlyBeSetOnce" xml:space="preserve">
     <value>PythonUwpProject.Package must only be set once</value>
+    <comment>Do not localize - this is a fatal exception message.</comment>
   </data>
 </root>
