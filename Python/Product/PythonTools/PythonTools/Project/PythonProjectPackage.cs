@@ -29,8 +29,7 @@ using MSBuild = Microsoft.Build.Evaluation;
 namespace Microsoft.PythonTools.Project {
     //Set the projectsTemplatesDirectory to a non-existant path to prevent VS from including the working directory as a valid template path
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [Description("Python Project Package")] // TODO: Localization
-    [ProvideProjectFactory(typeof(PythonProjectFactory), PythonConstants.LanguageName, PythonFileFilter, "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
+    [ProvideProjectFactory(typeof(PythonProjectFactory), PythonConstants.LanguageName, "#127", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
     [ProvideObject(typeof(PythonGeneralPropertyPage))]
     [ProvideObject(typeof(PythonWebPropertyPage))]
     [ProvideObject(typeof(PythonDebugPropertyPage))]
@@ -39,7 +38,7 @@ namespace Microsoft.PythonTools.Project {
     [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, "*:1", ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3016, EditorNameResourceId = 3004, DefaultName = "module", TemplateDir = ".\\NullPath")]
     [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 60, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, null, ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3016, EditorNameResourceId = 3004, DefaultName = "module", TemplateDir = ".\\NullPath")]
     [ProvideEditorExtension2(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3016, EditorNameResourceId = 3015, LinkedEditorGuid = PythonConstants.EditorFactoryGuid, TemplateDir = ".\\NullPath")]
-    [ProvideFileFilter(PythonConstants.ProjectFactoryGuid, "/1", "Python Files;*.py,*.pyw", 100)]
+    [ProvideFileFilter(PythonConstants.ProjectFactoryGuid, "/1", "#128", 100)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.Designer_string)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.Code_string)]
@@ -50,15 +49,13 @@ namespace Microsoft.PythonTools.Project {
     [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.Debugging_string)]
     
     [ProvideObject(typeof(PythonWebProject))]
-    [ProvideProjectFactory(typeof(PythonWebProjectFactory), PythonConstants.LanguageName, PythonFileFilter, "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
-    [ProvideFileFilter(PythonConstants.WebProjectFactoryGuid, "/1", "Python Files;*.py,*.pyw", 100)] // TODO: Localization
+    [ProvideProjectFactory(typeof(PythonWebProjectFactory), PythonConstants.LanguageName, "#127", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
+    [ProvideFileFilter(PythonConstants.WebProjectFactoryGuid, "/1", "#128", 100)]
     [ProvideLanguageTemplates("{349C5851-65DF-11DA-9384-00065B846F21}", "Python", PythonConstants.ProjectSystemPackageGuid, "Web", "Python Application Project Templates", "{888888a0-9f3d-457c-b088-3a5042f75d52}", ".py", "Python", "{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}")]
     
     [Guid(PythonConstants.ProjectSystemPackageGuid)]
     [DeveloperActivity("Python", typeof(PythonProjectPackage))]
     public class PythonProjectPackage : CommonProjectPackage {
-        internal const string PythonFileFilter = "Python Project Files (*.pyproj);*.pyproj"; // TODO: Localization
-
         protected override void Initialize() {
             // The variable is inherited by MSBuild processes and is used to resolve test target
             // files.
