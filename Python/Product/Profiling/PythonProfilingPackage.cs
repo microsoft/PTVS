@@ -44,7 +44,6 @@ namespace Microsoft.PythonTools.Profiling {
     // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
     // a package.
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [Description("Python Tools Profiling Package")] // TODO: Localization: does this do anything?
     // This attribute is used to register the informations needed to show the this package
     // in the Help/About dialog of Visual Studio.
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
@@ -53,7 +52,7 @@ namespace Microsoft.PythonTools.Profiling {
     [Guid(GuidList.guidPythonProfilingPkgString)]
     // set the window to dock where Toolbox/Performance Explorer dock by default
     [ProvideToolWindow(typeof(PerfToolWindow), Orientation = ToolWindowOrientation.Left, Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindToolbox)]
-    [ProvideFileFilterAttribute("{81da0100-e6db-4783-91ea-c38c3fa1b81e}", "/1", "Python Performance Session (*.pyperf);*.pyperf", 100)] // TODO: Localization
+    [ProvideFileFilterAttribute("{81da0100-e6db-4783-91ea-c38c3fa1b81e}", "/1", "#113", 100)]
     [ProvideEditorExtension(typeof(ProfilingSessionEditorFactory), ".pyperf", 50,
           ProjectGuid = "{81da0100-e6db-4783-91ea-c38c3fa1b81e}",
           NameResourceID = 105,
