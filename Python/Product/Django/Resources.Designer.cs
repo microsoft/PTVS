@@ -61,6 +61,15 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Django App....
+        /// </summary>
+        public static string AddDjangoApp {
+            get {
+                return ResourceManager.GetString("AddDjangoApp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided..
         /// </summary>
         public static string AddWebRoleSupportFiles {

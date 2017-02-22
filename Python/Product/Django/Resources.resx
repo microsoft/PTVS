@@ -203,4 +203,7 @@ NOTE: This pattern is applied in addition to the static URI specified in the Dja
   <data name="DjangoTemplateTag" xml:space="preserve">
     <value>Django template tag</value>
   </data>
+  <data name="AddDjangoApp" xml:space="preserve">
+    <value>Add Django App...</value>
+  </data>
 </root>
