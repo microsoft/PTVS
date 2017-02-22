@@ -1978,4 +1978,45 @@ Expand selection to the full expression?</value>
     <value>Run PyLint</value>
     <comment>PyLint is a product name and should not be localized</comment>
   </data>
+  <data name="Analyzer_Analyzing" xml:space="preserve">
+    <value>Analyzing {0}</value>
+    <comment>{0} is a file system path from the user's machine</comment>
+  </data>
+  <data name="Analyzer_CleaningFiles" xml:space="preserve">
+    <value>Cleaning old files</value>
+  </data>
+  <data name="Analyzer_CollectingFiles" xml:space="preserve">
+    <value>Collecting files</value>
+  </data>
+  <data name="Analyzer_Initializing" xml:space="preserve">
+    <value>Initializing</value>
+  </data>
+  <data name="Analyzer_Parsing" xml:space="preserve">
+    <value>Parsing {0}</value>
+    <comment>{0} is a file system path from the user's machine</comment>
+  </data>
+  <data name="Analyzer_Saving" xml:space="preserve">
+    <value>Saving {0}</value>
+    <comment>{0} is a file system path from the user's machine</comment>
+  </data>
+  <data name="Analyzer_Scraping" xml:space="preserve">
+    <value>Scraping {0}</value>
+    <comment>{0} is a file system path from the user's machine</comment>
+  </data>
+  <data name="Analyzer_ScrapingStdLib" xml:space="preserve">
+    <value>Scraping standard library</value>
+  </data>
+  <data name="Analyzer_Starting" xml:space="preserve">
+    <value>Starting analysis</value>
+  </data>
+  <data name="Analyzer_WaitingForRefresh" xml:space="preserve">
+    <value>Waiting for another refresh</value>
+  </data>
+  <data name="Analyzer_WaitingForRefresh_Message" xml:space="preserve">
+    <value>Waiting for another refresh: {0}</value>
+    <comment>{0} is a previously formatted UI string</comment>
+  </data>
+  <data name="Analyzer_WaitingForStart" xml:space="preserve">
+    <value>Waiting for another refresh to start.</value>
+  </data>
 </root>
