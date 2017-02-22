@@ -439,6 +439,114 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Analyzing {0}.
+        /// </summary>
+        public static string Analyzer_Analyzing {
+            get {
+                return ResourceManager.GetString("Analyzer_Analyzing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cleaning old files.
+        /// </summary>
+        public static string Analyzer_CleaningFiles {
+            get {
+                return ResourceManager.GetString("Analyzer_CleaningFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collecting files.
+        /// </summary>
+        public static string Analyzer_CollectingFiles {
+            get {
+                return ResourceManager.GetString("Analyzer_CollectingFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Initializing.
+        /// </summary>
+        public static string Analyzer_Initializing {
+            get {
+                return ResourceManager.GetString("Analyzer_Initializing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parsing {0}.
+        /// </summary>
+        public static string Analyzer_Parsing {
+            get {
+                return ResourceManager.GetString("Analyzer_Parsing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saving {0}.
+        /// </summary>
+        public static string Analyzer_Saving {
+            get {
+                return ResourceManager.GetString("Analyzer_Saving", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scraping {0}.
+        /// </summary>
+        public static string Analyzer_Scraping {
+            get {
+                return ResourceManager.GetString("Analyzer_Scraping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scraping standard library.
+        /// </summary>
+        public static string Analyzer_ScrapingStdLib {
+            get {
+                return ResourceManager.GetString("Analyzer_ScrapingStdLib", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting analysis.
+        /// </summary>
+        public static string Analyzer_Starting {
+            get {
+                return ResourceManager.GetString("Analyzer_Starting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for another refresh.
+        /// </summary>
+        public static string Analyzer_WaitingForRefresh {
+            get {
+                return ResourceManager.GetString("Analyzer_WaitingForRefresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for another refresh: {0}.
+        /// </summary>
+        public static string Analyzer_WaitingForRefresh_Message {
+            get {
+                return ResourceManager.GetString("Analyzer_WaitingForRefresh_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for another refresh to start..
+        /// </summary>
+        public static string Analyzer_WaitingForStart {
+            get {
+                return ResourceManager.GetString("Analyzer_WaitingForStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Analyzing current project. IntelliSense will be limited..
         /// </summary>
         public static string AnalyzingProject {

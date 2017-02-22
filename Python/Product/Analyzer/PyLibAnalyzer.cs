@@ -254,7 +254,7 @@ namespace Microsoft.PythonTools.Analysis {
                     _updater.ThrowPendingExceptions();
                     // Immediately inform any listeners that we've started running
                     // successfully.
-                    _updater.UpdateStatus(0, 0, SecondsRunning, "Initializing");
+                    _updater.UpdateStatus(0, 0, SecondsRunning, Strings.Analyzer_Initializing);
                 } catch (InvalidOperationException) {
                     // Thrown when we run out of space in our shared memory
                     // block. Disable updates for this run.
@@ -498,7 +498,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (_updater != null) {
-                _updater.UpdateStatus(0, 0, SecondsRunning, "Waiting for another refresh to start.");
+                _updater.UpdateStatus(0, 0, SecondsRunning, Strings.Analyzer_WaitingForStart);
             }
 
             bool everSeen = false;
@@ -507,9 +507,11 @@ namespace Microsoft.PythonTools.Analysis {
                 AnalysisProgress progress;
                 if (d.TryGetValue(_waitForAnalysis, out progress)) {
                     everSeen = true;
-                    var message = "Waiting for another refresh";
-                    if (!string.IsNullOrEmpty(progress.Message)) {
-                        message += ": " + progress.Message;
+                    string message;
+                    if (string.IsNullOrEmpty(progress.Message)) {
+                        message = Strings.Analyzer_WaitingForRefresh;
+                    } else {
+                        message = Strings.Analyzer_WaitingForRefresh_Message.FormatUI(progress.Message);
                     }
                     _updater.UpdateStatus(progress.Progress, progress.Maximum, SecondsRunning, message);
                 } else if (everSeen) {
@@ -532,7 +534,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal async Task<bool> Prepare(bool firstRun) {
             if (_updater != null) {
-                _updater.UpdateStatus(0, 0, SecondsRunning, "Collecting files");
+                _updater.UpdateStatus(0, 0, SecondsRunning, Strings.Analyzer_CollectingFiles);
             }
 
             if (_library.Any()) {
@@ -900,7 +902,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal void Clean(HashSet<string> files, int progressScale = 1) {
             if (_updater != null) {
-                _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning, "Cleaning old files");
+                _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning, Strings.Analyzer_CleaningFiles);
             }
 
             int modCount = 0;
@@ -909,7 +911,7 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var file in files) {
                 if (_updater != null && ++modCount >= progressScale) {
                     modCount = 0;
-                    _updater.UpdateStatus(++_progressOffset, _progressTotal, SecondsRunning, "Cleaning old files");
+                    _updater.UpdateStatus(++_progressOffset, _progressTotal, SecondsRunning, Strings.Analyzer_CleaningFiles);
                 }
 
                 if (_dryRun) {
@@ -1040,7 +1042,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (_updater != null) {
-                _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning, "Scraping standard library");
+                _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning, Strings.Analyzer_ScrapingStdLib);
             }
 
             if (_all) {
@@ -1079,7 +1081,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 if (_updater != null) {
                     _updater.UpdateStatus(_progressOffset++, _progressTotal, SecondsRunning,
-                        "Scraping " + PathUtils.GetFileOrDirectoryName(file.LibraryPath));
+                        Strings.Analyzer_Scraping.FormatUI(PathUtils.GetFileOrDirectoryName(file.LibraryPath)));
                 }
 
                 var destFile = Path.ChangeExtension(GetOutputFile(file), null);
@@ -1184,7 +1186,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal Task Analyze() {
             if (_updater != null) {
-                _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning, "Starting analysis");
+                _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning, Strings.Analyzer_Starting);
             }
 
             if (!string.IsNullOrEmpty(_logDiagnostic) && AnalysisLog.Output == null) {
@@ -1254,10 +1256,10 @@ namespace Microsoft.PythonTools.Analysis {
                             if (mostItemsInQueue > 0) {
                                 var progress = (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue;
                                 _updater.UpdateStatus(_progressOffset + (progress ?? 0), _progressTotal, SecondsRunning,
-                                    "Analyzing " + currentLibrary);
+                                    Strings.Analyzer_Analyzing.FormatUI(currentLibrary));
                             } else {
                                 _updater.UpdateStatus(_progressOffset + files.Count, _progressTotal, SecondsRunning,
-                                    "Analyzing " + currentLibrary);
+                                    Strings.Analyzer_Analyzing.FormatUI(currentLibrary));
                             }
                         }, 10);
                     }
@@ -1304,7 +1306,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                         if (_updater != null) {
                             _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning,
-                                string.Format("Parsing {0}", currentLibrary));
+                                Strings.Analyzer_Parsing.FormatUI(currentLibrary));
                         }
                         try {
                             var sourceUnit = new FileStream(item.SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -1364,7 +1366,8 @@ namespace Microsoft.PythonTools.Analysis {
                     TraceInformation("Saving group \"{0}\"", files[0].LibraryPath);
                     if (_updater != null) {
                         _progressOffset += files.Count;
-                        _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning, "Saving " + currentLibrary);
+                        _updater.UpdateStatus(_progressOffset, _progressTotal, SecondsRunning,
+                            Strings.Analyzer_Saving.FormatUI(currentLibrary));
                     }
                     Directory.CreateDirectory(outDir);
                     var saver = new SaveAnalysis();
