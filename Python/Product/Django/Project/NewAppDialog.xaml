@@ -5,7 +5,7 @@
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Django"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Django.Project"
     x:ClassModifier="internal"
-    Title="Add Django App..."
+    Title="{x:Static ui:Resources.AddDjangoApp}"
     Height="110" Width="381"
     ShowInTaskbar="False"
     WindowStartupLocation="CenterOwner"
