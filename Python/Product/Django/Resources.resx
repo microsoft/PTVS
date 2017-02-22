@@ -200,4 +200,7 @@ NOTE: This pattern is applied in addition to the static URI specified in the Dja
   <data name="NewAppDialog_Cancel" xml:space="preserve">
     <value>C_ancel</value>
   </data>
+  <data name="DjangoTemplateTag" xml:space="preserve">
+    <value>Django template tag</value>
+  </data>
 </root>

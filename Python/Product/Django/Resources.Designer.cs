@@ -196,6 +196,15 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Django template tag.
+        /// </summary>
+        public static string DjangoTemplateTag {
+            get {
+                return ResourceManager.GetString("DjangoTemplateTag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Django Ma&amp;ke Migrations (Django &gt;= 1.7).
         /// </summary>
         public static string MakeMigrationsLabel {
