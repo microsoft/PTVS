@@ -705,56 +705,56 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Snippets\1033\Python\for.snippet">
+    <Content Include="Snippets\Python\for.snippet">
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\SnippetsIndex.xml">
+    <Content Include="Snippets\SnippetsIndex.xml">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Test\testclass.snippet">
+    <Content Include="Snippets\Test\testclass.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Python\while.snippet">
+    <Content Include="Snippets\Python\while.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Python\def.snippet">
+    <Content Include="Snippets\Python\def.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Python\class.snippet">
+    <Content Include="Snippets\Python\class.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Python\if.snippet">
+    <Content Include="Snippets\Python\if.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Python\with.snippet">
+    <Content Include="Snippets\Python\with.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Python\try.snippet">
+    <Content Include="Snippets\Python\try.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Python\except.snippet">
+    <Content Include="Snippets\Python\except.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Snippets\1033\Python\main.snippet">
+    <Content Include="Snippets\Python\main.snippet">
       <SubType>Designer</SubType>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
