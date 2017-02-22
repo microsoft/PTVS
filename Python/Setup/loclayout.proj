@@ -10,6 +10,7 @@
   <PropertyGroup>
     <OutputPath>$(BinariesOutputPath)</OutputPath>
     <OutDir>$(BinariesOutputPath)</OutDir>
+    <LocDir>$(BuildRoot)Python\loc\</LocDir>
   </PropertyGroup>
   
   <ItemGroup>
@@ -54,10 +55,19 @@
         Microsoft.PythonTools.Uwp.Wizards.dll;
         " Condition="$(IncludeUwp)" />
 
+    <CodeSnippets Include="
+        $(BinariesOutputPath)Snippets\SnippetsIndex.xml;
+        $(BinariesOutputPath)Snippets\**\*.snippet" />
+
     <FilesToLocalize Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
-      <TranslationFile>$(BuildRoot)loc\lcl\{Lang}\%(Filename).lcl</TranslationFile>
-      <LciCommentFile>$(BuildRoot)loc\lci\%(Filename).lci</LciCommentFile>
+      <TranslationFile>$(LocDir)lcl\{Lang}\%(Filename).lcl</TranslationFile>
+      <LciCommentFile>$(LocDir)lci\%(Filename).lci</LciCommentFile>
       <SettingsFile>$(LSBuildRoot)\MCP_excludeBaml.lss</SettingsFile>
+    </FilesToLocalize>
+    <FilesToLocalize Include="@(CodeSnippets)">
+      <TranslationFile>$(LocDir)lcl\{Lang}\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
+      <LciCommentFile>$(LocDir)lci\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
+      <SettingsFile>$(LSBuildRoot)\locxml_snippets.lss</SettingsFile>
     </FilesToLocalize>
   </ItemGroup>
   

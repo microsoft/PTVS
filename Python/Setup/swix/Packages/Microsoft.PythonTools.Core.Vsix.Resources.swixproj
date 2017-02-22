@@ -8,8 +8,6 @@
   <Import Project="SetupProjectBefore.settings" />
 
   <PropertyGroup>
-    <SourcePath>$(LayoutOutputPath)Microsoft.PythonTools.Core</SourcePath>
-    <ExtraOptions>-i "\.dll$" -i "\.exe$"</ExtraOptions>
     <GenerateSwrDependsOnTargets>SetSwrProperties</GenerateSwrDependsOnTargets>
   </PropertyGroup>
 
@@ -17,15 +15,20 @@
     <Error Condition="$(Culture) == ''" Text="Culture property was not provided" />
     <Error Condition="$(Lang) == ''" Text="Lang property was not provided" />
     <ItemGroup>
-      <SwrSource>
+      <SwrSource Include="$(LayoutOutputPath)Microsoft.PythonTools.Core">
         <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Core\$(Culture)</BaseInstall>
-        <ExtraOptions>%(ExtraOptions) -r "$(BinariesOutputPath)localize\$(Lang)"</ExtraOptions>
+        <ExtraOptions>-i "\.dll$" -i "\.exe$" -r "$(BinariesOutputPath)localize\$(Lang)"</ExtraOptions>
+      </SwrSource>
+      <SwrSource Include="$(BinariesOutputPath)localize\$(Lang)\Snippets">
+        <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Core\Snippets\$(Lcid)</BaseInstall>
+        <ExtraOptions>-i "\\Snippets\\.+\.xml$" -i "\\Snippets\\.+\.snippet$"</ExtraOptions>
       </SwrSource>
     </ItemGroup>
   </Target>
 
   <ItemGroup>
     <PackageSearchPaths Include="$(BinariesOutputPath)localize\$(Lang)" />
+    <PackageSearchPaths Include="$(BinariesOutputPath)localize\$(Lang)\Snippets"/>
   </ItemGroup>
 
   <Import Project="SetupProjectAfter.settings" />
