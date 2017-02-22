@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <VSTemplate Version="3.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name>Pyvot Project</Name>
-    <Description>A sample for working with the Pyvot library for Excel.</Description>
+    <Name Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5016" />
+    <Description Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5017" />
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="401" />
     <ProjectType>Python</ProjectType>
     <SortOrder>1060</SortOrder>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
   <TemplateData>
-    <Name>Polls Bottle Web Project</Name>
-    <Description>A sample polls application using the Bottle web framework. It can be configured to use Azure Table Storage or MongoDB for storage.</Description>
+    <Name Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5054" />
+    <Description Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5055" />
     <ProjectType>Python</ProjectType>
     <ProjectSubType></ProjectSubType>
     <SortOrder>1000</SortOrder>

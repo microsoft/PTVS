@@ -1,10 +1,8 @@
 <VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name>Clustering Project</Name>
-    <Description>A project for testing scikit-learn clustering learners.
-
-This project requires the pandas, numpy, scikit-learn, and matplotlib packages.</Description>
-    <Icon Package="{185d223a-f461-4197-bd14-de0236e7eeca}" ID="401" />
+    <Name Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5020" />
+    <Description Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5021" />
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="414" />
     <ProjectType>Python</ProjectType>
     <SortOrder>20</SortOrder>
     <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>

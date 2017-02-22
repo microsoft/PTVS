@@ -158,4 +158,46 @@
   <data name="113" xml:space="preserve">
     <value>Django Template Editor with Encoding</value>
   </data>
+  <data name="5000" xml:space="preserve">
+    <value>Blank Django Web Project</value>
+  </data>
+  <data name="5001" xml:space="preserve">
+    <value>A project for creating a Django project</value>
+  </data>
+  <data name="5002" xml:space="preserve">
+    <value>Polls Django Web Project</value>
+  </data>
+  <data name="5003" xml:space="preserve">
+    <value>A sample polls application using the Django web framework</value>
+  </data>
+  <data name="5004" xml:space="preserve">
+    <value>Django Web Project</value>
+  </data>
+  <data name="5005" xml:space="preserve">
+    <value>A project for creating an application using the Django web framework. It features sample pages that use the Twitter Bootstrap framework for responsive web design.</value>
+  </data>
+  <data name="5006" xml:space="preserve">
+    <value>Django Web Role</value>
+  </data>
+  <data name="5007" xml:space="preserve">
+    <value>A blank Django Web Role for an Azure Cloud Service</value>
+  </data>
+  <data name="5008" xml:space="preserve">
+    <value>Django Web Role</value>
+  </data>
+  <data name="5009" xml:space="preserve">
+    <value>Service with a web interface using the Django web framework</value>
+  </data>
+  <data name="5010" xml:space="preserve">
+    <value>Django 1.4 App</value>
+  </data>
+  <data name="5011" xml:space="preserve">
+    <value>An empty Django app</value>
+  </data>
+  <data name="5012" xml:space="preserve">
+    <value>Django 1.9 App</value>
+  </data>
+  <data name="5013" xml:space="preserve">
+    <value>An empty Django app</value>
+  </data>
 </root>
