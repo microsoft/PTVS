@@ -986,8 +986,11 @@ namespace Microsoft.VisualStudioTools.Project {
             ProjectMgr.OnItemDeleted(this);
 
             // Remove child if any before removing from the hierarchy
-            for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) {
+            var child = FirstChild;
+            while (child != null) {
+                var next = child.NextSibling;
                 child.Remove(removeFromStorage);
+                child = next;
             }
 
             // the project node has no parentNode
