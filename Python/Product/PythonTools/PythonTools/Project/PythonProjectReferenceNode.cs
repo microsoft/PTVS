@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Project {
                     var searchPath = PathUtils.GetParent(ReferencedProjectOutputPath);
                     (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
                     return;
-                } catch (COMException ex) {
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.WriteLine(ex.ToUnhandledExceptionMessage(GetType()));
                 }
 
