@@ -31,7 +31,7 @@ using TestUtilities.Python;
 namespace PythonToolsMockTests {
     [TestClass]
     public class RefactorRenameTests {
-        private const string ErrorModuleName = "Cannot rename a module name";
+        private static readonly string ErrorModuleName = Microsoft.PythonTools.Strings.RenameVariable_CannotRenameModuleName;
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {

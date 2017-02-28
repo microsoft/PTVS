@@ -333,14 +333,14 @@ namespace PythonToolsMockTests {
             AutoListTest("{a for a in b for c in d if x}", 1, -7, 12, -18, 23, 28);
             AutoListTest("(a for a in b for c in d if x)", 1, -7, 12, -18, 23, 28);
             AutoListTest("{a: b for a, b in b for c, d in e if x}", 1, 4, -10, -13, 18, 32, 37);
-            AutoListTest("x = [a for a in b for c in d if x]", -1, 5, -11, 16, -22, 27, 32);
+            AutoListTest("x = [a for a in b for c in d if x]", 0, 5, -11, 16, -22, 27, 32);
         }
 
         [TestMethod, Priority(1)]
         public void AutoListInStatements() {
-            AutoListTest("assert a", -6, 7);
-            AutoListTest("a += b", 5);
-            AutoListTest("del a", -3, 4);
+            AutoListTest("assert a", 0, 6, -6, 7);
+            AutoListTest("a += b", 0, 5);
+            AutoListTest("del a", 0, 3, -3, 4);
             AutoListTest("exec a", PythonLanguageVersion.V27, -4, 5);
             AutoListTest("for a in b", -3, -5, 9);
             AutoListTest("if a", -2, 3);
