@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
@@ -256,9 +257,14 @@ namespace Microsoft.PythonTools.Refactoring {
         private void UpdatePreview() {
             var info = GetRequest();
             if (info != null) {
-                _previewer.GetExtractionResult(info).ContinueWith(
-                    x => PreviewText = x?.WaitOrDefault(1000)?.methodBody ?? Strings.ExtractMethod_FailedToGetPreview
-                ).DoNotWait();
+                _previewer.GetExtractionResult(info).ContinueWith(t => {
+                    try {
+                        PreviewText = t.Result.methodBody;
+                    } catch (Exception ex) {
+                        Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                        PreviewText = Strings.ExtractMethod_FailedToGetPreview;
+                    }
+                }).DoNotWait();
             } else {
                 PreviewText = Strings.ExtractMethod_InvalidMethodName;
             }

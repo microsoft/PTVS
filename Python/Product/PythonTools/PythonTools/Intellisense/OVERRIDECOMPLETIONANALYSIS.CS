@@ -55,12 +55,12 @@ namespace Microsoft.PythonTools.Intellisense {
             var snapshot = TextBuffer.CurrentSnapshot;
             var pos = VsProjectAnalyzer.TranslateIndex(startPos, snapshot, analysis);
 
-            var completions = analysis.Analyzer.GetOverrideCompletionsAsync(
+            var completions = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetOverrideCompletionsAsync(
                 analysis,
                 TextBuffer,
                 pos,
                 indentation
-            ).WaitOrDefault(1000)?.overrides;
+            ), "OverrideCompletionAnalysis.GetOverrideCompletions")?.overrides;
 
             CompletionSet res;
             if (completions != null && completions.Any()) {

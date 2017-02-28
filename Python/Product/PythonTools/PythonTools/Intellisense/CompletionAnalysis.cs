@@ -140,12 +140,21 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var modules = Enumerable.Empty<CompletionResult>();
+
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                modules = modules.Concat(package.Length > 0 ? 
-                    analysis.Analyzer.GetModuleMembersAsync(analysis, package, !modulesOnly).WaitOrDefault(1000) ?? modules:
-                    (analysis.Analyzer.GetModulesResult(true).WaitOrDefault(1000) ?? modules).Distinct(CompletionComparer.MemberEquality)
-                );
+                var analyzer = analysis.Analyzer;
+                IEnumerable<CompletionResult> result;
+                if (package.Length > 0) {
+                    result = analyzer.WaitForRequest(analyzer.GetModuleMembersAsync(analysis, package, !modulesOnly), "GetSubmodules");
+                } else {
+                    result = analyzer.WaitForRequest(analyzer.GetModulesResult(true), "GetModules");
+                }
+
+                if (result != null) {
+                    modules = modules.Concat(result).Distinct(CompletionComparer.MemberEquality);
+                }
             }
+
             if (replScopes != null) {
                 modules = GetModulesFromReplScope(replScopes, package)
                     .Concat(modules)

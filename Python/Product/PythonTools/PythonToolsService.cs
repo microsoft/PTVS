@@ -529,19 +529,31 @@ namespace Microsoft.PythonTools {
         }
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            return VsProjectAnalyzer.GetSignaturesAsync(_container, view, snapshot, span).WaitOrDefault(1000);
+            var entry = view.GetAnalysisEntry(snapshot.TextBuffer, Site);
+            if (entry == null) {
+                return new SignatureAnalysis("", 0, new ISignature[0]);
+            }
+            return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
         }
 
         public Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            return VsProjectAnalyzer.GetSignaturesAsync(_container, view, snapshot, span);
+            var entry = view.GetAnalysisEntry(snapshot.TextBuffer, Site);
+            if (entry == null) {
+                return Task.FromResult(new SignatureAnalysis("", 0, new ISignature[0]));
+            }
+            return entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span);
         }
 
         public ExpressionAnalysis AnalyzeExpression(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
-            return VsProjectAnalyzer.AnalyzeExpressionAsync(_container, view, span.GetStartPoint(snapshot)).WaitOrDefault(1000);
+            var entry = view.GetAnalysisEntry(snapshot.TextBuffer, Site);
+            return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, view, span.GetStartPoint(snapshot)), "AnalyzeExpression");
         }
 
-        public IEnumerable<CompletionResult> GetExpansionCompletions(int timeout) {
-            return _expansionCompletions?.GetCompletions(timeout);
+        public Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {
+            if (_expansionCompletions == null) {
+                return Task.FromResult<IEnumerable<CompletionResult>>(null);
+            }
+            return _expansionCompletions.GetCompletionsAsync();
         }
 
         #endregion

@@ -29,9 +29,30 @@ namespace Microsoft.PythonTools.Infrastructure {
             await task;
         }
 
+        /// <summary>
+        /// Waits for a task to complete. If an exception occurs, the exception
+        /// will be unwrapped. If the timeout expires, the default value for
+        /// <b>T</b> will be returned.
+        /// </summary>
         public static T WaitOrDefault<T>(this Task<T> task, int milliseconds) {
-            if (task.Wait(milliseconds)) {
-                return task.Result;
+            return WaitOrDefault(task, TimeSpan.FromMilliseconds(milliseconds));
+        }
+
+        /// <summary>
+        /// Waits for a task to complete. If an exception occurs, the exception
+        /// will be unwrapped. If the timeout expires, the default value for
+        /// <b>T</b> will be returned.
+        /// </summary>
+        public static T WaitOrDefault<T>(this Task<T> task, TimeSpan timeout) {
+            try {
+                if (task.Wait(timeout)) {
+                    return task.Result;
+                }
+            } catch (AggregateException ae) {
+                if (ae.InnerException != null) {
+                    throw ae.InnerException;
+                }
+                throw;
             }
             return default(T);
         }

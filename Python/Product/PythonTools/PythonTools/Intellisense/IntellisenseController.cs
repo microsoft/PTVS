@@ -17,23 +17,22 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
@@ -114,28 +113,27 @@ namespace Microsoft.PythonTools.Intellisense {
                     return;
                 }
 
-                var quickInfo = await VsProjectAnalyzer.GetQuickInfoAsync(
-                    _serviceProvider,
-                    _textView,
-                    pt.Value,
-                    TimeSpan.FromSeconds(1.0)
-                );
+                var entry = _textView.GetAnalysisEntry(pt.Value.Snapshot.TextBuffer, _serviceProvider);
+                var t = entry.Analyzer.GetQuickInfoAsync(entry, _textView, pt.Value);
+                var quickInfo = await Task.Run(() => entry.Analyzer.WaitForRequest(t, "GetQuickInfo", null, 2));
 
                 QuickInfoSource.AddQuickInfo(_textView, quickInfo);
 
-                var viewPoint = _textView.BufferGraph.MapUpToBuffer(
-                    pt.Value,
-                    PointTrackingMode.Positive,
-                    PositionAffinity.Successor,
-                    _textView.TextBuffer
-                );
-
-                if (viewPoint != null) {
-                    _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
-                        _textView,
-                        viewPoint.Value.Snapshot.CreateTrackingPoint(viewPoint.Value, PointTrackingMode.Positive),
-                        true
+                if (quickInfo != null) {
+                    var viewPoint = _textView.BufferGraph.MapUpToBuffer(
+                        pt.Value,
+                        PointTrackingMode.Positive,
+                        PositionAffinity.Successor,
+                        _textView.TextBuffer
                     );
+
+                    if (viewPoint != null) {
+                        _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
+                            _textView,
+                            viewPoint.Value.Snapshot.CreateTrackingPoint(viewPoint.Value, PointTrackingMode.Positive),
+                            true
+                        );
+                    }
                 }
             }
         }

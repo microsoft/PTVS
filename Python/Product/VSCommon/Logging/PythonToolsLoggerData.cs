@@ -79,4 +79,10 @@ namespace Microsoft.PythonTools.Logging {
         public bool IsWeb { get; set; }
         public string Version { get; set; }
     }
+
+    internal sealed class AnalysisTimingInfo : PythonToolsLoggerData {
+        public string RequestName { get; set; }
+        public int Milliseconds { get; set; }
+        public bool Timeout { get; set; }
+    }
 }

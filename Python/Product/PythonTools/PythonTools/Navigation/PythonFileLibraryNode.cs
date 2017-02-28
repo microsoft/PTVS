@@ -82,11 +82,11 @@ namespace Microsoft.PythonTools.Navigation {
 
                 if (analysis != null) {
                     string expr = criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1);
-                    var exprAnalysis = VsProjectAnalyzer.AnalyzeExpressionAsync(
+                    var exprAnalysis = analysis.Analyzer.WaitForRequest(analysis.Analyzer.AnalyzeExpressionAsync(
                         analysis,
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
-                        new Parsing.SourceLocation(0, 1, 1)
-                    ).WaitOrDefault(1000);
+                        new SourceLocation(0, 1, 1)
+                    ), "PythonFileLibraryNode.DoSearch");
 
                     if (exprAnalysis != null) {
                         return EditFilter.GetFindRefLocations(analysis.Analyzer, _hierarchy.ProjectMgr.Site, expr, exprAnalysis.Variables);
@@ -205,11 +205,11 @@ namespace Microsoft.PythonTools.Navigation {
 
         protected override IEnumerable<CompletionResult> GetChildren() {
             var analysis = _hierarchy.GetAnalysisEntry();
-            var members = analysis.Analyzer.GetAllAvailableMembersAsync(
+            var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetAllAvailableMembersAsync(
                 analysis,
                 new SourceLocation(0, 1, 1),
                 GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation
-            ).WaitOrDefault(1000);
+            ), "PythonFileChildren.GetChildren");
             return members;
         }
 
@@ -227,13 +227,13 @@ namespace Microsoft.PythonTools.Navigation {
 
         protected override IEnumerable<CompletionResult> GetChildren() {
             var analysis = _hierarchy.GetAnalysisEntry();
-            var members = analysis.Analyzer.GetMembersAsync(
+            var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetMembersAsync(
                 analysis,
                 _member,
                 new SourceLocation(0, 1, 1),
                 GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation | GetMemberOptions.DeclaredOnly |
                 GetMemberOptions.NoMemberRecursion
-            ).WaitOrDefault(1000);
+            ), "MemberChildren.GetChildren");
             return members;
         }
 

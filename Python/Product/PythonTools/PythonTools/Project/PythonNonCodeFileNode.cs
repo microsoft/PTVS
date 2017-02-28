@@ -17,6 +17,7 @@
 using System;
 using System.IO;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Text;
@@ -52,26 +53,29 @@ namespace Microsoft.PythonTools.Project {
 
             public string[] FindMethods(string className, int? paramCount) {
                 var fileInfo = _node.GetAnalysisEntry();
-                return fileInfo.Analyzer.FindMethodsAsync(
+                return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.FindMethodsAsync(
                     fileInfo,
                     _node.GetTextBuffer(),
                     className,
                     paramCount
-                ).WaitOrDefault(1000);
+                ), "PythonNonCodeFileNode.FindMethods");
             }
 
             public InsertionPoint GetInsertionPoint(string className) {
                 var fileInfo = _node.GetAnalysisEntry();
-                return fileInfo.Analyzer.GetInsertionPointAsync(
+                return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.GetInsertionPointAsync(
                     fileInfo,
                     _node.GetTextBuffer(),
                     className
-                ).WaitOrDefault(1000);
+                ), "PythonNonCodeFileNode.GetInsertionPoint");
             }
 
             public MethodInformation GetMethodInfo(string className, string methodName) {
                 var fileInfo = _node.GetAnalysisEntry();
-                var info = fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName).WaitOrDefault(1000);
+                var info = fileInfo.Analyzer.WaitForRequest(
+                    fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName),
+                    "PythonNonCodeFileNode.GetMethodInfo"
+                );
                 if (info != null) {
                     return new MethodInformation(
                         info.start,

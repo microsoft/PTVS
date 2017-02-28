@@ -136,14 +136,14 @@ namespace Microsoft.PythonTools.Language {
             UpdateStatusForIncompleteAnalysis();
 
             var caret = _textView.GetPythonCaret();
-            if (caret != null) {
-
-                var defs = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _textView, caret.Value);
+            var analysis = _textView.GetAnalysisAtCaret(_serviceProvider);
+            if (analysis != null && caret != null) {
+                var defs = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, _textView, caret.Value);
                 if (defs == null) {
                     return;
                 }
                 Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
-                GetDefsRefsAndValues(_textView.GetAnalyzerAtCaret(_serviceProvider), _serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
+                GetDefsRefsAndValues(analysis.Analyzer, _serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
 
                 if ((values.Count + definitions.Count) == 1) {
                     if (values.Count != 0) {
@@ -208,13 +208,14 @@ namespace Microsoft.PythonTools.Language {
             UpdateStatusForIncompleteAnalysis();
 
             var caret = _textView.GetPythonCaret();
-            if (caret != null) {
-                var references = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _textView, caret.Value);
+            var analysis = _textView.GetAnalysisAtCaret(_serviceProvider);
+            if (analysis != null && caret != null) {
+                var references = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, _textView, caret.Value);
                 if (references == null) {
                     return;
                 }
 
-                var locations = GetFindRefLocations(_textView.GetAnalyzerAtCaret(_serviceProvider), _serviceProvider, references.Expression, references.Variables);
+                var locations = GetFindRefLocations(analysis.Analyzer, _serviceProvider, references.Expression, references.Variables);
 
                 ShowFindSymbolsDialog(references.Expression, locations);
             }
