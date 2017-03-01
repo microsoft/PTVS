@@ -60,8 +60,8 @@
         $(BinariesOutputPath)Snippets\**\*.snippet" />
 
     <FilesToLocalize Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
-      <TranslationFile>$(LocDir)lcl\{Lang}\%(Filename).lcl</TranslationFile>
-      <LciCommentFile>$(LocDir)lci\%(Filename).lci</LciCommentFile>
+      <TranslationFile>$(LocDir)lcl\{Lang}\%(Filename)%(Extension).lcl</TranslationFile>
+      <LciCommentFile>$(LocDir)lci\%(Filename)%(Extension).lci</LciCommentFile>
       <SettingsFile>$(LSBuildRoot)\MCP_excludeBaml.lss</SettingsFile>
     </FilesToLocalize>
     <FilesToLocalize Include="@(CodeSnippets)">
