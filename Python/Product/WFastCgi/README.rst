@@ -89,7 +89,7 @@ handler and some app settings:
                path="*"
                verb="*"
                modules="FastCgiModule"
-               scriptProcessor="C:\Python34\python.exe|C:\Python34\Lib\site-packages\wfastcgi.py"
+               scriptProcessor="C:\Python36\python.exe|C:\Python36\Lib\site-packages\wfastcgi.py"
                resourceType="Unspecified"
                requireAccess="Script" />
         </handlers>
@@ -105,6 +105,8 @@ handler and some app settings:
         <add key="WSGI_RESTART_FILE_REGEX" value=".*((\.py)|(\.config))$" />
         <add key="APPINSIGHTS_INSTRUMENTATIONKEY" value="__instrumentation_key__" />
         <add key="DJANGO_SETTINGS_MODULE" value="my_app.settings" />
+        <add key="WSGI_PTVSD_SECRET" value="__secret_code__" />
+        <add key="WSGI_PTVSD_ADDRESS" value="ipaddress:port" />
       </appSettings>
     </configuration>
 
@@ -174,7 +176,7 @@ APPINSIGHTS_INSTRUMENTATIONKEY
 ------------------------------
 
 Providing an instrumentation key with this value will enable request tracing
-with `Application Insights <http://pypi.python.org/pypi/applicationinsights>`__
+with `Application Insights <http://pypi.org/project/applicationinsights>`__
 for your entire site. If you have not installed the ``applicationinsights``
 package, a warning is written to ``WSGI_LOG`` (if enabled) but the site will
 operate normally.
@@ -192,3 +194,24 @@ Django sites will set ``WSGI_HANDLER`` to
 through the module specified by this value.
 
 Sites using frameworks other than Django do not need to specify this value.
+
+WSGI_PTVSD_SECRET
+-----------------
+
+Providing an arbitrary string here and including the
+`ptvsd <https://pypi.org/project/ptvsd>`__ module in your environment will
+automatically enable remote debugging of your web site. The string in this
+application setting should be treated as a password, and needs to be provided
+when attaching to the running site.
+
+WSGI_PTVSD_ADDRESS
+------------------
+
+When ``WSGI_PTVSD_SECRET`` is specified, this value may also be specified to
+override the default listening address for remote debugging. By default,
+your site will listen on ``localhost:5678``, but in many cases you may need
+to change this to ``0.0.0.0:some-port`` in order to attach remotely.
+
+Remember that you will also need to forward the port through any firewalls
+you might have configured.
+
