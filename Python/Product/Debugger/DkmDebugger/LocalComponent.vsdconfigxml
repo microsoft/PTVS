@@ -53,7 +53,7 @@ permissions and limitations under the License.
           <Interface Name="IDkmModuleSymbolsLoadedNotification"/>
         </InterfaceGroup>
 
-        <InterfaceGroup>
+        <InterfaceGroup CallOnlyWhenLoaded="true">
           <NoFilter/>
           <Interface Name="IDkmCallStackFilter"/>
         </InterfaceGroup>
