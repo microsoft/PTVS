@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="E:\A\_work\9\b\raw\binaries\Snippets\Python\while.snippet" PsrId="210" FileType="1" SrcCul="en-US" TgtCul="pl-PL" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Settings Name="@SettingsPath@\default.lss" Type="Lss" />
+  <Item ItemId=";&lt;Description&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;4c47aecff3292f9536da06295652cf19" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Code snippet for a while loop]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="3" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;Title&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;964db747aceb0415c606f6e0a2bb4fe1" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[while]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="1" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;ToolTip&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;039f114016b2c12610027da7fc0f9b13" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[The condition which terminates the loop]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="5" />
+    </Item>
+  </Item>
+</LCX>
