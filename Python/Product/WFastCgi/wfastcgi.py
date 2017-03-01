@@ -16,7 +16,7 @@
 from __future__ import absolute_import, print_function, with_statement
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.0.0.0"
+__version__ = "3.0.0"
 
 import ctypes
 import datetime
@@ -36,8 +36,6 @@ try:
     from thread import start_new_thread
 except ImportError:
     from _thread import start_new_thread
-
-__version__ = '3.0.0'
 
 if sys.version_info[0] == 3:
     def to_str(value):
