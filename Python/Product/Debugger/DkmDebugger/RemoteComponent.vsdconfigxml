@@ -72,16 +72,15 @@ permissions and limitations under the License.
 
         <!-- AboveNormal is needed so that we get invoked before the standard exception manager, which swallows the notifications. -->
         <InterfaceGroup Priority="AboveNormal">
-          <!--<Filter>
+          <Filter>
             <EngineId RequiredValue="guidPythonEngineId"/>
-          </Filter>-->
-          <NoFilter/>
+          </Filter>
           <Interface Name="IDkmExceptionManager"/>
         </InterfaceGroup>
 
-        <InterfaceGroup>
+        <InterfaceGroup CallOnlyWhenLoaded="true">
           <NoFilter/>
-          <Interface Name="IDkmAsyncBreakCompleteReceived"/>
+          <Interface Name="IDkmAsyncBreakCompleteReceived" />
         </InterfaceGroup>
 
       </Implements>
