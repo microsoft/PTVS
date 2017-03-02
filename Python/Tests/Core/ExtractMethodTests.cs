@@ -19,9 +19,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AnalysisTests;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Refactoring;
@@ -36,13 +36,13 @@ namespace PythonToolsTests {
 
     [TestClass]
     public class ExtractMethodTests {
-        private const string ErrorReturn = "When the selection contains a return statement, all code paths must be terminated by a return statement too.";
-        private const string ErrorYield = "Cannot extract code containing \"yield\" expression";
-        private const string ErrorContinue = "The selection contains a \"continue\" statement, but not the enclosing loop";
-        private const string ErrorBreak = "The selection contains a \"break\" statement, but not the enclosing loop";
-        private const string ErrorReturnWithOutputs = "Cannot extract method that assigns to variables and returns";
-        private const string ErrorImportStar = "Cannot extract method containing from ... import * statement";
-        private const string ErrorExtractFromClass = "Cannot extract statements from a class definition";
+        private static readonly string ErrorReturn = Strings.ExtractMethodSelectionContainsReturn;
+        private static readonly string ErrorYield = Strings.ExtractMethodContainsYieldExpression;
+        private static readonly string ErrorContinue = Strings.ExtractMethodSelectionContainsContinueButNotEnclosingLoop;
+        private static readonly string ErrorBreak = Strings.ExtractMethodSelectionContainsBreakButNotEnclosingLoop;
+        private static readonly string ErrorReturnWithOutputs = Strings.ExtractMethodAssignsVariablesAndReturns;
+        private static readonly string ErrorImportStar = Strings.ExtractMethodContainsFromImportStar;
+        private static readonly string ErrorExtractFromClass = Strings.ExtractMethodStatementsFromClassDefinition;
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {

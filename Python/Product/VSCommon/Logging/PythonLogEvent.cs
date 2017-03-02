@@ -67,6 +67,10 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// The analysis process raised a warning
         /// </summary>
-        AnalysisWarning
+        AnalysisWarning,
+        /// <summary>
+        /// Information about how long requests to the out-of-proc analyzer take
+        /// </summary>
+        AnalysisRequestTiming
     }
 }

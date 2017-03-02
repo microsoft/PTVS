@@ -34,17 +34,11 @@ namespace Microsoft.PythonTools.Intellisense {
             _snippets = GetAvailableSnippets();
         }
 
-        public IEnumerable<CompletionResult> GetCompletions(int timeout) {
-            var task = _snippets;
-            if (task == null) {
-                return null;
+        public async Task<IEnumerable<CompletionResult>> GetCompletionsAsync() {
+            if (_snippets.IsCompleted) {
+                return _snippets.Result;
             }
-
-            if (task.IsCompleted || task.Wait(timeout)) {
-                return task.Result;
-            }
-
-            return null;
+            return await _snippets;
         }
 
         private async Task<IReadOnlyList<CompletionResult>> GetAvailableSnippets() {

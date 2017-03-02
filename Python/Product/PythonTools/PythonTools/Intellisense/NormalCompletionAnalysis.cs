@@ -96,6 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             } else if (string.IsNullOrEmpty(text)) {
                 if (analysis != null) {
+                    Debug.Assert(analysis.Analyzer == _analyzer);
                     lock (_analyzer) {
                         var location = VsProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
@@ -103,7 +104,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
                         var parameters = Enumerable.Empty<CompletionResult>();
-                        var sigs = VsProjectAnalyzer.GetSignaturesAsync(_serviceProvider, View, _snapshot, Span).WaitOrDefault(1000);
+                        var sigs = _analyzer.WaitForRequest(_analyzer.GetSignaturesAsync(analysis, View, _snapshot, Span), "GetCompletions.GetSignatures");
                         if (sigs != null && sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
@@ -111,13 +112,14 @@ namespace Microsoft.PythonTools.Intellisense {
                                 .Distinct()
                                 .Select(n => new CompletionResult(n, PythonMemberType.Field));
                         }
-                        members = (analysis.Analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions).WaitOrDefault(1000) ?? new CompletionResult[0])
+                        members = _analyzer.WaitForRequest(_analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions), "GetCompletions.GetAllAvailableMembers")
+                            .MaybeEnumerate()
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
                 }
 
                 if (pyReplEval == null) {
-                    var expansions = _serviceProvider.GetPythonToolsService().GetExpansionCompletions(100);
+                    var expansions = _analyzer.WaitForRequest(_serviceProvider.GetPythonToolsService().GetExpansionCompletionsAsync(), "GetCompletions.GetExpansionCompletions");
                     if (expansions != null) {
                         // Expansions should come first, so that they replace our keyword
                         // completions with the more detailed snippets.
@@ -134,6 +136,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             } else {
                 if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
+                    Debug.Assert(analysis.Analyzer == _analyzer);
                     lock (_analyzer) {
                         var location = VsProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
@@ -141,7 +144,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
 
-                        members = analysis.Analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions).WaitOrDefault(1000);
+                        members = _analyzer.WaitForRequest(_analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions), "GetCompletions.GetMembers");
                     }
                 }
 

@@ -19,18 +19,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Script.Serialization;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     static class AnalyzerExtensions {
         public static string[] GetTags(this VsProjectAnalyzer analyzer) {
-            var tags = analyzer.SendExtensionCommandAsync(
+            var tags = analyzer.WaitForRequest(analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetTags,
                 string.Empty
-            ).WaitOrDefault(1000);
+            ), "Django.GetTags");
 
             if (tags != null) {
                 return new JavaScriptSerializer().Deserialize<string[]>(tags);
@@ -40,11 +39,11 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
 
         public static Dictionary<string, TagInfo> GetFilters(this VsProjectAnalyzer analyzer) {
-            var filtersRes = analyzer.SendExtensionCommandAsync(
+            var filtersRes = analyzer.WaitForRequest(analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetFilters,
                 string.Empty
-            ).WaitOrDefault(1000);
+            ), "Django.GetFilters");
 
 
             var res = new Dictionary<string, TagInfo>();
@@ -59,21 +58,21 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         public static DjangoUrl[] GetUrls(this VsProjectAnalyzer analyzer)
         {
-            var urls = analyzer.SendExtensionCommandAsync(
+            var urls = analyzer.WaitForRequest(analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetUrls,
                 string.Empty
-            ).WaitOrDefault(1000);
+            ), "Django.GetUrls");
 
             return urls != null ? new JavaScriptSerializer().Deserialize<DjangoUrl[]>(urls) : Array.Empty<DjangoUrl>();
         }
 
         public static string[] GetVariableNames(this VsProjectAnalyzer analyzer, string file) {
-            var variables = analyzer.SendExtensionCommandAsync(
+            var variables = analyzer.WaitForRequest(analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetVariables,
                 file
-            ).WaitOrDefault(1000);
+            ), "Django.GetVariableNames");
 
             if (variables != null) {
                 return new JavaScriptSerializer().Deserialize<string[]>(variables);
@@ -85,11 +84,11 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         public static Dictionary<string, PythonMemberType> GetMembers(this VsProjectAnalyzer analyzer, string file, string variable) {
             var serializer = new JavaScriptSerializer();
 
-            var members = analyzer.SendExtensionCommandAsync(
+            var members = analyzer.WaitForRequest(analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetMembers,
                 serializer.Serialize(new[] { file, variable })
-            ).WaitOrDefault(1000);
+            ), "Django.GetMembers");
 
             if (members != null) {
                 var res = serializer.Deserialize<Dictionary<string, string>>(members);

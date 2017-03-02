@@ -29,6 +29,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
@@ -83,8 +84,54 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly HashSet<ProjectReference> _references = new HashSet<ProjectReference>();
         private bool _disposing;
 
+        private readonly IPythonToolsLogger _logger;
+
         internal Task ReloadTask;
         internal int _parsePending;
+
+        /// <summary>
+        /// The recommended timeout to use when waiting on analysis information.
+        /// </summary>
+        /// <remarks>
+        /// This has been adjusted based on telemetry to minimize the "never
+        /// responsive" time.
+        /// </remarks>
+        private static int DefaultTimeout => 250;
+
+        public T WaitForRequest<T>(Task<T> request, string requestName) {
+            return WaitForRequest(request, requestName, default(T), 1);
+        }
+
+        public T WaitForRequest<T>(Task<T> request, string requestName, T defaultValue) {
+            return WaitForRequest(request, requestName, defaultValue, 1);
+        }
+
+        public T WaitForRequest<T>(Task<T> request, string requestName, T defaultValue, int timeoutScale) {
+            bool timeout = true;
+            var start = Stopwatch.GetTimestamp();
+            T result = defaultValue;
+            try {
+                if (request.Wait(DefaultTimeout * timeoutScale)) {
+                    result = request.Result;
+                    timeout = false;
+                }
+            } catch (AggregateException ae) {
+                if (ae.InnerException != null) {
+                    throw ae.InnerException;
+                }
+                throw;
+            }
+            try {
+                _logger?.LogEvent(PythonLogEvent.AnalysisRequestTiming, new AnalysisTimingInfo {
+                    RequestName = requestName,
+                    Milliseconds = (int)Math.Min((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency, (long)int.MaxValue),
+                    Timeout = timeout
+                });
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+            return result;
+        }
 
         internal async Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(AnalysisEntry analysisEntry, ITextBuffer textBuffer) {
             var lastVersion = analysisEntry.GetAnalysisVersion(textBuffer);
@@ -128,6 +175,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFilesById = new ConcurrentDictionary<int, AnalysisEntry>();
 
             _pyService = serviceProvider.GetPythonToolsService();
+
+            _logger = _pyService.Logger;
 
             if (_commentTaskProvider != null) {
                 _commentTaskProvider.TokensChanged += CommentTaskTokensChanged;
@@ -803,26 +852,28 @@ namespace Microsoft.PythonTools.Intellisense {
                 entry,
                 expr,
                 translatedLocation
-            ).WaitOrDefault(1000) ?? Array.Empty<string>();
+            ).WaitOrDefault(DefaultTimeout) ?? Array.Empty<string>();
         }
 
-        internal static async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry file, string expr, SourceLocation location) {
+        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, string expr, SourceLocation location) {
+            Debug.Assert(entry.Analyzer == this);
+
             var req = new AP.AnalyzeExpressionRequest() {
                 expr = expr,
                 column = location.Column,
                 index = location.Index,
                 line = location.Line,
-                fileId = file.FileId
+                fileId = entry.FileId
             };
 
-            var definitions = await file.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
+            var definitions = await SendRequestAsync(req).ConfigureAwait(false);
             if (definitions != null) {
                 return new ExpressionAnalysis(
                     expr,
                     null,
                     definitions.variables
                         .Where(x => x.file != null)
-                        .Select(file.Analyzer.ToAnalysisVariable)
+                        .Select(ToAnalysisVariable)
                         .ToArray(),
                     definitions.privatePrefix,
                     definitions.memberName
@@ -831,11 +882,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        internal static async Task<ExpressionAnalysis> AnalyzeExpressionAsync(IServiceProvider serviceProvider, ITextView view, SnapshotPoint point) {
-            var analysis = GetApplicableExpression(
-                view.GetAnalysisEntry(point.Snapshot.TextBuffer, serviceProvider),
-                point
-            );
+        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, ITextView view, SnapshotPoint point) {
+            Debug.Assert(entry.Analyzer == this);
+
+            var analysis = GetApplicableExpression(entry, point);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -847,7 +897,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = analysis.Entry.FileId
                 };
 
-                var definitions = await analysis.Entry.Analyzer.SendRequestAsync(req);
+                var definitions = await SendRequestAsync(req);
 
                 if (definitions != null) {
                     return new ExpressionAnalysis(
@@ -855,7 +905,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         analysis.Span,
                         definitions.variables
                             .Where(x => x.file != null)
-                            .Select(analysis.Entry.Analyzer.ToAnalysisVariable)
+                            .Select(ToAnalysisVariable)
                             .ToArray(),
                         definitions.privatePrefix,
                         definitions.memberName
@@ -877,13 +927,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a list of signatuers available for the expression at the provided location in the snapshot.
         /// </summary>
-        internal static async Task<SignatureAnalysis> GetSignaturesAsync(IServiceProvider serviceProvider, ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            var analysis = view.GetAnalysisEntry(snapshot.TextBuffer, serviceProvider);
-            if (analysis == null) {
-                return new SignatureAnalysis("", 0, new ISignature[0]);
-            }
-
-            var analyzer = analysis.Analyzer;
+        internal async Task<SignatureAnalysis> GetSignaturesAsync(AnalysisEntry entry, ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             var buffer = snapshot.TextBuffer;
 
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
@@ -902,8 +946,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var text = new SnapshotSpan(exprRange.Value.Snapshot, new Span(exprRange.Value.Start, sigStart.Value.Position - exprRange.Value.Start)).GetText();
             var applicableSpan = parser.Snapshot.CreateTrackingSpan(exprRange.Value.Span, SpanTrackingMode.EdgeInclusive);
 
-            if (analyzer.ShouldEvaluateForCompletion(text)) {
-                var liveSigs = analyzer.TryGetLiveSignatures(snapshot, paramIndex, text, applicableSpan, lastKeywordArg);
+            if (ShouldEvaluateForCompletion(text)) {
+                var liveSigs = TryGetLiveSignatures(snapshot, paramIndex, text, applicableSpan, lastKeywordArg);
                 if (liveSigs != null) {
                     return liveSigs;
                 }
@@ -911,22 +955,22 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var result = new List<ISignature>();
             // TODO: Need to deal with version here...
-            var location = TranslateIndex(loc.Start, snapshot, analysis);
+            var location = TranslateIndex(loc.Start, snapshot, entry);
             AP.SignaturesResponse sigs;
             using (new DebugTimer("SignaturesRequest", CompletionAnalysis.TooMuchTime)) {
-                sigs = await analyzer.SendRequestAsync(
+                sigs = await SendRequestAsync(
                     new AP.SignaturesRequest() {
                         text = text,
                         location = location.Index,
                         column = location.Column,
-                        fileId = analysis.FileId
+                        fileId = entry.FileId
                     }
                 ).ConfigureAwait(false);
             }
 
             if (sigs != null) {
                 foreach (var sig in sigs.sigs) {
-                    result.Add(new PythonSignature(analysis.Analyzer, applicableSpan, sig, paramIndex, lastKeywordArg));
+                    result.Add(new PythonSignature(this, applicableSpan, sig, paramIndex, lastKeywordArg));
                 }
             }
 
@@ -2097,16 +2141,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static async Task<QuickInfo> GetQuickInfoAsync(
-            IServiceProvider serviceProvider,
-            ITextView view,
-            SnapshotPoint point,
-            TimeSpan? timeout = null
-        ) {
-            var analysis = GetApplicableExpression(
-                view.GetAnalysisEntry(point.Snapshot.TextBuffer, serviceProvider),
-                point
-            );
+        internal async Task<QuickInfo> GetQuickInfoAsync(AnalysisEntry entry, ITextView view, SnapshotPoint point) {
+            Debug.Assert(entry.Analyzer == this);
+
+            var analysis = GetApplicableExpression(entry, point);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -2118,7 +2156,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = analysis.Entry.FileId
                 };
 
-                var quickInfo = await analysis.Entry.Analyzer.SendRequestAsync(req, timeout: timeout).ConfigureAwait(false);
+                var quickInfo = await SendRequestAsync(req).ConfigureAwait(false);
 
                 if (quickInfo != null) {
                     return new QuickInfo(quickInfo.text, analysis.Span);

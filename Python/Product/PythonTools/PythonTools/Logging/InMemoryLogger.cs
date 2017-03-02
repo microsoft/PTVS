@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Logging {
         private List<PackageInfo> _seenPackages = new List<PackageInfo>();
         private List<AnalysisInfo> _analysisInfo = new List<AnalysisInfo>();
         private List<string> _analysisAbnormalities = new List<string>();
+        private Dictionary<string, Tuple<int, int, long, int>> _analysisTiming = new Dictionary<string, Tuple<int, int, long, int>>();
 
         #region IPythonToolsLogger Members
 
@@ -69,6 +70,17 @@ namespace Microsoft.PythonTools.Logging {
                 case PythonLogEvent.AnalysisWarning:
                     lock (_analysisAbnormalities) {
                         _analysisAbnormalities.Add("[{0}] {1}: {2}".FormatInvariant(DateTime.Now, logEvent, argument as string ?? ""));
+                    }
+                    break;
+                case PythonLogEvent.AnalysisRequestTiming:
+                    lock (_analysisTiming) {
+                        var a = (AnalysisTimingInfo)argument;
+                        if (_analysisTiming.ContainsKey(a.RequestName)) {
+                            var t = _analysisTiming[a.RequestName];
+                            _analysisTiming[a.RequestName] = Tuple.Create(t.Item1 + 1, Math.Max(t.Item2, a.Milliseconds), t.Item3 + a.Milliseconds, t.Item4 + (a.Timeout ? 1 : 0));
+                        } else {
+                            _analysisTiming[a.RequestName] = Tuple.Create(1, a.Milliseconds, (long)a.Milliseconds, a.Timeout ? 1 : 0);
+                        }
                     }
                     break;
             }
@@ -114,6 +126,18 @@ namespace Microsoft.PythonTools.Logging {
                     res.AppendLine();
                     foreach (var abnormalExit in _analysisAbnormalities) {
                         res.AppendLine(abnormalExit);
+                    }
+                    res.AppendLine();
+                }
+            }
+
+            lock (_analysisTiming) {
+                if (_analysisTiming.Any()) {
+                    res.AppendLine("Analysis timing:");
+                    foreach (var kv in _analysisTiming.OrderBy(kv => kv.Key)) {
+                        res.AppendFormat("    {0} (count {1}, {2} timeouts, max {3:N0}ms, mean {4:N2}ms)",
+                            kv.Key, kv.Value.Item1, kv.Value.Item4, kv.Value.Item2, (double)kv.Value.Item3 / kv.Value.Item1);
+                        res.AppendLine();
                     }
                     res.AppendLine();
                 }

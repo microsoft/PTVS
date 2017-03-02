@@ -102,6 +102,16 @@ namespace Microsoft.PythonTools.Interpreter {
                             if (_seenIds.Add(config.Id)) {
                                 var supportUrl = tagKey.GetValue("SupportUrl") as string ?? companySupportUrl;
 
+                                // We don't want to send people to http://python.org, even
+                                // if that's what is in the registry, so catch and fix it.
+                                if (!string.IsNullOrEmpty(supportUrl)) {
+                                    var url = supportUrl.TrimEnd('/');
+                                    if (url.Equals("http://www.python.org", StringComparison.OrdinalIgnoreCase) ||
+                                        url.Equals("http://python.org", StringComparison.OrdinalIgnoreCase)) {
+                                        supportUrl = PythonCoreSupportUrl;
+                                    }
+                                }
+
                                 var info = new PythonInterpreterInformation(config, companyDisplay, companySupportUrl, supportUrl);
                                 _info.Add(info);
                             }

@@ -181,11 +181,11 @@ namespace Microsoft.PythonTools.Navigation {
                 foreach (var value in _value.Values) {
                     foreach (var reference in value.locations) {
                         var entry = analyzer.GetAnalysisEntryFromPath(reference.file);
-                        var analysis = VsProjectAnalyzer.AnalyzeExpressionAsync(
+                        var analysis = analyzer.WaitForRequest(analyzer.AnalyzeExpressionAsync(
                             entry, 
                             Name, 
                             new SourceLocation(0, reference.line, reference.column)
-                        ).WaitOrDefault(1000);
+                        ), "PythonLibraryNode.AnalyzeExpression");
                         vars.AddRange(analysis.Variables);
                     }
                 }

@@ -131,6 +131,7 @@ namespace PythonToolsMockTests {
                 var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
                 // Ensure all tasks have been updated
                 var taskProvider = (ErrorTaskProvider)view.VS.ServiceProvider.GetService(typeof(ErrorTaskProvider));
+                Assert.IsNotNull(taskProvider, "no ErrorTaskProvider available");
 
                 foreach (var testCase in testCases) {
                     view.Text = testCase.Item1;

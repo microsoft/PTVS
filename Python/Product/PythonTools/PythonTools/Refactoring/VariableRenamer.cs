@@ -47,7 +47,12 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             var caret = _view.GetPythonCaret();
-            var analysis = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _view, caret.Value);
+            var entry = _view.GetAnalysisAtCaret(_serviceProvider);
+            if (caret == null || entry == null) {
+                input.CannotRename(Strings.RenameVariable_UnableGetAnalysisCurrentTextView);
+                return;
+            }
+            var analysis = await entry.Analyzer.AnalyzeExpressionAsync(entry, _view, caret.Value);
             if (analysis == null) {
                 input.CannotRename(Strings.RenameVariable_UnableGetAnalysisCurrentTextView);
                 return;

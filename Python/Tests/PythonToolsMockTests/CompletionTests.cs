@@ -938,7 +938,7 @@ def func(a):
                 var expected2 = string.Join(Environment.NewLine, docString.Take(15)).TrimStart() + Environment.NewLine + "...";
 
                 using (var view = new PythonEditor(code)) {
-                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
+                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def file.func(a)\r\n" + expected1);
 
                     SignatureAnalysis sigs;
                     view.Text += "func(";
@@ -961,7 +961,7 @@ def func(a):
                     expected1 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
                     expected2 = string.Join(Environment.NewLine, docString.Take(8)).TrimStart() + Environment.NewLine + "...";
 
-                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
+                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def file.func(a)\r\n" + expected1);
 
                     SignatureAnalysis sigs;
                     view.Text += "func(";
@@ -1143,8 +1143,8 @@ async def g():
                 ITrackingSpan span;
                 QuickInfoSource.AugmentQuickInfoWorker(
                     quickInfo,
-                    VsProjectAnalyzer.GetQuickInfoAsync(
-                        view.VS.ServiceProvider,
+                    view.Analyzer.GetQuickInfoAsync(
+                        view.View.View.GetAnalysisEntry(snapshot.TextBuffer, view.VS.ServiceProvider),
                         view.View.TextView,
                         new SnapshotPoint(snapshot, start)
                     ).Result,
@@ -1165,16 +1165,15 @@ async def g():
 
             using (var view = new PythonEditor(code, version, vs)) {
                 var snapshot = view.CurrentSnapshot;
-                ExpressionAnalysis expr = null;
+                Task<ExpressionAnalysis> task = null;
                 vs.InvokeSync(() => {
-                    expr = vs.GetPyService().AnalyzeExpression(
-                        view.View.TextView,
-                        snapshot,
-                        snapshot.CreateTrackingSpan(location, location < snapshot.Length ? 1 : 0, SpanTrackingMode.EdgeInclusive),
-                        false
+                    task = view.Analyzer.AnalyzeExpressionAsync(
+                        view.View.TextView.GetAnalysisEntry(snapshot.TextBuffer, view.VS.ServiceProvider),
+                        view.View.View,
+                        new SnapshotPoint(snapshot, location)
                     );
                 });
-                return expr;
+                return task.Wait(10000) ? task.Result : null;
             }
         }
 
@@ -1208,15 +1207,16 @@ async def g():
         private static SignatureAnalysis GetSignatureAnalysis(PythonEditor view, int index) {
             var snapshot = view.CurrentSnapshot;
 
-            SignatureAnalysis sigs = null;
+            Task<SignatureAnalysis> task = null;
             view.VS.InvokeSync(() => {
-                sigs = view.VS.GetPyService().GetSignatures(
+                task = view.Analyzer.GetSignaturesAsync(
+                    view.View.View.GetAnalysisEntry(snapshot.TextBuffer, view.VS.ServiceProvider),
                     view.View.TextView,
                     snapshot,
                     snapshot.CreateTrackingSpan(index, 1, SpanTrackingMode.EdgeInclusive)
                 );
             });
-            return sigs;
+            return task.Wait(10000) ? task.Result : null;
         }
 
 
