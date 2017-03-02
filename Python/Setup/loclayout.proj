@@ -65,8 +65,8 @@
       <SettingsFile>$(LSBuildRoot)\MCP_excludeBaml.lss</SettingsFile>
     </FilesToLocalize>
     <FilesToLocalize Include="@(CodeSnippets)">
-      <TranslationFile>$(LocDir)lcl\{Lang}\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
-      <LciCommentFile>$(LocDir)lci\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
+      <TranslationFile>$(LocDir)lcl\{Lang}\Snippets\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
+      <LciCommentFile>$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
       <SettingsFile>$(LSBuildRoot)\locxml_snippets.lss</SettingsFile>
     </FilesToLocalize>
   </ItemGroup>
