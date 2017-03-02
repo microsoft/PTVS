@@ -16,8 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+using EnvDTE;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TemplateWizard;
 using Project = EnvDTE.Project;
 using ProjectItem = EnvDTE.ProjectItem;
@@ -44,30 +50,56 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 return;
             }
 
-            var provider = WizardHelpers.GetProvider(project.DTE);
-            if (provider == null) {
-                return;
-            }
-
             try {
-                object inObj = (object)txt, outObj = null;
-                project.DTE.Commands.Raise(
-                    GuidList.guidPythonToolsCmdSet.ToString("B"),
-                    (int)PkgCmdIDList.cmdidInstallProjectRequirements,
-                    ref inObj,
-                    ref outObj
-                );
+                InstallProjectRequirements(project, txt);
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;
                 }
-                TaskDialog.ForException(
-                    provider,
-                    ex,
-                    Strings.InstallRequirementsFailed,
-                    Strings.IssueTrackerUrl
-                ).ShowModal();
+
+                ex.ReportUnhandledException(
+                    WizardHelpers.GetProvider(project.DTE), // null here is okay
+                    GetType(),
+                    allowUI: true
+                );
             }
+        }
+
+        private static void InstallProjectRequirements(Project project, string requirementsTxt) {
+            var target = project as IOleCommandTarget;
+            if (target == null) {
+                // Project does not implement IOleCommandTarget, so try with DTE
+                InstallProjectRequirements_DTE(project, requirementsTxt);
+                return;
+            }
+
+            IntPtr inObj = IntPtr.Zero;
+            try {
+                var guid = GuidList.guidPythonToolsCmdSet;
+                inObj = Marshal.AllocCoTaskMem(16);
+                Marshal.GetNativeVariantForObject(requirementsTxt, inObj);
+                ErrorHandler.ThrowOnFailure(target.Exec(
+                    ref guid,
+                    PkgCmdIDList.cmdidInstallProjectRequirements,
+                    (uint)OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT,
+                    inObj,
+                    IntPtr.Zero
+                ));
+            } finally {
+                if (inObj != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(inObj);
+                }
+            }
+        }
+
+        private static void InstallProjectRequirements_DTE(Project project, string requirementsTxt) {
+            object inObj = requirementsTxt, outObj = null;
+            project.DTE.Commands.Raise(
+                GuidList.guidPythonToolsCmdSet.ToString("B"),
+                (int)PkgCmdIDList.cmdidInstallProjectRequirements,
+                ref inObj,
+                ref outObj
+            );
         }
 
         public void BeforeOpeningFile(ProjectItem projectItem) { }

@@ -19,11 +19,12 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.Project.Automation {
     [ComVisible(true)]
-    public class OAProject : EnvDTE.Project, EnvDTE.ISupportVSProperties {
+    public class OAProject : EnvDTE.Project, EnvDTE.ISupportVSProperties, IOleCommandTarget {
         #region fields
         private ProjectNode project;
         EnvDTE.ConfigurationManager configurationManager;
@@ -406,7 +407,16 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             }
 
         }
+
         #endregion
+
+        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            return ((IOleCommandTarget)project).QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
+
+        public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            return ((IOleCommandTarget)project).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
     }
 
     /// <summary>

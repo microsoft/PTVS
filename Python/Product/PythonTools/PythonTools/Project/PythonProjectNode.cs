@@ -1626,6 +1626,7 @@ namespace Microsoft.PythonTools.Project {
             var requirementsPath = GetStringArgument(variantIn) ?? "";
             requirementsPath = requirementsPath.Trim('"');
             if (!File.Exists(requirementsPath)) {
+                Debug.Fail("ProcessRequirementsTxt did not find '{0}'".FormatInvariant(requirementsPath));
                 return;
             }
 
@@ -1662,6 +1663,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (install == null && venv == null) {
+                Debug.Fail("ProcessRequirementsTxt found nowhere to install");
                 return;
             }
 

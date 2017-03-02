@@ -1,3 +1,4 @@
+extern alias pythontools;
 // Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
@@ -23,9 +24,12 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
+using Microsoft.VisualStudioTools.Project.Automation;
+using pythontools::Microsoft.PythonTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.SharedProject;
@@ -140,5 +144,22 @@ namespace PythonToolsMockTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void OAProjectMustBeRightType() {
+            var sln = new ProjectDefinition(
+                "HelloWorld",
+                PythonProject,
+                Compile("server", "")
+            ).Generate();
+
+            using (var vs = sln.ToMockVs()) {
+                var proj = vs.GetProject("HelloWorld");
+                Assert.IsNotNull(proj);
+                Assert.IsInstanceOfType(proj, typeof(OAProject));
+                Assert.IsInstanceOfType(proj, typeof(IOleCommandTarget));
+                Assert.IsInstanceOfType(proj.Object, typeof(OAVSProject));
+                Assert.IsInstanceOfType(((OAProject)proj).Project, typeof(PythonProjectNode));
+            }
+        }
     }
 }

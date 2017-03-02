@@ -14,14 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using TestUtilities.SharedProject;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace PythonToolsUITests {
+namespace PythonToolsTests {
     [Export(typeof(IProjectProcessor))]
     [ProjectExtension(".pyproj")]
     public class PythonProjectProcessor : IProjectProcessor {
