@@ -82,7 +82,13 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             _projectFiles = new ProjectEntryMap();
-            _connection = new Connection(writer, reader, RequestHandler, AP.RegisteredTypes);
+            _connection = new Connection(
+                writer,
+                reader,
+                RequestHandler,
+                AP.RegisteredTypes,
+                "Analyzer"
+            );
             _connection.EventReceived += ConectionReceivedEvent;
 
             GlobalInterpreterOptions.SuppressFileSystemWatchers = true;

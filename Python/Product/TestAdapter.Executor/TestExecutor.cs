@@ -485,7 +485,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                     new MemoryStream(),
                     stream,
                     RequestHandler,
-                    TP.RegisteredTypes
+                    TP.RegisteredTypes,
+                    "TestExecutor"
                 );
                 _connection.EventReceived += ConectionReceivedEvent;
                 _connection.StartProcessing();

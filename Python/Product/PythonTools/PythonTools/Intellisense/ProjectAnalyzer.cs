@@ -390,7 +390,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 process.StandardInput.BaseStream,
                 process.StandardOutput.BaseStream,
                 null,
-                AP.RegisteredTypes
+                AP.RegisteredTypes,
+                "ProjectAnalyzer"
             );
 
             process.Exited += OnAnalysisProcessExited;
