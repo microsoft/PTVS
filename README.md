@@ -1,16 +1,16 @@
-# Python tools for Visual Studio
+# Python Tools for Visual Studio
 
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Python support for [Visual Studio 2017](https://www.visualstudio.com/) is developed and managed here.
+Python support for [Visual Studio 2017](https://visualstudio.com/) is developed and managed here.
 
-Visit our page on [VisualStudio.com](https://www.visualstudio.com/en-us/features/python-vs) for an overview, and check out our [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube. Full documentation is available at [docs.microsoft.com](https://docs.microsoft.com/visualstudio/python/).
+Visit our page on [VisualStudio.com](https://aka.ms/PTVS) for an overview and download links, and check out our [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube. Full documentation is available at [docs.microsoft.com](https://aka.ms/PTVSDocs).
 
 Feel free to file issues or ask questions on our [issue tracker](http://github.com/Microsoft/PTVS/issues), and we welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs) repository.
 
 ## Visual Studio 2017 Installation
 
-See [our recent blog post](https://blogs.msdn.microsoft.com/pythonengineering/2017/02/22/python-in-vs2017/) for the latest status on how to install Python support.
+The Python development workload is available as part of the [preview version of Visual Studio 2017](https://visualstudio.com/vs/preview?wt.mc_id=github_microsoft_ptvs). This installs side-by-side with the regular install of Visual Studio 2017 and includes all features from the stable release as well as early previews of new functionality. See [our blog post](http://blogs.msdn.microsoft.com/pythonengineering/2017/03/07/python-support-in-vs2017/) for more details.
 
 ## Visual Studio 2015 and earlier
 
