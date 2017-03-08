@@ -35,6 +35,10 @@
     <AssemblyName>Microsoft.CookiecutterTools</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootSuffix Exp /Log</StartArguments>
+    <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
     <NoWarn>1762;0436</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">

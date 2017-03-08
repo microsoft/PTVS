@@ -89,22 +89,29 @@
         <!-- Created successfully -->
         <StackPanel Grid.Row="0" Orientation="Vertical" Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
             <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                        Orientation="Horizontal"
+                        AutomationProperties.Name="{x:Static cct:Strings.SearchPage_FilesCreatedSuccessfully}">
+                <imaging:CrispImage Width="16" Height="16"
+                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}" />
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_FilesCreatedSuccessfully}"/>
             </StackPanel>
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal">
-                <imaging:CrispImage Margin="20 0 0 0" Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.OpenFolder}"/>
-                <Button Style="{StaticResource NavigationButton}"
-                        Margin="4 0 0 0"
-                        Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
-                        CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
-                        HorizontalAlignment="Left"
-                        Content="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
-            </StackPanel>
+            <Button Style="{StaticResource NavigationButton}"
+                    Margin="24 0 0 0"
+                    Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
+                    CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
+                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"
+                    HorizontalAlignment="Left">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <imaging:CrispImage Width="16" Height="16"
+                                            Moniker="{x:Static imagecatalog:KnownMonikers.OpenFolder}"
+                                            AutomationProperties.Name="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
+                        <Label Content="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
         </StackPanel>
 
         <!-- Search -->
@@ -133,6 +140,7 @@
         <TreeView Grid.Row="2"
                   Margin="4 4 0 8"
                   ItemsSource="{Binding Path=SearchResults}"
+                  Focusable="True"
                   SelectedItemChanged="TreeView_SelectedItemChanged">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type vm:CategorizedViewModel}" ItemsSource="{Binding Path=Templates}">
@@ -231,7 +239,9 @@
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
                         Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <imaging:CrispImage Width="16" Height="16"
+                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
+                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_ErrorInstallingCookiecutter}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_ErrorInstallingCookiecutter}"/>
@@ -248,7 +258,9 @@
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
                         Visibility="{Binding Path=CloningStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <imaging:CrispImage Width="16" Height="16"
+                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
+                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_ErrorCloningRepository}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_ErrorCloningRepository}"/>
@@ -265,7 +277,9 @@
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
                         Visibility="{Binding Path=LoadingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <imaging:CrispImage Width="16" Height="16"
+                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
+                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_ErrorLoadingTemplate}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_ErrorLoadingTemplate}"/>
@@ -282,7 +296,9 @@
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
                         Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                <imaging:CrispImage Width="16" Height="16"
+                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"
+                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_CheckingUpdatesCompleted}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_CheckingUpdatesCompleted}"/>
@@ -291,7 +307,9 @@
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
                         Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <imaging:CrispImage Width="16" Height="16"
+                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
+                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_ErrorCheckingUpdates}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_ErrorCheckingUpdates}"/>
@@ -308,14 +326,18 @@
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
                         Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                <imaging:CrispImage Width="16" Height="16"
+                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"
+                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_UpdatingTemplateCompleted}"/>
                 <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="{x:Static cct:Strings.SearchPage_UpdatingTemplateCompleted}"/>
             </StackPanel>
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
                         Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <imaging:CrispImage Width="16" Height="16"
+                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
+                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_UpdatingTemplateError}"/>
                 <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="{x:Static cct:Strings.SearchPage_UpdatingTemplateError}"/>
             </StackPanel>
 
@@ -336,6 +358,7 @@
                    RenderOptions.BitmapScalingMode="HighQuality"
                    Cursor="Hand"
                    ToolTip="{Binding SelectedTemplate.OwnerTooltip}"
+                   AutomationProperties.Name="{Binding SelectedTemplate.OwnerTooltip}"
                    MouseLeftButtonDown="Image_MouseLeftButtonDown">
             </Image>
             <Grid Grid.Column="1">
