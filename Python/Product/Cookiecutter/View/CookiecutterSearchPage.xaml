@@ -140,6 +140,7 @@
         <TreeView Grid.Row="2"
                   Margin="4 4 0 8"
                   ItemsSource="{Binding Path=SearchResults}"
+                  Focusable="True"
                   SelectedItemChanged="TreeView_SelectedItemChanged">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type vm:CategorizedViewModel}" ItemsSource="{Binding Path=Templates}">
