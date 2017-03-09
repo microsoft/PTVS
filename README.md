@@ -1,12 +1,14 @@
 # Python Tools for Visual Studio
 
-[![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 Python support for [Visual Studio 2017](https://visualstudio.com/?wt.mc_id=github_microsoft_ptvs) is developed and managed here.
 
 Visit our page on [VisualStudio.com](https://aka.ms/PTVS) for an overview and download links, and check out our [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube. Full documentation is available at [docs.microsoft.com](https://aka.ms/PTVSDocs).
 
 Feel free to file issues or ask questions on our [issue tracker](http://github.com/Microsoft/PTVS/issues), and we welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs/tree/master/docs/python) repository.
+
+[![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Master: ![Build status for master branch](https://mseng.visualstudio.com/_apis/public/build/definitions/b21de0ba-dffd-474c-b888-7112d5e6397b/2921/badge)
 
 ## Visual Studio 2017 Installation
 
