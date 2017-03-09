@@ -1,60 +1,62 @@
-param ($vstarget, $source, [switch] $clean, [switch] $full)
-
-# This is the list of packages we require to build, and the version to use for each supported $vstarget
-$packages = @(
-    @{ name="Microsoft.VSSDK.BuildTools"; version=@{ "14.0"="14.2.25201"; "15.0"="15.0.26201" }; required=$true },
-    @{ name="Newtonsoft.Json"; version=@{ "14.0"="6.0.8"; "15.0"="8.0.3" }; required=$true },
-    @{ name="MicroBuild.Core"; version=@{ "14.0"="0.2.0"; "15.0"="0.2.0" }; required=$false },
-    @{ name="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime"; version=@{ "14.0"="14.2.25123"; "15.0"="14.2.25123" }; required=$true },
-    @{ name="Microsoft.VisualStudio.Shell.Interop.12.1.DesignTime"; version=@{ "14.0"="12.1.30328"; "15.0"="12.1.30328" }; required=$true },
-    @{ name="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime"; version=@{ "14.0"="14.2.25123"; "15.0"="14.2.25123" }; required=$true },
-    @{ name="Microsoft.VisualStudio.TextManager.Interop.12.1.DesignTime"; version=@{ "14.0"="12.1.30328"; "15.0"="12.1.30328" }; required=$true },
-    @{ name="Python"; version=@{ "14.0"="3.6.0"; "15.0"="3.6.0" }; required=$true }
-)
-
-if ($full) {
-    $packages += @(
-        @{ name="Wix"; version=@{ "14.0"="3.9.2.1"; "15.0"="3.9.2.1" }; required=$false }
-    )
-}
+param ($vstarget, $source, $outdir)
 
 "Restoring Packages"
 
+# These packages require a versionless symlink pointing to the versioned install.
+$need_symlink = @(
+    "python",
+    "MicroBuild.Core",
+    "Microsoft.VSSDK.BuildTools",
+    "Newtonsoft.Json",
+    "Wix"
+)
+
 if (-not $vstarget) {
-    $vstarget = "14.0"
+    $vstarget = "15.0"
 } elseif ($vstarget.ToString() -match "^\d\d$") {
     $vstarget = "$vstarget.0"
 }
 
 $buildroot = $MyInvocation.MyCommand.Definition | Split-Path -Parent | Split-Path -Parent
-pushd "$buildroot\Build"
-if ($source) {
-    .\nuget.exe sources add -Name PreBuildSource -Source $source
-}
-if ($env:BUILD_BINARIESDIRECTORY) {
-    $outdir = "${env:BUILD_BINARIESDIRECTORY}"
-} else {
-    $outdir = "$buildroot\packages"
-}
 
-
-if ($clean) {
-    $packages.name | %{ rmdir -r -fo -ea 0 "$outdir\$_" }
-}
-
-$packages | %{
-    $v = $_.version[$vstarget]
-    if ($v) {
-        $arglist = "install", $_.name, "-Version", $v, "-ExcludeVersion", "-OutputDirectory", $outdir
-        if ($_.required) {
-            Start-Process -Wait -NoNewWindow .\nuget.exe -ErrorAction Stop -ArgumentList $arglist
-        } else {
-            Start-Process -Wait -NoNewWindow .\nuget.exe -ErrorAction Continue -ArgumentList $arglist
-        }
+if (-not $outdir) {
+    if ($env:BUILD_BINARIESDIRECTORY) {
+        $outdir = "${env:BUILD_BINARIESDIRECTORY}"
+    } else {
+        $outdir = "$buildroot\packages"
     }
 }
 
-if ($source) {
-    .\nuget.exe sources remove -Name PreBuildSource
+# Wonderful hack because Resolve-Path fails if the path doesn't exist
+$outdir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($outdir)
+
+pushd "$buildroot\Build"
+try {
+    if ($source) {
+        .\nuget.exe sources add -Name PreBuildSource -Source $source
+    }
+    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", $outdir
+
+    try {
+        Start-Process -Wait -NoNewWindow .\nuget.exe -ErrorAction Stop -ArgumentList $arglist
+    } finally {
+        if ($source) {
+            .\nuget.exe sources remove -Name PreBuildSource
+        }
+    }
+    
+    $versions = @{}
+    ([xml](gc "$vstarget\packages.config")).packages.package | %{ $versions[$_.id] = $_.version }
+    
+    $need_symlink | ?{ $versions[$_] } | %{
+        $existing = gi "$outdir\$_" -EA 0
+        if ($existing) {
+            $existing.Delete()
+        }
+        Write-Host "Creating symlink for $_.$($versions[$_])"
+        New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
+    } | Out-Null
+    
+} finally {
+    popd
 }
-popd
