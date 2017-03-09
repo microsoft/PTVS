@@ -8,7 +8,7 @@ Feel free to file issues or ask questions on our [issue tracker](http://github.c
 
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Master: ![Build status for master branch](https://mseng.visualstudio.com/_apis/public/build/definitions/b21de0ba-dffd-474c-b888-7112d5e6397b/2921/badge)
+![Build status for master branch](https://mseng.visualstudio.com/_apis/public/build/definitions/b21de0ba-dffd-474c-b888-7112d5e6397b/2921/badge)
 
 ## Visual Studio 2017 Installation
 
