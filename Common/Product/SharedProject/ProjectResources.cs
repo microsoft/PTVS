@@ -157,6 +157,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string StartupFileDescription = "StartupFileDescription";
         internal const string StartWebBrowser = "StartWebBrowser";
         internal const string StartWebBrowserDescription = "StartWebBrowserDescription";
+        internal const string UnableToReadVerbosity = "UnableToReadVerbosity";
         internal const string UnableToRemoveFile = "UnableToRemoveFile";
         internal const string UnknownInParentheses = "UnknownInParentheses";
         internal const string URL = "URL";

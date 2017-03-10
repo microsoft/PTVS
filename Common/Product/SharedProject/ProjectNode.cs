@@ -2589,6 +2589,7 @@ namespace Microsoft.VisualStudioTools.Project {
             } else {
                 ((IDEBuildLogger)this.BuildLogger).OutputWindowPane = output;
             }
+            ((IDEBuildLogger)this.BuildLogger).ResetVerbosity();
         }
 
         /// <summary>
