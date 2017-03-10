@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string _fromModule;
         private readonly ITextBuffer _buffer;
 
+        private static readonly Guid _telemetryId = new Guid("{7E850DC8-FC71-415C-B0D2-428372EC9B93}");
         public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ITextBuffer buffer, ExportedMemberInfo import) {
             _source = source;
             _fromModule = import.FromName;
@@ -121,7 +122,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public bool TryGetTelemetryId(out Guid telemetryId) {
-            telemetryId = Guid.Empty;
+            telemetryId = _telemetryId;
             return false;
         }
 
