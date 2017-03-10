@@ -36,6 +36,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private SnapshotSpan _currentSpan;
         private readonly UIThreadBase _uiThread;
 
+        private static readonly Guid _telemetryId = new Guid("{9D2182D9-27BC-4143-9A93-B7D9C015D01B}");
+
         public PythonSuggestedActionsSource(
             IServiceProvider provider,
             ITextView textView,
@@ -114,7 +116,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public bool TryGetTelemetryId(out Guid telemetryId) {
-            telemetryId = Guid.Empty;
+            telemetryId = _telemetryId;
             return false;
         }
     }
