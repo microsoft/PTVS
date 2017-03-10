@@ -1,5 +1,7 @@
 # Python Tools for Visual Studio
 
+## Note: Python support is in the [preview of Visual Studio 2017](https://visualstudio.com/vs/preview?wt.mc_id=github_microsoft_ptvs) at this time.
+
 Python support for [Visual Studio 2017](https://visualstudio.com/?wt.mc_id=github_microsoft_ptvs) is developed and managed here.
 
 Visit our page on [VisualStudio.com](https://aka.ms/PTVS) for an overview and download links, and check out our [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube. Full documentation is available at [docs.microsoft.com](https://aka.ms/PTVSDocs).
