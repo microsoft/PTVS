@@ -679,4 +679,10 @@ You can get more information by running Visual Studio with the /log parameter on
   <data name="UnableToRemoveFile" xml:space="preserve">
     <value>The file does not exist on disk but is present in your project and cannot be removed.  Please remove the item from the project before attempting to rename an item to a filename of the same name.</value>
   </data>
+  <data name="UnableToReadVerbosity" xml:space="preserve">
+    <value>Unable to read build verbosity setting.
+
+{0}</value>
+    <comment>{0} will be embedded exception text</comment>
+  </data>
 </root>
