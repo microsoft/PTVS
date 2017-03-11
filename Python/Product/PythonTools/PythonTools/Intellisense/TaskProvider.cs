@@ -499,7 +499,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#region Internal Worker Thread
+        #region Internal Worker Thread
 
         private void StartWorker() {
             if (_worker != null) {
@@ -716,9 +716,9 @@ namespace Microsoft.PythonTools.Intellisense {
             StartWorker();
         }
 
-#endregion
+        #endregion
 
-#region IVsTaskProvider Members
+        #region IVsTaskProvider Members
 
         public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
             lock (_itemsLock) {
@@ -751,7 +751,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return VSConstants.S_OK;
         }
 
-#endregion
+        #endregion
     }
 
     class TaskEnum : IVsEnumTaskItems {
