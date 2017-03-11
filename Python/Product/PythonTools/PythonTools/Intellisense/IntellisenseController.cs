@@ -114,6 +114,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 var entry = _textView.GetAnalysisEntry(pt.Value.Snapshot.TextBuffer, _serviceProvider);
+                if (entry == null) {
+                    return;
+                }
                 var t = entry.Analyzer.GetQuickInfoAsync(entry, _textView, pt.Value);
                 var quickInfo = await Task.Run(() => entry.Analyzer.WaitForRequest(t, "GetQuickInfo", null, 2));
 
