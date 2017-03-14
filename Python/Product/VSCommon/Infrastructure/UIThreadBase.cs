@@ -15,8 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools {
     /// <summary>
@@ -121,4 +124,55 @@ namespace Microsoft.VisualStudioTools {
         }
     }
 
+    /// <summary>
+    /// Provides extension methods useful for using with UIThread.
+    /// </summary>
+    public static class UIThreadExtensions {
+        /// <summary>
+        /// Returns the <see cref="UIThreadBase"/> instance associated with
+        /// the service provider. This is guaranteed to return an instance,
+        /// though if no UI thread is available, the instance may simply
+        /// drop all calls without executing the code.
+        /// </summary>
+        public static UIThreadBase GetUIThread(this IServiceProvider serviceProvider) {
+            var uiThread = (UIThreadBase)serviceProvider.GetService(typeof(UIThreadBase));
+            if (uiThread == null) {
+                Trace.TraceWarning("Returning NoOpUIThread instance from GetUIThread");
+#if DEBUG
+                var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
+                object shutdownStarted;
+                if (shell != null &&
+                    ErrorHandler.Succeeded(shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out shutdownStarted)) &&
+                    !(bool)shutdownStarted) {
+                    Debug.Fail("No UIThread service but shell is not shutting down");
+                }
+#endif
+                return new NoOpUIThread();
+            }
+            return uiThread;
+        }
+
+        [Conditional("DEBUG")]
+        // Available on serviceProvider so we can avoid the GetUIThread call on release builds
+        public static void MustBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = "Invalid cross-thread call") {
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread(message);
+        }
+
+        [Conditional("DEBUG")]
+        // Available on serviceProvider so we can avoid the GetUIThread call on release builds
+        public static void MustNotBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = "Invalid cross-thread call") {
+            serviceProvider.GetUIThread().MustNotBeCalledFromUIThread(message);
+        }
+
+        [Conditional("DEBUG")]
+        public static void MustBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
+            Debug.Assert(self is MockUIThreadBase || !self.InvokeRequired, message);
+        }
+
+        [Conditional("DEBUG")]
+        public static void MustNotBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
+            Debug.Assert(self is MockUIThreadBase || self.InvokeRequired, message);
+        }
+
+    }
 }

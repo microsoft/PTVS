@@ -189,37 +189,6 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
-        internal static ITrackingSpan CreateTrackingSpan(this IQuickInfoSession session, ITextBuffer buffer) {
-            var triggerPoint = session.GetTriggerPoint(buffer);
-            var position = triggerPoint.GetPosition(buffer.CurrentSnapshot);
-            if (position == buffer.CurrentSnapshot.Length) {
-                return ((IIntellisenseSession)session).GetApplicableSpan(buffer);
-            }
-
-            return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
-        }
-
-#pragma warning disable 0618
-
-        // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
-        internal static ITrackingSpan CreateTrackingSpan(this ISmartTagSession session, ITextBuffer buffer) {
-            var triggerPoint = session.GetTriggerPoint(buffer);
-            var position = triggerPoint.GetPosition(buffer.CurrentSnapshot);
-            if (position == buffer.CurrentSnapshot.Length) {
-                return ((IIntellisenseSession)session).GetApplicableSpan(buffer);
-            }
-
-            var triggerChar = triggerPoint.GetCharacter(buffer.CurrentSnapshot);
-            if (position != 0 && !char.IsLetterOrDigit(triggerChar)) {
-                // end of line, back up one char as we may have an identifier
-                return buffer.CurrentSnapshot.CreateTrackingSpan(position - 1, 1, SpanTrackingMode.EdgeInclusive);
-            }
-
-            return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
-        }
-
-#pragma warning restore 0618
-
         public static IPythonInterpreterFactory GetPythonInterpreterFactory(this IVsHierarchy self) {
             var node = (self.GetProject().GetCommonProject() as PythonProjectNode);
             if (node != null) {
@@ -249,14 +218,6 @@ namespace Microsoft.PythonTools {
             return EnumerateLoadedProjects(solution)
                 .Select(p => p.GetPythonProject())
                 .Where(p => p != null);
-        }
-
-        public static IPythonProject AsPythonProject(this IVsProject project) {
-            return ((IVsHierarchy)project).GetProject().GetCommonProject() as PythonProjectNode;
-        }
-
-        public static IPythonProject AsPythonProject(this EnvDTE.Project project) {
-            return project.GetCommonProject() as PythonProjectNode;
         }
 
 

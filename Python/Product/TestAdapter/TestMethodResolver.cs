@@ -44,13 +44,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public string GetCurrentTest(string filePath, int line, int lineCharOffset) {
-            var provider = PathToProject(filePath) as IPythonProjectProvider;
-            if (provider != null) {
-                var container = _discoverer.GetTestContainer(provider.Project, filePath);
+            var pyProj = PythonProject.FromObject(PathToProject(filePath));
+            if (pyProj != null) {
+                var container = _discoverer.GetTestContainer(pyProj, filePath);
                 if (container != null) {
                     foreach (var testCase in container.TestCases) {
                         if (testCase.StartLine >= line && line <= testCase.EndLine) {
-                            var moduleName = CommonUtils.CreateFriendlyFilePath(provider.Project.ProjectHome, testCase.Filename);
+                            var moduleName = CommonUtils.CreateFriendlyFilePath(pyProj.ProjectHome, testCase.Filename);
                             return moduleName + "::" + testCase.ClassName + "::" + testCase.MethodName;
                         }
                     }

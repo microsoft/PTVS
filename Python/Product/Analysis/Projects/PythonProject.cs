@@ -65,5 +65,13 @@ namespace Microsoft.PythonTools.Projects {
         public abstract string ProjectHome { get; }
 
         public abstract LaunchConfiguration GetLaunchConfigurationOrThrow();
+
+        /// <summary>
+        /// Attempts to retrieve a PythonProject from the provided object, which
+        /// should implement <see cref="IPythonProjectProvider"/>.
+        /// </summary>
+        public static PythonProject FromObject(object source) {
+            return (source as IPythonProjectProvider)?.Project;
+        }
     }
 }

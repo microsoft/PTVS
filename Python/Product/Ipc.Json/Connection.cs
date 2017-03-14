@@ -117,8 +117,10 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 return;
             }
             try {
-                _logFile.WriteLine(message);
-                _logFile.Flush();
+                lock (_logFile) {
+                    _logFile.WriteLine(message);
+                    _logFile.Flush();
+                }
             } catch (IOException) {
             } catch (ObjectDisposedException) {
             }

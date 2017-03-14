@@ -493,17 +493,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private async void OnAnalysisComplete(EventReceivedEventArgs e) {
+        private void OnAnalysisComplete(EventReceivedEventArgs e) {
             var analysisComplete = (AP.FileAnalysisCompleteEvent)e.Event;
             AnalysisEntry entry;
             if (_projectFilesById.TryGetValue(analysisComplete.fileId, out entry)) {
-                try {
-                    var bufferParser = await entry.GetBufferParserAsync();
+                // Notify buffer parsers without blocking this handler
+                entry.GetBufferParserAsync().ContinueWith(t => {
                     foreach (var version in analysisComplete.versions) {
-                        bufferParser.Analyzed(version.bufferId, version.version);
+                        t.Result.Analyzed(version.bufferId, version.version);
                     }
-                } catch (OperationCanceledException) {
-                }
+                }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
 
                 entry.OnAnalysisComplete();
                 AnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs(entry.Path));
