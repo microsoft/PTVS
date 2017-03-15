@@ -251,7 +251,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
-            var project = projectToProfile.AsPythonProject();
+            var project = projectToProfile.GetPythonProject();
 
             var config = project?.GetLaunchConfigurationOrThrow();
             if (config == null) {
