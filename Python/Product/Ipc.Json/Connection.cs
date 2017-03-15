@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private readonly Func<RequestArgs, Func<Response, Task>, Task> _requestHandler;
         private readonly Stream _writer, _reader;
         private readonly TextWriter _logFile;
+        private readonly object _logFileLock;
         private int _seq;
         private static char[] _headerSeparator = new[] { ':' };
 
@@ -65,6 +66,11 @@ namespace Microsoft.PythonTools.Ipc.Json {
             _writer = writer;
             _reader = reader;
             _logFile = OpenLogFile(connectionLogKey);
+            // FxCop won't let us lock a MarshalByRefObject, so we create
+            // a plain old object that we can log against.
+            if (_logFile != null) {
+                _logFileLock = new object();
+            }
         }
 
         /// <summary>
@@ -113,11 +119,11 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         private void LogToDisk(string message) {
-            if (_logFile == null) {
+            if (_logFile == null || _logFileLock == null) {
                 return;
             }
             try {
-                lock (_logFile) {
+                lock (_logFileLock) {
                     _logFile.WriteLine(message);
                     _logFile.Flush();
                 }
@@ -127,7 +133,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         private void LogToDisk(Exception ex) {
-            if (_logFile == null) {
+            if (_logFile == null || _logFileLock == null) {
                 return;
             }
             // Should have immediately logged a message before, so the exception
