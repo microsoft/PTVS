@@ -14,6 +14,7 @@
   
     <PackageSearchPaths Include="$(LayoutOutputPath)Microsoft.PythonTools.Core" />
     <PackageSearchPaths Include="$(BinariesOutputPath)Snippets" />
+    <Dependency Include="$(MSBuildProjectName).Resources" />
     <Package Include="file_associations.swr" />
     <Package Include="debug_symbols.swr" Condition="$(Configuration) == 'Release'" />
     <Package Include="targets.swr" />

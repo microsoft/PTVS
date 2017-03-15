@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageSearchPaths Include="$(SourcePath)" />
     <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
+    <Dependency Include="$(MSBuildProjectName).Resources" />
     <Package Include="targets.uwp.swr" />
   </ItemGroup>
 
