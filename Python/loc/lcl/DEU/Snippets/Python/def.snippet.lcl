@@ -11,8 +11,11 @@
     <Item ItemId="0;84190deaf8be37d11746126b1f790d26" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a function definition]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Codeausschnitt für eine Funktionsdefinition]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="3" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;Title&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -21,7 +24,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[def]]></Val>
       </Str>
-      <Disp Icon="Str" Order="1" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;ToolTip&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -29,14 +32,20 @@
     <Item ItemId="0;0a00ca99017e0234e48f05edc1515b0a" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The name of the function]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Der Name der Funktion]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="5" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;33c82ad3fb79e6482236f6d0e4f69ea2" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The arguments for the function]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Die Argumente für die Funktion]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="7" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
 </LCX>
