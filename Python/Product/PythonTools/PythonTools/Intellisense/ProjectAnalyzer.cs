@@ -493,17 +493,24 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private async void OnAnalysisComplete(EventReceivedEventArgs e) {
+        private void OnAnalysisComplete(EventReceivedEventArgs e) {
             var analysisComplete = (AP.FileAnalysisCompleteEvent)e.Event;
             AnalysisEntry entry;
             if (_projectFilesById.TryGetValue(analysisComplete.fileId, out entry)) {
-                try {
-                    var bufferParser = await entry.GetBufferParserAsync();
-                    foreach (var version in analysisComplete.versions) {
-                        bufferParser.Analyzed(version.bufferId, version.version);
+                // Notify buffer parsers without blocking this handler
+                entry.GetBufferParserAsync().ContinueWith(t => {
+                    if (t.IsCanceled) {
+                        // Silence if we cancelled, else the wait below
+                        // will re-raise any exceptions for us.
+                        return;
                     }
-                } catch (OperationCanceledException) {
-                }
+
+                    var bp = t.WaitAndUnwrapExceptions();
+
+                    foreach (var version in analysisComplete.versions) {
+                        bp.Analyzed(version.bufferId, version.version);
+                    }
+                }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
 
                 entry.OnAnalysisComplete();
                 AnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs(entry.Path));

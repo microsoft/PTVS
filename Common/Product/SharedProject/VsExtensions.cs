@@ -16,30 +16,14 @@
 
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudioTools.Project.Automation;
-using VsShellUtil = Microsoft.VisualStudio.Shell.VsShellUtilities;
 
 namespace Microsoft.VisualStudioTools {
     static class VsExtensions {
-#if FALSE
-        internal static ITrackingSpan CreateTrackingSpan(this IIntellisenseSession session, ITextBuffer buffer) {
-            var triggerPoint = session.GetTriggerPoint(buffer);
-            var position = session.GetTriggerPoint(buffer).GetPosition(session.TextView.TextSnapshot);
-
-            var snapshot = buffer.CurrentSnapshot;
-            if (position == snapshot.Length) {
-                return snapshot.CreateTrackingSpan(position, 0, SpanTrackingMode.EdgeInclusive);
-            } else {
-                return snapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
-            }
-        }
-#endif
         internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {
             object project;
 
@@ -86,47 +70,6 @@ namespace Microsoft.VisualStudioTools {
         internal static IClipboardService GetClipboardService(this IServiceProvider serviceProvider) {
             return (IClipboardService)serviceProvider.GetService(typeof(IClipboardService));
         }
-
-        internal static UIThreadBase GetUIThread(this IServiceProvider serviceProvider) {
-            var uiThread = (UIThreadBase)serviceProvider.GetService(typeof(UIThreadBase));
-            if (uiThread == null) {
-                Trace.TraceWarning("Returning NoOpUIThread instance from GetUIThread");
-#if DEBUG
-                var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
-                object shutdownStarted;
-                if (shell != null &&
-                    ErrorHandler.Succeeded(shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out shutdownStarted)) &&
-                    !(bool)shutdownStarted) {
-                    Debug.Fail("No UIThread service but shell is not shutting down");
-                }
-#endif
-                return new NoOpUIThread();
-            }
-            return uiThread;
-        }
-
-        [Conditional("DEBUG")]
-        // Available on serviceProvider so we can avoid the GetUIThread call on release builds
-        public static void MustBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = "Invalid cross-thread call") {
-            serviceProvider.GetUIThread().MustBeCalledFromUIThread(message);
-        }
-
-        [Conditional("DEBUG")]
-        // Available on serviceProvider so we can avoid the GetUIThread call on release builds
-        public static void MustNotBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = "Invalid cross-thread call") {
-            serviceProvider.GetUIThread().MustNotBeCalledFromUIThread(message);
-        }
-
-        [Conditional("DEBUG")]
-        public static void MustBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
-            Debug.Assert(self is MockUIThreadBase || !self.InvokeRequired, message);
-        }
-
-        [Conditional("DEBUG")]
-        public static void MustNotBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
-            Debug.Assert(self is MockUIThreadBase || self.InvokeRequired, message);
-        }
-
 
         /// <summary>
         /// Use the line ending of the first line for the line endings.  

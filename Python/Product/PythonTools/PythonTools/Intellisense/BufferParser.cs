@@ -145,13 +145,22 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal ITextSnapshot GetLastSentSnapshot(ITextBuffer buffer) {
             lock (this) {
-                return _bufferInfo[buffer].LastSentSnapshot;
+                BufferInfo bi;
+                if (buffer != null && _bufferInfo.TryGetValue(buffer, out bi) && bi != null) {
+                    return bi.LastSentSnapshot;
+                }
+                return null;
             }
         }
 
         internal void SetLastSentSnapshot(ITextSnapshot snapshot) {
             lock (this) {
-                _bufferInfo[snapshot.TextBuffer].LastSentSnapshot = snapshot;
+                BufferInfo bi;
+                if (snapshot != null && _bufferInfo.TryGetValue(snapshot.TextBuffer, out bi) && bi != null) {
+                    bi.LastSentSnapshot = snapshot;
+                } else {
+                    Debug.Fail("Unknown snapshot");
+                }
             }
         }
 

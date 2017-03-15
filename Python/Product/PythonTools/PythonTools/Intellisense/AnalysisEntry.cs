@@ -130,6 +130,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     bpt = _bufferParserTask;
                     if (cbpt == null) {
                         _createBufferParserTask = tcs = new TaskCompletionSource<BufferParser>();
+                        if (bpt == null) {
+                            _bufferParserTask = tcs;
+                        }
                     }
                 }
             }
