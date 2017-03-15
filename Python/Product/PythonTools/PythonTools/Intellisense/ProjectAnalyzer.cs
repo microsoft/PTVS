@@ -499,6 +499,12 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_projectFilesById.TryGetValue(analysisComplete.fileId, out entry)) {
                 // Notify buffer parsers without blocking this handler
                 entry.GetBufferParserAsync().ContinueWith(t => {
+                    if (t.IsCanceled) {
+                        // Silence if we cancelled, else the t.Result below
+                        // will re-raise any exceptions for us.
+                        return;
+                    }
+
                     foreach (var version in analysisComplete.versions) {
                         t.Result.Analyzed(version.bufferId, version.version);
                     }
