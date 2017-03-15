@@ -500,13 +500,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 // Notify buffer parsers without blocking this handler
                 entry.GetBufferParserAsync().ContinueWith(t => {
                     if (t.IsCanceled) {
-                        // Silence if we cancelled, else the t.Result below
+                        // Silence if we cancelled, else the wait below
                         // will re-raise any exceptions for us.
                         return;
                     }
 
+                    var bp = t.WaitAndUnwrapExceptions();
+
                     foreach (var version in analysisComplete.versions) {
-                        t.Result.Analyzed(version.bufferId, version.version);
+                        bp.Analyzed(version.bufferId, version.version);
                     }
                 }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
 

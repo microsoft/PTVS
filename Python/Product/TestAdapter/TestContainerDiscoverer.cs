@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         internal bool IsProjectKnown(IVsProject project) {
             var pyProj = PythonProject.FromObject(project);
-            return pyProj == null ? false : _projectInfo.ContainsKey(pyProj);
+            return pyProj != null && _projectInfo.ContainsKey(pyProj);
         }
 
         public TestContainerDiscoverer(IServiceProvider serviceProvider,
