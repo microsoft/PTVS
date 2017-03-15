@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageSearchPaths Include="$(SourcePath)" />
     <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
+    <Dependency Include="$(MSBuildProjectName).Resources" />
   </ItemGroup>
 
   <Import Project="SetupProjectAfter.settings" />

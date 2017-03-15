@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageSearchPaths Include="$(SourcePath)" />
+    <Dependency Include="$(MSBuildProjectName).Resources" />
   </ItemGroup>
 
   <Import Project="SetupProjectAfter.settings" />
