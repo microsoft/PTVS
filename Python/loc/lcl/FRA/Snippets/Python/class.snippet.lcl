@@ -11,8 +11,11 @@
     <Item ItemId="0;7b651e905df5f63c686fe9468623e9ed" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a class definition]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Extrait de code pour une définition de classe]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="3" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;Title&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -20,8 +23,11 @@
     <Item ItemId="0;b7ab18de37681f7263567bb65f9eab18" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[class]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[classe]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="1" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;ToolTip&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -29,14 +35,20 @@
     <Item ItemId="0;ac14130ad024848e768464376f71d5e4" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The base class list for the class]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Liste des classes de base pour la classe]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="7" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;cfaf8c0b899a1eef0fe8ac51592800f4" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The name of the class]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Nom de la classe]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="5" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
 </LCX>

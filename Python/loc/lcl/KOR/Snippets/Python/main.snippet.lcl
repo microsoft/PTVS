@@ -11,8 +11,11 @@
     <Item ItemId="0;e63d78657a102adbfca355e08deba933" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a main function]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[main 함수의 코드 조각]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="3" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;Title&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -20,8 +23,11 @@
     <Item ItemId="0;0cdeddeff6e1da7944e206131a620d3b" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[main function]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[main 함수]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="1" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
 </LCX>

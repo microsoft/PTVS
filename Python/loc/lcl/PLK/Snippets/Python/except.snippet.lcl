@@ -11,8 +11,11 @@
     <Item ItemId="0;e63d78657a102adbfca355e08deba933" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a try statement]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Fragment kodu dla instrukcji try]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="3" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;Title&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -20,8 +23,11 @@
     <Item ItemId="0;8ceae43693a7c80699439cdc5ed779ae" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[except (try/except)]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[except (try/except)]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="1" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;ToolTip&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -29,8 +35,11 @@
     <Item ItemId="0;fa20a7d3c9aa5c54b6c572989ad19d89" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The exception to handle]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Wyjątek do obsłużenia]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="5" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
 </LCX>

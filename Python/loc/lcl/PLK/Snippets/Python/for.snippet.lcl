@@ -11,8 +11,11 @@
     <Item ItemId="0;8c2883e9d5472a6d5ff697b41da84cc8" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a for loop]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Fragment kodu dla pętli for]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="3" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;Title&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -20,8 +23,11 @@
     <Item ItemId="0;728d9a44de19d473c37519b3df0ddd1e" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[for]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[for]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="1" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;ToolTip&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -29,14 +35,20 @@
     <Item ItemId="0;d689bff7df14daae684952fbda7056af" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The variable name(s) to iterate over]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Nazwy zmiennych dla iteracji]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="5" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;ee5dc3ebe146bc13759e16540bf5dffc" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The expressions to enumerate]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Wyrażenia do wyliczenia]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="7" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
 </LCX>
