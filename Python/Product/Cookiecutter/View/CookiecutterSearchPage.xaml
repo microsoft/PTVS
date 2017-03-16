@@ -145,7 +145,6 @@
                 <HierarchicalDataTemplate DataType="{x:Type vm:CategorizedViewModel}" ItemsSource="{Binding Path=Templates}">
                     <TextBlock Margin="0 4 0 4"
                                FontWeight="Bold"
-                               AutomationProperties.ItemType="Category"
                                Text="{Binding DisplayName}"/>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type vm:TemplateViewModel}">
