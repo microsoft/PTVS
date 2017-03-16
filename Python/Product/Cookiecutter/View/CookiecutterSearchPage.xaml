@@ -90,7 +90,7 @@
         <StackPanel Grid.Row="0" Orientation="Vertical" Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
-                        AutomationProperties.Name="{x:Static cct:Strings.SearchPage_FilesCreatedSuccessfully}">
+                        AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_FilesCreatedSuccessfully}">
                 <imaging:CrispImage Width="16" Height="16"
                                     Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}" />
                 <TextBlock Margin="4 0 0 0"
@@ -101,13 +101,12 @@
                     Margin="24 0 0 0"
                     Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
                     CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
-                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"
                     HorizontalAlignment="Left">
                 <Button.Content>
                     <StackPanel Orientation="Horizontal">
                         <imaging:CrispImage Width="16" Height="16"
                                             Moniker="{x:Static imagecatalog:KnownMonikers.OpenFolder}"
-                                            AutomationProperties.Name="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
+                                            AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
                         <Label Content="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
                     </StackPanel>
                 </Button.Content>
@@ -129,7 +128,7 @@
                 <wpf:ConfigurationTextBoxWithHelp Margin="0 0 0 0"
                                                   Text="{Binding Path=SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                   HelpText="{x:Static cct:Strings.SearchPage_SearchTooltip}"
-                                                  AutomationProperties.Name="{x:Static cct:Strings.SearchPage_SearchAutomationName}"
+                                                  AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_SearchAutomationName}"
                                                   Watermark="{x:Static cct:Strings.SearchPage_SearchWatermark}"
                                                   BrowseButtonStyle="{StaticResource SearchButtonStyle}"
                                                   KeyDown="TextBox_KeyDown" />
@@ -146,7 +145,8 @@
                 <HierarchicalDataTemplate DataType="{x:Type vm:CategorizedViewModel}" ItemsSource="{Binding Path=Templates}">
                     <TextBlock Margin="0 4 0 4"
                                FontWeight="Bold"
-                               Text="{Binding Path=DisplayName}"/>
+                               AutomationProperties.ItemType="Category"
+                               Text="{Binding DisplayName}"/>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type vm:TemplateViewModel}">
                     <StackPanel Orientation="Horizontal" x:Name="Item">
@@ -212,7 +212,6 @@
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                     <Setter Property="IsExpanded" Value="True" />
-                    <Setter Property="Focusable" Value="{Binding Selectable}"/>
                     <EventSetter Event="MouseDoubleClick" Handler="OnItemMouseDoubleClick" />
                     <EventSetter Event="TreeViewItem.PreviewMouseRightButtonDown" Handler="OnItemPreviewMouseRightButtonDown"/>
                 </Style>
@@ -241,7 +240,7 @@
                         Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16"
                                     Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_ErrorInstallingCookiecutter}"/>
+                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_ErrorInstallingCookiecutter}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_ErrorInstallingCookiecutter}"/>
@@ -260,7 +259,7 @@
                         Visibility="{Binding Path=CloningStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16"
                                     Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_ErrorCloningRepository}"/>
+                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_ErrorCloningRepository}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_ErrorCloningRepository}"/>
@@ -279,7 +278,7 @@
                         Visibility="{Binding Path=LoadingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16"
                                     Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_ErrorLoadingTemplate}"/>
+                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_ErrorLoadingTemplate}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_ErrorLoadingTemplate}"/>
@@ -298,7 +297,7 @@
                         Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16"
                                     Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"
-                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_CheckingUpdatesCompleted}"/>
+                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_CheckingUpdatesCompleted}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_CheckingUpdatesCompleted}"/>
@@ -309,7 +308,7 @@
                         Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16"
                                     Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_ErrorCheckingUpdates}"/>
+                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_ErrorCheckingUpdates}"/>
                 <TextBlock Margin="4 0 0 0"
                            TextWrapping="Wrap"
                            Text="{x:Static cct:Strings.SearchPage_ErrorCheckingUpdates}"/>
@@ -328,8 +327,10 @@
                         Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16"
                                     Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"
-                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_UpdatingTemplateCompleted}"/>
-                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="{x:Static cct:Strings.SearchPage_UpdatingTemplateCompleted}"/>
+                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_UpdatingTemplateCompleted}"/>
+                <TextBlock Margin="4 0 0 0"
+                           TextWrapping="Wrap"
+                           Text="{x:Static cct:Strings.SearchPage_UpdatingTemplateCompleted}"/>
             </StackPanel>
 
             <StackPanel Margin="4 4 4 8"
@@ -337,8 +338,10 @@
                         Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16"
                                     Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.Name="{x:Static cct:Strings.SearchPage_UpdatingTemplateError}"/>
-                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="{x:Static cct:Strings.SearchPage_UpdatingTemplateError}"/>
+                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_UpdatingTemplateError}"/>
+                <TextBlock Margin="4 0 0 0"
+                           TextWrapping="Wrap"
+                           Text="{x:Static cct:Strings.SearchPage_UpdatingTemplateError}"/>
             </StackPanel>
 
             <Separator Margin="4"/>
@@ -358,30 +361,32 @@
                    RenderOptions.BitmapScalingMode="HighQuality"
                    Cursor="Hand"
                    ToolTip="{Binding SelectedTemplate.OwnerTooltip}"
-                   AutomationProperties.Name="{Binding SelectedTemplate.OwnerTooltip}"
+                   AutomationProperties.HelpText="{Binding SelectedTemplate.OwnerTooltip}"
                    MouseLeftButtonDown="Image_MouseLeftButtonDown">
             </Image>
-            <Grid Grid.Column="1">
+            <Grid Grid.Column="1"
+                  Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
+                <Grid.Resources>
+                    <DataTemplate x:Key="Description">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                      AutomationProperties.HelpText="{Binding}">
+                            <TextBlock Margin="8" TextWrapping="Wrap" Text="{Binding}" x:Name="Description_Text" />
+                        </ScrollViewer>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding}" Value="">
+                                <Setter TargetName="Description_Text" Property="Text" Value="{x:Static cct:Strings.SearchPage_NoTemplateDescriptionAvailable}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </Grid.Resources>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <ScrollViewer Grid.Row="0"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
-                    <Grid>
-                        <TextBlock Margin="8"
-                            Visibility="{Binding SelectedDescription, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
-                            TextWrapping="Wrap"
-                            Text="{Binding Path=SelectedDescription}"/>
-                        <TextBlock Margin="8"
-                            Visibility="{Binding SelectedDescription, Converter={StaticResource EmptyStringToVisibleOrCollapsed}}"
-                            TextWrapping="Wrap"
-                            Text="{x:Static cct:Strings.SearchPage_NoTemplateDescriptionAvailable}"/>
-                    </Grid>
-                </ScrollViewer>
-                <StackPanel Grid.Row="1" Orientation="Horizontal" Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
+                <ContentPresenter Grid.Row="0"
+                                  Content="{Binding SelectedDescription}"
+                                  ContentTemplate="{StaticResource Description}" />
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Button Margin="8"
                             Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                             CommandParameter="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
