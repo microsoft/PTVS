@@ -16,6 +16,9 @@
       <Item ItemId=";_deprecatedLabel.Error" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
           <Val><![CDATA[Deprecated]]></Val>
+          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Deprecato]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -220,6 +223,9 @@
       <Item ItemId=";NewAppDialog_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[C_ancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[A_nnulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -232,6 +238,9 @@
       <Item ItemId=";NewAppDialog_OK" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[O_K]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[O_K]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -337,12 +346,18 @@
       <Item ItemId=";100" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[Read Only]5D;]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[Sola lettura]5D;]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";101" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[File has been changed outside the environment. Reload the new file?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[File modificato all'esterno dell'ambiente. Ricaricare il nuovo file?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -351,9 +366,6 @@
           <Val><![CDATA[Django Template Editor]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Name of the editor to show for the Keybindings]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";105" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -511,7 +523,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -541,7 +553,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

@@ -58,11 +58,11 @@
       <Item ItemId=";CaptionDirty" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} *]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} *]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a filename, and the asterisk indicates that the file has unsaved changes.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";CompareReports_BaselineFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -73,6 +73,9 @@
       <Item ItemId=";CompareReports_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -85,6 +88,9 @@
       <Item ItemId=";CompareReports_OK" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_OK]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_OK]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -121,6 +127,9 @@
       <Item ItemId=";LaunchProfiling_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -139,6 +148,9 @@
       <Item ItemId=";LaunchProfiling_OK" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_OK]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_OK]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -181,6 +193,9 @@
       <Item ItemId=";LaunchProfiling_Start" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Start]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Avvia]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -193,6 +208,9 @@
       <Item ItemId=";LaunchProfiling_WindowTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Profiling Settings]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Impostazioni profilatura]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -217,11 +235,11 @@
       <Item ItemId=";PerformanceBaseFileName" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Prestazioni]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[This is a valid file name, without extension]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PerformanceComparisonTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -384,6 +402,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},259" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Start Profiling]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Avvia profilatura]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -441,6 +462,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},264" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Open]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Apri]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -456,6 +480,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},265" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Stop Profiling]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Arresta profilatura]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -553,7 +580,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -583,7 +610,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

@@ -154,6 +154,9 @@
       <Item ItemId=";SpaceBeforeIndexBracketShort" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Insert space before open square bracket]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inserisci spazio prima della parentesi quadra di apertura]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -166,6 +169,9 @@
       <Item ItemId=";SpaceWithinCallParensShort" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Insert space within argument list parentheses]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inserisci spazio tra le parentesi dell'elenco di argomenti]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -202,6 +208,9 @@
       <Item ItemId=";SpaceWithinEmptyCallArgumentListShort" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Insert space within empty argument list parentheses]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inserisci spazio tra le parentesi dell'elenco di argomenti vuoto]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -250,6 +259,9 @@
       <Item ItemId=";SpaceWithinIndexBracketsShort" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Insert space within square brackets]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inserisci spazio tra parentesi quadre]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -286,6 +298,9 @@
       <Item ItemId=";SpacesWithinEmptyListExpressionShort" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Insert space within empty square brackets]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inserisci spazio tra parentesi quadre vuote]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -379,7 +394,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -409,7 +424,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

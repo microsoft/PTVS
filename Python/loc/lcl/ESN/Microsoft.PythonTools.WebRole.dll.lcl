@@ -21,8 +21,11 @@
         <Item ItemId="0;Title" ItemType="21;HTML" PsrId="22" Leaf="true">
           <Str Cat="HTML Title">
             <Val><![CDATA[PTVS remote debugging proxy for Microsoft Azure Web Sites]]></Val>
+            <Tgt Cat="HTML Title" Stat="Loc" Orig="New">
+              <Val><![CDATA[Proxy de depuración remota de PTVS para sitios web de Microsoft Azure]]></Val>
+            </Tgt>
           </Str>
-          <Disp Icon="Str" Order="1" />
+          <Disp Icon="Str" />
         </Item>
       </Item>
       <Item ItemId=";Regular Content" ItemType="0" PsrId="22" Leaf="false">
@@ -30,26 +33,38 @@
         <Item ItemId="0;7e1c966364b493453c3478e6fa8915f4" ItemType="18;HTML" PsrId="22" Leaf="true">
           <Str Cat="HTML Text">
             <Val><![CDATA[where <span class="secret">secret</span> is the value of <code>WSGI_PTVSD_SECRET</code> in web.debug.config]A;    of the project from which this web site was deployed.]]></Val>
+            <Tgt Cat="HTML Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[donde <span class="secret">secret</span> es el valor de <code>WSGI_PTVSD_SECRET</code> en web.debug.config]A;    del proyecto desde donde se ha implementado el sitio web.]]></Val>
+            </Tgt>
           </Str>
-          <Disp Icon="Str" Order="5" />
+          <Disp Icon="Str" />
         </Item>
         <Item ItemId="0;b9fec04c5f853ec2672acae6ea387def" ItemType="18;HTML" PsrId="22" Leaf="true">
           <Str Cat="HTML Text">
             <Val><![CDATA[Python remote debugging is enabled for this Microsoft Azure web site, and it can be attached to using]A;    <a href='https://aka.ms/ptvs'>Visual Studio's Python support</a>. To attach, go to]A;    Debug → Attach to Process, switch Transport to "Python remote debugging", and enter the following]A;    URL in the Qualifier textbox:]]></Val>
+            <Tgt Cat="HTML Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[La depuración remota de Python está habilitada para este sitio web de Microsoft Azure y no se puede asociar para usar la]A;    <a href='https://aka.ms/ptvs'>compatibilidad de Python con Visual Studio</a>. Para establecer una asociación, vaya a]A;    Depurar → Asociar a proceso, cambie "Transporte" a "Depuración remota de Python" y escriba la siguiente]A;    URL en el cuadro de texto Calificador:]]></Val>
+            </Tgt>
           </Str>
-          <Disp Icon="Str" Order="3" />
+          <Disp Icon="Str" />
         </Item>
         <Item ItemId="0;cebdcd8c214c03634153b9587ffdabed" ItemType="18;HTML" PsrId="22" Leaf="true">
           <Str Cat="HTML Text">
             <Val><![CDATA[PTVS remote debugging proxy for Microsoft Azure Web Sites]]></Val>
+            <Tgt Cat="HTML Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[Proxy de depuración remota de PTVS para sitios web de Microsoft Azure]]></Val>
+            </Tgt>
           </Str>
-          <Disp Icon="Str" Order="2" />
+          <Disp Icon="Str" />
         </Item>
         <Item ItemId="0;d7c5f29997cd23b32db839f71018619a" ItemType="18;HTML" PsrId="22" Leaf="true">
           <Str Cat="HTML Text">
             <Val><![CDATA[<strong>{{WS_URI}}</strong>]]></Val>
+            <Tgt Cat="HTML Text" Stat="Loc" Orig="New">
+              <Val><![CDATA[<strong>{{WS_URI}}</strong>]]></Val>
+            </Tgt>
           </Str>
-          <Disp Icon="Str" Order="4" />
+          <Disp Icon="Str" />
         </Item>
       </Item>
     </Item>
@@ -65,6 +80,9 @@
     <Item ItemId=";Comments" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Supports Azure deployment and remote debugging of Python projects.]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Permite la implementación de Azure y la depuración remota de proyectos de Python.]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -77,12 +95,15 @@
     <Item ItemId=";FileDescription" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Python web role]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Rol web de Python]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17068.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -95,6 +116,9 @@
     <Item ItemId=";LegalCopyright" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[© Microsoft Corporation]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[© Microsoft Corporation]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -107,12 +131,15 @@
     <Item ItemId=";ProductName" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Python support for Microsoft® Visual Studio®]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Compatibilidad de Python para Microsoft® Visual Studio®]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17068.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

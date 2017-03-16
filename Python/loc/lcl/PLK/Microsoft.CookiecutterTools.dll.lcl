@@ -16,684 +16,1008 @@
       <Item ItemId=";AddToProjectError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Files were successfully created, but there was an issue adding the files to your project.\n{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki zostały utworzone pomyślnie, lecz wystąpił problem podczas dodawania plików do projektu.\n{0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingForAllUpdatesCanceled" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Check for template updates canceled -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Anulowano sprawdzenie dostępności aktualizacji szablonów -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingForAllUpdatesFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to check for template updates -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Nie można sprawdzić dostępności aktualizacji szablonów -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingForAllUpdatesStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Checking for template updates -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Sprawdzanie dostępności aktualizacji szablonów -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingForAllUpdatesSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully checked for template updates -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Pomyślnie sprawdzono dostępność aktualizacji szablonów -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error checking for an update.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd sprawdzania dostępności aktualizacji.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An update is available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Dostępna jest aktualizacja.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateInconclusive" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not determine if an update is available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można określić, czy aktualizacja jest dostępna.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Template is already up-to-date.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Szablon jest już aktualny.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Checking for update to template '{0}' from '{1}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Sprawdzanie dostępności aktualizacji szablonu „{0}” z „{1}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CloneCollisionMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A different template with the name '{0}' already exists in '{1}'.]D;]A;]D;]A;Please delete the installed template and try again.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inny szablon o nazwie „{0}” już istnieje w katalogu „{1}”.]D;]A;]D;]A;Usuń zainstalowany szablon i spróbuj ponownie.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CloningTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to clone template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Nie można sklonować szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CloningTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Cloning template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Klonowanie szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CloningTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully cloned template '{0}' to '{1}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Pomyślnie sklonowano szablon „{0}” do „{1}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ConnectionStringFormatIncorrect" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The connection string appears to be in incorrect format. Would you like to re-create it?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Format parametrów połączenia jest prawdopodobnie nieprawidłowy. Czy chcesz je utworzyć ponownie?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_Invalidurl" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' from _visual_studio section in context file should be an absolute http or https url.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Adres „{0}” z sekcji _visual_studio w pliku kontekstu powinien być bezwzględnym adresem URL typu http lub https.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_MissingProperty" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' property is required on '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Właściwość „{0}” jest wymagana dla elementu „{1}”.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_MoveToDesiredFolderTemplatedFolderNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter generated files must have a templated folder.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki wygenerowane przez program Cookiecutter muszą mieć folder utworzony na podstawie szablonu.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_ReferenceNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' is referenced from _visual_studio section in context file but was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Element „{0}” jest przywoływany z sekcji _visual_studio w pliku kontekstu, lecz nie został znaleziony.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_UnsupportedJsonElementTypeForPorperty" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unsupported json element type in context file for property '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieobsługiwany typ elementu json w pliku kontekstu dla właściwości „{0}”.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_WrongJsonType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' from _visual_studio section in context file should be of type '{1}', instead of '{2}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Element „{0}” z sekcji _visual_studio w pliku kontekstu powinien być typu „{1}” zamiast „{2}”.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeleteConfirmation" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Are you sure you want to delete the template from this folder?]D;]A;]D;]A;{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Czy na pewno chcesz usunąć szablon z tego folderu?]D;]A;]D;]A;{0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeletingTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to delete template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Nie można usunąć szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeletingTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Deleting template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Usuwanie szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeletingTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully deleted template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Pomyślnie usunięto szablon „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";FeedLoadError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not retrieve results from feed]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można pobrać wyników z kanału informacyjnego]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";GitHubSearchError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not retrieve results from GitHub]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można pobrać wyników z usługi GitHub]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter makes it easy to generate code from a template.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Program cookiecutter ułatwia generowanie kodu z szablonu.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InfoBarMessageLink" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Learn more.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Dowiedz się więcej.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallGitInfoBarLink" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install Git]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zainstaluj program Git]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallPythonInfoBarLink" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install Python 3]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zainstaluj program Python 3]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallingCookiecutterFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to install cookiecutter -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Nie można zainstalować programu cookiecutter -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallingCookiecutterStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Installing cookiecutter -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Instalowanie programu cookiecutter -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallingCookiecutterSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully installed cookiecutter -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Pomyślnie zainstalowano program cookiecutter -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InvalidOutputFolder" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please enter a valid output folder in the 'Create To' field.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Podaj prawidłowy folder wyjściowy w polu „Utwórz do”.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LoadingTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to load template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Nie można załadować szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LoadingTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Loading template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Ładowanie szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LoadingTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully loaded template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Pomyślnie załadowano szablon „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";MissingDependenciesInfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Some external dependencies are missing. Click the links to install them.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Brakuje niektórych zewnętrznych zależności. Kliknij linki, aby je zainstalować.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";MissingDependenciesPage_InstallPython" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Help me install Python]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pomóż mi zainstalować program Python]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";MissingDependenciesPage_Message" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please install Python 3.5 or later and restart Visual Studio to use this feature.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zainstaluj program Python 3.5 lub nowszy i uruchom ponownie program Visual Studio, aby użyć tej funkcji.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OpenInSolutionExplorerQuestion" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Would you like to open the generated folder in Solution Explorer?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Czy chcesz otworzyć wygenerowany folder w Eksploratorze rozwiązań?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_AddToProject" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Add to Project]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Dodaj do projektu]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_AddingToProject" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Files will be added to your project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki zostaną dodane do projektu.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_AddingToProjectTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter was invoked using the Add From Cookiecutter command. To restart and create a new project, click Home or Cancel.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Program cookiecutter został wywołany za pomocą polecenia Dodaj z programu cookiecutter. Aby uruchomić ponownie i utworzyć nowy projekt, kliknij pozycję Strona główna lub Anuluj.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Anuluj]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_Create" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Create]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Utwórz]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreateTo" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Create To]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Utwórz do]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreateToAutomationName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Output folder path]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ścieżka folderu wyjściowego]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreateToTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Folder location where the files will be created. Files may be replaced if the folder is not empty, but a backup of the existing files will be created as needed.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Lokalizacja folderu, w którym zostaną utworzone pliki. Pliki mogą zostać zastąpione, jeśli folder nie jest pusty, lecz w razie potrzeby zostanie utworzona kopia zapasowa istniejących plików.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreateToWatermark" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[e.g. C:\Projects\Project1]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[np. C:\Projects\Project1]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreatingFiles" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Creating files...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trwa tworzenie plików...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreatingFilesError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error creating files. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd tworzenia plików. Więcej szczegółów zawiera okno danych wyjściowych.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_Name" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Name]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nazwa]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_Options" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Options]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Opcje]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_RunAdditionalTasks" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run additional tasks on completion]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Uruchom dodatkowe zadania po zakończeniu]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_TemplateCloneSuccessfully" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Template cloned successfully.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Szablon został sklonowany pomyślnie.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProcessExitCodeMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} returned an exit code of {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Program {0} zwrócił kod zakończenia {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProductTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProjectNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project with unique name '{0}' was not found in the current solution.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Projektu z unikatową nazwą „{0}” nie znaleziono w bieżącym rozwiązaniu.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ReplacedFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[ - '{0}' was saved as '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ — element „{0}” zapisano jako „{1}”.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ReplacedFilesHeader" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The following files were backed up and then replaced:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Utworzono kopię zapasową wymienionych plików, a następnie zastąpiono je:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RunningTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to create files using template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Nie można utworzyć plików za pomocą szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RunningTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Creating files using template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Tworzenie plików za pomocą szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RunningTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully created files using template '{0}' into '{1}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Pomyślnie utworzono pliki za pomocą szablonu „{0}” do „{1}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_CheckingUpdates" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Checking for updates...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trwa wyszukiwanie aktualizacji...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_CheckingUpdatesCompleted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Check for updates completed.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zakończono sprawdzenie dostępności aktualizacji.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_CloningRepository" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cloning repository...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trwa klonowanie repozytorium...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_Creator" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[the creator]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[autor]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_EnumeratingTemplatesTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enumerating templates. This may take a few seconds.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wyliczanie szablonów. Może to potrwać kilka sekund.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_ErrorCheckingUpdates" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error checking for updates. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd sprawdzania dostępności aktualizacji. Więcej szczegółów zawiera okno danych wyjściowych.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_ErrorCloningRepository" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error cloning repository. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd klonowania repozytorium. Więcej szczegółów zawiera okno danych wyjściowych.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_ErrorInstallingCookiecutter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error installing Cookiecutter. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd instalowania programu Cookiecutter. Więcej szczegółów zawiera okno danych wyjściowych.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_ErrorLoadingTemplate" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error loading template. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd ładowania szablonu. Więcej szczegółów zawiera okno danych wyjściowych.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_FilesCreatedSuccessfully" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Files created successfully.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki zostały utworzone pomyślnie.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_LinksGitHub" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[GitHub]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GitHub]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Label for the link to the main GitHub page.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";SearchPage_LinksGitHubIssues" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Issues]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problemy]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Label for the link to the GitHub issues page]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";SearchPage_LinksGitHubWiki" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Wiki]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Witryna typu wiki]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Label for the link to the GitHub wiki page.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";SearchPage_LoadMore" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Load more...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ładuj więcej...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_LoadingSearchResults" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Loading...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trwa ładowanie...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_LoadingTemplate" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Loading template...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trwa ładowanie szablonu...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_NextButton" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Next]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Dalej]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Prefix accelerator key with underscore]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";SearchPage_NoTemplateDescriptionAvailable" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[No description available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie jest dostępny żaden opis.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_OpenInSolutionExplorer" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Open in Solution Explorer]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Otwórz w Eksploratorze rozwiązań]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_PreparingFirstTime" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Preparing cookiecutter for first time use...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trwa przygotowywanie programu cookiecutter do pierwszego użycia...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_PreparingFirstTimeTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Downloading and installing the cookiecutter package from the Python Package Index. This may take a few minutes.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pobieranie i instalowanie pakietu cookiecutter z usługi Python Package Index. To może potrwać kilka minut.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_Search" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Search]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wyszukiwanie]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_SearchAutomationName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Search terms]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Terminy wyszukiwania]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_SearchTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enter search terms or template location (git repository URL or path to local folder)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Podaj terminy wyszukiwania lub lokalizację szablonu (adres URL repozytorium git lub ścieżkę do lokalnego folderu)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_SearchWatermark" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enter search terms or template location]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Podaj terminy wyszukiwania lub lokalizację szablonu]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_UpdateAvailableTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An update is available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Dostępna jest aktualizacja.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_UpdatingTemplate" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Updating template...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trwa aktualizowanie szablonu...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_UpdatingTemplateCompleted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Template updated.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Szablon został zaktualizowany.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_UpdatingTemplateError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error updating template. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd aktualizowania szablonu. Więcej szczegółów zawiera okno danych wyjściowych.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_VisitOwnerOnGitHub" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Visit {0} on GitHub]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Odwiedź stronę {0} w witrynie GitHub]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SeeActivityLog" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An unexpected error occurred.]D;]A;]D;]A;You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking the Event Log.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wystąpił nieoczekiwany błąd.]D;]A;]D;]A;Możesz uzyskać więcej informacji, uruchamiając program Visual Studio z parametrem /log w wierszu polecenia, a następnie analizując plik „{0}”, lub sprawdzając dziennik zdarzeń.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_CheckForTemplateUpdate_Description" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Automatically check online for updates to installed templates.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Automatycznie sprawdź online dostępność aktualizacji zainstalowanych szablonów.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_CheckForTemplateUpdate_Name" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Check for updated templates]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sprawdź dostępność zaktualizowanych szablonów]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_FeedUrl_Description" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Location of the feed file. Feed files have one template URL on each line.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Lokalizacja pliku kanału informacyjnego. Pliki kanału informacyjnego zawierają jeden adres URL szablonu w każdym wierszu.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_FeedUrl_Name" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Recommended feed URL]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Adres URL zalecanego kanału informacyjnego]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_General_Category" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[General]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ogólny]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_ShowHelp_Description" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show the help information bar.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pokaż pasek informacji pomocy.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_ShowHelp_Name" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show Help]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pokaż pomoc]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TemplateCategoryCustom" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Custom]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Niestandardowy]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TemplateCategoryGitHub" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[GitHub]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GitHub]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TemplateCategoryInstalled" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Installed]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zainstalowano]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TemplateCategoryRecommended" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Recommended]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zalecane]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ToolWindowCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UnhandledException" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unhandled exception in {3} ({1}:{2})]D;]A;{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieobsługiwany wyjątek w {3} ({1}:{2})]D;]A;{0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UpdatingTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to update template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Nie można zaktualizować szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UpdatingTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Updating template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Aktualizowanie szablonu „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UpdatingTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully updated template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Pomyślnie zaktualizowano szablon „{0}” -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -834,6 +1158,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},101" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Cookiecutter Context]]></Val>
+            <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
+              <Val><![CDATA[Kontekst programu cookiecutter]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -843,18 +1170,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4097" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Cookiecutter Explorer]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Eksplorator programu cookiecutter]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4097" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Explorer]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Eksplorator]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4097" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens the Cookiecutter Explorer window.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Otwiera okno eksploratora programu cookiecutter.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -864,12 +1200,18 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4098" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Home]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Narzędzia główne]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4098" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Home]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Strona główna]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -879,18 +1221,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4099" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Run]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Uruchom]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4099" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Run Template]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Uruchom szablon]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4099" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Run]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Uruchom]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -900,12 +1251,18 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4100" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[GitHub Home]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Strona główna witryny GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4100" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&GitHub Home]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Strona główna witryny &GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -915,12 +1272,18 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4101" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[GitHub Issues]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Problemy z usługą GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4101" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&GitHub Issues]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Problemy z usługą &GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -930,12 +1293,18 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4102" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[GitHub Wiki]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Witryna typu wiki usługi GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4102" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&GitHub Wiki]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Witryna typu wiki usługi &GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -945,18 +1314,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[From &Cookiecutter...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Z programu &Cookiecutter...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Create From]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Utwórz z]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Creates files using a Cookiecutter template.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Tworzy pliki za pomocą szablonu programu Cookiecutter.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -966,18 +1344,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4104" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[From &Cookiecutter...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Z programu &Cookiecutter...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4104" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add From]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Dodaj z]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4104" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Adds files using a Cookiecutter template.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Dodaje pliki za pomocą szablonu programu Cookiecutter.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -987,18 +1374,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4105" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Update]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Aktualizacja]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4105" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Update Template]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Aktualizuj szablon]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4105" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Update]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Aktualizuj]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1008,18 +1404,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4106" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Check for Updates]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Sprawdź aktualizacje]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4106" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Check For Updates]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Sprawdź dostępność aktualizacji]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4106" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Check for Updates]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Wyszukaj aktualizacje]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1029,18 +1434,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4352" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open in External Browser]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Otwórz w zewnętrznej przeglądarce]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4352" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[External Web Browser]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Zewnętrzna przeglądarka sieci Web]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4352" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Open in External Browser]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Otwórz w zewnętrznej przeglądarce]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1050,6 +1464,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},8192" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Cookiecutter]]></Val>
+            <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
+              <Val><![CDATA[Cookiecutter]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1059,6 +1476,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},8193" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item" IgnoreHK="true">
             <Val><![CDATA[C&ookiecutter]]></Val>
+            <Tgt Cat="Menu Item" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[C&ookiecutter]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1069,30 +1489,45 @@
       <Item ItemId=";110" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";112" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Provides tools for finding, instantiating and customizing templates in cookiecutter format.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Udostępnia narzędzia do wyszukiwania, tworzenia instancji i dostosowywania szablonów w formacie programu cookiecutter.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";113" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";114" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[General]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ogólny]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";115" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter options]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Opcje programu cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1109,6 +1544,9 @@
     <Item ItemId=";Comments" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Provides tools for finding, instantiating and customizing Cookiecutter templates.]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Udostępnia narzędzia do wyszukiwania, tworzenia instancji i dostosowywania szablonów programu Cookiecutter.]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1121,12 +1559,15 @@
     <Item ItemId=";FileDescription" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Visual Studio - Cookiecutter integration]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Integracja programów Visual Studio i Cookiecutter]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1139,6 +1580,9 @@
     <Item ItemId=";LegalCopyright" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[© Microsoft Corporation]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[© Microsoft Corporation]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1151,12 +1595,15 @@
     <Item ItemId=";ProductName" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Python support for Microsoft® Visual Studio®]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Obsługa języka Python dla programu Microsoft® Visual Studio®]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
