@@ -781,26 +781,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="WebPiCmdLine\Microsoft.Web.Deployment.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="WebPiCmdLine\Microsoft.Web.PlatformInstaller.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="WebPiCmdLine\Microsoft.Web.PlatformInstaller.UI.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="WebPiCmdLine\WebPICmdLine.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>.</VSIXSubPath>
@@ -839,11 +819,6 @@
     <Content Include="NewFileItems\NewPythonItems.vsdir">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="WebPiCmdLine\WebPICmdLine.exe.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <VSCTCompile Include="PythonTools.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
