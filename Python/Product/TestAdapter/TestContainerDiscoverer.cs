@@ -190,7 +190,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     _analyzer.AnalysisComplete -= AnalysisComplete;
                 }
                 _analyzer = _project.Analyzer;
-                _analyzer.RegisterExtension(typeof(TestAnalyzer).Assembly.CodeBase);
+                _analyzer.RegisterExtension(typeof(TestAnalyzer).Assembly.Location);
                 _analyzer.AnalysisComplete += AnalysisComplete;
 
                 await UpdateTestCasesAsync(_analyzer.Files).HandleAllExceptions(_discoverer._serviceProvider, GetType());
