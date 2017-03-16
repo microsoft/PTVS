@@ -45,7 +45,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             new InterpreterConfiguration(AddNewEnvironmentViewId, AddNewEnvironmentViewId)
         };
 
-        public static readonly EnvironmentView OnlineHelpView = new EnvironmentView(OnlineHelpViewId);
+        public static readonly EnvironmentView OnlineHelpView = new EnvironmentView(
+            OnlineHelpViewId,
+            Resources.EnvironmentViewOnlineHelpLabel
+        );
 
         // Names of properties that will be requested from interpreter configurations
         internal const string CompanyKey = "Company";
@@ -63,9 +66,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public IPythonInterpreterFactory Factory { get; }
         public InterpreterConfiguration Configuration { get; }
+        public string LocalizedDisplayName { get; }
 
-        private EnvironmentView(string id) {
+        private EnvironmentView(string id, string localizedName) {
             Configuration = new InterpreterConfiguration(id, id);
+            LocalizedDisplayName = localizedName;
         }
 
         internal EnvironmentView(
@@ -91,6 +96,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _registry = registry;
             Factory = factory;
             Configuration = Factory.Configuration;
+            LocalizedDisplayName = Configuration.Description;
 
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
             if (_withDb != null) {
@@ -124,7 +130,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public static EnvironmentView CreateAddNewEnvironmentView(IInterpreterOptionsService service) {
-            var ev = new EnvironmentView(AddNewEnvironmentViewId);
+            var ev = new EnvironmentView(AddNewEnvironmentViewId, Resources.EnvironmentViewCustomAutomationName);
             ev.Extensions = new ObservableCollection<object>();
             ev.Extensions.Add(new ConfigurationExtensionProvider(service, alwaysCreateNew: true));
             return ev;
@@ -135,14 +141,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public static bool IsAddNewEnvironmentView(EnvironmentView view) => AddNewEnvironmentViewId.Equals(view?.Configuration.Id);
         public static bool IsOnlineHelpView(EnvironmentView view) => OnlineHelpViewId.Equals(view?.Configuration.Id);
-
-        public override string ToString() {
-            return string.Format(
-                "{{{0}:{1}}}",
-                GetType().FullName,
-                _withDb?.Configuration.Description ??"(null)"
-            );
-        }
 
         public ObservableCollection<object> Extensions { get; private set; }
 
