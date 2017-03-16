@@ -32,7 +32,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _displayName = displayName;
         }
 
-        public bool Selectable => false;
+        public bool Selectable => true;
 
         public string DisplayName {
             get {
@@ -50,5 +50,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public ObservableCollection<object> Templates { get; } = new ObservableCollection<object>();
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public override string ToString() => _displayName;
     }
 }
