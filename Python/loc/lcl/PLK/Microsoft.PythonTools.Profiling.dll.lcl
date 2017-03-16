@@ -40,75 +40,108 @@
       <Item ItemId=";CannotFindShellFolder" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot find shell folder for Visual Studio]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można znaleźć folderu powłoki dla programu Visual Studio]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CannotLocatePerformanceTools" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot locate performance tools.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można znaleźć narzędzi do oceny wydajności.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CannotOpenSystemRegistry" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot open system registry]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można otworzyć rejestru systemu]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CaptionDirty" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} *]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} *]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a filename, and the asterisk indicates that the file has unsaved changes.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";CompareReports_BaselineFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Baseline File:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Plik linii bazowej:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CompareReports_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Anuluj]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CompareReports_ComparisonFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Co_mparison File:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Plik p_orównania:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CompareReports_OK" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_OK]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_OK]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CompareReports_WindowTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Select analysis files for comparison]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wybierz pliki analizy do porównania]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ExecutableFilesFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executable files (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki wykonywalne (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|Wszystkie pliki (*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";FailedToOpenPerformanceSessionFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to open file '{0}']D;]A;]D;]A;{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można otworzyć pliku „{0}”]D;]A;]D;]A;{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";FailedToReadPerformanceSession" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to read performance session '{0}']D;]A;]D;]A;{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można odczytać sesji oceny wydajności „{0}”]D;]A;]D;]A;{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -121,207 +154,306 @@
       <Item ItemId=";LaunchProfiling_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Anuluj]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_CommandLineArguments" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Command Line _Arguments:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Argume_nty wiersza polecenia:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_InterpreterPath" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[I_nterpreter Path:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ścieżka i_nterpretera:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_OK" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_OK]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_OK]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_OpenProject" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Open project]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Otwórz projekt]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_OtherInterpreter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Other...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inne...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_PythonInterpreter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python _Interpreter:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Interpreter języka _Python:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_Script" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Sc_ript:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sk_rypt:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_ScriptOptions" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Script Options]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Opcje skryptu]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_StandaloneScript" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[S_tandalone script]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Skrypt _autonomiczny]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_Start" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Start]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Uruchom]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_WhatToProfile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[What would you like to profile?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Co chcesz profilować?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_WindowTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Profiling Settings]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ustawienia profilowania]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LaunchProfiling_WorkingDirectory" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Working Directory:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Katalog roboczy:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";NoProfilingTargetTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[No Profiling Target]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Brak celu profilowania]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";NoProjectStartupFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project has no configured startup file, cannot start profiling.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Projekt nie ma skonfigurowanego pliku uruchamiania, nie można rozpocząć profilowania.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PerformanceBaseFileName" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wydajność]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[This is a valid file name, without extension]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PerformanceComparisonTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance Comparison]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Porównanie wydajności]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PerformanceReportFilesFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance Report Files (*.vsp;*.vsps)|*.vsp;*.vsps|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki raportu wydajności (*.vsp;*.vsps)|*.vsp;*.vsps|Wszystkie pliki (*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PerformanceReportNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance report no longer exists: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Raport wydajności już nie istnieje: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PerformanceSessionAlreadyOpen" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance '{0}' session is already open]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sesja wydajności „{0}” jest już otwarta]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PerformanceToolWindowTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Performance]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wydajność kodu Python]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProductTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Visual Studio - Python support]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Program Visual Studio — obsługa języka Python]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProfilingSessionNotConfigured" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Profiling session has not been configured. Configure now and launch?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sesja profilowania nie została skonfigurowana. Skonfigurować teraz i uruchomić?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProfilingSupportMissingError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Profiling support seems to be missing or corrupt. Try repairing your Visual Studio installation.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Brakuje obsługi profilowania lub jest ona uszkodzona. Spróbuj naprawić instalację programu Visual Studio.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProjectInterpreterNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not find interpreter for project {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można znaleźć interpretera dla projektu {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProjectNotFoundInSolution" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project could not be found in current solution.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można znaleźć projektu w bieżącym rozwiązaniu.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProjectTargetUnknownName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[(Unknown name)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[(Nieznana nazwa)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PythonFilesFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki kodu Python (*.py;*.pyw)|*.py;*.pyw|Wszystkie pliki (*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SessionAlreadyRemoved" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Session has already been removed]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sesja została już usunięta]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";StartPerfCmdError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to start performance monitor.]D;]A;]D;]A;Output:]D;]A;{0}]D;]A;]D;]A;Error:]D;]A;{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można uruchomić monitora wydajności.]D;]A;]D;]A;Dane wyjściowe:]D;]A;{0}]D;]A;]D;]A;Błąd:]D;]A;{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";StopPerfMonError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to shut down performance monitor.]D;]A;]D;]A;Output:]D;]A;{0}]D;]A;]D;]A;Error:]D;]A;{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można zamknąć monitora wydajności.]D;]A;]D;]A;Dane wyjściowe:]D;]A;{0}]D;]A;]D;]A;Błąd:]D;]A;{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UnableToStopPerfMon" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to stop performance monitor: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można zatrzymać monitora wydajności: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UnsupportedArchitecture" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unsupported architecture: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieobsługiwana architektura: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -345,12 +477,18 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},256" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Launch &Python Profiling...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Uruchom profilowanie kodu &Python...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},256" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Launch Profiling]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Uruchom profilowanie]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -360,12 +498,18 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},257" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Python Performance Explorer]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Eksplorator wydajności kodu Python]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},257" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Performance Explorer]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Eksplorator wydajności]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -375,6 +519,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},258" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Performance Session]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Dodaj sesję oceny wydajności]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -384,6 +531,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},259" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Start Profiling]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Rozpocznij profilowanie]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -393,6 +543,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},260" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Start Profiling]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Rozpocznij profilowanie]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -402,6 +555,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},261" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Set as &Current Session]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Ustaw jako &bieżącą sesję]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -411,12 +567,18 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},262" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Compare Performance Reports...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Porównaj raporty wydajności...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},262" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Compare Performance Reports]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Porównaj raporty wydajności]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -426,12 +588,18 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},263" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Add Report...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Dodaj raport...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},263" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Performance Report]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Dodaj raport wydajności]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -441,12 +609,18 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},264" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Open]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Otwórz]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},264" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Performance Report]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Otwórz raport wydajności]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -456,6 +630,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},265" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Stop Profiling]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Zakończ profilowanie]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -465,6 +642,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},8192" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Python Performance]]></Val>
+            <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
+              <Val><![CDATA[Wydajność kodu Python]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -474,6 +654,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},8193" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Performance Context]]></Val>
+            <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
+              <Val><![CDATA[Kontekst wydajności]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -483,6 +666,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},8194" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Performance Reports Context]]></Val>
+            <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
+              <Val><![CDATA[Kontekst raportów wydajności]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -492,6 +678,9 @@
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},8195" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Performance Report Context]]></Val>
+            <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
+              <Val><![CDATA[Kontekst raportu wydajności]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -502,24 +691,36 @@
       <Item ItemId=";105" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Performance Session File]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Plik sesji oceny wydajności kodu Python]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";110" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python - Profiling support]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Język Python — obsługa profilowania]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";112" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Profiling support for Python projects.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Obsługa profilowania dla projektów języka Python.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";113" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Performance Session;*.pyperf]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sesja oceny wydajności kodu Python;*.pyperf]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -536,6 +737,9 @@
     <Item ItemId=";Comments" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Provides support for profiling Python projects.]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Udostępnia obsługę profilowania projektów języka Python.]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -548,12 +752,15 @@
     <Item ItemId=";FileDescription" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Visual Studio - Python profiling support]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Program Visual Studio — obsługa profilowania kodu Python]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -566,6 +773,9 @@
     <Item ItemId=";LegalCopyright" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[© Microsoft Corporation]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[© Microsoft Corporation]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -578,12 +788,15 @@
     <Item ItemId=";ProductName" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Python support for Microsoft® Visual Studio®]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Obsługa języka Python dla programu Microsoft® Visual Studio®]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

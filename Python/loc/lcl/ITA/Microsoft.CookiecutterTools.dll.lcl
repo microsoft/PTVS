@@ -100,6 +100,9 @@
       <Item ItemId=";ConnectionStringFormatIncorrect" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The connection string appears to be in incorrect format. Would you like to re-create it?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Il formato della stringa di connessione non è corretto. Ricreare la stringa di connessione?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -184,12 +187,18 @@
       <Item ItemId=";InfoBarMessageLink" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Learn more.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Altre informazioni.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallGitInfoBarLink" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install Git]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Installa GIT]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -286,12 +295,18 @@
       <Item ItemId=";OptionsPage_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_Create" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Create]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Crea]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -334,12 +349,18 @@
       <Item ItemId=";OptionsPage_Name" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Name]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nome]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_Options" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Options]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Opzioni]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -406,6 +427,9 @@
       <Item ItemId=";SearchPage_CheckingUpdates" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Checking for updates...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Verifica disponibilità aggiornamenti in corso...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -466,29 +490,26 @@
       <Item ItemId=";SearchPage_LinksGitHub" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[GitHub]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GitHub]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Label for the link to the main GitHub page.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";SearchPage_LinksGitHubIssues" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Issues]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problemi]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Label for the link to the GitHub issues page]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";SearchPage_LinksGitHubWiki" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Wiki]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Label for the link to the GitHub wiki page.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";SearchPage_LoadMore" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -499,6 +520,9 @@
       <Item ItemId=";SearchPage_LoadingSearchResults" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Loading...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Caricamento in corso...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -511,11 +535,11 @@
       <Item ItemId=";SearchPage_NextButton" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Next]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[A_vanti]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Prefix accelerator key with underscore]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";SearchPage_NoTemplateDescriptionAvailable" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -544,6 +568,9 @@
       <Item ItemId=";SearchPage_Search" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Search]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ricerca]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -628,6 +655,9 @@
       <Item ItemId=";Settings_General_Category" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[General]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Generale]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -640,30 +670,45 @@
       <Item ItemId=";Settings_ShowHelp_Name" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show Help]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Visualizza la Guida]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TemplateCategoryCustom" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Custom]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Personalizzato]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TemplateCategoryGitHub" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[GitHub]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GitHub]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TemplateCategoryInstalled" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Installed]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Installato]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TemplateCategoryRecommended" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Recommended]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Consigliata]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -849,6 +894,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4097" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Explorer]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Esplora]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -864,12 +912,18 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4098" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Home]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Home page]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4098" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Home]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Pagina iniziale]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -879,6 +933,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4099" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Run]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Esegui]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -891,6 +948,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4099" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Run]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Esegui]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -987,6 +1047,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4105" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Update]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Aggiorna]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -999,6 +1062,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4105" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Update]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Aggi&orna]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1008,6 +1074,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4106" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Check for Updates]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Controlla la disponibilità di aggiornamenti]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1020,6 +1089,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4106" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Check for Updates]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Controlla la disponibilità di aggiornamenti]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1087,6 +1159,9 @@
       <Item ItemId=";114" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[General]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Generale]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1126,7 +1201,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1156,7 +1231,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

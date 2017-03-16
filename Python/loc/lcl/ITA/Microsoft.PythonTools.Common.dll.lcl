@@ -28,6 +28,9 @@
       <Item ItemId=";AddInterpreterWindow_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -40,6 +43,9 @@
       <Item ItemId=";AddInterpreterWindow_OK" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_OK]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_OK]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -64,6 +70,9 @@
       <Item ItemId=";AddVirtualEnvironmentWindow_Add" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Add]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Aggiungi]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -96,13 +105,13 @@
           <Val><![CDATA[We could not find a base interpreter at {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a folder path]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";AddVirtualEnvironmentWindow_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -127,12 +136,18 @@
       <Item ItemId=";AddVirtualEnvironmentWindow_Close" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Close]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Chiudi]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";AddVirtualEnvironmentWindow_Create" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[C_reate]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[C_rea]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -177,27 +192,18 @@
           <Val><![CDATA[Install pip and virtualenv packages]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA['pip' and 'virtualenv' are package names and must not be translated]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";AddVirtualEnvironmentWindow_InstallRequirements" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install packages from requirements.txt]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Do not translate 'requirements.txt']]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";AddVirtualEnvironmentWindow_InstallVirtualEnv" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install the virtualenv package]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA['virtualenv' is a package name and must not be translated]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";AddVirtualEnvironmentWindow_MayNotSupportWarning" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -256,6 +262,9 @@
       <Item ItemId=";AddVirtualEnvironmentWindow_Working" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Working...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Elaborazione in corso...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -270,24 +279,24 @@
           <Val><![CDATA[Adding project environment {0} to wrong project {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is environment id]D;]A;{1} is project path]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";AdditionalInformation" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Additional information:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Informazioni aggiuntive:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Analyzer_Analyzing" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Analyzing {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Analisi di {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a file system path from the user's machine]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Analyzer_CleaningFiles" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -304,6 +313,9 @@
       <Item ItemId=";Analyzer_Initializing" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Initializing]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inizializzazione in corso]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -312,27 +324,21 @@
           <Val><![CDATA[Parsing {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a file system path from the user's machine]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Analyzer_Saving" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Saving {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Salvataggio di {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a file system path from the user's machine]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Analyzer_Scraping" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a file system path from the user's machine]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Analyzer_ScrapingStdLib" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -357,9 +363,6 @@
           <Val><![CDATA[Waiting for another refresh: {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a previously formatted UI string]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";Analyzer_WaitingForStart" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -418,6 +421,9 @@
       <Item ItemId=";Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[&Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -496,6 +502,9 @@
       <Item ItemId=";ConnErrorMessages_OutOfMemory" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Out of memory]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Memoria insufficiente]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -580,6 +589,9 @@
       <Item ItemId=";ConnErrorMessages_UnknownError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown error]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore sconosciuto]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -606,36 +618,24 @@
           <Val><![CDATA[Working Directory ({0})]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a folder path]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";CustomCommandExecutingModule" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executing -m {0} {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is module name]D;]A;{1} is arguments]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";CustomCommandExecutingOther" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executing {0} {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is filename]D;]A;{1} is arguments]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";CustomCommandExecutingScript" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executing {0} {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is filename]D;]A;{1} is arguments]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";CustomCommandPrerequisitesContent" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -714,18 +714,12 @@
           <Val><![CDATA[Failed to connect to process {0} ({1}): {2}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is process id]D;]A;{1} is module name]D;]A;{2} is error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugConnectionFailedToConnectToProcessWithoutModule" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to connect to process {0}: {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is process id]D;]A;{1} is error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugCouldNotAbortFailedExpressionEvaluation" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -738,9 +732,6 @@
           <Val><![CDATA[{0} raised while evaluating expression: {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a type name]D;]A;{1} is the error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugEvaluationTimedOut" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -765,18 +756,12 @@
           <Val><![CDATA[{0} module]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a filename]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugFileUnknownCode" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} unknown code]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is filename]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugLaunchInterpreterMissing" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -831,18 +816,15 @@
           <Val><![CDATA[{0}:{1} in {2}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is filename]D;]A;{1} is line number]D;]A;{2} is function name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugPythonExceptionStackTraceFileOnly" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} in {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} in {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is filename]D;]A;{1} is function name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugPythonView" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -867,22 +849,19 @@
           <Val><![CDATA[Cannot change current thread to {0}, because it does not have any visible frames.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a thread id.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplCurrentIndicator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[=> ]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Do not translate. This is a prefix that indicates that the following value is 'current'. Should be same length as DebugReplNotCurrentIndicator.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplDisplayName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debug]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Debug]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -891,9 +870,6 @@
           <Val><![CDATA[Current frame changed to {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a frame id.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplFrameCommandDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -906,9 +882,6 @@
           <Val><![CDATA[Invalid arguments '{0}'. Expected frame id.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the full argument string that was passed by the user.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplFrameDownCommandDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -933,9 +906,6 @@
           <Val><![CDATA[{2}Frame id={0}, function={1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the frame  id.]D;]A;{1} is the name of the function..]D;]A;{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplGoCommandDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -960,27 +930,18 @@
           <Val><![CDATA[Invalid frame id '{0}'.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the invalid id passed by the user.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplInvalidProcessId" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid process id '{0}'.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the invalid id passed by the user.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplInvalidThreadId" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid thread id '{0}'.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the invalid id passed by the user.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplModuleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1005,9 +966,6 @@
           <Val><![CDATA[   ]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Do not translate. This is a prefix that indicates that the following value is not 'current'. Should be same length as DebugReplCurrentIndicator.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplProcessCommandDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1020,9 +978,6 @@
           <Val><![CDATA[Invalid arguments '{0}'. Expected process id.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the full argument string that was passed by the user.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplProcessesCommandDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1035,9 +990,6 @@
           <Val><![CDATA[{2}Process id={0}, Language version={1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the process id.]D;]A;{1} is the language version.]D;]A;{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplResetNotSupported" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1068,18 +1020,12 @@
           <Val><![CDATA[Current process changed to {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the process id.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplThreadChanged" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Current thread changed to {0}, frame {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a thread id, {1} is a frame id.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplThreadCommandDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1092,9 +1038,6 @@
           <Val><![CDATA[Invalid arguments '{0}'. Expected thread id.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the full argument string that was passed by the user.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReplThreadsCommandDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1107,9 +1050,6 @@
           <Val><![CDATA[{2}Thread id={0}, name={1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the thread id.]D;]A;{1} is the name of the thread.]D;]A;{2} is string value of DebugReplCurrentIndicator or DebugNotReplCurrentIndicator.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugReprMaxLengthAtLeast3" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1122,54 +1062,45 @@
           <Val><![CDATA[{0} line {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a function name]D;]A;{1} is a line number]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugStackFrameInfoFunctionNameInFileName" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} in {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} in {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is function name]D;]A;{1} is filename]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugStackFrameNameInName" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} in {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} in {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a function name]D;]A;{1} is a function name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugStackFrameParseTextError" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is error message]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugStructuredExceptionWhileEvaluatingExpression" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Native exception {0:x08} ({1}) raised while evaluating expression]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the error integer value]D;]A;{1} is the error integer value cast as a enum value]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Native exception {0:x08} raised while evaluating expression]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the error integer value]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugTcpTransportUriCannotContainPath" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1182,9 +1113,6 @@
           <Val><![CDATA[Could not establish secure connection to {0} because of the following SSL issues:]D;]A;{1}]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a URI]D;]A;{1} is a multi-line list of issues]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DebugTcpsTransportConnectionErrorRemoteCertificateChainErrors" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1207,6 +1135,9 @@
       <Item ItemId=";DebugThreadNormalPriority" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Normal]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Normale]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1237,12 +1168,18 @@
       <Item ItemId=";DebugUnknownFunctionName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[<unknown>]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[<sconosciuto>]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DebugUnknownModuleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[<unknown>]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[<sconosciuto>]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1257,9 +1194,6 @@
           <Val><![CDATA[your default environment]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Used with InstallRequirementsIntoGlobalEnv if no description can be obtained from the project.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";DefaultLauncherDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1276,6 +1210,9 @@
       <Item ItemId=";DiagnosticsWindow_Close" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[C_lose]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[C_hiudi]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1300,6 +1237,9 @@
       <Item ItemId=";DiagnosticsWindow_TextFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Text Files (*.txt)|*.txt|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[File di testo (*.txt)|*.txt|Tutti i file (*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1396,6 +1336,9 @@
       <Item ItemId=";EnvironmentIdDisplayName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Id]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ID]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1414,6 +1357,9 @@
       <Item ItemId=";EnvironmentVersionDisplayName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Version]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Versione]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1498,6 +1444,9 @@
       <Item ItemId=";ErrorTaskItemZipArchiveNotSupportedCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot open file]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Impossibile aprire il file.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1512,58 +1461,46 @@
           <Val><![CDATA[Execute File in P&ython Interactive]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Use ampersand for accelerator key]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ExecuteInReplCommand_ExecuteProject" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Execute Project in P&ython Interactive]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Use ampersand for accelerator key]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ExecuteInReplCommand_RunningMessage" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Running {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} in esecuzione]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the name of the script that is being run]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ExecutingCommandFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to run '{0}' -----]D;]A;]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ExecutingCommandStarted" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Running '{0}' -----]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ExecutingCommandSucceeded" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully ran '{0}' -----]D;]A;]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ExtractMethod" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Extract Method]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Estrai metodo]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1578,9 +1515,6 @@
           <Val><![CDATA[Cannot extract code containing "{0}"]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the name of a code element]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ExtractMethodContainsFromImportStar" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1633,6 +1567,9 @@
       <Item ItemId=";ExtractMethod_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1675,12 +1612,18 @@
       <Item ItemId=";ExtractMethod_OK" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_OK]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_OK]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ExtractMethod_Preview" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Preview:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Anteprima:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1699,6 +1642,9 @@
       <Item ItemId=";ExtractMethod_Title" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Extract Method]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Estrai metodo]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1707,9 +1653,6 @@
           <Val><![CDATA[Failed to attach debugger:]D;]A;{0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";FailedToCollectFilesForPublish" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1752,9 +1695,6 @@
           <Val><![CDATA[Incorrect user name or password: {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";FillCommentSelectionError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1773,9 +1713,6 @@
           <Val><![CDATA[# The existing formatting will not be altered:]D;]A;]D;]A;{0}]D;]A;    # or]D;]A;{1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} and {1} are Python code snippets, and the whole string is valid Python code, # indicates a comment.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";FormattingOptionsCategoryClassDefinitions" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1804,12 +1741,18 @@
       <Item ItemId=";FormattingOptionsCategoryStatements" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Statements]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Istruzioni]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";FormattingOptionsCategoryWrapping" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Wrapping]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ritorno a capo]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1824,9 +1767,6 @@
           <Val><![CDATA[# Select an option to see a preview]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[This is valid Python code, # indicates a comment.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";FromImportCompletionImportAllMembersFromModuleTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1845,27 +1785,18 @@
           <Val><![CDATA[Failed to create directory: {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";FtpPublisherDirExistsCheckException" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to check if directory exists: {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";FtpPublisherUploadFileException" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to upload file: {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";FunctionClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1878,9 +1809,6 @@
           <Val><![CDATA[ (global default)]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Leading space is important]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";GroupingClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -1939,12 +1867,18 @@
       <Item ItemId=";ImportWizard_BackButton" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Back]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Indietro]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ImportWizard_CancelButton" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2005,6 +1939,9 @@
       <Item ItemId=";ImportWizard_FinishButton" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Finish]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Fine]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2017,6 +1954,9 @@
       <Item ItemId=";ImportWizard_NextButton" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Next]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[A_vanti]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2029,6 +1969,9 @@
       <Item ItemId=";ImportWizard_SaveProjectPageTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Save Project]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Salva progetto]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2091,13 +2034,13 @@
           <Val><![CDATA[If it is not in this list, you can right-click any file in your project and choose "Set as startup file"]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA["Set as startup file" is the text of a command and must match the translation of that command.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InsertSnippet" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Insert Snippet]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Inserisci frammento]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2136,18 +2079,12 @@
           <Val><![CDATA[&Install into {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the localized (and/or user-provided) title of the destination environment]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InstallRequirementsIntoGlobalEnv" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Install into {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the localized (and/or user-provided) title of the destination environment]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InstallRequirementsIntoGlobalEnvTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2188,65 +2125,47 @@
       <Item ItemId=";InstallationFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Installation failed]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Installazione non riuscita]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Used as exception text]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InstallingPackageFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to install '{0}' -----]D;]A;]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InstallingPackageStarted" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Installing '{0}' -----]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InstallingPackageSuccess" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully installed '{0}' -----]D;]A;]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InstallingPipFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to install pip -----]D;]A;]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InstallingPipStarted" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Installing pip -----]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InstallingPipSuccess" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully installed pip -----]D;]A;]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";IntellisenseControllerAlreadyDetachedException" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2265,9 +2184,6 @@
           <Val><![CDATA[bad char for integer value: {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a character]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InvalidSearchPath" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2280,27 +2196,18 @@
           <Val><![CDATA[https://go.microsoft.com/fwlink/?LinkId=402428]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Should not be localized]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";LibraryNodeAliasOf" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} (alias of {1})]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} and {1} or python data types]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";MisconfiguredEnvironment" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Operation cannot be started because the environment is not configured.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Used as exception text]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";MissingEnvironment" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2331,9 +2238,6 @@
           <Val><![CDATA[ (missing)]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Leading space is important]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";MixedModeDebugSymbolsRequiredDownloadSymbols" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2404,6 +2308,9 @@
       <Item ItemId=";PackageFullName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Full Name]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nome completo]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2434,6 +2341,9 @@
       <Item ItemId=";PackageInstalling" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Installing '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Installazione di '{0}']]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2454,9 +2364,6 @@
           <Val><![CDATA[Unable to install {0} because the selected environment does not support package management.]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a package name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PackageUninstallFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2529,27 +2436,24 @@
           <Val><![CDATA[Publishing folder location ({0}): ]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a dynamically built list of location types]D;]A;Location types examples:]D;]A;ftp or file]D;]A;web, ftp or file]D;]A;azure, web, ftp or file]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PublishPropertyControl_LocationTypeSeparator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[, ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[, ]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[This is used to concatenate a dynamically built list of location types.]D;]A;This separator is used between all elements except before the last element.]D;]A;See PublishPropertyControl_LocationLabel for examples.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PublishPropertyControl_LocationTypeSeparatorLast" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[ or ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ o ]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[This is used to concatenate a dynamically built list of location types.]D;]A;This separator is used before the last element.]D;]A;See PublishPropertyControl_LocationLabel for examples.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PublishToAzure30" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2572,6 +2476,9 @@
       <Item ItemId=";PythonDebugPropertyPageLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debug]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Debug]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2590,6 +2497,9 @@
       <Item ItemId=";PythonGeneralPropertyPageLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[General]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Generale]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2602,42 +2512,54 @@
       <Item ItemId=";PythonNavigateToItemDisplay_FileHeader" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[File:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[File:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PythonNavigateToItemDisplay_FileInfo" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[File: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[File: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is file name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PythonNavigateToItemDisplay_LineHeader" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Line:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Riga:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PythonNavigateToItemDisplay_ProjectHeader" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PythonNavigateToItemDisplay_ProjectInfo" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is project name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";PythonPublishPropertyPageLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Publish]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pubblica]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2656,12 +2578,18 @@
       <Item ItemId=";PythonWebPropertyPageTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Web]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Web]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";QuickInfo_TypeNoDocs" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0}: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0}: {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2686,6 +2614,9 @@
       <Item ItemId=";RefactorPaneName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Refactor]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Refactoring]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2700,13 +2631,13 @@
           <Val><![CDATA[Renaming '{0}' to '{1}']]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} and {1} are Python variable names]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";RefactorPreviewChangesRenamingConfirmationButton" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Apply]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Applica]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2715,49 +2646,52 @@
           <Val><![CDATA[&Rename '{0}' to '{1}']]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} and {1} are Python variable names]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";RefactorPreviewChangesTextViewDescription" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Preview Code Changes:]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[This is a heading for a text control - Alt+P will activate the control.]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";RefactorPreviewUpdatedLogEntry" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0}({1},{2}): updated {3}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a file name]D;]A;{1} is the line number]D;]A;{2} is the column number]D;]A;{3} is either 'definition' or 'reference' ]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";RefactorPreviewUpdatedLogEntryDefinition" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[definition]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[definizione]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RefactorPreviewUpdatedLogEntryReference" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[reference]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[riferimento]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RefactorRenameVariableUndoDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Rename Variable]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Rinomina variabile]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ReferencesNodeName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[References]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Riferimenti]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2784,9 +2718,6 @@
           <Val><![CDATA[{0}]D;]A;Connect anyway?]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is error details]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";RemoteSecretMismatch_Host" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2805,9 +2736,6 @@
           <Val><![CDATA[Unrecognized remote debugging transport '{0}'.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the uri scheme]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";RemoteUnsupportedServer_Host" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -2818,6 +2746,9 @@
       <Item ItemId=";RenameVariable_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2836,6 +2767,9 @@
       <Item ItemId=";RenameVariable_NewName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_New name:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Nuovo nome:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2848,6 +2782,9 @@
       <Item ItemId=";RenameVariable_OK" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_OK]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_OK]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2878,6 +2815,9 @@
       <Item ItemId=";RenameVariable_Title" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Rename]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Rinomina]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2952,9 +2892,6 @@
           <Val><![CDATA[&#x1b;[94;21m{0} interactive window &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;Type $help for a list of commands.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the Python language version, {1} is the PTVS version, {2} is the VS version]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ReplLoadCommandDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3001,20 +2938,17 @@
       <Item ItemId=";ReplProjectProjectCaption" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the name of the project]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ReplQuerySwitchEvaluator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Changing to {0} will reset your current state.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the user-provided description of the Python interpreter]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ReplQuerySwitchEvaluatorHint" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3057,9 +2991,6 @@
           <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Do not localize]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";ReplScriptPathReadmeContents" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3150,9 +3081,6 @@
           <Val><![CDATA[Installing packages from '{0}']]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a full path to a user's file]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";RequirementsTxtRefresh" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3193,6 +3121,9 @@
       <Item ItemId=";Retry" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Retry]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[&Riprova]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3207,9 +3138,6 @@
           <Val><![CDATA[Run PyLint]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[PyLint is a product name and should not be localized]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";RunWebServerLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3328,24 +3256,36 @@
       <Item ItemId=";SurroundWith" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Surround With]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Racchiudi tra]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SymbolListDefinitions" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Definitions]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Definizioni]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SymbolListReferences" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[References]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Riferimenti]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SymbolListValues" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Values]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Valori]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3396,9 +3336,6 @@
           <Val><![CDATA[Unexpected test result: {0}.{1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a class name from user code, {1} is a method name from user code]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";UnableToElevate" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3427,11 +3364,11 @@
       <Item ItemId=";UninstallMessage_Package" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Remove {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Rimuovi {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a package name]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";UninstallPackage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3450,45 +3387,30 @@
           <Val><![CDATA[----- Error while uninstalling '{0}' -----]D;]A;'{0}' may not have been uninstalled completely.]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";UninstallingPackageStarted" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Uninstalling '{0}' -----]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";UninstallingPackageSuccess" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully uninstalled '{0}' -----]D;]A;]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[Displayed in the output window]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";UnknownRoleTypeException" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown role type: {0}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is role type]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";UnrecognizedEnumValue" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unrecognized value for enum type '{0}'.]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is the enum type]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";UnresolvedModuleTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3513,9 +3435,6 @@
           <Val><![CDATA[Upgrade to {0} version {1}]]></Val>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="RCCX"><![CDATA[{0} is a package name, {1} is the latest available version number]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";UpgradedBottleImports" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
@@ -3610,6 +3529,9 @@
       <Item ItemId=";WaitForCompleteAnalysisDialog_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cancel]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Annulla]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3679,7 +3601,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -3709,7 +3631,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17053.2]]></Val>
+        <Val><![CDATA[3.0.17061.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
