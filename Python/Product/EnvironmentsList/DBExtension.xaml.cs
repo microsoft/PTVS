@@ -294,6 +294,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             get { return Resources.DBExtensionHelpContent; }
         }
 
+        public string HelpText {
+            get { return Resources.DBExtensionHelpContent; }
+        }
+
         public FrameworkElement WpfObject {
             get {
                 if (_wpfObject == null) {

@@ -295,6 +295,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public object HelpContent {
             get { return Resources.ConfigurationExtensionHelpContent; }
         }
+
+        public string HelpText {
+            get { return Resources.ConfigurationExtensionHelpContent; }
+        }
     }
 
     struct ConfigurationValues {

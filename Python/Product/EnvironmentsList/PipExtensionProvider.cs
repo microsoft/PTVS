@@ -88,6 +88,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             get { return Resources.PipExtensionHelpContent; }
         }
 
+        public string HelpText {
+            get { return Resources.PipExtensionHelpContent; }
+        }
+
         public FrameworkElement WpfObject {
             get {
                 if (_wpfObject == null) {
