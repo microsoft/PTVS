@@ -16,84 +16,126 @@
       <Item ItemId=";AddToProjectError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Files were successfully created, but there was an issue adding the files to your project.\n{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[I file sono stati creati ma si è verificato un problema durante l'aggiunta dei file al progetto.\n{0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingForAllUpdatesCanceled" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Check for template updates canceled -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Il controllo della disponibilità di aggiornamenti del modello è stato annullato -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingForAllUpdatesFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to check for template updates -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Non è stato possibile controllare la disponibilità di aggiornamenti del modello -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingForAllUpdatesStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Checking for template updates -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Controllo della disponibilità di aggiornamenti del modello -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingForAllUpdatesSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully checked for template updates -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Il controllo della disponibilità di aggiornamenti del modello è stato completato -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error checking for an update.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore durante il controllo della disponibilità di un aggiornamento.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An update is available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[È disponibile un aggiornamento.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateInconclusive" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not determine if an update is available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è stato possibile determinare se è disponibile un aggiornamento.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Template is already up-to-date.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Il modello è già aggiornato.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CheckingTemplateUpdateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Checking for update to template '{0}' from '{1}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Controllo della disponibilità di aggiornamenti del modello '{0}' da '{1}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CloneCollisionMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A different template with the name '{0}' already exists in '{1}'.]D;]A;]D;]A;Please delete the installed template and try again.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Un modello diverso con il nome '{0}' esiste già in '{1}'.]D;]A;]D;]A;Eliminare il modello installato e riprovare.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CloningTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to clone template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Non è stato possibile clonare il modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CloningTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Cloning template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Clonazione del modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CloningTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully cloned template '{0}' to '{1}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Il modello '{0}' è stato clonato in '{1}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -109,78 +151,117 @@
       <Item ItemId=";CookiecutterClient_Invalidurl" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' from _visual_studio section in context file should be an absolute http or https url.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' nella sezione _visual_studio del file di contesto deve essere un URL HTTP o HTTPS assoluto.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_MissingProperty" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' property is required on '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[La proprietà '{0}' è necessaria in '{1}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_MoveToDesiredFolderTemplatedFolderNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter generated files must have a templated folder.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[I file Cookiecutter generati devono avere una cartella basata su modelli.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_ReferenceNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' is referenced from _visual_studio section in context file but was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[A '{0}' viene fatto riferimento nella sezione _visual_studio del file di contesto ma non è stato trovato.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_UnsupportedJsonElementTypeForPorperty" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unsupported json element type in context file for property '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Tipo di elemento JSON non supportato nel file di contesto per la proprietà '{0}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CookiecutterClient_WrongJsonType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['{0}' from _visual_studio section in context file should be of type '{1}', instead of '{2}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' nella sezione _visual_studio del file di contesto deve essere di tipo '{1}' anziché '{2}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeleteConfirmation" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Are you sure you want to delete the template from this folder?]D;]A;]D;]A;{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Eliminare il modello da questa cartella?]D;]A;]D;]A;{0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeletingTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to delete template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Non è stato possibile eliminare il modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeletingTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Deleting template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Eliminazione del modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeletingTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully deleted template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Il modello '{0}' è stato eliminato -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";FeedLoadError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not retrieve results from feed]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è stato possibile recuperare i risultati dal feed]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";GitHubSearchError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not retrieve results from GitHub]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è stato possibile recuperare i risultati da GitHub]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter makes it easy to generate code from a template.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter consente di generare facilmente il codice da un modello.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -205,90 +286,135 @@
       <Item ItemId=";InstallPythonInfoBarLink" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install Python 3]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Installa Python 3]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallingCookiecutterFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to install cookiecutter -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Non è stato possibile installare Cookiecutter -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallingCookiecutterStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Installing cookiecutter -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Installazione di Cookiecutter -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InstallingCookiecutterSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully installed cookiecutter -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Cookiecutter è stato installato -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InvalidOutputFolder" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please enter a valid output folder in the 'Create To' field.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Immettere una cartella di output valida nel campo 'Crea in'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LoadingTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to load template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Non è stato possibile caricare il modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LoadingTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Loading template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Caricamento del modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LoadingTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully loaded template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Il modello '{0}' è stato caricato -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";MissingDependenciesInfoBarMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Some external dependencies are missing. Click the links to install them.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Mancano alcune dipendenze esterne. Fare clic sui collegamenti per installarle.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";MissingDependenciesPage_InstallPython" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Help me install Python]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Informazioni sull'installazione di Python]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";MissingDependenciesPage_Message" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please install Python 3.5 or later and restart Visual Studio to use this feature.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Installare Python 3.5 o versione successiva e riavviare Visual Studio per usare questa funzionalità.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OpenInSolutionExplorerQuestion" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Would you like to open the generated folder in Solution Explorer?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Aprire la cartella generata in Esplora soluzioni?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_AddToProject" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Add to Project]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Aggiungi al progetto]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_AddingToProject" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Files will be added to your project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[I file verranno aggiunti al progetto.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_AddingToProjectTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter was invoked using the Add From Cookiecutter command. To restart and create a new project, click Home or Cancel.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter è stato richiamato con il comando Aggiungi da Cookiecutter. Per richiamare e creare un nuovo progetto, fare clic su Home o Annulla.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -313,36 +439,54 @@
       <Item ItemId=";OptionsPage_CreateTo" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Create To]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Crea in]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreateToAutomationName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Output folder path]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Percorso cartella di output]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreateToTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Folder location where the files will be created. Files may be replaced if the folder is not empty, but a backup of the existing files will be created as needed.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Percorso della cartella in cui verranno creati i file. Se la cartella non è vuota, è possibile che i file vengano sostituiti, ma se necessario verrà creato un backup dei file esistenti.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreateToWatermark" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[e.g. C:\Projects\Project1]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Esempio: C:\Projects\Project1]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreatingFiles" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Creating files...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Creazione dei file...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_CreatingFilesError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error creating files. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore durante la creazione dei file. Per i dettagli, vedere la finestra di output.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -367,60 +511,90 @@
       <Item ItemId=";OptionsPage_RunAdditionalTasks" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run additional tasks on completion]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Eseguire altre attività al completamento]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";OptionsPage_TemplateCloneSuccessfully" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Template cloned successfully.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Il modello è stato clonato.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProcessExitCodeMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} returned an exit code of {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} ha restituito il codice di uscita {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProductTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ProjectNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project with unique name '{0}' was not found in the current solution.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Il progetto con nome univoco '{0}' non è stato trovato nella soluzione corrente.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ReplacedFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[ - '{0}' was saved as '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ - '{0}' è stato salvato come '{1}'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ReplacedFilesHeader" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The following files were backed up and then replaced:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[È stato eseguito il backup e quindi la sostituzione dei file seguenti:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RunningTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to create files using template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Non è stato possibile creare i file con il modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RunningTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Creating files using template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Creazione dei file con il modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";RunningTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully created files using template '{0}' into '{1}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- I file sono stati creati con il modello '{0}' in '{1}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -436,54 +610,81 @@
       <Item ItemId=";SearchPage_CheckingUpdatesCompleted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Check for updates completed.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Il controllo della disponibilità di aggiornamenti è stato completato.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_CloningRepository" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cloning repository...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Clonazione del repository...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_Creator" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[the creator]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[autore]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_EnumeratingTemplatesTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enumerating templates. This may take a few seconds.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Enumerazione dei modelli. Questa operazione potrebbe richiedere qualche secondo.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_ErrorCheckingUpdates" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error checking for updates. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore durante il controllo della disponibilità di aggiornamenti. Per i dettagli, vedere la finestra di output.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_ErrorCloningRepository" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error cloning repository. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore durante la clonazione del repository. Per i dettagli, vedere la finestra di output.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_ErrorInstallingCookiecutter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error installing Cookiecutter. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore durante l'installazione di Cookiecutter. Per i dettagli, vedere la finestra di output.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_ErrorLoadingTemplate" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error loading template. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore durante il caricamento del modello. Per i dettagli, vedere la finestra di output.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_FilesCreatedSuccessfully" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Files created successfully.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[I file sono stati creati.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -508,12 +709,18 @@
       <Item ItemId=";SearchPage_LinksGitHubWiki" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Wiki]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wiki]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_LoadMore" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Load more...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Carica altri...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -529,6 +736,9 @@
       <Item ItemId=";SearchPage_LoadingTemplate" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Loading template...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Caricamento del modello...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -544,24 +754,36 @@
       <Item ItemId=";SearchPage_NoTemplateDescriptionAvailable" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[No description available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[La descrizione non è disponibile.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_OpenInSolutionExplorer" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Open in Solution Explorer]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Apri in Esplora soluzioni]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_PreparingFirstTime" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Preparing cookiecutter for first time use...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Preparazione di Cookiecutter per il primo utilizzo...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_PreparingFirstTimeTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Downloading and installing the cookiecutter package from the Python Package Index. This may take a few minutes.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Download e installazione del pacchetto Cookiecutter dall'indice dei pacchetti Python. Questa operazione potrebbe richiedere qualche minuto.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -577,78 +799,117 @@
       <Item ItemId=";SearchPage_SearchAutomationName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Search terms]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Termine di ricerca]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_SearchTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enter search terms or template location (git repository URL or path to local folder)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Immettere i termine di ricerca o il percorso del modello (URL del repository Git o percorso della cartella locale)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_SearchWatermark" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enter search terms or template location]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Immettere i termine di ricerca o il percorso del modello]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_UpdateAvailableTooltip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An update is available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[È disponibile un aggiornamento.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_UpdatingTemplate" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Updating template...]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Aggiornamento del modello...]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_UpdatingTemplateCompleted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Template updated.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Il modello è stato aggiornato.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_UpdatingTemplateError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error updating template. See the Output Window for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Errore durante l'aggiornamento del modello. Per i dettagli, vedere la finestra di output.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SearchPage_VisitOwnerOnGitHub" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Visit {0} on GitHub]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Visitare {0} in GitHub]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SeeActivityLog" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An unexpected error occurred.]D;]A;]D;]A;You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking the Event Log.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sì è verificato un errore imprevisto.]D;]A;]D;]A;Per ottenere altre informazioni, eseguire Visual Studio con il parametro /log nella riga di comando, quindi esaminare il file '{0}' o fare clic su Log eventi.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_CheckForTemplateUpdate_Description" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Automatically check online for updates to installed templates.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Controlla automaticamente online la disponibilità di aggiornamenti per i modelli installati.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_CheckForTemplateUpdate_Name" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Check for updated templates]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Controlla la disponibilità di modelli aggiornati]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_FeedUrl_Description" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Location of the feed file. Feed files have one template URL on each line.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Percorso del file di feed. I file di feed hanno un URL del modello in ogni riga.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Settings_FeedUrl_Name" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Recommended feed URL]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[URL del feed consigliato]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -664,6 +925,9 @@
       <Item ItemId=";Settings_ShowHelp_Description" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show the help information bar.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Mostra la Barra informazioni della Guida.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -715,30 +979,45 @@
       <Item ItemId=";ToolWindowCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UnhandledException" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unhandled exception in {3} ({1}:{2})]D;]A;{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Eccezione non gestita in {3} ({1}:{2})]D;]A;{0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UpdatingTemplateFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to update template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Non è stato possibile aggiornare il modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UpdatingTemplateStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Updating template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Aggiornamento del modello '{0}' -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UpdatingTemplateSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully updated template '{0}' -----]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[----- Il modello '{0}' è stato aggiornato -----]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -802,7 +1081,7 @@
     </Item>
     <Item ItemId=";shared/wpf/controls.baml" ItemType="0" PsrId="211" Leaf="true">
       <Bin BinId="3">
-        <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAMAAAALAAEAAAD/////AQAAAAAAAAAGAQAAABhzaGFyZWQvd3BmL2NvbnRyb2xzLmJhbWwLAAEAAAD/////AQAAAAAAAAAEAQAAAB9TeXN0ZW0uVW5pdHlTZXJpYWxpemF0aW9uSG9sZGVyAwAAAAREYXRhCVVuaXR5VHlwZQxBc3NlbWJseU5hbWUBAAEIBgIAAAAfU3lzdGVtLklPLlVubWFuYWdlZE1lbW9yeVN0cmVhbQQAAAAGAwAAAEttc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkLAAEAAAD/////AQAAAAAAAAAPAQAAAD1lAAACDAAAAE0AUwBCAEEATQBMAAAAYAAAAGAAAABgAAEA/////wAcTwAAS21zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4ORsxJmNsci1uYW1lc3BhY2U6U3lzdGVtO2Fzc2VtYmx5PW1zY29ybGliBlN5c3RlbQAAHGYBAGJNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcsIFZlcnNpb249MTUuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYRt9V2Nsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5QbGF0Zm9ybVVJO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZyFNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlBsYXRmb3JtVUkBABxcAgBYUHJlc2VudGF0aW9uRnJhbWV3b3JrLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49MzFiZjM4NTZhZDM2NGUzNRtOO2Nsci1uYW1lc3BhY2U6U3lzdGVtLldpbmRvd3M7YXNzZW1ibHk9UHJlc2VudGF0aW9uRnJhbWV3b3JrDlN5c3RlbS5XaW5kb3dzAgAcYgMAXk1pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scywgVmVyc2lvbj0xLjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EbUS1jbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW9Ub29scy5XcGYfTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZgMAHFIEAE5XaW5kb3dzQmFzZSwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcVwUAU1ByZXNlbnRhdGlvbkNvcmUsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj0zMWJmMzg1NmFkMzY0ZTM1HFIGAE5TeXN0ZW0uWGFtbCwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkgFAAAEEZvY3VzVmlzdWFsU3R5bGUfEQAAlP0AClRhcmdldFR5cGUfDwEA1P0ACFByb3BlcnR5HwwCANT9AAVWYWx1ZR8PAwD6/QAIRWRnZU1vZGUdLgAAAwAoTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5Db250cm9scx8UBAAAAAANRm9yZWdyb3VuZEtleR8WBQDS/QAPU3Ryb2tlRGFzaEFycmF5IBsBABdFbGxpcHNlRm9jdXNWaXN1YWxTdHlsZSAMAgAISWNvblBhdGgfGwYAAAAAFENvbnRyb2xCYWNrZ3JvdW5kS2V5HxcHAAAAABBDb250cm9sQm9yZGVyS2V5HxEIAJT/AApUYXJnZXRUeXBlHxgJAAL/ABFDb2x1bW5EZWZpbml0aW9ucx8VCgAC/wAOUm93RGVmaW5pdGlvbnMfFwsA2/0AEENhbkNvbnRlbnRTY3JvbGwfEgwA3P0AC09yaWVudGF0aW9uHxUNANr9AA5WZXJ0aWNhbE9mZnNldB8MDgAI/gAFVmFsdWUfFw8A2v0AEFNjcm9sbGFibGVIZWlnaHQfDhAACP4AB01heGltdW0fFREA2v0ADlZpZXdwb3J0SGVpZ2h0HxMSANz9AAxWaWV3cG9ydFNpemUfKhMA2v0AI0NvbXB1dGVkVmVydGljYWxTY3JvbGxCYXJWaXNpYmlsaXR5HxcUANr9ABBIb3Jpem9udGFsT2Zmc2V0HxYVANr9AA9TY3JvbGxhYmxlV2lkdGgfFBYA2v0ADVZpZXdwb3J0V2lkdGgfLBcA2v0AJUNvbXB1dGVkSG9yaXpvbnRhbFNjcm9sbEJhclZpc2liaWxpdHkgEQMADUJ1bGxldGVkTGFiZWwfDhgAlP0AB0Jhc2VkT24fFRkA7P8ADlJlbGF0aXZlU291cmNlHxMaAPz9AAxBbmNlc3RvclR5cGUgEgQADkNvbnRyb2xOb0hvdmVyHxsbAAAAABRDb250cm9sRm9yZWdyb3VuZEtleR09AQABADdNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlBsYXRmb3JtVUkuSW1hZ2VUaGVtaW5nVXRpbGl0aWVzHyAcAAAAABlDb250cm9sQmFja2dyb3VuZENvbG9yS2V5Hw8dAJT9AAhUcmlnZ2Vycx8PHgBQ/QAIUHJvcGVydHkfDB8AUP0ABVZhbHVlHx8gAAAAABhDb250cm9sQm9yZGVyU2VsZWN0ZWRLZXkfKCEAAAAAIUNvbnRyb2xCYWNrZ3JvdW5kU2VsZWN0ZWRDb2xvcktleR8jIgAAAAAcQ29udHJvbEJhY2tncm91bmREaXNhYmxlZEtleR8jIwAAAAAcQ29udHJvbEZvcmVncm91bmREaXNhYmxlZEtleR8fJAAAAAAYQ29udHJvbEJvcmRlckRpc2FibGVkS2V5HyglAAAAACFDb250cm9sQmFja2dyb3VuZERpc2FibGVkQ29sb3JLZXkfICYAAAAAGUNvbnRyb2xCYWNrZ3JvdW5kSG92ZXJLZXkfJScAAAAAHkNvbnRyb2xCYWNrZ3JvdW5kSG92ZXJDb2xvcktleSAPBQALQ29udHJvbExpa2UgEQYADVRvb2x0aXBCb3JkZXIfGygAAAAAFFRvb2x0aXBCYWNrZ3JvdW5kS2V5HxUpAAAAAA5Ub29sdGlwVGV4dEtleR8gKgAAAAAZVG9vbHRpcEJhY2tncm91bmRDb2xvcktleR8LKwDO/wMETmFtZR8aLACc/wATQ29udGVudFN0cmluZ0Zvcm1hdB8aLQCa/wATQ29udGVudFN0cmluZ0Zvcm1hdB8NLgAe/wAGQ3Vyc29yHxQvAAAAAA1CYWNrZ3JvdW5kS2V5HxkwAAAAABJCYWNrZ3JvdW5kQ29sb3JLZXkfHDEAAAAAFUNvbnRyb2xCb3JkZXJIb3ZlcktleR8bMgAAAAAUQnV0dG9uQm9yZGVySG92ZXJLZXkfHzMAAAAAGEJ1dHRvbkJhY2tncm91bmRIb3ZlcktleR8kNAAAAAAdQnV0dG9uQmFja2dyb3VuZEhvdmVyQ29sb3JLZXkfITUAAAAAGkJ1dHRvbkJhY2tncm91bmRQcmVzc2VkS2V5HyE2AAAAABpCdXR0b25Gb3JlZ3JvdW5kUHJlc3NlZEtleR8nNwAAAAAgQ29udHJvbEJhY2tncm91bmRQcmVzc2VkQ29sb3JLZXkfETgAXf4ACkNvbmRpdGlvbnMfDzkAnv8ACFByb3BlcnR5Hww6AJ7/AAVWYWx1ZSAUBwAQTmF2aWdhdGlvbkJ1dHRvbh8TOwAAAAAMSHlwZXJsaW5rS2V5HxA8AB7/AAlSZXNvdXJjZXMfDz0Aff0ACExvY2F0aW9uHxg+AAAAABFIeXBlcmxpbmtIb3ZlcktleR8SPwAAAAALR3JheVRleHRLZXkgGggAFk5hdmlnYXRpb25CdXR0b25Jbkxpc3QfDkAAhv8AB0JpbmRpbmcfDEEAhv8ABVZhbHVlHxdCAAAAABBIaWdobGlnaHRUZXh0S2V5IBEJAA1Qb3B1cEV4cGFuZGVyHxBDABn/AAlSZXNvdXJjZXMgBwoAA0tleR8SRAAe/wALRGF0YUNvbnRleHQfC0UA4/0DBE5hbWUfC0YAZP0DBE5hbWUfGUcA8/4AEkhlYWRlclN0cmluZ0Zvcm1hdCASCwAORXhwYW5kZXJCdXR0b24fF0gAHv8AEEZvY3VzVmlzdWFsU3R5bGUfEEkAZP0ACUlzQ2hlY2tlZB8LSgDs/wAETW9kZR8LSwCa/wMETmFtZR8PTACU/wAIVHJpZ2dlcnMfEU0A1P0AClRhcmdldE5hbWUfEk4A7P8AC0VsZW1lbnROYW1lHw5PAM7/AAdQYWRkaW5nHwtQANr9AwROYW1lHxxRAAAAABVUcmVlVmlld0JhY2tncm91bmRLZXkfHFIAAAAAFVRyZWVWaWV3Rm9yZWdyb3VuZEtleR0nAgACACFTeXN0ZW0uV2luZG93cy5WaXN1YWxTdGF0ZU1hbmFnZXIfGFMAAgAAEVZpc3VhbFN0YXRlR3JvdXBzHSUDAAIAH1N5c3RlbS5XaW5kb3dzLlZpc3VhbFN0YXRlR3JvdXAfDVQAAwAABlN0YXRlcx0gBAACABpTeXN0ZW0uV2luZG93cy5WaXN1YWxTdGF0ZR8RVQAEAAAKU3Rvcnlib2FyZB8RVgCg/QAKVGFyZ2V0TmFtZR8VVwCg/QAOVGFyZ2V0UHJvcGVydHkfKFgAAAAAIVRyZWVWaWV3SXRlbVNlbGVjdGVkQmFja2dyb3VuZEtleR8MWQBS/gAFVmFsdWUfDloAUv4AB0tleVRpbWUfKFsAAAAAIVRyZWVWaWV3SXRlbVNlbGVjdGVkRm9yZWdyb3VuZEtleR8wXAAAAAApVHJlZVZpZXdJdGVtSW5hY3RpdmVTZWxlY3RlZEJhY2tncm91bmRLZXkdHwUABQAZU3lzdGVtLldpbmRvd3MuVmlzaWJpbGl0eR8QXQAFAAAJQ29sbGFwc2VkHw5eAAUAAAdWaXNpYmxlHwtfAAL/AwROYW1lHwlgAFf/AAJUbx8PYQBn/QAIRHVyYXRpb24fC2IARv4DBE5hbWUfFWMA0v0ADlN0cm9rZUxpbmVKb2luHw5kAEr9AAdPcGFjaXR5HwtlAMn/AwROYW1lHxBmAMj/AAlDbGlja01vZGUfC2cAtf4DBE5hbWUfEmgAAAAAC0hvdFRyYWNrS2V5HxNpAAAAAAxIaWdobGlnaHRLZXkfC2oA/v0DBE5hbWUfImsAAAAAG0NvbnRyb2xCYWNrZ3JvdW5kUHJlc3NlZEtleR8ebAAAAAAXQ29udHJvbEJvcmRlclByZXNzZWRLZXkfIm0AAAAAG0NvbnRyb2xGb3JlZ3JvdW5kUHJlc3NlZEtleR8LbgBB/wMETmFtZR8ibwAAAAAbU2Nyb2xsQmFyQXJyb3dCYWNrZ3JvdW5kS2V5HxhwAAAAABFTY3JvbGxCYXJBcnJvd0tleR8ncQAAAAAgU2Nyb2xsQmFyQXJyb3dCYWNrZ3JvdW5kSG92ZXJLZXkfHXIAAAAAFlNjcm9sbEJhckFycm93SG92ZXJLZXkfKXMAAAAAIlNjcm9sbEJhckFycm93QmFja2dyb3VuZFByZXNzZWRLZXkfH3QAAAAAGFNjcm9sbEJhckFycm93UHJlc3NlZEtleR8qdQAAAAAjU2Nyb2xsQmFyQXJyb3dCYWNrZ3JvdW5kRGlzYWJsZWRLZXkfIHYAAAAAGVNjcm9sbEJhckFycm93RGlzYWJsZWRLZXkfIncAAAAAG1Njcm9sbEJhclRodW1iQmFja2dyb3VuZEtleR8neAAAAAAgU2Nyb2xsQmFyVGh1bWJCYWNrZ3JvdW5kSG92ZXJLZXkfKXkAAAAAIlNjcm9sbEJhclRodW1iQmFja2dyb3VuZFByZXNzZWRLZXkfHXoAAAAAFlNjcm9sbEJhckJhY2tncm91bmRLZXkfC3sA9v0DBE5hbWUfEnwASv0AC0lzTW91c2VPdmVyHwt9AF39AwROYW1lHxt+AF39ABREZWNyZWFzZVJlcGVhdEJ1dHRvbh8bfwBd/QAUSW5jcmVhc2VSZXBlYXRCdXR0b24fDIAAXf0ABVRodW1iHwuBABv+AwROYW1lHxmCABv+ABJBbGxvd3NUcmFuc3BhcmVuY3kfHYMAAAAAFkNvbWJvQm94UG9wdXBCb3JkZXJLZXkfIYQAAAAAGkNvbWJvQm94UG9wdXBCYWNrZ3JvdW5kS2V5HyGFAAAAABpDb21ib0JveFBvcHVwRm9yZWdyb3VuZEtleR8YhgCk/wARTWF4RHJvcERvd25IZWlnaHQfFIcA+v0ADUNsZWFyVHlwZUhpbnQfC4gAvv8DBE5hbWUdLQYAAgAnU3lzdGVtLldpbmRvd3MuSW5wdXQuS2V5Ym9hcmROYXZpZ2F0aW9uHxyJAAYAABVEaXJlY3Rpb25hbE5hdmlnYXRpb24fF4oApP8AEFNlbGVjdGlvbkJveEl0ZW0fI4sApP8AHFNlbGVjdGlvbkJveEl0ZW1TdHJpbmdGb3JtYXQfF4wASv0AEElzSGl0VGVzdFZpc2libGUfEY0AUP0AClNvdXJjZU5hbWUgDAwACEhlbHBUZXh0HTUHAAMQL01pY3Jvc29mdC5WaXN1YWxTdHVkaW9Ub29scy5XcGYuTGFiZWxsZWRDb250cm9sHw2OAKb+AAZUYXJnZXQdNAgABQAuU3lzdGVtLldpbmRvd3MuQXV0b21hdGlvbi5BdXRvbWF0aW9uUHJvcGVydGllcx8LjwAIAAAETmFtZR8PkAAIAAAISGVscFRleHQdNAkAAxAuTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5MYWJlbGxlZEJ1dHRvbiAQDQAMQnJvd3NlQnV0dG9uHwuRAOz/AARQYXRoIBYOABJCcm93c2VGb2xkZXJCdXR0b24dLgoAAwAoTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5Db21tYW5kcx8TkgAKAAAMQnJvd3NlRm9sZGVyIBgPABRCcm93c2VPcGVuRmlsZUJ1dHRvbh8VkwAKAAAOQnJvd3NlT3BlbkZpbGUgGBAAFEJyb3dzZVNhdmVGaWxlQnV0dG9uHxWUAAoAAA5Ccm93c2VTYXZlRmlsZR1CCwADEDxNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmLkNvbmZpZ3VyYXRpb25UZXh0Qm94V2l0aEhlbHAfFpUAev8AD1NoYXJlZFNpemVHcm91cB8LlgCB/QMETmFtZR8PlwALAAAISGVscFRleHQfEZgAgP0ACklzUmVhZE9ubHkfGpkA7P8AE1VwZGF0ZVNvdXJjZVRyaWdnZXIfDpoAHv8AB1Rvb2xUaXAfEJsAX/0ACVBsYWNlbWVudB8PnACI/wAIRGF0YVR5cGUfC50Agv0DBE5hbWUfEJ4ACwAACVdhdGVybWFyax8YnwALAAARQnJvd3NlQnV0dG9uU3R5bGUfHaAACwAAFkJyb3dzZUNvbW1hbmRQYXJhbWV0ZXIdQwwAAxA9TWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5Db25maWd1cmF0aW9uQ29tYm9Cb3hXaXRoSGVscB8LoQCk/wMETmFtZR8RogCk/wAKSXNFZGl0YWJsZR8NowAMAAAGVmFsdWVzHxqkALf+ABNJc1RleHRTZWFyY2hFbmFibGVkHyClALf+ABlJc1RleHRTZWFyY2hDYXNlU2Vuc2l0aXZlHw+mAAwAAAhIZWxwVGV4dB8UpwDX/QANU2VsZWN0ZWRWYWx1ZQP0/QAURAA5aHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93aW5meC8yMDA2L3hhbWwvcHJlc2VudGF0aW9uAwAEAAIABQAUOgF4LGh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd2luZngvMjAwNi94YW1sBAAEAAIABQAGABQsAXMmY2xyLW5hbWVzcGFjZTpTeXN0ZW07YXNzZW1ibHk9bXNjb3JsaWIAABRfA2ltZ1djbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uUGxhdGZvcm1VSTthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcAABRDA3ZzbTtjbHItbmFtZXNwYWNlOlN5c3RlbS5XaW5kb3dzO2Fzc2VtYmx5PVByZXNlbnRhdGlvbkZyYW1ld29yawAAFDUDd3BmLWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZgAAJe5MAAAmCQAAAAAAAAAAJgkBAFoAAAAAACYJAgC0AAAAAAAnF/4AOQEAAAAAJ4L9AJgBAAAAACem/gAEAgAAAAAn2v0AVgIAAAAAJgkDAAIEAAAAADcBpv4mCQQATwUAAAAANwAAACeV/wDzBgAAAAA3AAQAJgkFAGYHAAAAACYJBgDaCAAAAAAnX/0AYQkAAAAAJ/j+AGQKAAAAACfJ/wASDAAAAAA3AZX/JgkHANsPAAAAACYJCABGEgAAAAA3AAcAJgkJANwSAAAAADcBlf83AAIANwABADcACwAngf0AdxcAAAAANwAEACdS/QAbGQAAAAA3AAQAJ1H9AGgZAAAAADcAAAAnh/4ATCEAAAAANwAEACeG/gDCIQAAAAA3AAAAJ4v+AAgiAAAAADcABAAniv4AfiIAAAAAJ7b/AIIjAAAAADcBlf83AAIAJwn+AP4oAAAAADcBlf8n9v0AviwAAAAAJ279AMUuAAAAACfc/QDNLwAAAAA3AAIANwACADcAAgA3AAIAJ6T/ALo1AAAAADcBlf83AAAAJgkMAEE+AAAAADcBgv0nBwAAij4AAAAANwAMACcJAACWQAAAAAA3AYL9NwAMACYJDQCbQwAAAAA3Acn/JgkOAE5EAAAAADcADQAmCQ8At0QAAAAANwANACYJEAAoRQAAAAA3AA0AJwsAAJ5FAAAAADcBgf0nDAAATEkAAAAAA5T9ACIAAJX/LhL/A9T9AAYHAQCJANv/BwIAA5T/AC5S/wP+/QAkB8//ATJx/SQNAwAHQWxpYXNlZD3/I5v/vSAEACQHmv8BMaT+JAkFAAMxIDFS/wQECAQEA5T9ACIAAJX/LhL/A9T9AAYHAQCJANv/BwIAA5T/AC5S/wNB/wAkB8//ATJx/SQNAwAHQWxpYXNlZD3/I5v/vSAEACQHmv8BMaT+JAkFAAMxIDJS/wQECAQEA5T9ACIAAEb+LhL/A9T9AAYHAQCJAJz/IwIAvSAEAAQD1P0ABgcBAIkAzf8kCAIAAjEwpP4EA9T9AAYHAQCJAM7/JAgCAAIxMKT+BAPU/QAGBwEAiQDP/yQHAgABM3H9BAPU/QAGDwEAiUDS/QdTdHJldGNoJA0CAAdVbmlmb3JtPf8EBAOU/QAiAAAX/i4S/wPU/QAGBwEAiQDo/yMCAL0gBgAEA9T9AAYHAQCJAOf/IwIAvSAHAAQD1P0ABgcBAIkAz/8kBwIAATJx/QQD1P0ABgcBAIkA3f8kBwIAATJx/QQEA5T9ACIAAIL9LhL/A9T9AAYHAQCJAJP/IwIAvSAEAAQD1P0ABgcBAIkAmP8kDgIACFNlZ29lIFVJKf8EA9T9AAYHAQCJAM//JAkCAAMzIDBx/QQD1P0ABgcBAIkAj/8kCgIABFdyYXA9/wQEA5T9ACIAAKb+LhL/A9T9AAYHAQCJAOD/IwIAvSAEAAQD1P0ABgcBAIkA5f8kDgIACFNlZ29lIFVJKf8EA9T9AAYHAQCJAM//JAcCAAEwcf0EBAOU/QAiAADa/S4S/wPU/QAGBwEAiQDg/yMCAL0gBAAEA9T9AAYdAQCJQB7/FU92ZXJyaWRlc0RlZmF1bHRTdHlsZQYGAgAuAAEEA9T9AAYHAQCJANv/BwIAA5T/ACIIANr9LlL/AwL/AAsJAAOm/wAEA6b/ACQK8/8EQXV0bwD/BAwLCgAD4/0ABAPj/QAkCqL/BEF1dG8A/wQMLiv/A9v9ACQhyv8bUEFSVF9TY3JvbGxDb250ZW50UHJlc2VudGVymf0kB8H/ATDF/iQHw/8BMMX+I8//egLd/yPt/3oC8v8j6/96AvH/IwsAegKf/wQD3P0AJBzK/xZQQVJUX1ZlcnRpY2FsU2Nyb2xsQmFymf0kDgwACFZlcnRpY2FsPf8kB8P/ATHF/iMOAHoCDQAjEAB6Ag8AIxIAegIRACN5/3oCEwAEA9z9ACQeyv8YUEFSVF9Ib3Jpem9udGFsU2Nyb2xsQmFymf0kEAwACkhvcml6b250YWw9/yQHwf8BMcX+JAfD/wEwxf4jDgB6AhQAIxAAegIVACMSAHoCFgAjef96AhcABAQECAQEA5T9ACIAAKb+OBgAAAAuEv8D1P0ABgcBAIkA3f8kBwIAATFx/QQD1P0ABgcBAIkA8f8HAgADiP8ALlL/AwL/AAsJAAOm/wAkCvP/BGF1dG8A/wQDpv8AJAfz/wEqAP8EDC4r/wNB/wAkB8P/ATDF/iQHy/8BNKT+JA3Q/wdTdHJldGNoPf8kDMj/BkNlbnRlcj3/JAfP/wE1cf0H0f8D7P8AKhANC0FjdHVhbFdpZHRoKwcZAAP8/QAqEAYEU2VsZisECAQIB5z/A+z/ACoQDApGb3JlZ3JvdW5kKwcZAAP8/QAqEA4MRmluZEFuY2VzdG9yKyQLGgAFTGFiZWxM/QQIBAgEA4L9ACQHw/8BMMX+JAx5/wZIaWRkZW49/yQHkv8BTZn9BAOC/QAkB8P/ATHF/iQKj/8EV3JhcD3/B5L/A+z/AAQIBAQECAQEA5T9ACIAAJX/LhL/A9T9AAYHAQCJAOX/JA4CAAhTZWdvZSBVSSn/BAPU/QAGBwEAiQDo/yMCAL0gBgAEA9T9AAYHAQCJAOD/IwIAvSAbAAQD1P0ABgcBAIkA5/8jAgC9IAcABAPU/QAGBwEAiQDm/yQHAgABMXH9BAPU/QAGGAEAiUAe/xBGb2N1c1Zpc3VhbFN0eWxlOAIAAAAEA9T9AAYcAQCJQAEAFEltYWdlQmFja2dyb3VuZENvbG9yIwIAvSAcAAQLHQADUP0ABhEeAIlASv0JSXNGb2N1c2VkBgYfAC4AAS4A/wPU/QAGBwEAiQDn/yMCAL0gIAAEA9T9AAYcAQCJQAEAFEltYWdlQmFja2dyb3VuZENvbG9yIwIAvSAhAAQEA1D9AAYHHgCJAHv/BgYfAC4AAC4A/wPU/QAGBwEAiQDo/yMCAL0gIgAEA9T9AAYHAQCJAOD/IwIAvSAjAAQD1P0ABgcBAIkA5/8jAgC9ICQABAPU/QAGHAEAiUABABRJbWFnZUJhY2tncm91bmRDb2xvciMCAL0gJQAEBAwEA5T9ACIAAJX/OBgAAAALHQADUP0ABhMeAIlASv0LSXNNb3VzZU92ZXIGBh8ALgABLgD/A9T9AAYHAQCJAOj/IwIAvSAmAAQD1P0ABhwBAIlAAQAUSW1hZ2VCYWNrZ3JvdW5kQ29sb3IjAgC9ICcABAQMBAOU/QAiAADO/y4S/wPU/QAGBwEAiQD8/yMCAL0gBgAEA9T9AAYHAQCJAPv/IwIAvSAHAAQD1P0ABgcBAIkA+v8kBwIAATFx/QQD1P0ABhwBAIlAAQAUSW1hZ2VCYWNrZ3JvdW5kQ29sb3IjAgC9IBwABAsdAANQ/QAGER4AiUBK/QlJc0ZvY3VzZWQGBh8ALgABLgD/A9T9AAYHAQCJAPv/IwIAvSAgAAQEA1D9AAYTHgCJQEr9C0lzTW91c2VPdmVyBgYfAC4AAS4A/wPU/QAGBwEAiQD8/yMCAL0gJgAEA9T9AAYcAQCJQAEAFEltYWdlQmFja2dyb3VuZENvbG9yIwIAvSAnAAQEA1D9AAYHHgCJAHv/BgYfAC4AAC4A/wPU/QAGBwEAiQD8/yMCAL0gIgAEA9T9AAYHAQCJAPv/IwIAvSAkAAQD1P0ABhwBAIlAAQAUSW1hZ2VCYWNrZ3JvdW5kQ29sb3IjAgC9ICUABAQMBAOU/QAiAADO/y4S/wPU/QAGBwEAiQD8/yMCAL0gKAAEA9T9AAYHAQCJAPv/IwIAvSAoAAQD1P0ABgcBAIkA+v8kBwIAATRx/QQD1P0ABgcBAIkAh/8jAgC9ICkABAPU/QAGHAEAiUABABRJbWFnZUJhY2tncm91bmRDb2xvciMCAL0gKgAEBAOU/QAiAABf/S4S/wPU/QAGBwEAiQDo/yMCAL0gKAAEA9T9AAYHAQCJAOf/IwIAvSAoAAQD1P0ABgcBAIkA5v8kBwIAATFx/QQD1P0ABgcBAIkAh/8jAgC9ICkABAPU/QAGHAEAiUABABRJbWFnZUJhY2tncm91bmRDb2xvciMCAL0gKgAEA9T9AAYHAQCJANv/BwIAA5T/ACIIAF/9LlL/A87/ACQKKwAEUm9vdJn9I/z/egLo/yP7/3oC5/8j+v96Aub/Ll//A5r/ACPt/3oC8v8jLQB6AiwAI+v/egLx/yPq/3oC8P8jh/96Aof/Iy4AegIuACPP/3oC3f8EBAQIBAQDlP0AIgAA+P4uEv8D1P0ABgcBAIkAz/8kBwIAATZx/QQD1P0ABgcBAIkA3f8kCQIAAzYgM3H9BAPU/QAGBwEAiQDn/yMCAL0gBwAEA9T9AAYHAQCJAOj/IwIAvSAvAAQD1P0ABhwBAIlAAQAUSW1hZ2VCYWNrZ3JvdW5kQ29sb3IjAgC9IDAABAPU/QAGBwEAiQDb/wcCAAOU/wAiCAD4/i5S/wMC/wALCgAD4/0AJAqi/wRhdXRvAP8EA+P9ACQKov8EYXV0bwD/BAPj/QAkB6L/ASoA/wQMLiv/A/79ACQHwf8BMcX+JAfA/wEyxf4jm/96Auf/JAea/wExpP4EA87/ACQHwf8BMMX+JAfA/wEyxf4kB8//ATNx/SQK0P8ETGVmdD3/I/z/egLo/y5f/wOa/wAkDOz/BkhlYWRlcpn9I8//egLd/wYG6f8uAAEEBAOa/wAkB8H/ATPF/iPP/3oC3f8EBAQIBAsdAANQ/QAGBx4AiQB7/wYGHwAuAAAuAP8D1P0ABgcBAIkA4P8jAgC9ICMABAPU/QAGBwEAiQDn/yMCAL0gJAAEBAwEA5T9ACIAAMn/OBgAAAAuEv8D1P0ABgcBAIkAz/8kBwIAATZx/QQD1P0ABgcBAIkA3f8kCQIAAzYgM3H9BAPU/QAGBwEAiQDb/wcCAAOU/wAiCADJ/y5S/wPO/wAj+/96Auf/I/r/egLm/yP8/3oC6P8uX/8Dmv8AI+v/egLx/yPt/3oC8v8jLQB6AiwAI9D/egLf/yPP/3oC3f8GBnz/LgAABgbp/y4AASPI/3oC2v8EBAQIBAsdAANQ/QAGBx4AiQD5/yQfHwAZQXBwbGljYXRpb25Db21tYW5kcy5DbG9zZaL/LgD/A9T9AAYQAQCJQMn/CElzQ2FuY2VsBgYCAC4AAQQEA1D9AAYTHgCJQEr9C0lzTW91c2VPdmVyBgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0gJgAEA9T9AAYHAQCJAOf/IwIAvSAxAAQD1P0ABhwBAIlAAQAUSW1hZ2VCYWNrZ3JvdW5kQ29sb3IjAgC9ICcABAQDUP0ABgceAIkA9v8GBh8ALgABLgD/A9T9AAYHAQCJAOf/IwIAvSAgAAQEA1D9AAYZHgCJQEr9EUlzS2V5Ym9hcmRGb2N1c2VkBgYfAC4AAS4A/wPU/QAGBwEAiQDn/yMCAL0gBwAEBANQ/QAGEx4AiUBK/QtJc01vdXNlT3ZlcgYGHwAuAAEuAP8D1P0ABgcBAIkA5/8jAgC9IDIABAPU/QAGBwEAiQDo/yMCAL0gMwAEA9T9AAYcAQCJQAEAFEltYWdlQmFja2dyb3VuZENvbG9yIwIAvSA0AAQEA1D9AAYHHgCJAPb/BgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0gNQAEA9T9AAYHAQCJAOD/IwIAvSA2AAQD1P0ABhwBAIlAAQAUSW1hZ2VCYWNrZ3JvdW5kQ29sb3IjAgC9IDcABAQDXf4ACzgAA57/AAYROQCJQMn/CUlzRGVmYXVsdAYGOgAuAAEEA57/AAYHOQCJAHv/BgY6AC4AAQQDnv8ABhM5AIlASv0LSXNNb3VzZU92ZXIGBjoALgAABAOe/wAGGTkAiUBK/RFJc0tleWJvYXJkRm9jdXNlZAYGOgAuAAAEDC4v/wPU/QAGBwEAiQDn/yMCAL0gIAAEBANd/gALOAADnv8ABhE5AIlAyf8JSXNEZWZhdWx0BgY6AC4AAQQDnv8ABgc5AIkAe/8GBjoALgABBAOe/wAGEzkAiUBK/QtJc01vdXNlT3ZlcgYGOgAuAAEEDC4v/wPU/QAGBwEAiQDn/yMCAL0gMQAEBAwEA5T9ACIAAMn/LhL/A9T9AAYHAQCJAOj/BgoCAOgCAf///wAEA9T9AAYHAQCJAOD/IwIAvSA7AAQD1P0ABgcBAIkA3/8kDAIABkNlbnRlcj3/BAPU/QAGBwEAiQDa/yQMAgAGQ2VudGVyPf8EA9T9AAYOAQCJQB7/BkN1cnNvciQKAgAESGFuZIv/BAPU/QAGBwEAiQDb/wcCAAOU/wAiCADJ/y5S/wOa/wAjh/96AuD/Bgbp/y4AASQK0f8EQXV0b6T+DTwAA/T9AgOU/QAngv0AAAAAAAAAIgAAgv0LHQADUP0ABhMeAIlASv0LSXNNb3VzZU92ZXIGBh8ALgABLgD/A9T9AAYHAQCJAJH/BwIAA3z9AAN9/QAkDz0ACVVuZGVybGluZT3/BAQIBAQMBAOU/QAnpv4AAAAAAAAAIgAApv4uEv8D1P0ABgcBAIkA4P8HAgAD7P8AKhAMCkZvcmVncm91bmQrBxkAA/z9ACQMGgAGQnV0dG9uTP0ECAQIBAQEDgQECAQD1P0ABhgBAIlAHv8QRm9jdXNWaXN1YWxTdHlsZQcCAAOU/QAiAACV/y4S/wPU/QAGBwEAiQDb/wcCAAOU/wAuUv8D/v0AJAfP/wEwcf0kDQMAB0FsaWFzZWQ9/yOb/70gBAAkB5r/ATGk/iQJBQADMSAxUv8EBAgEBAgECx0AA1D9AAYTHgCJQEr9C0lzTW91c2VPdmVyBgYfAC4AAS4A/wPU/QAGBwEAiQDg/yMCAL0gPgAEBANQ/QAGBx4AiQB7/wYGHwAuAAAuAP8D1P0ABgcBAIkA4P8jAgC9ID8ABAQMBAOU/QA4GAAAACIAAMn/Cx0AA4b/AAdAAAPs/wAqEAwKSXNTZWxlY3RlZCsHGQAD/P0AJBEaAAtMaXN0Qm94SXRlbUz9BAgECAUIQQAEVHJ1ZS5h/wPU/QAGBwEAiQDg/yMCAL0gQgAEBANQ/QAGBx4AiQB7/wYGHwAuAAAuAP8D1P0ABgcBAIkA4P8jAgC9ID8ABAQMBAOU/QAiAAA5/zgYAAAALhL/A9T9AAYHAQCJAL3/BwIAA0b+ADjJ/wEABmmp/+oCcAASegAFBwAAAK6TMEBRACT0AAUHAAAArpM4QFEANm4BBQcAAACukzBAUQA2bgEFBwAAAK7rNUBRACT0AAUHAAAArus9QFEAEnoABQcAAACu6zVAUQASegAFBwAAAK6TMEAZCAQIBAPU/QAGBwEAiQDk/yQHAgABOCj/BAPU/QAGBwEAiQDP/yQHAgABNHH9BAPU/QAGBwEAiQDd/yQHAgABNHH9BAPU/QAGGAEAiUAe/xBGb2N1c1Zpc3VhbFN0eWxlOAIAAgAEA9T9AAYHAQCJAN//JAwCAAZDZW50ZXI9/wQD1P0ABgcBAIkA2v8kDAIABkNlbnRlcj3/BAPU/QAGBwEAiQDb/wcCAAOU/wAiCAA5/w1DAAP0/QIDlP8AGRIORXhwYW5kZXJCdXR0b24KACIIAGT9LlL/AwL/AAdEAAPs/wAHGQAD/P0AIhoAOf8ECAQILiv/A0H/ACQHmv8BMaT+B5v/A+z/ACoQDQtCb3JkZXJCcnVzaCsECAec/wPs/wAqEAwKQmFja2dyb3VuZCsECAfL/wPs/wAqEA4MQWN0dWFsSGVpZ2h0KwcZAAP8/QAqEAYEU2VsZisECAQIB8z/A+z/ACoQDQtBY3R1YWxXaWR0aCsHGQAD/P0AKhAGBFNlbGYrBAgECAQDmv8ABgZ8/y4AAAYG6f8uAAEkDND/BkNlbnRlcj3/JAzI/wZDZW50ZXI9/yPP/3oC3f8EBAQEDi5S/wMC/wAjz/96As//CwoAA+P9ACQKov8EYXV0bwD/BAPj/QAkEEUACkNvbnRlbnRSb3eZ/SQHov8BMAD/BAwLCQADpv8AJArz/wRhdXRvAP8EDC4r/wNk/QAkFEYADkV4cGFuZGVyQnV0dG9umf0kB8H/ATDF/iPg/3oC4P8j8v96Ar3/IywAegJHACPx/3oCvP8j8P96Arv/JAzf/wZDZW50ZXI9/yQM2v8GQ2VudGVyPf842/8DACPd/3oC3f8jSAB6AkgAB0kAA+z/ACoQDApJc0V4cGFuZGVkKyQMSgAGVHdvV2F5Pf8HGQAD/P0AKhARD1RlbXBsYXRlZFBhcmVudCsECAQIBAOa/wAkDUsAB0NvbnRlbnSZ/SQHwf8BMcX+BAQLTAADUP0ABhIeAIlAOf8KSXNFeHBhbmRlZAYGHwAuAAEuAP8D1P0AJBBNAApDb250ZW50Um93mf0HAgAD7P8AKhAPDURlc2lyZWRIZWlnaHQrJA1OAAdDb250ZW50mf0ECAYHAQCJAKL/BAQMBAgECx0AA1D9AAYTHgCJQEr9C0lzTW91c2VPdmVyBgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0gJgAEA9T9AAYHAQCJAOf/IwIAvSAxAAQD1P0ABhwBAIlAAQAUSW1hZ2VCYWNrZ3JvdW5kQ29sb3IjAgC9ICcABAQDUP0ABhIeAIlAOf8KSXNFeHBhbmRlZAYGHwAuAAEuAP8D1P0ABgcBAIkA5/8jAgC9ICAABAQMBAOU/QAiAACB/TgYAAAALhL/A9T9AAYSAQCJQID9CkNhcmV0QnJ1c2gjAgC9IAQABAPU/QAGGAEAiUAe/xBGb2N1c1Zpc3VhbFN0eWxlBwIAA1r+AAQIBAPU/QAGBwEAiQDb/wcCAAOU/wAiCACA/S5S/wPO/wAkDMr/BkJvcmRlcpn9JAdPAAEycf0j/P96Auj/I/v/egLn/yP6/3oC5v8uX/8D2v0AJBZQABBQQVJUX0NvbnRlbnRIb3N0mf0kB8//ATBx/Qfo/wNa/gAECAQEBAgECx0AA1D9AAYVHgCJQID9DUFjY2VwdHNSZXR1cm4GBh8ALgAALgD/A9T9AAYHAQCJANr/JAwCAAZDZW50ZXI9/wQEA13+AAs4AAOe/wAGFTkAiUCA/Q1BY2NlcHRzUmV0dXJuBgY6AC4AAQQDnv8ABhM5AIlASv0LSXNNb3VzZU92ZXIGBjoALgABBAwLL/8D1P0ABgcBAIkA6P8jAgC9ICYABAPU/QAGHAEAiUABABRJbWFnZUJhY2tncm91bmRDb2xvciMCAL0gJwAEDAQMBAOU/QAiAABS/TgYAAAALhL/A9T9AAYHAQCJAOj/IwIAvSBRAAQD1P0ABhgBAIlAHv8QRm9jdXNWaXN1YWxTdHlsZQcCAANa/gAECAQEA5T9ACIAAFH9LhL/A9T9AAYHAQCJAOj/BgoCAOgCAf///wAEA9T9AAYHAQCJAOb/JAcCAAEwcf0EA9T9AAYHAQCJAOD/IwIAvSBSAAQD1P0ABhgBAIlAHv8QRm9jdXNWaXN1YWxTdHlsZTgCAAAABAPU/QAGBwEAiQDb/wcCAAOU/wAiCABR/S5S/wMC/wAjz/96As//B6r/A1r+AAQIB0gAA1r+AAQIC1MAAwMAABkQDENvbW1vblN0YXRlc///LlQAAwQAABkKBk5vcm1hbP//BAMEAAAZDQlNb3VzZU92ZXL//wQDBAAAGQsHUHJlc3NlZP//BAMEAAAZDAhEaXNhYmxlZP//BAQDAwAAGRMPU2VsZWN0aW9uU3RhdGVz//8uVAADBAAAGQ4KVW5zZWxlY3RlZP//BAMEAAAZDAhTZWxlY3RlZP//LlUAA6D9AC6G/wNU/gAkD1YACVNlbGVjdGlvbpn9JBBXAApCYWNrZ3JvdW5kFP4uLv8Daf8AI1kAvSBYACQHWgABMKj+BAQDVP4AJAxWAAZIZWFkZXKZ/SQQVwAKRm9yZWdyb3VuZBT+Li7/A2n/ACNZAL0gWwAkB1oAATCo/gQEBAQDBAAAGRQQU2VsZWN0ZWRJbmFjdGl2Zf//LlUAA6D9AC6G/wNU/gAkD1YACVNlbGVjdGlvbpn9JBBXAApCYWNrZ3JvdW5kFP4uLv8Daf8AI1kAvSBcAAQEBAQEAwMAABkSDkhhc0l0ZW1zU3RhdGVz//8uVAADBAAAGQwISGFzSXRlbXP//wQDBAAAGQsHTm9JdGVtc///LlUAA6D9AC6G/wNU/gAkFFYADkV4cGFuZGVyQnV0dG9umf0kEFcAClZpc2liaWxpdHkU/i4u/wNp/wAkB1oAATCo/iNZAFoCXQAEBAQEBAMDAAAZEw9FeHBhbnNpb25TdGF0ZXP//y5UAAMEAAAZDQlDb2xsYXBzZWT//wQDBAAAGQwIRXhwYW5kZWT//y5VAAOg/QAuhv8DVP4AJA9WAAlJdGVtc0hvc3SZ/SQQVwAKVmlzaWJpbGl0eRT+Li7/A2n/ACQHWgABMKj+I1kAWgJeAAQEBAQEDAsKAAPj/QAkCqL/BEF1dG8A/wQD4/0AJAei/wEqAP8EDAsJAAOm/wAkCPP/AjE1AP8EA6b/ACQK8/8EQXV0bwD/BAOm/wAkB/P/ASoA/wQMLiv/A2T9ACQURgAORXhwYW5kZXJCdXR0b26Z/SQN0P8HU3RyZXRjaD3/JA3I/wdTdHJldGNoPf8GBt7/LgAAI+D/egLg/wdJAAPs/wAqEAwKSXNFeHBhbmRlZCskDEoABlR3b1dheT3/BxkAA/z9ACoQEQ9UZW1wbGF0ZWRQYXJlbnQrBAgECAfb/wOU/wAiCABk/S5S/wMC/wAkCl8ABFJvb3SZ/QYKqv/oAgH///8AC1MAAwMAABkQDENvbW1vblN0YXRlc///LlQAAwQAABkKBk5vcm1hbP//BAMEAAAZDQlNb3VzZU92ZXL//wQDBAAAGQwIRGlzYWJsZWT//wQEAwMAABkPC0NoZWNrU3RhdGVz//8uVAADBAAAGQ0JVW5jaGVja2Vk//8EAwQAABkLB0NoZWNrZWT//y5VAAOg/QAuhv8DV/8AJBVWAA9VbmNoZWNrZWRWaXN1YWyZ/SQNVwAHT3BhY2l0eRT+JAdgAAEwWP4kB2EAATBE/wQDV/8AJBNWAA1DaGVja2VkVmlzdWFsmf0kDVcAB09wYWNpdHkU/iQHYAABMVj+JAdhAAEwRP8EBAQEDC4r/wMC/wAkC9D/BVJpZ2h0Pf8kDc//BzIgMiA1IDJx/S4r/wNG/gAkFWIAD1VuY2hlY2tlZFZpc3VhbJn9JAfH/wE2pP4kB9H/ATmk/iOb/3oC4P8kDMj/BkNlbnRlcj3/JAvQ/wVSaWdodD3/BiKp/+oC8AAAAAAAAAAA0QAAAABAVIkA0UBLTAAgqkQACQgkB5r/ATGk/iQLYwAFTWl0ZXI9/wQDRv4AJBNiAA1DaGVja2VkVmlzdWFsmf0kB2QAATBR/yQHx/8BNqT+JAfR/wE2pP4jnP96AuD/JAzI/wZDZW50ZXI9/yQM0P8GQ2VudGVyPf8GIqn/6gLwgI1bAAAAAADRgI1bAICNWwDRAAAAAICNWwAJCCQLYwAFTWl0ZXI9/wQEBAQIBAPO/wAkDysACVNlbGVjdGlvbpn9JAfD/wExxf4j/P96Auj/I/v/egLn/yP6/3oC5v8kB8//ATBx/SNPAHoC3f8HSAADWv4ABAguX/8DAv8ALiv/A8n/ACQMZQAGSGVhZGVymf0kC2YABUhvdmVyPf8j4P96AuD/I4f/egLg/yMuAHoCLgAj0P96At//I8j/egLa/yQHz/8BMHH9Bgbe/y4AACNIAHoCSAAH6P8DWv4ABAgH2/8DlP8AIggAyf8uUv8DAv8AI6r/egLo/y4r/wOa/wAkDUsAB0NvbnRlbnSZ/SMuAHoCLgAj7f96AvL/I+v/egLx/yQK0P8ETGVmdD3/JAfP/wEwcf0EBAQIB/L/A5r/ACPt/3oCuf8j6/96Arj/JAfP/wEwcf0ECAQEBAO1/gAkD2cACUl0ZW1zSG9zdJn9JAfB/wExxf4kB8P/ATHF/iQHwv8BMsX+JA95/wlDb2xsYXBzZWQ9/wQEBAgEBAOU/QAiAACH/jgYAAAALhL/A9T9AAYHAQCJAOj/IwIAvSAvAAQD1P0ABhwBAIlAAQAUSW1hZ2VCYWNrZ3JvdW5kQ29sb3IjAgC9IDAABAPU/QAGGAEAiUAe/xBGb2N1c1Zpc3VhbFN0eWxlBwIAA1r+AAQIBAQDlP0AIgAAhv4uEv8D1P0ABgcBAIkA6P8HAgADWv4ABAgEA9T9AAYYAQCJQB7/EEZvY3VzVmlzdWFsU3R5bGU4AgAAAAQEA5T9ACIAAIv+OBgAAAAuEv8D1P0ABgcBAIkA6P8jAgC9IC8ABAPU/QAGHAEAiUABABRJbWFnZUJhY2tncm91bmRDb2xvciMCAL0gMAAEA9T9AAYYAQCJQB7/EEZvY3VzVmlzdWFsU3R5bGUHAgADWv4ABAgEBAOU/QAiAACK/i4S/wPU/QAGBwEAiQDo/wcCAANa/gAECAQD1P0ABgcBAIkA2/8HAgADlP8AIggAiv4uUv8DAv8AI6r/egLo/yOH/3oC4P8uK/8Dmv8AI+3/egLy/yPr/3oC8f8j6v96AvD/JA3Q/wdTdHJldGNoPf8EBAtMAANQ/QAGEx4AiUBK/QtJc01vdXNlT3ZlcgYGHwAuAAEuAP8D1P0AIwIAvSBoAAYHAQCJAOj/BAQDUP0ABhIeAIlAiv4KSXNTZWxlY3RlZAYGHwAuAAEuAP8D1P0AIwIAvSBpAAYHAQCJAOj/BAPU/QAjAgC9IEIABgcBAIkA4P8EBAwECAQEA5T9ACIAALb/OBgAAAAuEv8D1P0ABgcBAIkA2v8kDAIABkNlbnRlcj3/BAPU/QAGGAEAiUAe/xBGb2N1c1Zpc3VhbFN0eWxlBwIAA1r+AAQIBAPU/QAGBwEAiQDb/wcCAAOU/wAiCAC2/y5S/wMC/wAGCqr/6AIB////AAsJAAOm/wAkCvP/BEF1dG8A/wQDpv8AJAfz/wEqAP8EDC4r/wPO/wAkFCsADmNoZWNrQm94Qm9yZGVymf0j+/96Auf/I/r/egLm/yP8/3oC6P8j0P96At//JAfP/wExcf0jyP96Atr/B8v/A+z/ACoQDgxBY3R1YWxIZWlnaHQrBxkAA/z9ACoQBgRTZWxmKwQIBAgHzP8D7P8AKhANC0FjdHVhbFdpZHRoKwcZAAP8/QAqEAYEU2VsZisECAQILl//AwL/ACQOXwAIbWFya0dyaWSZ/S4r/wNG/gAkEGIACm9wdGlvbk1hcmuZ/TjJ/wEABnep/+oCcCtUCwIFAwAAAFxXI0BRPm5WAgUOAAAAXK8qQFGh6WQBBQQAAADXe0JAUW/OXAEFBAAAANd7QkBR69uNAAUHAAAArj85QFGIRcgABQcAAACuOzRAUaSlUAEFBwAAAK7vO0BRK1QLAgUDAAAAXFcjQBkIJAzQ/wZDZW50ZXI9/yQMyP8GQ2VudGVyPf8kB2QAATBR/wQD/v0AJBdqABFpbmRldGVybWluYXRlTWFya5n9I5z/egLg/yQHz/8BMnH9JAdkAAEwUf8EBAQDAv8AJAfD/wExxf4kDc//BzQgMCAwIDBx/QsJAAOm/wAkCvP/BGF1dG8A/wQDpv8AJAfz/wEqAP8EDC4r/wP+/QAkD2oACWZvY3VzUmVjdJn9JAfD/wEwxf4kDQMAB0FsaWFzZWQ9/yOb/70gBAAkB5r/ATGk/iQJBQADMSAxUv8kDHn/BkhpZGRlbj3/BAOa/wAkFksAEGNvbnRlbnRQcmVzZW50ZXKZ/SQHw/8BMMX+I+v/egLx/yPt/3oC8v8jLQB6AiwAI9D/egLf/yPP/3oC3f8GBun/LgABI8j/egLa/wQEBAtMAANQ/QAGER4AiUBK/QlJc0ZvY3VzZWQGBh8ALgABLgD/A9T9ACQPTQAJZm9jdXNSZWN0mf0GBwEAiQB5/yQNAgAHVmlzaWJsZT3/BAQDUP0ABhEeAIlAZP0JSXNDaGVja2VkJAofAARUcnVlWf4uAP8D1P0AJBBNAApvcHRpb25NYXJrmf0GDwEAiUBK/QdPcGFjaXR5JAcCAAExUf8EA9T9ACQXTQARaW5kZXRlcm1pbmF0ZU1hcmuZ/QYPAQCJQEr9B09wYWNpdHkkBwIAATBR/wQEA1D9AAcfAANa/gAECAYRHgCJQGT9CUlzQ2hlY2tlZC4A/wPU/QAkEE0ACm9wdGlvbk1hcmuZ/QYPAQCJQEr9B09wYWNpdHkkBwIAATBR/wQD1P0AJBdNABFpbmRldGVybWluYXRlTWFya5n9Bg8BAIlASv0HT3BhY2l0eSQHAgABMVH/BAQMBAgECx0AA1D9AAYTHgCJQEr9C0lzTW91c2VPdmVyBgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0gJgAEA9T9AAYHAQCJAOf/IwIAvSAxAAQEA1D9AAYHHgCJAPb/BgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0gawAEA9T9AAYHAQCJAOf/IwIAvSBsAAQD1P0ABgcBAIkA4P8jAgC9IG0ABAQDUP0ABgceAIkAe/8GBh8ALgAALgD/A9T9AAYHAQCJAOj/IwIAvSAiAAQD1P0ABgcBAIkA5/8jAgC9ICQABAPU/QAGBwEAiQDg/yMCAL0gIwAEBAwEA5T9ACIAAAn+OBgAAAAuEv8D1P0ABgcBAIkA2v8kDAIABkNlbnRlcj3/BAPU/QAGGAEAiUAe/xBGb2N1c1Zpc3VhbFN0eWxlBwIAA1r+AAQIBAPU/QAGBwEAiQDb/wcCAAOU/wAiCAAJ/i5S/wMC/wAGCqr/6AIB////AAsJAAOm/wAkCvP/BEF1dG8A/wQDpv8AJAfz/wEqAP8EDC4r/wNB/wAjm/96Auf/I5r/egLm/yOc/3oC6P8Hy/8D7P8AKhAODEFjdHVhbEhlaWdodCsHGQAD/P0AKhAGBFNlbGYrBAgECAfM/wPs/wAqEA0LQWN0dWFsV2lkdGgrBxkAA/z9ACoQBgRTZWxmKwQIBAgEA0H/ACQQbgAKb3B0aW9uTWFya5n9I5z/egLg/yQHz/8BNXH9JAdkAAEwUf8EAwL/ACQHw/8BMcX+JA3P/wc0IDAgMCAwcf0LCQADpv8AJArz/wRhdXRvAP8EA6b/ACQH8/8BKgD/BAwuK/8D/v0AJA9qAAlmb2N1c1JlY3SZ/SQHw/8BMMX+JA0DAAdBbGlhc2VkPf8jm/+9IAQAJAea/wExpP4kCQUAAzEgMVL/JAx5/wZIaWRkZW49/wQDmv8AJBZLABBjb250ZW50UHJlc2VudGVymf0kB8P/ATDF/iPr/3oC8f8j7f96AvL/Iy0AegIsACPQ/3oC3/8jz/96At3/Bgbp/y4AASPI/3oC2v8EBAQLTAADUP0ABhEeAIlASv0JSXNGb2N1c2VkBgYfAC4AAS4A/wPU/QAkD00ACWZvY3VzUmVjdJn9BgcBAIkAef8kDQIAB1Zpc2libGU9/wQEA1D9AAYRHgCJQGT9CUlzQ2hlY2tlZCQKHwAEVHJ1ZVn+LgD/A9T9ACQQTQAKb3B0aW9uTWFya5n9Bg8BAIlASv0HT3BhY2l0eSQHAgABMVH/BAQMBAgECx0AA1D9AAYTHgCJQEr9C0lzTW91c2VPdmVyBgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0gJgAEA9T9AAYHAQCJAOf/IwIAvSAxAAQEA1D9AAYHHgCJAPb/BgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0gawAEA9T9AAYHAQCJAOf/IwIAvSBsAAQD1P0ABgcBAIkA4P8jAgC9IG0ABAQDUP0ABgceAIkAe/8GBh8ALgAALgD/A9T9AAYHAQCJAOj/IwIAvSAiAAQD1P0ABgcBAIkA5/8jAgC9ICQABAPU/QAGBwEAiQDg/yMCAL0gIwAEBAwEA5T9ACIAAPb9LhL/A9T9AAYHAQCJAOj/IwIAvSBvAAQD1P0ABgcBAIkA4P8jAgC9IHAABAPU/QAGBwEAiQDf/yQMAgAGQ2VudGVyPf8EA9T9AAYHAQCJANr/JAwCAAZDZW50ZXI9/wQD1P0ABgcBAIkA3f8kBwIAATFx/QQD1P0ABgcBAIkAfP8GBgIALgAABAPU/QAGBwEAiQDe/wYGAgAuAAAEA9T9AAYHAQCJANv/BwIAA5T/ACIIAPb9LlL/A87/ACP8/3oC6P8kCWQAAzEuMFH/Ll//A5r/ACNkAHoCZAAj7f96AvL/Iy0AegIsACPr/3oC8f8GBnz/LgAAI8//egLd/yPQ/3oC3/8jyP96Atr/BAQECAQLHQADUP0ABhMeAIlASv0LSXNNb3VzZU92ZXIGBh8ALgABLgD/A9T9AAYHAQCJAOj/IwIAvSBxAAQD1P0ABgcBAIkA4P8jAgC9IHIABAQDUP0ABgceAIkA9v8GBh8ALgABLgD/A9T9AAYHAQCJAOj/IwIAvSBzAAQD1P0ABgcBAIkA4P8jAgC9IHQABAQDUP0ABgceAIkAe/8GBh8ALgAALgD/A9T9AAYPAQCJQEr9B09wYWNpdHkkCgIABDAuNTZR/wQD1P0ABgcBAIkA6P8jAgC9IHUABAPU/QAGBwEAiQDg/yMCAL0gdgAEBAwEA5T9ACIAAG79LhL/A9T9AAYHAQCJAOj/IwIAvSB3AAQD1P0ABh0BAIlAHv8VT3ZlcnJpZGVzRGVmYXVsdFN0eWxlBgYCAC4AAQQD1P0ABgcBAIkA3v8GBgIALgAABAPU/QAGBwEAiQDb/wcCAAOU/wAiCABu/S5S/wP+/QAjnP96Auj/I9H/egLR/yPH/3oCx/8EBAgECx0AA1D9AAYTHgCJQEr9C0lzTW91c2VPdmVyBgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0geAAEBANQ/QAGEh4AiUBu/QpJc0RyYWdnaW5nBgYfAC4AAS4A/wPU/QAGBwEAiQDo/yMCAL0geQAEBAwEA5T9ACIAANz9LhL/A9T9AAYdAQCJQJP9FUlzUHJlc3NBbmRIb2xkRW5hYmxlZAYGAgAuAAAEA9T9AAYXAQCJQJP9D0lzRmxpY2tzRW5hYmxlZAYGAgAuAAAEA9T9AAYHAQCJAOj/IwIAvSB6AAQD1P0ABgcBAIkAx/8jAgC9IHL/BAPU/QAGBwEAiQDL/yMCAL0gcv8EA9T9AAYHAQCJANv/BwIAA5T/ACIIANz9LlL/AwL/ACQIXwACQmeZ/QsKAAPj/QAjof+9IHH/BAPj/QAkDKL/BjFFLTA1KgD/BAPj/QAjof+9IHH/BAwuK/8D9v0AJBd7ABFQQVJUX0xpbmVVcEJ1dHRvbpn9JB35/xdTY3JvbGxCYXIuTGluZVVwQ29tbWFuZKL/I3v/egJ8AC7y/wNG/gA4yf8AAAZpqf/qAnAAJPQABQcAAACuTzJAUTUWnwEFBwAAAK5LPUBRNRafAQUEAAAA12tCQFEAJPQABQcAAACuIzpAUcsxSQAFBAAAANdrQkBRyzFJAAUHAAAArks9QFEAJPQABQcAAACuTzJAGQgEBANd/QAkEH0AClBBUlRfVHJhY2uZ/QYGhf8uAAEje/96AnwAJAfB/wExxf4HfgAD9v0AJB35/xdTY3JvbGxCYXIuUGFnZVVwQ29tbWFuZKL/BAgHfwAD9v0AJB/5/xlTY3JvbGxCYXIuUGFnZURvd25Db21tYW5kov8ECAeAAANu/QAj5/96Auf/I+b/egLm/wQIBAP2/QAkGXsAE1BBUlRfTGluZURvd25CdXR0b26Z/SQf+f8ZU2Nyb2xsQmFyLkxpbmVEb3duQ29tbWFuZKL/I3v/egJ8ACQHwf8BMsX+LvL/A0b+ADjJ/wEABmmp/+oCcMsxSQAFBwAAAK4fMEBRACT0AAUHAAAArtM6QFE1Fp8BBQcAAACuHzBAUTUWnwEFBwAAAK6rN0BRACT0AAUEAAAA11NBQFHLMUkABQcAAACuqzdAUcsxSQAFBwAAAK4fMEAZCAQEBAQIBAsdAANQ/QAGEx4AiUDc/QtPcmllbnRhdGlvbiQQHwAKSG9yaXpvbnRhbD3/LgD/A9T9AAYHAQCJAMf/JAoCAARBdXRvpP4EA9T9AAYHAQCJAMv/JAcCAAEwpP4EA9T9AAYHAQCJANH/IwIAvSCU/wQD1P0ABgcBAIkAzP8jAgC9IJT/BAPU/QAGBwEAiQDb/wcCAAOU/wAiCADc/S5S/wMC/wAkCF8AAkJnmf0LCQADpv8AI/X/vSCV/wQDpv8AJAzz/wYxRS0wNSoA/wQDpv8AI/X/vSCV/wQMLiv/A/b9ACQZewATUEFSVF9MaW5lTGVmdEJ1dHRvbpn9JB/5/xlTY3JvbGxCYXIuTGluZUxlZnRDb21tYW5kov8je/96AnwALvL/A0b+ADjJ/wIABmmp/+oCcN5dDgEFDgAAAFw/KEBR2YWBAQUOAAAAXD8oQFHENN4ABQcAAACuUzdAUdmFgQEFBAAAANdDQUBR3l0OAQUEAAAA10NBQFEnwmYABQcAAACuUzdAUd5dDgEFDgAAAFw/KEAZCAQEA139ACQQfQAKUEFSVF9UcmFja5n9JAfD/wExxf4je/96AnwAB34AA/b9ACQf+f8ZU2Nyb2xsQmFyLlBhZ2VMZWZ0Q29tbWFuZKL/BAgHfwAD9v0AJCD5/xpTY3JvbGxCYXIuUGFnZVJpZ2h0Q29tbWFuZKL/BAgHgAADbv0ABAgEA/b9ACQaewAUUEFSVF9MaW5lUmlnaHRCdXR0b26Z/SQHw/8BMsX+JCD5/xpTY3JvbGxCYXIuTGluZVJpZ2h0Q29tbWFuZKL/I3v/egJ8AC7y/wNG/gA4yf8DAAZpqf/qAnAnwmYABQ4AAABcPyhAUSLq2QAFDgAAAFw/KEBR2YWBAQUHAAAArlM3QFEi6tkABQQAAADXQ0FAUSfCZgAFBAAAANdDQUBRPBMKAQUHAAAArlM3QFEnwmYABQ4AAABcPyhAGQgEBAQECAQEDAQDlP0AIgAApP84GAAAAC4S/wPU/QAGHQEAiUAe/xVPdmVycmlkZXNEZWZhdWx0U3R5bGUGBgIALgAABAPU/QAGGAEAiUAe/xBGb2N1c1Zpc3VhbFN0eWxlOAIAAQAEA9T9AAYHAQCJAJ7/JAoCAARBdXRvPf8EA9T9AAYHAQCJAJ3/JAoCAARBdXRvPf8EA9T9AAYHAQCJAN3/JAcCAAE0cf0EA9T9AAYHAQCJAJ//BgYCAC4AAQQD1P0ABhMBAIlA2v0LUGFubmluZ01vZGUkCgIABEJvdGg9/wQD1P0ABhcBAIlAk/0PSXNGbGlja3NFbmFibGVkBgYCAC4AAAQD1P0ABgcBAIkA2/8HAgADlP8AIggApP8uUv8DAv8AJBJfAAx0ZW1wbGF0ZVJvb3SZ/QsJAAOm/wAkB/P/ASoA/wQDpv8AI/T/vSBy/yQH8/8BMAD/BAwuK/8DG/4AJBCBAApQQVJUX1BvcHVwmf0GBoIALgABJAfC/wEyxf4kB8//ATFx/SOj/70gLv8kDKT/BkJvdHRvbT3/B6X/A+z/ACoQEA5Jc0Ryb3BEb3duT3BlbiskDEoABlR3b1dheT3/BxkAA/z9ACoQEQ9UZW1wbGF0ZWRQYXJlbnQrBAgECC6m/wPO/wAkFCsADkRyb3BEb3duQm9yZGVymf0j+/+9IIMAJAf6/wExcf0j/P+9IIQAI4f/vSCFACPO/3oChgAHy/8D7P8AKhANC0FjdHVhbFdpZHRoKyQSTgAMdGVtcGxhdGVSb290mf0ECC5f/wPa/QAkGlAAFERyb3BEb3duU2Nyb2xsVmlld2Vymf0u8v8DAv8AJApfAARncmlkmf0kDYcAB0VuYWJsZWQ9/y4r/wO+/wAkDIgABmNhbnZhc5n9JArQ/wRMZWZ0Pf8kB9H/ATCk/iQJyP8DVG9wPf8kB8f/ATCk/i4r/wP+/QAkEGoACk9wYXF1ZVJlY3SZ/Qec/wPs/wAqEAwKQmFja2dyb3VuZCskFE4ADkRyb3BEb3duQm9yZGVymf0ECAfR/wPs/wAqEA4MQWN0dWFsSGVpZ2h0KyQUTgAORHJvcERvd25Cb3JkZXKZ/QQIB8f/A+z/ACoQDQtBY3R1YWxXaWR0aCskFE4ADkRyb3BEb3duQm9yZGVymf0ECAQEA7X+ACQUZwAOSXRlbXNQcmVzZW50ZXKZ/SQPiQAJQ29udGFpbmVkPf8EBAQEBANk/QAkEkYADHRvZ2dsZUJ1dHRvbpn9I+f/egLn/yPm/3oC5v8j6P96Auj/I+D/egLg/yQHwv8BMsX+B0kAA+z/ACoQEA5Jc0Ryb3BEb3duT3BlbiskDEoABlR3b1dheT3/BxkAA/z9ACoQEQ9UZW1wbGF0ZWRQYXJlbnQrBAgECAfJ/wOU/QAiAABk/S4S/wPU/QAGHQEAiUAe/xVPdmVycmlkZXNEZWZhdWx0U3R5bGUGBgIALgABBAPU/QAGBwEAiQDe/wYGAgAuAAAEA9T9AAYHAQCJAHz/BgYCAC4AAAQD1P0ABhEBAIlAyP8JQ2xpY2tNb2RlJAsCAAVQcmVzcz3/BAPU/QAGBwEAiQDb/wcCAAOU/wAiCABk/S5S/wPO/wAkEisADHRlbXBsYXRlUm9vdJn9I/z/egLo/yP7/3oC5/8j+v96Aub/Ll//A87/ACQRKwALc3BsaXRCb3JkZXKZ/SP7/3oC5/8kB/r/ATFx/SQL0P8FUmlnaHQ9/yQHz/8BMHH9I8f/vSBy/y5f/wNG/gAkC2IABUFycm93mf0GRqn/6gLwAAAAAAAAAADR+LEoAJqwKADRmGFRAAAAAADRmGFRAFDQ5P/RzLAoABKBDQDRAAAAAFDQ5P/RAAAAAAAAAAAZCCOc/3oC4P8kDND/BkNlbnRlcj3/JAfP/wEwcf0kDMj/BkNlbnRlcj3/BAQEC0wAA4b/ACQLQQAFRmFsc2WZ/QdAAAPs/wAqEAwKSXNFZGl0YWJsZSsHGQAD/P0AIhoApP8ECAQILmH/A9T9ACQRTQALc3BsaXRCb3JkZXKZ/QYHAQCJAPv/BgoCAOgCAf///wAEBAwECAQECAQDmv8AJBZLABBjb250ZW50UHJlc2VudGVymf0j6/96ArH/I+3/egKKACMtAHoCiwAj0P96At//BgaMAC4AACPP/3oC3f8jyP96Atr/BAQLTAADXf4ACzgAA57/AAYTOQCJQEr9C0lzTW91c2VPdmVyBgY6AC4AAQQDnv8ABhI5AIlApP8KSXNFZGl0YWJsZQYGOgAuAAEEDC4v/wPU/QAjAgC9IDEABgcBAIkA5/8EBANQ/QAGEx4AiUBK/QtJc01vdXNlT3ZlcgYGHwAuAAEuAP8D1P0AIwIAvSAmAAYHAQCJAOj/BAQDUP0ABhAeAIlAt/4ISGFzSXRlbXMGBh8ALgAALgD/A9T9ACQUTQAORHJvcERvd25Cb3JkZXKZ/QYHAQCJANH/JAgCAAI5NaT+BAQDUP0AJBqNABREcm9wRG93blNjcm9sbFZpZXdlcpn9BgceAIkAn/8GBh8ALgAALgD/A9T9ACQQTQAKT3BhcXVlUmVjdJn9BwIAA+z/ACoQEA5WZXJ0aWNhbE9mZnNldCskGk4AFERyb3BEb3duU2Nyb2xsVmlld2Vymf0ECAYLAQCJQL7/A1RvcAQD1P0AJBBNAApPcGFxdWVSZWN0mf0HAgAD7P8AKhASEEhvcml6b250YWxPZmZzZXQrJBpOABREcm9wRG93blNjcm9sbFZpZXdlcpn9BAgGDAEAiUC+/wRMZWZ0BAQDUP0ABhYeAIlApP8OSXNEcm9wRG93bk9wZW4GBh8ALgABLgD/A9T9ACMCAL0gBgAGBwEAiQDo/wQD1P0AIwIAvSBsAAYHAQCJAOf/BAQMBAgEBAOU/QAiAACC/TgYAAAALhL/A9T9AAYHAQCJAJP/IwIAvSA/AAQD1P0ABg8BAIlAgv0HUGFkZGluZyQNAgAHOCAwIDAgNXH9BAQDlP0AIgAABwAuEv8D1P0ABgcBAIkAfP8GBgIALgAABAPU/QAGBwEAiQDP/yQNAgAHMCAwIDAgOHH9BAPU/QAGBwEAiQDe/wYGAgAuAAAEA9T9AAYHAQCJANv/BwIAA5T/AC5S/wMC/wAHRAAD7P8ABxkAA/z9ACIaAAcABAgECAsKAAPj/QAkCqL/BGF1dG8A/wQD4/0AJAqi/wRhdXRvAP8EA+P9ACQHov8BKgD/BAwuK/8Dpv4AJAfB/wEwxf4j4P+9IAQAB/L/A+z/ACoQBwVUaXRsZSsECAeOAAPs/wAkDU4AB0NvbnRlbnSZ/QQIBAOC/QAkDsr/CEhlbHBUZXh0mf0kB8H/ATHF/jjJ/wAAB5L/A+z/ACoQCghIZWxwVGV4dCsECAQDmv8AJA3K/wdDb250ZW50mf0kB8H/ATLF/iQHz/8BM3H9I48AegKPAAft/wPs/wAqEAkHQ29udGVudCsECAeQAAPs/wAqEAoISGVscFRleHQrBAgEBAtMAANQ/QAGEx4AiUAHAAtIYXNIZWxwVGV4dAYGHwAuAAAuAP8D1P0AJA5NAAhIZWxwVGV4dJn9BgcBAIkAef8kDwIACUNvbGxhcHNlZD3/BAQDUP0ABgceAIkAe/8GBh8ALgAALgD/A9T9AAYPAQCJQEr9B09wYWNpdHkkCQIAAzAuNVH/BAQMBAgEBAOU/QAiAAAJAC4S/wPU/QAGBwEAiQB8/wYGAgAuAAAEA9T9AAYHAQCJAM//JA0CAAcwIDAgMCA4cf0EA9T9AAYHAQCJAN7/BgYCAC4AAAQD1P0ABgcBAIkA2/8HAgADlP8ADUMAA/T9AgOU/QAZDAhIZWxwVGV4dAoAIgAAgv04GAAAAC4S/wPU/QAGBwEAiQCT/yMCAL0gPwAEA9T9AAYPAQCJQIL9B1BhZGRpbmckDQIABzggMCAwIDVx/QQEBA4uUv8DAv8AB0QAA+z/AAcZAAP8/QAiGgAJAAQIBAgLCgAD4/0AJAqi/wRhdXRvAP8EA+P9ACQHov8BKgD/BAwLCQADpv8AJArz/wRhdXRvAP8EA6b/ACQH8/8BKgD/BAwuK/8Dyf8AJA3K/wdDb250ZW50mf0kB8P/ATDF/iQHwf8BMMX+JAfA/wEyxf4kB8//ATNx/SQN0P8HU3RyZXRjaD3/JAzI/wZDZW50ZXI9/yOPAHoCjwAH8v8D7P8AKhAJB0NvbnRlbnQrBAgH+f8D7P8AKhAJB0NvbW1hbmQrBAgH+P8D7P8AKhASEENvbW1hbmRQYXJhbWV0ZXIrBAgH9/8D7P8AKhAPDUNvbW1hbmRUYXJnZXQrBAgHkAAD7P8AKhAKCEhlbHBUZXh0KwQIBAOm/gAkB8P/ATHF/iQHwf8BMMX+I+D/vSAEAAfy/wPs/wAqEAcFVGl0bGUrBAgHjgAD7P8AJA1OAAdDb250ZW50mf0ECAQDgv0AJA7K/whIZWxwVGV4dJn9JAfD/wExxf4kB8H/ATHF/jjJ/wEAB5L/A+z/ACoQCghIZWxwVGV4dCsECAQEC0wAA1D9AAYTHgCJQAkAC0hhc0hlbHBUZXh0BgYfAC4AAC4A/wPU/QAkDk0ACEhlbHBUZXh0mf0GBwEAiQB5/yQPAgAJQ29sbGFwc2VkPf8EBANQ/QAGBx4AiQB7/wYGHwAuAAAuAP8D1P0ABg8BAIlASv0HT3BhY2l0eSQJAgADMC41Uf8EBAwECAQEA5T9ACIAAMn/OBgAAAAuEv8D1P0ABgcBAIkAy/8HAgAD7P8ABxkAA/z9ACoQBgRTZWxmKwQIJBKRAAxBY3R1YWxIZWlnaHQU/gQIBAPU/QAGBwEAiQDP/yQNAgAHNiAwIDAgMHH9BAPU/QAGBwEAiQDy/yQJAgADLi4umf0EA9T9AAYHAQCJAND/JAwCAAZDZW50ZXI9/wQD1P0ABgcBAIkAyP8kDAIABkNlbnRlcj3/BAQDlP0AIgAAyf84GAAAAC4S/wPU/QAGBwEAiQD5/yMCAFoCkgAEA9T9AAYQAQCJQAgACEhlbHBUZXh0JCwCACZPcGVucyBhIGRpYWxvZyB0byBicm93c2UgZm9yIGEgZm9sZGVyLpn9BAQDlP0AIgAAyf84GAAAAC4S/wPU/QAGBwEAiQD5/yMCAFoCkwAEA9T9AAYQAQCJQAgACEhlbHBUZXh0JDQCAC5PcGVucyBhIGRpYWxvZyB0byBicm93c2UgZm9yIGFuIGV4aXN0aW5nIGZpbGUumf0EBAOU/QAiAADJ/zgYAAAALhL/A9T9AAYHAQCJAPn/IwIAWgKUAAQD1P0ABhABAIlACAAISGVscFRleHQkOQIAM09wZW5zIGEgZGlhbG9nIHRvIHNlbGVjdCBhIGxvY2F0aW9uIHRvIHNhdmUgYSBmaWxlLpn9BAQDlP0AIgAACwAuEv8D1P0ABgcBAIkAfP8GBgIALgAABAPU/QAGBwEAiQDb/wcCAAOU/wAiCAALAC5S/wMC/wALCgAD4/0AJAqi/wRhdXRvAP8EDAsJAAOm/wAkB/P/ASoA/wQDpv8AJArz/wRhdXRvAP8kJZUAH0NvbmZpZ3VyYXRpb25Ccm93c2VCdXR0b25Db2x1bW6Z/QQMLiv/A4H9ACQOlgAIX1RleHRCb3iZ/SQHw/8BMMX+JA3P/wc0IDQgMSA0cf0kDcj/B1N0cmV0Y2g9/zjJ/wAAI48AegKPACOQAHoClwAHmAAD7P8AKhAMCklzUmVhZE9ubHkrJAxKAAZPbmVXYXk9/wcZAAP8/QAqEBEPVGVtcGxhdGVkUGFyZW50KwQIBAgHjv8D7P8AKhAGBFRleHQrJAxKAAZUd29XYXk9/wcZAAP8/QAqEBEPVGVtcGxhdGVkUGFyZW50KwQIJBWZAA9Qcm9wZXJ0eUNoYW5nZWQ9/wQILo7/B5oAA1/9ACQMmwAGQm90dG9tPf8j8v96ApcAB/H/A4j/ACKcAJz9KIf/AAAAAAAAACosnP0rKS5S/wOC/QAkCo//BFdyYXA9/yQJzf8DMzAwpP4Hkv8D7P8ABAgEBAgECC6O/wQDgv0AJBCdAApfV2F0ZXJtYXJrmf0kB8P/ATDF/iOT/70gPwAkCtD/BExlZnQ9/yQMyP8GQ2VudGVyPf8kDc//BzggMCAwIDBx/QYGjAAuAAAkDHn/BkhpZGRlbj3/I5L/egKeAAQDyf8AJA1lAAdfQnJvd3Nlmf0kB8P/ATHF/iQNz/8HMSA0IDQgNHH9JAzI/wZDZW50ZXI9/yPJ/3oCnwAj+P96AqAAB/f/A+z/ACQOTgAIX1RleHRCb3iZ/QQIBAQLTAADUP0AJA6NAAhfVGV4dEJveJn9BgceAIkAjv8kBh8AAJn9LgD/A9T9ACQQTQAKX1dhdGVybWFya5n9BgcBAIkAef8kDQIAB1Zpc2libGU9/wQEA1D9ACQOjQAIX1RleHRCb3iZ/QYSHgCJQID9CklzUmVhZE9ubHkGBh8ALgABLgD/A9T9ACQNTQAHX0Jyb3dzZZn9BgcBAIkAef8kDwIACUNvbGxhcHNlZD3/BAQDUP0AJA2NAAdfQnJvd3Nlmf0HHwADWv4ABAgGBx4AiQDJ/y4A/wPU/QAkDU0AB19Ccm93c2WZ/QYHAQCJAHn/JA8CAAlDb2xsYXBzZWQ9/wQEDAQIBAQDlP0AIgAADAAuEv8D1P0ABgcBAIkAfP8GBgIALgAABAPU/QAGBwEAiQDb/wcCAAOU/wAiCAAMAC5S/wMC/wALCQADpv8AJAfz/wEqAP8EA6b/ACQK8/8EYXV0bwD/JCWVAB9Db25maWd1cmF0aW9uQnJvd3NlQnV0dG9uQ29sdW1umf0EDC4r/wOk/wAkD6EACV9Db21ib0JveJn9JAfD/wEwxf4GBqIALgAAJA3P/wc0IDQgMSA0cf0kDMj/BkNlbnRlcj3/I67/egKjAAYGpAAuAAEGBqUALgAAI48AegKPACOQAHoCpgAHpwAD7P8AKhAHBVZhbHVlKyQMSgAGVHdvV2F5Pf8HGQAD/P0AKhARD1RlbXBsYXRlZFBhcmVudCsECAQIB5oAA1/9ACQMmwAGQm90dG9tPf8j8v96AqYAB/H/A4j/ACKcAJz9KIf/AAAAAAAAACosnP0rKS5S/wOC/QAkCo//BFdyYXA9/yQJzf8DMzAwpP4Hkv8D7P8ABAgEBAgECAQEBAgEBAQCCwABAAAA/////wEAAAAAAAAABAEAAAAOU3lzdGVtLkJvb2xlYW4BAAAAB21fdmFsdWUAAQALAAEAAAD/////AQAAAAAAAAAEAQAAAA5TeXN0ZW0uQm9vbGVhbgEAAAAHbV92YWx1ZQABAAs=]]></Val>
+        <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAMAAAALAAEAAAD/////AQAAAAAAAAAGAQAAABhzaGFyZWQvd3BmL2NvbnRyb2xzLmJhbWwLAAEAAAD/////AQAAAAAAAAAEAQAAAB9TeXN0ZW0uVW5pdHlTZXJpYWxpemF0aW9uSG9sZGVyAwAAAAREYXRhCVVuaXR5VHlwZQxBc3NlbWJseU5hbWUBAAEIBgIAAAAfU3lzdGVtLklPLlVubWFuYWdlZE1lbW9yeVN0cmVhbQQAAAAGAwAAAEttc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkLAAEAAAD/////AQAAAAAAAAAPAQAAAOVlAAACDAAAAE0AUwBCAEEATQBMAAAAYAAAAGAAAABgAAEA/////wAcTwAAS21zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4ORsxJmNsci1uYW1lc3BhY2U6U3lzdGVtO2Fzc2VtYmx5PW1zY29ybGliBlN5c3RlbQAAHGYBAGJNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcsIFZlcnNpb249MTUuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYRt9V2Nsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5QbGF0Zm9ybVVJO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZyFNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlBsYXRmb3JtVUkBABxcAgBYUHJlc2VudGF0aW9uRnJhbWV3b3JrLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49MzFiZjM4NTZhZDM2NGUzNRtOO2Nsci1uYW1lc3BhY2U6U3lzdGVtLldpbmRvd3M7YXNzZW1ibHk9UHJlc2VudGF0aW9uRnJhbWV3b3JrDlN5c3RlbS5XaW5kb3dzAgAcYgMAXk1pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scywgVmVyc2lvbj0xLjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EbUS1jbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW9Ub29scy5XcGYfTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZgMAHFIEAE5XaW5kb3dzQmFzZSwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcVwUAU1ByZXNlbnRhdGlvbkNvcmUsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj0zMWJmMzg1NmFkMzY0ZTM1HFIGAE5TeXN0ZW0uWGFtbCwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkgFAAAEEZvY3VzVmlzdWFsU3R5bGUfEQAAlP0AClRhcmdldFR5cGUfDwEA1P0ACFByb3BlcnR5HwwCANT9AAVWYWx1ZR8PAwD6/QAIRWRnZU1vZGUdLgAAAwAoTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5Db250cm9scx8UBAAAAAANRm9yZWdyb3VuZEtleR8WBQDS/QAPU3Ryb2tlRGFzaEFycmF5IBsBABdFbGxpcHNlRm9jdXNWaXN1YWxTdHlsZSAMAgAISWNvblBhdGgfGwYAAAAAFENvbnRyb2xCYWNrZ3JvdW5kS2V5HxcHAAAAABBDb250cm9sQm9yZGVyS2V5HxEIAJT/AApUYXJnZXRUeXBlHxgJAAL/ABFDb2x1bW5EZWZpbml0aW9ucx8VCgAC/wAOUm93RGVmaW5pdGlvbnMfFwsA2/0AEENhbkNvbnRlbnRTY3JvbGwfEgwA3P0AC09yaWVudGF0aW9uHxUNANr9AA5WZXJ0aWNhbE9mZnNldB8MDgAI/gAFVmFsdWUfFw8A2v0AEFNjcm9sbGFibGVIZWlnaHQfDhAACP4AB01heGltdW0fFREA2v0ADlZpZXdwb3J0SGVpZ2h0HxMSANz9AAxWaWV3cG9ydFNpemUfKhMA2v0AI0NvbXB1dGVkVmVydGljYWxTY3JvbGxCYXJWaXNpYmlsaXR5HxcUANr9ABBIb3Jpem9udGFsT2Zmc2V0HxYVANr9AA9TY3JvbGxhYmxlV2lkdGgfFBYA2v0ADVZpZXdwb3J0V2lkdGgfLBcA2v0AJUNvbXB1dGVkSG9yaXpvbnRhbFNjcm9sbEJhclZpc2liaWxpdHkgEQMADUJ1bGxldGVkTGFiZWwfDhgAlP0AB0Jhc2VkT24fFRkA7P8ADlJlbGF0aXZlU291cmNlHxMaAPz9AAxBbmNlc3RvclR5cGUgEgQADkNvbnRyb2xOb0hvdmVyHxsbAAAAABRDb250cm9sRm9yZWdyb3VuZEtleR09AQABADdNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlBsYXRmb3JtVUkuSW1hZ2VUaGVtaW5nVXRpbGl0aWVzHyAcAAAAABlDb250cm9sQmFja2dyb3VuZENvbG9yS2V5Hw8dAJT9AAhUcmlnZ2Vycx8PHgBQ/QAIUHJvcGVydHkfDB8AUP0ABVZhbHVlHx8gAAAAABhDb250cm9sQm9yZGVyU2VsZWN0ZWRLZXkfKCEAAAAAIUNvbnRyb2xCYWNrZ3JvdW5kU2VsZWN0ZWRDb2xvcktleR8jIgAAAAAcQ29udHJvbEJhY2tncm91bmREaXNhYmxlZEtleR8jIwAAAAAcQ29udHJvbEZvcmVncm91bmREaXNhYmxlZEtleR8fJAAAAAAYQ29udHJvbEJvcmRlckRpc2FibGVkS2V5HyglAAAAACFDb250cm9sQmFja2dyb3VuZERpc2FibGVkQ29sb3JLZXkfICYAAAAAGUNvbnRyb2xCYWNrZ3JvdW5kSG92ZXJLZXkfJScAAAAAHkNvbnRyb2xCYWNrZ3JvdW5kSG92ZXJDb2xvcktleSAPBQALQ29udHJvbExpa2UgEQYADVRvb2x0aXBCb3JkZXIfGygAAAAAFFRvb2x0aXBCYWNrZ3JvdW5kS2V5HxUpAAAAAA5Ub29sdGlwVGV4dEtleR8gKgAAAAAZVG9vbHRpcEJhY2tncm91bmRDb2xvcktleR8LKwDO/wMETmFtZR8aLACc/wATQ29udGVudFN0cmluZ0Zvcm1hdB8aLQCa/wATQ29udGVudFN0cmluZ0Zvcm1hdB8NLgAe/wAGQ3Vyc29yHxQvAAAAAA1CYWNrZ3JvdW5kS2V5HxkwAAAAABJCYWNrZ3JvdW5kQ29sb3JLZXkfHDEAAAAAFUNvbnRyb2xCb3JkZXJIb3ZlcktleR8bMgAAAAAUQnV0dG9uQm9yZGVySG92ZXJLZXkfHzMAAAAAGEJ1dHRvbkJhY2tncm91bmRIb3ZlcktleR8kNAAAAAAdQnV0dG9uQmFja2dyb3VuZEhvdmVyQ29sb3JLZXkfITUAAAAAGkJ1dHRvbkJhY2tncm91bmRQcmVzc2VkS2V5HyE2AAAAABpCdXR0b25Gb3JlZ3JvdW5kUHJlc3NlZEtleR8nNwAAAAAgQ29udHJvbEJhY2tncm91bmRQcmVzc2VkQ29sb3JLZXkfETgAXf4ACkNvbmRpdGlvbnMfDzkAnv8ACFByb3BlcnR5Hww6AJ7/AAVWYWx1ZSAUBwAQTmF2aWdhdGlvbkJ1dHRvbh8TOwAAAAAMSHlwZXJsaW5rS2V5HxA8AB7/AAlSZXNvdXJjZXMfDz0Aff0ACExvY2F0aW9uHxg+AAAAABFIeXBlcmxpbmtIb3ZlcktleR8SPwAAAAALR3JheVRleHRLZXkgGggAFk5hdmlnYXRpb25CdXR0b25Jbkxpc3QfDkAAhv8AB0JpbmRpbmcfDEEAhv8ABVZhbHVlHxdCAAAAABBIaWdobGlnaHRUZXh0S2V5IBEJAA1Qb3B1cEV4cGFuZGVyHxBDABn/AAlSZXNvdXJjZXMgBwoAA0tleR8SRAAe/wALRGF0YUNvbnRleHQfC0UA4/0DBE5hbWUfC0YAZP0DBE5hbWUfGUcA8/4AEkhlYWRlclN0cmluZ0Zvcm1hdCASCwAORXhwYW5kZXJCdXR0b24fF0gAHv8AEEZvY3VzVmlzdWFsU3R5bGUfEEkAZP0ACUlzQ2hlY2tlZB8LSgDs/wAETW9kZR8LSwCa/wMETmFtZR8PTACU/wAIVHJpZ2dlcnMfEU0A1P0AClRhcmdldE5hbWUfEk4A7P8AC0VsZW1lbnROYW1lHw5PAM7/AAdQYWRkaW5nHwtQANr9AwROYW1lHxxRAAAAABVUcmVlVmlld0JhY2tncm91bmRLZXkdLQIAAgAnU3lzdGVtLldpbmRvd3MuSW5wdXQuS2V5Ym9hcmROYXZpZ2F0aW9uHxBSAAIAAAlJc1RhYlN0b3AfHFMAAAAAFVRyZWVWaWV3Rm9yZWdyb3VuZEtleR0nAwACACFTeXN0ZW0uV2luZG93cy5WaXN1YWxTdGF0ZU1hbmFnZXIfGFQAAwAAEVZpc3VhbFN0YXRlR3JvdXBzHSUEAAIAH1N5c3RlbS5XaW5kb3dzLlZpc3VhbFN0YXRlR3JvdXAfDVUABAAABlN0YXRlcx0gBQACABpTeXN0ZW0uV2luZG93cy5WaXN1YWxTdGF0ZR8RVgAFAAAKU3Rvcnlib2FyZB8RVwCg/QAKVGFyZ2V0TmFtZR8VWACg/QAOVGFyZ2V0UHJvcGVydHkfKFkAAAAAIVRyZWVWaWV3SXRlbVNlbGVjdGVkQmFja2dyb3VuZEtleR8MWgBS/gAFVmFsdWUfDlsAUv4AB0tleVRpbWUfKFwAAAAAIVRyZWVWaWV3SXRlbVNlbGVjdGVkRm9yZWdyb3VuZEtleR8wXQAAAAApVHJlZVZpZXdJdGVtSW5hY3RpdmVTZWxlY3RlZEJhY2tncm91bmRLZXkdHwYABQAZU3lzdGVtLldpbmRvd3MuVmlzaWJpbGl0eR8QXgAGAAAJQ29sbGFwc2VkHw5fAAYAAAdWaXNpYmxlHwtgAAL/AwROYW1lHwlhAFf/AAJUbx8PYgBn/QAIRHVyYXRpb24fC2MARv4DBE5hbWUfFWQA0v0ADlN0cm9rZUxpbmVKb2luHw5lAEr9AAdPcGFjaXR5HwtmAMn/AwROYW1lHxBnAMj/AAlDbGlja01vZGUfC2gAtf4DBE5hbWUfEmkAAAAAC0hvdFRyYWNrS2V5HxNqAAAAAAxIaWdobGlnaHRLZXkfC2sA/v0DBE5hbWUfImwAAAAAG0NvbnRyb2xCYWNrZ3JvdW5kUHJlc3NlZEtleR8ebQAAAAAXQ29udHJvbEJvcmRlclByZXNzZWRLZXkfIm4AAAAAG0NvbnRyb2xGb3JlZ3JvdW5kUHJlc3NlZEtleR8LbwBB/wMETmFtZR8icAAAAAAbU2Nyb2xsQmFyQXJyb3dCYWNrZ3JvdW5kS2V5HxhxAAAAABFTY3JvbGxCYXJBcnJvd0tleR8ncgAAAAAgU2Nyb2xsQmFyQXJyb3dCYWNrZ3JvdW5kSG92ZXJLZXkfHXMAAAAAFlNjcm9sbEJhckFycm93SG92ZXJLZXkfKXQAAAAAIlNjcm9sbEJhckFycm93QmFja2dyb3VuZFByZXNzZWRLZXkfH3UAAAAAGFNjcm9sbEJhckFycm93UHJlc3NlZEtleR8qdgAAAAAjU2Nyb2xsQmFyQXJyb3dCYWNrZ3JvdW5kRGlzYWJsZWRLZXkfIHcAAAAAGVNjcm9sbEJhckFycm93RGlzYWJsZWRLZXkfIngAAAAAG1Njcm9sbEJhclRodW1iQmFja2dyb3VuZEtleR8neQAAAAAgU2Nyb2xsQmFyVGh1bWJCYWNrZ3JvdW5kSG92ZXJLZXkfKXoAAAAAIlNjcm9sbEJhclRodW1iQmFja2dyb3VuZFByZXNzZWRLZXkfHXsAAAAAFlNjcm9sbEJhckJhY2tncm91bmRLZXkfC3wA9v0DBE5hbWUfEn0ASv0AC0lzTW91c2VPdmVyHwt+AF39AwROYW1lHxt/AF39ABREZWNyZWFzZVJlcGVhdEJ1dHRvbh8bgABd/QAUSW5jcmVhc2VSZXBlYXRCdXR0b24fDIEAXf0ABVRodW1iHwuCABv+AwROYW1lHxmDABv+ABJBbGxvd3NUcmFuc3BhcmVuY3kfHYQAAAAAFkNvbWJvQm94UG9wdXBCb3JkZXJLZXkfIYUAAAAAGkNvbWJvQm94UG9wdXBCYWNrZ3JvdW5kS2V5HyGGAAAAABpDb21ib0JveFBvcHVwRm9yZWdyb3VuZEtleR8YhwCk/wARTWF4RHJvcERvd25IZWlnaHQfFIgA+v0ADUNsZWFyVHlwZUhpbnQfC4kAvv8DBE5hbWUfHIoAAgAAFURpcmVjdGlvbmFsTmF2aWdhdGlvbh8XiwCk/wAQU2VsZWN0aW9uQm94SXRlbR8jjACk/wAcU2VsZWN0aW9uQm94SXRlbVN0cmluZ0Zvcm1hdB8XjQBK/QAQSXNIaXRUZXN0VmlzaWJsZR8RjgBQ/QAKU291cmNlTmFtZSAMDAAISGVscFRleHQdNQcAAxAvTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5MYWJlbGxlZENvbnRyb2wfDY8Apv4ABlRhcmdldB00CAAFAC5TeXN0ZW0uV2luZG93cy5BdXRvbWF0aW9uLkF1dG9tYXRpb25Qcm9wZXJ0aWVzHwuQAAgAAAROYW1lHw+RAAgAAAhIZWxwVGV4dB00CQADEC5NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmLkxhYmVsbGVkQnV0dG9uIBANAAxCcm93c2VCdXR0b24fC5IA7P8ABFBhdGggFg4AEkJyb3dzZUZvbGRlckJ1dHRvbh0uCgADAChNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmLkNvbW1hbmRzHxOTAAoAAAxCcm93c2VGb2xkZXIgGA8AFEJyb3dzZU9wZW5GaWxlQnV0dG9uHxWUAAoAAA5Ccm93c2VPcGVuRmlsZSAYEAAUQnJvd3NlU2F2ZUZpbGVCdXR0b24fFZUACgAADkJyb3dzZVNhdmVGaWxlHUILAAMQPE1pY3Jvc29mdC5WaXN1YWxTdHVkaW9Ub29scy5XcGYuQ29uZmlndXJhdGlvblRleHRCb3hXaXRoSGVscB8WlgB6/wAPU2hhcmVkU2l6ZUdyb3VwHwuXAIH9AwROYW1lHw+YAAsAAAhIZWxwVGV4dB8RmQCA/QAKSXNSZWFkT25seR8amgDs/wATVXBkYXRlU291cmNlVHJpZ2dlch8OmwAe/wAHVG9vbFRpcB8QnABf/QAJUGxhY2VtZW50Hw+dAIj/AAhEYXRhVHlwZR8LngCC/QMETmFtZR8QnwALAAAJV2F0ZXJtYXJrHxigAAsAABFCcm93c2VCdXR0b25TdHlsZR8doQALAAAWQnJvd3NlQ29tbWFuZFBhcmFtZXRlch1DDAADED1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmLkNvbmZpZ3VyYXRpb25Db21ib0JveFdpdGhIZWxwHwuiAKT/AwROYW1lHxGjAKT/AApJc0VkaXRhYmxlHw2kAAwAAAZWYWx1ZXMfGqUAt/4AE0lzVGV4dFNlYXJjaEVuYWJsZWQfIKYAt/4AGUlzVGV4dFNlYXJjaENhc2VTZW5zaXRpdmUfD6cADAAACEhlbHBUZXh0HxSoANf9AA1TZWxlY3RlZFZhbHVlA/T9ABREADlodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dpbmZ4LzIwMDYveGFtbC9wcmVzZW50YXRpb24DAAQAAgAFABQ6AXgsaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93aW5meC8yMDA2L3hh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]]></Val>
       </Bin>
       <Disp Edtr="External" LocTbl="false" />
     </Item>
@@ -832,7 +1111,7 @@
     </Item>
     <Item ItemId=";view/cookiecuttersearchpage.baml" ItemType="0" PsrId="211" Leaf="true">
       <Bin BinId="3">
-        <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAMAAAALAAEAAAD/////AQAAAAAAAAAGAQAAACB2aWV3L2Nvb2tpZWN1dHRlcnNlYXJjaHBhZ2UuYmFtbAsAAQAAAP////8BAAAAAAAAAAQBAAAAH1N5c3RlbS5Vbml0eVNlcmlhbGl6YXRpb25Ib2xkZXIDAAAABERhdGEJVW5pdHlUeXBlDEFzc2VtYmx5TmFtZQEAAQgGAgAAAB9TeXN0ZW0uSU8uVW5tYW5hZ2VkTWVtb3J5U3RyZWFtBAAAAAYDAAAAS21zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQsAAQAAAP////8BAAAAAAAAAA8BAAAAEi8AAAIMAAAATQBTAEIAQQBNAEwAAABgAAAAYAAAAGAAAQD/////ABxiAABeTWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLCBWZXJzaW9uPTEuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYRtdM2Nsci1uYW1lc3BhY2U6TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlZpZXdNb2RlbCVNaWNyb3NvZnQuQ29va2llY3V0dGVyVG9vbHMuVmlld01vZGVsAAAbXTNjbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scy5SZXNvdXJjZXMlTWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlJlc291cmNlcwAAG1EtY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmH01pY3Jvc29mdC5WaXN1YWxTdHVkaW9Ub29scy5XcGYAABxmAQBiTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nLCBWZXJzaW9uPTE1LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2Ebd1RjbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZzthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmceTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nAQAbfVdjbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uUGxhdGZvcm1VSTthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmchTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5QbGF0Zm9ybVVJAQAcawIAZ01pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2VDYXRhbG9nLCBWZXJzaW9uPTE1LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EbfFljbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZzthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdlQ2F0YWxvZx5NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcCABtJKWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzG01pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scwAAHT0AAAAQN01pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scy5WaWV3LkNvb2tpZWN1dHRlclNlYXJjaFBhZ2UDAAAAHFIDAE5XaW5kb3dzQmFzZSwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcXAQAWFByZXNlbnRhdGlvbkZyYW1ld29yaywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcVwUAU1ByZXNlbnRhdGlvbkNvcmUsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj0zMWJmMzg1NmFkMzY0ZTM1FEQAOWh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd2luZngvMjAwNi94YW1sL3ByZXNlbnRhdGlvbgMAAwAEAAUAHFIGAE5TeXN0ZW0uWGFtbCwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkUOgF4LGh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd2luZngvMjAwNi94YW1sBAADAAQABQAGABRKAm1jO2h0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9tYXJrdXAtY29tcGF0aWJpbGl0eS8yMDA2BAADAAQABQAGABRAAWQyaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS9leHByZXNzaW9uL2JsZW5kLzIwMDgEAAMABAAFAAYAFEICdm0zY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuQ29va2llY3V0dGVyVG9vbHMuVmlld01vZGVsBAADAAQABQAGABRCAnJjM2Nsci1uYW1lc3BhY2U6TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlJlc291cmNlcwQAAwAEAAUABgAUPQN3cGYtY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmBAADAAQABQAGABRoB2ltYWdpbmdUY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmc7YXNzZW1ibHk9TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nBAADAAQABQAGABRnA2ltZ1djbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uUGxhdGZvcm1VSTthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcEAAMABAAFAAYAFHIMaW1hZ2VjYXRhbG9nWWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2VDYXRhbG9nBAADAAQABQAGABQ5A2NjdCljbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scwQAAwAEAAUABgAdNgEAAAAwTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5MYW1iZGFQcm9wZXJ0aWVzHxkAAAEAABJJbXBvcnRlZE5hbWVzcGFjZXMkVgAAUFN5c3RlbS5XaW5kb3dzIE1pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scyBNaWNyb3NvZnQuQ29va2llY3V0dGVyVG9vbHMuVmlld01vZGVsmf0dLgIAAAAoTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5Db250cm9scx8UAQACAAANQmFja2dyb3VuZEtleR8RAgBO/gAKQmFja2dyb3VuZCMCAL0gAQAfGQMAAgAAEkJhY2tncm91bmRDb2xvcktleR09AwABADdNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlBsYXRmb3JtVUkuSW1hZ2VUaGVtaW5nVXRpbGl0aWVzHxsEAAMAABRJbWFnZUJhY2tncm91bmRDb2xvciMEAL0gAwAfDAUATv4ABVRpdGxlJAwFAAZTZWFyY2iZ/R8WBgBK/QAPQ29tbWFuZEJpbmRpbmdzCwYAHSkEAAUAI1N5c3RlbS5XaW5kb3dzLklucHV0LkNvbW1hbmRCaW5kaW5nAwQAAC0BAAAAHUEFAAAQO01pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scy5WaWV3TW9kZWwuQ29va2llY3V0dGVyVmlld01vZGVsHw8HAAUAAAhMb2FkTW9yZR8OCAAEAAAHQ29tbWFuZCMIAFoCBwAEAwQAAC0CAAAAHxMJAAUAAAxSdW5TZWxlY3Rpb24jCABaAgkABAMEAAAtAwAAAB8NCgAFAAAGU2VhcmNoIwgAWgIKAAQDBAAALQQAAAAfFAsABQAADU9wZW5JbkJyb3dzZXIjCABaAgsABAMEAAAtBQAAAB8VDAAFAAAOT3BlbkluRXhwbG9yZXIjCABaAgwABAwfEA0AHv8ACVJlc291cmNlcw0NAB8ZDgD0/QASTWVyZ2VkRGljdGlvbmFyaWVzHw0PAPT9AAZTb3VyY2UgBwAAA0tleR8YEAAC/wARQ29sdW1uRGVmaW5pdGlvbnMfCxEA7P8ABFBhdGgdNQYAAAAvTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5MYW1iZGFFeHRlbnNpb24fDRIABgAABkxhbWJkYQP0/QALDgAD9P0AJCEPABtDb29raWVjdXR0ZXJEaWN0aW9uYXJ5LnhhbWw//QQD9P0AA4j/ABkNCUluc3RhbGxlZAAALlL/AwL/AAsQAAOm/wAkCvP/BEF1dG8A/wQDpv8AJArz/wRBdXRvAP8EDC4r/wOC/QAkB8P/ATDF/geS/wPs/wAkEREAC0Rpc3BsYXlOYW1lFP4ECAQEBAOI/wAZCgZTb3VyY2UAAC5S/wMC/wALEAADpv8AJArz/wRBdXRvAP8EA6b/ACQK8/8EQXV0bwD/BAwuK/8Dgv0AJAfD/wEwxf4Hkv8D7P8AJBERAAtEaXNwbGF5TmFtZRT+BAgEBAQDBgAAGTEtT3BlcmF0aW9uU3RhdHVzSW5Qcm9ncmVzc1RvVmlzaWJsZU9yQ29sbGFwc2VkAAAuEgAQZGIoT3BlcmF0aW9uU3RhdHVzIHMpID0+IHMgPT0gT3BlcmF0aW9uU3RhdHVzLkluUHJvZ3Jlc3MgPyBWaXNpYmlsaXR5LlZpc2libGUgOiBWaXNpYmlsaXR5LkNvbGxhcHNlZAQDBgAAGS0pT3BlcmF0aW9uU3RhdHVzRmFpbGVkVG9WaXNpYmxlT3JDb2xsYXBzZWQAAC4SABBgXihPcGVyYXRpb25TdGF0dXMgcykgPT4gcyA9PSBPcGVyYXRpb25TdGF0dXMuRmFpbGVkID8gVmlzaWJpbGl0eS5WaXNpYmxlIDogVmlzaWJpbGl0eS5Db2xsYXBzZWQEAwYAABkwLE9wZXJhdGlvblN0YXR1c1N1Y2NlZWRlZFRvVmlzaWJsZU9yQ29sbGFwc2VkAAAuEgAQY2EoT3BlcmF0aW9uU3RhdHVzIHMpID0+IHMgPT0gT3BlcmF0aW9uU3RhdHVzLlN1Y2NlZWRlZCA/IFZpc2liaWxpdHkuVmlzaWJsZSA6IFZpc2liaWxpdHkuQ29sbGFwc2VkBAMGAAAZHBhCb29sVG9WaXNpYmxlT3JDb2xsYXBzZWQAAC4SABA7OShib29sIGIpID0+IGIgPyBWaXNpYmlsaXR5LlZpc2libGUgOiBWaXNpYmlsaXR5LkNvbGxhcHNlZAQDBgAAGRENQm9vbFRvVmlzaWJsZQAALhIAEDg2KGJvb2wgYikgPT4gYiA/IFZpc2liaWxpdHkuVmlzaWJsZSA6IFZpc2liaWxpdHkuSGlkZGVuBAMGAAAZFBBCb29sVG9Ob3RWaXNpYmxlAAAuEgAQODYoYm9vbCBiKSA9PiBiID8gVmlzaWJpbGl0eS5IaWRkZW4gOiBWaXNpYmlsaXR5LlZpc2libGUEAwYAABkUEE51bGxUb05vdFZpc2libGUAAC4SABBCQChvYmplY3QgbykgPT4gbyA9PSBudWxsID8gVmlzaWJpbGl0eS5IaWRkZW4gOiBWaXNpYmlsaXR5LlZpc2libGUEAwYAABkSDk51bGxOb3RWaXNpYmxlAAAuEgAQQkAob2JqZWN0IG8pID0+IG8gIT0gbnVsbCA/IFZpc2liaWxpdHkuSGlkZGVuIDogVmlzaWJpbGl0eS5WaXNpYmxlBAMGAAAZIx9FbXB0eVN0cmluZ1RvVmlzaWJsZU9yQ29sbGFwc2VkAAAuEgAQU1Eoc3RyaW5nIHMpID0+ICFzdHJpbmcuSXNOdWxsT3JFbXB0eShzKSA/IFZpc2liaWxpdHkuQ29sbGFwc2VkOiBWaXNpYmlsaXR5LlZpc2libGUEAwYAABkmIkVtcHR5U3RyaW5nVG9Ob3RWaXNpYmxlT3JDb2xsYXBzZWQAAC4SABBTUShzdHJpbmcgcykgPT4gc3RyaW5nLklzTnVsbE9yRW1wdHkocykgPyBWaXNpYmlsaXR5LkNvbGxhcHNlZCA6IFZpc2liaWxpdHkuVmlzaWJsZQQEDCUAAAAABA4uq/8DAv8AHxUTAAL/AA5Sb3dEZWZpbml0aW9ucwsTAAPj/QAkCqL/BEF1dG8A/wQD4/0AJAqi/wRBdXRvAP8EA+P9ACQHov8BKgD/BAPj/QAkCqL/BEF1dG8A/wQD4/0AJAqi/wRBdXRvAP8EDC4r/wOn/QAkB8H/ATDF/h8SFACn/QALT3JpZW50YXRpb24kDhQACFZlcnRpY2FsPf8Hef8D7P8AJBQRAA5DcmVhdGluZ1N0YXR1cxT+IDABACxPcGVyYXRpb25TdGF0dXNTdWNjZWVkZWRUb1Zpc2libGVPckNvbGxhcHNlZB8QFQDs/wAJQ29udmVydGVyIxUAWwIBAAQILiv/A6f9ACQNz/8HNCA0IDQgOHH9JBAUAApIb3Jpem9udGFsPf8uK/8dLwcAAQApTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nLkNyaXNwSW1hZ2UDBwAAJAjH/wIxNqT+JAjR/wIxNqT+HTIIAAIALE1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZy5Lbm93bk1vbmlrZXJzHw8WAAgAAAhTdGF0dXNPSx8OFwAHAAAHTW9uaWtlciMXAFoCFgAEA4L9ACQNz/8HNCAwIDAgMHH9JAqP/wRXcmFwPf8dKQkAAAAjTWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlN0cmluZ3MfKhgACQAAI1NlYXJjaFBhZ2VfRmlsZXNDcmVhdGVkU3VjY2Vzc2Z1bGx5I5L/WgIYAAQEA6f9ACQNz/8HNCA0IDQgOHH9JBAUAApIb3Jpem9udGFsPf8uK/8DBwAAJA7P/wgyMCAwIDAgMHH9JAjH/wIxNqT+JAjR/wIxNqT+HxEZAAgAAApPcGVuRm9sZGVyIxcAWgIZAAQDyf8AIBQCABBOYXZpZ2F0aW9uQnV0dG9uI8n/WwICACQNz/8HNCAwIDAgMHH9I/n/WgIMACQK0P8ETGVmdD3/HygaAAkAACFTZWFyY2hQYWdlX09wZW5JblNvbHV0aW9uRXhwbG9yZXIj8v9aAhoAB/j/A+z/ACQeEQAYT3BlbkluRXhwbG9yZXJGb2xkZXJQYXRoFP4fCxsA7P8ABE1vZGUkDBsABk9uZVdheT3/BAgEBAQDp/0AJAfB/wExxf4kDhQACFZlcnRpY2FsPf8uK/8DAv8ADQ0AIBUDABFTZWFyY2hCdXR0b25TdHlsZR8RHACU/QAKVGFyZ2V0VHlwZR8OHQCU/QAHQmFzZWRPbh8PHgDU/QAIUHJvcGVydHkfDB8A1P0ABVZhbHVlHxggAAkAABFTZWFyY2hQYWdlX1NlYXJjaAP0/QIlegAAACYJAwAAAAAAAAA3Acn/A5T9ACIcAMn/OB0AAAAuEv8D1P0ABgceAIkA+f8jHwBaAgoABAPU/QAGBx4AiQDy/yMfAFoCIAAEA9T9AAYHHgCJAN3/JAkfAAM2IDRx/QQD1P0ABgceAIkAz/8kDR8ABzMgMCAwIDBx/QQEBA4uK/8dQgoAABA8TWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5Db25maWd1cmF0aW9uVGV4dEJveFdpdGhIZWxwAwoAAB1CCwAAADxNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmLkNvbmZpZ3VyYXRpb25UZXh0Qm94V2l0aEhlbHAfDiEACwAAB0tleURvd24kFSEAD1RleHRCb3hfS2V5RG93bpn9JA3P/wcwIDAgMCAwcf0fHyIACQAAGFNlYXJjaFBhZ2VfU2VhcmNoVG9vbHRpcB8PIwAKAAAISGVscFRleHQjIwBaAiIAHyYkAAkAAB9TZWFyY2hQYWdlX1NlYXJjaEF1dG9tYXRpb25OYW1lHTQMAAUALlN5c3RlbS5XaW5kb3dzLkF1dG9tYXRpb24uQXV0b21hdGlvblByb3BlcnRpZXMfCyUADAAABE5hbWUjJQBaAiQAHyEmAAkAABpTZWFyY2hQYWdlX1NlYXJjaFdhdGVybWFyax8QJwAKAAAJV2F0ZXJtYXJrIycAWgImAB8YKAAKAAARQnJvd3NlQnV0dG9uU3R5bGUjKABbAgMAHwspAAoAAARUZXh0BykAA+z/ACQQEQAKU2VhcmNoVGVybRT+JAwbAAZUd29XYXk9/x8aKgDs/wATVXBkYXRlU291cmNlVHJpZ2dlciQVKgAPUHJvcGVydHlDaGFuZ2VkPf8ECAQEBANS/QAtBgAAACQHwf8BMsX+JA3P/wc0IDQgMCA4cf0Hrv8D7P8AJBMRAA1TZWFyY2hSZXN1bHRzFP4ECA0NAB8PKwCI/wAIRGF0YVR5cGUdQA0AABA6TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlZpZXdNb2RlbC5DYXRlZ29yaXplZFZpZXdNb2RlbB8SLADx/gALSXRlbXNTb3VyY2UdPQ4AABA3TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlZpZXdNb2RlbC5UZW1wbGF0ZVZpZXdNb2RlbB8LLQCn/QMETmFtZR8LLgAHAAMETmFtZR05DwAAEDNNaWNyb3NvZnQuQ29va2llY3V0dGVyVG9vbHMuUmVzb3VyY2VzLkltYWdlTW9uaWtlcnMfGy8ADwAAFENvb2tpZWN1dHRlclRlbXBsYXRlHw8wAIj/AAhUcmlnZ2Vycx8MMQCG/wAFVmFsdWUfDjIAhv8AB0JpbmRpbmcfETMA1P0AClRhcmdldE5hbWUfKDQACQAAIVNlYXJjaFBhZ2VfVXBkYXRlQXZhaWxhYmxlVG9vbHRpcB8hNQAPAAAaQ29va2llY3V0dGVyVGVtcGxhdGVVcGRhdGUd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7P8AKhAVE1NlbGVjdGVkRGVzY3JpcHRpb24rICMIAB9FbXB0eVN0cmluZ1RvVmlzaWJsZU9yQ29sbGFwc2VkIxUAWwIIAAQIBAQEA6f9ACQHwf8BMcX+JBAUAApIb3Jpem9udGFsPf8Hef8D7P8AJBYRABBTZWxlY3RlZFRlbXBsYXRlFP4jFQBbAgYABAguK/8Dyf8AJAfP/wE4cf0j+f9aAgsAI8n/WwICAB8dUgAJAAAWU2VhcmNoUGFnZV9MaW5rc0dpdEh1YiPy/1oCUgAH+P8D7P8AKhAgHlNlbGVjdGVkVGVtcGxhdGUuR2l0SHViSG9tZVVybCskDBsABk9uZVdheT3/BAgHNwAD7P8AKhAgHlNlbGVjdGVkVGVtcGxhdGUuR2l0SHViSG9tZVVybCskDBsABk9uZVdheT3/BAgEA8n/ACQHz/8BOHH9I/n/WgILACPJ/1sCAgAfI1MACQAAHFNlYXJjaFBhZ2VfTGlua3NHaXRIdWJJc3N1ZXMj8v9aAlMAB/j/A+z/ACoQIiBTZWxlY3RlZFRlbXBsYXRlLkdpdEh1Yklzc3Vlc1VybCskDBsABk9uZVdheT3/BAgHNwAD7P8AKhAiIFNlbGVjdGVkVGVtcGxhdGUuR2l0SHViSXNzdWVzVXJsKyQMGwAGT25lV2F5Pf8ECAQDyf8AJAfP/wE4cf0j+f9aAgsAI8n/WwICAB8hVAAJAAAaU2VhcmNoUGFnZV9MaW5rc0dpdEh1Yldpa2kj8v9aAlQAB/j/A+z/ACoQIB5TZWxlY3RlZFRlbXBsYXRlLkdpdEh1Yldpa2lVcmwrJAwbAAZPbmVXYXk9/wQIBzcAA+z/ACoQIB5TZWxlY3RlZFRlbXBsYXRlLkdpdEh1Yldpa2lVcmwrJAwbAAZPbmVXYXk9/wQIBAQEBAQEAgsAAQAAAP////8BAAAAAAAAAAQBAAAADlN5c3RlbS5Cb29sZWFuAQAAAAdtX3ZhbHVlAAEACwABAAAA/////wEAAAAAAAAABAEAAAAOU3lzdGVtLkJvb2xlYW4BAAAAB21fdmFsdWUAAQAL]]></Val>
+        <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAMAAAALAAEAAAD/////AQAAAAAAAAAGAQAAACB2aWV3L2Nvb2tpZWN1dHRlcnNlYXJjaHBhZ2UuYmFtbAsAAQAAAP////8BAAAAAAAAAAQBAAAAH1N5c3RlbS5Vbml0eVNlcmlhbGl6YXRpb25Ib2xkZXIDAAAABERhdGEJVW5pdHlUeXBlDEFzc2VtYmx5TmFtZQEAAQgGAgAAAB9TeXN0ZW0uSU8uVW5tYW5hZ2VkTWVtb3J5U3RyZWFtBAAAAAYDAAAAS21zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQsAAQAAAP////8BAAAAAAAAAA8BAAAAdy8AAAIMAAAATQBTAEIAQQBNAEwAAABgAAAAYAAAAGAAAQD/////ABxiAABeTWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLCBWZXJzaW9uPTEuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYRtdM2Nsci1uYW1lc3BhY2U6TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlZpZXdNb2RlbCVNaWNyb3NvZnQuQ29va2llY3V0dGVyVG9vbHMuVmlld01vZGVsAAAbXTNjbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scy5SZXNvdXJjZXMlTWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlJlc291cmNlcwAAG1EtY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmH01pY3Jvc29mdC5WaXN1YWxTdHVkaW9Ub29scy5XcGYAABxmAQBiTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nLCBWZXJzaW9uPTE1LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2Ebd1RjbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZzthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmceTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nAQAbfVdjbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uUGxhdGZvcm1VSTthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmchTWljcm9zb2Z0LlZpc3VhbFN0dWRpby5QbGF0Zm9ybVVJAQAcawIAZ01pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2VDYXRhbG9nLCBWZXJzaW9uPTE1LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EbfFljbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZzthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdlQ2F0YWxvZx5NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcCABtJKWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzG01pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scwAAHT0AAAAQN01pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scy5WaWV3LkNvb2tpZWN1dHRlclNlYXJjaFBhZ2UDAAAAHFIDAE5XaW5kb3dzQmFzZSwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcXAQAWFByZXNlbnRhdGlvbkZyYW1ld29yaywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcVwUAU1ByZXNlbnRhdGlvbkNvcmUsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj0zMWJmMzg1NmFkMzY0ZTM1FEQAOWh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd2luZngvMjAwNi94YW1sL3ByZXNlbnRhdGlvbgMAAwAEAAUAHFIGAE5TeXN0ZW0uWGFtbCwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkUOgF4LGh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd2luZngvMjAwNi94YW1sBAADAAQABQAGABRKAm1jO2h0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9tYXJrdXAtY29tcGF0aWJpbGl0eS8yMDA2BAADAAQABQAGABRAAWQyaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS9leHByZXNzaW9uL2JsZW5kLzIwMDgEAAMABAAFAAYAFEICdm0zY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuQ29va2llY3V0dGVyVG9vbHMuVmlld01vZGVsBAADAAQABQAGABRCAnJjM2Nsci1uYW1lc3BhY2U6TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlJlc291cmNlcwQAAwAEAAUABgAUPQN3cGYtY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvVG9vbHMuV3BmBAADAAQABQAGABRoB2ltYWdpbmdUY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmc7YXNzZW1ibHk9TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nBAADAAQABQAGABRnA2ltZ1djbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uUGxhdGZvcm1VSTthc3NlbWJseT1NaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcEAAMABAAFAAYAFHIMaW1hZ2VjYXRhbG9nWWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5JbWFnaW5nO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2VDYXRhbG9nBAADAAQABQAGABQ5A2NjdCljbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scwQAAwAEAAUABgAdNgEAAAAwTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5MYW1iZGFQcm9wZXJ0aWVzHxkAAAEAABJJbXBvcnRlZE5hbWVzcGFjZXMkVgAAUFN5c3RlbS5XaW5kb3dzIE1pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scyBNaWNyb3NvZnQuQ29va2llY3V0dGVyVG9vbHMuVmlld01vZGVsmf0dLgIAAAAoTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5Db250cm9scx8UAQACAAANQmFja2dyb3VuZEtleR8RAgBO/gAKQmFja2dyb3VuZCMCAL0gAQAfGQMAAgAAEkJhY2tncm91bmRDb2xvcktleR09AwABADdNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlBsYXRmb3JtVUkuSW1hZ2VUaGVtaW5nVXRpbGl0aWVzHxsEAAMAABRJbWFnZUJhY2tncm91bmRDb2xvciMEAL0gAwAfDAUATv4ABVRpdGxlJAwFAAZTZWFyY2iZ/R8WBgBK/QAPQ29tbWFuZEJpbmRpbmdzCwYAHSkEAAUAI1N5c3RlbS5XaW5kb3dzLklucHV0LkNvbW1hbmRCaW5kaW5nAwQAAC0BAAAAHUEFAAAQO01pY3Jvc29mdC5Db29raWVjdXR0ZXJUb29scy5WaWV3TW9kZWwuQ29va2llY3V0dGVyVmlld01vZGVsHw8HAAUAAAhMb2FkTW9yZR8OCAAEAAAHQ29tbWFuZCMIAFoCBwAEAwQAAC0CAAAAHxMJAAUAAAxSdW5TZWxlY3Rpb24jCABaAgkABAMEAAAtAwAAAB8NCgAFAAAGU2VhcmNoIwgAWgIKAAQDBAAALQQAAAAfFAsABQAADU9wZW5JbkJyb3dzZXIjCABaAgsABAMEAAAtBQAAAB8VDAAFAAAOT3BlbkluRXhwbG9yZXIjCABaAgwABAwfEA0AHv8ACVJlc291cmNlcw0NAB8ZDgD0/QASTWVyZ2VkRGljdGlvbmFyaWVzHw0PAPT9AAZTb3VyY2UgBwAAA0tleR8YEAAC/wARQ29sdW1uRGVmaW5pdGlvbnMfCxEA7P8ABFBhdGgdNQYAAAAvTWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5MYW1iZGFFeHRlbnNpb24fDRIABgAABkxhbWJkYQP0/QALDgAD9P0AJCEPABtDb29raWVjdXR0ZXJEaWN0aW9uYXJ5LnhhbWw//QQD9P0AA4j/ABkNCUluc3RhbGxlZAAALlL/AwL/AAsQAAOm/wAkCvP/BEF1dG8A/wQDpv8AJArz/wRBdXRvAP8EDC4r/wOC/QAkB8P/ATDF/geS/wPs/wAkEREAC0Rpc3BsYXlOYW1lFP4ECAQEBAOI/wAZCgZTb3VyY2UAAC5S/wMC/wALEAADpv8AJArz/wRBdXRvAP8EA6b/ACQK8/8EQXV0bwD/BAwuK/8Dgv0AJAfD/wEwxf4Hkv8D7P8AJBERAAtEaXNwbGF5TmFtZRT+BAgEBAQDBgAAGTEtT3BlcmF0aW9uU3RhdHVzSW5Qcm9ncmVzc1RvVmlzaWJsZU9yQ29sbGFwc2VkAAAuEgAQZGIoT3BlcmF0aW9uU3RhdHVzIHMpID0+IHMgPT0gT3BlcmF0aW9uU3RhdHVzLkluUHJvZ3Jlc3MgPyBWaXNpYmlsaXR5LlZpc2libGUgOiBWaXNpYmlsaXR5LkNvbGxhcHNlZAQDBgAAGS0pT3BlcmF0aW9uU3RhdHVzRmFpbGVkVG9WaXNpYmxlT3JDb2xsYXBzZWQAAC4SABBgXihPcGVyYXRpb25TdGF0dXMgcykgPT4gcyA9PSBPcGVyYXRpb25TdGF0dXMuRmFpbGVkID8gVmlzaWJpbGl0eS5WaXNpYmxlIDogVmlzaWJpbGl0eS5Db2xsYXBzZWQEAwYAABkwLE9wZXJhdGlvblN0YXR1c1N1Y2NlZWRlZFRvVmlzaWJsZU9yQ29sbGFwc2VkAAAuEgAQY2EoT3BlcmF0aW9uU3RhdHVzIHMpID0+IHMgPT0gT3BlcmF0aW9uU3RhdHVzLlN1Y2NlZWRlZCA/IFZpc2liaWxpdHkuVmlzaWJsZSA6IFZpc2liaWxpdHkuQ29sbGFwc2VkBAMGAAAZHBhCb29sVG9WaXNpYmxlT3JDb2xsYXBzZWQAAC4SABA7OShib29sIGIpID0+IGIgPyBWaXNpYmlsaXR5LlZpc2libGUgOiBWaXNpYmlsaXR5LkNvbGxhcHNlZAQDBgAAGRENQm9vbFRvVmlzaWJsZQAALhIAEDg2KGJvb2wgYikgPT4gYiA/IFZpc2liaWxpdHkuVmlzaWJsZSA6IFZpc2liaWxpdHkuSGlkZGVuBAMGAAAZFBBCb29sVG9Ob3RWaXNpYmxlAAAuEgAQODYoYm9vbCBiKSA9PiBiID8gVmlzaWJpbGl0eS5IaWRkZW4gOiBWaXNpYmlsaXR5LlZpc2libGUEAwYAABkUEE51bGxUb05vdFZpc2libGUAAC4SABBCQChvYmplY3QgbykgPT4gbyA9PSBudWxsID8gVmlzaWJpbGl0eS5IaWRkZW4gOiBWaXNpYmlsaXR5LlZpc2libGUEAwYAABkSDk51bGxOb3RWaXNpYmxlAAAuEgAQQkAob2JqZWN0IG8pID0+IG8gIT0gbnVsbCA/IFZpc2liaWxpdHkuSGlkZGVuIDogVmlzaWJpbGl0eS5WaXNpYmxlBAMGAAAZIx9FbXB0eVN0cmluZ1RvVmlzaWJsZU9yQ29sbGFwc2VkAAAuEgAQU1Eoc3RyaW5nIHMpID0+ICFzdHJpbmcuSXNOdWxsT3JFbXB0eShzKSA/IFZpc2liaWxpdHkuQ29sbGFwc2VkOiBWaXNpYmlsaXR5LlZpc2libGUEAwYAABkmIkVtcHR5U3RyaW5nVG9Ob3RWaXNpYmxlT3JDb2xsYXBzZWQAAC4SABBTUShzdHJpbmcgcykgPT4gc3RyaW5nLklzTnVsbE9yRW1wdHkocykgPyBWaXNpYmlsaXR5LkNvbGxhcHNlZCA6IFZpc2liaWxpdHkuVmlzaWJsZQQEDCUAAAAABA4uq/8DAv8AHxUTAAL/AA5Sb3dEZWZpbml0aW9ucwsTAAPj/QAkCqL/BEF1dG8A/wQD4/0AJAqi/wRBdXRvAP8EA+P9ACQHov8BKgD/BAPj/QAkCqL/BEF1dG8A/wQD4/0AJAqi/wRBdXRvAP8EDC4r/wOn/QAkB8H/ATDF/h8SFACn/QALT3JpZW50YXRpb24kDhQACFZlcnRpY2FsPf8Hef8D7P8AJBQRAA5DcmVhdGluZ1N0YXR1cxT+IDABACxPcGVyYXRpb25TdGF0dXNTdWNjZWVkZWRUb1Zpc2libGVPckNvbGxhcHNlZB8QFQDs/wAJQ29udmVydGVyIxUAWwIBAAQILiv/A6f9ACQNz/8HNCA0IDQgOHH9JBAUAApIb3Jpem9udGFsPf8dKQcAAAAjTWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlN0cmluZ3MfKhYABwAAI1NlYXJjaFBhZ2VfRmlsZXNDcmVhdGVkU3VjY2Vzc2Z1bGx5HTQIAAUALlN5c3RlbS5XaW5kb3dzLkF1dG9tYXRpb24uQXV0b21hdGlvblByb3BlcnRpZXMfCxcACAAABE5hbWUjFwBaAhYALiv/HS8JAAEAKU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uSW1hZ2luZy5DcmlzcEltYWdlAwkAACQIx/8CMTak/iQI0f8CMTak/h0yCgACACxNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLkltYWdpbmcuS25vd25Nb25pa2Vycx8PGAAKAAAIU3RhdHVzT0sfDhkACQAAB01vbmlrZXIjGQBaAhgABAOC/QAkDc//BzQgMCAwIDBx/SQKj/8EV3JhcD3/I5L/WgIWAAQEA8n/ACAUAgAQTmF2aWdhdGlvbkJ1dHRvbiPJ/1sCAgAkDs//CDI0IDAgMCAwcf0j+f9aAgwAHygaAAcAACFTZWFyY2hQYWdlX09wZW5JblNvbHV0aW9uRXhwbG9yZXIjFwBaAhoAJArQ/wRMZWZ0Pf8H+P8D7P8AJB4RABhPcGVuSW5FeHBsb3JlckZvbGRlclBhdGgU/h8LGwDs/wAETW9kZSQMGwAGT25lV2F5Pf8ECAfy/wOn/QAkEBQACkhvcml6b250YWw9/y4r/wMJAAAkCMf/AjE2pP4kCNH/AjE2pP4fERwACgAACk9wZW5Gb2xkZXIjGQBaAhwAIxcAWgIaAAQDpv4AI/L/WgIaAAQECAQEA6f9ACQHwf8BMcX+JA4UAAhWZXJ0aWNhbD3/Liv/AwL/AA0NACAVAwARU2VhcmNoQnV0dG9uU3R5bGUfER0AlP0AClRhcmdldFR5cGUfDh4AlP0AB0Jhc2VkT24fDx8A1P0ACFByb3BlcnR5HwwgANT9AAVWYWx1ZR8YIQAHAAARU2VhcmNoUGFnZV9TZWFyY2gD9P0CJXoAAAAmCQMAAAAAAAAANwHJ/wOU/QAiHQDJ/zgeAAAALhL/A9T9AAYHHwCJAPn/IyAAWgIKAAQD1P0ABgcfAIkA8v8jIABaAiEABAPU/QAGBx8AiQDd/yQJIAADNiA0cf0EA9T9AAYHHwCJAM//JA0gAAczIDAgMCAwcf0EBAQOLiv/HUILAAAQPE1pY3Jvc29mdC5WaXN1YWxTdHVkaW9Ub29scy5XcGYuQ29uZmlndXJhdGlvblRleHRCb3hXaXRoSGVscAMLAAAdQgwAAAA8TWljcm9zb2Z0LlZpc3VhbFN0dWRpb1Rvb2xzLldwZi5Db25maWd1cmF0aW9uVGV4dEJveFdpdGhIZWxwHw4iAAwAAAdLZXlEb3duJBUiAA9UZXh0Qm94X0tleURvd26Z/SQNz/8HMCAwIDAgMHH9Hx8jAAcAABhTZWFyY2hQYWdlX1NlYXJjaFRvb2x0aXAfDyQACwAACEhlbHBUZXh0IyQAWgIjAB8mJQAHAAAfU2VhcmNoUGFnZV9TZWFyY2hBdXRvbWF0aW9uTmFtZSMXAFoCJQAfISYABwAAGlNlYXJjaFBhZ2VfU2VhcmNoV2F0ZXJtYXJrHxAnAAsAAAlXYXRlcm1hcmsjJwBaAiYAHxgoAAsAABFCcm93c2VCdXR0b25TdHlsZSMoAFsCAwAfCykACwAABFRleHQHKQAD7P8AJBARAApTZWFyY2hUZXJtFP4kDBsABlR3b1dheT3/HxoqAOz/ABNVcGRhdGVTb3VyY2VUcmlnZ2VyJBUqAA9Qcm9wZXJ0eUNoYW5nZWQ9/wQIBAQEA1L9AC0GAAAAJAfB/wEyxf4kDc//BzQgNCAwIDhx/QYGfP8uAAEHrv8D7P8AJBMRAA1TZWFyY2hSZXN1bHRzFP4ECA0NAB8PKwCI/wAIRGF0YVR5cGUdQA0AABA6TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlZpZXdNb2RlbC5DYXRlZ29yaXplZFZpZXdNb2RlbB8SLADx/gALSXRlbXNTb3VyY2UdPQ4AABA3TWljcm9zb2Z0LkNvb2tpZWN1dHRlclRvb2xzLlZpZXdNb2RlbC5UZW1wbGF0ZVZpZXdNb2RlbB8LLQCn/QMETmFtZR8LLgAJAAMETmFtZR05DwAAEDNNaWNyb3NvZnQuQ29va2llY3V0dGVyVG9vbHMuUmVzb3VyY2VzLkltYWdlTW9uaWtlcnMfGy8ADwAAFENvb2tpZWN1dHRlclRlbXBsYXRlHw8wAIj/AAhUcmlnZ2Vycx8MMQCG/wAFVmFsdWUfDjIAhv8AB0JpbmRpbmcfETMA1P0AClRhcmdldE5hbWUfKDQABwAAIVNlYXJjaFBhZ2VfVXBkYXRlQXZhaWxhYmxlVG9vbHRpcB8hNQAPAAAaQ29va2llY3V0dGVyVGVtcGxh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ZWREZXNjcmlwdGlvbhT+BAgEA4L9ACQHz/8BOHH9JAqP/wRXcmFwPf8fMFEABwAAKVNlYXJjaFBhZ2VfTm9UZW1wbGF0ZURlc2NyaXB0aW9uQXZhaWxhYmxlI5L/WgJRAAd5/wPs/wAqEBUTU2VsZWN0ZWREZXNjcmlwdGlvbisgIwgAH0VtcHR5U3RyaW5nVG9WaXNpYmxlT3JDb2xsYXBzZWQjFQBbAggABAgEBAQDp/0AJAfB/wExxf4kEBQACkhvcml6b250YWw9/wd5/wPs/wAkFhEAEFNlbGVjdGVkVGVtcGxhdGUU/iMVAFsCBgAECC4r/wPJ/wAkB8//AThx/SP5/1oCCwAjyf9bAgIAHx1SAAcAABZTZWFyY2hQYWdlX0xpbmtzR2l0SHViI/L/WgJSAAf4/wPs/wAqECAeU2VsZWN0ZWRUZW1wbGF0ZS5HaXRIdWJIb21lVXJsKyQMGwAGT25lV2F5Pf8ECAc3AAPs/wAqECAeU2VsZWN0ZWRUZW1wbGF0ZS5HaXRIdWJIb21lVXJsKyQMGwAGT25lV2F5Pf8ECAQDyf8AJAfP/wE4cf0j+f9aAgsAI8n/WwICAB8jUwAHAAAcU2VhcmNoUGFnZV9MaW5rc0dpdEh1Yklzc3VlcyPy/1oCUwAH+P8D7P8AKhAiIFNlbGVjdGVkVGVtcGxhdGUuR2l0SHViSXNzdWVzVXJsKyQMGwAGT25lV2F5Pf8ECAc3AAPs/wAqECIgU2VsZWN0ZWRUZW1wbGF0ZS5HaXRIdWJJc3N1ZXNVcmwrJAwbAAZPbmVXYXk9/wQIBAPJ/wAkB8//AThx/SP5/1oCCwAjyf9bAgIAHyFUAAcAABpTZWFyY2hQYWdlX0xpbmtzR2l0SHViV2lraSPy/1oCVAAH+P8D7P8AKhAgHlNlbGVjdGVkVGVtcGxhdGUuR2l0SHViV2lraVVybCskDBsABk9uZVdheT3/BAgHNwAD7P8AKhAgHlNlbGVjdGVkVGVtcGxhdGUuR2l0SHViV2lraVVybCskDBsABk9uZVdheT3/BAgEBAQEBAQCCwABAAAA/////wEAAAAAAAAABAEAAAAOU3lzdGVtLkJvb2xlYW4BAAAAB21fdmFsdWUAAQALAAEAAAD/////AQAAAAAAAAAEAQAAAA5TeXN0ZW0uQm9vbGVhbgEAAAAHbV92YWx1ZQABAAs=]]></Val>
       </Bin>
       <Disp Edtr="External" LocTbl="false" />
     </Item>
@@ -879,6 +1158,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},101" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Cookiecutter Context]]></Val>
+            <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
+              <Val><![CDATA[Contesto Cookiecutter]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -888,6 +1170,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4097" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Cookiecutter Explorer]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Cookiecutter Explorer]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -903,6 +1188,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4097" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens the Cookiecutter Explorer window.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Apre la finestra Cookiecutter Explorer.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -942,6 +1230,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4099" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Run Template]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Esegui modello]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -960,12 +1251,18 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4100" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[GitHub Home]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Home GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4100" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&GitHub Home]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Home &GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -975,12 +1272,18 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4101" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[GitHub Issues]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Problemi di GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4101" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&GitHub Issues]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Problemi di &GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -990,12 +1293,18 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4102" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[GitHub Wiki]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Wiki di GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4102" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&GitHub Wiki]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Wiki di &GitHub]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1005,18 +1314,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[From &Cookiecutter...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Da &Cookiecutter...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Create From]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Crea da]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Creates files using a Cookiecutter template.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Crea i file usando un modello Cookiecutter.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1026,18 +1344,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4104" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[From &Cookiecutter...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Da &Cookiecutter...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4104" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add From]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Aggiungi da]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4104" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Adds files using a Cookiecutter template.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Aggiunge i file usando un modello Cookiecutter.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1056,6 +1383,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4105" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Update Template]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Aggiorna modello]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1083,6 +1413,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4106" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Check For Updates]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Controlla la disponibilità di aggiornamenti]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1101,18 +1434,27 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4352" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open in External Browser]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Apri in un browser esterno]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4352" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[External Web Browser]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Web browser esterno]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4352" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Open in External Browser]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Apri in un br&owser esterno]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1122,6 +1464,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},8192" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Cookiecutter]]></Val>
+            <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
+              <Val><![CDATA[Cookiecutter]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1131,6 +1476,9 @@
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},8193" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item" IgnoreHK="true">
             <Val><![CDATA[C&ookiecutter]]></Val>
+            <Tgt Cat="Menu Item" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[C&ookiecutter]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -1141,18 +1489,27 @@
       <Item ItemId=";110" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";112" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Provides tools for finding, instantiating and customizing templates in cookiecutter format.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fornisce gli strumenti per la ricerca, la creazione di un'istanza e la personalizzazione dei modelli in formato Cookiecutter.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";113" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1168,6 +1525,9 @@
       <Item ItemId=";115" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cookiecutter options]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Opzioni di Cookiecutter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1184,6 +1544,9 @@
     <Item ItemId=";Comments" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Provides tools for finding, instantiating and customizing Cookiecutter templates.]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Fornisce gli strumenti per la ricerca, la creazione di un'istanza e la personalizzazione dei modelli Cookiecutter.]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1196,12 +1559,15 @@
     <Item ItemId=";FileDescription" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Visual Studio - Cookiecutter integration]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Visual Studio - Integrazione di Cookiecutter]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17061.1]]></Val>
+        <Val><![CDATA[3.0.17075.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1214,6 +1580,9 @@
     <Item ItemId=";LegalCopyright" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[© Microsoft Corporation]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[© Microsoft Corporation]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1226,12 +1595,15 @@
     <Item ItemId=";ProductName" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text">
         <Val><![CDATA[Python support for Microsoft® Visual Studio®]]></Val>
+        <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Supporto Python per Microsoft® Visual Studio®]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17061.1]]></Val>
+        <Val><![CDATA[3.0.17075.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
