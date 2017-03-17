@@ -35,6 +35,9 @@
     <Item ItemId="0;b5cecfa37c713728239c6bf50112a358" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The condition for the if statement]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Condizione per l'istruzione if]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>

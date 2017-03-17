@@ -35,12 +35,18 @@
     <Item ItemId="0;d689bff7df14daae684952fbda7056af" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The variable name(s) to iterate over]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Nomi di variabili da scorrere]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;ee5dc3ebe146bc13759e16540bf5dffc" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The expressions to enumerate]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Espressioni da enumerare]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>

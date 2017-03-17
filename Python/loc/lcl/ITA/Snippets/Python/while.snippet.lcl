@@ -35,6 +35,9 @@
     <Item ItemId="0;039f114016b2c12610027da7fc0f9b13" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The condition which terminates the loop]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Condizione che termina il ciclo]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
