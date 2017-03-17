@@ -89,6 +89,7 @@
       <LocFilesToSign Include="$(BinariesOutputPath)localize\**\*.resources.dll" />
       <FilesToSign Include="@(LocFilesToSign)">
         <Authenticode>Microsoft</Authenticode>
+        <StrongName>StrongName</StrongName>
         <SignedPath>$(BinariesOutputPath)localize\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
         <UnsignedPath>$(UnsignedOutputPath)%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
