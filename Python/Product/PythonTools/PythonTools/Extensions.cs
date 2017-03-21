@@ -35,6 +35,7 @@ using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -280,12 +281,12 @@ namespace Microsoft.PythonTools {
 
             var service = serviceProvider.GetEntryService();
             if (service != null) {
-                AnalysisEntry entry;
-                if (service.TryGetAnalysisEntry(textBuffer, out entry)) {
-                    return entry.Analyzer.LanguageVersion;
+                VsProjectAnalyzer analyzer = service.GetVsAnalyzer(null, textBuffer);
+                if (analyzer != null) {
+                    return analyzer.LanguageVersion;
                 }
 
-                var analyzer = service.DefaultAnalyzer as VsProjectAnalyzer;
+                analyzer = service.DefaultAnalyzer as VsProjectAnalyzer;
                 if (analyzer != null) {
                     return analyzer.LanguageVersion;
                 }

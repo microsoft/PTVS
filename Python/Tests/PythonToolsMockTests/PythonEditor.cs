@@ -137,8 +137,8 @@ namespace PythonToolsMockTests {
                     var buffer = View.TextView.TextBuffer;
                     var oldVersion = buffer.CurrentSnapshot;
                     buffer.GetPythonAnalysisClassifier().ClassificationChanged += (s, e) => {
-                        var entry = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
-                        if (entry.TryGetBufferParser()?.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
+                        var en = (AnalysisEntry)GetAnalysisEntry();
+                        if (en.TryGetBufferParser()?.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
                             mre.SetIfNotDisposed();
                         }
                     };
@@ -148,8 +148,8 @@ namespace PythonToolsMockTests {
                         edit.Apply();
                     }
 
-                    var analysis = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
-                    analysis.TryGetBufferParser().Requeue();    // force the reparse to happen quickly...
+                    var entry = (AnalysisEntry)GetAnalysisEntry();
+                    entry.TryGetBufferParser().Requeue();    // force the reparse to happen quickly...
 
                     if (!mre.Wait(10000)) {
                         throw new TimeoutException("Failed to see buffer start analyzing");
@@ -202,6 +202,15 @@ namespace PythonToolsMockTests {
 
         public IEnumerable<string> GetCompletionsAfter(string substring) {
             return GetCompletionListAfter(substring, false).Select(c => c.DisplayText);
+        }
+
+        public object GetAnalysisEntry(ITextBuffer buffer = null) {
+            var entryService = VS.ComponentModel.GetService<AnalysisEntryService>();
+            AnalysisEntry entry;
+            if (!entryService.TryGetAnalysisEntry(View.TextView, buffer, out entry)) {
+                throw new ArgumentException("no AnalysisEntry available");
+            }
+            return entry;
         }
 
         public void Dispose() {

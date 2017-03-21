@@ -114,12 +114,21 @@ namespace Microsoft.PythonTools.Intellisense {
             return TryGetAnalysisEntry(null, textBuffer, out entry);
         }
 
+        /// <summary>
+        /// Gets the internal analyzer object from either a text view or buffer. Both arguments
+        /// are optional, and <c>null</c> may be passed.
+        /// </summary>
         public VsProjectAnalyzer GetVsAnalyzer(ITextView view, ITextBuffer buffer) {
+            VsProjectAnalyzer vsAnalyzer;
             ProjectAnalyzer analyzer;
             string filename;
-            if ((buffer != null && TryGetAnalyzer(buffer, out analyzer, out filename)) ||
-                TryGetAnalyzer(view, out analyzer, out filename)) {
-                return analyzer as VsProjectAnalyzer;
+            if (buffer != null && TryGetAnalyzer(buffer, out analyzer, out filename) &&
+                (vsAnalyzer = analyzer as VsProjectAnalyzer) != null) {
+                return vsAnalyzer;
+            }
+            if (view != null && TryGetAnalyzer(view, out analyzer, out filename) &&
+                (vsAnalyzer = analyzer as VsProjectAnalyzer) != null) {
+                return vsAnalyzer;
             }
             return null;
         }
