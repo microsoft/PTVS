@@ -6094,6 +6094,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";UnableToReadVerbosity" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to read build verbosity setting.]D;]A;]D;]A;{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można odczytać ustawienia poziomu szczegółowości kompilacji.]D;]A;]D;]A;{0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";UnableToRemoveFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The file does not exist on disk but is present in your project and cannot be removed.  Please remove the item from the project before attempting to rename an item to a filename of the same name.]]></Val>
@@ -6544,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6580,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

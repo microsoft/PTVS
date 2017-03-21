@@ -130,6 +130,9 @@
       <Item ItemId=";AddWebRoleSupportFiles" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Um sicherzustellen, dass Ihr Projekt ordnungsgemäß in Microsoft Azure Cloud Services bereitgestellt wird, fügen Sie Ihrem Projekt über das Dialogfeld "Neues Element hinzufügen" die Webrollen-Unterstützungsdateien hinzu, und folgen Sie den Anweisungen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -691,7 +694,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -727,7 +730,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
