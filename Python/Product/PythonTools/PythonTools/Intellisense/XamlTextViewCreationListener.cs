@@ -33,14 +33,17 @@ namespace Microsoft.PythonTools.Intellisense {
     class XamlTextViewCreationListener : IVsTextViewCreationListener {
         internal readonly IVsEditorAdaptersFactoryService AdapterService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly AnalysisEntryService _entryService;
 
         [ImportingConstructor]
         public XamlTextViewCreationListener(
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
-            IVsEditorAdaptersFactoryService adapterService
+            IVsEditorAdaptersFactoryService adapterService,
+            AnalysisEntryService entryService
         ) {
             _serviceProvider = serviceProvider;
             AdapterService = adapterService;
+            _entryService = entryService;
         }
 
         public void VsTextViewCreated(VisualStudio.TextManager.Interop.IVsTextView textViewAdapter) {
@@ -66,9 +69,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private void TextView_Closed(object sender, EventArgs e) {
             var textView = (ITextView)sender;
 
-            var analysis = textView.GetAnalysisEntry(textView.TextBuffer, _serviceProvider);
-            if (analysis != null) {
-                analysis.Analyzer.BufferDetached(analysis, textView.TextBuffer);
+            AnalysisEntry entry;
+            if (_entryService.TryGetAnalysisEntry(textView, textView.TextBuffer, out entry)) {
+                entry.Analyzer.BufferDetached(entry, textView.TextBuffer);
             }
             
             textView.Closed -= TextView_Closed;

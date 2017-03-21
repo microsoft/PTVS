@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Language.StandardClassification;
@@ -47,19 +48,21 @@ namespace Microsoft.PythonTools {
         private IClassificationType _commaClassification;
         private readonly IContentType _type;
         internal readonly IServiceProvider _serviceProvider;
+        internal readonly AnalysisEntryService _entryService;
+        public readonly IClassificationTypeRegistryService _classificationRegistry;
 
         [ImportingConstructor]
-        public PythonClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public PythonClassifierProvider(
+            IContentTypeRegistryService contentTypeRegistryService,
+            [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
+            IClassificationTypeRegistryService classificationRegistry,
+            AnalysisEntryService entryService
+        ) {
             _type = contentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
             _serviceProvider = serviceProvider;
+            _classificationRegistry = classificationRegistry;
+            _entryService = entryService;
         }
-
-        /// <summary>
-        /// Import the classification registry to be used for getting a reference
-        /// to the custom classification type later.
-        /// </summary>
-        [Import]
-        public IClassificationTypeRegistryService _classificationRegistry = null; // Set via MEF
 
         #region Python Classification Type Definitions
 

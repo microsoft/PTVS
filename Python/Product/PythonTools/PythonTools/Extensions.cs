@@ -229,148 +229,8 @@ namespace Microsoft.PythonTools {
             return project.GetCommonProject() as PythonProjectNode;
         }
 
-        internal static bool TryGetAnalyzer(this ITextView view, ITextBuffer buffer, IServiceProvider provider, out VsProjectAnalyzer analyzer) {
-            analyzer = null;
-
-            IPythonInteractiveIntellisense evaluator;
-            if ((evaluator = buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
-                analyzer = evaluator.Analyzer;
-                return analyzer != null;
-            }
-
-            string path = buffer.GetFilePath();
-            if (path != null) {
-                var docTable = (IVsRunningDocumentTable4)provider.GetService(typeof(SVsRunningDocumentTable));
-                if (docTable != null) {
-                    var cookie = VSConstants.VSCOOKIE_NIL;
-                    try {
-                        cookie = docTable.GetDocumentCookie(path);
-                    } catch (ArgumentException) {
-                    }
-                    if (cookie != VSConstants.VSCOOKIE_NIL) {
-                        IVsHierarchy hierarchy;
-                        uint itemid;
-                        docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
-                        if (hierarchy != null) {
-                            var pyProject = hierarchy.GetProject()?.GetPythonProject();
-                            if (pyProject != null) {
-                                analyzer = pyProject.GetAnalyzer();
-                            }
-                        }
-                    }
-                }
-
-                if (analyzer == null && view != null) {
-                    // We could spin up a new analyzer for non Python projects...
-                    analyzer = view.GetBestAnalyzer(provider);
-                }
-
-                return analyzer != null;
-            }
-
-            analyzer = null;
-            return false;
-        }
-
-        /// <summary>
-        /// Gets the analysis entry for the given view and buffer.
-        /// 
-        /// For files on disk this is pretty easy - we analyze each file on it's own in a buffer parser.  
-        /// Therefore we map filename -> analyzer and then get the analysis from teh analyzer.  If we
-        /// determine an analyzer but the file isn't loaded into it for some reason this would return null.
-        /// We can also apply some policy to buffers depending upon the view that they're hosted in.  For
-        /// example if a buffer is outside of any projects, but hosted in a difference view with a buffer
-        /// that is in a project, then we'll look in the view that has the project.
-        /// 
-        /// For interactive windows we will use the analyzer that's configured for the window.
-        /// </summary>
-        /// <param name="view"></param>
-        /// <param name="buffer"></param>
-        /// <param name="provider"></param>
-        /// <param name="entry"></param>
-        /// <returns></returns>
-        internal static bool TryGetAnalysisEntry(this ITextView view, ITextBuffer buffer, IServiceProvider provider, out AnalysisEntry entry) {
-            entry = null;
-
-            VsProjectAnalyzer analyzer;
-            if (view.TryGetAnalyzer(buffer, provider, out analyzer)) {
-                string path = null;
-                PythonInteractiveEvaluator evaluator;
-                if ((evaluator = buffer.GetInteractiveWindow()?.GetPythonEvaluator()) != null) {
-                    path = evaluator.AnalysisFilename;
-                } else {
-                    path = buffer.GetFilePath();
-                }
-
-                if (!string.IsNullOrEmpty(path)) {
-                    entry = analyzer.GetAnalysisEntryFromPath(path);
-                }
-                return entry != null;
-            }
-            return false;
-        }
-
         internal static AnalysisEntry GetAnalysisEntry(this FileNode node) {
             return ((PythonProjectNode)node.ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(node.Url);
-        }
-
-        /// <summary>
-        /// Gets the best analyzer for this text view, accounting for things like REPL windows and
-        /// difference windows.
-        /// </summary>
-        internal static VsProjectAnalyzer GetBestAnalyzer(this ITextView textView, IServiceProvider serviceProvider) {
-            // If we have set an analyzer explicitly, return that
-            VsProjectAnalyzer analyzer = null;
-            if (textView.TextBuffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer)) {
-                return analyzer;
-            }
-
-            // If we have a REPL evaluator we'll use it's analyzer
-            var evaluator = textView.TextBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
-            if (evaluator != null) {
-                return evaluator.Analyzer;
-            }
-
-            // If we have a difference viewer we'll match the LHS w/ the RHS
-            IWpfDifferenceViewerFactoryService diffService = null;
-            try {
-                diffService = serviceProvider.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
-            } catch (System.ComponentModel.Composition.CompositionException) {
-            } catch (System.ComponentModel.Composition.ImportCardinalityMismatchException) {
-            }
-            if (diffService != null) {
-                var viewer = diffService.TryGetViewerForTextView(textView);
-                if (viewer != null) {
-
-                    var entry = GetAnalysisEntry(null, viewer.DifferenceBuffer.LeftBuffer, serviceProvider) ??
-                        GetAnalysisEntry(null, viewer.DifferenceBuffer.RightBuffer, serviceProvider);
-
-                    if (entry != null) {
-                        return entry.Analyzer;
-                    }
-                }
-            }
-
-            return serviceProvider.GetPythonToolsService().DefaultAnalyzer;
-        }
-
-        internal static AnalysisEntry GetAnalysisEntry(this ITextView view, ITextBuffer buffer, IServiceProvider provider) {
-            AnalysisEntry res;
-            view.TryGetAnalysisEntry(buffer, provider, out res);
-            return res;
-        }
-
-        /// <summary>
-        /// Gets an analysis entry for this buffer.  This will only succeed if the buffer is a file
-        /// on disk.  It is not able to support things like difference views because we don't know
-        /// what view this buffer is hosted in.  This method should only be used when we don't know
-        /// the current view for the buffer.  Instead calling view.GetAnalysisEntry or view.TryGetAnalysisEntry
-        /// should be used.
-        /// </summary>
-        internal static AnalysisEntry GetAnalysisEntry(this ITextBuffer buffer, IServiceProvider serviceProvider) {
-            AnalysisEntry res;
-            TryGetAnalysisEntry(null, buffer, serviceProvider, out res);
-            return res;
         }
 
         internal static PythonProjectNode GetProject(this ITextBuffer buffer, IServiceProvider serviceProvider) {
@@ -392,24 +252,52 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
+        internal static AnalysisEntryService GetEntryService(this IServiceProvider serviceProvider) {
+            return serviceProvider.GetComponentModel()?.GetService<AnalysisEntryService>();
+        }
+
         internal static PythonLanguageVersion GetLanguageVersion(this ITextView textView, IServiceProvider serviceProvider) {
             var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
             if (evaluator != null) {
                 return evaluator.LanguageVersion;
             }
-            return textView.GetBestAnalyzer(serviceProvider).LanguageVersion;
+
+            var service = serviceProvider.GetEntryService();
+            if (service != null) {
+                var analyzer = service.GetVsAnalyzer(textView, null) ?? (service.DefaultAnalyzer as VsProjectAnalyzer);
+                if (analyzer != null) {
+                    return analyzer.LanguageVersion;
+                }
+            }
+            return PythonLanguageVersion.None;
+        }
+
+        internal static PythonLanguageVersion GetLanguageVersion(this ITextBuffer textBuffer, IServiceProvider serviceProvider) {
+            var evaluator = textBuffer.GetInteractiveWindow().GetPythonEvaluator();
+            if (evaluator != null) {
+                return evaluator.LanguageVersion;
+            }
+
+            var service = serviceProvider.GetEntryService();
+            if (service != null) {
+                AnalysisEntry entry;
+                if (service.TryGetAnalysisEntry(textBuffer, out entry)) {
+                    return entry.Analyzer.LanguageVersion;
+                }
+
+                var analyzer = service.DefaultAnalyzer as VsProjectAnalyzer;
+                if (analyzer != null) {
+                    return analyzer.LanguageVersion;
+                }
+            }
+            return PythonLanguageVersion.None;
         }
 
         /// <summary>
         /// Returns the active VsProjectAnalyzer being used for where the caret is currently located in this view.
         /// </summary>
         internal static VsProjectAnalyzer GetAnalyzerAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            var buffer = textView.GetPythonBufferAtCaret();
-            if (buffer != null) {
-                return textView.GetAnalysisEntry(buffer, serviceProvider)?.Analyzer;
-            }
-
-            return null;
+            return GetAnalysisAtCaret(textView, serviceProvider)?.Analyzer;
         }
 
         /// <summary>
@@ -419,11 +307,14 @@ namespace Microsoft.PythonTools {
         /// </summary>
         internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
             var buffer = textView.GetPythonBufferAtCaret();
-            if (buffer != null) {
-                return textView.GetAnalysisEntry(buffer, serviceProvider);
+            if (buffer == null) {
+                return null;
             }
 
-            return null;
+            var service = serviceProvider.GetEntryService();
+            AnalysisEntry entry = null;
+            service?.TryGetAnalysisEntry(textView, buffer, out entry);
+            return entry;
         }
 
         /// <summary>
@@ -588,21 +479,6 @@ namespace Microsoft.PythonTools {
                 return BitConverter.ToInt32(cmd_buffer, 0);
             }
             throw new InvalidOperationException();
-        }
-
-        internal static VsProjectAnalyzer GetAnalyzer(this ITextBuffer buffer, IServiceProvider serviceProvider) {
-            var analysisEntry = GetAnalysisEntry(null, buffer, serviceProvider);
-            if (analysisEntry != null) {
-                return analysisEntry.Analyzer;
-            }
-
-            VsProjectAnalyzer analyzer;
-            // exists for tests where we don't run in VS and for the existing changes preview
-            if (buffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer)) {
-                return analyzer;
-            }
-
-            return serviceProvider.GetPythonToolsService().DefaultAnalyzer;
         }
 
         internal static PythonToolsService GetPythonToolsService(this IServiceProvider serviceProvider) {

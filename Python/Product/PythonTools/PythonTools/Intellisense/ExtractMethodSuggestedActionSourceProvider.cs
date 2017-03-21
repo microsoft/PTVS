@@ -39,11 +39,13 @@ namespace Microsoft.PythonTools.Intellisense {
     class ExtractMethodSuggestedActionSourceProvider : ISuggestedActionsSourceProvider {
         private readonly IServiceProvider _serviceProvider;
         private readonly Lazy<PreviewChangesService> _changePreviewFactory;
+        private readonly Lazy<AnalysisEntryService> _entryService;
 
         [ImportingConstructor]
-        public ExtractMethodSuggestedActionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider provider, Lazy<PreviewChangesService> changePreviewFactory) {
+        public ExtractMethodSuggestedActionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider provider, Lazy<PreviewChangesService> changePreviewFactory, Lazy<AnalysisEntryService> entryService) {
             _serviceProvider = provider;
             _changePreviewFactory = changePreviewFactory;
+            _entryService = entryService;
         }
 
         public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer) {
@@ -155,13 +157,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 public async Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
-                    var analysis = _view.GetAnalysisEntry(_view.TextBuffer, _parent._serviceProvider);
-                    if (analysis == null) {
+                    AnalysisEntry entry;
+                    if (_parent._entryService.Value == null || !_parent._entryService.Value.TryGetAnalysisEntry(_view, _view.TextBuffer, out entry)) {
                         return null;
                     }
 
-                    var extractInfo = await analysis.Analyzer.ExtractMethodAsync(
-                        analysis,
+                    var extractInfo = await entry.Analyzer.ExtractMethodAsync(
+                        entry,
                         _view.TextBuffer,
                         _view,
                         "new_method",

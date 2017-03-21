@@ -79,6 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly UnresolvedImportSquiggleProvider _unresolvedSquiggles;
         private readonly PythonToolsService _pyService;
+        private readonly AnalysisEntryService _entryService;
         internal readonly IServiceProvider _serviceProvider;
         private readonly CancellationTokenSource _processExitedCancelSource = new CancellationTokenSource();
         private readonly HashSet<ProjectReference> _references = new HashSet<ProjectReference>();
@@ -175,6 +176,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFilesById = new ConcurrentDictionary<int, AnalysisEntry>();
 
             _pyService = serviceProvider.GetPythonToolsService();
+            _entryService = serviceProvider.GetEntryService();
 
             _logger = _pyService.Logger;
 
@@ -192,9 +194,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // load the interpreter factories available inside of VS into the remote process
             var providers = new HashSet<string>(
-                    serviceProvider.GetComponentModel().GetExtensions<IPythonInterpreterFactoryProvider>()
-                        .Select(x => x.GetType().Assembly.Location),
-                    StringComparer.OrdinalIgnoreCase
+                serviceProvider.GetComponentModel().GetExtensions<IPythonInterpreterFactoryProvider>()
+                    .Select(x => x.GetType().Assembly.Location),
+                StringComparer.OrdinalIgnoreCase
             );
             providers.Add(typeof(IInterpreterOptionsService).Assembly.Location);
 
@@ -635,6 +637,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
+            _entryService.SetAnalyzer(textBuffer, this);
+
             var bufferParser = await entry.GetOrCreateBufferParser(
                 this,
                 textBuffer,
@@ -1038,8 +1042,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 return MissingImportAnalysis.Empty;
             }
 
+            var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
-            if (!view.TryGetAnalysisEntry(snapshot.TextBuffer, serviceProvider, out entry)) {
+            if (entryService == null || !entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
                 return MissingImportAnalysis.Empty;
             }
 
@@ -1071,27 +1076,24 @@ namespace Microsoft.PythonTools.Intellisense {
             return MissingImportAnalysis.Empty;
         }
 
-        internal static async Task AddImportAsync(AnalysisEntry analysisEntry, string fromModule, string name, ITextView view, ITextBuffer textBuffer) {
-            var analysis = view.GetAnalysisEntry(textBuffer, analysisEntry.Analyzer._serviceProvider);
-            if (analysis != null) {
-                var lastVersion = analysis.GetAnalysisVersion(textBuffer);
+        internal static async Task AddImportAsync(AnalysisEntry entry, string fromModule, string name, ITextView view, ITextBuffer textBuffer) {
+            var lastVersion = entry.GetAnalysisVersion(textBuffer);
 
-                var changes = await analysisEntry.Analyzer.AddImportAsync(
-                    analysisEntry,
+            var changes = await entry.Analyzer.AddImportAsync(
+                entry,
+                textBuffer,
+                fromModule,
+                name,
+                view.Options.GetNewLineCharacter()
+            );
+
+            if (changes != null) {
+                ApplyChanges(
+                    changes.changes,
+                    lastVersion,
                     textBuffer,
-                    fromModule,
-                    name,
-                    view.Options.GetNewLineCharacter()
+                    changes.version
                 );
-
-                if (changes != null) {
-                    ApplyChanges(
-                        changes.changes,
-                        lastVersion,
-                        textBuffer,
-                        changes.version
-                    );
-                }
             }
         }
 
@@ -1473,7 +1475,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             AnalysisEntry entry;
-            if (view.TryGetAnalysisEntry(snapshot.TextBuffer, serviceProvider, out entry)) {
+            var entryService = serviceProvider.GetEntryService();
+            if (entryService != null && entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
                 return new NormalCompletionAnalysis(
                     entry.Analyzer,
                     session,
@@ -1789,17 +1792,21 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
-            var fileInfo = view.GetAnalysisEntry(span.Snapshot.TextBuffer, _serviceProvider);
+            var entryService = _serviceProvider.GetEntryService();
+            AnalysisEntry entry;
+            if (entryService == null || !entryService.TryGetAnalysisEntry(view, span.Snapshot.TextBuffer, out entry)) {
+                return;
+            }
             var buffer = span.Snapshot.TextBuffer;
 
-            await fileInfo.EnsureCodeSyncedAsync(buffer);
+            await entry.EnsureCodeSyncedAsync(buffer);
 
-            var bufferId = fileInfo.GetBufferId(buffer);
-            var lastAnalyzed = fileInfo.GetAnalysisVersion(buffer);
+            var bufferId = entry.GetBufferId(buffer);
+            var lastAnalyzed = entry.GetAnalysisVersion(buffer);
 
             var res = await SendRequestAsync(
                 new AP.FormatCodeRequest() {
-                    fileId = fileInfo.FileId,
+                    fileId = entry.FileId,
                     bufferId = bufferId,
                     startIndex = span.Start,
                     endIndex = span.End,
@@ -1851,14 +1858,18 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task RemoveImportsAsync(ITextView view, ITextBuffer textBuffer, int index, bool allScopes) {
-            var fileInfo = view.GetAnalysisEntry(textBuffer, _serviceProvider);
-            await fileInfo.EnsureCodeSyncedAsync(textBuffer);
-            var lastAnalyzed = fileInfo.GetAnalysisVersion(textBuffer);
+            var entryService = _serviceProvider.GetEntryService();
+            AnalysisEntry entry;
+            if (entryService == null || !entryService.TryGetAnalysisEntry(view, textBuffer, out entry)) {
+                return;
+            }
+            await entry.EnsureCodeSyncedAsync(textBuffer);
+            var lastAnalyzed = entry.GetAnalysisVersion(textBuffer);
 
             var res = await SendRequestAsync(
                 new AP.RemoveImportsRequest() {
-                    fileId = fileInfo.FileId,
-                    bufferId = fileInfo.GetBufferId(textBuffer),
+                    fileId = entry.FileId,
+                    bufferId = entry.GetBufferId(textBuffer),
                     allScopes = allScopes,
                     index = index
                 }
@@ -1971,7 +1982,8 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<NavigationInfo> GetNavigationsAsync(ITextView view) {
             AnalysisEntry entry;
             var textBuffer = view.TextBuffer;
-            if (view.TryGetAnalysisEntry(textBuffer, _serviceProvider, out entry)) {
+            var entryService = _serviceProvider.GetEntryService();
+            if (entryService != null && entryService.TryGetAnalysisEntry(view, textBuffer, out entry)) {
                 var lastVersion = entry.GetAnalysisVersion(textBuffer);
 
                 var navigations = await SendRequestAsync(
@@ -2063,33 +2075,33 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<IEnumerable<OutliningTaggerProvider.TagSpan>> GetOutliningTagsAsync(ITextSnapshot snapshot) {
-            var res = Enumerable.Empty<OutliningTaggerProvider.TagSpan>();
-            var entry = snapshot.TextBuffer.GetAnalysisEntry(_serviceProvider);
-            if (entry != null) {
-                var lastVersion = entry.GetAnalysisVersion(snapshot.TextBuffer);
-
-                var outliningTags = await SendRequestAsync(
-                    new AP.OutlingRegionsRequest() {
-                        fileId = entry.FileId,
-                        bufferId = entry.GetBufferId(snapshot.TextBuffer)
-                    }
-                );
-
-                if (outliningTags != null && outliningTags.version >= lastVersion.VersionNumber) {
-                    Debug.WriteLine("Translating from {0} to {1}", outliningTags.version, snapshot.TextBuffer.CurrentSnapshot);
-                    var translator = new LocationTracker(
-                        lastVersion,
-                        snapshot.TextBuffer,
-                        outliningTags.version
-                    );
-
-                    res = ConvertOutliningTags(translator, outliningTags.tags);
-                } else {
-                    return null;
-                }
+            var entryService = _serviceProvider.GetEntryService();
+            AnalysisEntry entry;
+            if (entryService == null || !entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+                return null;
             }
 
-            return res;
+            var lastVersion = entry.GetAnalysisVersion(snapshot.TextBuffer);
+
+            var outliningTags = await SendRequestAsync(
+                new AP.OutlingRegionsRequest() {
+                    fileId = entry.FileId,
+                    bufferId = entry.GetBufferId(snapshot.TextBuffer)
+                }
+            );
+
+            if (outliningTags != null && outliningTags.version >= lastVersion.VersionNumber) {
+                Debug.WriteLine("Translating from {0} to {1}", outliningTags.version, snapshot.TextBuffer.CurrentSnapshot);
+                var translator = new LocationTracker(
+                    lastVersion,
+                    snapshot.TextBuffer,
+                    outliningTags.version
+                );
+
+                return ConvertOutliningTags(translator, outliningTags.tags);
+            }
+
+            return null;
         }
 
         private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(LocationTracker translator, AP.OutliningTag[] tags) {
@@ -2196,30 +2208,28 @@ namespace Microsoft.PythonTools.Intellisense {
             SnapshotSpan span,
             TimeSpan? timeout = null
         ) {
-            var analysis = GetApplicableExpression(
-                view.GetAnalysisEntry(span.Start.Snapshot.TextBuffer, serviceProvider),
-                span.Start
-            );
-            string result = null;
-
-            if (analysis != null) {
-                var location = analysis.Location;
-                var req = new AP.ExpressionForDataTipRequest() {
-                    expr = span.GetText(),
-                    column = location.Column,
-                    index = location.Index,
-                    line = location.Line,
-                    fileId = analysis.Entry.FileId,
-                };
-
-                var resp = await analysis.Entry.Analyzer.SendRequestAsync(req, timeout: timeout).ConfigureAwait(false);
-
-                if (resp != null) {
-                    result = resp.expression;
-                }
+            var entryService = serviceProvider.GetEntryService();
+            AnalysisEntry entry;
+            if (entryService == null || !entryService.TryGetAnalysisEntry(view, span.Snapshot.TextBuffer, out entry)) {
+                return null;
+            }
+            var analysis = GetApplicableExpression(entry, span.Start);
+            if (analysis == null) {
+                return null;
             }
 
-            return result;
+            var location = analysis.Location;
+            var req = new AP.ExpressionForDataTipRequest() {
+                expr = span.GetText(),
+                column = location.Column,
+                index = location.Index,
+                line = location.Line,
+                fileId = analysis.Entry.FileId,
+            };
+
+            var resp = await analysis.Entry.Analyzer.SendRequestAsync(req, timeout: timeout).ConfigureAwait(false);
+
+            return resp?.expression;
         }
 
         class ApplicableExpression {

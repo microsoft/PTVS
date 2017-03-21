@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -113,8 +114,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     return;
                 }
 
-                var entry = _textView.GetAnalysisEntry(pt.Value.Snapshot.TextBuffer, _serviceProvider);
-                if (entry == null) {
+                AnalysisEntry entry;
+                if (!_provider._EntryService.TryGetAnalysisEntry(_textView, pt.Value.Snapshot.TextBuffer, out entry)) {
                     return;
                 }
                 var t = entry.Analyzer.GetQuickInfoAsync(entry, _textView, pt.Value);
@@ -153,21 +154,25 @@ namespace Microsoft.PythonTools.Intellisense {
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
             _subjectBuffers.Add(subjectBuffer);
 
-            VsProjectAnalyzer analyzer;
+            ProjectAnalyzer analyzer;
+            string filename;
             bool isTemporaryFile = false;
-            if (!_textView.TryGetAnalyzer(subjectBuffer, _serviceProvider, out analyzer)) {
+            if (!_provider._EntryService.TryGetAnalyzer(subjectBuffer, out analyzer, out filename)) {
                 // there's no analyzer for this file, but we can analyze it against either
                 // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
                 // to analyze against the project we're diffing from).  But in either case this
                 // is just a temporary file which should be closed when the view is closed.
-                analyzer = _textView.GetBestAnalyzer(_serviceProvider);
                 isTemporaryFile = true;
+                if (!_provider._EntryService.TryGetAnalyzer(_textView, out analyzer, out filename)) {
+                    analyzer = _provider._EntryService.DefaultAnalyzer;
+                }
             }
 
-            if (analyzer != null) {
+            var vsAnalyzer = analyzer as VsProjectAnalyzer;
+            if (vsAnalyzer != null) {
                 bool suppressErrorList = _textView.Properties.ContainsProperty(SuppressErrorLists);
 
-                analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile, suppressErrorList).ContinueWith(task => {
+                vsAnalyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile, suppressErrorList).ContinueWith(task => {
                     var newParser = task.Result;
 
                     if (newParser != null) {
@@ -362,12 +367,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
 
-            var analysis = _textView.GetAnalysisEntry(snapshot.TextBuffer, _serviceProvider);
-            if (analysis == null) {
+            AnalysisEntry entry;
+            if (!_provider._EntryService.TryGetAnalysisEntry(_textView, snapshot.TextBuffer, out entry)) {
                 return false;
             }
 
-            var languageVersion = analysis.Analyzer.InterpreterFactory.Configuration.Version.ToLanguageVersion();
+            var languageVersion = entry.Analyzer.LanguageVersion;
             PythonAst ast;
             using (var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions { Verbatim = true })) {
                 ast = parser.ParseSingleStatement();

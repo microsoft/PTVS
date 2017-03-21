@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<PythonInteractiveOptions> _interactiveOptions;
         private readonly Lazy<SuppressDialogOptions> _suppressDialogOptions;
         private readonly Lazy<SurveyNewsService> _surveyNews;
+        private readonly AnalysisEntryService _entryService;
         private readonly IdleManager _idleManager;
         private ExpansionCompletionSource _expansionCompletions;
         private Func<CodeFormattingOptions> _optionsFactory;
@@ -97,6 +98,7 @@ namespace Microsoft.PythonTools {
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
+            _entryService = ComponentModel.GetService<AnalysisEntryService>();
 
             _idleManager.OnIdle += OnIdleInitialization;
         }
@@ -529,23 +531,26 @@ namespace Microsoft.PythonTools {
         }
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            var entry = view.GetAnalysisEntry(snapshot.TextBuffer, Site);
-            if (entry == null) {
+            AnalysisEntry entry;
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
             return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
         }
 
         public Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
-            var entry = view.GetAnalysisEntry(snapshot.TextBuffer, Site);
-            if (entry == null) {
+            AnalysisEntry entry;
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
                 return Task.FromResult(new SignatureAnalysis("", 0, new ISignature[0]));
             }
             return entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span);
         }
 
         public ExpressionAnalysis AnalyzeExpression(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
-            var entry = view.GetAnalysisEntry(snapshot.TextBuffer, Site);
+            AnalysisEntry entry;
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+                return null;
+            }
             return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, view, span.GetStartPoint(snapshot)), "AnalyzeExpression");
         }
 

@@ -51,6 +51,8 @@ namespace Microsoft.PythonTools.Intellisense {
         internal IQuickInfoBroker _QuickInfoBroker = null; // Set via MEF
         [Import]
         internal IIncrementalSearchFactoryService _IncrementalSearch = null; // Set via MEF
+        [Import]
+        internal AnalysisEntryService _EntryService = null; // Set via MEF
         internal IServiceProvider _ServiceProvider;
         internal PythonToolsService PythonService;
 

@@ -64,6 +64,7 @@ namespace Microsoft.PythonTools.Language {
         private readonly IComponentModel _componentModel;
         private readonly IEditorOperations _editorOps;
         private readonly PythonToolsService _pyService;
+        private readonly AnalysisEntryService _entryService;
         private readonly IOleCommandTarget _next;
 
         private EditFilter(
@@ -71,14 +72,16 @@ namespace Microsoft.PythonTools.Language {
             ITextView textView,
             IEditorOperations editorOps,
             IServiceProvider serviceProvider,
+            IComponentModel model,
             IOleCommandTarget next
         ) {
             _vsTextView = vsTextView;
             _textView = textView;
             _editorOps = editorOps;
             _serviceProvider = serviceProvider;
-            _componentModel = _serviceProvider.GetComponentModel();
+            _componentModel = model;
             _pyService = _serviceProvider.GetPythonToolsService();
+            _entryService = _componentModel.GetService<AnalysisEntryService>();
             _next = next;
 
             BraceMatcher.WatchBraceHighlights(textView, _componentModel);
@@ -102,6 +105,7 @@ namespace Microsoft.PythonTools.Language {
                 textView,
                 opsFactory.GetEditorOperations(textView),
                 serviceProvider,
+                componentModel,
                 next
             ));
         }
@@ -120,6 +124,7 @@ namespace Microsoft.PythonTools.Language {
                 textView,
                 opsFactory.GetEditorOperations(textView),
                 serviceProvider,
+                componentModel,
                 next
             ));
         }
@@ -795,13 +800,15 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {
-            var analysis = _textView.GetAnalysisEntry(span.Snapshot.TextBuffer, _serviceProvider);
-            if (analysis != null) {
-                var options = _pyService.GetCodeFormattingOptions();
-                options.NewLineFormat = _textView.Options.GetNewLineCharacter();
-
-                await analysis.Analyzer.FormatCodeAsync(span, _textView, options, selectResult);
+            AnalysisEntry entry;
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(_textView, span.Snapshot.TextBuffer, out entry)) {
+                return;
             }
+
+            var options = _pyService.GetCodeFormattingOptions();
+            options.NewLineFormat = _textView.Options.GetNewLineCharacter();
+
+            await entry.Analyzer.FormatCodeAsync(span, _textView, options, selectResult);
         }
 
         internal void RefactorRename() {

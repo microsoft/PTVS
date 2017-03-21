@@ -90,12 +90,13 @@ namespace Microsoft.PythonTools.Navigation {
                 return VSConstants.E_FAIL;
             }
 
-            AnalysisEntry analysisEntry;
-            if (!wpfTextView.TryGetAnalysisEntry(wpfTextView.TextBuffer, _serviceProvider, out analysisEntry)) {
+            AnalysisEntry entry;
+            var entryService = _serviceProvider.GetEntryService();
+            if (entryService == null || !entryService.TryGetAnalysisEntry(wpfTextView, wpfTextView.TextBuffer, out entry)) {
                 return VSConstants.E_FAIL;
             }
 
-            _client = new DropDownBarClient(_serviceProvider, wpfTextView, analysisEntry);
+            _client = new DropDownBarClient(_serviceProvider, wpfTextView, entry);
             return _client.Register((IVsDropdownBarManager)_window);
         }
 
