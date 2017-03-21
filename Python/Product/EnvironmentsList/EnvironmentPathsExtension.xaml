@@ -30,13 +30,14 @@
                                     Style="{StaticResource NavigationButton}"
                                     HorizontalAlignment="Stretch"
                                     Command="{x:Static l:EnvironmentView.MakeGlobalDefault}"
-                                    CommandParameter="{Binding}">
+                                    CommandParameter="{Binding}"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionMakeDefaultLabel}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <ContentControl Grid.Column="0"
+                                    <Control Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource PythonEnvironmentImage}" />
                                     <TextBlock Grid.Column="1"
@@ -44,35 +45,41 @@
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionMakeDefaultLabel}"/>
                                 </Grid>
                             </Button>
-                            <Grid x:Name="IsDefaultMessage"
-                                  Visibility="Collapsed">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="auto" />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
+                            <Label x:Name="IsDefaultMessage"
+                                   Visibility="Collapsed"
+                                   AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
 
-                                <ContentControl Grid.Column="0"
-                                                Margin="3 0"
-                                                Style="{StaticResource ActiveEnvironmentImage}" />
-                                <TextBlock Grid.Column="1"
-                                           TextWrapping="WrapWithOverflow"
-                                           Text="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}"/>
-                            </Grid>
-                            <Grid x:Name="CannotBeDefaultMessage"
-                                  Visibility="Collapsed">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="auto" />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource ActiveEnvironmentImage}" />
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}"/>
+                                </Grid>
+                            </Label>
+                            <Label x:Name="CannotBeDefaultMessage"
+                                   Visibility="Collapsed"
+                                   AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionCannotBeDefaultLabel}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
 
-                                <ContentControl Grid.Column="0"
-                                                Margin="3 0"
-                                                Opacity="0.5"
-                                                Style="{StaticResource PythonEnvironmentImage}" />
-                                <TextBlock Grid.Column="1"
-                                           TextWrapping="WrapWithOverflow"
-                                           Text="{x:Static l:Resources.EnvironmentPathsExtensionCannotBeDefaultLabel}"/>
-                            </Grid>
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Opacity="0.5"
+                                                    Style="{StaticResource PythonEnvironmentImage}" />
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="WrapWithOverflow"
+                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionCannotBeDefaultLabel}"/>
+                                </Grid>
+                            </Label>
                         </Grid>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding IsDefault}" Value="True">
@@ -93,7 +100,8 @@
                                     CommandParameter="{Binding}"
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6"
-                                    HorizontalAlignment="Left">
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionOpenInteractiveWindowLabel}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -112,7 +120,8 @@
                                     CommandParameter="{Binding}"
                                     Style="{StaticResource NavigationButton}"
                                     Margin="12 6 6 6"
-                                    HorizontalAlignment="Left">
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionOpenInteractiveScriptsLabel}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -137,7 +146,8 @@
                                     Style="{StaticResource NavigationButton}"
                                     Margin="12 6 6 6"
                                     HorizontalAlignment="Left"
-                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}">
+                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonAutomationName}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -156,7 +166,8 @@
                                     Style="{StaticResource NavigationButton}"
                                     Margin="12 6 6 6"
                                     HorizontalAlignment="Left"
-                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}">
+                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionDisableIPythonAutomationName}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -176,7 +187,8 @@
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6"
                                     HorizontalAlignment="Left"
-                                    x:Name="Button">
+                                    x:Name="Button"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionOpenInPowerShell}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -209,7 +221,8 @@
                                     CommandParameter="{Binding Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6"
-                                    HorizontalAlignment="Left">
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionConfigureEnvironmentLabel}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -229,7 +242,9 @@
                                     ToolTip="{Binding PrefixPath,Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6"
-                                    HorizontalAlignment="Left">
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsPrefixPath}"
+                                    AutomationProperties.HelpText="{Binding PrefixPath,Mode=OneWay}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -262,7 +277,9 @@
                                     ToolTip="{Binding InterpreterPath,Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6"
-                                    HorizontalAlignment="Left">
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsInterpreterPath}"
+                                    AutomationProperties.HelpText="{Binding InterpreterPath,Mode=OneWay}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -295,7 +312,9 @@
                                     ToolTip="{Binding WindowsInterpreterPath,Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6"
-                                    HorizontalAlignment="Left">
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsWindowsInterpreterPath}"
+                                    AutomationProperties.HelpText="{Binding WindowsInterpreterPath,Mode=OneWay}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
@@ -339,7 +358,9 @@
                                     ToolTip="{Binding SupportUrl,Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6 1"
-                                    HorizontalAlignment="Left">
+                                    HorizontalAlignment="Left"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"
+                                    AutomationProperties.HelpText="{Binding SupportUrl,Mode=OneWay}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />

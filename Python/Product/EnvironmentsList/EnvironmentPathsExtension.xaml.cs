@@ -36,6 +36,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             get { return Resources.EnvironmentPathsExtensionHelpContent; }
         }
 
+        public string HelpText {
+            get { return Resources.EnvironmentPathsExtensionHelpContent; }
+        }
+
         public FrameworkElement WpfObject {
             get {
                 if (_wpfObject == null) {

@@ -439,6 +439,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disable IPython interactive mode.
+        /// </summary>
+        public static string EnvironmentPathsExtensionDisableIPythonAutomationName {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsExtensionDisableIPythonAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use IPython interactive mode.
         /// </summary>
         public static string EnvironmentPathsExtensionDisableIPythonLabel {
@@ -453,6 +462,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static string EnvironmentPathsExtensionDisplayName {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable IPython interactive mode.
+        /// </summary>
+        public static string EnvironmentPathsExtensionEnableIPythonAutomationName {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsExtensionEnableIPythonAutomationName", resourceCulture);
             }
         }
         
@@ -534,6 +552,33 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static string EnvironmentPathsExtensionSupportInformationLabel {
             get {
                 return ResourceManager.GetString("EnvironmentPathsExtensionSupportInformationLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpreter path.
+        /// </summary>
+        public static string EnvironmentPathsInterpreterPath {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsInterpreterPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpreter directory.
+        /// </summary>
+        public static string EnvironmentPathsPrefixPath {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsPrefixPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Windows interpreter path.
+        /// </summary>
+        public static string EnvironmentPathsWindowsInterpreterPath {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsWindowsInterpreterPath", resourceCulture);
             }
         }
         
@@ -835,6 +880,42 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static string StandardLibraryModuleListItem {
             get {
                 return ResourceManager.GetString("StandardLibraryModuleListItem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment pages.
+        /// </summary>
+        public static string ToolWindow_ExtensionsName {
+            get {
+                return ResourceManager.GetString("ToolWindow_ExtensionsName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment page help.
+        /// </summary>
+        public static string ToolWindow_HelpContentName {
+            get {
+                return ResourceManager.GetString("ToolWindow_HelpContentName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toggle page help.
+        /// </summary>
+        public static string ToolWindow_HelpVisibilityName {
+            get {
+                return ResourceManager.GetString("ToolWindow_HelpVisibilityName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python environments.
+        /// </summary>
+        public static string ToolWindow_ListOfEnvironmentsName {
+            get {
+                return ResourceManager.GetString("ToolWindow_ListOfEnvironmentsName", resourceCulture);
             }
         }
         

@@ -25,5 +25,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         FrameworkElement WpfObject { get; }
 
         object HelpContent { get; }
+
+        string HelpText { get; }
     }
 }

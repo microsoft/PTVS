@@ -395,4 +395,31 @@
   <data name="StandardLibraryModuleListItem" xml:space="preserve">
     <value>(Standard Library)</value>
   </data>
+  <data name="EnvironmentPathsExtensionDisableIPythonAutomationName" xml:space="preserve">
+    <value>Disable IPython interactive mode</value>
+  </data>
+  <data name="EnvironmentPathsExtensionEnableIPythonAutomationName" xml:space="preserve">
+    <value>Enable IPython interactive mode</value>
+  </data>
+  <data name="EnvironmentPathsInterpreterPath" xml:space="preserve">
+    <value>Interpreter path</value>
+  </data>
+  <data name="EnvironmentPathsPrefixPath" xml:space="preserve">
+    <value>Interpreter directory</value>
+  </data>
+  <data name="EnvironmentPathsWindowsInterpreterPath" xml:space="preserve">
+    <value>Windows interpreter path</value>
+  </data>
+  <data name="ToolWindow_ExtensionsName" xml:space="preserve">
+    <value>Environment pages</value>
+  </data>
+  <data name="ToolWindow_HelpContentName" xml:space="preserve">
+    <value>Environment page help</value>
+  </data>
+  <data name="ToolWindow_HelpVisibilityName" xml:space="preserve">
+    <value>Toggle page help</value>
+  </data>
+  <data name="ToolWindow_ListOfEnvironmentsName" xml:space="preserve">
+    <value>Python environments</value>
+  </data>
 </root>
