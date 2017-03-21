@@ -286,12 +286,18 @@
       <Item ItemId=";ConfigurationExtensionWindowedInterpreterPathHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &quot;pythonw.exe&quot;, but it may be different for some interpreters.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der Fenstermodus-Interpreterpfad ist die ausführbare Datei, die zum Starten von Python ohne Anzeige eines Konsolenfensters verwendet wird. Normalerweise heißt diese Datei "pythonw.exe", der Name kann jedoch für einige Interpreter anders lauten.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";ConfigurationExtensionWindowedInterpreterPathLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windowed interpreter]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fenstermodus-Interpreter]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -730,6 +736,9 @@
       <Item ItemId=";PipExtensionPipInstall" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA["pip install {0}"]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA["pip install {0}"]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -880,7 +889,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -916,7 +925,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

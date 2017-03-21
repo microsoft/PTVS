@@ -427,12 +427,18 @@
       <Item ItemId=";_indentationInconsistentCombo.Items2" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Combo Box">
           <Val><![CDATA[Don't]]></Val>
+          <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Kein]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
       <Item ItemId=";_indentationInconsistentLabel.Text" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
           <Val><![CDATA[&Report inconsistent indentation as]]></Val>
+          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[&Inkonsistenten Einzug melden als]]></Val>
+          </Tgt>
         </Str>
         <Bin BinId="1">
           <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAEAAAALAAEAAAD/////AQAAAAAAAAAGAQAAAB1faW5kZW50YXRpb25JbmNvbnNpc3RlbnRMYWJlbAsAAQAAAP////8BAAAAAAAAAAQBAAAADlN5c3RlbS5Cb29sZWFuAQAAAAdtX3ZhbHVlAAEACwABAAAA/////wEAAAAAAAAABAEAAAAOU3lzdGVtLkJvb2xlYW4BAAAAB21fdmFsdWUAAQALAAEAAAD/////AQAAAAAAAAAEAQAAAIcCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1udWxsXV0EAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUNS2V5VmFsdWVQYWlycwADAAMIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQiLAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1udWxsXV1bXQcAAAAJAgAAAAcAAAAJAwAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAHAwAAAAABAAAABwAAAAOJAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1udWxsXV0MBQAAAERNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49bnVsbAT8////iQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49bnVsbF1dAgAAAANrZXkFdmFsdWUBBDlNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8FAAAABgYAAAAmX2luZGVudGF0aW9uSW5jb25zaXN0ZW50TGFiZWwuVGFiSW5kZXgJBwAAAAH4/////P///wYJAAAAJ19pbmRlbnRhdGlvbkluY29uc2lzdGVudExhYmVsLlRleHRBbGlnbgkKAAAAAfX////8////BgwAAAAkX2luZGVudGF0aW9uSW5jb25zaXN0ZW50TGFiZWwuQW5jaG9yCQ0AAAAB8v////z///8GDwAAACRfaW5kZW50YXRpb25JbmNvbnNpc3RlbnRMYWJlbC5NYXJnaW4JEAAAAAHv/////P///wYSAAAAJl9pbmRlbnRhdGlvbkluY29uc2lzdGVudExhYmVsLkxvY2F0aW9uCRMAAAAB7P////z///8GFQAAACZfaW5kZW50YXRpb25JbmNvbnNpc3RlbnRMYWJlbC5BdXRvU2l6ZQkWAAAAAen////8////BhgAAAAiX2luZGVudGF0aW9uSW5jb25zaXN0ZW50TGFiZWwuU2l6ZQkZAAAABQcAAAA5TWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvAgAAAAZtX3R5cGUGbV9kYXRhAQcCBQAAAAYaAAAAFlJlc291cmNlVHlwZUNvZGUuSW50MzIJGwAAAAEKAAAABwAAAAYcAAAAclN5c3RlbS5EcmF3aW5nLkNvbnRlbnRBbGlnbm1lbnQsIFN5c3RlbS5EcmF3aW5nLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQkdAAAAAQ0AAAAHAAAABh4AAAB6U3lzdGVtLldpbmRvd3MuRm9ybXMuQW5jaG9yU3R5bGVzLCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkJHwAAAAEQAAAABwAAAAYgAAAAdVN5c3RlbS5XaW5kb3dzLkZvcm1zLlBhZGRpbmcsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQkhAAAAARMAAAAHAAAABiIAAABnU3lzdGVtLkRyYXdpbmcuUG9pbnQsIFN5c3RlbS5EcmF3aW5nLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQkjAAAAARYAAAAHAAAABiQAAAAYUmVzb3VyY2VUeXBlQ29kZS5Cb29sZWFuCSUAAAABGQAAAAcAAAAGJgAAAGZTeXN0ZW0uRHJhd2luZy5TaXplLCBTeXN0ZW0uRHJhd2luZywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EJJwAAAA8bAAAABAAAAAIHAAAADx0AAACkAAAAAgABAAAA/////wEAAAAAAAAADAIAAABRU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhBQEAAAAfU3lzdGVtLkRyYXdpbmcuQ29udGVudEFsaWdubWVudAEAAAAHdmFsdWVfXwAIAgAAABAAAAALDx8AAACsAAAAAgABAAAA/////wEAAAAAAAAADAIAAABXU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAhU3lzdGVtLldpbmRvd3MuRm9ybXMuQW5jaG9yU3R5bGVzAQAAAAd2YWx1ZV9fAAgCAAAABAAAAAsPIQAAANMAAAACAAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAABxTeXN0ZW0uV2luZG93cy5Gb3Jtcy5QYWRkaW5nBQAAAARfYWxsBF90b3AFX2xlZnQGX3JpZ2h0B19ib3R0b20AAAAAAAEICAgIAgAAAAAAAAAABgAAAAYAAAAAAAAACw8jAAAAmwAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAUVN5c3RlbS5EcmF3aW5nLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQUBAAAAFFN5c3RlbS5EcmF3aW5nLlBvaW50AgAAAAF4AXkAAAgIAgAAAAYAAACoAAAACw8lAAAAAQAAAAIBDycAAACjAAAAAgABAAAA/////wEAAAAAAAAADAIAAABRU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhBQEAAAATU3lzdGVtLkRyYXdpbmcuU2l6ZQIAAAAFd2lkdGgGaGVpZ2h0AAAICAIAAACnAAAADQAAAAsLAAEAAAD/////AQAAAAAAAAAEAQAAAIcCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1udWxsXV0EAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUNS2V5VmFsdWVQYWlycwADAAMIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQiLAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1udWxsXV1bXQQAAAAJAgAAAAcAAAAJAwAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAHAwAAAAABAAAABAAAAAOJAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1udWxsXV0MBQAAAERNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49bnVsbAT8////iQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49bnVsbF1dAgAAAANrZXkFdmFsdWUBBDlNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8FAAAABgYAAAAmPj5faW5kZW50YXRpb25JbmNvbnNpc3RlbnRMYWJlbC5QYXJlbnQJBwAAAAH4/////P///wYJAAAAJj4+X2luZGVudGF0aW9uSW5jb25zaXN0ZW50TGFiZWwuWk9yZGVyCQoAAAAB9f////z///8GDAAAACQ+Pl9pbmRlbnRhdGlvbkluY29uc2lzdGVudExhYmVsLlR5cGUJDQAAAAHy/////P///wYPAAAAJD4+X2luZGVudGF0aW9uSW5jb25zaXN0ZW50TGFiZWwuTmFtZQkQAAAABQcAAAA5TWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvAgAAAAZtX3R5cGUGbV9kYXRhAQcCBQAAAAYRAAAAF1Jlc291cmNlVHlwZUNvZGUuU3RyaW5nCRIAAAABCgAAAAcAAAAGEwAAABdSZXNvdXJjZVR5cGVDb2RlLlN0cmluZwkUAAAAAQ0AAAAHAAAABhUAAAAXUmVzb3VyY2VUeXBlQ29kZS5TdHJpbmcJFgAAAAEQAAAABwAAAAYXAAAAF1Jlc291cmNlVHlwZUNvZGUuU3RyaW5nCRgAAAAPEgAAABIAAAACEXRhYmxlTGF5b3V0UGFuZWwzDxQAAAACAAAAAgE0DxYAAAB0AAAAAnNTeXN0ZW0uV2luZG93cy5Gb3Jtcy5MYWJlbCwgU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5DxgAAAAeAAAAAh1faW5kZW50YXRpb25JbmNvbnNpc3RlbnRMYWJlbAsAAQAAAP////8BAAAAAAAAAAQBAAAAhwJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5EaWN0aW9uYXJ5YDJbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV0sW01pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbywgTWFuYWdlZFBhcnNlciwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPW51bGxdXQMAAAAHVmVyc2lvbghDb21wYXJlcghIYXNoU2l6ZQADAAiSAVN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLkdlbmVyaWNFcXVhbGl0eUNvbXBhcmVyYDFbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV1dCAAAAAAJAgAAAAAAAAAEAgAAAJIBU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuR2VuZXJpY0VxdWFsaXR5Q29tcGFyZXJgMVtbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0AAAAACw==]]></Val>
@@ -2112,6 +2118,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16390" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Remove Environments]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Umgebungen hinzufügen/entfernen]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -2541,6 +2550,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16436" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Generate RequiremenstTxt]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA["Requirements.txt" generieren]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -2799,12 +2811,18 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},259" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Send to &Interactive]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[An &interaktives Fenster senden]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},259" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Send Selection To Interactive]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Auswahl an interaktives Fenster senden]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3072,6 +3090,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Import Coverage]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Coveragedatei importieren]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3129,6 +3150,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},514" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[New Interactive]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Neues interaktives Fenster]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3246,6 +3270,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[.Python.Open Command Prompt Here]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[.Python.Hier Eingabeaufforderung öffnen]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -6067,6 +6094,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";UnableToReadVerbosity" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to read build verbosity setting.]D;]A;]D;]A;{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ausführlichkeitseinstellung für den Build konnte nicht gelesen werden.]D;]A;]D;]A;{0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";UnableToRemoveFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The file does not exist on disk but is present in your project and cannot be removed.  Please remove the item from the project before attempting to rename an item to a filename of the same name.]]></Val>
@@ -6517,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6553,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

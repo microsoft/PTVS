@@ -367,6 +367,9 @@
       <Item ItemId=";AddWebRoleSupportFiles" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Um sicherzustellen, dass Ihr Projekt ordnungsgemäß in Microsoft Azure Cloud Services bereitgestellt wird, fügen Sie Ihrem Projekt über das Dialogfeld "Neues Element hinzufügen" die Webrollen-Unterstützungsdateien hinzu, und folgen Sie den Anweisungen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -562,6 +565,9 @@
       <Item ItemId=";BuiltinClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Builtins]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Vordefinierte Python-Elemente]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -937,6 +943,9 @@
       <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive Window]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Interaktives {0}-Fenster]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1889,7 +1898,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{0}' will be removed from the project.]D;]A;No files will be deleted from disk.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA["{0}" wird aus dem Projekt entfernt.]D;]A;Es werden keine Dateien vom Datenträger gelöscht. ]]></Val>
+            <Val><![CDATA["{0}" wird aus dem Projekt entfernt.]D;]A;Es werden keine Dateien vom Datenträger gelöscht.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2050,6 +2059,9 @@
       <Item ItemId=";ExecuteInReplCommand_ExecuteFile" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Execute File in P&ython Interactive]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Datei in interaktivem P&ython ausführen]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3934,6 +3946,9 @@
       <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Interaktives {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4012,6 +4027,9 @@
       <Item ItemId=";ReplInitializationMessage" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&#x1b;[94;21m{0} interactive window &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;Type $help for a list of commands.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[&#x1b;[94;21mInteraktives {0}-Fenster &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;Geben Sie "$help" ein, um eine Liste der Befehle anzuzeigen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4126,6 +4144,9 @@
       <Item ItemId=";ReplQuerySwitchThisTab" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Switch this tab]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[&Diese Registerkarte wechseln]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4745,7 +4766,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unknown role type: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Unbekannter Rollentyp: {0} ]]></Val>
+            <Val><![CDATA[Unbekannter Rollentyp: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5029,7 +5050,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5065,7 +5086,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17076.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

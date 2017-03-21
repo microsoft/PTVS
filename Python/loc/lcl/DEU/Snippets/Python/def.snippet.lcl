@@ -23,6 +23,9 @@
     <Item ItemId="0;f11d4b02f34d87b06deca7c18f4f4a0d" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[def]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[def]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
