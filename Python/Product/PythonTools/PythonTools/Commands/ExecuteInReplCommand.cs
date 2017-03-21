@@ -16,15 +16,16 @@
 
 using System;
 using System.Diagnostics;
+using System.Windows;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -130,11 +131,21 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
-        public override async void DoCommand(object sender, EventArgs e) {
+        public override void DoCommand(object sender, EventArgs e) {
+            DoCommand().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+        }
+
+        private async System.Threading.Tasks.Task DoCommand() {
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             var textView = CommonPackage.GetActiveTextView(_serviceProvider);
 
-            var config = pyProj?.GetLaunchConfigurationOrThrow();
+            LaunchConfiguration config = null;
+            try {
+                config = pyProj?.GetLaunchConfigurationOrThrow();
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return;
+            }
             if (config == null && textView != null) {
                 var interpreters = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
                 config = new LaunchConfiguration(interpreters.DefaultInterpreter.Configuration) {
