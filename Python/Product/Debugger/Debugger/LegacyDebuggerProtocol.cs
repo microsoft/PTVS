@@ -372,7 +372,7 @@ namespace Microsoft.PythonTools.Debugger {
             public override string name => Name;
 
             public long threadId;
-            public ExceptionItem[] data;
+            public Dictionary<string, string> data;
         }
 
         public sealed class BreakpointHitEvent : Event {
@@ -564,11 +564,6 @@ namespace Microsoft.PythonTools.Debugger {
             public string name;
             public string expression;
             public PythonObject obj;
-        }
-
-        public sealed class ExceptionItem {
-            public string key;
-            public string val;
         }
 
         public sealed class ThreadFrameVariable {

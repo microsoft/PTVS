@@ -693,7 +693,7 @@ namespace Microsoft.PythonTools.Debugger {
         private void OnLegacyException(object sender, LDP.ExceptionEvent e) {
             var exc = new PythonException();
             foreach (var item in e.data) {
-                exc.SetValue(this, item.key, item.val);
+                exc.SetValue(this, item.Key, item.Value);
             }
 
             if (e.threadId != 0) {

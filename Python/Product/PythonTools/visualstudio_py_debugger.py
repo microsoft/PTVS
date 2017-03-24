@@ -2104,7 +2104,7 @@ def report_exception(frame, exc_info, tid, break_type):
     send_debug_event(
         name='legacyException',
         threadId=tid,
-        data=[{'key':k, 'val':str(v)} for k, v in data.items()],
+        data=dict((k, str(v)) for k, v in data.items()),
     )
 
 def new_module(frame):
