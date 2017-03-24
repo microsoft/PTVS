@@ -43,8 +43,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             string issueTrackerUrl = null
         ) {
             string suffix = string.IsNullOrEmpty(issueTrackerUrl) ?
-                "Please press Ctrl+C to copy the contents of this dialog and report this error." :
-                "Please press Ctrl+C to copy the contents of this dialog and report this error to our <a href=\"issuetracker\">issue tracker</a>.";
+                Strings.UnexpectedError_Instruction :
+                Strings.UnexpectedError_InstructionWithLink;
 
             if (string.IsNullOrEmpty(message)) {
                 message = suffix;
@@ -53,12 +53,12 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
             
             var td = new TaskDialog(provider) {
-                MainInstruction = "An unexpected error occurred",
+                MainInstruction = Strings.UnexpectedError_Title,
                 Content = message,
                 EnableHyperlinks = true,
-                CollapsedControlText = "Show &details",
-                ExpandedControlText = "Hide &details",
-                ExpandedInformation = "```{0}{1}{0}```".FormatUI(Environment.NewLine, exception)
+                CollapsedControlText = Strings.ShowDetails,
+                ExpandedControlText = Strings.HideDetails,
+                ExpandedInformation = "```{0}Build: {2}{0}{0}{1}{0}```".FormatUI(Environment.NewLine, exception, AssemblyVersionInfo.Version)
             };
             td.Buttons.Add(TaskDialogButton.Close);
             if (!string.IsNullOrEmpty(issueTrackerUrl)) {

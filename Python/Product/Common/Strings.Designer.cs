@@ -2647,6 +2647,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hide &amp;details.
+        /// </summary>
+        public static string HideDetails {
+            get {
+                return ResourceManager.GetString("HideDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*.
         /// </summary>
         public static string ImportCoverageCommandFileFilter {
@@ -4649,6 +4658,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show &amp;details.
+        /// </summary>
+        public static string ShowDetails {
+            get {
+                return ResourceManager.GetString("ShowDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python source analysis is not up to date.
         /// </summary>
         public static string SourceAnalysisNotUpToDate {
@@ -4818,6 +4836,33 @@ namespace Microsoft.PythonTools {
         public static string UnableToElevate {
             get {
                 return ResourceManager.GetString("UnableToElevate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please press Ctrl+C to copy the contents of this dialog and report this error..
+        /// </summary>
+        public static string UnexpectedError_Instruction {
+            get {
+                return ResourceManager.GetString("UnexpectedError_Instruction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please press Ctrl+C to copy the contents of this dialog and report this error to our &lt;a href=&quot;issuetracker&quot;&gt;issue tracker&lt;/a&gt;..
+        /// </summary>
+        public static string UnexpectedError_InstructionWithLink {
+            get {
+                return ResourceManager.GetString("UnexpectedError_InstructionWithLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unexpected error occurred.
+        /// </summary>
+        public static string UnexpectedError_Title {
+            get {
+                return ResourceManager.GetString("UnexpectedError_Title", resourceCulture);
             }
         }
         
