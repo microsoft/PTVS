@@ -188,18 +188,30 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #endregion
     }
 
-    // This interface is sent by the debug engine (DE) to the session debug manager (SDM) when a program is loaded, but before any code is executed.
-    sealed class AD7LoadCompleteEvent : AD7StoppingEvent, IDebugLoadCompleteEvent2 {
+    // This interface is sent by the debug engine (DE) to the session debug manager (SDM)
+    // when a program is loaded, but before any code is executed.
+    sealed class AD7LoadCompleteEvent : IDebugEvent2, IDebugLoadCompleteEvent2 {
         public const string IID = "B1844850-1349-45D4-9F12-495212F5EB0B";
 
-        public AD7LoadCompleteEvent() {
+        private uint _attributes;
+
+        public AD7LoadCompleteEvent(IDebugThread2 thread) {
+            if (thread == null) {
+                _attributes = (uint)enum_EVENTATTRIBUTES.EVENT_ASYNCHRONOUS;
+            } else {
+                _attributes = (uint)enum_EVENTATTRIBUTES.EVENT_STOPPING;
+            }
         }
 
-        internal static void Send(AD7Engine engine) {
-            var eventObject = new AD7LoadCompleteEvent();
-            engine.Send(eventObject, IID, null);
+        internal static void Send(AD7Engine engine, IDebugThread2 thread) {
+            var eventObject = new AD7LoadCompleteEvent(thread);
+            engine.Send(eventObject, IID, thread);
         }
 
+        public int GetAttributes(out uint pdwAttrib) {
+            pdwAttrib = _attributes;
+            return VSConstants.S_OK;
+        }
     }
 
     // This interface tells the session debug manager (SDM) that an asynchronous break has been successfully completed.

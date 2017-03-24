@@ -323,7 +323,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     _mixedMode = true;
                     AD7EngineCreateEvent.Send(this);
                     AD7ProgramCreateEvent.Send(this);
-                    AD7LoadCompleteEvent.Send(this);
+                    AD7LoadCompleteEvent.Send(this, null);
                     Debug.WriteLine("PythonEngine Attach bailing out early - mixed-mode debugging");
                     return VSConstants.S_OK;
                 }
@@ -403,12 +403,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _startThread = null;
             }
 
-            var attached = EngineAttached;
-            if (attached != null) {
-                attached(this, new AD7EngineEventArgs(this));
-            }
+            EngineAttached?.Invoke(this, new AD7EngineEventArgs(this));
 
-            Send(new AD7LoadCompleteEvent(), AD7LoadCompleteEvent.IID, thread);
+            AD7LoadCompleteEvent.Send(this, thread);
 
             _processLoadedThread = null;
             _loadComplete.Set();
@@ -1455,38 +1452,36 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// New in 1.5.
         /// </summary>
         public static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame) {
-            if (frame >= 0) {
-                foreach (var engineRef in _engines) {
-                    var engine = engineRef.Target as AD7Engine;
-                    if (engine != null) {
-                        if (engine._process.Id == processId) {
-                            foreach (var thread in engine._threads.Keys) {
-                                if (thread.Id == threadId) {
-                                    var frames = thread.Frames;
-
-                                    if (frame < frames.Count) {
-                                        var curFrame = thread.Frames[frame];
-
-                                        switch (curFrame.Kind) {
-                                            case FrameKind.Django:
-                                                var djangoFrame = (DjangoStackFrame)curFrame;
-
-                                                return new AD7DocumentContext(djangoFrame.SourceFile,
-                                                    new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
-                                                    new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
-                                                    new AD7MemoryAddress(engine, djangoFrame.SourceFile, (uint)djangoFrame.SourceLine, curFrame),
-                                                    FrameKind.Python
-                                                );
-                                            default:
-                                                return null;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            if (frame < 0) {
+                return null;
             }
+
+            var engine = _engines.Select(e => e.Target as AD7Engine).FirstOrDefault(e => e?._process?.Id == processId);
+            if (engine == null) {
+                return null;
+            }
+
+            var thread = engine._threads.Keys.FirstOrDefault(t => t.Id == threadId);
+            if (thread == null) {
+                return null;
+            }
+
+            var curFrame = thread.Frames.ElementAtOrDefault(frame);
+            if (curFrame == null) {
+                return null;
+            }
+
+            if (curFrame.Kind == FrameKind.Django) {
+                var djangoFrame = (DjangoStackFrame)curFrame;
+
+                return new AD7DocumentContext(djangoFrame.SourceFile,
+                    new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
+                    new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
+                    new AD7MemoryAddress(engine, djangoFrame.SourceFile, (uint)djangoFrame.SourceLine, curFrame),
+                    FrameKind.Python
+                );
+            }
+
             return null;
         }
 
