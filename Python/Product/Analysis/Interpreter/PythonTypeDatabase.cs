@@ -41,7 +41,20 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 25;
+        /// <remarks>
+        /// This value should be incremented when the database format changes such
+        /// that it can no longer be read by previous releases.
+        /// </remarks>
+        public static readonly int FormatVersion = 1;
+        /// <summary>
+        /// Gets the version of the analysis format that tools generate.
+        /// </summary>
+        /// <remarks>
+        /// This value should be incremented when the generated analysis differs
+        /// from a previous release. It may be reset to 1 when <see cref="FormatVersion"/>
+        /// is incremented.
+        /// </remarks>
+        public static readonly int CurrentVersion = 1;
 
         private static string _completionDatabasePath;
         private static string _referencesDatabasePath;
@@ -492,19 +505,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        private static bool DatabaseExists(string path) {
-            string versionFile = Path.Combine(path, "database.ver");
-            if (File.Exists(versionFile)) {
-                try {
-                    string allLines = File.ReadAllText(versionFile);
-                    int version;
-                    return Int32.TryParse(allLines, out version) && version == PythonTypeDatabase.CurrentVersion;
-                } catch (IOException) {
-                }
-            }
-            return false;
-        }
-
         public static string GlobalLogFilename {
             get {
                 return Path.Combine(CompletionDatabasePath, "AnalysisLog.txt");
@@ -532,7 +532,7 @@ namespace Microsoft.PythonTools.Interpreter {
 #if DEBUG
                         "Debug",
 #endif
-                        AssemblyVersionInfo.Version
+                        $"{AssemblyVersionInfo.VSVersion}-{FormatVersion}"
                     );
                 }
                 return _completionDatabasePath;
@@ -549,7 +549,7 @@ namespace Microsoft.PythonTools.Interpreter {
 #if DEBUG
                         "Debug",
 #endif
-                        AssemblyVersionInfo.Version
+                        $"{AssemblyVersionInfo.VSVersion}-{FormatVersion}"
                     );
                 }
                 return _referencesDatabasePath;

@@ -62,12 +62,6 @@ namespace DjangoTests {
         }
 
         [TestMethod, Priority(1)]
-        public void TestRequestContext() {
-            TestSingleRenderVariable("test_RequestContext.html");
-            TestSingleRenderVariable("test_RequestContext2.html");
-        }
-
-        [TestMethod, Priority(1)]
         public void TestCustomFilter() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
