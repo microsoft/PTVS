@@ -2035,4 +2035,7 @@ Expand selection to the full expression?</value>
   <data name="UnexpectedError_Title" xml:space="preserve">
     <value>An unexpected error occurred</value>
   </data>
+  <data name="UpgradedInterpreterReferenceRemoved" xml:space="preserve">
+    <value>An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.</value>
+  </data>
 </root>
