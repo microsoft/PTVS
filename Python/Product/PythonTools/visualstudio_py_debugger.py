@@ -181,12 +181,12 @@ BREAKPOINTS = {}
 # Elements are BreakpointInfo objects.
 PENDING_BREAKPOINTS = set()
 
-# Must be in sync with enum PythonBreakpointConditionKind in PythonBreakpoint.cs
+# Must be in sync with enum BreakpointConditionKind in LegacyDebuggerProtocol.cs
 BREAKPOINT_CONDITION_ALWAYS = 0
 BREAKPOINT_CONDITION_WHEN_TRUE = 1
 BREAKPOINT_CONDITION_WHEN_CHANGED = 2
 
-# Must be in sync with enum PythonBreakpointPassCountKind in PythonBreakpoint.cs
+# Must be in sync with enum BreakpointPassCountKind in LegacyDebuggerProtocol.cs
 BREAKPOINT_PASS_COUNT_ALWAYS = 0
 BREAKPOINT_PASS_COUNT_EVERY = 1
 BREAKPOINT_PASS_COUNT_WHEN_EQUAL = 2

@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private readonly Dictionary<int, RequestInfo> _requestCache;
         private readonly Dictionary<string, Type> _types;
         private readonly Func<RequestArgs, Func<Response, Task>, Task> _requestHandler;
-        private readonly bool _ownWriter, _ownReader;
+        private readonly bool _disposeWriter, _disposeReader;
         private readonly Stream _writer, _reader;
         private readonly TextWriter _logFile;
         private readonly object _logFileLock;
@@ -48,9 +48,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// Creates a new connection object for doing client/server communication.  
         /// </summary>
         /// <param name="writer">The stream that we write to for sending requests and responses.</param>
-        /// <param name="ownWriter">The writer stream is disposed when this object is disposed.</param>
+        /// <param name="disposeWriter">The writer stream is disposed when this object is disposed.</param>
         /// <param name="reader">The stream that we read from for reading responses and events.</param>
-        /// <param name="ownReader">The reader stream is disposed when this object is disposed.</param>
+        /// <param name="disposeReader">The reader stream is disposed when this object is disposed.</param>
         /// <param name="requestHandler">The callback that is invoked when a request is received.</param>
         /// <param name="types">A set of registered types for receiving requests and events.  The key is "request.command_name" or "event.event_name"
         /// where command_name and event_name correspond to the fields in the Request and Event objects.  The type is the type of object
@@ -60,9 +60,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// <param name="connectionLogKey">Name of registry key used to determine if we should log messages and exceptions to disk.</param>
         public Connection(
             Stream writer,
-            bool ownWriter,
+            bool disposeWriter,
             Stream reader,
-            bool ownReader,
+            bool disposeReader,
             Func<RequestArgs, Func<Response, Task>, Task> requestHandler = null,
             Dictionary<string, Type> types = null,
             string connectionLogKey = null
@@ -71,9 +71,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
             _requestHandler = requestHandler;
             _types = types;
             _writer = writer;
-            _ownWriter = ownWriter;
+            _disposeWriter = disposeWriter;
             _reader = reader;
-            _ownReader = ownReader;
+            _disposeReader = disposeReader;
             _logFile = OpenLogFile(connectionLogKey);
             // FxCop won't let us lock a MarshalByRefObject, so we create
             // a plain old object that we can log against.
@@ -270,8 +270,6 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     var type = packet["type"].ToObject<string>();
                     var seq = packet["seq"].ToObject<int?>();
 
-                    Debug.WriteLine(string.Format("Received packet seq={0}", seq));
-
                     if (seq == null) {
                         await WriteError("Missing sequence number").ConfigureAwait(false);
                     }
@@ -375,10 +373,10 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         public void Dispose() {
-            if (_ownWriter) {
+            if (_disposeWriter) {
                 _writer.Dispose();
             }
-            if (_ownReader) {
+            if (_disposeReader) {
                 _reader.Dispose();
             }
             _writeLock.Dispose();

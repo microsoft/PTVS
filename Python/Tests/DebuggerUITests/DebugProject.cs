@@ -26,6 +26,7 @@ using EnvDTE90a;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
@@ -33,7 +34,6 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using Thread = System.Threading.Thread;
-using Microsoft.VisualStudioTools;
 
 namespace DebuggerUITests {
     [TestClass]

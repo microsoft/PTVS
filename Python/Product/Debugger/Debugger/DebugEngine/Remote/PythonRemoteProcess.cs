@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 string serverDebuggerName = string.Empty;
                 int serverDebuggerProtocolVersion = 0;
 
-                EventHandler<LDP.RemoteConnectedEvent> eventReceived = delegate (object sender, LDP.RemoteConnectedEvent ea) {
+                EventHandler<LDP.RemoteConnectedEvent> eventReceived = (object sender, LDP.RemoteConnectedEvent ea) => {
                     serverDebuggerName = ea.debuggerName;
                     serverDebuggerProtocolVersion = ea.debuggerProtocolVersion;
                     connectedEvent.Set();

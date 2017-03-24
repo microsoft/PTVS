@@ -20,7 +20,8 @@ using Microsoft.PythonTools.Ipc.Json;
 
 namespace Microsoft.PythonTools.Debugger {
     // IMPORTANT:
-    // Names of all fields, commands and events must match the names in visualstudio_py_debugger.py
+    // Names of all fields, commands and events must match the names in
+    // visualstudio_py_debugger.py and attach_server.py
     internal static class LegacyDebuggerProtocol {
         public static readonly Dictionary<string, Type> RegisteredTypes = CollectCommands();
 
@@ -522,28 +523,28 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public enum FrameKind {
-            None,
-            Python,
-            Django,
+            None = 0,
+            Python = 1,
+            Django = 2,
         }
 
         public enum ReprKind {
-            Normal,
-            Raw,
-            RawLen
+            Normal = 0,
+            Raw = 1,
+            RawLen = 2,
         }
 
         public enum BreakpointConditionKind {
             Always = 0,
             WhenTrue = 1,
-            WhenChanged = 2
+            WhenChanged = 2,
         }
 
         public enum BreakpointPassCountKind {
             Always = 0,
             Every = 1,
             WhenEqual = 2,
-            WhenEqualOrGreater = 3
+            WhenEqualOrGreater = 3,
         }
 
         public sealed class PythonObject {

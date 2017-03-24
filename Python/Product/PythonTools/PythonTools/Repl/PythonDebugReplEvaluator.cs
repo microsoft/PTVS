@@ -35,10 +35,9 @@ using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Repl {
-    using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
-
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]

@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Debugger {
 
                     string debugId = string.Empty;
                     var result = ConnErrorMessages.None;
-                    EventHandler<LDP.LocalConnectedEvent> eventReceived = delegate (object sender, LDP.LocalConnectedEvent ea) {
+                    EventHandler<LDP.LocalConnectedEvent> eventReceived = (object sender, LDP.LocalConnectedEvent ea) => {
                         result = (ConnErrorMessages)ea.result;
                         debugId = ea.processGuid;
                         connectedEvent.Set();
