@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -293,11 +294,15 @@ namespace PythonToolsTests {
                 var text = File.ReadAllText(project);
                 Assert.IsFalse(
                     text.Contains("<PtvsTargetsFile>" + PythonProjectFactory.PtvsTargets),
-                    string.Format("Upgraded OldCommonTargets.pyproj should not define $(PtvsTargetsFile)")
+                    "Upgraded OldCommonTargets.pyproj should not define $(PtvsTargetsFile)"
                 );
                 Assert.IsTrue(
                     text.Contains("<Import Project=\"" + PythonProjectFactory.PtvsTargets + "\""),
-                    string.Format("Upgraded OldCommonTargets.pyproj should import the Python targets directly")
+                    "Upgraded OldCommonTargets.pyproj should import the Python targets directly"
+                );
+                Assert.AreEqual(
+                    1, text.FindIndexesOf(PythonProjectFactory.PtvsTargets).Count(),
+                    "Expected only one import of Python targets file"
                 );
                 Assert.AreEqual(Guid.Empty, factoryGuid);
             }
@@ -341,6 +346,10 @@ namespace PythonToolsTests {
                     text.Contains("<Import Project=\"" + PythonProjectFactory.PtvsTargets + "\""),
                     string.Format("Upgraded OldPythonTargets.pyproj should import the Python targets directly")
                 );
+                Assert.AreEqual(
+                    1, text.FindIndexesOf(PythonProjectFactory.PtvsTargets).Count(),
+                    "Expected only one import of Python targets file"
+                );
                 Assert.AreEqual(Guid.Empty, factoryGuid);
             }
         }
@@ -361,6 +370,7 @@ namespace PythonToolsTests {
                 new { Name = "CPythonx64InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5" },
                 new { Name = "MSBuildInterpreterId.pyproj", Expected = 1, Id = "MSBuild|env|$(MSBuildProjectFullPath)" },
                 new { Name = "IronPythonInterpreterId.pyproj", Expected = 1, Id = "IronPython|2.7-32" },
+                new { Name = "UnknownInterpreterId.pyproj", Expected = 1, Id = (string)null },
             }) {
                 int actual;
                 Guid factoryGuid;
@@ -383,9 +393,15 @@ namespace PythonToolsTests {
                     Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
                     Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
 
-                    AssertUtil.Contains(
-                        File.ReadAllText(project),
-                        "<InterpreterId>{0}</InterpreterId>".FormatInvariant(testCase.Id)
+                    var content = File.ReadAllText(project);
+                    if (testCase.Id == null) {
+                        Assert.IsFalse(content.Contains("<InterpreterId>"), "Found <InterpreterId> in " + content);
+                    } else {
+                        AssertUtil.Contains(content, "<InterpreterId>{0}</InterpreterId>".FormatInvariant(testCase.Id));
+                    }
+                    Assert.AreEqual(
+                        1, content.FindIndexesOf(PythonProjectFactory.PtvsTargets).Count(),
+                        "Expected only one import of Python targets file"
                     );
                     Assert.AreEqual(Guid.Empty, factoryGuid);
                 }
@@ -405,6 +421,7 @@ namespace PythonToolsTests {
             foreach (var testCase in new[] {
                 new { Name = "CPythonInterpreterReference.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32" },
                 new { Name = "IronPythonInterpreterReference.pyproj", Expected = 1, Id = "IronPython|2.7-32" },
+                new { Name = "UnknownInterpreterReference.pyproj", Expected = 1, Id = (string)null },
             }) {
                 int actual;
                 Guid factoryGuid;
@@ -427,10 +444,12 @@ namespace PythonToolsTests {
                     Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
                     Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
 
-                    AssertUtil.Contains(
-                        File.ReadAllText(project),
-                        "<InterpreterReference Include=\"{0}\" />".FormatInvariant(testCase.Id)
-                    );
+                    var content = File.ReadAllText(project);
+                    if (testCase.Id == null) {
+                        Assert.IsFalse(content.Contains("<InterpreterReference "), "Found <InterpreterReference> in " + content);
+                    } else {
+                        AssertUtil.Contains(content, "<InterpreterReference Include=\"{0}\" />".FormatInvariant(testCase.Id));
+                    }
                     Assert.AreEqual(Guid.Empty, factoryGuid);
                 }
             }
@@ -470,9 +489,9 @@ namespace PythonToolsTests {
                     Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
                     Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
 
-                    AssertUtil.Contains(
-                        File.ReadAllText(project),
-                        "<BaseInterpreter>{0}</BaseInterpreter>".FormatInvariant(testCase.Id)
+                    Assert.IsFalse(
+                        File.ReadAllText(project).Contains("<BaseInterpreter>"),
+                        "Project should not contain <BaseInterpreter> element"
                     );
                     Assert.AreEqual(Guid.Empty, factoryGuid);
                 }

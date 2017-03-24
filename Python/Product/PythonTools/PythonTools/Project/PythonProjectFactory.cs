@@ -250,12 +250,17 @@ namespace Microsoft.PythonTools.Project {
             // <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
             foreach (var p in projectXml.Imports.Where(i => i.Condition.Contains("$(PtvsTargetsFile)") || i.Project.Equals("$(PtvsTargetsFile)")).ToArray()) {
                 p.Parent.RemoveChild(p);
+                anyUpdated = true;
             }
 
+            string targets = PtvsTargets;
             if (ContainsProjectTypeGuid(projectXml, UwpProjectGuid)) {
-                projectXml.AddImport(UwpTargets);
-            } else {
-                projectXml.AddImport(PtvsTargets);
+                targets = UwpTargets;
+            }
+
+            if (!projectXml.Imports.Any(p => targets.Equals(p.Project, StringComparison.OrdinalIgnoreCase))) {
+                projectXml.AddImport(targets);
+                anyUpdated = true;
             }
 
             if (anyUpdated) {
@@ -296,7 +301,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static void ProcessInterpreterIdsFrom22(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
-            bool interpreterChanged = false;
+            bool interpreterChanged = false, interpreterRemoved = false;
             var msbuildInterpreters = new Dictionary<Guid, string>();
 
             foreach (var i in projectXml.ItemGroups.SelectMany(g => g.Items).Where(i => i.ItemType == "Interpreter")) {
@@ -309,19 +314,14 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 var mdBase = i.Metadata.LastOrDefault(m => m.Name == "BaseInterpreter");
-                if (mdBase == null) {
-                    continue;
+                if (mdBase != null) {
+                    // BaseInterpreter value is now unused, so just remove it
+                    mdBase.Parent.RemoveChild(mdBase);
                 }
                 var mdVer = i.Metadata.LastOrDefault(m => m.Name == "Version");
                 if (mdVer == null) {
                     log(__VSUL_ERRORLEVEL.VSUL_ERROR, Strings.UpgradedInterpreterReferenceFailed);
                     continue;
-                }
-
-                var newId = MapInterpreterId(mdBase.Value, mdVer.Value, null);
-                if (newId != null) {
-                    mdBase.Value = newId;
-                    interpreterChanged = true;
                 }
             }
 
@@ -335,18 +335,27 @@ namespace Microsoft.PythonTools.Project {
                         interpreterVersion.Parent.RemoveChild(interpreterVersion);
                     }
                     interpreterChanged = true;
+                } else {
+                    interpreterId.Parent.RemoveChild(interpreterId);
+                    interpreterVersion.Parent.RemoveChild(interpreterVersion);
+                    interpreterRemoved = true;
                 }
             }
 
-            foreach (var i in projectXml.ItemGroups.SelectMany(g => g.Items).Where(i => i.ItemType == "InterpreterReference")) {
+            foreach (var i in projectXml.ItemGroups.SelectMany(g => g.Items).Where(i => i.ItemType == "InterpreterReference").ToList()) {
                 var newId = MapInterpreterId(i.Include, null, null);
                 if (newId != null) {
                     i.Include = newId;
                     interpreterChanged = true;
+                } else {
+                    i.Parent.RemoveChild(i);
+                    interpreterRemoved = true;
                 }
             }
 
-            if (interpreterChanged) {
+            if (interpreterRemoved) {
+                log(__VSUL_ERRORLEVEL.VSUL_WARNING, Strings.UpgradedInterpreterReferenceRemoved);
+            } else if (interpreterChanged) {
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedInterpreterReference);
             }
         }

@@ -4993,6 +4993,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project..
+        /// </summary>
+        public static string UpgradedInterpreterReferenceRemoved {
+            get {
+                return ResourceManager.GetString("UpgradedInterpreterReferenceRemoved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This project has had old build references removed and may no longer work with prior PTVS versions..
         /// </summary>
         public static string UpgradedRemoveCommonProps {

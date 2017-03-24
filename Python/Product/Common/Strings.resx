@@ -2019,4 +2019,7 @@ Expand selection to the full expression?</value>
   <data name="Analyzer_WaitingForStart" xml:space="preserve">
     <value>Waiting for another refresh to start.</value>
   </data>
+  <data name="UpgradedInterpreterReferenceRemoved" xml:space="preserve">
+    <value>An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.</value>
+  </data>
 </root>
