@@ -51,10 +51,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <remarks>
         /// This value should be incremented when the generated analysis differs
-        /// from a previous release. It may be reset to 1 when <see cref="FormatVersion"/>
-        /// is incremented.
+        /// from a previous release, either in quality or format. It may not be reset.
+        /// This version is expected to increment more often than
+        /// <see cref="FormatVersion"/>.
         /// </remarks>
-        public static readonly int CurrentVersion = 1;
+        public static readonly int CurrentVersion = 26;
 
         private static string _completionDatabasePath;
         private static string _referencesDatabasePath;
