@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
 
-        protected virtual CommandProcessorThread Connect() {
+        protected virtual Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThreadOrThrow();
 
             var interpreterPath = Configuration?.GetInterpreterPath();
@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Repl {
                 return null;
             }
 
-            return CommandProcessorThread.Create(this, conn, process);
+            return Task.FromResult(CommandProcessorThread.Create(this, conn, process));
         }
 
 

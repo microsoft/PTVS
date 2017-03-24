@@ -19,44 +19,40 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudioTools;
+using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Debugger {
     /// <summary>
     /// Handles all interactions with a Python process which is being debugged.
     /// </summary>
     class PythonProcess : IDisposable {
-        private static Random _portGenerator = new Random();
-
         private readonly Process _process;
         private readonly Dictionary<long, PythonThread> _threads = new Dictionary<long, PythonThread>();
         private readonly Dictionary<int, PythonBreakpoint> _breakpoints = new Dictionary<int, PythonBreakpoint>();
         private readonly IdDispenser _ids = new IdDispenser();
-        private readonly AutoResetEvent _lineEvent = new AutoResetEvent(false);         // set when result of setting current line returns
         private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();
         private readonly Dictionary<int, ChildrenInfo> _pendingChildEnums = new Dictionary<int, ChildrenInfo>();
-        private readonly Dictionary<int, TaskCompletionSource<int>> _pendingGetHitCountRequests = new Dictionary<int, TaskCompletionSource<int>>();
         private readonly List<TaskCompletionSource<int>> _pendingGetThreadFramesRequests = new List<TaskCompletionSource<int>>();
-        private readonly object _pendingGetHitCountRequestsLock = new object();
         private readonly object _pendingGetThreadFramesRequestsLock = new object();
         private readonly PythonLanguageVersion _langVersion;
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
-        private readonly bool _delayUnregister;
-        private readonly object _streamLock = new object();
+        private readonly object _connectionLock = new object();
         private readonly Dictionary<string, PythonAst> _astCache = new Dictionary<string, PythonAst>();
         private readonly object _astCacheLock = new object();
+        private readonly AutoResetEvent _connectedEvent = new AutoResetEvent(false);
 
         private int _pid;
         private bool _sentExited, _startedProcess;
-        private Stream _stream;
+        private DebugConnection _connection;
         private int _breakpointCounter;
-        private bool _setLineResult;                    // contains result of attempting to set the current line of a frame
         private bool _createdFirstThread;
         private bool _stoppedForException;
         private int _defaultBreakMode;
@@ -65,6 +61,10 @@ namespace Microsoft.PythonTools.Debugger {
         private bool _handleEntryPointBreakpoint = true;
 
         protected PythonProcess(int pid, PythonLanguageVersion languageVersion) {
+            if (languageVersion < PythonLanguageVersion.V26 && !languageVersion.IsNone()) {
+                throw new NotSupportedException(Strings.DebuggerPythonVersionNotSupported);
+            }
+
             _pid = pid;
             _langVersion = languageVersion;
             _dirMapping = new List<string[]>();
@@ -88,21 +88,6 @@ namespace Microsoft.PythonTools.Debugger {
                     throw new ConnectionException(ConnErrorMessages.TimeOut);
                 }
             }
-        }
-
-        private PythonProcess(Stream stream, int pid, PythonLanguageVersion version, PythonDebugOptions debugOptions) {
-            _pid = pid;
-            _process = Process.GetProcessById(pid);
-            _process.EnableRaisingEvents = true;
-            _process.Exited += new EventHandler(_process_Exited);
-            
-            _delayUnregister = true;
-            
-            ListenForConnection();
-
-            stream.WriteInt32(DebugConnectionListener.ListenerPort);
-            stream.WriteString(_processGuid.ToString());
-            stream.WriteString(debugOptions.ToString());
         }
 
         public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, string interpreterOptions, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
@@ -151,30 +136,24 @@ namespace Microsoft.PythonTools.Debugger {
             return new PythonProcess(pid, debugOptions);
         }
 
-        public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
-            return new PythonProcess(stream, pid, version, debugOptions);
-        }
-
         #region Public Process API
 
-        public int Id {
-            get {
-                return _pid;
-            }
-        }
+        public int Id => _pid;
 
-        public Guid ProcessGuid {
-            get {
-                return _processGuid;
-            }
-        }
+        public Guid ProcessGuid => _processGuid;
 
-        public void Start(bool startListening = true) {
+        public bool StoppedForException => _stoppedForException;
+
+        public PythonLanguageVersion LanguageVersion => _langVersion;
+
+        public bool HasExited => _process?.HasExited == true;
+
+        public async Task StartAsync(bool startListening = true) {
             _process.Start();
             _startedProcess = true;
             _pid = _process.Id;
             if (startListening) {
-                StartListening();
+                await StartListeningAsync();
             }
         }
 
@@ -197,14 +176,31 @@ namespace Microsoft.PythonTools.Debugger {
             DebugConnectionListener.UnregisterProcess(_processGuid);
 
             if (disposing) {
-                lock (_streamLock) {
-                    if (_stream != null) {
-                        _stream.Dispose();
+                lock (_connectionLock) {
+                    if (_connection != null) {
+                        _connection.ProcessingMessagesEnded -= OnProcessingMessagesEnded;
+                        _connection.LegacyAsyncBreak -= OnLegacyAsyncBreak;
+                        _connection.LegacyBreakpointFailed -= OnLegacyBreakpointFailed;
+                        _connection.LegacyBreakpointHit -= OnLegacyBreakpointHit;
+                        _connection.LegacyBreakpointSet -= OnLegacyBreakpointSet;
+                        _connection.LegacyDebuggerOutput -= OnLegacyDebuggerOutput;
+                        _connection.LegacyDetach -= OnLegacyDetach;
+                        _connection.LegacyEnumChildren -= OnLegacyEnumChildren;
+                        _connection.LegacyException -= OnLegacyException;
+                        _connection.LegacyExecutionException -= OnLegacyExecutionException;
+                        _connection.LegacyExecutionResult -= OnLegacyExecutionResult;
+                        _connection.LegacyLast -= OnLegacyLast;
+                        _connection.LegacyModuleLoad -= OnLegacyModuleLoad;
+                        _connection.LegacyProcessLoad -= OnLegacyProcessLoad;
+                        _connection.LegacyRequestHandlers -= OnLegacyRequestHandlers;
+                        _connection.LegacyStepDone -= OnLegacyStepDone;
+                        _connection.LegacyThreadCreate -= OnLegacyThreadCreate;
+                        _connection.LegacyThreadExit -= OnLegacyThreadExit;
+                        _connection.LegacyThreadFrameList -= OnLegacyThreadFrameList;
+                        _connection.LegacyInternalError -= OnLegacyInternalError;
+                        _connection.Dispose();
                     }
-                    if (_process != null) {
-                        _process.Dispose();
-                    }
-                    _lineEvent.Dispose();
+                    _process?.Dispose();
                 }
             }
         }
@@ -215,7 +211,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         void _process_Exited(object sender, EventArgs e) {
             // TODO: Abort all pending operations
-
             if (!_sentExited) {
                 _sentExited = true;
                 var exited = ProcessExited;
@@ -251,46 +246,26 @@ namespace Microsoft.PythonTools.Debugger {
                 _process.Kill();
             }
 
-            if (_stream != null) {
-                _stream.Dispose();
-            }
-        }
-
-        public bool HasExited {
-            get {
-                return _process != null && _process.HasExited;
-            }
+            _connection?.Dispose();
         }
 
         /// <summary>
         /// Breaks into the process.
         /// </summary>
-        public void Break() {
-            DebugWriteCommand("BreakAll");
-            lock(_streamLock) {
-                _stream.Write(BreakAllCommandBytes);
-            }
+        public async Task BreakAsync(CancellationToken ct) {
+            await SendDebugRequestAsync(new LDP.BreakAllRequest(), ct);
         }
 
-        [Conditional("DEBUG")]
-        private void DebugWriteCommand(string commandName) {
-            Debug.WriteLine("PythonDebugger " + _processGuid + " Sending Command " + commandName);
-        }
-
-        public void Resume() {
+        public async Task ResumeAsync(CancellationToken ct) {
             // Resume must be from entry point or past
             _handleEntryPointHit = false;
 
             _stoppedForException = false;
-            DebugWriteCommand("ResumeAll");
-            lock (_streamLock) {
-                if (_stream != null) {
-                    _stream.Write(ResumeAllCommandBytes);
-                }
-            }
+
+            await SendDebugRequestAsync(new LDP.ResumeAllRequest(), ct);
         }
 
-        public void AutoResumeThread(long threadId) {
+        public async Task AutoResumeThread(long threadId, CancellationToken ct) {
             if (_handleEntryPointHit) {
                 // Handle entrypoint breakpoint/tracepoint
                 var thread = _threads[threadId];
@@ -323,20 +298,10 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             }
 
-            SendAutoResumeThread(threadId);
+            await SendAutoResumeThreadAsync(threadId, ct);
         }
 
-        public bool StoppedForException {
-            get {
-                return _stoppedForException;
-            }
-        }
-
-        public void Continue() {
-            Resume();
-        }
-
-        public PythonBreakpoint AddBreakPoint(
+        public PythonBreakpoint AddBreakpoint(
             string filename,
             int lineNo,
             PythonBreakpointConditionKind conditionKind = PythonBreakpointConditionKind.Always,
@@ -350,68 +315,83 @@ namespace Microsoft.PythonTools.Debugger {
             return res;
         }
 
-        public PythonBreakpoint AddDjangoBreakPoint(string filename, int lineNo) {
+        public PythonBreakpoint AddDjangoBreakpoint(string filename, int lineNo) {
             int id = _breakpointCounter++;
             var res = new PythonBreakpoint(this, filename, lineNo, PythonBreakpointConditionKind.Always, "", PythonBreakpointPassCountKind.Always, 0 , id, true);
             _breakpoints[id] = res;
             return res;
         }
 
-        public PythonLanguageVersion LanguageVersion {
-            get {
-                return _langVersion;
-            }
-        }
+        public async Task SetExceptionInfoAsync(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn, CancellationToken ct) {
+            Task task = null;
 
-        public void SetExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
-            lock (_streamLock) {
-                if (_stream != null) {
-                    SendExceptionInfo(defaultBreakOnMode, breakOn);
+            lock (_connectionLock) {
+                if (_connection != null) {
+                    task = SendExceptionInfoAsync(defaultBreakOnMode, breakOn, ct);
                 } else {
+                    // We'll send it when we start listening
                     _breakOn = breakOn.ToArray();
                     _defaultBreakMode = defaultBreakOnMode;
                 }
             }
+
+            if (task != null) {
+                await task;
+            }
         }
 
-        private void SendExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
-            lock (_streamLock) {
-                _stream.Write(SetExceptionInfoCommandBytes);
-                _stream.WriteInt32(defaultBreakOnMode);
-                _stream.WriteInt32(breakOn.Count());
-                foreach (var item in breakOn) {
-                    _stream.WriteInt32(item.Value);
-                    _stream.WriteString(item.Key);
-                }
-            }
+        private async Task SendExceptionInfoAsync(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn, CancellationToken ct) {
+            await SendDebugRequestAsync(new LDP.SetExceptionInfoRequest() {
+                defaultBreakOnMode = defaultBreakOnMode,
+                breakOn = breakOn.Select(pair => new LDP.ExceptionInfo() {
+                    name = pair.Key,
+                    mode = pair.Value,
+                }).ToArray(),
+            }, ct);
         }
 
         #endregion
 
-        #region Debuggee Communcation
+        #region Debuggee Communication
 
-        internal void Connect(Stream stream) {
+        internal void Connect(DebugConnection connection) {
             Debug.WriteLine("Process Connected: " + _processGuid);
 
             EventHandler connected;
-            lock (_streamLock) {
-                _stream = stream;
-                if (_breakOn != null) {
-                    SendExceptionInfo(_defaultBreakMode, _breakOn);
-                }
+            lock (_connectionLock) {
+                _connection = connection;
+                _connection.SetProcess(_processGuid);
+                _connection.ProcessingMessagesEnded += OnProcessingMessagesEnded;
+                _connection.LegacyAsyncBreak += OnLegacyAsyncBreak;
+                _connection.LegacyBreakpointFailed += OnLegacyBreakpointFailed;
+                _connection.LegacyBreakpointHit += OnLegacyBreakpointHit;
+                _connection.LegacyBreakpointSet += OnLegacyBreakpointSet;
+                _connection.LegacyDebuggerOutput += OnLegacyDebuggerOutput;
+                _connection.LegacyDetach += OnLegacyDetach;
+                _connection.LegacyEnumChildren += OnLegacyEnumChildren;
+                _connection.LegacyException += OnLegacyException;
+                _connection.LegacyExecutionException += OnLegacyExecutionException;
+                _connection.LegacyExecutionResult += OnLegacyExecutionResult;
+                _connection.LegacyLast += OnLegacyLast;
+                _connection.LegacyModuleLoad += OnLegacyModuleLoad;
+                _connection.LegacyProcessLoad += OnLegacyProcessLoad;
+                _connection.LegacyRequestHandlers += OnLegacyRequestHandlers;
+                _connection.LegacyStepDone += OnLegacyStepDone;
+                _connection.LegacyThreadCreate += OnLegacyThreadCreate;
+                _connection.LegacyThreadExit += OnLegacyThreadExit;
+                _connection.LegacyThreadFrameList += OnLegacyThreadFrameList;
+                _connection.LegacyInternalError += OnLegacyInternalError;
 
-                // This must be done under the lock so that any handlers that are added after we assigned _stream
+                // This must be done under the lock so that any handlers that are added after we assigned _connection
                 // above won't get called twice, once from Connected add handler, and the second time below. 
                 connected = _connected;
             }
 
-            if (!_delayUnregister) {
-                Unregister();
-            }
+            Unregister();
 
-            if (connected != null) {
-                connected(this, EventArgs.Empty);
-            }
+            _connectedEvent.Set();
+
+            connected?.Invoke(this, EventArgs.Empty);
         }
 
         internal void Unregister() {
@@ -422,78 +402,13 @@ namespace Microsoft.PythonTools.Debugger {
         /// Starts listening for debugger communication.  Can be called after Start
         /// to give time to attach to debugger events.
         /// </summary>
-        public void StartListening() {
-            var debuggerThread = new Thread(DebugEventThread);
-            debuggerThread.Name = "Python Debugger Thread " + _processGuid;
-            debuggerThread.Start();
-        }
+        public async Task StartListeningAsync() {
+            _connectedEvent.WaitOne();
+            _connection?.WaitForAuthentication();
 
-        private void DebugEventThread() {
-            Debug.WriteLine("DebugEvent Thread Started " + _processGuid);
-            try {
-                while ((_process == null || !_process.HasExited) && _stream == null) {
-                    // wait for connection...
-                    System.Threading.Thread.Sleep(10);
-                }
-            } catch (InvalidOperationException) {
-                // Process termination - let any listeners know
-                _process_Exited(this, EventArgs.Empty);
-                return;
-            } catch (System.ComponentModel.Win32Exception) {
-                // Process termination - let any listeners know
-                _process_Exited(this, EventArgs.Empty);
-                return;
-            }
-
-            try {
-                while (true) {
-                    Stream stream = _stream;
-                    if (stream == null) {
-                        break;
-                    }
-
-                    string cmd = stream.ReadAsciiString(4);
-                    Debug.WriteLine(String.Format("Received Debugger command: {0} ({1})", cmd, _processGuid));
-
-                    switch (cmd) {
-                        case "EXCP": HandleException(stream); break;
-                        case "EXC2": HandleRichException(stream); break;
-                        case "BRKH": HandleBreakPointHit(stream); break;
-                        case "NEWT": HandleThreadCreate(stream); break;
-                        case "EXTT": HandleThreadExit(stream); break;
-                        case "MODL": HandleModuleLoad(stream); break;
-                        case "STPD": HandleStepDone(stream); break;
-                        case "BRKS": HandleBreakPointSet(stream); break;
-                        case "BRKF": HandleBreakPointFailed(stream); break;
-                        case "BKHC": HandleBreakPointHitCount(stream); break;
-                        case "LOAD": HandleProcessLoad(stream); break;
-                        case "THRF": HandleThreadFrameList(stream); break;
-                        case "EXCR": HandleExecutionResult(stream); break;
-                        case "EXCE": HandleExecutionException(stream); break;
-                        case "ASBR": HandleAsyncBreak(stream); break;
-                        case "SETL": HandleSetLineResult(stream); break;
-                        case "CHLD": HandleEnumChildren(stream); break;
-                        case "OUTP": HandleDebuggerOutput(stream); break;
-                        case "REQH": HandleRequestHandlers(stream); break;
-                        case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
-                        case "LAST": HandleLast(stream); break;
-                    }
-                }
-            } catch (IOException) {
-            } catch (ObjectDisposedException ex) {
-                // Socket or stream have been disposed
-                Debug.Assert(
-                    ex.ObjectName == typeof(NetworkStream).FullName ||
-                    ex.ObjectName == typeof(Socket).FullName,
-                    "Accidentally handled ObjectDisposedException(" + ex.ObjectName + ")"
-                );
-            }
-
-            // If the event thread ends, and the process is not controlled by the debugger (e.g. in remote scenarios, where there's no process),
-            // make sure that we report ProcessExited event. If the thread has ended gracefully, we have already done this when handling DETC,
-            // so it's a no-op. But if connection broke down unexpectedly, no-one knows yet, so we need to tell them.
-            if (!_startedProcess) {
-                _process_Exited(this, EventArgs.Empty);
+            if (_breakOn != null) {
+                await SendExceptionInfoAsync(_defaultBreakMode, _breakOn, default(CancellationToken));
+                _breakOn = null;
             }
         }
 
@@ -620,476 +535,337 @@ namespace Microsoft.PythonTools.Debugger {
             return statements;
         }
 
-        private void HandleRequestHandlers(Stream stream) {
-            string filename = stream.ReadString();
-
-            Debug.WriteLine("Exception handlers requested for: " + filename);
-            var statements = GetHandledExceptionRanges(filename);
-
-            lock (_streamLock) {
-                stream.Write(SetExceptionHandlerInfoCommandBytes);
-                stream.WriteString(filename);
-
-                stream.WriteInt32(statements.Count);
-
-                foreach (var t in statements) {
-                    stream.WriteInt32(t.Item1);
-                    stream.WriteInt32(t.Item2);
-
-                    foreach (var expr in t.Item3) {
-                        stream.WriteString(expr);
-                    }
-                    stream.WriteString("-");
-                }
+        private void OnProcessingMessagesEnded(object sender, EventArgs e) {
+            // If the event thread ends, and the process is not controlled by the debugger (e.g. in remote scenarios, where there's no process),
+            // make sure that we report ProcessExited event. If the thread has ended gracefully, we have already done this when handling DETC,
+            // so it's a no-op. But if connection broke down unexpectedly, no-one knows yet, so we need to tell them.
+            if (!_startedProcess) {
+                _process_Exited(this, EventArgs.Empty);
             }
         }
 
-        private void HandleDebuggerOutput(Stream stream) {
-            long tid = stream.ReadInt64();
-            string output = stream.ReadString();
+        private void OnLegacyRequestHandlers(object sender, LDP.RequestHandlersEvent e) {
+            Debug.WriteLine("Exception handlers requested for: " + e.fileName);
+            var statements = GetHandledExceptionRanges(e.fileName);
 
+            SendDebugRequestAsync(new LDP.SetExceptionHandlerInfoRequest() {
+                fileName = e.fileName,
+                statements = statements.Select(s => new LDP.ExceptionHandlerStatement() {
+                    lineStart = s.Item1,
+                    lineEnd = s.Item2,
+                    expressions = s.Item3.ToArray(),
+                }).ToArray(),
+            }).WaitAndUnwrapExceptions();
+        }
+
+        private void OnLegacyDebuggerOutput(object sender, LDP.DebuggerOutputEvent e) {
             PythonThread thread;
-            if (_threads.TryGetValue(tid, out thread)) {
-                var outputEvent = DebuggerOutput;
-                if (outputEvent != null) {
-                    outputEvent(this, new OutputEventArgs(thread, output));
-                }
+            if (_threads.TryGetValue(e.threadId, out thread)) {
+                DebuggerOutput?.Invoke(this, new OutputEventArgs(thread, e.output));
             }
         }
 
-        private void HandleSetLineResult(Stream stream) {
-            int res = stream.ReadInt32();
-            long tid = stream.ReadInt64();
-            int newLine = stream.ReadInt32();
-            _setLineResult = res != 0;
-            if (_setLineResult) {
-                var frame = _threads[tid].Frames.FirstOrDefault();
-                if (frame != null) {
-                    frame.LineNo = newLine;
-                } else {
-                    Debug.Fail("SETL result received, but there is no frame to update");
-                }
-            }
-            _lineEvent.Set();
+        private void OnLegacyAsyncBreak(object sender, LDP.AsyncBreakEvent e) {
+            var thread = _threads[e.threadId];
+            Debug.WriteLine("Received async break command from thread {0}", e.threadId);
+            AsyncBreakComplete?.Invoke(this, new ThreadEventArgs(thread));
         }
 
-        private void HandleAsyncBreak(Stream stream) {
-            long tid = stream.ReadInt64();
-            var thread = _threads[tid];
-            var asyncBreak = AsyncBreakComplete;
-            Debug.WriteLine("Received async break command from thread {0}", tid);
-            if (asyncBreak != null) {
-                asyncBreak(this, new ThreadEventArgs(thread));
-            }
-        }
-
-        private void HandleExecutionException(Stream stream) {
-            int execId = stream.ReadInt32();
+        private void OnLegacyExecutionException(object sender, LDP.ExecutionExceptionEvent e) {
             CompletionInfo completion;
             lock (_pendingExecutes) {
-                if (_pendingExecutes.TryGetValue(execId, out completion)) {
-                    _pendingExecutes.Remove(execId);
-                    _ids.Free(execId);
+                if (_pendingExecutes.TryGetValue(e.executionId, out completion)) {
+                    _pendingExecutes.Remove(e.executionId);
+                    _ids.Free(e.executionId);
                 } else {
-                    Debug.Fail("Received execution result with unknown execution ID " + execId);
+                    Debug.Fail("Received execution result with unknown execution ID " + e.executionId);
                 }
             }
 
-            string exceptionText = stream.ReadString();
-            if (completion != null) {
-                completion.Completion(new PythonEvaluationResult(this, exceptionText, completion.Text, completion.Frame));
-            }
+            completion?.Completion(new PythonEvaluationResult(this, e.exceptionText, completion.Text, completion.Frame));
         }
 
-        private void HandleExecutionResult(Stream stream) {
-            int execId = stream.ReadInt32();
+        private void OnLegacyExecutionResult(object sender, LDP.ExecutionResultEvent e) {
             CompletionInfo completion;
             lock (_pendingExecutes) {
-                if (_pendingExecutes.TryGetValue(execId, out completion)) {
-                    _pendingExecutes.Remove(execId);
-                    _ids.Free(execId);
+                if (_pendingExecutes.TryGetValue(e.executionId, out completion)) {
+                    _pendingExecutes.Remove(e.executionId);
+                    _ids.Free(e.executionId);
                 } else {
-                    Debug.Fail("Received execution result with unknown execution ID " + execId);
+                    Debug.Fail("Received execution result with unknown execution ID " + e.executionId);
                 }
             }
 
-            Debug.WriteLine("Received execution request {0}", execId);
+            Debug.WriteLine("Received execution request {0}", e.executionId);
             if (completion != null) {
-                var evalResult = ReadPythonObject(stream, completion.Text, null, completion.Frame);
+                var evalResult = ReadPythonObject(e.obj, completion.Text, null, completion.Frame);
                 completion.Completion(evalResult);
             } else {
                 // Passing null for parameters other than stream is okay as long
                 // as we drop the result.
-                ReadPythonObject(stream, null, null, null);
+                ReadPythonObject(e.obj, null, null, null);
             }
         }
 
-        private void HandleEnumChildren(Stream stream) {
-            int execId = stream.ReadInt32();
+        private PythonEvaluationResult ReadPythonObject(LDP.PythonObject obj, string expr, string childName, PythonStackFrame frame) {
+            var flags = FromLDPEvaluationResultFlags(obj.flags);
+            var objRepr = obj.objRepr;
+            var hexRepr = obj.hexRepr;
 
-            ChildrenInfo completion;
-            lock (_pendingChildEnums) {
-                if (_pendingChildEnums.TryGetValue(execId, out completion)) {
-                    _pendingChildEnums.Remove(execId);
-                    _ids.Free(execId);
-                } else {
-                    Debug.Fail("Received enum children result with unknown execution ID " + execId);
-                }
-            }
-
-            var children = new PythonEvaluationResult[stream.ReadInt32()];
-            for (int i = 0; i < children.Length; i++) {
-                string childName = stream.ReadString();
-                string childExpr = stream.ReadString();
-                children[i] = ReadPythonObject(stream, childExpr, childName, completion != null ? completion.Frame : null);
-            }
-
-            if (completion != null) {
-                completion.Completion(children);
-            }
-        }
-
-        private PythonEvaluationResult ReadPythonObject(Stream stream, string expr, string childName, PythonStackFrame frame) {
-            string objRepr = stream.ReadString();
-            string hexRepr = stream.ReadString();
-            string typeName = stream.ReadString();
-            long length = stream.ReadInt64();
-            var flags = (PythonEvaluationResultFlags)stream.ReadInt32();
-
-            if (!flags.HasFlag(PythonEvaluationResultFlags.Raw) && ((typeName == "unicode" && LanguageVersion.Is2x()) || (typeName == "str" && LanguageVersion.Is3x()))) {
+            if (!flags.HasFlag(PythonEvaluationResultFlags.Raw) && ((obj.typeName == "unicode" && LanguageVersion.Is2x()) || (obj.typeName == "str" && LanguageVersion.Is3x()))) {
                 objRepr = objRepr.FixupEscapedUnicodeChars();
             }
 
-            if (typeName == "bool") {
+            if (obj.typeName == "bool") {
                 hexRepr = null;
             }
 
-            return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, length, expr, childName, frame, flags);
+            return new PythonEvaluationResult(this, objRepr, hexRepr, obj.typeName, obj.length, expr, childName, frame, flags);
         }
 
-        private void HandleThreadFrameList(Stream stream) {
-            // list of thread frames
-            var frames = new List<PythonStackFrame>();
-            long tid = stream.ReadInt64();
-            PythonThread thread;
-            _threads.TryGetValue(tid, out thread);
-            var threadName = stream.ReadString();
-
-            int frameCount = stream.ReadInt32();
-            for (int i = 0; i < frameCount; i++) {
-                int startLine = stream.ReadInt32();
-                int endLine = stream.ReadInt32();
-                int lineNo = stream.ReadInt32();
-                string frameName = stream.ReadString();
-                string filename = stream.ReadString();
-                int argCount = stream.ReadInt32();
-                var frameKind = (FrameKind)stream.ReadInt32();
-                PythonStackFrame frame = null; 
-                if (thread != null) {
-                    switch (frameKind) {
-                        case FrameKind.Django:
-                            string sourceFile = stream.ReadString();
-                            var sourceLine = stream.ReadInt32();
-                            frame = new DjangoStackFrame(thread, frameName, filename, startLine, endLine, lineNo, argCount, i, sourceFile, sourceLine);
-                            break;
-                        default:
-                            frame = new PythonStackFrame(thread, frameName, filename, startLine, endLine, lineNo, argCount, i, frameKind);
-                            break;
-                    }
-                    
-                }
-
-                int varCount = stream.ReadInt32();
-                PythonEvaluationResult[] variables = new PythonEvaluationResult[varCount];
-                for (int j = 0; j < variables.Length; j++) {
-                    string name = stream.ReadString();
-                    if (frame != null) {
-                        variables[j] = ReadPythonObject(stream, name, name, frame);
-                    }
-                }
-                if (frame != null) {
-                    frame.SetVariables(variables);
-                    frames.Add(frame);
-                }
-            }
-
-            Debug.WriteLine("Received frames for thread {0}", tid);
-            if (thread != null) {
-                thread.Frames = frames;
-                if (threadName != null) {
-                    thread.Name = threadName;
-                }
-            }
-
-            lock(_pendingGetThreadFramesRequestsLock) {
-                foreach (TaskCompletionSource<int> tcs in _pendingGetThreadFramesRequests) {
-                    tcs.SetResult(0);
-                }
-                _pendingGetThreadFramesRequests.Clear();
-            }
-        }
-
-        private void HandleProcessLoad(Stream stream) {
+        private void OnLegacyProcessLoad(object sender, LDP.ProcessLoadEvent e) {
             Debug.WriteLine("Process loaded " + _processGuid);
 
             // process is loaded, no user code has run
-            long threadId = stream.ReadInt64();
-            var thread = _threads[threadId];
+            var thread = _threads[e.threadId];
 
-            var loaded = ProcessLoaded;
-            if (loaded != null) {
-                loaded(this, new ThreadEventArgs(thread));
-            }
+            ProcessLoaded?.Invoke(this, new ThreadEventArgs(thread));
         }
 
-        private void HandleBreakPointFailed(Stream stream) {
+        private void OnLegacyBreakpointFailed(object sender, LDP.BreakpointFailedEvent e) {
             // break point failed to set
-            int id = stream.ReadInt32();
-            var brkEvent = BreakpointBindFailed;
             PythonBreakpoint breakpoint;
-            if (brkEvent != null && _breakpoints.TryGetValue(id, out breakpoint)) {
-                brkEvent(this, new BreakpointEventArgs(breakpoint));
+            if (_breakpoints.TryGetValue(e.breakpointId, out breakpoint)) {
+                BreakpointBindFailed?.Invoke(this, new BreakpointEventArgs(breakpoint));
             }
         }
 
-        private void HandleBreakPointSet(Stream stream) {
+        private void OnLegacyBreakpointSet(object sender, LDP.BreakpointSetEvent e) {
             // break point successfully set
-            int id = stream.ReadInt32();
             PythonBreakpoint unbound;
-            if (_breakpoints.TryGetValue(id, out unbound)) {
-                var brkEvent = BreakpointBindSucceeded;
-                if (brkEvent != null) {
-                    brkEvent(this, new BreakpointEventArgs(unbound));
-                }
+            if (_breakpoints.TryGetValue(e.breakpointId, out unbound)) {
+                BreakpointBindSucceeded?.Invoke(this, new BreakpointEventArgs(unbound));
             }
         }
 
-        private void HandleBreakPointHitCount(Stream stream) {
-            // break point hit count retrieved
-            int reqId = stream.ReadInt32();
-            int hitCount = stream.ReadInt32();
-
-            TaskCompletionSource<int> tcs;
-            lock (_pendingGetHitCountRequestsLock) {
-                if (_pendingGetHitCountRequests.TryGetValue(reqId, out tcs)) {
-                    _pendingGetHitCountRequests.Remove(reqId);
-                }
-            }
-
-            if (tcs != null) {
-                tcs.SetResult(hitCount);
-            } else {
-                Debug.Fail("Breakpoint hit count response for unknown request ID.");
-            }
-        }
-
-        private void HandleStepDone(Stream stream) {
+        private void OnLegacyStepDone(object sender, LDP.StepDoneEvent e) {
             // stepping done
-            long threadId = stream.ReadInt64();
-            var stepComp = StepComplete;
-            if (stepComp != null) {
-                stepComp(this, new ThreadEventArgs(_threads[threadId]));
-            }
+            StepComplete?.Invoke(this, new ThreadEventArgs(_threads[e.threadId]));
         }
 
-        private void HandleModuleLoad(Stream stream) {
+        private void OnLegacyModuleLoad(object sender, LDP.ModuleLoadEvent e) {
             // module load
-            int moduleId = stream.ReadInt32();
-            string filename = stream.ReadString();
-            if (filename != null) {
-                Debug.WriteLine(String.Format("Module Loaded ({0}): {1}", moduleId, filename));
-                var module = new PythonModule(moduleId, filename);
+            if (e.moduleFileName != null) {
+                Debug.WriteLine(String.Format("Module Loaded ({0}): {1}", e.moduleId, e.moduleFileName));
+                var module = new PythonModule(e.moduleId, e.moduleFileName);
 
-                var loaded = ModuleLoaded;
-                if (loaded != null) {
-                    loaded(this, new ModuleLoadedEventArgs(module));
-                }
+                ModuleLoaded?.Invoke(this, new ModuleLoadedEventArgs(module));
             }
         }
 
-        private void HandleThreadExit(Stream stream) {
-            // thread exit
-            long threadId = stream.ReadInt64();
+        private void OnLegacyThreadExit(object sender, LDP.ThreadExitEvent e) {
             PythonThread thread;
-            if (_threads.TryGetValue(threadId, out thread)) {
-                var exited = ThreadExited;
-                if (exited != null) {
-                    exited(this, new ThreadEventArgs(thread));
-                }
+            if (_threads.TryGetValue(e.threadId, out thread)) {
+                ThreadExited?.Invoke(this, new ThreadEventArgs(thread));
 
-                _threads.Remove(threadId);
+                _threads.Remove(e.threadId);
                 Debug.WriteLine("Thread exited, {0} active threads", _threads.Count);
             }
-
         }
 
-        private void HandleThreadCreate(Stream stream) {
+        private void OnLegacyThreadCreate(object sender, LDP.ThreadCreateEvent e) {
             // new thread
-            long threadId = stream.ReadInt64();
-            var thread = _threads[threadId] = new PythonThread(this, threadId, _createdFirstThread);
+            var thread = _threads[e.threadId] = new PythonThread(this, e.threadId, _createdFirstThread);
             _createdFirstThread = true;
 
-            var created = ThreadCreated;
-            if (created != null) {
-                created(this, new ThreadEventArgs(thread));
-            }
+            ThreadCreated?.Invoke(this, new ThreadEventArgs(thread));
         }
 
-        private void HandleBreakPointHit(Stream stream) {
-            int breakId = stream.ReadInt32();
-            long threadId = stream.ReadInt64();
-            var brkEvent = BreakpointHit;
+        private void OnLegacyBreakpointHit(object sender, LDP.BreakpointHitEvent e) {
             PythonBreakpoint unboundBreakpoint;
-            if (brkEvent != null) {
-                if (_breakpoints.TryGetValue(breakId, out unboundBreakpoint)) {
-                    brkEvent(this, new BreakpointHitEventArgs(unboundBreakpoint, _threads[threadId]));
-                } else {
-                    SendResumeThread(threadId);
-                }
+            if (_breakpoints.TryGetValue(e.breakpointId, out unboundBreakpoint)) {
+                BreakpointHit?.Invoke(this, new BreakpointHitEventArgs(unboundBreakpoint, _threads[e.threadId]));
+            } else {
+                SendResumeThreadAsync(e.threadId, default(CancellationToken)).WaitAndUnwrapExceptions();
             }
         }
 
-        private void HandleException(Stream stream) {
-            string typeName = stream.ReadString();
-            long tid = stream.ReadInt64();
-            int breakType = stream.ReadInt32();
-            string desc = stream.ReadString();
-            if (typeName != null && desc != null) {
-                Debug.WriteLine("Exception: " + desc);
-                ExceptionRaised?.Invoke(this, new ExceptionRaisedEventArgs(
-                    _threads[tid],
-                    new PythonException {
-                        TypeName = typeName,
-                        FormattedDescription = desc,
-                        UserUnhandled = (breakType == 1) /* BREAK_TYPE_UNHANLDED */
-                    }
-                ));
-            }
-            _stoppedForException = true;
-        }
-
-        private void HandleRichException(Stream stream) {
+        private void OnLegacyException(object sender, LDP.ExceptionEvent e) {
             var exc = new PythonException();
-            long tid = stream.ReadInt64();
-            int count = stream.ReadInt32();
-            while (--count >= 0) {
-                string key = stream.ReadString();
-                string value = stream.ReadString();
-                exc.SetValue(this, key, value);
+            foreach (var item in e.data) {
+                exc.SetValue(this, item.key, item.val);
             }
-            if (tid != 0) {
-                Debug.WriteLine("Exception: " + exc.FormattedDescription ?? exc.ExceptionMessage ?? exc.TypeName);
-                ExceptionRaised?.Invoke(this, new ExceptionRaisedEventArgs(_threads[tid], exc));
+
+            if (e.threadId != 0) {
+                Debug.WriteLine("Exception: " + (exc.FormattedDescription ?? exc.ExceptionMessage ?? exc.TypeName));
+                ExceptionRaised?.Invoke(this, new ExceptionRaisedEventArgs(_threads[e.threadId], exc));
                 _stoppedForException = true;
             }
         }
 
-        private static string CommandtoString(byte[] cmd_buffer) {
-            return new string(new char[] { (char)cmd_buffer[0], (char)cmd_buffer[1], (char)cmd_buffer[2], (char)cmd_buffer[3] });
+        private void OnLegacyDetach(object sender, LDP.DetachEvent e) {
+            _process_Exited(this, EventArgs.Empty);
         }
 
-        private void HandleLast(Stream stream) {
-            DebugWriteCommand("LAST ack");
-            lock (_streamLock) {
-                stream.Write(LastAckCommandBytes);
+        private void OnLegacyLast(object sender, LDP.LastEvent e) {
+            try {
+                SendDebugRequestAsync(new LDP.LastAckRequest()).WaitAndUnwrapExceptions();
+            } catch (IOException) {
+            } catch (ObjectDisposedException) {
+                // The process waits for this request with short timeout before terminating
+                // If the process has terminated, we expect an exception
             }
         }
 
-        internal void SendStepOut(long threadId) {
-            DebugWriteCommand("StepOut");
-            lock (_streamLock) {
-                _stream.Write(StepOutCommandBytes);
-                _stream.WriteInt64(threadId);
-            }
+        private void OnLegacyInternalError(object sender, LDP.InternalErrorEvent e) {
+            // This event is sent when an internal error occurs
+            // on python side while processing a request.
+            // Request handlers should probably catch errors and send them back in the response
+            // instead of letting it propagate up.
+            Debug.Fail(e.output);
         }
 
-        internal void SendStepOver(long threadId) {
-            DebugWriteCommand("StepOver");
-            lock (_streamLock) {
-                _stream.Write(StepOverCommandBytes);
-                _stream.WriteInt64(threadId);
-            }
+        internal async Task SendStepOutAsync(long threadId, CancellationToken ct) {
+            await SendDebugRequestAsync(new LDP.StepOutRequest() {
+                threadId = threadId,
+            }, ct);
         }
 
-        internal void SendStepInto(long threadId) {
-            DebugWriteCommand("StepInto");
-            lock (_streamLock) {
-                _stream.Write(StepIntoCommandBytes);
-                _stream.WriteInt64(threadId);
-            }
+        internal async Task SendStepOverAsync(long threadId, CancellationToken ct) {
+            await SendDebugRequestAsync(new LDP.StepOverRequest() {
+                threadId = threadId,
+            }, ct);
         }
 
-        public void SendResumeThread(long threadId) {
+        internal async Task SendStepIntoAsync(long threadId, CancellationToken ct) {
+            await SendDebugRequestAsync(new LDP.StepIntoRequest() {
+                threadId = threadId,
+            }, ct);
+        }
+
+        public async Task SendResumeThreadAsync(long threadId, CancellationToken ct) {
             _stoppedForException = false;
-            DebugWriteCommand("ResumeThread");
-            lock (_streamLock) {
-                // race w/ removing the breakpoint, let the thread continue
-                _stream.Write(ResumeThreadCommandBytes);
-                _stream.WriteInt64(threadId);
-            }
+
+            // race w/ removing the breakpoint, let the thread continue
+            await SendDebugRequestAsync(new LDP.ResumeThreadRequest() {
+                threadId = threadId,
+            }, ct);
         }
 
-        public void SendAutoResumeThread(long threadId) {
+        public async Task SendAutoResumeThreadAsync(long threadId, CancellationToken ct) {
             _stoppedForException = false;
-            DebugWriteCommand("AutoResumeThread");
-            lock (_streamLock) {
-                _stream.Write(AutoResumeThreadCommandBytes);
-                _stream.WriteInt64(threadId);
-            }
+
+            await SendDebugRequestAsync(new LDP.AutoResumeThreadRequest() {
+                threadId = threadId,
+            }, ct);
         }
 
-    public void SendClearStepping(long threadId) {
-            DebugWriteCommand("ClearStepping");
-            lock (_streamLock) {
-                // race w/ removing the breakpoint, let the thread continue
-                _stream.Write(ClearSteppingCommandBytes);
-                _stream.WriteInt64(threadId);
-            }
+        public async Task SendClearSteppingAsync(long threadId, CancellationToken ct) {
+            // race w/ removing the breakpoint, let the thread continue
+            await SendDebugRequestAsync(new LDP.ClearSteppingRequest() {
+                threadId = threadId,
+            }, ct);
         }
 
-        public Task GetThreadFramesAsync(long threadId) {
-            DebugWriteCommand("GetThreadFrames");
-            var tcs = new TaskCompletionSource<int>();
+        public Task RefreshThreadFramesAsync(long threadId, CancellationToken ct) {
+            var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
             lock (_pendingGetThreadFramesRequestsLock) {
                 _pendingGetThreadFramesRequests.Add(tcs);
             }
 
-            lock (_streamLock) {
-                _stream.Write(GetThreadFramesCommandBytes);
-                _stream.WriteInt64(threadId);
-            }
+            var requestTask = SendDebugRequestAsync(new LDP.EnumThreadFramesRequest() {
+                threadId = threadId,
+            }, ct);
 
-            return tcs.Task;
+            return Task.WhenAll(requestTask, tcs.Task);
         }
 
-        public void Detach() {
-            DebugWriteCommand("Detach");
-            try {
-                lock (_streamLock) {
-                    _stream.Write(DetachCommandBytes);
+        private void OnLegacyThreadFrameList(object sender, LDP.ThreadFrameListEvent e) {
+            var frames = new List<PythonStackFrame>();
+            PythonThread thread;
+            _threads.TryGetValue(e.threadId, out thread);
+
+            for (int i = 0; i < e.threadFrames.Length; i++) {
+                var item = e.threadFrames[i];
+                PythonStackFrame frame = null;
+                switch (item.frameKind) {
+                    case LDP.FrameKind.Django:
+                        frame = new DjangoStackFrame(
+                            thread,
+                            item.frameName,
+                            item.fileName,
+                            item.startLine,
+                            item.endLine,
+                            item.lineNo,
+                            item.argCount,
+                            i,
+                            item.djangoSourceFile,
+                            item.djangoSourceLine
+                        );
+                        break;
+                    default:
+                        frame = new PythonStackFrame(
+                            thread,
+                            item.frameName,
+                            item.fileName,
+                            item.startLine,
+                            item.endLine,
+                            item.lineNo,
+                            item.argCount,
+                            i,
+                            FromLDPFrameKind(item.frameKind)
+                        );
+                        break;
                 }
+
+                var variables = item.variables.Select(v => ReadPythonObject(v.obj, v.name, v.name, frame)).ToArray();
+                frame.SetVariables(variables);
+                frames.Add(frame);
+            }
+
+            Debug.WriteLine("Received frames for thread {0}", e.threadId);
+            if (thread != null) {
+                thread.Frames = frames;
+                if (e.threadName != null) {
+                    thread.Name = e.threadName;
+                }
+            }
+
+            TaskCompletionSource<int>[] completions;
+            lock (_pendingGetThreadFramesRequestsLock) {
+                completions = _pendingGetThreadFramesRequests.ToArray();
+                _pendingGetThreadFramesRequests.Clear();
+            }
+
+            foreach (TaskCompletionSource<int> tcs in completions) {
+                tcs.SetResult(0);
+            }
+        }
+
+        public async Task DetachAsync(CancellationToken ct) {
+            try {
+                await SendDebugRequestAsync(new LDP.DetachRequest(), ct);
             } catch (IOException) {
                 // socket is closed after we send detach
             }
         }
 
-        internal void BindBreakpoint(PythonBreakpoint breakpoint) {
-            DebugWriteCommand(String.Format("Bind Breakpoint IsDjango: {0}", breakpoint.IsDjangoBreakpoint));
+        internal async Task BindBreakpointAsync(PythonBreakpoint breakpoint, CancellationToken ct) {
+            var request = new LDP.SetBreakpointRequest() {
+                language = breakpoint.IsDjangoBreakpoint ? LDP.LanguageKind.Django : LDP.LanguageKind.Python,
+                breakpointId = breakpoint.Id,
+                breakpointFileName = MapFile(breakpoint.Filename),
+                breakpointLineNo = breakpoint.LineNo,
+            };
 
-            lock (_streamLock) {
-                if (breakpoint.IsDjangoBreakpoint) {
-                    _stream.Write(AddDjangoBreakPointCommandBytes);
-                } else {
-                    _stream.Write(SetBreakPointCommandBytes);
-                }
-                _stream.WriteInt32(breakpoint.Id);
-                _stream.WriteInt32(breakpoint.LineNo);
-                _stream.WriteString(MapFile(breakpoint.Filename));
-                if (!breakpoint.IsDjangoBreakpoint) {
-                    SendCondition(breakpoint);
-                    SendPassCount(breakpoint);
-                }
+            if (!breakpoint.IsDjangoBreakpoint) {
+                request.conditionKind = ToLDPBreakpointConditionKind(breakpoint.ConditionKind);
+                request.condition = breakpoint.Condition;
+                request.passCountKind = ToLDPBreakpointPassCountKind(breakpoint.PassCountKind);
+                request.passCount = breakpoint.PassCount;
             }
+
+            await SendDebugRequestAsync(request, ct);
         }
 
         /// <summary>
@@ -1131,201 +907,176 @@ namespace Microsoft.PythonTools.Debugger {
             return file;
         }
 
-        private void SendCondition(PythonBreakpoint breakpoint) {
-            DebugWriteCommand("Send BP Condition");
-            _stream.WriteInt32((int)breakpoint.ConditionKind);
-            _stream.WriteString(breakpoint.Condition ?? "");
+        internal async Task SetBreakpointConditionAsync(PythonBreakpoint breakpoint, CancellationToken ct) {
+            await SendDebugRequestAsync(new LDP.SetBreakpointConditionRequest() {
+                breakpointId = breakpoint.Id,
+                conditionKind = ToLDPBreakpointConditionKind(breakpoint.ConditionKind),
+                condition = breakpoint.Condition ?? "",
+            }, ct);
         }
 
-        internal void SetBreakPointCondition(PythonBreakpoint breakpoint) {
-            DebugWriteCommand("Set BP Condition");
-            lock (_streamLock) {
-                _stream.Write(SetBreakPointConditionCommandBytes);
-                _stream.WriteInt32(breakpoint.Id);
-                SendCondition(breakpoint);
-            }
+        internal async Task SetBreakpointPassCountAsync(PythonBreakpoint breakpoint, CancellationToken ct) {
+            await SendDebugRequestAsync(new LDP.SetBreakpointPassCountRequest() {
+                breakpointId = breakpoint.Id,
+                passCountKind = ToLDPBreakpointPassCountKind(breakpoint.PassCountKind),
+                passCount = breakpoint.PassCount,
+            }, ct);
         }
 
-        private void SendPassCount(PythonBreakpoint breakpoint) {
-            DebugWriteCommand("Send BP pass count");
-            _stream.WriteInt32((int)breakpoint.PassCountKind);
-            _stream.WriteInt32(breakpoint.PassCount);
+        internal async Task SetBreakpointHitCountAsync(PythonBreakpoint breakpoint, int count, CancellationToken ct) {
+            await SendDebugRequestAsync(new LDP.SetBreakpointHitCountRequest() {
+                breakpointId = breakpoint.Id,
+                hitCount = count,
+            }, ct);
         }
 
-        internal void SetBreakPointPassCount(PythonBreakpoint breakpoint) {
-            DebugWriteCommand("Set BP pass count");
-            lock (_streamLock) {
-                _stream.Write(SetBreakPointPassCountCommandBytes);
-                _stream.WriteInt32(breakpoint.Id);
-                SendPassCount(breakpoint);
-            }
+        internal async Task<int> GetBreakpointHitCountAsync(PythonBreakpoint breakpoint, CancellationToken ct) {
+            var task = SendDebugRequestAsync(new LDP.GetBreakpointHitCountRequest() {
+                breakpointId = breakpoint.Id,
+            }, ct);
+
+            var response = await task;
+            return response.hitCount;
         }
 
-        internal void SetBreakPointHitCount(PythonBreakpoint breakpoint, int count) {
-            DebugWriteCommand("Set BP hit count");
-            lock (_streamLock) {
-                _stream.Write(SetBreakPointHitCountCommandBytes);
-                _stream.WriteInt32(breakpoint.Id);
-                _stream.WriteInt32(count);
-            }
-        }
-
-        internal Task<int> GetBreakPointHitCountAsync(PythonBreakpoint breakpoint) {
-            DebugWriteCommand("Get BP hit count");
-
-            int reqId = _ids.Allocate();
-            var tcs = new TaskCompletionSource<int>();
-            lock (_pendingGetHitCountRequestsLock) {
-                _pendingGetHitCountRequests[reqId] = tcs;
-            }
-
-            lock (_streamLock) {
-                _stream.Write(GetBreakPointHitCountCommandBytes);
-                _stream.WriteInt32(reqId);
-                _stream.WriteInt32(breakpoint.Id);
-            }
-
-            return tcs.Task;
-        }
-
-        internal void ExecuteText(string text, PythonEvaluationResultReprKind reprKind, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult> completion) {
+        internal async Task ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult> completion, CancellationToken ct) {
             int executeId = _ids.Allocate();
-            DebugWriteCommand("ExecuteText to thread " + pythonStackFrame.Thread.Id + " " + executeId);
             lock (_pendingExecutes) {
                 _pendingExecutes[executeId] = new CompletionInfo(completion, text, pythonStackFrame);
             }
 
-            lock (_streamLock) {
-                _stream.Write(ExecuteTextCommandBytes);
-                _stream.WriteString(text);
-                _stream.WriteInt64(pythonStackFrame.Thread.Id);
-                _stream.WriteInt32(pythonStackFrame.FrameId);
-                _stream.WriteInt32(executeId);
-                _stream.WriteInt32((int)pythonStackFrame.Kind);
-                _stream.WriteInt32((int)reprKind);
-            }
+            await SendDebugRequestAsync(new LDP.ExecuteTextRequest() {
+                text = text,
+                executionId = executeId,
+                threadId = pythonStackFrame.Thread.Id,
+                frameId = pythonStackFrame.FrameId,
+                frameKind = ToLDPFrameKind(pythonStackFrame.Kind),
+                reprKind = ToLDPReprKind(reprKind),
+            }, ct);
         }
 
-        internal void EnumChildren(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult[]> completion) {
-            DebugWriteCommand("Enum Children");
+        internal async Task<PythonEvaluationResult[]> GetChildrenAsync(string text, PythonStackFrame pythonStackFrame, CancellationToken ct) {
+            AutoResetEvent childrenEnumed = new AutoResetEvent(false);
+            PythonEvaluationResult[] res = null;
+
+            await EnumChildrenAsync(text, pythonStackFrame, (children) => {
+                res = children;
+                childrenEnumed.Set();
+            }).ConfigureAwait(false);
+
+            while (!HasExited && !childrenEnumed.WaitOne(100)) {
+                ct.ThrowIfCancellationRequested();
+            }
+
+            return res;
+        }
+
+        private async Task EnumChildrenAsync(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult[]> completion) {
             int executeId = _ids.Allocate();
             lock (_pendingChildEnums) {
                 _pendingChildEnums[executeId] = new ChildrenInfo(completion, text, pythonStackFrame);
             }
 
-            lock (_streamLock) {
-                _stream.Write(GetChildrenCommandBytes);
-                _stream.WriteString(text);
-                _stream.WriteInt64(pythonStackFrame.Thread.Id);
-                _stream.WriteInt32(pythonStackFrame.FrameId);
-                _stream.WriteInt32(executeId);
-                _stream.WriteInt32((int)pythonStackFrame.Kind);
+            await SendDebugRequestAsync(new LDP.EnumChildrenRequest() {
+                text = text,
+                threadId = pythonStackFrame.Thread.Id,
+                frameId = pythonStackFrame.FrameId,
+                frameKind = ToLDPFrameKind(pythonStackFrame.Kind),
+            });
+        }
+
+        private void OnLegacyEnumChildren(object sender, LDP.EnumChildrenEvent e) {
+            int execId = e.executionId;
+
+            ChildrenInfo completion;
+            lock (_pendingChildEnums) {
+                if (_pendingChildEnums.TryGetValue(execId, out completion)) {
+                    _pendingChildEnums.Remove(execId);
+                    _ids.Free(execId);
+                } else {
+                    Debug.Fail("Received enum children result with unknown execution ID " + execId);
+                }
+            }
+
+            if (completion != null) {
+                var children = e.children.Select(child => ReadPythonObject(
+                    child.obj,
+                    child.expression,
+                    child.name,
+                    completion?.Frame
+                )).ToArray();
+
+                completion.Completion(children);
             }
         }
 
-        internal void RemoveBreakPoint(PythonBreakpoint unboundBreakpoint) {
-            DebugWriteCommand("Remove Breakpoint");
+        internal async Task RemoveBreakpointAsync(PythonBreakpoint unboundBreakpoint, CancellationToken ct) {
             _breakpoints.Remove(unboundBreakpoint.Id);
-
-            DisableBreakPoint(unboundBreakpoint);
+            await DisableBreakpointAsync(unboundBreakpoint, ct);
         }
 
-        internal void DisableBreakPoint(PythonBreakpoint unboundBreakpoint) {
-            if (_stream != null) {
-                DebugWriteCommand("Disable Breakpoint");
-                lock (_streamLock) {
-                    if (unboundBreakpoint.IsDjangoBreakpoint) {
-                        _stream.Write(RemoveDjangoBreakPointCommandBytes);
-                    } else {
-                        _stream.Write(RemoveBreakPointCommandBytes);
-                    }
-                    _stream.WriteInt32(unboundBreakpoint.LineNo);
-                    _stream.WriteInt32(unboundBreakpoint.Id);
-                    if (unboundBreakpoint.IsDjangoBreakpoint) {
-                        _stream.WriteString(unboundBreakpoint.Filename);
-                    }
-                }
+        internal async Task DisableBreakpointAsync(PythonBreakpoint unboundBreakpoint, CancellationToken ct) {
+            if (HasExited) {
+                return;
+            }
+
+            await SendDebugRequestAsync(new LDP.RemoveBreakpointRequest() {
+                language = unboundBreakpoint.IsDjangoBreakpoint ? LDP.LanguageKind.Django : LDP.LanguageKind.Python,
+                breakpointId = unboundBreakpoint.Id,
+                breakpointFileName = unboundBreakpoint.Filename,
+                breakpointLineNo = unboundBreakpoint.LineNo,
+            }, ct);
+        }
+
+        internal async Task ConnectReplAsync(int portNum, CancellationToken ct = default(CancellationToken)) {
+            await SendDebugRequestAsync(new LDP.ConnectReplRequest() {
+                portNum = portNum,
+            }, ct);
+        }
+
+        internal async Task DisconnectReplAsync(CancellationToken ct = default(CancellationToken)) {
+            try {
+                await SendDebugRequestAsync(new LDP.DisconnectReplRequest() {
+                }, ct);
+            } catch (IOException) {
+            } catch (ObjectDisposedException) {
+                // If the process has terminated, we expect an exception
             }
         }
 
-        internal void ConnectRepl(int portNum) {
-            DebugWriteCommand("Connect Repl");
-            lock (_streamLock) {
-                _stream.Write(ConnectReplCommandBytes);
-                _stream.WriteInt32(portNum);
-            }
-        }
-
-        internal void DisconnectRepl() {
-            DebugWriteCommand("Disconnect Repl");
-            lock (_streamLock) {
-                if (_stream == null) {
-                    return;
-                }
-
-                try {
-                    _stream.Write(DisconnectReplCommandBytes);
-                } catch (IOException) {
-                } catch (ObjectDisposedException) {
-                    // If the process has terminated, we expect an exception
-                }
-            }
-        }
-
-        internal bool SetLineNumber(PythonStackFrame pythonStackFrame, int lineNo) {
+        internal async Task<bool> SetLineNumberAsync(PythonStackFrame pythonStackFrame, int lineNo, CancellationToken ct) {
             if (_stoppedForException) {
                 return false;
             }
 
-            DebugWriteCommand("Set Line Number");
-            lock (_streamLock) {
-                _setLineResult = false;
-                _stream.Write(SetLineNumberCommand);
-                _stream.WriteInt64(pythonStackFrame.Thread.Id);
-                _stream.WriteInt32(pythonStackFrame.FrameId);
-                _stream.WriteInt32(lineNo);
+            var timeoutSource = new CancellationTokenSource(2000);
+            var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token);
+
+            var requestTask = SendDebugRequestAsync(new LDP.SetLineNumberRequest() {
+                threadId = pythonStackFrame.Thread.Id,
+                frameId = pythonStackFrame.FrameId,
+                lineNo = lineNo,
+            }, linkedSource.Token);
+
+            try {
+                return await requestTask.ContinueWith(t => {
+                    var response = t.Result;
+                    if (response.result == 0) {
+                        return false;
+                    }
+
+                    var frame = _threads[response.threadId].Frames.FirstOrDefault();
+                    if (frame != null) {
+                        frame.LineNo = response.newLineNo;
+                    } else {
+                        Debug.Fail("SetLineNumber result received, but there is no frame to update");
+                    }
+
+                    return true;
+                });
+            } catch (OperationCanceledException) {
+                return false;
             }
-
-            // wait up to 2 seconds for line event...
-            for (int i = 0; i < 20 && _stream != null; i++) {
-                if (NativeMethods.WaitForSingleObject(_lineEvent.SafeWaitHandle, 100) == 0) {
-                    break;
-                }
-            }
-
-            return _setLineResult;
-        }
-
-        private static byte[] ExitCommandBytes = MakeCommand("exit");
-        private static byte[] StepIntoCommandBytes = MakeCommand("stpi");
-        private static byte[] StepOutCommandBytes = MakeCommand("stpo");
-        private static byte[] StepOverCommandBytes = MakeCommand("stpv");
-        private static byte[] BreakAllCommandBytes = MakeCommand("brka");
-        private static byte[] SetBreakPointCommandBytes = MakeCommand("brkp");
-        private static byte[] SetBreakPointConditionCommandBytes = MakeCommand("brkc");
-        private static byte[] SetBreakPointPassCountCommandBytes = MakeCommand("bkpc");
-        private static byte[] GetBreakPointHitCountCommandBytes = MakeCommand("bkgh");
-        private static byte[] SetBreakPointHitCountCommandBytes = MakeCommand("bksh");
-        private static byte[] RemoveBreakPointCommandBytes = MakeCommand("brkr");
-        private static byte[] ResumeAllCommandBytes = MakeCommand("resa");
-        private static byte[] GetThreadFramesCommandBytes = MakeCommand("thrf");
-        private static byte[] ExecuteTextCommandBytes = MakeCommand("exec");
-        private static byte[] ResumeThreadCommandBytes = MakeCommand("rest");
-        private static byte[] AutoResumeThreadCommandBytes = MakeCommand("ares");
-        private static byte[] ClearSteppingCommandBytes = MakeCommand("clst");
-        private static byte[] SetLineNumberCommand = MakeCommand("setl");
-        private static byte[] GetChildrenCommandBytes = MakeCommand("chld");
-        private static byte[] DetachCommandBytes = MakeCommand("detc");
-        private static byte[] SetExceptionInfoCommandBytes = MakeCommand("sexi");
-        private static byte[] SetExceptionHandlerInfoCommandBytes = MakeCommand("sehi");
-        private static byte[] RemoveDjangoBreakPointCommandBytes = MakeCommand("bkdr");
-        private static byte[] AddDjangoBreakPointCommandBytes = MakeCommand("bkda");
-        private static byte[] ConnectReplCommandBytes = MakeCommand("crep");
-        private static byte[] DisconnectReplCommandBytes = MakeCommand("drep");
-        private static byte[] LastAckCommandBytes = MakeCommand("lack");
-
-        private static byte[] MakeCommand(string command) {
-            return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };
         }
 
         internal void SendStringToStdInput(string text) {
@@ -1333,6 +1084,24 @@ namespace Microsoft.PythonTools.Debugger {
                 throw new InvalidOperationException();
             }
             _process.StandardInput.Write(text);
+        }
+
+        public async Task<T> SendDebugRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken))
+            where T : Response, new() {
+            Debug.WriteLine("PythonDebugger " + _processGuid + " Sending Command " + request.command);
+
+            // Don't send any request if we're not listening
+            // otherwise we'll never receive the response
+            lock (_connectionLock) {
+                if (_connection == null) {
+                    Debug.Fail("Debugger attempted to send a request with no connection.");
+                    return default(T);
+                }
+            }
+
+            using (new DebugTimer(string.Format("DebuggerRequest ({0})", request.command), 100)) {
+                return await _connection.SendRequestAsync(request, cancellationToken);
+            }
         }
 
         #endregion
@@ -1343,19 +1112,19 @@ namespace Microsoft.PythonTools.Debugger {
 
         public event EventHandler Connected {
             add {
-                lock (_streamLock) {
+                lock (_connectionLock) {
                     _connected += value;
 
                     // If a subscriber adds the handler after the process is connected, fire the event immediately.
                     // Since connection happens on a background thread, subscribers are racing against that thread
                     // when registering handlers, so we need to notify them even if they're too late.
-                    if (_stream != null) {
+                    if (_connection != null) {
                         value(this, EventArgs.Empty);
                     }
                 }
             }
             remove {
-                lock (_streamLock) {
+                lock (_connectionLock) {
                     _connected -= value;
                 }
             }
@@ -1379,6 +1148,78 @@ namespace Microsoft.PythonTools.Debugger {
         public event EventHandler<OutputEventArgs> DebuggerOutput;
 
         #endregion
+
+        private PythonEvaluationResultFlags FromLDPEvaluationResultFlags(LDP.EvaluationResultFlags flags) {
+            // All fields of both enums match
+            return (PythonEvaluationResultFlags)flags;
+        }
+
+        private FrameKind FromLDPFrameKind(LDP.FrameKind kind) {
+            switch (kind) {
+                case LDP.FrameKind.None:
+                    return FrameKind.None;
+                case LDP.FrameKind.Python:
+                    return FrameKind.Python;
+                case LDP.FrameKind.Django:
+                    return FrameKind.Django;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, "Value is not supported.");
+            }
+        }
+
+        private LDP.BreakpointConditionKind ToLDPBreakpointConditionKind(PythonBreakpointConditionKind kind) {
+            switch (kind) {
+                case PythonBreakpointConditionKind.Always:
+                    return LDP.BreakpointConditionKind.Always;
+                case PythonBreakpointConditionKind.WhenTrue:
+                    return LDP.BreakpointConditionKind.WhenTrue;
+                case PythonBreakpointConditionKind.WhenChanged:
+                    return LDP.BreakpointConditionKind.WhenChanged;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, "Value is not supported.");
+            }
+        }
+
+        private LDP.BreakpointPassCountKind ToLDPBreakpointPassCountKind(PythonBreakpointPassCountKind kind) {
+            switch (kind) {
+                case PythonBreakpointPassCountKind.Always:
+                    return LDP.BreakpointPassCountKind.Always;
+                case PythonBreakpointPassCountKind.Every:
+                    return LDP.BreakpointPassCountKind.Every;
+                case PythonBreakpointPassCountKind.WhenEqual:
+                    return LDP.BreakpointPassCountKind.WhenEqual;
+                case PythonBreakpointPassCountKind.WhenEqualOrGreater:
+                    return LDP.BreakpointPassCountKind.WhenEqualOrGreater;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, "Value is not supported.");
+            }
+        }
+
+        private LDP.ReprKind ToLDPReprKind(PythonEvaluationResultReprKind kind) {
+            switch (kind) {
+                case PythonEvaluationResultReprKind.Normal:
+                    return LDP.ReprKind.Normal;
+                case PythonEvaluationResultReprKind.Raw:
+                    return LDP.ReprKind.Raw;
+                case PythonEvaluationResultReprKind.RawLen:
+                    return LDP.ReprKind.RawLen;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, "Value is not supported.");
+            }
+        }
+
+        private LDP.FrameKind ToLDPFrameKind(FrameKind kind) {
+            switch (kind) {
+                case FrameKind.None:
+                    return LDP.FrameKind.None;
+                case FrameKind.Python:
+                    return LDP.FrameKind.Python;
+                case FrameKind.Django:
+                    return LDP.FrameKind.Django;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(kind), kind, "Value is not supported.");
+            }
+        }
 
         class CompletionInfo {
             public readonly Action<PythonEvaluationResult> Completion;

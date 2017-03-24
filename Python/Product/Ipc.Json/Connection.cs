@@ -31,11 +31,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private readonly Dictionary<int, RequestInfo> _requestCache;
         private readonly Dictionary<string, Type> _types;
         private readonly Func<RequestArgs, Func<Response, Task>, Task> _requestHandler;
+        private readonly bool _ownWriter, _ownReader;
         private readonly Stream _writer, _reader;
         private readonly TextWriter _logFile;
         private readonly object _logFileLock;
         private int _seq;
-        private static char[] _headerSeparator = new[] { ':' };
+        private static readonly char[] _headerSeparator = new[] { ':' };
 
         // Exposed settings for tests
         internal static bool AlwaysLog = false;
@@ -47,15 +48,21 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// Creates a new connection object for doing client/server communication.  
         /// </summary>
         /// <param name="writer">The stream that we write to for sending requests and responses.</param>
+        /// <param name="ownWriter">The writer stream is disposed when this object is disposed.</param>
         /// <param name="reader">The stream that we read from for reading responses and events.</param>
+        /// <param name="ownReader">The reader stream is disposed when this object is disposed.</param>
         /// <param name="requestHandler">The callback that is invoked when a request is received.</param>
         /// <param name="types">A set of registered types for receiving requests and events.  The key is "request.command_name" or "event.event_name"
         /// where command_name and event_name correspond to the fields in the Request and Event objects.  The type is the type of object
         /// which will be deserialized and instantiated.  If a type is not registered a GenericRequest or GenericEvent object will be created
-        /// which will include the complete body of the request as a dictionary.</param>
+        /// which will include the complete body of the request as a dictionary.
+        /// </param>
+        /// <param name="connectionLogKey">Name of registry key used to determine if we should log messages and exceptions to disk.</param>
         public Connection(
             Stream writer,
+            bool ownWriter,
             Stream reader,
+            bool ownReader,
             Func<RequestArgs, Func<Response, Task>, Task> requestHandler = null,
             Dictionary<string, Type> types = null,
             string connectionLogKey = null
@@ -64,7 +71,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
             _requestHandler = requestHandler;
             _types = types;
             _writer = writer;
+            _ownWriter = ownWriter;
             _reader = reader;
+            _ownReader = ownReader;
             _logFile = OpenLogFile(connectionLogKey);
             // FxCop won't let us lock a MarshalByRefObject, so we create
             // a plain old object that we can log against.
@@ -143,7 +152,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         /// <summary>
-        /// When a fire and forget notifcation is received from the other side this event is raised.
+        /// When a fire and forget notification is received from the other side this event is raised.
         /// </summary>
         public event EventHandler<EventReceivedEventArgs> EventReceived;
 
@@ -153,11 +162,20 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// All request payloads inherit from Request&lt;TResponse&gt; where the TResponse generic parameter
         /// specifies the .NET type used for serializing the response.
         /// </summary>
-        public async Task<T> SendRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken))
+        /// <param name="request">Request to send to the server.</param>
+        /// <param name="onResponse">
+        /// An action that you want to invoke after the SendRequestAsync task
+        /// has completed, but before the message processing loop reads the
+        /// next message from the read stream. This is currently used to cancel
+        /// the message loop immediately on reception of a response. This is
+        /// necessary when you want to stop processing messages without closing
+        /// the read stream.
+        /// </param>
+        public async Task<T> SendRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken), Action<T> onResponse = null)
             where T : Response, new() {
             int seq = Interlocked.Increment(ref _seq);
 
-            var r = new RequestInfo<T>(request, seq);
+            var r = new RequestInfo<T>(request, seq, onResponse);
             if (cancellationToken.CanBeCanceled) {
                 cancellationToken.Register(() => r._task.TrySetCanceled());
             }
@@ -168,7 +186,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
             T res;
             try {
-                Debug.WriteLine("Sending request {0}", seq);
+                Debug.WriteLine("Sending request {0}: {1}", seq, request.command);
                 await SendMessage(
                     new RequestMessage() {
                         command = r.Request.command,
@@ -190,7 +208,6 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     _requestCache.Remove(seq);
                 }
             }
-
         }
 
         /// <summary>
@@ -199,7 +216,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// <param name="eventValue">The event value to be sent.</param>
         public async Task SendEventAsync(Event eventValue) {
             int seq = Interlocked.Increment(ref _seq);
-            Debug.WriteLine("Sending event {0}", seq);
+            Debug.WriteLine("Sending event {0}: {1}", seq, eventValue.name);
             try {
                 await SendMessage(
                     new EventMessage() {
@@ -253,6 +270,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     var type = packet["type"].ToObject<string>();
                     var seq = packet["seq"].ToObject<int?>();
 
+                    Debug.WriteLine(string.Format("Received packet seq={0}", seq));
+
                     if (seq == null) {
                         await WriteError("Missing sequence number").ConfigureAwait(false);
                     }
@@ -270,6 +289,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
             } catch (OperationCanceledException) {
             } catch (ObjectDisposedException) {
             }
+
+            Debug.WriteLine("ProcessMessages ended");
         }
 
         private void ProcessEvent(JObject packet) {
@@ -291,8 +312,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
             try {
                 EventReceived?.Invoke(this, new EventReceivedEventArgs(name, eventObj));
-            } catch (Exception) {
+            } catch (Exception e) {
                 // TODO: Report unhandled exception?
+                Debug.Fail(e.Message);
             }
         }
 
@@ -329,7 +351,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 // We have a strongly typed request type registered, use that...
                 request = (Request)arguments.ToObject(requestType);
             } else {
-                // There's no strogly typed request type, give the user a generic
+                // There's no strongly typed request type, give the user a generic
                 // request object and they can look through the dictionary.
                 request = new GenericRequest() {
                     body = arguments.ToObject<Dictionary<string, object>>()
@@ -353,8 +375,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         public void Dispose() {
-            _writer.Dispose();
-            _reader.Dispose();
+            if (_ownWriter) {
+                _writer.Dispose();
+            }
+            if (_ownReader) {
+                _reader.Dispose();
+            }
             _writeLock.Dispose();
             lock (_cacheLock) {
                 foreach (var r in _requestCache.Values) {
@@ -567,13 +593,20 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// </summary>
         private sealed class RequestInfo<TResponse> : RequestInfo where TResponse : Response, new() {
             internal readonly TaskCompletionSource<TResponse> _task;
+            private readonly Action<TResponse> _postResponseAction;
 
-            internal RequestInfo(Request request, int sequence) : base(request, sequence) {
-                _task = new TaskCompletionSource<TResponse>();
+            internal RequestInfo(Request request, int sequence, Action<TResponse> postResponseAction) : base(request, sequence) {
+                // Make it run continuation asynchronously so that the thread calling SetResponse
+                // doesn't end up being hijacked to run the code after SendRequest, which would
+                // prevent it from processing any more messages.
+                _task = new TaskCompletionSource<TResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _postResponseAction = postResponseAction;
             }
 
             internal override void SetResponse(JToken obj) {
-                _task.TrySetResult(obj.ToObject<TResponse>());
+                var res = obj.ToObject<TResponse>();
+                _task.TrySetResult(res);
+                _postResponseAction?.Invoke(res);
             }
 
             internal override void Cancel() {

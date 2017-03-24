@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 
                 lock (_boundBreakpoints) {
                     if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguagePython) {
-                        var bp = _engine.Process.AddBreakPoint(
+                        var bp = _engine.Process.AddBreakpoint(
                             documentName,
                             (int)(startPosition[0].dwLine + 1),
                             _bpRequestInfo.bpCondition.styleCondition.ToPython(),
@@ -126,14 +126,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
 
                         if (_enabled) {
-                            bp.Add();
+                            TaskExtensions.RunSynchronouslyOnUIThread(ct => bp.AddAsync(ct));
                         }
 
                         return VSConstants.S_OK;
                     } else if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguageDjangoTemplate) {
                         
                         // bind a Django template 
-                        var bp = _engine.Process.AddDjangoBreakPoint(
+                        var bp = _engine.Process.AddDjangoBreakpoint(
                             documentName,
                             (int)(startPosition[0].dwLine + 1)
                         );
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
 
                         if (_enabled) {
-                            bp.Add();
+                            TaskExtensions.RunSynchronouslyOnUIThread(ct => bp.AddAsync(ct));
                         }
 
                         return VSConstants.S_OK;

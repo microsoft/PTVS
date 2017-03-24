@@ -18,24 +18,21 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Security.Authentication;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
+using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteProcess : PythonProcess {
-        public const byte DebuggerProtocolVersion = 6; // must be kept in sync with PTVSDBG_VER in attach_server.py
+        public const byte DebuggerProtocolVersion = 7; // must be kept in sync with PTVSDBG_VER in attach_server.py
         public const string DebuggerSignature = "PTVSDBG";
-        public const string Accepted = "ACPT";
-        public const string Rejected = "RJCT";
-        public static readonly byte[] DebuggerSignatureBytes = Encoding.ASCII.GetBytes(DebuggerSignature);
-        public static readonly byte[] InfoCommandBytes = Encoding.ASCII.GetBytes("INFO");
-        public static readonly byte[] AttachCommandBytes = Encoding.ASCII.GetBytes("ATCH");
-        public static readonly byte[] ReplCommandBytes = Encoding.ASCII.GetBytes("REPL");
+        private const int ConnectTimeoutMs = 5000;
 
         private PythonRemoteProcess(int pid, Uri uri, PythonLanguageVersion langVer)
             : base(pid, langVer) {
@@ -65,7 +62,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         /// Connects to and performs the initial handshake with the remote debugging server, verifying protocol signature and version number,
         /// and returns the opened stream in a state ready to receive further ptvsd commands (e.g. attach).
         /// </summary>
-        public static Stream Connect(Uri uri, bool warnAboutAuthenticationErrors) {
+        public static async Task<DebugConnection> ConnectAsync(Uri uri, bool warnAboutAuthenticationErrors, CancellationToken ct) {
             var transport = DebuggerTransportFactory.Get(uri);
             if (transport == null) {
                 throw new ConnectionException(ConnErrorMessages.RemoteInvalidUri);
@@ -91,41 +88,62 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 }
             } while (stream == null);
 
+            var debugConn = new DebugConnection(stream);
             bool connected = false;
             try {
-                string sig = stream.ReadAsciiString(DebuggerSignature.Length);
-                if (sig != DebuggerSignature) {
-                    throw new ConnectionException(ConnErrorMessages.RemoteUnsupportedServer);
+                var connectedEvent = new AutoResetEvent(false);
+
+                string serverDebuggerName = string.Empty;
+                int serverDebuggerProtocolVersion = 0;
+
+                EventHandler<LDP.RemoteConnectedEvent> eventReceived = delegate (object sender, LDP.RemoteConnectedEvent ea) {
+                    serverDebuggerName = ea.debuggerName;
+                    serverDebuggerProtocolVersion = ea.debuggerProtocolVersion;
+                    connectedEvent.Set();
+                    debugConn.Authenticated();
+                };
+
+                // When the server accepts a connection, it sends an event and then waits for a request
+                debugConn.LegacyRemoteConnected += eventReceived;
+                try {
+                    debugConn.StartListening();
+                    bool received = connectedEvent.WaitOne(ConnectTimeoutMs);
+                    if (!received) {
+                        throw new ConnectionException(ConnErrorMessages.TimeOut);
+                    }
+                } finally {
+                    debugConn.LegacyRemoteConnected -= eventReceived;
                 }
 
-                long ver = stream.ReadInt64();
+                if (serverDebuggerName != DebuggerSignature) {
+                    throw new ConnectionException(ConnErrorMessages.RemoteUnsupportedServer);
+                }
 
                 // If we are talking the same protocol but different version, reply with signature + version before bailing out
                 // so that ptvsd has a chance to gracefully close the socket on its side. 
-                stream.Write(DebuggerSignatureBytes);
-                stream.WriteInt64(DebuggerProtocolVersion);
+                var response = await debugConn.SendRequestAsync(new LDP.RemoteDebuggerAuthenticateRequest() {
+                    clientSecret = uri.UserInfo,
+                    debuggerName = DebuggerSignature,
+                    debuggerProtocolVersion = DebuggerProtocolVersion,
+                }, ct);
 
-                if (ver != DebuggerProtocolVersion) {
+                if (serverDebuggerProtocolVersion != DebuggerProtocolVersion) {
                     throw new ConnectionException(ConnErrorMessages.RemoteUnsupportedServer);
                 }
 
-                stream.WriteString(uri.UserInfo);
-                string secretResp = stream.ReadAsciiString(Accepted.Length);
-                if (secretResp != Accepted) {
+                if (!response.accepted) {
                     throw new ConnectionException(ConnErrorMessages.RemoteSecretMismatch);
                 }
 
                 connected = true;
-                return stream;
+                return debugConn;
             } catch (IOException ex) {
                 throw new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
             } catch (SocketException ex) {
                 throw new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
             } finally {
                 if (!connected) {
-                    if (stream != null) {
-                        stream.Close();
-                    }
+                    debugConn?.Dispose();
                 }
             }
         }
@@ -134,11 +152,11 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         /// Same as the static version of this method, but uses the same <c>uri</c>
         /// that was originally used to create this instance of <see cref="PythonRemoteProcess"/>.
         /// </summary>
-        public Stream Connect(bool warnAboutAuthenticationErrors) {
-            return Connect(Uri, warnAboutAuthenticationErrors);
+        public async Task<DebugConnection> ConnectAsync(bool warnAboutAuthenticationErrors, CancellationToken ct) {
+            return await ConnectAsync(Uri, warnAboutAuthenticationErrors, ct);
         }
 
-        public static PythonProcess Attach(Uri uri, bool warnAboutAuthenticationErrors) {
+        public static async Task<PythonProcess> AttachAsync(Uri uri, bool warnAboutAuthenticationErrors, CancellationToken ct) {
             string debugOptions = "";
             if (uri.Query != null) {
                 // It is possible to have more than one opt=... in the URI - the debug engine will always supply one based on
@@ -149,37 +167,32 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 debugOptions = queryParts[AD7Engine.DebugOptionsKey] ?? "";
             }
 
-            var stream = Connect(uri, warnAboutAuthenticationErrors);
+            var debugConn = await ConnectAsync(uri, warnAboutAuthenticationErrors, ct);
             try {
-                stream.Write(AttachCommandBytes);
-                stream.WriteString(debugOptions);
+                var response = await debugConn.SendRequestAsync(new LDP.RemoteDebuggerAttachRequest() {
+                    debugOptions = debugOptions,
+                });
 
-                string attachResp = stream.ReadAsciiString(Accepted.Length);
-                if (attachResp != Accepted) {
+                if (!response.accepted) {
                     throw new ConnectionException(ConnErrorMessages.RemoteAttachRejected);
                 }
 
-                int pid = stream.ReadInt32();
-                int langMajor = stream.ReadInt32();
-                int langMinor = stream.ReadInt32();
-                int langMicro = stream.ReadInt32();
-                var langVer = (PythonLanguageVersion)((langMajor << 8) | langMinor);
+                var langVer = (PythonLanguageVersion)((response.pythonMajor << 8) | response.pythonMinor);
                 if (!Enum.IsDefined(typeof(PythonLanguageVersion), langVer)) {
                     langVer = PythonLanguageVersion.None;
                 }
 
-                var process = new PythonRemoteProcess(pid, uri, langVer);
-                process.Connect(stream);
-                stream = null;
+                var process = new PythonRemoteProcess(response.processId, uri, langVer);
+                process.Connect(debugConn);
+                debugConn = null;
                 return process;
             } catch (IOException ex) {
                 throw new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
             } finally {
-                if (stream != null) {
-                    stream.Close();
+                if (debugConn != null) {
+                    debugConn.Dispose();
                 }
             }
         }
     }
 }
-

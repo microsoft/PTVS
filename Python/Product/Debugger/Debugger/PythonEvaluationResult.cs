@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Debugger {
     enum PythonEvaluationResultReprKind {
@@ -91,27 +92,12 @@ namespace Microsoft.PythonTools.Debugger {
         /// 
         /// Returns null if the object is not expandable.
         /// </summary>
-        public PythonEvaluationResult[] GetChildren(int timeOut) {
+        public async Task<PythonEvaluationResult[]> GetChildrenAsync(CancellationToken ct) {
             if (!IsExpandable) {
                 return null;
             }
 
-            AutoResetEvent childrenEnumed = new AutoResetEvent(false);
-            PythonEvaluationResult[] res = null;
-
-            _process.EnumChildren(Expression, _frame, (children) => {
-                res = children;
-                childrenEnumed.Set();
-            });
-
-            while (!_frame.Thread.Process.HasExited && !childrenEnumed.WaitOne(Math.Min(timeOut, 100))) {
-                if (timeOut <= 100) {
-                    break;
-                }
-                timeOut -= 100;
-            }
-
-            return res;
+            return await _process.GetChildrenAsync(Expression, _frame, ct);
         }
 
         /// <summary>
@@ -187,7 +173,5 @@ namespace Microsoft.PythonTools.Debugger {
                 return _frame;
             }
         }
-
-        public PythonProcess Process { get { return _process; } }
     }
 }

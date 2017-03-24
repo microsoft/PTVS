@@ -47,11 +47,11 @@ namespace DebuggerTests {
         }
 
 
-        [TestMethod, Priority(3)]
-        public void TestThreads() {
-            // TODO: Thread creation tests w/ both thread.start_new_thread and threading module.
-            Assert.Fail("TODO: Thread creation tests w/ both thread.start_new_thread and threading module.");
-        }
+        //[TestMethod, Priority(3)]
+        //public void TestThreads() {
+        //    // TODO: Thread creation tests w/ both thread.start_new_thread and threading module.
+        //    Assert.Fail("TODO: Thread creation tests w/ both thread.start_new_thread and threading module.");
+        //}
 
         private string InfRepr {
             get {
@@ -63,40 +63,40 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void EnumChildrenTest() {
+        public async Task EnumChildrenTest() {
             const int lastLine = 42;
 
-            ChildTest(EnumChildrenTestName, lastLine, "s", GetSetChildren(
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "s", GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
 
             if (Version.Version.Is2x() && !(this is DebuggerTestsIpy)) {
                 // IronPython unicode repr differs
                 // 3.x: http://pytools.codeplex.com/workitem/76
-                ChildTest(EnumChildrenTestName, lastLine, "cinst",
+                await ChildTestAsync(EnumChildrenTestName, lastLine, "cinst",
                     new ChildInfo("abc", null, "42", "0x2a"),
                     new ChildInfo("uc", null, "u\'привет мир\'"));
             }
-            ChildTest(EnumChildrenTestName, lastLine, "c2inst",
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "c2inst",
                 new ChildInfo("abc", null, "42", "0x2a"),
                 new ChildInfo("oar", null, "100", "0x64"),
                 new ChildInfo("self", null, "myrepr", "myhex"));
-            ChildTest(EnumChildrenTestName, lastLine, "c3inst",
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "c3inst",
                 new ChildInfo("_contents", null, "[1, 2]"),
                 new ChildInfo("abc", null, "42", "0x2a"),
                 new ChildInfo("[0]", null, "1"),
                 new ChildInfo("[1]", null, "2"));
-            ChildTest(EnumChildrenTestName, lastLine, "l", GetListChildren(
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "l", GetListChildren(
                 new ChildInfo("[0]", null, "1"),
                 new ChildInfo("[1]", null, "2")));
-            ChildTest(EnumChildrenTestName, lastLine, "d1", GetDictChildren(
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "d1", GetDictChildren(
                 new ChildInfo("[42]", null, "100", "0x64")));
             string itemsName = Version.Version == PythonLanguageVersion.V27 ? "viewitems" : "items";
-            ChildTest(EnumChildrenTestName, lastLine, "d2", GetDictChildren(
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "d2", GetDictChildren(
                 new ChildInfo("['abc']", null, "'fob'")));
-            ChildTest(EnumChildrenTestName, lastLine, "d3", GetDictChildren(
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "d3", GetDictChildren(
                 new ChildInfo("[" + InfRepr + "]", "next((v for i, (k, v) in enumerate(d3." + itemsName + "()) if i == 0))", "{42: 100}")));
-            ChildTest(EnumChildrenTestName, lastLine, "i", null);
-            ChildTest(EnumChildrenTestName, lastLine, "u1", null);
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "i", null);
+            await ChildTestAsync(EnumChildrenTestName, lastLine, "u1", null);
         }
 
         private ChildInfo[] GetSetChildren(ChildInfo items) {
@@ -139,39 +139,39 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void EnumChildrenTestPrevFrame() {
+        public async Task EnumChildrenTestPrevFrame() {
             const int breakLine = 3;
 
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, GetSetChildren(
+            await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
 
             if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
                 // IronPython unicode repr differs
                 // 3.x: http://pytools.codeplex.com/workitem/76
-                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1,
+                await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1,
                     new ChildInfo("abc", null, "42", "0x2a"),
                     new ChildInfo("uc", null, "u\'привет мир\'"));
             }
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1,
+            await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1,
                 new ChildInfo("abc", null, "42", "0x2a"),
                 new ChildInfo("oar", null, "100", "0x64"),
                 new ChildInfo("self", null, "myrepr", "myhex"));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, GetListChildren(
+            await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, GetListChildren(
                 new ChildInfo("[0]", null, "1"),
                 new ChildInfo("[1]", null, "2")));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, GetDictChildren(
+            await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, GetDictChildren(
                 new ChildInfo("[42]", null, "100", "0x64")));
             string itemsName = Version.Version == PythonLanguageVersion.V27 ? "viewitems" : "items";
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, GetDictChildren(
+            await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, GetDictChildren(
                 new ChildInfo("['abc']", null, "'fob'")));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d3", 1, GetDictChildren(
+            await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "d3", 1, GetDictChildren(
                 new ChildInfo("[" + InfRepr + "]", "next((v for i, (k, v) in enumerate(d3." + itemsName + "()) if i == 0))", "{42: 100}")));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "i", 1, null);
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
+            await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "i", 1, null);
+            await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
         }
 
         [TestMethod, Priority(1)]
-        public void GeneratorChildrenTest() {
+        public async Task GeneratorChildrenTest() {
             var children = new List<ChildInfo> {
                 new ChildInfo("gi_code", null),
                 new ChildInfo("gi_frame", null),
@@ -187,7 +187,7 @@ namespace DebuggerTests {
                 children.RemoveAll(c => c.ChildText == "gi_yieldfrom");
             }
 
-            ChildTest("GeneratorTest.py", 6, "a", 0, children.ToArray());
+            await ChildTestAsync("GeneratorTest.py", 6, "a", 0, children.ToArray());
         }
 
         public virtual string EnumChildrenTestName {
@@ -196,16 +196,16 @@ namespace DebuggerTests {
             }
         }
 
-        private void ChildTest(string filename, int lineNo, string text, params ChildInfo[] children) {
-            ChildTest(filename, lineNo, text, 0, children);
+        private async Task ChildTestAsync(string filename, int lineNo, string text, params ChildInfo[] children) {
+            await ChildTestAsync(filename, lineNo, text, 0, children);
         }
 
-        private void ChildTest(string filename, int lineNo, string text, int frame, params ChildInfo[] children) {
+        private async Task ChildTestAsync(string filename, int lineNo, string text, int frame, params ChildInfo[] children) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
-                var breakPoint = newproc.AddBreakPoint(filename, lineNo);
-                breakPoint.Add();
+            var process = DebugProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) => {
+                var breakPoint = newproc.AddBreakpoint(filename, lineNo);
+                await breakPoint.AddAsync(default(CancellationToken));
                 thread = newthread;
             });
 
@@ -215,7 +215,7 @@ namespace DebuggerTests {
             };
 
             try {
-                process.Start();
+                await process.StartAsync();
 
                 AssertWaited(brkHit);
 
@@ -224,25 +224,22 @@ namespace DebuggerTests {
                 AutoResetEvent evalComplete = new AutoResetEvent(false);
                 PythonEvaluationResult evalRes = null;
                 Console.WriteLine("Executing {0}", text);
-                frames[frame].ExecuteText(text, (completion) => {
+                await frames[frame].ExecuteTextAsync(text, (completion) => {
                     evalRes = completion;
                     evalComplete.Set();
-                });
+                }, TimeoutToken());
 
                 AssertWaited(evalComplete);
                 Assert.IsNotNull(evalRes, "didn't get evaluation result");
 
                 if (children == null) {
                     Assert.IsFalse(evalRes.IsExpandable, "result should not be expandable");
-                    Assert.IsNull(evalRes.GetChildren(Int32.MaxValue), "result should not have children");
+                    var childrenReceived = await evalRes.GetChildrenAsync(new CancellationTokenSource(20000).Token);
+                    Assert.IsNull(childrenReceived, "result should not have children");
                 } else {
                     Assert.IsNull(evalRes.ExceptionText, "exception while evaluating: " + evalRes.ExceptionText);
                     Assert.IsTrue(evalRes.IsExpandable, "result is not expandable");
-                    var childrenReceived = evalRes.GetChildren(Int32.MaxValue).ToList();
-                    for (int retries = 3; childrenReceived.Count == 0 && retries > 0; retries -= 1) {
-                        Thread.Sleep(100);
-                        childrenReceived = evalRes.GetChildren(Int32.MaxValue).ToList();
-                    }
+                    var childrenReceived = (await evalRes.GetChildrenAsync(new CancellationTokenSource(20000).Token)).ToList();
 
                     Console.WriteLine("{0} children received:", childrenReceived.Count);
                     foreach (var childReceived in childrenReceived) {
@@ -284,7 +281,7 @@ namespace DebuggerTests {
                     Assert.AreEqual(0, childrenReceived.Count, "there's still some children left over which we didn't find");
                 }
             } finally {
-                process.Continue();
+                await process.ResumeAsync(TimeoutToken());
                 WaitForExit(process);
             }
         }
@@ -314,7 +311,7 @@ namespace DebuggerTests {
         #region Set Next Line Tests
 
         [TestMethod, Priority(1)]
-        public void SetNextLineTest() {
+        public async Task SetNextLineTest() {
             if (GetType() == typeof(DebuggerTestsIpy)) {
                 //http://ironpython.codeplex.com/workitem/30129
                 return;
@@ -344,7 +341,7 @@ namespace DebuggerTests {
             };
 
             try {
-                process.Start();
+                await process.StartAsync();
 
                 AssertWaited(processLoaded);
 
@@ -355,22 +352,24 @@ namespace DebuggerTests {
                 }
 
                 // skip over def f()
-                Assert.IsTrue(moduleFrame.SetLineNumber(6), "failed to set line number to 6");
+                var result = await moduleFrame.SetLineNumber(6, TimeoutToken());
+                Assert.IsTrue(result, "failed to set line number to 6");
 
                 // set break point in g, run until we hit it.
-                var newBp = process.AddBreakPoint("SetNextLine.py", 7);
-                newBp.Add();
+                var newBp = process.AddBreakpoint("SetNextLine.py", 7);
+                await newBp.AddAsync(TimeoutToken());
 
-                process.Resume();
+                await process.ResumeAsync(TimeoutToken());
                 AssertWaited(brkHit);
 
-                thread.StepOver(); // step over x = 42
+                await thread.StepOverAsync(TimeoutToken()); // step over x = 42
                 AssertWaited(stepDone);
 
                 // skip y = 100
-                Assert.IsTrue(moduleFrame.SetLineNumber(9), "failed to set line number to 9");
+                result = await moduleFrame.SetLineNumber(9, TimeoutToken());
+                Assert.IsTrue(result, "failed to set line number to 9");
 
-                thread.StepOver(); // step over z = 200
+                await thread.StepOverAsync(TimeoutToken()); // step over z = 200
                 AssertWaited(stepDone);
 
                 // z shouldn't be defined
@@ -378,16 +377,16 @@ namespace DebuggerTests {
                 new HashSet<string>(new[] { "x", "z" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
 
                 // set break point in module, run until we hit it.
-                newBp = process.AddBreakPoint("SetNextLine.py", 13);
-                newBp.Add();
-                thread.Resume();
+                newBp = process.AddBreakpoint("SetNextLine.py", 13);
+                await newBp.AddAsync(TimeoutToken());
+                await thread.ResumeAsync(TimeoutToken());
                 AssertWaited(brkHit);
 
                 // f shouldn't be defined.
                 frames = thread.Frames;
                 new HashSet<string>(new[] { "sys", "g" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
 
-                process.Continue();
+                await process.ResumeAsync(TimeoutToken());
             } finally {
                 WaitForExit(process);
             }
@@ -399,7 +398,7 @@ namespace DebuggerTests {
 
 
         [TestMethod, Priority(1)]
-        public void TestBreakAll() {
+        public async Task TestBreakAll() {
             var debugger = new PythonDebugger();
 
             PythonThread thread = null;
@@ -410,7 +409,7 @@ namespace DebuggerTests {
             });
 
             try {
-                process.Start();
+                await process.StartAsync();
                 AssertWaited(loaded);
 
                 // let loop run
@@ -422,19 +421,19 @@ namespace DebuggerTests {
                     breakComplete.Set();
                 };
 
-                process.Break();
+                await process.BreakAsync(TimeoutToken());
                 AssertWaited(breakComplete);
 
                 Assert.AreEqual(thread, breakThread);
 
-                process.Resume();
+                await process.ResumeAsync(TimeoutToken());
             } finally {
                 TerminateProcess(process);
             }
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakAllThreads() {
+        public async Task TestBreakAllThreads() {
             var debugger = new PythonDebugger();
 
             PythonThread thread = null;
@@ -445,7 +444,7 @@ namespace DebuggerTests {
             });
 
             try {
-                process.Start();
+                await process.StartAsync();
                 AssertWaited(loaded);
 
                 AutoResetEvent breakComplete = new AutoResetEvent(false);
@@ -458,11 +457,11 @@ namespace DebuggerTests {
                     Thread.Sleep(50);
 
                     Debug.WriteLine(String.Format("Breaking {0}", i));
-                    process.Break();
+                    await process.BreakAsync(TimeoutToken());
                     if (!breakComplete.WaitOne(10000)) {
                         Console.WriteLine("Failed to break");
                     }
-                    process.Resume();
+                    await process.ResumeAsync(TimeoutToken());
                     Debug.WriteLine(String.Format("Resumed {0}", i));
                 }
             } finally {
@@ -476,11 +475,11 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void EvalTest() {
-            EvalTest("LocalsTest4.py", 2, "g", 1, EvalResult.Value("baz", "int", "42"));
-            EvalTest("LocalsTest3.py", 2, "f", 0, EvalResult.Value("x", "int", "42"));
-            EvalTest("LocalsTest3.py", 2, "f", 0, EvalResult.Exception("not_defined", "name 'not_defined' is not defined"));
-            EvalTest("LocalsTest3.py", 2, "f", 0, EvalResult.ErrorExpression("/2", "unexpected token '/'\r\ninvalid syntax\r\n"));
+        public async Task EvalTest() {
+            await EvalTestAsync("LocalsTest4.py", 2, "g", 1, EvalResult.Value("baz", "int", "42"));
+            await EvalTestAsync("LocalsTest3.py", 2, "f", 0, EvalResult.Value("x", "int", "42"));
+            await EvalTestAsync("LocalsTest3.py", 2, "f", 0, EvalResult.Exception("not_defined", "name 'not_defined' is not defined"));
+            await EvalTestAsync("LocalsTest3.py", 2, "f", 0, EvalResult.ErrorExpression("/2", "unexpected token '/'\r\ninvalid syntax\r\n"));
         }
 
         // Test evaluation of objects of a type that does not have a __repr__ attribute (but does have repr()),
@@ -488,48 +487,48 @@ namespace DebuggerTests {
         // https://pytools.codeplex.com/workitem/2770
         // https://pytools.codeplex.com/workitem/2772
         [TestMethod, Priority(1)]
-        public void EvalPseudoTypeTest() {
+        public async Task EvalPseudoTypeTest() {
             if (this is DebuggerTestsIpy) {
                 return;
             }
 
-            EvalTest("EvalPseudoType.py", 22, "<module>", 0, EvalResult.Value("obj", "PseudoType", "pseudo"));
+            await EvalTestAsync("EvalPseudoType.py", 22, "<module>", 0, EvalResult.Value("obj", "PseudoType", "pseudo"));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void EvalRawTest() {
-            EvalTest("EvalRawTest.py", 28, "<module>", 0, PythonEvaluationResultReprKind.Raw,
+        public async Task EvalRawTest() {
+            await EvalTestAsync("EvalRawTest.py", 28, "<module>", 0, PythonEvaluationResultReprKind.Raw,
                 EvalResult.Value("n", null, null, 0, PythonEvaluationResultFlags.None));
 
-            EvalRawTest(28, "s", "fob");
-            EvalRawTest(28, "u", "fob");
-            EvalRawTest(28, "ds", "fob");
+            await EvalRawTestAsync(28, "s", "fob");
+            await EvalRawTestAsync(28, "u", "fob");
+            await EvalRawTestAsync(28, "ds", "fob");
 
             if (Version.Version >= PythonLanguageVersion.V26) {
-                EvalRawTest(28, "ba", "fob");
+                await EvalRawTestAsync(28, "ba", "fob");
             }
         }
 
-        private void EvalRawTest(int line, string expr, string expected) {
+        private async Task EvalRawTestAsync(int line, string expr, string expected) {
             var flags = PythonEvaluationResultFlags.Raw | PythonEvaluationResultFlags.HasRawRepr;
 
-            EvalTest("EvalRawTest.py", line, "<module>", 0, PythonEvaluationResultReprKind.Raw,
+            await EvalTestAsync("EvalRawTest.py", line, "<module>", 0, PythonEvaluationResultReprKind.Raw,
                 EvalResult.Value(expr, null, expected, expected.Length, flags, allowOtherFlags: true));
-            EvalTest("EvalRawTest.py", line, "<module>", 0, PythonEvaluationResultReprKind.RawLen,
+            await EvalTestAsync("EvalRawTest.py", line, "<module>", 0, PythonEvaluationResultReprKind.RawLen,
                 EvalResult.Value(expr, null, null, expected.Length, flags, allowOtherFlags: true));
         }
 
-        private void EvalTest(string filename, int lineNo, string frameName, int frameIndex, EvalResult eval) {
-            EvalTest(filename, lineNo, frameName, frameIndex, PythonEvaluationResultReprKind.Normal, eval);
+        private async Task EvalTestAsync(string filename, int lineNo, string frameName, int frameIndex, EvalResult eval) {
+            await EvalTestAsync(filename, lineNo, frameName, frameIndex, PythonEvaluationResultReprKind.Normal, eval);
         }
 
-        private void EvalTest(string filename, int lineNo, string frameName, int frameIndex, PythonEvaluationResultReprKind reprKind, EvalResult eval) {
+        private async Task EvalTestAsync(string filename, int lineNo, string frameName, int frameIndex, PythonEvaluationResultReprKind reprKind, EvalResult eval) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
-                var breakPoint = newproc.AddBreakPoint(filename, lineNo);
-                breakPoint.Add();
+            var process = DebugProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) => {
+                var breakPoint = newproc.AddBreakpoint(filename, lineNo);
+                await breakPoint.AddAsync(TimeoutToken());
                 thread = newthread;
             });
 
@@ -539,7 +538,7 @@ namespace DebuggerTests {
             };
 
             try {
-                process.Start();
+                await process.StartAsync();
                 AssertWaited(brkHit);
 
                 var frames = thread.Frames;
@@ -555,15 +554,12 @@ namespace DebuggerTests {
 
                     Assert.AreEqual(frameName, frames[frameIndex].FunctionName);
 
-                    var timeoutToken = new CancellationTokenSource(10000).Token;
-                    obj = frames[frameIndex].ExecuteTextAsync(eval.Expression, reprKind)
-                        .ContinueWith(t => t.Result, timeoutToken, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current)
-                        .GetAwaiter().GetResult();
+                    obj = await frames[frameIndex].ExecuteTextAsync(eval.Expression, reprKind, TimeoutToken(10000));
 
                     eval.Validate(obj);
                 }
 
-                process.Continue();
+                await process.ResumeAsync(TimeoutToken());
                 WaitForExit(process);
                 process = null;
             } finally {
@@ -583,14 +579,14 @@ namespace DebuggerTests {
         /// Verify it takes more than just an items() method for us to treat something like a dictionary.
         /// </summary>
         [TestMethod, Priority(1)]
-        public void CloseToDictExpansionBug484() {
-            PythonThread thread = RunAndBreak("LocalsTestBug484.py", 7);
+        public async Task CloseToDictExpansionBug484() {
+            PythonThread thread = await RunAndBreakAsync("LocalsTestBug484.py", 7);
             var process = thread.Process;
             try {
                 var frames = thread.Frames;
 
                 var obj = frames[0].Locals.First(x => x.Expression == "x");
-                var children = obj.GetChildren(2000);
+                var children = await obj.GetChildrenAsync(new CancellationTokenSource(2000).Token);
                 int extraCount = 0;
                 if (this is DebuggerTestsIpy) {
                     extraCount += 2;
@@ -600,7 +596,7 @@ namespace DebuggerTests {
                 Assert.AreEqual("3", children[1 + extraCount].StringRepr);
                 Assert.AreEqual("4", children[2 + extraCount].StringRepr);
 
-                process.Continue();
+                await process.ResumeAsync(TimeoutToken());
             } finally {
                 WaitForExit(process);
             }
@@ -616,19 +612,19 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void Locals() {
-            new LocalsTest(this, "LocalsTest.py", 3) {
+        public async Task Locals() {
+            await new LocalsTest(this, "LocalsTest.py", 3) {
                 Locals = { { "x", UnassignedLocalType, UnassignedLocalRepr } }
-            }.Run();
+            }.RunAsync();
 
-            new LocalsTest(this, "LocalsTest2.py", 2) {
+            await new LocalsTest(this, "LocalsTest2.py", 2) {
                 Params = { { "x", "int", "42" } }
-            }.Run();
+            }.RunAsync();
 
-            new LocalsTest(this, "LocalsTest3.py", 2) {
+            await new LocalsTest(this, "LocalsTest3.py", 2) {
                 Params = { { "x", "int", "42" } },
                 Locals = { { "y", UnassignedLocalType, UnassignedLocalRepr } }
-            }.Run();
+            }.RunAsync();
         }
 
         /// <summary>
@@ -636,19 +632,19 @@ namespace DebuggerTests {
         /// </summary>
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void LocalGlobalsTest() {
+        public async Task LocalGlobalsTest() {
             var test = new LocalsTest(this, "LocalGlobalsTest.py", 3);
-            test.Run();
+            await test.RunAsync();
 
             test.LineNo = 4;
             test.Locals.Add("x");
-            test.Run();
+            await test.RunAsync();
 
             test.BreakFileName = "LocalGlobalsTestImported.py";
             test.LineNo = 5;
             test.Locals.Clear();
             test.Params.Add("self");
-            test.Run();
+            await test.RunAsync();
 
             test.LineNo = 6;
             test.Locals.Add("x");
@@ -658,37 +654,37 @@ namespace DebuggerTests {
         /// https://pytools.codeplex.com/workitem/1348
         /// </summary>
         [TestMethod, Priority(1)]
-        public virtual void LocalClosureVarsTest() {
+        public virtual async Task LocalClosureVarsTest() {
             var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4) {
                 Locals = { "x", "y" },
                 Params = { "z" }
             };
-            test.Run();
+            await test.RunAsync();
 
             test.BreakFileName = "LocalClosureVarsTestImported.py";
             test.LineNo = 6;
-            test.Run();
+            await test.RunAsync();
         }
 
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1710
         /// </summary>
         [TestMethod, Priority(1)]
-        public virtual void LocalBuiltinUsageTest() {
+        public virtual async Task LocalBuiltinUsageTest() {
             var test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4) {
                 Params = { "start", "end" },
                 Locals = { "i" }
             };
-            test.Run();
+            await test.RunAsync();
 
             test.BreakFileName = "LocalBuiltinUsageTestImported.py";
             test.LineNo = 6;
             test.Params.Add("self");
-            test.Run();
+            await test.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void GlobalsTest() {
+        public async Task GlobalsTest() {
             var test = new LocalsTest(this, "GlobalsTest.py", 4) {
                 Locals = { "x", "y", "__file__", "__name__", "__builtins__", "__doc__" }
             };
@@ -706,12 +702,12 @@ namespace DebuggerTests {
                 test.Locals.Add("__spec__");
             }
 
-            test.Run();
+            await test.RunAsync();
         }
 
         // https://pytools.codeplex.com/workitem/1334
         [TestMethod, Priority(1)]
-        public void LocalBooleanTest() {
+        public async Task LocalBooleanTest() {
             var test = new LocalsTest(this, "LocalBooleanTest.py", 2) {
                 Params = {
                     { "x", "bool", "True" },
@@ -724,11 +720,11 @@ namespace DebuggerTests {
                 p.HexRepr = null;
             }
 
-            test.Run();
+            await test.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void LocalReprRestrictionsTest() {
+        public async Task LocalReprRestrictionsTest() {
             // https://pytools.codeplex.com/workitem/931
             var filename = DebuggerTestPath + "LocalReprRestrictionsTest.py";
             var debugger = new PythonDebugger();
@@ -739,9 +735,9 @@ namespace DebuggerTests {
                 DebugProcess(
                     debugger,
                     filename,
-                    (newproc, newthread) => {
-                        var bp = newproc.AddBreakPoint(filename, 22);
-                        bp.Add();
+                    async (newproc, newthread) => {
+                        var bp = newproc.AddBreakpoint(filename, 22);
+                        await bp.AddAsync(TimeoutToken());
                         thread = newthread;
                         loaded.Set();
                     }
@@ -752,7 +748,7 @@ namespace DebuggerTests {
                 breakpointHit.Set();
             };
 
-            process.Start();
+            await process.StartAsync();
             try {
                 AssertWaited(breakpointHit);
 
@@ -844,9 +840,9 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(3)]
         [TestCategory("10s"), TestCategory("60s")]
-        public void StepTest() {
+        public async Task StepTest() {
             // Bug 1315: https://pytools.codeplex.com/workitem/1315
-            StepTest(Path.Combine(DebuggerTestPath, "StepIntoThroughStdLib.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "StepIntoThroughStdLib.py"),
                     new ExpectedStep(StepKind.Over, 1),     // step over import os
                     new ExpectedStep(StepKind.Over, 2),     // step over code =  ...
                     new ExpectedStep(StepKind.Over, 3),     // step over d = {}
@@ -857,7 +853,7 @@ namespace DebuggerTests {
                     new ExpectedStep(StepKind.Resume, 10)     // wait for exit
                 );
             // 1315 resurrected:
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug1315.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTestBug1315.py"),
                     new[] { 9 },
                     null,
                     new ExpectedStep(StepKind.Resume, 1),   // continue from import thread
@@ -866,7 +862,7 @@ namespace DebuggerTests {
                 );
 
             // Bug 507: http://pytools.codeplex.com/workitem/507
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug507.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTestBug507.py"),
                     new ExpectedStep(StepKind.Over, 1),     // step over def add_two_numbers(x, y):
                     new ExpectedStep(StepKind.Over, 4),     // step over class Z(object):
                     new ExpectedStep(StepKind.Over, 9),     // step over p = Z()
@@ -877,13 +873,13 @@ namespace DebuggerTests {
                 );
 
             // Bug 508: http://pytools.codeplex.com/workitem/508
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug508.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTestBug508.py"),
                     new ExpectedStep(StepKind.Into, 1),     // step print (should step over)
                     new ExpectedStep(StepKind.Resume, 2)     // step print (should step over)
                 );
 
             // Bug 509: http://pytools.codeplex.com/workitem/509
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug509.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTestBug509.py"),
                     new ExpectedStep(StepKind.Over, 1),     // step over def triangular_number
                     new ExpectedStep(StepKind.Into, 3),     // step into triangular_number
                     new ExpectedStep(StepKind.Into, 1),     // step over triangular_number
@@ -893,7 +889,7 @@ namespace DebuggerTests {
                 );
 
             // Bug 503: http://pytools.codeplex.com/workitem/503
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug503.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTestBug503.py"),
                 new[] { 6, 12 },
                 new Action<PythonProcess>[] {
                     (x) => {},
@@ -919,7 +915,7 @@ namespace DebuggerTests {
             );
 
             if (Version.Version < PythonLanguageVersion.V30) {  // step into print on 3.x runs more Python code
-                StepTest(Path.Combine(DebuggerTestPath, "SteppingTest7.py"),
+                await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest7.py"),
                     new ExpectedStep(StepKind.Over, 1),     // step over def f():
                     new ExpectedStep(StepKind.Over, 6),     // step over def g():
                     new ExpectedStep(StepKind.Over, 10),     // step over def h()
@@ -938,14 +934,14 @@ namespace DebuggerTests {
                 );
             }
 
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest6.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest6.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over print 'hello world'
                 new ExpectedStep(StepKind.Over, 2),     // step over a = set([i for i in range(256)])
                 new ExpectedStep(StepKind.Over, 3),     // step over print a
                 new ExpectedStep(StepKind.Resume, 4)    // let the program exit
             );
 
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest5.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest5.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def g():...
                 new ExpectedStep(StepKind.Over, 4),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 8),     // step into f()
@@ -953,7 +949,7 @@ namespace DebuggerTests {
                 new ExpectedStep(StepKind.Resume, 8)    // let the program exit
             );
 
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest4.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest4.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 5),     // step into f()
                 new ExpectedStep(StepKind.Over, 2),     // step over for i in xrange(10):
@@ -966,34 +962,34 @@ namespace DebuggerTests {
                 new ExpectedStep(StepKind.Resume, 5)    // let the program exit
             );
 
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest3.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest3.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Over, 5),     // step over f()
                 new ExpectedStep(StepKind.Resume, 6)    // let the program exit
             );
 
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest3.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest3.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 5),     // step into f()
                 new ExpectedStep(StepKind.Out, 2),     // step out of f()
                 new ExpectedStep(StepKind.Resume, 5)    // let the program exit
             );
 
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest2.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest2.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 4),     // step into f()
                 new ExpectedStep(StepKind.Over, 2),     // step over print 'hi'
                 new ExpectedStep(StepKind.Resume, 4)    // let the program exit
             );
 
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest2.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest2.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 4),     // step into f()
                 new ExpectedStep(StepKind.Over, 2),     // step over print 'hi'
                 new ExpectedStep(StepKind.Resume, 4)      // let the program exit
             );
 
-            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest.py"),
+            await StepTestAsync(Path.Combine(DebuggerTestPath, "SteppingTest.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over print "hello"
                 new ExpectedStep(StepKind.Over, 2),     // step over print "goodbye"
                 new ExpectedStep(StepKind.Resume, 3)   // let the program exit
@@ -1003,7 +999,7 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void StepStdLib() {
+        public async Task StepStdLib() {
             // http://pytools.codeplex.com/workitem/504 - test option for stepping into std lib.
             var debugger = new PythonDebugger();
 
@@ -1026,9 +1022,9 @@ namespace DebuggerTests {
 
                 bool processLoad = false, stepComplete = false;
                 PythonBreakpoint bp = null;
-                process.ProcessLoaded += (sender, args) => {
-                    bp = process.AddBreakPoint(fullPath, 2);
-                    bp.Add();
+                process.ProcessLoaded += async (sender, args) => {
+                    bp = process.AddBreakpoint(fullPath, 2);
+                    await bp.AddAsync(TimeoutToken());
 
                     processLoad = true;
                     processEvent.Set();
@@ -1040,23 +1036,23 @@ namespace DebuggerTests {
                 };
 
                 bool breakHit = false;
-                process.BreakpointHit += (sender, args) => {
+                process.BreakpointHit += async (sender, args) => {
                     breakHit = true;
-                    bp.Disable();
+                    await bp.DisableAsync(TimeoutToken());
                     processEvent.Set();
                 };
 
-                process.Start();
+                await process.StartAsync();
                 try {
                     AssertWaited(processEvent);
                     Assert.IsTrue(processLoad, "process did not load");
                     Assert.IsFalse(stepComplete, "step should not have completed");
-                    process.Resume();
+                    await process.ResumeAsync(TimeoutToken());
 
                     AssertWaited(processEvent);
                     Assert.IsTrue(breakHit, "breakpoint was not hit");
 
-                    thread.StepInto();
+                    await thread.StepIntoAsync(TimeoutToken());
                     AssertWaited(processEvent);
                     Assert.IsTrue(stepComplete, "step was not completed");
 
@@ -1068,7 +1064,7 @@ namespace DebuggerTests {
                         Assert.IsTrue(thread.Frames[0].FileName.EndsWith("\\StepStdLib.py"), "did not break in StepStdLib.py; instead, " + thread.Frames[0].FileName);
                     }
 
-                    process.Resume();
+                    await process.ResumeAsync(TimeoutToken());
                 } finally {
                     WaitForExit(process);
                 }
@@ -1076,7 +1072,7 @@ namespace DebuggerTests {
         }
 
         [TestMethod, Priority(1)]
-        public void StepToEntryPoint() {
+        public async Task StepToEntryPoint() {
             // https://pytools.codeplex.com/workitem/1344
             var debugger = new PythonDebugger();
 
@@ -1087,7 +1083,7 @@ namespace DebuggerTests {
                 loaded.Set();
             });
 
-            process.Start();
+            await process.StartAsync();
             try {
                 AssertWaited(loaded);
                 Assert.IsTrue(thread.Frames[0].FileName.EndsWith("SteppingTest.py"), "did not break in SteppingTest.py; instead, " + thread.Frames[0].FileName);
@@ -1106,41 +1102,41 @@ namespace DebuggerTests {
         /// the next one.  Makes sure we only break in once.
         /// </summary>
         [TestMethod, Priority(1)]
-        public void BreakStepStep() {
+        public async Task BreakStepStep() {
             // http://pytools.codeplex.com/workitem/815
 
             var debugger = new PythonDebugger();
             string fn = Path.Combine(DebuggerTestPath, "StepBreakBreak.py");
-            var process = DebugProcess(debugger, fn, (newproc, newthread) => {
-                PythonBreakpoint breakPoint = newproc.AddBreakPointByFileExtension(2, fn);
-                breakPoint.Add();
+            var process = DebugProcess(debugger, fn, async (newproc, newthread) => {
+                PythonBreakpoint breakPoint = newproc.AddBreakpointByFileExtension(2, fn);
+                await breakPoint.AddAsync(TimeoutToken());
 
-                breakPoint = newproc.AddBreakPointByFileExtension(3, fn);
-                breakPoint.Add();
+                breakPoint = newproc.AddBreakpointByFileExtension(3, fn);
+                await breakPoint.AddAsync(TimeoutToken());
             }, cwd: DebuggerTestPath);
 
             int hitBp = 0;
-            process.BreakpointHit += (sender, args) => {
+            process.BreakpointHit += async (sender, args) => {
                 ++hitBp;
-                args.Thread.StepOver();
+                await args.Thread.StepOverAsync(TimeoutToken());
             };
             bool sentStep = false;
-            process.StepComplete += (sender, args) => {
+            process.StepComplete += async (sender, args) => {
                 if (sentStep) {
-                    process.Continue();
+                    await process.ResumeAsync(TimeoutToken());
                 } else {
-                    args.Thread.StepOver();
+                    await args.Thread.StepOverAsync(TimeoutToken());
                     sentStep = true;
                 }
             };
-            StartAndWaitForExit(process);
+            await StartAndWaitForExitAsync(process);
         }
 
         [TestMethod, Priority(1)]
-        public void BreakpointNonMainFileRemoved() {
+        public async Task BreakpointNonMainFileRemoved() {
             // http://pytools.codeplex.com/workitem/638
 
-            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemoved.py")) {
+            await new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemoved.py")) {
                 WorkingDirectory = DebuggerTestPath,
                 BreakFileName = Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemovedImported.py"),
                 Breakpoints = {
@@ -1148,74 +1144,73 @@ namespace DebuggerTests {
                 },
                 ExpectedHits = { 0 },
                 IsBindFailureExpected = true
-            }.Run();
+            }.RunAsync();
         }
 
 
         [TestMethod, Priority(1)]
-        public void BreakpointNonMainThreadMainThreadExited() {
+        public async Task BreakpointNonMainThreadMainThreadExited() {
             // http://pytools.codeplex.com/workitem/638
 
-            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointMainThreadExited.py")) {
+            await new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointMainThreadExited.py")) {
                 WorkingDirectory = DebuggerTestPath,
                 Breakpoints = { 8 },
                 ExpectedHits = { 0, 0, 0, 0, 0 },
                 ExpectHitOnMainThread = false
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsCollidingFilenames() {
+        public async Task TestBreakpointsCollidingFilenames() {
             // http://pytools.codeplex.com/workitem/565
 
-            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointFilenames.py")) {
+            await new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointFilenames.py")) {
                 WorkingDirectory = DebuggerTestPath,
                 BreakFileName = Path.Combine(DebuggerTestPath, "B", "module1.py"),
                 Breakpoints = { 4 },
                 ExpectedHits = { },
                 IsBindFailureExpected = true
-            }.Run();
-
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsRelativePathTopLevel() {
+        public async Task TestBreakpointsRelativePathTopLevel() {
             // http://pytools.codeplex.com/workitem/522
 
-            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "SimpleFilenameBreakpoint.py")) {
+            await new BreakpointTest(this, Path.Combine(DebuggerTestPath, "SimpleFilenameBreakpoint.py")) {
                 WorkingDirectory = DebuggerTestPath,
                 BreakFileName = Path.Combine(DebuggerTestPath, "CompiledCodeFile.py"),
                 Breakpoints = { 4, 10 },
                 ExpectedHits = { 0, 1 },
                 IsBindFailureExpected = true
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsRelativePathInPackage() {
+        public async Task TestBreakpointsRelativePathInPackage() {
             // http://pytools.codeplex.com/workitem/522
 
-            new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointRelativePathInPackage.py")) {
+            await new BreakpointTest(this, Path.Combine(DebuggerTestPath, "BreakpointRelativePathInPackage.py")) {
                 WorkingDirectory = DebuggerTestPath,
                 BreakFileName = Path.Combine(DebuggerTestPath, "A", "relpath.py"),
                 Breakpoints = { 6 },
                 ExpectedHits = { 0, 0 },
                 InterpreterOptions = Version.IsIronPython ? "-X:Frames" : "",
                 IsBindFailureExpected = true
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointHitOtherThreadStackTrace() {
+        public async Task TestBreakpointHitOtherThreadStackTrace() {
             // http://pytools.codeplex.com/workitem/483
 
             var debugger = new PythonDebugger();
             string filename = Path.Combine(DebuggerTestPath, "ThreadJoin.py");
             PythonThread thread = null;
-            var process = DebugProcess(debugger, filename, (newproc, newthread) => {
+            var process = DebugProcess(debugger, filename, async (newproc, newthread) => {
                 thread = newthread;
-                var bp = newproc.AddBreakPoint(filename, 5);
-                bp.Add();
+                var bp = newproc.AddBreakpoint(filename, 5);
+                await bp.AddAsync(TimeoutToken());
             },
                 debugOptions: PythonDebugOptions.WaitOnAbnormalExit | PythonDebugOptions.WaitOnNormalExit
             );
@@ -1224,7 +1219,7 @@ namespace DebuggerTests {
 
             ExceptionDispatchInfo exc = null;
 
-            process.BreakpointHit += (sender, args) => {
+            process.BreakpointHit += async (sender, args) => {
                 try {
                     Assert.AreNotEqual(args.Thread, thread, "breakpoint shouldn't be on main thread");
 
@@ -1233,7 +1228,7 @@ namespace DebuggerTests {
                         Console.WriteLine(frame.LineNo);
                     }
                     Assert.IsTrue(thread.Frames.Count > 1, "expected more than one frame");
-                    process.Continue();
+                    await process.ResumeAsync(TimeoutToken());
                 } catch (Exception ex) {
                     exc = ExceptionDispatchInfo.Capture(ex);
                 } finally {
@@ -1241,7 +1236,7 @@ namespace DebuggerTests {
                 }
             };
 
-            process.Start();
+            await process.StartAsync();
 
             try {
                 if (!bpHit.WaitOne(10000)) {
@@ -1256,32 +1251,113 @@ namespace DebuggerTests {
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpoints() {
-            new BreakpointTest(this, "BreakpointTest.py") {
-                Breakpoints = { 1 },
-                ExpectedHits = { 0 }
-            }.Run();
+        public async Task TestBreakpointUpdateConditional() {
+            await BreakUpdateBreakpointAndContinue(
+                Path.Combine(DebuggerTestPath, "BreakpointTest5.py"),
+                3,
+                5,
+                async (bp) => await bp.SetConditionAsync(PythonBreakpointConditionKind.WhenTrue, "i>5", TimeoutToken())
+            );
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpoints2() {
-            new BreakpointTest(this, "BreakpointTest2.py") {
+        public async Task TestBreakpointUpdatePassCount() {
+            await BreakUpdateBreakpointAndContinue(
+                Path.Combine(DebuggerTestPath, "BreakpointTest5.py"),
+                3,
+                4,
+                async (bp) => await bp.SetPassCountAsync(PythonBreakpointPassCountKind.WhenEqualOrGreater, 8, TimeoutToken())
+            );
+        }
+
+        [TestMethod, Priority(1)]
+        public async Task TestBreakpointUpdateHitCount() {
+            await BreakUpdateBreakpointAndContinue(
+                Path.Combine(DebuggerTestPath, "BreakpointTest5.py"),
+                3,
+                6,
+                async (bp) => {
+                    await bp.SetHitCountAsync(3);
+                    await bp.SetPassCountAsync(PythonBreakpointPassCountKind.WhenEqualOrGreater, 8, TimeoutToken());
+                }
+            );
+        }
+
+        private async Task BreakUpdateBreakpointAndContinue(string filename, int line, int expectedHitCount, Func<PythonBreakpoint, Task> updateBreakpoint) {
+            var debugger = new PythonDebugger();
+            PythonThread thread = null;
+            PythonBreakpoint bp = null;
+            var process = DebugProcess(debugger, filename, async (newproc, newthread) =>
+            {
+                thread = newthread;
+                bp = newproc.AddBreakpoint(filename, line);
+                await bp.AddAsync(TimeoutToken());
+            },
+                debugOptions: PythonDebugOptions.RedirectOutput
+            );
+            try {
+                bool updated = false;
+                int hitCount = 0;
+
+                var backgroundException = new TaskCompletionSource<bool>();
+
+                process.BreakpointHit += async (sender, args) =>
+                {
+                    try {
+                        hitCount++;
+                        if (!updated) {
+                            await updateBreakpoint(bp);
+                            updated = true;
+                        }
+                        await args.Thread.ClearSteppingStateAsync(TimeoutToken());
+                        await process.ResumeAsync(TimeoutToken());
+                    } catch (Exception ex) {
+                        backgroundException.TrySetException(ex);
+                    }
+                };
+
+                await process.StartAsync();
+
+                WaitForExit(process);
+
+                if (backgroundException.Task.IsFaulted) {
+                    backgroundException.Task.GetAwaiter().GetResult();
+                }
+
+                Assert.AreEqual(expectedHitCount, hitCount);
+                Assert.IsTrue(updated);
+            } finally {
+                process.Terminate();
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        public async Task TestBreakpoints() {
+            await new BreakpointTest(this, "BreakpointTest.py") {
+                Breakpoints = { 1 },
+                ExpectedHits = { 0 }
+            }.RunAsync();
+        }
+
+        [TestMethod, Priority(1)]
+        public async Task TestBreakpoints2() {
+            await new BreakpointTest(this, "BreakpointTest2.py") {
                 Breakpoints = { 3 },
                 ExpectedHits = { 0, 0, 0 }
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpoints3() {
-            new BreakpointTest(this, "BreakpointTest3.py") {
+        public async Task TestBreakpoints3() {
+            await new BreakpointTest(this, "BreakpointTest3.py") {
                 Breakpoints = { 1 },
                 ExpectedHits = { 0 }
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsConditionalWhenTrue() {
-            new BreakpointTest(this, "BreakpointTest2.py") {
+        public async Task TestBreakpointsConditionalWhenTrue() {
+            await new BreakpointTest(this, "BreakpointTest2.py") {
                 Breakpoints = {
                     new Breakpoint(3) {
                         ConditionKind = PythonBreakpointConditionKind.WhenTrue,
@@ -1292,14 +1368,14 @@ namespace DebuggerTests {
                     }
                 },
                 ExpectedHits = { 0 },
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsConditionalWhenChanged() {
+        public async Task TestBreakpointsConditionalWhenChanged() {
             var expectedReprs = new Queue<string>(new[] { "0", "2", "4", "6", "8" });
 
-            new BreakpointTest(this, "BreakpointTest5.py") {
+            await new BreakpointTest(this, "BreakpointTest5.py") {
                 Breakpoints = {
                     new Breakpoint(4) {
                         ConditionKind = PythonBreakpointConditionKind.WhenChanged,
@@ -1310,17 +1386,17 @@ namespace DebuggerTests {
                     }
                 },
                 ExpectedHits = { 0, 0, 0, 0, 0 }
-            }.Run();
+            }.RunAsync();
 
             Assert.AreEqual(0, expectedReprs.Count);
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsPassCountEvery() {
+        public async Task TestBreakpointsPassCountEvery() {
             var expectedReprs = new Queue<string>(new[] { "2", "5", "8" });
             var expectedHitCounts = new Queue<int>(new[] { 3, 6, 9 });
 
-            new BreakpointTest(this, "BreakpointTest5.py") {
+            await new BreakpointTest(this, "BreakpointTest5.py") {
                 Breakpoints = {
                     new Breakpoint(3) {
                         PassCountKind = PythonBreakpointPassCountKind.Every,
@@ -1332,15 +1408,15 @@ namespace DebuggerTests {
                     }
                 },
                 ExpectedHits = { 0, 0, 0 },
-            }.Run();
+            }.RunAsync();
 
             Assert.AreEqual(0, expectedReprs.Count);
             Assert.AreEqual(0, expectedHitCounts.Count);
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsPassCountWhenEqual() {
-            new BreakpointTest(this, "BreakpointTest5.py") {
+        public async Task TestBreakpointsPassCountWhenEqual() {
+            await new BreakpointTest(this, "BreakpointTest5.py") {
                 Breakpoints = {
                     new Breakpoint(3) {
                         PassCountKind = PythonBreakpointPassCountKind.WhenEqual,
@@ -1352,15 +1428,15 @@ namespace DebuggerTests {
                     }
                 },
                 ExpectedHits = { 0 },
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsPassCountWhenEqualOrGreater() {
+        public async Task TestBreakpointsPassCountWhenEqualOrGreater() {
             var expectedReprs = new Queue<string>(new[] { "7", "8", "9" });
             var expectedHitCounts = new Queue<int>(new[] { 8, 9, 10 });
 
-            new BreakpointTest(this, "BreakpointTest5.py") {
+            await new BreakpointTest(this, "BreakpointTest5.py") {
                 Breakpoints = {
                     new Breakpoint(3) {
                         PassCountKind = PythonBreakpointPassCountKind.WhenEqualOrGreater,
@@ -1372,15 +1448,15 @@ namespace DebuggerTests {
                     }
                 },
                 ExpectedHits = { 0, 0, 0 },
-            }.Run();
+            }.RunAsync();
 
             Assert.AreEqual(0, expectedReprs.Count);
             Assert.AreEqual(0, expectedHitCounts.Count);
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointsPassCountAndCondition() {
-            new BreakpointTest(this, "BreakpointTest5.py") {
+        public async Task TestBreakpointsPassCountAndCondition() {
+            await new BreakpointTest(this, "BreakpointTest5.py") {
                 Breakpoints = {
                     new Breakpoint(3) {
                         ConditionKind = PythonBreakpointConditionKind.WhenTrue,
@@ -1394,28 +1470,28 @@ namespace DebuggerTests {
                     }
                 },
                 ExpectedHits = { 0 },
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointRemove() {
-            new BreakpointTest(this, "BreakpointTest2.py") {
+        public async Task TestBreakpointRemove() {
+            await new BreakpointTest(this, "BreakpointTest2.py") {
                 Breakpoints = {
                     new Breakpoint(3) { RemoveWhenHit = true }
                 },
                 ExpectedHits = { 0 }
-            }.Run();
+            }.RunAsync();
         }
 
         [TestMethod, Priority(1)]
-        public void TestBreakpointFailed() {
+        public async Task TestBreakpointFailed() {
             var debugger = new PythonDebugger();
 
             PythonThread thread = null;
             PythonBreakpoint breakPoint = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + "BreakpointTest.py", (newproc, newthread) => {
-                breakPoint = newproc.AddBreakPoint("doesnotexist.py", 1);
-                breakPoint.Add();
+            var process = DebugProcess(debugger, DebuggerTestPath + "BreakpointTest.py", async (newproc, newthread) => {
+                breakPoint = newproc.AddBreakpoint("doesnotexist.py", 1);
+                await breakPoint.AddAsync(TimeoutToken());
                 thread = newthread;
             });
 
@@ -1425,7 +1501,7 @@ namespace DebuggerTests {
                 Assert.AreEqual(breakPoint, args.Breakpoint);
             };
 
-            StartAndWaitForExit(process);
+            await StartAndWaitForExitAsync(process);
 
             Assert.IsTrue(bindFailed, "Should not have bound the breakpoint");
         }
@@ -1435,7 +1511,7 @@ namespace DebuggerTests {
         #region Call Stack Tests
 
         [TestMethod, Priority(1)]
-        public void TestCallStackFunctionNames() {
+        public async Task TestCallStackFunctionNames() {
             var expectedNames = new[] {
                 "InnerClass.InnermostClass.innermost_method in nested_function in OuterClass.outer_method",
                 "nested_function in OuterClass.outer_method",
@@ -1443,8 +1519,7 @@ namespace DebuggerTests {
                 "<module>"
             };
 
-            new BreakpointTest(this, "CallStackTest.py") {
-                WaitForExit = false,
+            await new BreakpointTest(this, "CallStackTest.py") {
                 Breakpoints = {
                     new Breakpoint(7) {
                         OnHit = args => {
@@ -1454,7 +1529,7 @@ namespace DebuggerTests {
                     }
                 },
                 ExpectedHits = { 0 },
-            }.Run();
+            }.RunAsync();
         }
 
         #endregion
@@ -1500,14 +1575,14 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s"), TestCategory("60s")]
-        public void TestExceptions() {
+        public async Task TestExceptions() {
             var debugger = new PythonDebugger();
             for (int i = 0; i < 2; i++) {
-                TestException(debugger, Path.Combine(DebuggerTestPath, "SimpleException.py"), i == 0, ExceptionMode.Always, null,
+                await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "SimpleException.py"), i == 0, ExceptionMode.Always, null,
                     new ExceptionInfo("Exception", 3)
                 );
 
-                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Always, null,
+                await TestExceptionAsync(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Always, null,
                     new ExceptionInfo(PickleModule + ".PickleError", 6),
                     new ExceptionInfo("StopIteration", 13),
                     new ExceptionInfo("NameError", 15),
@@ -1517,10 +1592,11 @@ namespace DebuggerTests {
                     new ExceptionInfo("Exception", 32)
                 );
 
-                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Unhandled, new[] {
+                await TestExceptionAsync(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Unhandled, new[] {
                     new KeyValuePair<string, ExceptionMode>(PickleModule + ".PickleError", ExceptionMode.Never)
                 });
-                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Never, new[] {
+
+                await TestExceptionAsync(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Never, new[] {
                     new KeyValuePair<string, ExceptionMode>(PickleModule + ".PickleError", ExceptionMode.Always),
                     new KeyValuePair<string, ExceptionMode>("StopIteration", ExceptionMode.Unhandled),
                     new KeyValuePair<string, ExceptionMode>("NameError", ExceptionMode.Never),
@@ -1531,74 +1607,80 @@ namespace DebuggerTests {
                     new ExceptionInfo("Exception", 32)
                 );
 
-                TestException(debugger, DebuggerTestPath + "FinallyExceptions.py", i == 0, ExceptionMode.Unhandled, null,
+                await TestExceptionAsync(debugger, DebuggerTestPath + "FinallyExceptions.py", i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo("Exception", 3)
                 );
 
                 if (Version.Version.Is2x()) {
-                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnicodeException.py"), i == 0, ExceptionMode.Always, null,
+                    await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnicodeException.py"), i == 0, ExceptionMode.Always, null,
                         new ExceptionInfo("Exception", 3)
                     );
                 }
 
                 // Only the last exception in each file should be noticed.
                 if (Version.Version <= PythonLanguageVersion.V25) {
-                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v25.py"), i == 0, ExceptionMode.Unhandled, null,
+                    await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v25.py"), i == 0, ExceptionMode.Unhandled, null,
                         new ExceptionInfo("Exception", 57)
                     );
                 } else if (Version.Version.Is3x()) {
-                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v3x.py"), i == 0, ExceptionMode.Unhandled, null,
+                    await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v3x.py"), i == 0, ExceptionMode.Unhandled, null,
                         new ExceptionInfo("Exception", 56)
                     );
                 } else {
-                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1.py"), i == 0, ExceptionMode.Unhandled, null,
+                    await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1.py"), i == 0, ExceptionMode.Unhandled, null,
                         new ExceptionInfo("Exception", 81)
                     );
                 }
 
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException2.py"), i == 0, ExceptionMode.Unhandled, null,
+                await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException2.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo("Exception", 16)
                 );
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException3.py"), i == 0, ExceptionMode.Unhandled, null,
+
+                await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException3.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo("ValueError", 12)
                 );
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException4.py"), i == 0, ExceptionMode.Unhandled, null,
+
+                await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException4.py"), i == 0, ExceptionMode.Unhandled, null,
                     // On IronPython, an unhandled exception will be repeatedly reported as raised as it bubbles up the stack.
                     // Everywhere else, it will only be reported once at the point where it is initially raised. 
                     this is DebuggerTestsIpy ?
                     new[] { new ExceptionInfo("OSError", 17), new ExceptionInfo("OSError", 32), new ExceptionInfo("OSError", 55) } :
                     new[] { new ExceptionInfo("OSError", 17) }
                 );
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException5.py"), i == 0, ExceptionMode.Unhandled, null,
+
+                await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException5.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo("ValueError", 4)
                 );
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException6.py"), i == 0, ExceptionMode.Unhandled, null,
+
+                await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException6.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo("OSError", 12)
                 );
             }
         }
 
         [TestMethod, Priority(1)]
-        public void TestExceptionInEgg() {
+        public async Task TestExceptionInEgg() {
             var debugger = new PythonDebugger();
 
-            TestException(debugger, DebuggerTestPath + "EGGceptionOnImport.py", true, ExceptionMode.Always, null,
+            await TestExceptionAsync(debugger, DebuggerTestPath + "EGGceptionOnImport.py", true, ExceptionMode.Always, null,
                 // We only see the unhandled exception in our script
                 new ExceptionInfo("ValueError", 7)
             );
-            TestException(debugger, DebuggerTestPath + "EGGceptionOnImport.py", true, ExceptionMode.Unhandled, null);
+
+            await TestExceptionAsync(debugger, DebuggerTestPath + "EGGceptionOnImport.py", true, ExceptionMode.Unhandled, null);
 
             // We never see this exception because it is fully handled in the egg
-            TestException(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Always, null);
-            TestException(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Unhandled, null);
+            await TestExceptionAsync(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Always, null);
 
-            TestException(debugger, DebuggerTestPath + "EGGceptionOnCallback.py", true, ExceptionMode.Always, null,
+            await TestExceptionAsync(debugger, DebuggerTestPath + "EGGceptionOnCall.py", true, ExceptionMode.Unhandled, null);
+
+            await TestExceptionAsync(debugger, DebuggerTestPath + "EGGceptionOnCallback.py", true, ExceptionMode.Always, null,
                 new ExceptionInfo("ValueError", 7),
                 new ExceptionInfo("TypeError", 10),
                 new ExceptionInfo("TypeError", 13)
             );
 
-            TestException(debugger, DebuggerTestPath + "EGGceptionOnCallback.py", true, ExceptionMode.Unhandled, null,
+            await TestExceptionAsync(debugger, DebuggerTestPath + "EGGceptionOnCallback.py", true, ExceptionMode.Unhandled, null,
                 new ExceptionInfo("TypeError", 13)
             );
         }
@@ -1610,7 +1692,7 @@ namespace DebuggerTests {
             Unhandled = 32
         }
 
-        private void TestException(
+        private async Task TestExceptionAsync(
             PythonDebugger debugger,
             string filename,
             bool resumeProcess,
@@ -1618,7 +1700,7 @@ namespace DebuggerTests {
             ICollection<KeyValuePair<string, ExceptionMode>> exceptionModes,
             params ExceptionInfo[] exceptions
         ) {
-            TestException(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.RedirectOutput, exceptions);
+            await TestExceptionAsync(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.RedirectOutput, exceptions);
         }
 
         private static string TryGetStack(PythonThread thread) {
@@ -1638,7 +1720,7 @@ namespace DebuggerTests {
             }
         }
 
-        private void TestException(
+        private async Task TestExceptionAsync(
             PythonDebugger debugger,
             string filename,
             bool resumeProcess,
@@ -1651,29 +1733,30 @@ namespace DebuggerTests {
             Console.WriteLine("Testing {0}", filename);
 
             bool loaded = false;
-            var process = DebugProcess(debugger, filename, (processObj, threadObj) => {
+            var process = DebugProcess(debugger, filename, async (processObj, threadObj) => {
                 loaded = true;
-                processObj.SetExceptionInfo(
+                await processObj.SetExceptionInfoAsync(
                     (int)defaultExceptionMode,
                     exceptionModes == null ?
                         Enumerable.Empty<KeyValuePair<string, int>>() :
-                        exceptionModes.Select(m => new KeyValuePair<string, int>(m.Key, (int)m.Value))
+                        exceptionModes.Select(m => new KeyValuePair<string, int>(m.Key, (int)m.Value)),
+                    TimeoutToken()
                 );
             }, debugOptions: debugOptions);
 
             var raised = new List<Tuple<string, string>>();
-            process.ExceptionRaised += (sender, args) => {
+            process.ExceptionRaised += async (sender, args) => {
                 if (loaded) {
                     raised.Add(Tuple.Create(args.Exception.TypeName, TryGetStack(args.Thread)));
                 }
                 if (resumeProcess) {
-                    process.Resume();
+                    await process.ResumeAsync(TimeoutToken());
                 } else {
-                    args.Thread.Resume();
+                    await args.Thread.ResumeAsync(TimeoutToken());
                 }
             };
 
-            StartAndWaitForExit(process);
+            await StartAndWaitForExitAsync(process);
 
             if (Version.Version == PythonLanguageVersion.V30 && raised.Count > exceptions.Length) {
                 // Python 3.0 raises an exception as the process shuts down.
@@ -1699,10 +1782,10 @@ namespace DebuggerTests {
         /// </summary>
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void TestExceptionsSysExitZero() {
+        public async Task TestExceptionsSysExitZero() {
             var debugger = new PythonDebugger();
 
-            TestException(
+            await TestExceptionAsync(
                 debugger,
                 Path.Combine(DebuggerTestPath, "SysExitNone.py"),
                 true, ExceptionMode.Unhandled,
@@ -1711,7 +1794,7 @@ namespace DebuggerTests {
                 new ExceptionInfo("SystemExit", 1)
             );
 
-            TestException(
+            await TestExceptionAsync(
                 debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZeroRaise.py"),
                 true, ExceptionMode.Unhandled,
@@ -1720,7 +1803,7 @@ namespace DebuggerTests {
                 new ExceptionInfo("SystemExit", 1)
             );
 
-            TestException(
+            await TestExceptionAsync(
                 debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZero.py"),
                 true, ExceptionMode.Unhandled,
@@ -1729,7 +1812,7 @@ namespace DebuggerTests {
                 new ExceptionInfo("SystemExit", 2)
             );
 
-            TestException(
+            await TestExceptionAsync(
                 debugger,
                 Path.Combine(DebuggerTestPath, "SysExitNone.py"),
                 true, ExceptionMode.Unhandled,
@@ -1737,7 +1820,7 @@ namespace DebuggerTests {
                 PythonDebugOptions.RedirectOutput
             );
 
-            TestException(
+            await TestExceptionAsync(
                 debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZeroRaise.py"),
                 true, ExceptionMode.Unhandled,
@@ -1745,7 +1828,7 @@ namespace DebuggerTests {
                 PythonDebugOptions.RedirectOutput
             );
 
-            TestException(
+            await TestExceptionAsync(
                 debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZero.py"),
                 true, ExceptionMode.Unhandled,
@@ -1755,7 +1838,7 @@ namespace DebuggerTests {
         }
 
         [TestMethod, Priority(1)]
-        public void TestExceptionHandlers() {
+        public async Task TestExceptionHandlers() {
             var debugger = new PythonDebugger();
 
             TestGetHandledExceptionRanges(debugger, Path.Combine(DebuggerTestPath, "ExceptionHandlers.py"),
@@ -1803,17 +1886,17 @@ namespace DebuggerTests {
         #region Module Load Tests
 
         [TestMethod, Priority(1)]
-        public void TestModuleLoad() {
+        public async Task TestModuleLoad() {
             var debugger = new PythonDebugger();
 
             // main file is reported
-            TestModuleLoad(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), "Program.py");
+            await TestModuleLoadAsync(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), "Program.py");
 
             // imports are reported
-            TestModuleLoad(debugger, Path.Combine(DebuggerTestPath, "imports_other.py"), "imports_other.py", "is_imported.py");
+            await TestModuleLoadAsync(debugger, Path.Combine(DebuggerTestPath, "imports_other.py"), "imports_other.py", "is_imported.py");
         }
 
-        private void TestModuleLoad(PythonDebugger debugger, string filename, params string[] expectedModulesLoaded) {
+        private async Task TestModuleLoadAsync(PythonDebugger debugger, string filename, params string[] expectedModulesLoaded) {
             var process = DebugProcess(debugger, filename);
 
             List<string> receivedFilenames = new List<string>();
@@ -1821,7 +1904,7 @@ namespace DebuggerTests {
                 receivedFilenames.Add(args.Module.Filename);
             };
 
-            StartAndWaitForExit(process);
+            await StartAndWaitForExitAsync(process);
 
             Assert.IsTrue(receivedFilenames.Count >= expectedModulesLoaded.Length, "did not receive enough module names");
             var set = new HashSet<string>();
@@ -1838,25 +1921,25 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void TestStartup() {
+        public async Task TestStartup() {
             var debugger = new PythonDebugger();
 
             // hello world
-            TestExitCode(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), 0);
+            await TestExitCodeAsync(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), 0);
 
             // test which calls sys.exit(23)
-            TestExitCode(debugger, Path.Combine(DebuggerTestPath, "SysExit.py"), 23);
+            await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "SysExit.py"), 23);
 
             // test which calls raise Exception()
-            TestExitCode(debugger, Path.Combine(DebuggerTestPath, "ExceptionalExit.py"), 1);
+            await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "ExceptionalExit.py"), 1);
 
             // test which checks __name__ and __file__ to be correct
-            TestExitCode(debugger, Path.Combine(DebuggerTestPath, "CheckNameAndFile.py"), 0);
+            await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "CheckNameAndFile.py"), 0);
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void TestWindowsStartup() {
+        public async Task TestWindowsStartup() {
             var debugger = new PythonDebugger();
 
             string pythonwExe = Path.Combine(Path.GetDirectoryName(Version.InterpreterPath), "pythonw.exe");
@@ -1866,17 +1949,17 @@ namespace DebuggerTests {
 
             if (File.Exists(pythonwExe)) {
                 // hello world
-                TestExitCode(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), 0, pythonExe: pythonwExe);
+                await TestExitCodeAsync(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), 0, pythonExe: pythonwExe);
 
                 // test which calls sys.exit(23)
-                TestExitCode(debugger, Path.Combine(DebuggerTestPath, "SysExit.py"), 23, pythonExe: pythonwExe);
+                await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "SysExit.py"), 23, pythonExe: pythonwExe);
 
                 // test which calls raise Exception()
-                TestExitCode(debugger, Path.Combine(DebuggerTestPath, "ExceptionalExit.py"), 1, pythonExe: pythonwExe);
+                await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "ExceptionalExit.py"), 1, pythonExe: pythonwExe);
             }
         }
 
-        private void TestExitCode(PythonDebugger debugger, string filename, int expectedExitCode, string interpreterOptions = null, string pythonExe = null) {
+        private async Task TestExitCodeAsync(PythonDebugger debugger, string filename, int expectedExitCode, string interpreterOptions = null, string pythonExe = null) {
             var process = DebugProcess(debugger, filename, interpreterOptions: interpreterOptions, pythonExe: pythonExe);
 
             // Collect these values and assert on them on the main thread
@@ -1896,8 +1979,8 @@ namespace DebuggerTests {
                 processExited = true;
                 hasExited.Set();
             };
-            process.ExceptionRaised += (sender, args) => {
-                process.Resume();
+            process.ExceptionRaised += async (sender, args) => {
+                await process.ResumeAsync(TimeoutToken());
             };
             process.DebuggerOutput += (sender, args) => {
                 if (args.Output != null) {
@@ -1907,7 +1990,7 @@ namespace DebuggerTests {
                 }
             };
 
-            StartAndWaitForExit(process);
+            await StartAndWaitForExitAsync(process);
             // Only wait a little while - the process should have already exited
             // by the time we get here, but we may not have received the event
             // yet.
@@ -1926,12 +2009,10 @@ namespace DebuggerTests {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
             var process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
-            process.ProcessLoaded += (sender, args) => {
-                if (onLoaded != null) {
-                    onLoaded(process, args.Thread);
-                }
+            process.ProcessLoaded += async (sender, args) => {
+                onLoaded?.Invoke(process, args.Thread);
                 if (resumeOnProcessLoaded) {
-                    process.Resume();
+                    await process.ResumeAsync(TimeoutToken());
                 }
             };
             process.DebuggerOutput += (sender, args) => {
@@ -1946,12 +2027,12 @@ namespace DebuggerTests {
         #region Argument Tests
 
         [TestMethod, Priority(1)]
-        public void TestInterpreterArguments() {
+        public async Task TestInterpreterArguments() {
             Version.AssertInstalled();
             var debugger = new PythonDebugger();
 
             // test which verifies we have no doc string when running w/ -OO
-            TestExitCode(debugger, Path.Combine(DebuggerTestPath, "DocString.py"), 0, interpreterOptions: "-OO");
+            await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "DocString.py"), 0, interpreterOptions: "-OO");
         }
 
         #endregion
@@ -1959,7 +2040,7 @@ namespace DebuggerTests {
         #region Output Tests
 
         [TestMethod, Priority(1)]
-        public void TestOutputRedirection() {
+        public async Task TestOutputRedirection() {
             var debugger = new PythonDebugger();
             var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
 
@@ -1972,7 +2053,7 @@ namespace DebuggerTests {
             }, debugOptions: PythonDebugOptions.RedirectOutput);
 
             try {
-                process.Start();
+                await process.StartAsync();
                 Thread.Sleep(1000);
             } finally {
                 WaitForExit(process);
@@ -1980,7 +2061,7 @@ namespace DebuggerTests {
         }
 
         [TestMethod, Priority(1)]
-        public void Test3xStdoutBuffer() {
+        public async Task Test3xStdoutBuffer() {
             if (Version.Version.Is3x()) {
                 var debugger = new PythonDebugger();
 
@@ -1993,14 +2074,14 @@ namespace DebuggerTests {
                     };
                 }, debugOptions: PythonDebugOptions.RedirectOutput);
 
-                StartAndWaitForExit(process);
+                await StartAndWaitForExitAsync(process);
 
                 Assert.IsTrue(gotOutput, "failed to get output");
             }
         }
 
         [TestMethod, Priority(1)]
-        public void TestInputFunction() {
+        public async Task TestInputFunction() {
             // 845 Python 3.3 Bad argument type for the debugger output wrappers
             // A change to the Python 3.3 implementation of input() now requires
             // that `errors` be set to a valid value on stdout. This test
@@ -2017,7 +2098,7 @@ namespace DebuggerTests {
             }, debugOptions: PythonDebugOptions.RedirectOutput | PythonDebugOptions.RedirectInput);
 
             try {
-                process.Start();
+                await process.StartAsync();
                 Thread.Sleep(1000);
                 process.SendStringToStdInput("fob\n");
             } finally {
@@ -2134,15 +2215,6 @@ namespace DebuggerTests {
     }
 
     [TestClass]
-    public class DebuggerTests25 : DebuggerTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;
-            }
-        }
-    }
-
-    [TestClass]
     public class DebuggerTests26 : DebuggerTests {
         internal override PythonVersion Version {
             get {
@@ -2186,29 +2258,29 @@ namespace DebuggerTests {
         }
 
         // IronPython doesn't expose closure variables in frame.f_locals
-        public override void LocalClosureVarsTest() {
+        public override async Task LocalClosureVarsTest() {
             var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4) {
                 Params = { "z" }
             };
-            test.Run();
+            await test.RunAsync();
 
             test.BreakFileName = "LocalClosureVarsTestImported.py";
             test.LineNo = 6;
-            test.Run();
+            await test.RunAsync();
         }
 
         // IronPython exposes some builtin elements in co_names not in __builtins__
-        public override void LocalBuiltinUsageTest() {
+        public override async Task LocalBuiltinUsageTest() {
             var test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4) {
                 Params = { "start", "end" },
                 Locals = { "i", "foreach_enumerator" }
             };
-            test.Run();
+            await test.RunAsync();
 
             test.BreakFileName = "LocalBuiltinUsageTestImported.py";
             test.LineNo = 6;
             test.Params.Add("self");
-            test.Run();
+            await test.RunAsync();
         }
     }
 }

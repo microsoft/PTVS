@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using Microsoft.PythonTools.Debugger;
 using TestUtilities;
 
@@ -33,32 +34,28 @@ namespace DebuggerTests {
             process.DebuggerOutput += (sender, args) => {
                 Console.WriteLine("{0}: {1}", args.Thread.Id, args.Output);
             };
-            process.ProcessLoaded += (sender, args) => {
-                if (onLoaded != null) {
-                    onLoaded(process, args.Thread);
-                }
+            process.ProcessLoaded += async (sender, args) => {
+                onLoaded?.Invoke(process, args.Thread);
                 if (resumeOnProcessLoaded) {
-                    process.Resume();
+                    await process.ResumeAsync(default(CancellationToken));
                 }
             };
 
             return process;
         }
 
-        internal static PythonBreakpoint AddBreakPointByFileExtension(this PythonProcess newproc, int line, string finalBreakFilename) {
+        internal static PythonBreakpoint AddBreakpointByFileExtension(this PythonProcess newproc, int line, string finalBreakFilename) {
             PythonBreakpoint breakPoint;
             var ext = Path.GetExtension(finalBreakFilename);
 
             if (String.Equals(ext, ".html", StringComparison.OrdinalIgnoreCase) ||
                 String.Equals(ext, ".htm", StringComparison.OrdinalIgnoreCase) ||
                 String.Equals(ext, ".djt", StringComparison.OrdinalIgnoreCase)) {
-                breakPoint = newproc.AddDjangoBreakPoint(finalBreakFilename, line);
+                breakPoint = newproc.AddDjangoBreakpoint(finalBreakFilename, line);
             } else {
-                breakPoint = newproc.AddBreakPoint(finalBreakFilename, line);
+                breakPoint = newproc.AddBreakpoint(finalBreakFilename, line);
             }
             return breakPoint;
         }
-
-
     }
 }

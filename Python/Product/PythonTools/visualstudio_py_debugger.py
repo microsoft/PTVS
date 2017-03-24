@@ -53,16 +53,20 @@ except:
     except ImportError:
         import ptvsd.visualstudio_py_util as _vspu
 
+try:
+    # In the local attach scenario, visualstudio_py_ipcjson is injected into globals()
+    # by PyDebugAttach before loading this module, and cannot be imported.
+    _vsipc = visualstudio_py_ipcjson
+except:
+    try:
+        import visualstudio_py_ipcjson as _vsipc
+    except ImportError:
+        import ptvsd.visualstudio_py_ipcjson as _vsipc
+
 to_bytes = _vspu.to_bytes
 exec_file = _vspu.exec_file
 exec_module = _vspu.exec_module
 exec_code = _vspu.exec_code
-read_bytes = _vspu.read_bytes
-read_int = _vspu.read_int
-read_string = _vspu.read_string
-write_bytes = _vspu.write_bytes
-write_int = _vspu.write_int
-write_string = _vspu.write_string
 safe_repr = _vspu.SafeRepr()
 
 try:
@@ -133,8 +137,6 @@ BREAK_ON_SYSTEMEXIT_ZERO = False
 DEBUG_STDLIB = False
 DJANGO_DEBUG = False
 
-RICH_EXCEPTIONS = False
-
 # Py3k compat - alias unicode to str
 try:
     unicode
@@ -189,6 +191,10 @@ BREAKPOINT_PASS_COUNT_ALWAYS = 0
 BREAKPOINT_PASS_COUNT_EVERY = 1
 BREAKPOINT_PASS_COUNT_WHEN_EQUAL = 2
 BREAKPOINT_PASS_COUNT_WHEN_EQUAL_OR_GREATER = 3
+
+# Must be in sync with enum LanguageKind in LegacyDebuggerProtocol.cs
+LANGUAGE_PYTHON = 0
+LANGUAGE_DJANGO = 1
 
 class BreakpointInfo(object):
     __slots__ = [
@@ -343,30 +349,6 @@ if sys.version[0] == '3':
 else:
     StackOverflowException = RuntimeError
   
-ASBR = to_bytes('ASBR')
-SETL = to_bytes('SETL')
-THRF = to_bytes('THRF')
-DETC = to_bytes('DETC')
-NEWT = to_bytes('NEWT')
-EXTT = to_bytes('EXTT')
-EXIT = to_bytes('EXIT')
-EXCP = to_bytes('EXCP')
-EXC2 = to_bytes('EXC2')
-MODL = to_bytes('MODL')
-STPD = to_bytes('STPD')
-BRKS = to_bytes('BRKS')
-BRKF = to_bytes('BRKF')
-BRKH = to_bytes('BRKH')
-BRKC = to_bytes('BRKC')
-BKHC = to_bytes('BKHC')
-LOAD = to_bytes('LOAD')
-EXCE = to_bytes('EXCE')
-EXCR = to_bytes('EXCR')
-CHLD = to_bytes('CHLD')
-OUTP = to_bytes('OUTP')
-REQH = to_bytes('REQH')
-LAST = to_bytes('LAST')
-
 def get_thread_from_id(id):
     THREADS_LOCK.acquire()
     try:
@@ -509,10 +491,11 @@ class ExceptionBreakInfo(object):
                 if handlers is None:
                     # req handlers for this file from the debug engine
                     self.handler_lock.acquire()
-                
-                    with _SendLockCtx:
-                        write_bytes(conn, REQH)
-                        write_string(conn, filename)
+
+                    send_debug_event(
+                        name='legacyRequestHandlers',
+                        fileName=filename,
+                    )
 
                     # wait for the handler data to be received
                     self.handler_lock.acquire()
@@ -1193,15 +1176,16 @@ class Thread(object):
     
     def async_break(self):
         def async_break_send():
-            with _SendLockCtx:
-                sent_break_complete = False
-                global SEND_BREAK_COMPLETE
-                if SEND_BREAK_COMPLETE == True or SEND_BREAK_COMPLETE == self.id:
-                    # multiple threads could be sending this...
-                    SEND_BREAK_COMPLETE = False
-                    sent_break_complete = True
-                    write_bytes(conn, ASBR)
-                    write_int(conn, self.id)
+            sent_break_complete = False
+            global SEND_BREAK_COMPLETE
+            if SEND_BREAK_COMPLETE == True or SEND_BREAK_COMPLETE == self.id:
+                # multiple threads could be sending this...
+                SEND_BREAK_COMPLETE = False
+                sent_break_complete = True
+                send_debug_event(
+                    name='legacyAsyncBreak',
+                    threadId=self.id,
+                )
 
             if sent_break_complete:
                 # if we have threads which have not broken yet capture their frame list and 
@@ -1553,32 +1537,36 @@ class Thread(object):
                 treated.add(name)
 
     def send_frame_list(self, frames, thread_name = None):
-        with _SendLockCtx:
-            write_bytes(conn, THRF)
-            write_int(conn, self.id)
-            write_string(conn, thread_name)
-        
-            # send the frame count
-            write_int(conn, len(frames))
-            for firstlineno, lineno, curlineno, name, filename, argcount, variables, frameKind, sourceFile, sourceLine in frames:
-                # send each frame    
-                write_int(conn, firstlineno)
-                write_int(conn, lineno)
-                write_int(conn, curlineno)
-        
-                write_string(conn, name)
-                write_string(conn, filename)
-                write_int(conn, argcount)
-                
-                write_int(conn, frameKind)
-                if frameKind == FRAME_KIND_DJANGO:
-                    write_string(conn, sourceFile)
-                    write_int(conn, sourceLine)
-                
-                write_int(conn, len(variables))
-                for name, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len in variables:
-                    write_string(conn, name)
-                    write_object(conn, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len)
+        threadFrames = []
+
+        for firstlineno, lineno, curlineno, name, filename, argcount, variables, frameKind, sourceFile, sourceLine in frames:
+            threadFrame = {
+                'startLine': firstlineno,
+                'endLine': lineno,
+                'lineNo': curlineno,
+                'frameName': name,
+                'fileName': filename,
+                'argCount': argcount,
+                'frameKind': frameKind,
+                'variables': [{
+                    'name': name,
+                    'obj': create_object(type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len)
+                    } for name, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len in variables
+                ]
+            }
+
+            if frameKind == FRAME_KIND_DJANGO:
+                threadFrame['djangoSourceFile'] = sourceFile
+                threadFrame['djangoSourceLine'] = sourceLine
+
+            threadFrames.append(threadFrame)
+
+        send_debug_event(
+            name='legacyThreadFrameList',
+            threadId=self.id,
+            threadName=thread_name,
+            threadFrames=threadFrames,
+        )
 
     def enum_thread_frames_locally(self):
         global _threading
@@ -1626,54 +1614,21 @@ def mark_all_threads_for_break(stepping = STEPPING_BREAK, skip_thread = None):
         thread.stepping = stepping
     THREADS_LOCK.release()
 
-class DebuggerLoop(object):
+
+class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
 
     instance = None
 
-    def __init__(self, conn, rich_exceptions=False):
+    def __init__(self, socket):
+        super(DebuggerLoop, self).__init__(socket=socket)
+        
         DebuggerLoop.instance = self
-        self.conn = conn
         self.repl_backend = None
-        self.rich_exceptions = rich_exceptions
-        self.command_table = {
-            to_bytes('stpi') : self.command_step_into,
-            to_bytes('stpo') : self.command_step_out,
-            to_bytes('stpv') : self.command_step_over,
-            to_bytes('brkp') : self.command_set_breakpoint,
-            to_bytes('brkc') : self.command_set_breakpoint_condition,
-            to_bytes('bkpc') : self.command_set_breakpoint_pass_count,
-            to_bytes('bkgh') : self.command_get_breakpoint_hit_count,
-            to_bytes('bksh') : self.command_set_breakpoint_hit_count,
-            to_bytes('brkr') : self.command_remove_breakpoint,
-            to_bytes('brka') : self.command_break_all,
-            to_bytes('resa') : self.command_resume_all,
-            to_bytes('rest') : self.command_resume_thread,
-            to_bytes('thrf') : self.command_get_thread_frames,
-            to_bytes('ares') : self.command_auto_resume,
-            to_bytes('exec') : self.command_execute_code,
-            to_bytes('chld') : self.command_enum_children,
-            to_bytes('setl') : self.command_set_lineno,
-            to_bytes('detc') : self.command_detach,
-            to_bytes('clst') : self.command_clear_stepping,
-            to_bytes('sexi') : self.command_set_exception_info,
-            to_bytes('sehi') : self.command_set_exception_handler_info,
-            to_bytes('bkdr') : self.command_remove_django_breakpoint,
-            to_bytes('bkda') : self.command_add_django_breakpoint,
-            to_bytes('crep') : self.command_connect_repl,
-            to_bytes('drep') : self.command_disconnect_repl,
-            to_bytes('lack') : self.command_last_ack,
-        }
 
     def loop(self):
         try:
             while True:
-                inp = read_bytes(conn, 4)
-                cmd = self.command_table.get(inp)
-                if cmd is not None:
-                    cmd()
-                else:
-                    if inp:
-                        print ('unknown command', inp)
+                if self.process_one_message():
                     break
         except DebuggerExitException:
             pass
@@ -1681,133 +1636,167 @@ class DebuggerLoop(object):
             pass
         except:
             traceback.print_exc()
-            
-    def command_step_into(self):
-        tid = read_int(self.conn)
-        thread = get_thread_from_id(tid)
+
+        global debugger_thread_id
+        debugger_thread_id = -1
+        DebuggerLoop.instance = None
+
+    def on_internal_error(self, output):
+        self.send_debug_event(
+            name='legacyInternalError',
+            output=output,
+        )
+
+    def on_legacyStepInto(self, request, args):
+        thread = get_thread_from_id(args['threadId'])
+
+        self.send_debug_response(request)
+
         if thread is not None:
             assert thread._is_blocked
             thread.stepping = STEPPING_INTO
-            self.command_resume_all()
+            self._resume_all()
 
-    def command_step_out(self):
-        tid = read_int(self.conn)
-        thread = get_thread_from_id(tid)
+    def on_legacyStepOut(self, request, args):
+        thread = get_thread_from_id(args['threadId'])
+
+        self.send_debug_response(request)
+
         if thread is not None:
             assert thread._is_blocked
             thread.stepping = STEPPING_OUT
-            self.command_resume_all()
-    
-    def command_step_over(self):
+            self._resume_all()
+
+    def on_legacyStepOver(self, request, args):
         # set step over
-        tid = read_int(self.conn)
-        thread = get_thread_from_id(tid)
+        thread = get_thread_from_id(args['threadId'])
+
+        self.send_debug_response(request)
+
         if thread is not None:
             assert thread._is_blocked
             if DJANGO_DEBUG:
                 source_obj = get_django_frame_source(thread.cur_frame)
                 if source_obj is not None:
                     thread.django_stepping = True
-                    self.command_resume_all()
+                    self._resume_all()
                     return
 
             thread.stepping = STEPPING_OVER
-            self.command_resume_all()
+            self._resume_all()
 
-    def command_set_breakpoint(self):
-        breakpoint_id = read_int(self.conn)
-        lineno = read_int(self.conn)
-        filename = read_string(self.conn)
-        condition_kind = read_int(self.conn)
-        condition = read_string(self.conn)
-        pass_count_kind = read_int(self.conn)
-        pass_count = read_int(self.conn)
-        bp = BreakpointInfo(breakpoint_id, filename, lineno, condition_kind, condition, pass_count_kind, pass_count)
+    def on_legacySetBreakpoint(self, request, args):
+        breakpoint_id = args['breakpointId']
+        lineno = args['breakpointLineNo']
+        filename = args['breakpointFileName']
+        condition_kind = args['conditionKind']
+        condition = args['condition']
+        pass_count_kind = args['passCountKind']
+        pass_count = args['passCount']
+        language = args['language']
 
-        for mod_filename, module in MODULES:
-            if try_bind_break_point(mod_filename, module, bp):
-                break
-        else:
-            # Failed to bind break point (e.g. module is not loaded yet); report as pending.
-            add_break_point(bp)
-            PENDING_BREAKPOINTS.add(bp)
-            report_breakpoint_failed(breakpoint_id)
+        if language != LANGUAGE_PYTHON and language != LANGUAGE_DJANGO:
+            self.send_debug_response(request, success=False, message='Unknown language')
+            return
 
-    def command_set_breakpoint_condition(self):
-        breakpoint_id = read_int(self.conn)
-        kind = read_int(self.conn)
-        condition = read_string(self.conn)
-        
+        self.send_debug_response(request)
+
+        if language == LANGUAGE_PYTHON:
+            bp = BreakpointInfo(breakpoint_id, filename, lineno, condition_kind, condition, pass_count_kind, pass_count)
+            for mod_filename, module in MODULES:
+                if try_bind_break_point(mod_filename, module, bp):
+                    break
+            else:
+                # Failed to bind break point (e.g. module is not loaded yet); report as pending.
+                add_break_point(bp)
+                PENDING_BREAKPOINTS.add(bp)
+                report_breakpoint_failed(breakpoint_id)
+        elif language == LANGUAGE_DJANGO:
+            bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
+            if bp_info is None:
+                DJANGO_BREAKPOINTS[filename.lower()] = bp_info = DjangoBreakpointInfo(filename)
+            bp_info.add_breakpoint(lineno, breakpoint_id)
+
+    def on_legacySetBreakpointCondition(self, request, args):
+        breakpoint_id = args['breakpointId']
+        kind = args['conditionKind']
+        condition = args['condition']
+
+        self.send_debug_response(request)
+
         bp = BreakpointInfo.find_by_id(breakpoint_id)
         if bp is not None:
             bp.condition_kind = kind
             bp.condition = condition
 
-    def command_set_breakpoint_pass_count(self):
-        breakpoint_id = read_int(self.conn)
-        kind = read_int(self.conn)
-        count = read_int(self.conn)
+    def on_legacySetBreakpointPassCount(self, request, args):
+        breakpoint_id = args['breakpointId']
+        kind = args['passCountKind']
+        count = args['passCount']
+
+        self.send_debug_response(request)
 
         bp = BreakpointInfo.find_by_id(breakpoint_id)
         if bp is not None:
             bp.pass_count_kind = kind
             bp.pass_count = count
 
-    def command_set_breakpoint_hit_count(self):
-        breakpoint_id = read_int(self.conn)
-        count = read_int(self.conn)
-        
+    def on_legacySetBreakpointHitCount(self, request, args):
+        breakpoint_id = args['breakpointId']
+        count = args['hitCount']
+
+        self.send_debug_response(request)
+
         bp = BreakpointInfo.find_by_id(breakpoint_id)
         if bp is not None:
             bp.hit_count = count
 
-    def command_get_breakpoint_hit_count(self):
-        req_id = read_int(self.conn)
-        breakpoint_id = read_int(self.conn)
+    def on_legacyGetBreakpointHitCount(self, request, args):
+        breakpoint_id = args['breakpointId']
         
         bp = BreakpointInfo.find_by_id(breakpoint_id)
         count = 0
         if bp is not None:
             count = bp.hit_count
 
-        with _SendLockCtx:
-            write_bytes(conn, BKHC)
-            write_int(conn, req_id)
-            write_int(conn, count)
+        self.send_debug_response(
+            request,
+            success=True,
+            message=None,
+            hitCount=count,
+        )
 
-    def command_remove_breakpoint(self):
-        line_no = read_int(self.conn)
-        brkpt_id = read_int(self.conn)
-        cur_bp = BREAKPOINTS.get(line_no)
-        if cur_bp is not None:
-            for file, id in cur_bp:
-                if id == brkpt_id:
-                    del cur_bp[file, id]
-                    if not cur_bp:
-                        del BREAKPOINTS[line_no]
-                    break
+    def on_legacyRemoveBreakpoint(self, request, args):
+        lineno = args['breakpointLineNo']
+        brkpt_id = args['breakpointId']
+        language = args['language']
 
-    def command_remove_django_breakpoint(self):
-        line_no = read_int(self.conn)
-        brkpt_id = read_int(self.conn)
-        filename = read_string(self.conn)
+        if language != LANGUAGE_PYTHON and language != LANGUAGE_DJANGO:
+            self.send_debug_response(request, success=False, message='Unknown language')
+            return
 
-        bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
-        if bp_info is not None:
-            bp_info.remove_breakpoint(line_no)
+        self.send_debug_response(request)
 
-    def command_add_django_breakpoint(self):
-        brkpt_id = read_int(self.conn)
-        line_no = read_int(self.conn)
-        filename = read_string(self.conn)
-        bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
-        if bp_info is None:
-            DJANGO_BREAKPOINTS[filename.lower()] = bp_info = DjangoBreakpointInfo(filename)
+        if language == LANGUAGE_PYTHON:
+            cur_bp = BREAKPOINTS.get(lineno)
+            if cur_bp is not None:
+                for file, id in cur_bp:
+                    if id == brkpt_id:
+                        del cur_bp[file, id]
+                        if not cur_bp:
+                            del BREAKPOINTS[lineno]
+                        break
+        elif language == LANGUAGE_DJANGO:
+            filename = args['breakpointFileName']
+            bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
+            if bp_info is not None:
+                bp_info.remove_breakpoint(lineno)
 
-        bp_info.add_breakpoint(line_no, brkpt_id)
+    def on_legacyConnectRepl(self, request, args):
+        port_num = args['portNum']
 
-    def command_connect_repl(self):
-        port_num = read_int(self.conn)
+        self.send_debug_response(request)
+
         _start_new_thread(self.connect_to_repl_backend, (port_num,))
 
     def connect_to_repl_backend(self, port_num):
@@ -1822,24 +1811,35 @@ class DebuggerLoop(object):
         self.repl_backend.connect_from_debugger_using_socket(sock)
         self.repl_backend.execution_loop()
 
-    def command_disconnect_repl(self):
+    def on_legacyDisconnectRepl(self, request, args):
+        self.send_debug_response(request)
+
         if self.repl_backend is not None:
             self.repl_backend.disconnect_from_debugger()
             self.repl_backend = None
 
-    def command_break_all(self):
+    def on_legacyBreakAll(self, request, args):
+        self.send_debug_response(request)
+
         global SEND_BREAK_COMPLETE
         SEND_BREAK_COMPLETE = True
         mark_all_threads_for_break()
 
-    def command_get_thread_frames(self):
-        tid = read_int(self.conn)
+    def on_legacyGetThreadFrames(self, request, args):
+        tid = args['threadId']
+
+        self.send_debug_response(request)
+
         THREADS_LOCK.acquire()
         thread = THREADS[tid]
         THREADS_LOCK.release()
         thread.enum_thread_frames_locally()
 
-    def command_resume_all(self):
+    def on_legacyResumeAll(self, request, args):
+        self.send_debug_response(request)
+        self._resume_all()
+
+    def _resume_all(self):
         # resume all
         THREADS_LOCK.acquire()
         all_threads = list(THREADS.values())
@@ -1851,21 +1851,27 @@ class DebuggerLoop(object):
             if thread._is_blocked:
                 thread.unblock()
             thread._block_starting_lock.release()
-    
-    def command_resume_thread(self):
-        tid = read_int(self.conn)
+
+    def on_legacyResumeThread(self, request, args):
+        tid = args['threadId']
+
+        self.send_debug_response(request)
+
         THREADS_LOCK.acquire()
         thread = THREADS[tid]
         THREADS_LOCK.release()
 
         if thread.reported_process_loaded:
             thread.reported_process_loaded = False
-            self.command_resume_all()
+            self._resume_all()
         else:
             thread.unblock()
 
-    def command_auto_resume(self):
-        tid = read_int(self.conn)
+    def on_legacyAutoResumeThread(self, request, args):
+        tid = args['threadId']
+
+        self.send_debug_response(request)
+
         THREADS_LOCK.acquire()
         thread = THREADS[tid]
         THREADS_LOCK.release()
@@ -1874,32 +1880,31 @@ class DebuggerLoop(object):
         if ((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and thread.cur_frame.f_lineno != thread.stopped_on_line): 
             report_step_finished(tid)
         else:
-            self.command_resume_all()
+            self._resume_all()
 
-    def command_set_exception_info(self):
+    def on_legacySetExceptionInfo(self, request, args):
+        self.send_debug_response(request)
+
         BREAK_ON.clear()
-        BREAK_ON.default_mode = read_int(self.conn)
+        BREAK_ON.default_mode = args['defaultBreakOnMode']
 
-        break_on_count = read_int(self.conn)
-        for i in xrange(break_on_count):
-            mode = read_int(self.conn)
-            name = read_string(self.conn)
-            BREAK_ON.add_exception(name, mode)
+        for item in args['breakOn']:
+            BREAK_ON.add_exception(item['name'], item['mode'])
 
-    def command_set_exception_handler_info(self):
+    def on_legacySetExceptionHandlerInfo(self, request, args):
+        self.send_debug_response(request)
+
         try:
-            filename = read_string(self.conn)
+            filename = args['fileName']
 
-            statement_count = read_int(self.conn)
             handlers = []
-            for _ in xrange(statement_count):
-                line_start, line_end = read_int(self.conn), read_int(self.conn)
+            for statement in args['statements']:
+                line_start = statement['lineStart']
+                line_end = statement['lineEnd']
 
                 expressions = set()
-                text = read_string(self.conn).strip()
-                while text != '-':
-                    expressions.add(text)
-                    text = read_string(self.conn)
+                for exp in statement['expressions']:
+                    expressions.add(exp)
 
                 if not expressions:
                     expressions = set('*')
@@ -1910,42 +1915,53 @@ class DebuggerLoop(object):
         finally:
             BREAK_ON.handler_lock.release()
 
-    def command_clear_stepping(self):
-        tid = read_int(self.conn)
+    def on_legacyClearStepping(self, request, args):
+        tid = args['threadId']
+
+        self.send_debug_response(request)
 
         thread = get_thread_from_id(tid)
         if thread is not None:
             thread.stepping = STEPPING_NONE
 
-    def command_set_lineno(self):
-        tid = read_int(self.conn)
-        fid = read_int(self.conn)
-        lineno = read_int(self.conn)
+    def on_legacySetLineNumber(self, request, args):
+        tid = args['threadId']
+        fid = args['frameId']
+        lineno = args['lineNo']
         try:
             THREADS_LOCK.acquire()
             THREADS[tid].cur_frame.f_lineno = lineno
             newline = THREADS[tid].cur_frame.f_lineno
             THREADS_LOCK.release()
-            with _SendLockCtx:
-                write_bytes(self.conn, SETL)
-                write_int(self.conn, 1)
-                write_int(self.conn, tid)
-                write_int(self.conn, newline)
-        except:
-            with _SendLockCtx:
-                write_bytes(self.conn, SETL)
-                write_int(self.conn, 0)
-                write_int(self.conn, tid)
-                write_int(self.conn, 0)
 
-    def command_execute_code(self):
+            self.send_debug_response(
+                request,
+                success=True,
+                message=None,
+                result=1,
+                threadId=tid,
+                newLineNo=newline,
+            )
+        except:
+            self.send_debug_response(
+                request,
+                success=True,
+                message=None,
+                result=0,
+                threadId=tid,
+                newLineNo=0,
+            )
+
+    def on_legacyExecuteText(self, request, args):
         # execute given text in specified frame
-        text = read_string(self.conn)
-        tid = read_int(self.conn) # thread id
-        fid = read_int(self.conn) # frame id
-        eid = read_int(self.conn) # execution id
-        frame_kind = read_int(self.conn)
-        repr_kind = read_int(self.conn)
+        text = args['text']
+        tid = args['threadId']
+        fid = args['frameId']
+        eid = args['executionId']
+        frame_kind = args['frameKind']
+        repr_kind = args['reprKind']
+
+        self.send_debug_response(request)
 
         thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
         if thread is not None and cur_frame is not None:
@@ -1957,18 +1973,20 @@ class DebuggerLoop(object):
         if thread is not None and cur_frame is not None:
             thread.run_locally_no_report(text, cur_frame, frame_kind)
 
-    def command_enum_children(self):
+    def on_legacyEnumChildren(self, request, args):
         # execute given text in specified frame
-        text = read_string(self.conn)
-        tid = read_int(self.conn) # thread id
-        fid = read_int(self.conn) # frame id
-        eid = read_int(self.conn) # execution id
-        frame_kind = read_int(self.conn) # frame kind
-                
+        text = args['text']
+        tid = args['threadId']
+        fid = args['frameId']
+        eid = args['executionId']
+        frame_kind = args['frameKind']
+
+        self.send_debug_response(request)
+
         thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
         if thread is not None and cur_frame is not None:
             thread.enum_child_on_thread(text, cur_frame, eid, frame_kind)
-    
+
     def get_thread_and_frame(self, tid, fid, frame_kind):
         thread = get_thread_from_id(tid)
         cur_frame = None
@@ -1980,7 +1998,11 @@ class DebuggerLoop(object):
 
         return thread, cur_frame
 
-    def command_detach(self):
+    def on_legacyDetach(self, request, args):
+        self.send_debug_response(request)
+        self.detach()
+
+    def detach(self):
         detach_threads()
 
         # unload debugger DLL
@@ -1991,17 +2013,29 @@ class DebuggerLoop(object):
             k32.FreeLibrary(debugger_dll_handle)
             debugger_dll_handle = None
 
-        with _SendLockCtx:
-            write_bytes(conn, DETC)
-            detach_process()        
+        self.send_debug_event(name='legacyDetach')
+        detach_process()
 
         for callback in DETACH_CALLBACKS:
             callback()
-        
+
         raise DebuggerExitException()
 
-    def command_last_ack(self):
+    def on_legacyLastAck(self, request, args):
+        self.send_debug_response(request)
         last_ack_event.set()
+
+    def send_debug_event(self, name, **args):
+        with _SendLockCtx:
+            self.send_event(name, **args)
+
+    def send_debug_response(self, request, success=True, message=None, **args):
+        with _SendLockCtx:
+            self.send_response(request, success, message, **args)
+
+def send_debug_event(name, **args):
+    if DebuggerLoop.instance:
+        DebuggerLoop.instance.send_debug_event(name, **args)
 
 DETACH_CALLBACKS = []
 
@@ -2021,9 +2055,7 @@ def new_thread_wrapper(func, posargs, kwargs):
 
 def report_new_thread(new_thread):
     ident = new_thread.id
-    with _SendLockCtx:
-        write_bytes(conn, NEWT)
-        write_int(conn, ident)
+    send_debug_event(name='legacyThreadCreate', threadId=ident)
 
 def report_all_threads():
     THREADS_LOCK.acquire()
@@ -2034,9 +2066,7 @@ def report_all_threads():
 
 def report_thread_exit(old_thread):
     ident = old_thread.id
-    with _SendLockCtx:
-        write_bytes(conn, EXTT)
-        write_int(conn, ident)
+    send_debug_event(name='legacyThreadExit', threadId=ident)
 
 def report_exception(frame, exc_info, tid, break_type):
     exc_type = exc_info[0]
@@ -2071,22 +2101,11 @@ def report_exception(frame, exc_info, tid, break_type):
             'message': data['message'],
         }
 
-    with _SendLockCtx:
-        if RICH_EXCEPTIONS:
-            write_bytes(conn, EXC2)
-            write_int(conn, tid)
-            write_int(conn, len(data))
-            for key, value in data.items():
-                write_string(conn, key)
-                write_string(conn, str(value))
-        else:
-            # Old message is fixed format. If RichExceptions is not passed in
-            # debug options, we'll send this format.
-            write_bytes(conn, EXCP)
-            write_string(conn, str(data['typename']))
-            write_int(conn, tid)
-            write_int(conn, 1 if 'breaktype' in data else 0)
-            write_string(conn, str(data['message']))
+    send_debug_event(
+        name='legacyException',
+        threadId=tid,
+        data=[{'key':k, 'val':str(v)} for k, v in data.items()],
+    )
 
 def new_module(frame):
     mod = Module(get_code_filename(frame.f_code))
@@ -2095,42 +2114,49 @@ def new_module(frame):
     return frame.f_code, mod
 
 def report_module_load(mod):
-    with _SendLockCtx:
-        write_bytes(conn, MODL)
-        write_int(conn, mod.module_id)
-        write_string(conn, mod.filename)
+    send_debug_event(
+        name='legacyModuleLoad',
+        moduleId=mod.module_id,
+        moduleFileName=mod.filename,
+    )
 
 def report_step_finished(tid):
-    with _SendLockCtx:
-        write_bytes(conn, STPD)
-        write_int(conn, tid)
+    send_debug_event(
+        name='legacyStepDone',
+        threadId=tid,
+    )
 
 def report_breakpoint_bound(id):
-    with _SendLockCtx:
-        write_bytes(conn, BRKS)
-        write_int(conn, id)
+    send_debug_event(
+        name='legacyBreakpointSet',
+        breakpointId=id,
+    )
 
 def report_breakpoint_failed(id):
-    with _SendLockCtx:
-        write_bytes(conn, BRKF)
-        write_int(conn, id)
+    send_debug_event(
+        name='legacyBreakpointFailed',
+        breakpointId=id,
+    )
 
-def report_breakpoint_hit(id, tid):    
-    with _SendLockCtx:
-        write_bytes(conn, BRKH)
-        write_int(conn, id)
-        write_int(conn, tid)
+def report_breakpoint_hit(id, tid):
+    send_debug_event(
+        name='legacyBreakpointHit',
+        breakpointId=id,
+        threadId=tid,
+    )
 
 def report_process_loaded(tid):
-    with _SendLockCtx:
-        write_bytes(conn, LOAD)
-        write_int(conn, tid)
+    send_debug_event(
+        name='legacyProcessLoad',
+        threadId=tid,
+    )
 
 def report_execution_error(exc_text, execution_id):
-    with _SendLockCtx:
-        write_bytes(conn, EXCE)
-        write_int(conn, execution_id)
-        write_string(conn, exc_text)
+    send_debug_event(
+        name='legacyExecutionException',
+        executionId=execution_id,
+        exceptionText=exc_text,
+    )
 
 def report_execution_exception(execution_id, exc_info):
     try:
@@ -2175,21 +2201,23 @@ def report_execution_result(execution_id, result, repr_kind = PYTHON_EVALUATION_
     res_type = type(result)
     type_name = type(result).__name__
 
-    with _SendLockCtx:
-        write_bytes(conn, EXCR)
-        write_int(conn, execution_id)
-        write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len, flags)
+    send_debug_event(
+        name='legacyExecutionResult',
+        executionId=execution_id,
+        obj=create_object(res_type, obj_repr, hex_repr, type_name, obj_len, flags),
+    )
 
 def report_children(execution_id, children):
     children = [(name, expression, flags, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for name, expression, result, flags in children]
-    with _SendLockCtx:
-        write_bytes(conn, CHLD)
-        write_int(conn, execution_id)
-        write_int(conn, len(children))
-        for name, expression, flags, obj_repr, hex_repr, res_type, type_name, obj_len in children:
-            write_string(conn, name)
-            write_string(conn, expression)
-            write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len, flags)
+    send_debug_event(
+        name='legacyEnumChildrenResult',
+        executionId=execution_id,
+        children=[{
+            'name': name,
+            'expression': expression,
+            'obj': create_object(res_type, obj_repr, hex_repr, type_name, obj_len, flags),
+        } for name, expression, flags, obj_repr, hex_repr, res_type, type_name, obj_len in children],
+    )
 
 def get_code_filename(code):
     return path.abspath(code.co_filename)
@@ -2199,13 +2227,7 @@ try:
     NONEXPANDABLE_TYPES.append(long)
 except NameError: pass
 
-def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len, flags = 0):
-    write_string(conn, obj_repr)
-    write_string(conn, hex_repr)
-    if obj_type is SynthesizedValue:
-        write_string(conn, '')
-    else:
-        write_string(conn, type_name)
+def create_object(obj_type, obj_repr, hex_repr, type_name, obj_len, flags = 0):
     if obj_type not in NONEXPANDABLE_TYPES and obj_len != 0:
         flags |= PYTHON_EVALUATION_RESULT_EXPANDABLE
     try:
@@ -2215,8 +2237,16 @@ def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len, flags =
                 break
     except: # guard against broken issubclass for types which aren't actually types, like vtkclass
         pass
-    write_int(conn, obj_len or 0)
-    write_int(conn, flags)
+
+    obj = {
+        'objRepr': obj_repr,
+        'hexRepr': hex_repr,
+        'typeName': '' if obj_type is SynthesizedValue else type_name,
+        'length': obj_len or 0,
+        'flags': flags,
+    }
+
+    return obj
 
 debugger_thread_id = -1
 _INTERCEPTING_FOR_ATTACH = False
@@ -2241,25 +2271,39 @@ def intercept_threads(for_attach = False):
     global _INTERCEPTING_FOR_ATTACH
     _INTERCEPTING_FOR_ATTACH = for_attach
 
+
+def start_debugger_loop(sock):
+    global debugger_thread_id
+    debugger_thread_id = _start_new_thread(DebuggerLoop(sock).loop, ())
+
 def attach_process(port_num, debug_id, debug_options, report = False, block = False):
-    global conn
     for i in xrange(50):
         try:
-            conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            conn.connect(('127.0.0.1', port_num))
-            write_string(conn, debug_id)
-            write_int(conn, 0)  # success
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect(('127.0.0.1', port_num))
             break
         except:
             import time
             time.sleep(50./1000)
     else:
         raise Exception('failed to attach')
-    attach_process_from_socket(conn, debug_options, report, block)
+
+    start_debugger_loop(sock)
+
+    send_debug_event(
+        name='legacyLocalConnected',
+        processGuid=debug_id,
+        result=0, # success
+    )
+
+    attach_connected_process(debug_options, report, block)
 
 def attach_process_from_socket(sock, debug_options, report = False, block = False):
-    global conn, attach_sent_break, DETACHED, DEBUG_STDLIB, BREAK_ON_SYSTEMEXIT_ZERO, DJANGO_DEBUG
-    global RICH_EXCEPTIONS
+    start_debugger_loop(sock)
+    attach_connected_process(debug_options, report, block)
+
+def attach_connected_process(debug_options, report = False, block = False):
+    global attach_sent_break, DETACHED, DEBUG_STDLIB, BREAK_ON_SYSTEMEXIT_ZERO, DJANGO_DEBUG
 
     BREAK_ON_SYSTEMEXIT_ZERO = 'BreakOnSystemExitZero' in debug_options
     DJANGO_DEBUG = 'DjangoDebugging' in debug_options
@@ -2274,8 +2318,6 @@ def attach_process_from_socket(sock, debug_options, report = False, block = Fals
     wait_on_normal_exit = 'WaitOnNormalExit' in debug_options
     wait_on_abnormal_exit = 'WaitOnAbnormalExit' in debug_options
 
-    RICH_EXCEPTIONS = 'RichExceptions' in debug_options
-
     def _excepthook(exc_type, exc_value, exc_tb):
         # Display the exception and wait on exit
         if exc_type is SystemExit:
@@ -2288,12 +2330,7 @@ def attach_process_from_socket(sock, debug_options, report = False, block = Fals
                 do_wait()
     sys.excepthook = sys.__excepthook__ = _excepthook
 
-    conn = sock
     attach_sent_break = False
-
-    # start the debugging loop
-    global debugger_thread_id
-    debugger_thread_id = _start_new_thread(DebuggerLoop(conn).loop, ())
 
     for mod_name, mod_value in sys.modules.items():
         try:
@@ -2334,7 +2371,7 @@ def attach_process_from_socket(sock, debug_options, report = False, block = Fals
 def detach_process_and_notify_debugger():
     if DebuggerLoop.instance:
         try:
-            DebuggerLoop.instance.command_detach()
+            DebuggerLoop.instance.detach()
         except DebuggerExitException: # successfully detached
             return
         except: # swallow anything else, and forcibly detach below
@@ -2446,10 +2483,11 @@ class _DebuggerOutput(object):
     def write(self, value):
         if not DETACHED:
             probe_stack(3)
-            with _SendLockCtx:
-                write_bytes(conn, OUTP)
-                write_int(conn, thread.get_ident())
-                write_string(conn, value)
+            send_debug_event(
+                name='legacyDebuggerOutput',
+                threadId=thread.get_ident(),
+                output=value,
+            )
         if self.old_out:
             self.old_out.write(value)
     
@@ -2477,10 +2515,11 @@ class DebuggerBuffer(object):
         if not DETACHED:
             probe_stack(3)
             str_data = utf_8.decode(data)[0]
-            with _SendLockCtx:
-                write_bytes(conn, OUTP)
-                write_int(conn, thread.get_ident())
-                write_string(conn, str_data)
+            send_debug_event(
+                name='legacyDebuggerOutput',
+                threadId=thread.get_ident(),
+                output=str_data,
+            )
         self.buffer.write(data)
 
     def flush(self): 
@@ -2568,8 +2607,7 @@ def debug(file, port_num, debug_id, debug_options, run_as = 'script'):
             _threading = threading
         global last_ack_event
         last_ack_event = _threading.Event()
-        with _SendLockCtx:
-            write_bytes(conn, LAST)
+        send_debug_event(name='legacyLast')
         last_ack_event.wait(5)
 
     if wait_on_normal_exit:

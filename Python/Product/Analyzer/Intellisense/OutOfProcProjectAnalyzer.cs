@@ -84,7 +84,9 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ProjectEntryMap();
             _connection = new Connection(
                 writer,
+                true,
                 reader,
+                true,
                 RequestHandler,
                 AP.RegisteredTypes,
                 "Analyzer"
@@ -102,7 +104,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
             _connection.Dispose();
         }
-
 
         private void ContainerExportsChanged(object sender, ExportsChangeEventArgs e) {
             // figure out the new extensions...

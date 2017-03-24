@@ -11,7 +11,7 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Django launcher</LaunchProvider>
-    <WebBrowserUrl></WebBrowserUrl>
+    <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <OutputPath>.</OutputPath>
     <Name>DjangoDebugProject</Name>
     <RootNamespace>DjangoDebugProject</RootNamespace>

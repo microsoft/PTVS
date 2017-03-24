@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonThread {
@@ -31,34 +33,30 @@ namespace Microsoft.PythonTools.Debugger {
             _name = "";
         }
 
-        public void StepInto() {
-            _process.SendStepInto(_identity);
+        public Task StepIntoAsync(CancellationToken ct) {
+            return _process.SendStepIntoAsync(_identity, ct);
         }
 
-        public void StepOver() {
-            _process.SendStepOver(_identity);
+        public Task StepOverAsync(CancellationToken ct) {
+            return _process.SendStepOverAsync(_identity, ct);
         }
 
-        public void StepOut() {
-            _process.SendStepOut(_identity);
+        public Task StepOutAsync(CancellationToken ct) {
+            return _process.SendStepOutAsync(_identity, ct);
         }
 
-        public void Resume() {
-            _process.SendResumeThread(_identity);
+        public Task ResumeAsync(CancellationToken ct) {
+            return _process.SendResumeThreadAsync(_identity, ct);
         }
 
-        public void AutoResume() {
-            _process.AutoResumeThread(_identity);
+        public Task AutoResumeAsync(CancellationToken ct) {
+            return _process.AutoResumeThread(_identity, ct);
         }
 
-        public bool IsWorkerThread {
-            get {
-                return _isWorkerThread;
-            }
-        }
+        public bool IsWorkerThread => _isWorkerThread;
 
-        internal void ClearSteppingState() {
-            _process.SendClearStepping(_identity);
+        internal Task ClearSteppingStateAsync(CancellationToken ct) {
+            return _process.SendClearSteppingAsync(_identity, ct);
         }
 
         public IList<PythonStackFrame> Frames {
@@ -70,11 +68,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public PythonProcess Process {
-            get {
-                return _process;
-            }
-        }
+        public PythonProcess Process => _process;
 
         public string Name {
             get {
@@ -85,10 +79,6 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        internal long Id {
-            get {
-                return _identity;
-            }
-        }
+        internal long Id => _identity;
     }
 }

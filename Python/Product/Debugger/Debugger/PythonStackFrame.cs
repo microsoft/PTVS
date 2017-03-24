@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -155,29 +156,30 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Executes the given text against this stack frame.
         /// </summary>
-        /// <param name="text"></param>
-        public void ExecuteText(string text, Action<PythonEvaluationResult> completion) {
-            ExecuteText(text, PythonEvaluationResultReprKind.Normal, completion);
+        public Task ExecuteTextAsync(string text, Action<PythonEvaluationResult> completion, CancellationToken ct) {
+            return ExecuteTextAsync(text, PythonEvaluationResultReprKind.Normal, completion, ct);
         }
 
-        public void ExecuteText(string text, PythonEvaluationResultReprKind reprKind, Action<PythonEvaluationResult> completion) {
-            _thread.Process.ExecuteText(text, reprKind, this, completion);
+        public Task ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind, Action<PythonEvaluationResult> completion, CancellationToken ct) {
+            return _thread.Process.ExecuteTextAsync(text, reprKind, this, completion, ct);
         }
 
-        public Task<PythonEvaluationResult> ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind = PythonEvaluationResultReprKind.Normal) {
+        public async Task<PythonEvaluationResult> ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind = PythonEvaluationResultReprKind.Normal, CancellationToken ct = default(CancellationToken)) {
             var tcs = new TaskCompletionSource<PythonEvaluationResult>();
+            var cancellationRegistration = ct.Register(() => tcs.TrySetCanceled());
 
             EventHandler<ProcessExitedEventArgs> processExited = delegate {
                 tcs.TrySetCanceled();
             };
-            tcs.Task.ContinueWith(_ => _thread.Process.ProcessExited -= processExited);
+
             _thread.Process.ProcessExited += processExited;
-
-            ExecuteText(text, reprKind, result => {
-                tcs.TrySetResult(result);
-            });
-
-            return tcs.Task;
+            try {
+                await ExecuteTextAsync(text, reprKind, result => tcs.TrySetResult(result), ct);
+                return await tcs.Task;
+            } finally {
+                _thread.Process.ProcessExited -= processExited;
+                cancellationRegistration.Dispose();
+            }
         }
 
         /// <summary>
@@ -185,8 +187,8 @@ namespace Microsoft.PythonTools.Debugger {
         /// if the line was successfully set or false if the line number cannot be changed
         /// to this line.
         /// </summary>
-        public bool SetLineNumber(int lineNo) {
-            return _thread.Process.SetLineNumber(this, lineNo);
+        public Task<bool> SetLineNumber(int lineNo, CancellationToken ct) {
+            return _thread.Process.SetLineNumberAsync(this, lineNo, ct);
         }
 
         public string GetQualifiedFunctionName() {

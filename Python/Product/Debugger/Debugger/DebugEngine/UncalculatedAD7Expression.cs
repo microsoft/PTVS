@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -48,13 +49,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         //
         // This is primarily used for the immediate window which this engine does not currently support.
         int IDebugExpression2.EvaluateAsync(enum_EVALFLAGS dwFlags, IDebugEventCallback2 pExprCallback) {
-            _frame.StackFrame.ExecuteText(_expression, (obj) => {
+            TaskExtensions.RunSynchronouslyOnUIThread(ct => _frame.StackFrame.ExecuteTextAsync(_expression, (obj) => {
                 _frame.Engine.Send(
                     new AD7ExpressionEvaluationCompleteEvent(this, new AD7Property(_frame, obj, _writable)), 
                     AD7ExpressionEvaluationCompleteEvent.IID, 
                     _frame.Engine, 
                     _frame.Thread);
-            });
+            }, ct));
             return VSConstants.S_OK;
         }
 
@@ -62,10 +63,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         int IDebugExpression2.EvaluateSync(enum_EVALFLAGS dwFlags, uint dwTimeout, IDebugEventCallback2 pExprCallback, out IDebugProperty2 ppResult) {
             AutoResetEvent completion = new AutoResetEvent(false);
             PythonEvaluationResult result = null;
-            _frame.StackFrame.ExecuteText(_expression, (obj) => {
+
+            TaskExtensions.RunSynchronouslyOnUIThread(ct => _frame.StackFrame.ExecuteTextAsync(_expression, (obj) => {
                 result = obj;
                 completion.Set();
-            });
+            }, ct));
             
             while (!_frame.StackFrame.Thread.Process.HasExited && !completion.WaitOne(Math.Min((int)dwTimeout, 100))) {
                 if (dwTimeout <= 100) {
