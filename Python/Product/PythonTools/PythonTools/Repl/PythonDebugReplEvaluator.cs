@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (activeThreadId != null) {
                     AttachProcessAsync(engine.Process, engine).ContinueWith(t => {
                         ChangeActiveThread(activeThreadId.Value, false);
-                    });
+                    }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
                 }
             }
         }

@@ -838,7 +838,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             foreach (TaskCompletionSource<int> tcs in completions) {
-                tcs.SetResult(0);
+                tcs.TrySetResult(0);
             }
         }
 

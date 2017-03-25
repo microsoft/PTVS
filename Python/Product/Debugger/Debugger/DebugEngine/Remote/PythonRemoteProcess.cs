@@ -91,28 +91,30 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             var debugConn = new DebugConnection(stream);
             bool connected = false;
             try {
-                var connectedEvent = new AutoResetEvent(false);
-
                 string serverDebuggerName = string.Empty;
                 int serverDebuggerProtocolVersion = 0;
+                using (var connectedEvent = new AutoResetEvent(false)) {
+                    EventHandler<LDP.RemoteConnectedEvent> eventReceived = (object sender, LDP.RemoteConnectedEvent ea) => {
+                        serverDebuggerName = ea.debuggerName;
+                        serverDebuggerProtocolVersion = ea.debuggerProtocolVersion;
+                        try {
+                            connectedEvent.Set();
+                        } catch (ObjectDisposedException) {
+                        }
+                        debugConn.Authenticated();
+                    };
 
-                EventHandler<LDP.RemoteConnectedEvent> eventReceived = (object sender, LDP.RemoteConnectedEvent ea) => {
-                    serverDebuggerName = ea.debuggerName;
-                    serverDebuggerProtocolVersion = ea.debuggerProtocolVersion;
-                    connectedEvent.Set();
-                    debugConn.Authenticated();
-                };
-
-                // When the server accepts a connection, it sends an event and then waits for a request
-                debugConn.LegacyRemoteConnected += eventReceived;
-                try {
-                    debugConn.StartListening();
-                    bool received = connectedEvent.WaitOne(ConnectTimeoutMs);
-                    if (!received) {
-                        throw new ConnectionException(ConnErrorMessages.TimeOut);
+                    // When the server accepts a connection, it sends an event and then waits for a request
+                    debugConn.LegacyRemoteConnected += eventReceived;
+                    try {
+                        debugConn.StartListening();
+                        bool received = connectedEvent.WaitOne(ConnectTimeoutMs);
+                        if (!received) {
+                            throw new ConnectionException(ConnErrorMessages.TimeOut);
+                        }
+                    } finally {
+                        debugConn.LegacyRemoteConnected -= eventReceived;
                     }
-                } finally {
-                    debugConn.LegacyRemoteConnected -= eventReceived;
                 }
 
                 if (serverDebuggerName != DebuggerSignature) {

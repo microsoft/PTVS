@@ -101,26 +101,29 @@ namespace Microsoft.PythonTools.Debugger {
 
                 var debugConn = new DebugConnection(stream);
                 try {
-                    var connectedEvent = new AutoResetEvent(false);
-
                     string debugId = string.Empty;
                     var result = ConnErrorMessages.None;
-                    EventHandler<LDP.LocalConnectedEvent> eventReceived = (object sender, LDP.LocalConnectedEvent ea) => {
-                        result = (ConnErrorMessages)ea.result;
-                        debugId = ea.processGuid;
-                        connectedEvent.Set();
-                        debugConn.Authenticated();
-                    };
+                    using (var connectedEvent = new AutoResetEvent(false)) {
+                        EventHandler<LDP.LocalConnectedEvent> eventReceived = (object sender, LDP.LocalConnectedEvent ea) => {
+                            result = (ConnErrorMessages)ea.result;
+                            debugId = ea.processGuid;
+                            try {
+                                connectedEvent.Set();
+                            } catch (ObjectDisposedException) {
+                            }
+                            debugConn.Authenticated();
+                        };
 
-                    debugConn.LegacyLocalConnected += eventReceived;
-                    try {
-                        debugConn.StartListening();
-                        bool received = connectedEvent.WaitOne(ConnectTimeoutMs);
-                        if (!received) {
-                            throw new TimeoutException();
+                        debugConn.LegacyLocalConnected += eventReceived;
+                        try {
+                            debugConn.StartListening();
+                            bool received = connectedEvent.WaitOne(ConnectTimeoutMs);
+                            if (!received) {
+                                throw new TimeoutException();
+                            }
+                        } finally {
+                            debugConn.LegacyLocalConnected -= eventReceived;
                         }
-                    } finally {
-                        debugConn.LegacyLocalConnected -= eventReceived;
                     }
 
                     lock (_targets) {
