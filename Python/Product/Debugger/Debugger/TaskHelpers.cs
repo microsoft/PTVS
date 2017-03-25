@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
@@ -24,22 +23,16 @@ using static System.FormattableString;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Debugger {
-    class TaskExtensions {
+    static class TaskHelpers {
         private static readonly Lazy<IVsThreadedWaitDialogFactory> _twdf = new Lazy<IVsThreadedWaitDialogFactory>(() => {
-            var twdf = (IVsThreadedWaitDialogFactory)Package.GetGlobalService(typeof(SVsThreadedWaitDialogFactory));
-            if (twdf == null) {
-                var err = Invariant($"{nameof(SVsThreadedWaitDialogFactory)} is not available");
-                Trace.Fail(err);
-                throw new InvalidOperationException(err);
-            }
-            return twdf;
+            return (IVsThreadedWaitDialogFactory)Package.GetGlobalService(typeof(SVsThreadedWaitDialogFactory));
         });
 
         public static void RunSynchronouslyOnUIThread(Func<CancellationToken, Task> method, double delayToShowDialog = 2) {
             ThreadHelper.ThrowIfNotOnUIThread();
 
             using (var session = StartWaitDialog(delayToShowDialog)) {
-                var ct = session.UserCancellationToken;
+                var ct = session?.UserCancellationToken ?? default(CancellationToken);
                 ThreadHelper.JoinableTaskFactory.Run(() => method(ct));
             }
         }
@@ -47,7 +40,7 @@ namespace Microsoft.PythonTools.Debugger {
         public static T RunSynchronouslyOnUIThread<T>(Func<CancellationToken, Task<T>> method, double delayToShowDialog = 2) {
             T result;
             using (var session = StartWaitDialog(delayToShowDialog)) {
-                var ct = session.UserCancellationToken;
+                var ct = session?.UserCancellationToken ?? default(CancellationToken);
                 result = ThreadHelper.JoinableTaskFactory.Run(() => method(ct));
             }
 
@@ -55,8 +48,11 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static ThreadedWaitDialogHelper.Session StartWaitDialog(double delayToShowDialog) {
-            var initialProgress = new ThreadedWaitDialogProgressData(Strings.DebuggerInProgress, isCancelable: true);
-            return _twdf.Value.StartWaitDialog(null, initialProgress, TimeSpan.FromSeconds(delayToShowDialog));
+            return _twdf.Value?.StartWaitDialog(
+                null,
+                new ThreadedWaitDialogProgressData(Strings.DebuggerInProgress, isCancelable: true),
+                TimeSpan.FromSeconds(delayToShowDialog)
+            );
         }
     }
 }

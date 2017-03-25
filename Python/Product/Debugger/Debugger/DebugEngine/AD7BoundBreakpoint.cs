@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             if (!_deleted) {
                 _deleted = true;
-                TaskExtensions.RunSynchronouslyOnUIThread(ct => _breakpoint.RemoveAsync(ct));
+                TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.RemoveAsync(ct));
                 _pendingBreakpoint.OnBoundBreakpointDeleted(this);
                 _engine.BreakpointManager.RemoveBoundBreakpoint(_breakpoint);
             }
@@ -70,9 +70,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             bool enabled = fEnable == 0 ? false : true;
             if (_enabled != enabled) {
                 if (!enabled) {
-                    TaskExtensions.RunSynchronouslyOnUIThread(ct => _breakpoint.DisableAsync(ct));
+                    TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.DisableAsync(ct));
                 } else {
-                    TaskExtensions.RunSynchronouslyOnUIThread(ct => _breakpoint.AddAsync(ct));
+                    TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.AddAsync(ct));
                 }
             }
             _enabled = enabled;
@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugBoundBreakpoint2.SetCondition(BP_CONDITION bpCondition) {
-            TaskExtensions.RunSynchronouslyOnUIThread(ct => _breakpoint.SetConditionAsync(bpCondition.styleCondition.ToPython(), bpCondition.bstrCondition, ct));
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.SetConditionAsync(bpCondition.styleCondition.ToPython(), bpCondition.bstrCondition, ct));
             return VSConstants.S_OK;
         }
 
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 // remote debug type due to issues with communicating this command
                 pdwHitCount = 1;
             } else {
-                pdwHitCount = (uint)TaskExtensions.RunSynchronouslyOnUIThread(async ct => {
+                pdwHitCount = (uint)TaskHelpers.RunSynchronouslyOnUIThread(async ct => {
                     var timeoutSource = new CancellationTokenSource(remoteProcess != null ? 5000 : 1000);
                     var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token);
                     return await _breakpoint.GetHitCountAsync(linkedSource.Token);
@@ -128,12 +128,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugBoundBreakpoint2.SetHitCount(uint dwHitCount) {
-            TaskExtensions.RunSynchronouslyOnUIThread(ct => _breakpoint.SetHitCountAsync((int)dwHitCount, ct));
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.SetHitCountAsync((int)dwHitCount, ct));
             return VSConstants.S_OK;
         }
 
         int IDebugBoundBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount) {
-            TaskExtensions.RunSynchronouslyOnUIThread(ct => _breakpoint.SetPassCountAsync(bpPassCount.stylePassCount.ToPython(), (int)bpPassCount.dwPassCount, ct));
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.SetPassCountAsync(bpPassCount.stylePassCount.ToPython(), (int)bpPassCount.dwPassCount, ct));
             return VSConstants.S_OK;
         }
 

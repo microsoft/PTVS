@@ -154,7 +154,7 @@
     <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumDebug.cs" />
     <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumDebugProcesses.cs" />
     <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumDebugPrograms.cs" />
-    <Compile Include="Debugger\TaskExtensions.cs" />
+    <Compile Include="Debugger\TaskHelpers.cs" />
     <Compile Include="Debugger\ThreadEventArgs.cs" />
     <Compile Include="Debugger\PythonBreakpoint.cs" />
     <Compile Include="Debugger\Transports\DebuggerTransport.cs" />

@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
 
                         if (_enabled) {
-                            TaskExtensions.RunSynchronouslyOnUIThread(ct => bp.AddAsync(ct));
+                            TaskHelpers.RunSynchronouslyOnUIThread(ct => bp.AddAsync(ct));
                         }
 
                         return VSConstants.S_OK;
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
 
                         if (_enabled) {
-                            TaskExtensions.RunSynchronouslyOnUIThread(ct => bp.AddAsync(ct));
+                            TaskHelpers.RunSynchronouslyOnUIThread(ct => bp.AddAsync(ct));
                         }
 
                         return VSConstants.S_OK;

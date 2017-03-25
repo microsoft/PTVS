@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         //
         // This is primarily used for the immediate window which this engine does not currently support.
         int IDebugExpression2.EvaluateAsync(enum_EVALFLAGS dwFlags, IDebugEventCallback2 pExprCallback) {
-            TaskExtensions.RunSynchronouslyOnUIThread(ct => _frame.StackFrame.ExecuteTextAsync(_expression, (obj) => {
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _frame.StackFrame.ExecuteTextAsync(_expression, (obj) => {
                 _frame.Engine.Send(
                     new AD7ExpressionEvaluationCompleteEvent(this, new AD7Property(_frame, obj, _writable)), 
                     AD7ExpressionEvaluationCompleteEvent.IID, 
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             AutoResetEvent completion = new AutoResetEvent(false);
             PythonEvaluationResult result = null;
 
-            TaskExtensions.RunSynchronouslyOnUIThread(ct => _frame.StackFrame.ExecuteTextAsync(_expression, (obj) => {
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _frame.StackFrame.ExecuteTextAsync(_expression, (obj) => {
                 result = obj;
                 completion.Set();
             }, ct));

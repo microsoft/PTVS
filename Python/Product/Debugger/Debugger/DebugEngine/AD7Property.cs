@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public int EnumChildren(enum_DEBUGPROP_INFO_FLAGS dwFields, uint dwRadix, ref System.Guid guidFilter, enum_DBG_ATTRIB_FLAGS dwAttribFilter, string pszNameFilter, uint dwTimeout, out IEnumDebugPropertyInfo2 ppEnum) {
             ppEnum = null;
             try {
-                var children = TaskExtensions.RunSynchronouslyOnUIThread(ct => {
+                var children = TaskHelpers.RunSynchronouslyOnUIThread(ct => {
                     var timeoutSource = new CancellationTokenSource((int)dwTimeout);
                     var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token);
                     return _evalResult.GetChildrenAsync(linkedSource.Token);
@@ -187,7 +187,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // The debugger will call this when the user tries to edit the property's values in one of the debugger windows.
         public int SetValueAsString(string pszValue, uint dwRadix, uint dwTimeout) {
             try {
-                var result = TaskExtensions.RunSynchronouslyOnUIThread(async ct => {
+                var result = TaskHelpers.RunSynchronouslyOnUIThread(async ct => {
                     var timeoutSource = new CancellationTokenSource((int)dwTimeout);
                     var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token);
                     return await _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression + " = " + pszValue, ct: linkedSource.Token);
@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         public int GetStringCharLength(out uint pLen) {
-            var result = TaskExtensions.RunSynchronouslyOnUIThread(ct => _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression, PythonEvaluationResultReprKind.RawLen, ct));
+            var result = TaskHelpers.RunSynchronouslyOnUIThread(ct => _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression, PythonEvaluationResultReprKind.RawLen, ct));
             pLen = (uint)(result.ExceptionText != null ? result.ExceptionText.Length : result.Length); 
             return VSConstants.S_OK;
         }
@@ -232,7 +232,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 return VSConstants.S_OK;
             }
 
-            var result = TaskExtensions.RunSynchronouslyOnUIThread(ct => _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression, PythonEvaluationResultReprKind.Raw, ct));
+            var result = TaskHelpers.RunSynchronouslyOnUIThread(ct => _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression, PythonEvaluationResultReprKind.Raw, ct));
             var value = result.ExceptionText ?? result.StringRepr;
 
             pceltFetched = Math.Min(buflen, (uint)value.Length);

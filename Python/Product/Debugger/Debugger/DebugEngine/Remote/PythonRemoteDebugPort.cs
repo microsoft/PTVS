@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
-            var process = TaskExtensions.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, ct));
+            var process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, ct));
             if (process == null) {
                 ppEnum = null;
                 return VSConstants.E_FAIL;

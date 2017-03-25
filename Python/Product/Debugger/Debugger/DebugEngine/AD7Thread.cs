@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             var frame = (AD7StackFrame)stackFrame;
             var context = (AD7MemoryAddress)codeContext;
 
-            if (TaskExtensions.RunSynchronouslyOnUIThread(ct => frame.StackFrame.SetLineNumber((int)context.LineNumber + 1, ct))) {
+            if (TaskHelpers.RunSynchronouslyOnUIThread(ct => frame.StackFrame.SetLineNumber((int)context.LineNumber + 1, ct))) {
                 return VSConstants.S_OK;
             } else if (frame.StackFrame.Thread.Process.StoppedForException) {
                 return E_CANNOT_SET_NEXT_STATEMENT_ON_EXCEPTION;
