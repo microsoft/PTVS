@@ -198,6 +198,7 @@ namespace Microsoft.PythonTools.Debugger {
                         _connection.LegacyThreadExit -= OnLegacyThreadExit;
                         _connection.LegacyThreadFrameList -= OnLegacyThreadFrameList;
                         _connection.Dispose();
+                        _connection = null;
                     }
                     _process?.Dispose();
                 }
