@@ -33,23 +33,29 @@ namespace Microsoft.PythonTools.Debugger {
             _name = "";
         }
 
-        public Task StepIntoAsync(CancellationToken ct) =>
-            _process.SendStepIntoAsync(_identity, ct);
+        public Task StepIntoAsync(CancellationToken ct) {
+            return _process.SendStepIntoAsync(_identity, ct);
+        }
 
-        public Task StepOverAsync(CancellationToken ct) =>
-            _process.SendStepOverAsync(_identity, ct);
+        public Task StepOverAsync(CancellationToken ct) {
+            return _process.SendStepOverAsync(_identity, ct);
+        }
 
-        public Task StepOutAsync(CancellationToken ct) =>
-            _process.SendStepOutAsync(_identity, ct);
+        public Task StepOutAsync(CancellationToken ct) {
+            return _process.SendStepOutAsync(_identity, ct);
+        }
 
-        public Task ResumeAsync(CancellationToken ct) =>
-            _process.SendResumeThreadAsync(_identity, ct);
+        public Task ResumeAsync(CancellationToken ct) {
+            return _process.SendResumeThreadAsync(_identity, ct);
+        }
 
-        public Task AutoResumeAsync(CancellationToken ct) =>
-            _process.AutoResumeThread(_identity, ct);
+        public Task AutoResumeAsync(CancellationToken ct) {
+            return _process.AutoResumeThread(_identity, ct);
+        }
 
-        internal Task ClearSteppingStateAsync(CancellationToken ct) =>
-            _process.SendClearSteppingAsync(_identity, ct);
+        internal Task ClearSteppingStateAsync(CancellationToken ct) {
+            return _process.SendClearSteppingAsync(_identity, ct);
+        }
 
         public IList<PythonStackFrame> Frames {
             get {
