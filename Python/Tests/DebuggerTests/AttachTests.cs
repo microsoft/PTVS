@@ -361,7 +361,7 @@ int main(int argc, char* argv[]) {
     printf(""Executing\r\n"");
     PyEval_EvalCode(src, glb, loc);
 }";
-            await AttachTestAsync(hostCode);
+            await AttachTestTimeoutAsync(hostCode);
         }
 
         /// <summary>
@@ -643,10 +643,10 @@ int main(int argc, char* argv[]) {
     printf(""Executing\r\n"");
     PyEval_EvalCode(src, glb, loc);
 }";
-            await AttachTestAsync(hostCode);
+            await AttachTestTimeoutAsync(hostCode);
         }
 
-        private async Task AttachTestAsync(string hostCode) {
+        private async Task AttachTestTimeoutAsync(string hostCode) {
             var exe = CompileCode(hostCode);
 
             // start the test process w/ our handle
@@ -667,25 +667,36 @@ int main(int argc, char* argv[]) {
             p.BeginOutputReadLine();
 
             try {
+                bool isAttached = false;
+
                 // start the attach with the GIL held
-                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent attachStarted = new AutoResetEvent(false);
+                AutoResetEvent attachDone = new AutoResetEvent(false);
 
-                var proc = PythonProcess.Attach(p.Id);
-                try {
-                    bool isAttached = false;
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                        isAttached = false;
-                    };
-                    await proc.StartListeningAsync();
+                // We run the Attach and StartListeningAsync on a separate thread,
+                // because StartListeningAsync waits until debuggee has connected
+                // back (which it won't do until handle is set).
+                var task = Task.Run(async () =>
+                {
+                    var proc = PythonProcess.Attach(p.Id);
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            attachDone.Set();
+                            isAttached = false;
+                        };
 
-                    Assert.IsFalse(isAttached, "should not have attached yet"); // we should be blocked
-                    handle.Set();   // let the code start running
+                        attachStarted.Set();
+                        await proc.StartListeningAsync(10000);
+                    } finally {
+                        await DetachProcessAsync(proc);
+                    }
+                });
 
-                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
-                } finally {
-                    await DetachProcessAsync(proc);
-                }
+                Assert.IsTrue(attachStarted.WaitOne(10000), "Failed to start attaching within 10s");
+                Assert.IsFalse(isAttached, "should not have attached yet"); // we should be blocked
+                handle.Set();   // let the code start running
+
+                Assert.IsTrue(attachDone.WaitOne(10000), "Failed to attach within 10s");
             } finally {
                 Debug.WriteLine(String.Format("Process output: {0}", outRecv.Output.ToString()));
                 DisposeProcess(p);

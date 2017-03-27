@@ -399,10 +399,14 @@ namespace Microsoft.PythonTools.Debugger {
 
         /// <summary>
         /// Starts listening for debugger communication.  Can be called after Start
-        /// to give time to attach to debugger events.
+        /// to give time to attach to debugger events.  This waits for the debuggee
+        /// to connect to the socket.
         /// </summary>
-        public async Task StartListeningAsync() {
-            _connectedEvent.WaitOne();
+        public async Task StartListeningAsync(int timeOutMs = 20000) {
+            if (!_connectedEvent.WaitOne(timeOutMs)) {
+                throw new ConnectionException(ConnErrorMessages.TimeOut);
+            }
+
             _connection?.WaitForAuthentication();
 
             if (_breakOn != null) {
