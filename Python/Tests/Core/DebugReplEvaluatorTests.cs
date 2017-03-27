@@ -22,10 +22,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using DebuggerTests;
 using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools.Infrastructure;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -373,8 +373,7 @@ NameError: name 'does_not_exist' is not defined
         }
 
         protected static CancellationToken TimeoutToken() {
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            return cts.Token;
+            return CancellationTokens.After5s;
         }
     }
 

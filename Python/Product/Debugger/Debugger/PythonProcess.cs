@@ -1049,8 +1049,7 @@ namespace Microsoft.PythonTools.Debugger {
                 return false;
             }
 
-            var timeoutSource = new CancellationTokenSource(2000);
-            var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token);
+            var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, CancellationTokens.After2s);
 
             var requestTask = SendDebugRequestAsync(new LDP.SetLineNumberRequest() {
                 threadId = pythonStackFrame.Thread.Id,

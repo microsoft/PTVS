@@ -783,7 +783,7 @@ int main(int argc, char* argv[]) {
 
                     var frame = thread.Frames[0];
                     Assert.AreEqual("False", frame.ExecuteTextAsync("attached").Result.StringRepr);
-                    await frame.ExecuteTextAsync("attached = True", ct: TimeoutToken(20000));
+                    await frame.ExecuteTextAsync("attached = True", ct: CancellationTokens.After15s);
 
                     await proc.ResumeAsync(TimeoutToken());
                     WaitForExit(proc);

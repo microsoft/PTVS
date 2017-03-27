@@ -23,6 +23,7 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -688,9 +689,8 @@ namespace DebuggerTests {
             throw new NotImplementedException();
         }
 
-        protected static CancellationToken TimeoutToken(int timeOutMs = 5000) {
-            var cts = new CancellationTokenSource(timeOutMs);
-            return cts.Token;
+        protected static CancellationToken TimeoutToken() {
+            return CancellationTokens.After5s;
         }
     }
 }

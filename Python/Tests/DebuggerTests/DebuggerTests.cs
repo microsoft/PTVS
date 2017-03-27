@@ -234,12 +234,12 @@ namespace DebuggerTests {
 
                 if (children == null) {
                     Assert.IsFalse(evalRes.IsExpandable, "result should not be expandable");
-                    var childrenReceived = await evalRes.GetChildrenAsync(new CancellationTokenSource(20000).Token);
+                    var childrenReceived = await evalRes.GetChildrenAsync(CancellationTokens.After15s);
                     Assert.IsNull(childrenReceived, "result should not have children");
                 } else {
                     Assert.IsNull(evalRes.ExceptionText, "exception while evaluating: " + evalRes.ExceptionText);
                     Assert.IsTrue(evalRes.IsExpandable, "result is not expandable");
-                    var childrenReceived = (await evalRes.GetChildrenAsync(new CancellationTokenSource(20000).Token)).ToList();
+                    var childrenReceived = (await evalRes.GetChildrenAsync(CancellationTokens.After15s)).ToList();
 
                     Console.WriteLine("{0} children received:", childrenReceived.Count);
                     foreach (var childReceived in childrenReceived) {
@@ -554,7 +554,7 @@ namespace DebuggerTests {
 
                     Assert.AreEqual(frameName, frames[frameIndex].FunctionName);
 
-                    obj = await frames[frameIndex].ExecuteTextAsync(eval.Expression, reprKind, TimeoutToken(10000));
+                    obj = await frames[frameIndex].ExecuteTextAsync(eval.Expression, reprKind, CancellationTokens.After15s);
 
                     eval.Validate(obj);
                 }
@@ -586,7 +586,7 @@ namespace DebuggerTests {
                 var frames = thread.Frames;
 
                 var obj = frames[0].Locals.First(x => x.Expression == "x");
-                var children = await obj.GetChildrenAsync(new CancellationTokenSource(2000).Token);
+                var children = await obj.GetChildrenAsync(CancellationTokens.After2s);
                 int extraCount = 0;
                 if (this is DebuggerTestsIpy) {
                     extraCount += 2;
