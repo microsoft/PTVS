@@ -17,6 +17,7 @@
 using System;
 using System.Text;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -111,8 +112,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             ppEnum = null;
             try {
                 var children = TaskHelpers.RunSynchronouslyOnUIThread(ct => {
-                    var timeoutSource = new CancellationTokenSource((int)dwTimeout);
-                    var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token);
+                    var timeoutToken = CancellationTokens.GetToken(TimeSpan.FromMilliseconds(dwTimeout));
+                    var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutToken);
                     return _evalResult.GetChildrenAsync(linkedSource.Token);
                 });
 
@@ -188,8 +189,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public int SetValueAsString(string pszValue, uint dwRadix, uint dwTimeout) {
             try {
                 var result = TaskHelpers.RunSynchronouslyOnUIThread(async ct => {
-                    var timeoutSource = new CancellationTokenSource((int)dwTimeout);
-                    var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token);
+                    var timeoutToken = CancellationTokens.GetToken(TimeSpan.FromMilliseconds(dwTimeout));
+                    var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutToken);
                     return await _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression + " = " + pszValue, ct: linkedSource.Token);
                 });
                 return VSConstants.S_OK;

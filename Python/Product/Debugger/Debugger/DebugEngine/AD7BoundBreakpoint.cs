@@ -17,6 +17,7 @@
 using System.Diagnostics;
 using System.Threading;
 using Microsoft.PythonTools.Debugger.Remote;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -118,8 +119,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 pdwHitCount = 1;
             } else {
                 pdwHitCount = (uint)TaskHelpers.RunSynchronouslyOnUIThread(async ct => {
-                    var timeoutSource = new CancellationTokenSource(remoteProcess != null ? 5000 : 1000);
-                    var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutSource.Token);
+                    var timeoutToken = remoteProcess != null ? CancellationTokens.After5s : CancellationTokens.After1s;
+                    var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutToken);
                     return await _breakpoint.GetHitCountAsync(linkedSource.Token);
                 });
             }

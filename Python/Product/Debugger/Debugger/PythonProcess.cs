@@ -953,7 +953,7 @@ namespace Microsoft.PythonTools.Debugger {
             await EnumChildrenAsync(text, pythonStackFrame, (children) => {
                 res = children;
                 childrenEnumed.Set();
-            }).ConfigureAwait(false);
+            }, ct).ConfigureAwait(false);
 
             while (!HasExited && !childrenEnumed.WaitOne(100)) {
                 ct.ThrowIfCancellationRequested();
@@ -962,7 +962,7 @@ namespace Microsoft.PythonTools.Debugger {
             return res;
         }
 
-        private async Task EnumChildrenAsync(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult[]> completion) {
+        private async Task EnumChildrenAsync(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult[]> completion, CancellationToken ct) {
             int executeId = _ids.Allocate();
             lock (_pendingChildEnums) {
                 _pendingChildEnums[executeId] = new ChildrenInfo(completion, text, pythonStackFrame);
@@ -973,7 +973,7 @@ namespace Microsoft.PythonTools.Debugger {
                 threadId = pythonStackFrame.Thread.Id,
                 frameId = pythonStackFrame.FrameId,
                 frameKind = ToLDPFrameKind(pythonStackFrame.Kind),
-            });
+            }, ct);
         }
 
         private void OnLegacyEnumChildren(object sender, LDP.EnumChildrenEvent e) {
