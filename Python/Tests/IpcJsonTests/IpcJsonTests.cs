@@ -29,7 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace DebuggerTests {
+namespace IpcJsonTests {
     [TestClass]
     public class IpcJsonTests {
         private Connection _client;
@@ -256,6 +256,8 @@ namespace DebuggerTests {
         }
     }
 
+#pragma warning disable 0649
+
     static class TestDataProtocol {
         public static readonly Dictionary<string, Type> RegisteredTypes = CollectCommands();
 
@@ -309,4 +311,5 @@ namespace DebuggerTests {
             public override string name => Name;
         }
     }
+#pragma warning restore 0649
 }

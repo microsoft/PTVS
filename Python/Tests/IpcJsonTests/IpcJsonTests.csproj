@@ -29,11 +29,11 @@
     <ProductVersion>
     </ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{E50E1B02-257C-4E10-AC1C-5ED36B48EE40}</ProjectGuid>
+    <ProjectGuid>{BE9F11BF-EDD4-4138-A8AD-C8126BF2C77F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DebuggerTests</RootNamespace>
-    <AssemblyName>DebuggerTests</AssemblyName>
+    <RootNamespace>IpcJsonTests</RootNamespace>
+    <AssemblyName>IpcJsonTests</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
@@ -52,10 +52,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AttachTests.cs" />
-    <Compile Include="BaseDebuggerTests.cs" />
-    <Compile Include="DebuggerTests.cs" />
-    <Compile Include="DebugExtensions.cs" />
+    <Compile Include="IpcJsonTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

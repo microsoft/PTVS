@@ -15,6 +15,7 @@ ASSEMBLIES = sorted([
     "DjangoTests",
     "DjangoUITests",
     "FastCgiTest",
+    "IpcJsonTests",
     "IronPythonTests",
     "Microsoft.IronPythonTools.Resolver",
     "Microsoft.PythonTools",
