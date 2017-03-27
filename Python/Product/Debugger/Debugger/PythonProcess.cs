@@ -1049,30 +1049,27 @@ namespace Microsoft.PythonTools.Debugger {
                 return false;
             }
 
-            var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, CancellationTokens.After2s);
-
-            var requestTask = SendDebugRequestAsync(new LDP.SetLineNumberRequest() {
-                threadId = pythonStackFrame.Thread.Id,
-                frameId = pythonStackFrame.FrameId,
-                lineNo = lineNo,
-            }, linkedSource.Token);
-
             try {
-                return await requestTask.ContinueWith(t => {
-                    var response = t.Result;
-                    if (response.result == 0) {
-                        return false;
-                    }
+                var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, CancellationTokens.After2s);
 
-                    var frame = _threads[response.threadId].Frames.FirstOrDefault();
-                    if (frame != null) {
-                        frame.LineNo = response.newLineNo;
-                    } else {
-                        Debug.Fail("SetLineNumber result received, but there is no frame to update");
-                    }
+                var response = await SendDebugRequestAsync(new LDP.SetLineNumberRequest() {
+                    threadId = pythonStackFrame.Thread.Id,
+                    frameId = pythonStackFrame.FrameId,
+                    lineNo = lineNo,
+                }, linkedSource.Token);
 
-                    return true;
-                });
+                if (response.result == 0) {
+                    return false;
+                }
+
+                var frame = _threads[response.threadId].Frames.FirstOrDefault();
+                if (frame != null) {
+                    frame.LineNo = response.newLineNo;
+                } else {
+                    Debug.Fail("SetLineNumber result received, but there is no frame to update");
+                }
+
+                return true;
             } catch (OperationCanceledException) {
                 return false;
             }
