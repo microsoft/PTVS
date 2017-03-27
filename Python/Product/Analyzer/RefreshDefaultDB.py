@@ -23,7 +23,6 @@ __version__ = "3.0.0.0"
 #  3. Run a full analysis against CPython 2.7
 #  4. Copy unittest.idb and unittest.case.idb to CompletionDB
 #  5. Rerun "ipy.exe RefreshDefaultDB.py" in Python\Product\PythonTools
-#  6. Undo unnecessary edits (tfpt uu)
 #
 
 import os
@@ -33,8 +32,6 @@ try:
 except ImportError:
     from pickle import load, dump
 
-# Add Analyzer to the search path so we can import PythonScraper
-sys.path.append(os.path.join(os.path.split(os.path.split(os.path.abspath(__file__))[0])[0], "Analyzer"))
 from PythonScraper import *
 
 def replace_tuple_contents(type_name, orig, orig_name):

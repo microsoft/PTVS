@@ -125,15 +125,6 @@ import sys
 import traceback
 import types
 
-# The version number should match the value of
-# PythonTypeDatabase.CurrentVersion in
-#  \Release\Product\Python\Analysis\Interpreter\PythonTypeDatabase.cs
-#
-# To update the baseline DB, see Python\Product\PythonTools\RefreshDefaultDB.py
-#
-CURRENT_DATABASE_VERSION = '25'
-
-
 # The values in KNOWN_METHOD_TYPES and KNOWN_FUNCTION_TYPES are used when
 # detecting the types of members.  The names are ('module.name', 'type.name')
 # pairs, matching the contents of a typeref.
