@@ -495,14 +495,6 @@ namespace Microsoft.PythonTools.Debugger {
             public ThreadFrameItem[] threadFrames;
         }
 
-        public sealed class InternalErrorEvent : Event {
-            public const string Name = "legacyInternalError";
-
-            public override string name => Name;
-
-            public string output;
-        }
-
         //////////////////////////////////////////////////////////////////////
         /// Protocol types
         //////////////////////////////////////////////////////////////////////

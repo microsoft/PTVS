@@ -66,7 +66,6 @@ namespace Microsoft.PythonTools.Debugger {
         public event EventHandler<LDP.EnumChildrenEvent> LegacyEnumChildren;
         public event EventHandler<LDP.ThreadFrameListEvent> LegacyThreadFrameList;
         public event EventHandler<LDP.RemoteConnectedEvent> LegacyRemoteConnected;
-        public event EventHandler<LDP.InternalErrorEvent> LegacyInternalError;
 
         public DebugConnection(Stream stream) {
             _stream = stream;
@@ -252,9 +251,6 @@ namespace Microsoft.PythonTools.Debugger {
                         break;
                     case LDP.ThreadExitEvent.Name:
                         LegacyThreadExit?.Invoke(this, (LDP.ThreadExitEvent)e.Event);
-                        break;
-                    case LDP.InternalErrorEvent.Name:
-                        LegacyInternalError?.Invoke(this, (LDP.InternalErrorEvent)e.Event);
                         break;
                     default:
                         Debug.Fail("Unknown event: {0}".FormatUI(e.Event.name));

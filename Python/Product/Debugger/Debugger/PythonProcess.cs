@@ -197,7 +197,6 @@ namespace Microsoft.PythonTools.Debugger {
                         _connection.LegacyThreadCreate -= OnLegacyThreadCreate;
                         _connection.LegacyThreadExit -= OnLegacyThreadExit;
                         _connection.LegacyThreadFrameList -= OnLegacyThreadFrameList;
-                        _connection.LegacyInternalError -= OnLegacyInternalError;
                         _connection.Dispose();
                     }
                     _process?.Dispose();
@@ -380,7 +379,6 @@ namespace Microsoft.PythonTools.Debugger {
                 _connection.LegacyThreadCreate += OnLegacyThreadCreate;
                 _connection.LegacyThreadExit += OnLegacyThreadExit;
                 _connection.LegacyThreadFrameList += OnLegacyThreadFrameList;
-                _connection.LegacyInternalError += OnLegacyInternalError;
 
                 // This must be done under the lock so that any handlers that are added after we assigned _connection
                 // above won't get called twice, once from Connected add handler, and the second time below. 
@@ -715,14 +713,6 @@ namespace Microsoft.PythonTools.Debugger {
                 // The process waits for this request with short timeout before terminating
                 // If the process has terminated, we expect an exception
             }
-        }
-
-        private void OnLegacyInternalError(object sender, LDP.InternalErrorEvent e) {
-            // This event is sent when an internal error occurs
-            // on python side while processing a request.
-            // Request handlers should probably catch errors and send them back in the response
-            // instead of letting it propagate up.
-            Debug.Fail(e.output);
         }
 
         internal async Task SendStepOutAsync(long threadId, CancellationToken ct) {

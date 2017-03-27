@@ -49,6 +49,7 @@ SKIP_TB_PREFIXES = [
     os.path.normcase(os.path.dirname(os.path.abspath(__file__)))
 ]
 
+class InvalidHeaderError(Exception): pass
 
 class SocketIO(object):
     def __init__(self, *args, **kwargs):
@@ -109,7 +110,7 @@ class SocketIO(object):
             if len(parts) == 2:
                 headers[parts[0]] = parts[1]
             else:
-                raise NotImplementedError("Malformed header, expected 'name: value'\n{0}".format(line))
+                raise InvalidHeaderError("Malformed header, expected 'name: value'\n{0}".format(line))
             line = self._buffered_read_line_as_utf8()
 
         # validate headers
@@ -117,9 +118,9 @@ class SocketIO(object):
             length_text = headers['Content-Length']
             length = int(length_text)
         except NameError:
-            raise NotImplementedError('Content-Length not specified on request')
+            raise InvalidHeaderError('Content-Length not specified on request')
         except KeyError:
-            raise NotImplementedError("Invalid Content-Length: {0}".format(length_text))
+            raise InvalidHeaderError("Invalid Content-Length: {0}".format(length_text))
 
         # read content
         content = self._buffered_read_as_utf8(length)
@@ -221,7 +222,7 @@ class IpcChannel(object):
             raise
         except Exception:
             _trace('Error ', traceback.format_exc)
-            self.on_internal_error(traceback.format_exc())
+            traceback.print_exc()
 
         _trace('self.__exit is ', self.__exit)
         return self.__exit
@@ -250,12 +251,6 @@ class IpcChannel(object):
 
     def on_event(self, msg):
         # this class is only used for server side only for now
-        raise NotImplementedError
-
-    def on_internal_error(self, output):
-        # implement this in your derived class to send an internal error
-        # using an appropriate event defined by your custom protocol
-        print('on_internal_error must be implemented in derived class')
         raise NotImplementedError
 
     def on_invalid_request(self, request, args):

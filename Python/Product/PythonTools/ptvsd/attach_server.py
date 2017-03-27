@@ -261,12 +261,6 @@ class AttachLoop(vsipc.SocketIO, vsipc.IpcChannel):
         if self.__owned_socket:
             self.__owned_socket.close()
 
-    def on_internal_error(self, output):
-        self.send_event(
-            name='legacyInternalError',
-            output=output,
-        )
-
     def on_legacyRemoteDebuggerAuthenticate(self, request, args):
         debugger_name = args['debuggerName']
         protocol_version = args['debuggerProtocolVersion']
