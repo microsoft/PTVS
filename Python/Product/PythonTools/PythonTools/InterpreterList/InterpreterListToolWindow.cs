@@ -226,6 +226,9 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void List_ViewCreated(object sender, EnvironmentViewEventArgs e) {
             var view = e.View;
+            if (view.Factory == null) {
+                return;
+            }
 
             try {
                 var pep = new PipExtensionProvider(view.Factory);
