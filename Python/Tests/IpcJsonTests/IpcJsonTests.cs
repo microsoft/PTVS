@@ -256,8 +256,6 @@ namespace IpcJsonTests {
         }
     }
 
-#pragma warning disable 0649
-
     static class TestDataProtocol {
         public static readonly Dictionary<string, Type> RegisteredTypes = CollectCommands();
 
@@ -278,6 +276,8 @@ namespace IpcJsonTests {
             }
             return all;
         }
+
+#pragma warning disable 0649 // Field 'field' is never assigned to, and will always have its default value 'value'
 
         public sealed class TestRequest : Request<TestResponse> {
             public const string Command = "testRequest";
@@ -310,6 +310,8 @@ namespace IpcJsonTests {
 
             public override string name => Name;
         }
-    }
+
 #pragma warning restore 0649
+
+    }
 }
