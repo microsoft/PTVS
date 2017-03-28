@@ -461,7 +461,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Show the Output Window when &installing or removing packages]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Mostra la f&inestra di output durante l'installazione o la rimozione di pacchetti]]></Val>
+            <Val><![CDATA[Mostra la fi&nestra di output durante l'installazione o la rimozione di pacchetti]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -2662,7 +2662,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Issues and suggestions]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Problem&i e suggerimenti]]></Val>
+              <Val><![CDATA[Proble&mi e suggerimenti]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3082,7 +3082,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Import coverage file...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Importa file di code coverage...]]></Val>
+              <Val><![CDATA[Importa &file di code coverage...]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3112,7 +3112,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Interactive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Finestra P&ython interattivo]]></Val>
+              <Val><![CDATA[Finestra Pyth&on interattivo]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3172,7 +3172,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Debug Interactive]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Debug interattivo P&ython]]></Val>
+              <Val><![CDATA[Debug interattivo Py&thon]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -6553,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6589,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
