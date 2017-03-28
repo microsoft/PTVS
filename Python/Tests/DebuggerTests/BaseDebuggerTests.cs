@@ -343,7 +343,16 @@ namespace DebuggerTests {
                                     allBreakpointsHit.SetResult(true);
                                 }
                             }
-                            await process.ResumeAsync(TimeoutToken());
+
+                            try {
+                                await process.ResumeAsync(TimeoutToken());
+                            } catch (TaskCanceledException) {
+                                // If we don't wait for exit, the Terminate() call
+                                // will cause ResumeAsync to be canceled.
+                                if (WaitForExit) {
+                                    throw;
+                                }
+                            }
                         } catch (Exception ex) {
                             backgroundException.TrySetException(ex);
                         }
