@@ -62,6 +62,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void SetAnalyzer(ITextBuffer textBuffer, VsProjectAnalyzer analyzer) {
+            if (textBuffer == null) {
+                throw new ArgumentNullException(nameof(textBuffer));
+            }
+
+            if (analyzer == null) {
+                textBuffer.Properties.RemoveProperty(typeof(VsProjectAnalyzer));
+                return;
+            }
+
             textBuffer.Properties[typeof(VsProjectAnalyzer)] = analyzer;
 
             TaskCompletionSource<object> tcs;
@@ -74,8 +83,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets the analysis entry for the given view and buffer.
         /// 
-        /// For files on disk this is pretty easy - we analyze each file on it's own in a buffer parser.  
-        /// Therefore we map filename -> analyzer and then get the analysis from teh analyzer.  If we
+        /// For files on disk this is pretty easy - we analyze each file on it's own in a buffer parser.
+        /// Therefore we map filename -> analyzer and then get the analysis from the analyzer.  If we
         /// determine an analyzer but the file isn't loaded into it for some reason this would return null.
         /// We can also apply some policy to buffers depending upon the view that they're hosted in.  For
         /// example if a buffer is outside of any projects, but hosted in a difference view with a buffer
@@ -93,13 +102,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var vsAnalyzer = analyzer as VsProjectAnalyzer;
-            if (vsAnalyzer == null) {
-                entry = null;
-                return false;
+            if (vsAnalyzer != null) {
+                entry = vsAnalyzer.GetAnalysisEntryFromPath(filename);
+                return entry != null;
             }
 
-            entry = vsAnalyzer.GetAnalysisEntryFromPath(filename);
-            return entry != null;
+            entry = null;
+            return false;
         }
 
         /// <summary>
@@ -135,9 +144,21 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region IAnalysisEntryService members
 
+        /// <summary>
+        /// Returns the default analyzer for the Visual Studio session. Must be called from
+        /// the UI thread.
+        /// </summary>
         public ProjectAnalyzer DefaultAnalyzer => _site.GetPythonToolsService().DefaultAnalyzer;
 
+        /// <summary>
+        /// Returns a task that will be completed when an analyzer is assigned to the text buffer.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
         public Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken) {
+            if (textBuffer == null) {
+                throw new ArgumentNullException(nameof(textBuffer));
+            }
+
             if (textBuffer.Properties.ContainsProperty(typeof(VsProjectAnalyzer))) {
                 return Task.FromResult<object>(null);
             }
@@ -148,11 +169,28 @@ namespace Microsoft.PythonTools.Intellisense {
             ).Task;
         }
 
+        /// <summary>
+        /// Returns a task that will be completed when an analyzer is assigned to the text view.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
         public Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken) {
+            if (textView == null) {
+                throw new ArgumentNullException(nameof(textView));
+            }
+
             return WaitForAnalyzerAsync(textView.TextBuffer, cancellationToken);
         }
 
+        /// <summary>
+        /// Tries to get the analyzer and filename of the specified text buffer.
+        /// </summary>
+        /// <returns>True if an analyzer and filename are found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
         public bool TryGetAnalyzer(ITextBuffer textBuffer, out ProjectAnalyzer analyzer, out string filename) {
+            if (textBuffer == null) {
+                throw new ArgumentNullException(nameof(textBuffer));
+            }
+            
             // If we have set an analyzer explicitly, return that
             analyzer = null;
             if (textBuffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer)) {
@@ -173,7 +211,18 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
+        /// <summary>
+        /// Tries to get the analyzer and filename of the specified text view. This is
+        /// equivalent to using the view's default text buffer, with some added checks
+        /// for non-standard editors.
+        /// </summary>
+        /// <returns>True if an analyzer and filename are found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
         public bool TryGetAnalyzer(ITextView textView, out ProjectAnalyzer analyzer, out string filename) {
+            if (textView == null) {
+                throw new ArgumentNullException(nameof(textView));
+            }
+
             // Try to get the analyzer from the main text buffer
             if (TryGetAnalyzer(textView.TextBuffer, out analyzer, out filename)) {
                 return true;
