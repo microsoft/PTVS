@@ -70,6 +70,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public static int GetId(IProjectEntry node) {
+            if (node == null) {
+                return -1;
+            }
+
             return (int)node.Properties[_idKey];
         }
 

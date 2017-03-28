@@ -1835,7 +1835,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                fileId = ProjectEntryMap.GetId(pyItem);
+                fileId = ProjectEntryMap.GetId(item);
                 return item;
             }
 
