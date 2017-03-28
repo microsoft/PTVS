@@ -173,7 +173,7 @@
         <Str Cat="Text">
           <Val><![CDATA[I_nterpreter Path:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ścieżka i_nterpretera:]]></Val>
+            <Val><![CDATA[Ścieżka in_terpretera:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -236,7 +236,7 @@
         <Str Cat="Text">
           <Val><![CDATA[S_tandalone script]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Skrypt _autonomiczny]]></Val>
+            <Val><![CDATA[_Skrypt autonomiczny]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -478,7 +478,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Launch &Python Profiling...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Uruchom profilowanie kodu &Python...]]></Val>
+              <Val><![CDATA[Uruchom pro&filowanie kodu Python...]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -760,7 +760,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17061.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -796,7 +796,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17061.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

@@ -38,7 +38,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Color &names based on types]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[依類型區分的色彩名稱(&N)]]></Val>
+            <Val><![CDATA[根據類型為名稱上色(&N)]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -6553,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6589,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

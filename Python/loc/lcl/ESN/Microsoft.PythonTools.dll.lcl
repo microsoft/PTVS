@@ -50,7 +50,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Committed by &typing the following characters:]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Confirmado al &escribir los caracteres siguientes:]]></Val>
+            <Val><![CDATA[Confirmado al escri&bir los caracteres siguientes:]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -74,7 +74,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Enter commits current completion]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Entrar confirma la finalización actual]]></Val>
+            <Val><![CDATA[Entrar confirma la finali&zación actual]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -260,7 +260,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Wait for input when process exits abnormally]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Esperar a la entrada cuando el proceso termine de forma anómala]]></Val>
+            <Val><![CDATA[Esperar a la entrada cuando el proceso &termine de forma anómala]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -461,7 +461,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Show the Output Window when &installing or removing packages]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Mostrar la Ventana de salida al &instalar o desinstalar paquetes]]></Val>
+            <Val><![CDATA[Mostrar la &Ventana de salida al instalar o desinstalar paquetes]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -587,7 +587,7 @@
         <Str Cat="Radio Button">
           <Val><![CDATA[&Evaluate all expressions]]></Val>
           <Tgt Cat="Radio Button" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Evaluar todas las expresiones]]></Val>
+            <Val><![CDATA[Evaluar &todas las expresiones]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -6094,6 +6094,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";UnableToReadVerbosity" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to read build verbosity setting.]D;]A;]D;]A;{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[No se puede leer el valor de los detalles de la compilación.]D;]A;]D;]A;{0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";UnableToRemoveFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The file does not exist on disk but is present in your project and cannot be removed.  Please remove the item from the project before attempting to rename an item to a filename of the same name.]]></Val>
@@ -6544,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6580,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

@@ -38,7 +38,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Color &names based on types]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Türlerine göre renk &adları]]></Val>
+            <Val><![CDATA[Türlerine göre re&nk adları]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -50,7 +50,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Committed by &typing the following characters:]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Aşağıdaki karakterler &yazılarak işlendi:]]></Val>
+            <Val><![CDATA[Aşağıdaki karak&terler yazılarak işlendi:]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -74,7 +74,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Enter commits current completion]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Enter'a basmak geçerli tamamlanmayı işler]]></Val>
+            <Val><![CDATA[Enter'a basmak geçerli ta&mamlanmayı işler]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -134,7 +134,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Enter &outlining mode when files open]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Dosyalar açıldığında &anahat moduna gir]]></Val>
+            <Val><![CDATA[Dosyalar açıldığında anahat moduna &gir]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -146,7 +146,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Paste removes REPL prompts]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Yapıştırma REPL istemlerini kaldırır]]></Val>
+            <Val><![CDATA[Yapıştırma RE&PL istemlerini kaldırır]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -236,7 +236,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Prompt before running when errors are present]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Hatalar olduğunda çalıştırmadan önce &sor]]></Val>
+            <Val><![CDATA[Hatalar &olduğunda çalıştırmadan önce sor]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -386,7 +386,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Ignore system-wide PYTHONPATH variables]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sistem genelinde PYTHONPATH değişkenlerini &yoksay]]></Val>
+            <Val><![CDATA[Sistem genelinde PYTHONPATH değişkenlerin&i yoksay]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -461,7 +461,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Show the Output Window when &installing or removing packages]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Paketleri &yüklerken veya kaldırırken Çıkış Penceresi'ni göster]]></Val>
+            <Val><![CDATA[Paketl&eri yüklerken veya kaldırırken Çıkış Penceresi'ni göster]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -620,7 +620,7 @@
         <Str Cat="Radio Button">
           <Val><![CDATA[Only evaluate expressions without function &calls]]></Val>
           <Tgt Cat="Radio Button" Stat="Loc" Orig="New">
-            <Val><![CDATA[Yalnızca işlev ç&ağrıları olmayan ifadeleri değerlendir]]></Val>
+            <Val><![CDATA[Yal&nızca işlev çağrıları olmayan ifadeleri değerlendir]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -644,7 +644,7 @@
         <Str Cat="Radio Button">
           <Val><![CDATA[&Never evaluate expressions]]></Val>
           <Tgt Cat="Radio Button" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Asla ifadeleri değerlendirme]]></Val>
+            <Val><![CDATA[Asla ifadel&eri değerlendirme]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -758,7 +758,7 @@
         <Str Cat="Edit Box">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Oluşturulan işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -779,7 +779,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Oluşturulan işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1361,7 +1361,7 @@
         <Str Cat="Edit Box">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Oluşturulan işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1382,7 +1382,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Oluşturulan işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1430,7 +1430,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[&Interpreter Path:]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Yorumlayıcı Yolu:]]></Val>
+            <Val><![CDATA[Yoruml&ayıcı Yolu:]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -3112,7 +3112,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Interactive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Etkileşimli P&ython Penceresi]]></Val>
+              <Val><![CDATA[Etkileşiml&i Python Penceresi]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -6553,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6589,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

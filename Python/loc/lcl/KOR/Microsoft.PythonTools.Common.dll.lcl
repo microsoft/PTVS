@@ -1436,7 +1436,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Steps over the next function call.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[다음 함수 호출을 프로시저 단위로 실행합니다.]]></Val>
+            <Val><![CDATA[다음 함수 호출을 건너뜁니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5044,7 +5044,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5080,7 +5080,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

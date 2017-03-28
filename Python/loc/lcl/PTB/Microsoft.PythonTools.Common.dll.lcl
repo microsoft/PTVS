@@ -1709,7 +1709,7 @@
         <Str Cat="Text">
           <Val><![CDATA[C_lose]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Fe_char]]></Val>
+            <Val><![CDATA[_Fechar]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2735,7 +2735,7 @@
         <Str Cat="Text">
           <Val><![CDATA[_Finish]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[_Concluir]]></Val>
+            <Val><![CDATA[Co_ncluir]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5050,7 +5050,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17061.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5086,7 +5086,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17061.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
