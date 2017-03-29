@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly object _eventHandlingLock = new object();
         private readonly ConcurrentQueue<EventReceivedEventArgs> _eventsPending = new ConcurrentQueue<EventReceivedEventArgs>();
         private readonly AutoResetEvent _eventsPendingWakeUp = new AutoResetEvent(false);
-        private readonly AutoResetEvent _listeningReadyEvent = new AutoResetEvent(false);
+        private readonly ManualResetEventSlim _listeningReadyEvent = new ManualResetEventSlim(false);
         private bool _isListening;
         private bool _isAuthenticated;
         private bool _isPaused;
@@ -84,8 +84,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         /// <summary>
-        /// Starts listening for debugger communication.  Can be called after Start
-        /// to give time to attach to debugger events.
+        /// Starts listening for debugger messages.
         /// </summary>
         public void StartListening() {
             _eventThread = new Thread(EventHandlingThread);
@@ -96,14 +95,7 @@ namespace Microsoft.PythonTools.Debugger {
             _debuggerThread.Name = "Python Debugger Message Processing " + _processGuid;
             _debuggerThread.Start();
 
-            while (true) {
-                lock (_isListeningLock) {
-                    if (_isListening) {
-                        break;
-                    }
-                    Thread.Sleep(10);
-                }
-            }
+            _listeningReadyEvent.Wait();
         }
 
         public async Task<T> SendRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken), Action<T> postResponseAction = null)
@@ -123,65 +115,59 @@ namespace Microsoft.PythonTools.Debugger {
             Debug.WriteLine("MessageProcessingThreadAsync Started");
 
             try {
-                try {
-                    Debug.Assert(_connection != null);
-                    if (_connection != null) {
-                        lock (_isListeningLock) {
-                            _isListening = true;
-                            _listeningReadyEvent.Set();
-                        }
-                        await _connection.ProcessMessages();
-                    }
-                } catch (IOException) {
-                } catch (ObjectDisposedException ex) {
-                    // Socket or stream have been disposed
-                    Debug.Assert(
-                        ex.ObjectName == typeof(NetworkStream).FullName ||
-                        ex.ObjectName == typeof(Socket).FullName,
-                        "Accidentally handled ObjectDisposedException(" + ex.ObjectName + ")"
-                    );
-                } finally {
+                Debug.Assert(_connection != null);
+                if (_connection != null) {
                     lock (_isListeningLock) {
-                        // Exit out of the event handling thread
-                        _isListening = false;
-                        _eventsPendingWakeUp.Set();
+                        _isListening = true;
+                        _listeningReadyEvent.Set();
                     }
+                    await _connection.ProcessMessages();
                 }
-
-                ProcessingMessagesEnded?.Invoke(this, EventArgs.Empty);
-            } catch (ThreadAbortException) {
+            } catch (IOException) {
+            } catch (ObjectDisposedException ex) {
+                // Socket or stream have been disposed
+                Debug.Assert(
+                    ex.ObjectName == typeof(NetworkStream).FullName ||
+                    ex.ObjectName == typeof(Socket).FullName,
+                    "Accidentally handled ObjectDisposedException(" + ex.ObjectName + ")"
+                );
+            } finally {
+                lock (_isListeningLock) {
+                    // Exit out of the event handling thread
+                    _isListening = false;
+                    _eventsPendingWakeUp.Set();
+                }
             }
+
+            ProcessingMessagesEnded?.Invoke(this, EventArgs.Empty);
 
             Debug.WriteLine("MessageProcessingThreadAsync Ended");
         }
 
         private void EventHandlingThread() {
             Debug.WriteLine("EventHandlingThread Started");
-            try {
-                _listeningReadyEvent.WaitOne();
+            _listeningReadyEvent.Wait();
 
-                while (true) {
-                    bool paused;
-                    lock (_isListeningLock) {
-                        if (!_isListening) {
-                            break;
-                        }
-
-                        paused = _isPaused;
+            while (true) {
+                bool paused;
+                lock (_isListeningLock) {
+                    if (!_isListening) {
+                        break;
                     }
 
-                    EventReceivedEventArgs eventReceived = null;
-                    if (!paused && _eventsPending.TryDequeue(out eventReceived)) {
-                        try {
-                            HandleEvent(eventReceived);
-                        } catch (Exception e) when (!e.IsCriticalException()) {
-                            Debug.Fail(string.Format("Error while handling debugger event '{0}'.\n{1}", eventReceived.Name, e));
-                        }
-                    } else {
-                        _eventsPendingWakeUp.WaitOne();
-                    }
+                    paused = _isPaused;
                 }
-            } catch (ThreadAbortException) {
+
+                EventReceivedEventArgs eventReceived = null;
+                if (!paused && _eventsPending.TryDequeue(out eventReceived)) {
+                    try {
+                        HandleEvent(eventReceived);
+                    } catch (Exception e) when (!e.IsCriticalException()) {
+                        Debug.Fail(string.Format("Error while handling debugger event '{0}'.\n{1}", eventReceived.Name, e));
+                    }
+                } else {
+                    _eventsPendingWakeUp.WaitOne();
+                }
             }
 
             Debug.WriteLine("EventHandlingThread Ended");
@@ -265,6 +251,8 @@ namespace Microsoft.PythonTools.Debugger {
             // Disposing of the stream will cause the message thread to stop, which causes the event thread to stop
             _stream?.Dispose();
             WaitForWorkerThreads();
+            _eventsPendingWakeUp.Dispose();
+            _listeningReadyEvent.Dispose();
         }
 
         public Stream DetachStream() {
