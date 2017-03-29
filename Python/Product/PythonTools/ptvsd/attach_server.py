@@ -28,6 +28,7 @@ import socket
 import struct
 import sys
 import threading
+import traceback
 try:
     import thread
 except ImportError:
@@ -39,49 +40,54 @@ except ImportError:
 
 import ptvsd.visualstudio_py_debugger as vspd
 import ptvsd.visualstudio_py_repl as vspr
-from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+import ptvsd.visualstudio_py_ipcjson as vsipc
 
 
-# The server (i.e. the Python app) waits on a TCP port provided. Whenever anything connects to that port,
-# it immediately sends the octet sequence 'PTVSDBG', followed by version number represented as int64,
-# and then waits for the client to respond with the same exact byte sequence. After signatures are thereby
-# exchanged and found to match, the client is expected to provide a string secret (in the usual debugger
-# string format, None/ACII/Unicode prefix + length + data), which can be an empty string to designate the
-# lack of a specified secret.
-#
-# If the secret does not match the one expected by the server, it responds with 'RJCT', and then closes
-# the connection. Otherwise, the server responds with 'ACPT', and awaits a 4-octet command. The following
-# commands are recognized:
-#
-# 'INFO'
-#   Report information about the process. The server responds with the following information, in order:
-#       - Process ID (int64)
-#       - Executable name (string)
-#       - User name (string)
-#       - Implementation name (string)
-#   and then immediately closes connection. Note, all string fields can be empty or null strings.
-#
-# 'ATCH'
-#   Attach debugger to the process. If successful, the server responds with 'ACPT', followed by process ID
-#   (int64), and then the Python language version that the server is running represented by three int64s -
-#   major, minor, micro; From there on the socket is assumed to be using the normal PTVS debugging protocol.
-#   If attaching was not successful (which can happen if some other debugger is already attached), the server
-#   responds with 'RJCT' and closes the connection. 
-#
-# 'REPL'
-#   Attach REPL to the process. If successful, the server responds with 'ACPT', and from there on the socket
-#   is assumed to be using the normal PTVS REPL protocol. If not successful (which can happen if there is
-#   no debugger attached), the server responds with 'RJCT' and closes the connection. 
+# The server (i.e. the Python app) waits on a TCP port provided. Whenever
+# anything connects to that port, it immediately sends a legacyRemoteConnected
+# event that includes the protocol name and version.
 
-PTVS_VER = '2.2'
+# It then waits for the client to send requests, the first of which will be
+# legacyRemoteDebuggerAuthenticate, which includes the protocol name and version,
+# and the string secret which can be an empty string to designate the lack of a
+# specified secret.
+#
+# If the secret does not match the one expected by the server, it responds
+# accepted=False, and then closes the connection. Otherwise, the server responds
+# accepted=True, and continues waiting for requests.
+#
+# If the client does not send a legacyRemoteDebuggerAuthenticate request, then
+# any other request will fail and the connection will be closed.
+#
+# The following commands are recognized:
+#
+# 'legacyRemoteDebuggerInfo'
+#   Report information about the process. The server responds with the following:
+#       - Process ID
+#       - Executable name
+#       - User name
+#       - Implementation name
+#   and then immediately closes connection. Note, all string fields can be
+#   empty or null strings.
+#
+# 'legacyRemoteDebuggerAttach'
+#   Attach debugger to the process. If successful, the server responds with
+#   accepted=True, along with process ID, and the Python language version that
+#   the server is running represented by three integers - major, minor, micro.
+#   From there on the socket is assumed to be using the normal PTVS debugging protocol.
+#   If attaching was not successful (which can happen if some other debugger is
+#   already attached), the server responds with accepted=False and closes the connection. 
+#
+# 'legacyRemoteReplAttach'
+#   Attach REPL to the process. If successful, the server responds with
+#   accepted=True, and from there on the socket is assumed to be using the
+#   normal PTVS REPL (binary) protocol. If not successful (which can happen if
+#   there is no debugger attached), the server responds with accepted=False and
+#   closes the connection. 
+
 DEFAULT_PORT = 5678
-PTVSDBG_VER = 6 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
-PTVSDBG = to_bytes('PTVSDBG')
-ACPT = to_bytes('ACPT')
-RJCT = to_bytes('RJCT')
-INFO = to_bytes('INFO')
-ATCH = to_bytes('ATCH')
-REPL = to_bytes('REPL')
+PTVSDBG_VER = 7 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
+PTVSDBG = 'PTVSDBG'
 
 _attach_enabled = False
 _attached = threading.Event()
@@ -169,111 +175,24 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
     def server_thread_func():
         while True:
             client = None
-            raw_client = None
+            connection = None
             try:
                 client, addr = server.accept()
                 if certfile:
                     client = ssl.wrap_socket(client, server_side = True, ssl_version = ssl.PROTOCOL_TLSv1, certfile = certfile, keyfile = keyfile)
-                write_bytes(client, PTVSDBG)
-                write_int(client, PTVSDBG_VER)
 
-                response = read_bytes(client, 7)
-                if response != PTVSDBG:
-                    continue
-                dbg_ver = read_int(client)
-                if dbg_ver != PTVSDBG_VER:
-                    continue
-
-                client_secret = read_string(client)
-                if secret is None or secret == client_secret:
-                    write_bytes(client, ACPT)
-                else:
-                    write_bytes(client, RJCT)
-                    continue
-
-                response = read_bytes(client, 4)
-
-                if response == INFO:
-                    try:
-                        pid = os.getpid()
-                    except AttributeError:
-                        pid = 0
-                    write_int(client, pid)
-
-                    exe = sys.executable or ''
-                    write_string(client, exe)
-
-                    try:
-                        username = getpass.getuser()
-                    except AttributeError:
-                        username = ''
-                    write_string(client, username)
-
-                    try:
-                        impl = platform.python_implementation()
-                    except AttributeError:
-                        try:
-                            impl = sys.implementation.name
-                        except AttributeError:
-                            impl = 'Python'
-
-                    major, minor, micro, release_level, serial = sys.version_info
-
-                    os_and_arch = platform.system()
-                    if os_and_arch == "":
-                        os_and_arch = sys.platform
-                    try:
-                        if sys.maxsize > 2**32:
-                            os_and_arch += ' 64-bit'
-                        else:
-                            os_and_arch += ' 32-bit'
-                    except AttributeError:
-                        pass
-
-                    version = '%s %s.%s.%s (%s)' % (impl, major, minor, micro, os_and_arch)
-                    write_string(client, version)
-
-                    # Don't just drop the connection - let the debugger close it after it finishes reading.
-                    client.recv(1)
-
-                elif response == ATCH:
-                    debug_options = vspd.parse_debug_options(read_string(client))
-                    if redirect_output:
-                        debug_options.add('RedirectOutput')
-
-                    if vspd.DETACHED:
-                        write_bytes(client, ACPT)
-                        try:
-                            pid = os.getpid()
-                        except AttributeError:
-                            pid = 0
-                        write_int(client, pid)
-
-                        major, minor, micro, release_level, serial = sys.version_info
-                        write_int(client, major)
-                        write_int(client, minor)
-                        write_int(client, micro)
-
-                        vspd.attach_process_from_socket(client, debug_options, report = True)
-                        vspd.mark_all_threads_for_break(vspd.STEPPING_ATTACH_BREAK)
-                        _attached.set()
-                        client = None
-                    else:
-                        write_bytes(client, RJCT)
-
-                elif response == REPL:
-                    if not vspd.DETACHED:
-                        write_bytes(client, ACPT)
-                        vspd.connect_repl_using_socket(client)
-                        client = None
-                    else:
-                        write_bytes(client, RJCT)
-
+                connection = AttachLoop(client, secret, redirect_output, None)
+                connection.send_event(
+                    name='legacyRemoteConnected',
+                    debuggerName=PTVSDBG,
+                    debuggerProtocolVersion=PTVSDBG_VER,
+                )
+                connection.process_messages()
             except (socket.error, OSError):
                 pass
             finally:
-                if client is not None:
-                    client.close()
+                if connection:
+                    connection.close()
 
     server_thread = threading.Thread(target = server_thread_func)
     server_thread.setDaemon(True)
@@ -328,3 +247,162 @@ def break_into_debugger():
 def is_attached():
     """Returns ``True`` if debugger is attached, ``False`` otherwise."""
     return not vspd.DETACHED
+
+
+class AttachLoop(vsipc.SocketIO, vsipc.IpcChannel):
+    def __init__(self, socket, secret, redirect_output, logfile):
+        super(AttachLoop, self).__init__(socket=socket, own_socket=False, logfile=logfile)
+        self.__secret = secret
+        self.__redirect_output = redirect_output
+        self.__owned_socket = socket
+        self.__waiting_for_authentication = True
+
+    def close(self):
+        if self.__owned_socket:
+            self.__owned_socket.close()
+
+    def on_legacyRemoteDebuggerAuthenticate(self, request, args):
+        debugger_name = args['debuggerName']
+        protocol_version = args['debuggerProtocolVersion']
+        client_secret = args['clientSecret']
+
+        supported = debugger_name == PTVSDBG and protocol_version == PTVSDBG_VER
+        authenticated = self.__secret is None or client_secret == self.__secret
+        accepted = supported and authenticated
+        self.send_response(request, accepted=accepted)
+
+        self.__waiting_for_authentication = False
+        if not accepted:
+            self.set_exit()
+
+    def on_legacyRemoteDebuggerInfo(self, request, args):
+        if self.__waiting_for_authentication:
+            self.send_response(
+                request,
+                success=False,
+                message='legacyRemoteDebuggerAuthenticate request must be sent first.',
+            )
+            self.set_exit()
+            return
+
+        try:
+            try:
+                pid = os.getpid()
+            except AttributeError:
+                pid = 0
+
+            exe = sys.executable or ''
+
+            try:
+                username = getpass.getuser()
+            except AttributeError:
+                username = ''
+
+            try:
+                impl = platform.python_implementation()
+            except AttributeError:
+                try:
+                    impl = sys.implementation.name
+                except AttributeError:
+                    impl = 'Python'
+
+            major, minor, micro, release_level, serial = sys.version_info
+
+            os_and_arch = platform.system()
+            if os_and_arch == "":
+                os_and_arch = sys.platform
+            try:
+                if sys.maxsize > 2**32:
+                    os_and_arch += ' 64-bit'
+                else:
+                    os_and_arch += ' 32-bit'
+            except AttributeError:
+                pass
+
+            version = '%s %s.%s.%s (%s)' % (impl, major, minor, micro, os_and_arch)
+
+            self.send_response(
+                request,
+                processId=pid,
+                executable=exe,
+                user=username,
+                pythonVersion=version,
+            )
+        finally:
+            self.set_exit()
+
+    def on_legacyRemoteDebuggerAttach(self, request, args):
+        if self.__waiting_for_authentication:
+            self.send_response(
+                request,
+                success=False,
+                message='legacyRemoteDebuggerAuthenticate request must be sent first.',
+            )
+            self.set_exit()
+            return
+
+        try:
+            debug_options = vspd.parse_debug_options(args['debugOptions'])
+            if self.__redirect_output:
+                debug_options.add('RedirectOutput')
+
+            if vspd.DETACHED:
+                try:
+                    pid = os.getpid()
+                except AttributeError:
+                    pid = 0
+
+                major, minor, micro, release_level, serial = sys.version_info
+
+                self.send_response(
+                    request,
+                    accepted=True,
+                    processId=pid,
+                    pythonMajor=major,
+                    pythonMinor=minor,
+                    pythonMicro=micro,
+                )
+
+                vspd.attach_process_from_socket(self.__owned_socket, debug_options, report = True)
+                vspd.mark_all_threads_for_break(vspd.STEPPING_ATTACH_BREAK)
+
+                _attached.set()
+
+                # Prevent from closing the socket, it will be used by debugger
+                self.__owned_socket = None
+            else:
+                self.send_response(
+                    request,
+                    accepted=False,
+                )
+        finally:
+            self.set_exit()
+
+    def on_legacyRemoteReplAttach(self, request, args):
+        if self.__waiting_for_authentication:
+            self.send_response(
+                request,
+                success=False,
+                message='legacyRemoteDebuggerAuthenticate request must be sent first.',
+            )
+            self.set_exit()
+            return
+
+        try:
+            if not vspd.DETACHED:
+                self.send_response(
+                    request,
+                    accepted=True,
+                )
+
+                vspd.connect_repl_using_socket(self.__owned_socket)
+
+                # Prevent from closing the socket, it will be used by debugger
+                self.__owned_socket = None
+            else:
+                self.send_response(
+                    request,
+                    accepted=False,
+                )
+        finally:
+            self.set_exit()

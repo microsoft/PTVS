@@ -16,8 +16,10 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class implements IDebugThread2 which represents a thread running in a program.
@@ -155,7 +157,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             var frame = (AD7StackFrame)stackFrame;
             var context = (AD7MemoryAddress)codeContext;
 
-            if (frame.StackFrame.SetLineNumber((int)context.LineNumber + 1)) {
+            if (TaskHelpers.RunSynchronouslyOnUIThread(ct => frame.StackFrame.SetLineNumber((int)context.LineNumber + 1, ct))) {
                 return VSConstants.S_OK;
             } else if (frame.StackFrame.Thread.Process.StoppedForException) {
                 return E_CANNOT_SET_NEXT_STATEMENT_ON_EXCEPTION;

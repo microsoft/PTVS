@@ -26,6 +26,7 @@ using EnvDTE90a;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
@@ -109,7 +110,11 @@ namespace DebuggerUITests {
                 using (var app = new VisualStudioApp()) {
                     app.OpenProject(TestData.GetPath(@"TestData\SysPath.sln"));
 
-                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = false;
+                    var uiThread = app.ServiceProvider.GetUIThread();
+                    uiThread.Invoke(() => {
+                        app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = false;
+                    });
+
                     try {
                         ClearOutputWindowDebugPaneText();
                         app.Dte.ExecuteCommand("Debug.Start");
@@ -117,7 +122,9 @@ namespace DebuggerUITests {
 
                         WaitForDebugOutput(text => text.Contains(testDataPath));
                     } finally {
-                        app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = true;
+                        uiThread.Invoke(() => {
+                            app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = true;
+                        });
                     }
 
                     ClearOutputWindowDebugPaneText();
@@ -246,28 +253,54 @@ namespace DebuggerUITests {
  
                 app.Dte.ExecuteCommand("Debug.ShowCallStackonCodeMap");
 
-                // Got the CodeMap Graph displaying.  Now we need to save, or at least make it have a version in temp.
+                // Got the CodeMap Graph displaying, but it may not have finished processing
                 app.WaitForInputIdle();
-                app.Dte.Documents.SaveAll();
 
-                // VS is saving a temp version of the codemap in the Local AppData Temp directory. We will compare to that for verification.
-                var tempFiles = Directory.GetFiles(Environment.ExpandEnvironmentVariables("%temp%"), "*.dgml", SearchOption.TopDirectoryOnly);
-                var dgmlFile = (from x in tempFiles orderby File.GetCreationTime(x) descending select x).First();
+                var dgmlKind = "{295A0962-5A59-4F4F-9E12-6BC670C15C3B}";
 
-                // These are the lines of interest in the DGML File.  If these match, the correct content should be displayed in the code map.
-                List<string> LinesToMatch = new List<string>() {
-                    @"<Node Id=""\(Name=f @1 IsUnresolved=True\)"" Category=""CodeSchema_CallStackUnresolvedMethod"" Bounds=""[0-9,\.]+"" Label=""f"">",
-                    @"<Node Id=""@2"" Category=""CodeSchema_CallStackUnresolvedMethod"" Bounds=""[0-9,\.]+"" Label=""SteppingTest3 module"">",
-                    @"<Node Id=""ExternalCodeRootNode"" Category=""ExternalCallStackEntry"" Bounds=""[0-9,\.]+"" Label=""External Code"">",
-                    @"<Link Source=""@2"" Target=""\(Name=f @1 IsUnresolved=True\)"" Category=""CallStackDirectCall"">",
-                    @"<Alias n=""1"" Uri=""Assembly=SteppingTest3"" />",
-                    @"<Alias n=""2"" Id=""\(Name=&quot;SteppingTest3 module&quot; @1 IsUnresolved=True\)"" />"
-                };
+                Document dgmlDoc = null;
+                for (int i = 1; i <= app.Dte.Documents.Count; i++) {
+                    var doc = app.Dte.Documents.Item(i);
+                    if (doc.Kind == dgmlKind) {
+                        dgmlDoc = doc;
+                        break;
+                    }
+                }
 
-                var fileText = File.ReadAllText(dgmlFile);
+                Assert.IsNotNull(dgmlDoc, "Could not find dgml document");
 
-                foreach (var line in LinesToMatch) {
-                    Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(fileText, line), "Expected:\r\n{0}\r\nsActual:\r\n{1}", line, fileText);
+                var dgmlFile = Path.GetTempFileName();
+                try {
+                    // Save to a temp file. If the code map is not ready, it 
+                    // may have template xml but no data in it, so give it
+                    // some more time and try again.
+                    string fileText = string.Empty;
+                    for (int i = 0; i < 10; i++) {
+                        dgmlDoc.Save(dgmlFile);
+
+                        fileText = File.ReadAllText(dgmlFile);
+                        if (fileText.Contains("SteppingTest3")) {
+                            break;
+                        }
+
+                        Thread.Sleep(250);
+                    }
+
+                    // These are the lines of interest in the DGML File.  If these match, the correct content should be displayed in the code map.
+                    List<string> LinesToMatch = new List<string>() {
+                        @"<Node Id=""\(Name=f @1 IsUnresolved=True\)"" Category=""CodeSchema_CallStackUnresolvedMethod"" Label=""f"">",
+                        @"<Node Id=""@2"" Category=""CodeSchema_CallStackUnresolvedMethod"" Label=""SteppingTest3 module"">",
+                        @"<Node Id=""ExternalCodeRootNode"" Category=""ExternalCallStackEntry"" Label=""External Code"">",
+                        @"<Link Source=""@2"" Target=""\(Name=f @1 IsUnresolved=True\)"" Category=""CallStackDirectCall"">",
+                        @"<Alias n=""1"" Uri=""Assembly=SteppingTest3"" />",
+                        @"<Alias n=""2"" Id=""\(Name=&quot;SteppingTest3 module&quot; @1 IsUnresolved=True\)"" />"
+                    };
+
+                    foreach (var line in LinesToMatch) {
+                        Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(fileText, line), "Expected:\r\n{0}\r\nsActual:\r\n{1}", line, fileText);
+                    }
+                } finally {
+                    File.Delete(dgmlFile);
                 }
             }
         }
@@ -479,13 +512,13 @@ namespace DebuggerUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestException() {
-            ExceptionTest("SimpleException.py", "Exception occurred", "", "Exception", 3);
+            ExceptionTest("SimpleException.py", "Exception Thrown", "Exception", "Exception", 3);
         }
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestException2() {
-            ExceptionTest("SimpleException2.py", "ValueError occurred", "bad value", "ValueError", 3);
+            ExceptionTest("SimpleException2.py", "Exception Thrown", "ValueError: bad value", "ValueError", 3);
         }
 
         [TestMethod, Priority(1)]
@@ -494,7 +527,7 @@ namespace DebuggerUITests {
             var waitOnAbnormalExit = GetOptions().WaitOnAbnormalExit;
             GetOptions().WaitOnAbnormalExit = false;
             try {
-                ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "ValueError", 2);
+                ExceptionTest("SimpleExceptionUnhandled.py", "Exception User-Unhandled", "ValueError: bad value", "ValueError", 2);
             } finally {
                 GetOptions().WaitOnAbnormalExit = waitOnAbnormalExit;
             }
@@ -537,13 +570,11 @@ namespace DebuggerUITests {
                     exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
                     debug3.ExceptionGroups.ResetAll();
 
-                    var excepDialog = app.WaitForException();
-                    AutomationWrapper.DumpElement(excepDialog.Element);
+                    var excepAdorner = app.WaitForExceptionAdornment();
+                    AutomationWrapper.DumpElement(excepAdorner.Element);
 
-                    Assert.AreEqual(expectedDescription, excepDialog.Description);
-                    Assert.AreEqual(expectedTitle, excepDialog.Title);
-                    
-                    excepDialog.Cancel();
+                    Assert.AreEqual(expectedDescription, excepAdorner.Description.TrimEnd());
+                    Assert.AreEqual(expectedTitle, excepAdorner.Title.TrimEnd());
 
                     Assert.AreEqual((uint)expectedLine, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 
@@ -646,6 +677,9 @@ namespace DebuggerUITests {
             }
         }
 
+        /// <summary>
+        /// Make sure the presence of errors causes F5 to prevent running w/o a confirmation.
+        /// </summary>
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestLaunchWithErrorsDontRun() {
@@ -654,6 +688,12 @@ namespace DebuggerUITests {
             GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
             try {
                 var project = app.OpenProject(@"TestData\ErrorProject.sln");
+
+                // Open a file with errors
+                string scriptFilePath = TestData.GetPath(@"TestData\ErrorProject\Program.py");
+                app.Dte.ItemOperations.OpenFile(scriptFilePath);
+                app.Dte.ExecuteCommand("View.ErrorList");
+                var items = app.WaitForErrorListItems(7);
 
                 var debug3 = (Debugger3)app.Dte.Debugger;
                 ThreadPool.QueueUserWorkItem(x => debug3.Go(true));
@@ -675,33 +715,6 @@ namespace DebuggerUITests {
         }
 
         /// <summary>
-        /// Make sure the presence of errors causes F5 to prevent running w/o a confirmation.
-        /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestLaunchWithErrorsRun() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProject.sln");
-
-                GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
-
-                var debug3 = (Debugger3)app.Dte.Debugger;
-                ThreadPool.QueueUserWorkItem(x => debug3.Go(true));
-
-                var dialog = new PythonLaunchWithErrorsDialog(app.WaitForDialog());
-                dialog.No();
-
-                // make sure we don't go into debug mode
-                for (int i = 0; i < 10; i++) {
-                    Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
-                    System.Threading.Thread.Sleep(100);
-                }
-
-                WaitForMode(app, dbgDebugMode.dbgDesignMode);
-            }
-        }
-
-        /// <summary>
         /// Start with debugging, with script but no project.
         /// </summary>
         [TestMethod, Priority(1)]
@@ -714,9 +727,10 @@ namespace DebuggerUITests {
 
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
                 app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-                app.Dte.ExecuteCommand("Project.StartWithDebugging");
+                app.Dte.ExecuteCommand("Python.StartWithDebugging");
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
+                Assert.IsNotNull(app.Dte.Debugger.BreakpointLastHit);
                 Assert.AreEqual("Program.py, line 1", app.Dte.Debugger.BreakpointLastHit.Name);
                 app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
                 Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
@@ -736,7 +750,7 @@ namespace DebuggerUITests {
 
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
                 app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-                app.Dte.ExecuteCommand("Project.StartWithoutDebugging");
+                app.Dte.ExecuteCommand("Python.StartWithoutDebugging");
                 Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
                 WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File1.txt"));
             }
@@ -755,7 +769,7 @@ namespace DebuggerUITests {
 
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
                 app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-                app.Dte.ExecuteCommand("Project.StartWithDebugging");
+                app.Dte.ExecuteCommand("Python.StartWithDebugging");
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
                 Assert.AreEqual("Program.py, line 1", app.Dte.Debugger.BreakpointLastHit.Name);
@@ -777,7 +791,7 @@ namespace DebuggerUITests {
 
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
                 app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-                app.Dte.ExecuteCommand("Project.StartWithoutDebugging");
+                app.Dte.ExecuteCommand("Python.StartWithoutDebugging");
                 Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
                 WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File2.txt"));
             }
@@ -796,7 +810,7 @@ namespace DebuggerUITests {
 
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
                 app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-                app.Dte.ExecuteCommand("Project.StartWithDebugging");
+                app.Dte.ExecuteCommand("Python.StartWithDebugging");
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
                 Assert.AreEqual("Program.py, line 1", app.Dte.Debugger.BreakpointLastHit.Name);
@@ -818,7 +832,7 @@ namespace DebuggerUITests {
 
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
                 app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 3);
-                app.Dte.ExecuteCommand("Project.StartWithDebugging");
+                app.Dte.ExecuteCommand("Python.StartWithDebugging");
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
                 AssertUtil.ContainsAtLeast(
@@ -847,7 +861,7 @@ namespace DebuggerUITests {
 
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
                 app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-                app.Dte.ExecuteCommand("Project.StartWithoutDebugging");
+                app.Dte.ExecuteCommand("Python.StartWithoutDebugging");
                 Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
                 WaitForFileCreatedByScript(TestData.GetPath(@"TestData\DebuggerProject\File3.txt"));
             }
@@ -860,7 +874,7 @@ namespace DebuggerUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithDebuggingNoScript() {
             try {
-                VSTestContext.DTE.ExecuteCommand("Project.StartWithDebugging");
+                VSTestContext.DTE.ExecuteCommand("Python.StartWithDebugging");
             } catch (COMException e) {
                 // Requires an opened python file with focus
                 Assert.IsTrue(e.ToString().Contains("is not available"));
@@ -874,7 +888,7 @@ namespace DebuggerUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithoutDebuggingNoScript() {
             try {
-                VSTestContext.DTE.ExecuteCommand("Project.StartWithoutDebugging");
+                VSTestContext.DTE.ExecuteCommand("Python.StartWithoutDebugging");
             } catch (COMException e) {
                 // Requires an opened python file with focus
                 Assert.IsTrue(e.ToString().Contains("is not available"));

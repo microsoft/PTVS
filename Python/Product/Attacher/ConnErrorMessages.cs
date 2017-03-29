@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Debugger {
         RemoteAttachRejected,
         RemoteInvalidUri,
         RemoteUnsupportedTransport,
+        UnsupportedVersion,
     };
 
     static class ConnErrorExtensions {
@@ -65,6 +66,7 @@ namespace Microsoft.PythonTools.Debugger {
             { ConnErrorMessages.RemoteAttachRejected, Strings.ConnErrorMessages_RemoteAttachRejected },
             { ConnErrorMessages.RemoteInvalidUri, Strings.ConnErrorMessages_RemoteInvalidUri },
             { ConnErrorMessages.RemoteUnsupportedTransport, Strings.ConnErrorMessages_RemoteUnsupportedTransport },
+            { ConnErrorMessages.UnsupportedVersion, Strings.ConnErrorMessages_UnsupportedVersion },
         };
 
         internal static string GetErrorMessage(this ConnErrorMessages attachRes) {

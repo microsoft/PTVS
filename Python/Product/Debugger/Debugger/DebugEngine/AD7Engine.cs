@@ -32,6 +32,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // AD7Engine is the primary entrypoint object for the debugging engine. 
@@ -180,7 +181,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public AD7Engine() {
             _breakpointManager = new BreakpointManager(this);
             _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
-            _debugOptions = PythonDebugOptions.RichExceptions;
+            _debugOptions = PythonDebugOptions.None;
             Debug.WriteLine("Python Engine Created " + GetHashCode());
             _engines.Add(new WeakReference(this));
         }
@@ -344,7 +345,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         query += "&" + DebugOptionsKey + "=" + _debugOptions;
                         uriBuilder.Query = query;
 
-                        _process = PythonRemoteProcess.Attach(uriBuilder.Uri, true);
+                        _process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteProcess.AttachAsync(uriBuilder.Uri, true, ct));
                     } else {
                         _process = PythonProcess.Attach(processId, _debugOptions);
                     }
@@ -558,7 +559,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _breakOnException.Clear();
             _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
 
-            SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
             return VSConstants.S_OK;
         }
 
@@ -580,7 +581,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             if (sendUpdate) {
-                SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+                TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
             }
             return VSConstants.S_OK;
         }
@@ -605,7 +606,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             if (sendUpdate) {
-                SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+                TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
             }
             return VSConstants.S_OK;
         }
@@ -628,7 +629,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             var enabled = enabledUint.Value != 0;
                             if (_justMyCodeEnabled != enabled) {
                                 _justMyCodeEnabled = enabled;
-                                SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+                                TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
                             }
                         }
                         return VSConstants.S_OK;
@@ -656,14 +657,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
         }
 
-        private void SetExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
+        private Task SetExceptionInfoAsync(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn, CancellationToken ct) {
             if (!_justMyCodeEnabled) {
                 // Mask out just my code related flag not masked out by VS SDM
                 var mask = ~(int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
                 defaultBreakOnMode &= mask;
                 breakOn = breakOn.Select(kvp => new KeyValuePair<string, int>(kvp.Key, kvp.Value & mask));
             }
-            _process.SetExceptionInfo(defaultBreakOnMode, breakOn);
+            return _process.SetExceptionInfoAsync(defaultBreakOnMode, breakOn, ct);
         }
 
         // Sets the registry root currently in use by the DE. Different installations of Visual Studio can change where their registry information is stored
@@ -746,7 +747,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             if (!_debugOptions.HasFlag(PythonDebugOptions.AttachRunning)) {
-                _process.Start(false);
+                TaskHelpers.RunSynchronouslyOnUIThread(ct => _process.StartAsync(false));
             }
 
             AttachEvents(_process);
@@ -953,7 +954,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (!_pseudoAttach) {
                 _process.Terminate();
             } else {
-                _process.Detach();
+                TaskHelpers.RunSynchronouslyOnUIThread(ct => _process.DetachAsync(ct));
             }
 
             return VSConstants.S_OK;
@@ -981,7 +982,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Debug.WriteLine("PythonEngine CauseBreak");
             AssertMainThread();
 
-            _process.Break();
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _process.BreakAsync(ct));
 
             return VSConstants.S_OK;
         }
@@ -1002,7 +1003,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             AssertMainThread();
 
             // Resume process, but leave stepping state intact, allowing stepping accross tracepoints
-            thread.GetDebuggedThread().AutoResume();
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => thread.GetDebuggedThread().AutoResumeAsync(ct));
             return VSConstants.S_OK;
         }
 
@@ -1019,12 +1020,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
                 _breakpointManager.ClearBoundBreakpoints();
 
-                var detaching = EngineDetaching;
-                if (detaching != null) {
-                    detaching(this, new AD7EngineEventArgs(this));
-                }
+                EngineDetaching?.Invoke(this, new AD7EngineEventArgs(this));
 
-                _process.Detach();
+                TaskHelpers.RunSynchronouslyOnUIThread(ct => _process.DetachAsync(ct));
             }
 
             _ad7ProgramId = Guid.Empty;
@@ -1167,9 +1165,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             var thread = ((AD7Thread)pThread).GetDebuggedThread();
             switch (sk) {
-                case enum_STEPKIND.STEP_INTO: thread.StepInto(); break;
-                case enum_STEPKIND.STEP_OUT: thread.StepOut(); break;
-                case enum_STEPKIND.STEP_OVER: thread.StepOver(); break;
+                case enum_STEPKIND.STEP_INTO:
+                    TaskHelpers.RunSynchronouslyOnUIThread(ct => thread.StepIntoAsync(ct));
+                    break;
+                case enum_STEPKIND.STEP_OUT:
+                    TaskHelpers.RunSynchronouslyOnUIThread(ct => thread.StepOutAsync(ct));
+                    break;
+                case enum_STEPKIND.STEP_OVER:
+                    TaskHelpers.RunSynchronouslyOnUIThread(ct => thread.StepOverAsync(ct));
+                    break;
             }
             return VSConstants.S_OK;
         }
@@ -1203,15 +1207,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             // clear stepping state on the thread the user was currently on
             AD7Thread thread = (AD7Thread)pThread;
-            thread.GetDebuggedThread().ClearSteppingState();
 
-            ResumeProcess();
+            TaskHelpers.RunSynchronouslyOnUIThread(async ct => {
+                await thread.GetDebuggedThread().ClearSteppingStateAsync(ct);
+                await _process.ResumeAsync(ct);
+            });
 
             return VSConstants.S_OK;
-        }
-
-        private void ResumeProcess() {
-            _process.Resume();
         }
 
         #endregion
@@ -1308,7 +1310,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             process.ThreadExited += OnThreadExited;
             process.DebuggerOutput += OnDebuggerOutput;
 
-            process.StartListening();
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => process.StartListeningAsync());
         }
 
         private void OnThreadExited(object sender, ThreadEventArgs e) {
@@ -1485,8 +1487,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return null;
         }
 
-        internal System.Threading.Tasks.Task RefreshThreadFrames(long threadId) {
-            return _process.GetThreadFramesAsync(threadId);
+        internal Task RefreshThreadFrames(long threadId, CancellationToken ct) {
+            return _process.RefreshThreadFramesAsync(threadId, ct);
         }
 
         internal static AD7Engine GetEngineForProcess(EnvDTE.Process process) {

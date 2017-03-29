@@ -461,6 +461,18 @@ namespace TestUtilities.UI {
             return null;
         }
 
+        public ExceptionHelperAdornment WaitForExceptionAdornment() {
+            var control = FindByAutomationId("TheExceptionControl");
+            if (control != null) {
+                var parent = TreeWalker.RawViewWalker.GetParent(control);
+                Assert.IsNotNull(parent);
+                return new ExceptionHelperAdornment(parent);
+            }
+
+            Assert.Fail("Failed to find exception helper adornment");
+            return null;
+        }
+
         /// <summary>
         /// Waits for a modal dialog to take over a given window and returns the HWND for the new dialog.
         /// </summary>

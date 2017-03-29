@@ -91,6 +91,7 @@
     <Compile Include="UI\AzureCloudServiceActivityLog.cs" />
     <Compile Include="UI\AzureCloudServiceCreateDialog.cs" />
     <Compile Include="UI\AzureCloudServicePublishDialog.cs" />
+    <Compile Include="UI\ExceptionHelperDialog.cs" />
     <Compile Include="UI\ListBox.cs" />
     <Compile Include="UI\Button.cs" />
     <Compile Include="UI\CheckBox.cs" />
@@ -108,7 +109,7 @@
     <Compile Include="UI\DetailPane.cs" />
     <Compile Include="UI\EditorWindow.cs" />
     <Compile Include="UI\ExceptionButton.cs" />
-    <Compile Include="UI\ExceptionHelperDialog.cs" />
+    <Compile Include="UI\ExceptionHelperAdornment.cs" />
     <Compile Include="UI\Header.cs" />
     <Compile Include="UI\Keyboard.cs" />
     <Compile Include="UI\ListItem.cs" />

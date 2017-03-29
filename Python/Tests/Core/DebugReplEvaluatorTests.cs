@@ -19,14 +19,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using DebuggerTests;
 using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -70,7 +69,7 @@ namespace PythonToolsTests {
         public void TestClean() {
             foreach (var proc in _processes) {
                 try {
-                    proc.Continue();
+                    proc.ResumeAsync(TimeoutToken()).WaitAndUnwrapExceptions();
                 } catch (Exception ex) {
                     Console.WriteLine("Failed to continue process");
                     Console.WriteLine(ex);
@@ -93,24 +92,24 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(1)]
-        public void DisplayVariables() {
-            Attach("DebugReplTest1.py", 3);
+        public async Task DisplayVariables() {
+            await AttachAsync("DebugReplTest1.py", 3);
 
             Assert.AreEqual("hello", ExecuteText("print(a)"));
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
         [TestMethod, Priority(3)]
-        public void DisplayFunctionLocalsAndGlobals() {
-            Attach("DebugReplTest2.py", 13);
+        public async Task DisplayFunctionLocalsAndGlobals() {
+            await AttachAsync("DebugReplTest2.py", 13);
 
             Assert.AreEqual("51", ExecuteText("print(innermost_val)"));
             Assert.AreEqual("5", ExecuteText("print(global_val)"));
         }
 
         [TestMethod, Priority(3)]
-        public void ErrorInInput() {
-            Attach("DebugReplTest2.py", 13);
+        public async Task ErrorInInput() {
+            await AttachAsync("DebugReplTest2.py", 13);
 
             Assert.AreEqual("", ExecuteText("print(does_not_exist)", false));
             Assert.AreEqual(@"Traceback (most recent call last):
@@ -120,16 +119,47 @@ NameError: name 'does_not_exist' is not defined
         }
 
         [TestMethod, Priority(3)]
-        public void ChangeVariables() {
-            Attach("DebugReplTest2.py", 13);
+        public async Task ChangeVariables() {
+            await AttachAsync("DebugReplTest2.py", 13);
 
             Assert.AreEqual("", ExecuteText("innermost_val = 1"));
             Assert.AreEqual("1", ExecuteText("print(innermost_val)"));
         }
 
+        [TestMethod, Priority(3)]
+        public async Task ChangeVariablesAndRefreshFrames() {
+            // This is really a test for PythonProcess' RefreshFramesAsync
+            // but it's convenient to have it here, as this is the exact
+            // scenario where it's used in the product.
+            // We call RefreshFramesAsync multiple times, which validates a bug fix.
+            await AttachAsync("DebugReplTest2.py", 13);
+
+            var process = _processes[0];
+            var thread = process.GetThreads().FirstOrDefault();
+
+            var variables = thread.Frames[0].Locals.ToArray();
+            Assert.AreEqual("innermost_val", variables[0].ChildName);
+            Assert.AreEqual("51", variables[0].StringRepr);
+
+            // Refresh before changing anything, local variable should remain the same
+            await process.RefreshThreadFramesAsync(thread.Id, TimeoutToken());
+            variables = thread.Frames[0].Locals.ToArray();
+            Assert.AreEqual("innermost_val", variables[0].ChildName);
+            Assert.AreEqual("51", variables[0].StringRepr);
+
+            Assert.AreEqual("", ExecuteText("innermost_val = 1"));
+            Assert.AreEqual("1", ExecuteText("print(innermost_val)"));
+
+            // This should now produce an updated local variable
+            await process.RefreshThreadFramesAsync(thread.Id, TimeoutToken());
+            variables = thread.Frames[0].Locals.ToArray();
+            Assert.AreEqual("innermost_val", variables[0].ChildName);
+            Assert.AreEqual("1", variables[0].StringRepr);
+        }
+
         [TestMethod, Priority(1)]
-        public void ChangeModule() {
-            Attach("DebugReplTest1.py", 3);
+        public async Task ChangeModule() {
+            await AttachAsync("DebugReplTest1.py", 3);
 
             Assert.AreEqual("'hello'", ExecuteText("a"));
 
@@ -146,8 +176,8 @@ NameError: name 'does_not_exist' is not defined
         }
 
         [TestMethod, Priority(2)]
-        public void ChangeFrame() {
-            Attach("DebugReplTest2.py", 13);
+        public async Task ChangeFrame() {
+            await AttachAsync("DebugReplTest2.py", 13);
 
             // We are broken in the innermost function
             string stack;
@@ -181,8 +211,8 @@ NameError: name 'does_not_exist' is not defined
 
         [TestMethod, Priority(3)]
         [TestCategory("10s")]
-        public void ChangeThread() {
-            Attach("DebugReplTest3.py", 39);
+        public async Task ChangeThread() {
+            await AttachAsync("DebugReplTest3.py", 39);
 
             var threads = _processes[0].GetThreads();
             PythonThread main = threads.SingleOrDefault(t => t.Frames[0].FunctionName == "threadmain");
@@ -210,9 +240,9 @@ NameError: name 'does_not_exist' is not defined
         }
 
         [TestMethod, Priority(1)]
-        public void ChangeProcess() {
-            Attach("DebugReplTest4A.py", 3);
-            Attach("DebugReplTest4B.py", 3);
+        public async Task ChangeProcess() {
+            await AttachAsync("DebugReplTest4A.py", 3);
+            await AttachAsync("DebugReplTest4B.py", 3);
 
             PythonProcess proc1 = _processes[0];
             PythonProcess proc2 = _processes[1];
@@ -238,8 +268,8 @@ NameError: name 'does_not_exist' is not defined
 
         [TestMethod, Priority(3)]
         [TestCategory("10s")]
-        public void Abort() {
-            Attach("DebugReplTest5.py", 3);
+        public async Task Abort() {
+            await AttachAsync("DebugReplTest5.py", 3);
 
             _window.ClearScreen();
             var execute = _evaluator.ExecuteText("for i in range(0,20): time.sleep(0.5)");
@@ -250,13 +280,13 @@ NameError: name 'does_not_exist' is not defined
         }
 
         [TestMethod, Priority(1)]
-        public void StepInto() {
+        public async Task StepInto() {
             // Make sure that we don't step into the internal repl code
             // http://pytools.codeplex.com/workitem/777
-            Attach("DebugReplTest6.py", 2);
+            await AttachAsync("DebugReplTest6.py", 2);
 
             var thread = _processes[0].GetThreads()[0];
-            thread.StepInto();
+            await thread.StepIntoAsync(TimeoutToken());
 
             // Result of step into is not immediate
             Thread.Sleep(1000);
@@ -296,12 +326,11 @@ NameError: name 'does_not_exist' is not defined
             }
         }
 
-        private void Attach(string filename, int lineNo) {
+        private async Task AttachAsync(string filename, int lineNo) {
             var debugger = new PythonDebugger();
-            PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, (newproc, newthread) => {
-                var breakPoint = newproc.AddBreakPointByFileExtension(lineNo, filename);
-                breakPoint.Add();
-                _evaluator.AttachProcess(newproc, new MockThreadIdMapper());
+            PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, async (newproc, newthread) => {
+                var breakPoint = newproc.AddBreakpointByFileExtension(lineNo, filename);
+                await breakPoint.AddAsync(TimeoutToken());
             },
             debugOptions: PythonDebugOptions.CreateNoWindow);
 
@@ -315,7 +344,7 @@ NameError: name 'does_not_exist' is not defined
                 process.ProcessExited += processExitedHandler;
 
                 try {
-                    process.Start();
+                    await process.StartAsync();
                 } catch (Win32Exception ex) {
                     _processes.Remove(process);
                     if (ex.HResult == -2147467259 /*0x80004005*/) {
@@ -334,13 +363,17 @@ NameError: name 'does_not_exist' is not defined
                 process.ProcessExited -= processExitedHandler;
             }
 
-            _evaluator.AttachProcess(process, new MockThreadIdMapper());
+            await _evaluator.AttachProcessAsync(process, new MockThreadIdMapper());
         }
 
         private class MockThreadIdMapper : IThreadIdMapper {
             public long? GetPythonThreadId(uint vsThreadId) {
                 return vsThreadId;
             }
+        }
+
+        protected static CancellationToken TimeoutToken() {
+            return CancellationTokens.After5s;
         }
     }
 
@@ -460,21 +493,6 @@ NameError: name 'does_not_exist' is not defined
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
-            }
-        }
-    }
-
-    [TestClass]
-    public class DebugReplEvaluatorTests25 : DebugReplEvaluatorTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;
             }
         }
     }

@@ -882,6 +882,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unsupported Python version loaded in process.
+        /// </summary>
+        public static string ConnErrorMessages_UnsupportedVersion {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_UnsupportedVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Continue
         ///Some manual steps will be required to configure your project..
         /// </summary>
@@ -1122,6 +1131,24 @@ namespace Microsoft.PythonTools {
         public static string DebugFileUnknownCode {
             get {
                 return ResourceManager.GetString("DebugFileUnknownCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugger operation is in progress....
+        /// </summary>
+        public static string DebuggerInProgress {
+            get {
+                return ResourceManager.GetString("DebuggerInProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugging is not supported for Python 2.5 and earlier..
+        /// </summary>
+        public static string DebuggerPythonVersionNotSupported {
+            get {
+                return ResourceManager.GetString("DebuggerPythonVersionNotSupported", resourceCulture);
             }
         }
         

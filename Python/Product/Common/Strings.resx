@@ -1490,7 +1490,10 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
   <data name="ConnErrorMessages_UnknownVersion" xml:space="preserve">
     <value>Unknown Python version loaded in process</value>
   </data>
-  <data name="RemoteUnrecognizedDebuggingTransport" xml:space="preserve">
+  <data name="ConnErrorMessages_UnsupportedVersion" xml:space="preserve">
+    <value>Unsupported Python version loaded in process</value>
+  </data>
+    <data name="RemoteUnrecognizedDebuggingTransport" xml:space="preserve">
     <value>Unrecognized remote debugging transport '{0}'.</value>
     <comment>{0} is the uri scheme</comment>
   </data>
@@ -1978,7 +1981,13 @@ Expand selection to the full expression?</value>
     <value>Run PyLint</value>
     <comment>PyLint is a product name and should not be localized</comment>
   </data>
-  <data name="Analyzer_Analyzing" xml:space="preserve">
+  <data name="DebuggerInProgress" xml:space="preserve">
+    <value>Debugger operation is in progress...</value>
+  </data>
+    <data name="DebuggerPythonVersionNotSupported" xml:space="preserve">
+    <value>Debugging is not supported for Python 2.5 and earlier.</value>
+  </data>
+    <data name="Analyzer_Analyzing" xml:space="preserve">
     <value>Analyzing {0}</value>
     <comment>{0} is a file system path from the user's machine</comment>
   </data>

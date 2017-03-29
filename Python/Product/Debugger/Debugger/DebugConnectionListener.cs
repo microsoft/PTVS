@@ -20,10 +20,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Debugger {
     /// <summary>
@@ -32,6 +34,7 @@ namespace Microsoft.PythonTools.Debugger {
     static class DebugConnectionListener {
         private static int _listenerPort = -1;
         private static readonly Dictionary<Guid, WeakReference> _targets = new Dictionary<Guid, WeakReference>();
+        private const int ConnectTimeoutMs = 5000;
 
         public static void RegisterProcess(Guid id, PythonProcess process) {
             lock (_targets) {
@@ -95,39 +98,64 @@ namespace Microsoft.PythonTools.Debugger {
             var stream = new NetworkStream(socket, ownsSocket: true);
             try {
                 socket.Blocking = true;
-                string debugId = stream.ReadString();
-                var result = (ConnErrorMessages)stream.ReadInt32();
 
-                lock (_targets) {
-                    Guid debugGuid;
-                    WeakReference weakProcess;
-                    PythonProcess targetProcess;
+                var debugConn = new DebugConnection(stream);
+                try {
+                    string debugId = string.Empty;
+                    var result = ConnErrorMessages.None;
+                    using (var connectedEvent = new AutoResetEvent(false)) {
+                        EventHandler<LDP.LocalConnectedEvent> eventReceived = (object sender, LDP.LocalConnectedEvent ea) => {
+                            result = (ConnErrorMessages)ea.result;
+                            debugId = ea.processGuid;
+                            try {
+                                connectedEvent.Set();
+                            } catch (ObjectDisposedException) {
+                            }
+                            debugConn.Authenticated();
+                        };
 
-                    if (Guid.TryParse(debugId, out debugGuid) &&
-                        _targets.TryGetValue(debugGuid, out weakProcess) &&
-                        (targetProcess = weakProcess.Target as PythonProcess) != null) {
-
-                        if (result == ConnErrorMessages.None) {
-                            targetProcess.Connect(stream);
-                            stream = null;
-                            socket = null;
-                        } else {
-                            WriteErrorToOutputWindow(result, targetProcess);
-                            targetProcess.Unregister();
+                        debugConn.LegacyLocalConnected += eventReceived;
+                        try {
+                            debugConn.StartListening();
+                            bool received = connectedEvent.WaitOne(ConnectTimeoutMs);
+                            if (!received) {
+                                throw new TimeoutException();
+                            }
+                        } finally {
+                            debugConn.LegacyLocalConnected -= eventReceived;
                         }
-                    } else {
-                        Debug.WriteLine("Unknown debug target: {0}", debugId);
                     }
+
+                    lock (_targets) {
+                        Guid debugGuid;
+                        WeakReference weakProcess;
+                        PythonProcess targetProcess;
+
+                        if (Guid.TryParse(debugId, out debugGuid) &&
+                            _targets.TryGetValue(debugGuid, out weakProcess) &&
+                            (targetProcess = weakProcess.Target as PythonProcess) != null) {
+
+                            if (result == ConnErrorMessages.None) {
+                                targetProcess.Connect(debugConn);
+                                stream = null;
+                                socket = null;
+                                debugConn = null;
+                            } else {
+                                WriteErrorToOutputWindow(result, targetProcess);
+                                targetProcess.Unregister();
+                            }
+                        } else {
+                            Debug.WriteLine("Unknown debug target: {0}", debugId);
+                        }
+                    }
+                } finally {
+                    debugConn?.Dispose();
                 }
             } catch (IOException) {
             } catch (SocketException) {
             } finally {
-                if (stream != null) {
-                    stream.Dispose();
-                }
-                if (socket != null) {
-                    socket.Dispose();
-                }
+                stream?.Dispose();
+                socket?.Dispose();
             }
 
             socketSource.BeginAccept(AcceptConnection, socketSource);
