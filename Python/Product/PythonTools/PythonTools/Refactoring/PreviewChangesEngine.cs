@@ -29,11 +29,9 @@ namespace Microsoft.PythonTools.Refactoring {
     /// </summary>
     class PreviewChangesEngine : IVsPreviewChangesEngine {
         private readonly string _expr;
-        private readonly RenameVariableRequest _renameReq;
         private readonly PreviewList _list;
         internal readonly IRenameVariableInput _input;
         internal readonly VsProjectAnalyzer _analyzer;
-        private readonly string _originalName, _privatePrefix;
         private readonly IEnumerable<AnalysisVariable> _variables;
         internal readonly IServiceProvider _serviceProvider;
 
@@ -41,9 +39,9 @@ namespace Microsoft.PythonTools.Refactoring {
             _serviceProvider = serviceProvider;
             _expr = expr;
             _analyzer = analyzer;
-            _renameReq = request;
-            _originalName = originalName;
-            _privatePrefix = privatePrefix;
+            Request = request;
+            OriginalName = originalName;
+            PrivatePrefix = privatePrefix;
             _variables = variables;
             _input = input;
             _list = new PreviewList(CreatePreviewItems().ToArray());
@@ -68,8 +66,12 @@ namespace Microsoft.PythonTools.Refactoring {
                         }
 
                         if (!curLocations.Contains(variable.Location)) {
-                            fileItem.Items.Add(new LocationPreviewItem(_analyzer, fileItem, variable.Location, variable.Type));
-                            curLocations.Add(variable.Location);
+                            try {
+                                fileItem.Items.Add(new LocationPreviewItem(_analyzer, fileItem, variable.Location, variable.Type));
+                                curLocations.Add(variable.Location);
+                            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                                ex.ReportUnhandledException(_serviceProvider, GetType());
+                            }
                         }
                         break;
                 }
@@ -87,26 +89,14 @@ namespace Microsoft.PythonTools.Refactoring {
         /// <summary>
         /// Gets the original name of the variable/member being renamed.
         /// </summary>
-        public string OriginalName {
-            get {
-                return _originalName;
-            }
-        }
+        public string OriginalName { get; }
 
         /// <summary>
         /// Gets the private prefix class name minus the leading underscore.
         /// </summary>
-        public string PrivatePrefix {
-            get {
-                return _privatePrefix;
-            }
-        }
+        public string PrivatePrefix { get; }
 
-        public RenameVariableRequest Request {
-            get {
-                return _renameReq;
-            }
-        }
+        public RenameVariableRequest Request { get; }
 
         private static int FileComparer(FilePreviewItem left, FilePreviewItem right) {
             return String.Compare(left.Filename, right.Filename, StringComparison.OrdinalIgnoreCase);
@@ -125,7 +115,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public int ApplyChanges() {
             _input.ClearRefactorPane();
-            _input.OutputLog(Strings.RefactorPreviewChangesRenaming.FormatUI(_originalName, _renameReq.Name));
+            _input.OutputLog(Strings.RefactorPreviewChangesRenaming.FormatUI(OriginalName, Request.Name));
 
             var undo = _input.BeginGlobalUndo();
             try {
@@ -150,7 +140,7 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public int GetDescription(out string pbstrDescription) {
-            pbstrDescription = Strings.RefactorPreviewChangesRenamingDescription.FormatUI(_expr, _renameReq.Name);
+            pbstrDescription = Strings.RefactorPreviewChangesRenamingDescription.FormatUI(_expr, Request.Name);
             return VSConstants.S_OK;
         }
 
