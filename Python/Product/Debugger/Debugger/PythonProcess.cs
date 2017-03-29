@@ -713,8 +713,7 @@ namespace Microsoft.PythonTools.Debugger {
         private void OnLegacyLast(object sender, LDP.LastEvent e) {
             try {
                 SendDebugRequestAsync(new LDP.LastAckRequest()).WaitAndUnwrapExceptions();
-            } catch (IOException) {
-            } catch (ObjectDisposedException) {
+            } catch (OperationCanceledException) {
                 // The process waits for this request with short timeout before terminating
                 // If the process has terminated, we expect an exception
             }
@@ -840,7 +839,7 @@ namespace Microsoft.PythonTools.Debugger {
         public async Task DetachAsync(CancellationToken ct) {
             try {
                 await SendDebugRequestAsync(new LDP.DetachRequest(), ct);
-            } catch (IOException) {
+            } catch (OperationCanceledException) {
                 // socket is closed after we send detach
             }
         }
@@ -1033,8 +1032,7 @@ namespace Microsoft.PythonTools.Debugger {
             try {
                 await SendDebugRequestAsync(new LDP.DisconnectReplRequest() {
                 }, ct);
-            } catch (IOException) {
-            } catch (ObjectDisposedException) {
+            } catch (OperationCanceledException) {
                 // If the process has terminated, we expect an exception
             }
         }
@@ -1077,21 +1075,27 @@ namespace Microsoft.PythonTools.Debugger {
             _process.StandardInput.Write(text);
         }
 
-        public async Task<T> SendDebugRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken))
+        private async Task<T> SendDebugRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken))
             where T : Response, new() {
             Debug.WriteLine("PythonDebugger " + _processGuid + " Sending Command " + request.command);
 
-            // Don't send any request if we're not listening
-            // otherwise we'll never receive the response
+            DebugConnection connection = null;
             lock (_connectionLock) {
-                if (_connection == null) {
-                    Debug.Fail("Debugger attempted to send a request with no connection.");
-                    return default(T);
-                }
+                connection = _connection;
             }
 
-            using (new DebugTimer(string.Format("DebuggerRequest ({0})", request.command), 100)) {
-                return await _connection.SendRequestAsync(request, cancellationToken);
+            if (connection == null) {
+                throw new OperationCanceledException();
+            }
+
+            try {
+                using (new DebugTimer(string.Format("DebuggerRequest ({0})", request.command), 100)) {
+                    return await connection.SendRequestAsync(request, cancellationToken);
+                }
+            } catch (IOException ex) {
+                throw new OperationCanceledException(ex.Message, ex);
+            } catch (ObjectDisposedException ex) {
+                throw new OperationCanceledException(ex.Message, ex);
             }
         }
 
