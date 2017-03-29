@@ -364,14 +364,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     select = selectView?.Configuration?.Id;
                 }
 
+                // We allow up to three retries at this process to handle race
+                // conditions where an interpreter disappears between the
+                // point where we enumerate known configuration IDs and convert
+                // them into a view. The first time that happens, we insert a
+                // stub entry, and on the subsequent pass it will be removed.
                 bool anyMissing = true;
                 for (int retries = 3; retries > 0 && anyMissing; --retries) {
-                    var configs = _interpreters.Configurations.Where(f => f.IsUIVisible());
+                    var configs = _interpreters.Configurations.Where(f => f.IsUIVisible()).ToList();
                     if (_onlineHelpView != null) {
-                        configs = configs.Concat(Enumerable.Repeat(_onlineHelpView.Configuration, 1));
+                        configs.Add(_onlineHelpView.Configuration);
                     }
                     if (_addNewEnvironmentView != null) {
-                        configs = configs.Concat(Enumerable.Repeat(_addNewEnvironmentView.Configuration, 1));
+                        configs.Add(_addNewEnvironmentView.Configuration);
                     }
 
                     anyMissing = false;
