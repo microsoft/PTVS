@@ -123,11 +123,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 throw;
             }
             try {
-                _logger?.LogEvent(PythonLogEvent.AnalysisRequestTiming, new AnalysisTimingInfo {
-                    RequestName = requestName,
-                    Milliseconds = (int)Math.Min((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency, (long)int.MaxValue),
-                    Timeout = timeout
-                });
+                int waitTime = (int)Math.Min((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency, (long)int.MaxValue);
+                if (waitTime >= 10) {
+                    _logger?.LogEvent(PythonLogEvent.AnalysisRequestTiming, new AnalysisTimingInfo {
+                        RequestName = requestName,
+                        Milliseconds = waitTime,
+                        Timeout = timeout
+                    });
+                }
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }

@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Project {
                 try {
                     var logger = ProjectMgr.Site.GetPythonToolsService().Logger;
                     foreach (var p in packages) {
-                        logger.LogEvent(PythonLogEvent.PythonPackage, new PackageInfo { Name = p.Value.Name });
+                        logger.LogEvent(PythonLogEvent.PythonPackage, new PackageInfo { Name = p.Value.Name.ToLowerInvariant() });
                     }
                 } catch (Exception ex) {
                     Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));

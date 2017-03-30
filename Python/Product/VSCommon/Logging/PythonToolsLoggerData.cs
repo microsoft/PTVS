@@ -85,4 +85,9 @@ namespace Microsoft.PythonTools.Logging {
         public int Milliseconds { get; set; }
         public bool Timeout { get; set; }
     }
+
+    internal sealed class DebugReplInfo : PythonToolsLoggerData {
+        public bool RemoteProcess { get; set; }
+        public string Version { get; set; }
+    }
 }

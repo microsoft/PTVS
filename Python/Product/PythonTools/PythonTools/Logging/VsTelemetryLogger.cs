@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Telemetry;
 
@@ -25,6 +26,8 @@ namespace Microsoft.PythonTools.Logging {
     [Export(typeof(IPythonToolsLogger))]
     internal sealed class VsTelemetryLogger : IPythonToolsLogger {
         private readonly Lazy<TelemetrySession> _session = new Lazy<TelemetrySession>(() => TelemetryService.DefaultSession);
+
+        private readonly HashSet<string> _seenPackages = new HashSet<string>();
 
         private const string EventPrefix = "vs/python/";
         private const string PropertyPrefix = "VS.Python.";
@@ -48,6 +51,15 @@ namespace Microsoft.PythonTools.Logging {
                 case PythonLogEvent.AnalysisOperationCancelled:
                 case PythonLogEvent.AnalysisExitedAbnormally:
                     return;
+                case PythonLogEvent.PythonPackage:
+                    lock (_seenPackages) {
+                        var name = (argument as PackageInfo)?.Name;
+                        // Don't send empty or repeated names
+                        if (string.IsNullOrEmpty(name) || !_seenPackages.Add(name)) {
+                            return;
+                        }
+                    }
+                    break;
             }
 
             var evt = new TelemetryEvent(EventPrefix + logEvent.ToString());

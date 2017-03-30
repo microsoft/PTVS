@@ -543,6 +543,15 @@ namespace Microsoft.PythonTools.Repl {
         protected override async Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
             var remoteProcess = _process as PythonRemoteProcess;
             if (remoteProcess == null) {
+                try {
+                    _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.DebugRepl, new Logging.DebugReplInfo {
+                        RemoteProcess = false,
+                        Version = _process.LanguageVersion.ToVersion().ToString()
+                    });
+                } catch (Exception ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                }
+
                 var conn = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
                 conn.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 conn.Listen(0);
@@ -565,6 +574,15 @@ namespace Microsoft.PythonTools.Repl {
                 // Then we give the stream to the REPL protocol handler.
                 var response = await debugConn.SendRequestAsync(new LDP.RemoteReplAttachRequest(), ct, resp => {
                     Debug.WriteLine("Stopping debug connection message processing. Switching from debugger protocol to REPL protocol.");
+
+                    try {
+                        _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.DebugRepl, new Logging.DebugReplInfo {
+                            RemoteProcess = true,
+                            Version = _process.LanguageVersion.ToVersion().ToString()
+                        });
+                    } catch (Exception ex) {
+                        Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                    }
                     // This causes the message handling loop to exit
                     throw new OperationCanceledException();
                 });
