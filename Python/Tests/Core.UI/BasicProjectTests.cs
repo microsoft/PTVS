@@ -989,11 +989,12 @@ namespace PythonToolsUITests {
 
         private static IEnumerable<string> GetVariableDescriptions(IServiceProvider serviceProvider, ITextView view, string variable, ITextSnapshot snapshot) {
             var index = snapshot.GetText().IndexOf(variable + " =");
-            return VsProjectAnalyzer.GetValueDescriptionsAsync(
-                view.GetAnalysisEntry(snapshot.TextBuffer, serviceProvider),
-                variable,
-                new SnapshotPoint(snapshot, index)
-            ).Result;
+            var entryService = serviceProvider.GetEntryService();
+            AnalysisEntry entry;
+            if (!entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+                return Enumerable.Empty<string>();
+            }
+            return VsProjectAnalyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index)).WaitAndUnwrapExceptions();
         }
 
         private static SignatureAnalysis GetSignatures(VisualStudioApp app, ITextView textView, string text, ITextSnapshot snapshot) {

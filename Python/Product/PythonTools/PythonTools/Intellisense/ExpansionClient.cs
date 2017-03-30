@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IVsTextView _view;
         private readonly ITextView _textView;
         private readonly IVsEditorAdaptersFactoryService _adapterFactory;
+        private readonly AnalysisEntryService _entryService;
         private readonly IServiceProvider _serviceProvider;
         private IVsExpansionSession _session;
         private bool _sessionEnded, _selectEndSpan;
@@ -51,6 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_expansion == null) {
                 throw new ArgumentException("TextBuffer does not support expansions");
             }
+            _entryService = serviceProvider.GetEntryService();
         }
 
         public bool InSession {
@@ -215,30 +217,34 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task AddMissingImports(List<string> importList, SnapshotPoint point) {
-            if (importList.Count > 0) {
-                var projEntry = _textView.GetAnalysisEntry(_textView.TextBuffer, _serviceProvider);
-                if (projEntry != null) {
-                    foreach (var import in importList) {
-                        var isMissing = await projEntry.Analyzer.IsMissingImportAsync(
-                            projEntry,
-                            import,
-                            new SourceLocation(
-                                point.Position,
-                                point.Position - point.GetContainingLine().Start + 1,
-                                point.GetContainingLine().LineNumber
-                            )
-                        );
+            if (importList.Count == 0) {
+                return;
+            }
 
-                        if (isMissing) {
-                            await VsProjectAnalyzer.AddImportAsync(
-                                projEntry,
-                                null,
-                                import,
-                                _textView,
-                                _textView.TextBuffer
-                            );
-                        }
-                    }
+            AnalysisEntry entry;
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(_textView, _textView.TextBuffer, out entry)) {
+                return;
+            }
+
+            foreach (var import in importList) {
+                var isMissing = await entry.Analyzer.IsMissingImportAsync(
+                    entry,
+                    import,
+                    new SourceLocation(
+                        point.Position,
+                        point.Position - point.GetContainingLine().Start + 1,
+                        point.GetContainingLine().LineNumber
+                    )
+                );
+
+                if (isMissing) {
+                    await VsProjectAnalyzer.AddImportAsync(
+                        entry,
+                        null,
+                        import,
+                        _textView,
+                        _textView.TextBuffer
+                    );
                 }
             }
         }

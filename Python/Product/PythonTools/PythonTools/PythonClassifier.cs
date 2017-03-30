@@ -48,9 +48,7 @@ namespace Microsoft.PythonTools {
 
             _buffer.RegisterForNewAnalysisEntry(NewAnalysisEntry);
 
-            var analyzer = _buffer.GetAnalyzer(provider._serviceProvider);
-            Debug.Assert(analyzer != null);
-            _version = analyzer.InterpreterFactory.GetLanguageVersion();
+            _version = _buffer.GetLanguageVersion(_provider._serviceProvider);
         }
 
         private void NewAnalysisEntry(AnalysisEntry entry) {

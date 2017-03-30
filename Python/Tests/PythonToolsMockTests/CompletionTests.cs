@@ -1144,7 +1144,7 @@ async def g():
                 QuickInfoSource.AugmentQuickInfoWorker(
                     quickInfo,
                     view.Analyzer.GetQuickInfoAsync(
-                        view.View.View.GetAnalysisEntry(snapshot.TextBuffer, view.VS.ServiceProvider),
+                        (AnalysisEntry)view.GetAnalysisEntry(),
                         view.View.TextView,
                         new SnapshotPoint(snapshot, start)
                     ).Result,
@@ -1168,7 +1168,7 @@ async def g():
                 Task<ExpressionAnalysis> task = null;
                 vs.InvokeSync(() => {
                     task = view.Analyzer.AnalyzeExpressionAsync(
-                        view.View.TextView.GetAnalysisEntry(snapshot.TextBuffer, view.VS.ServiceProvider),
+                        (AnalysisEntry)view.GetAnalysisEntry(),
                         view.View.View,
                         new SnapshotPoint(snapshot, location)
                     );
@@ -1210,7 +1210,7 @@ async def g():
             Task<SignatureAnalysis> task = null;
             view.VS.InvokeSync(() => {
                 task = view.Analyzer.GetSignaturesAsync(
-                    view.View.View.GetAnalysisEntry(snapshot.TextBuffer, view.VS.ServiceProvider),
+                    (AnalysisEntry)view.GetAnalysisEntry(),
                     view.View.TextView,
                     snapshot,
                     snapshot.CreateTrackingSpan(index, 1, SpanTrackingMode.EdgeInclusive)

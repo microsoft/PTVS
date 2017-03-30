@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             AddService(type, inst);
         }
 
-        public object GetService(Guid serviceType) {
+        private object GetService(Guid serviceType, string typeName) {
             object res;
             if (_servicesByGuid.TryGetValue(serviceType, out res)) {
                 return res;
@@ -66,14 +66,18 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             Console.WriteLine(
                 "Unknown Service {0} ({1:B})",
-                Type.GetTypeFromCLSID(serviceType, false)?.FullName ?? "(unknown)",
+                typeName ?? Type.GetTypeFromCLSID(serviceType, false)?.FullName ?? "(unknown)",
                 serviceType
             );
             return null;
         }
 
+        public object GetService(Guid serviceType) {
+            return GetService(serviceType, null);
+        }
+
         public object GetService(Type serviceType) {
-            return GetService(serviceType.GUID);
+            return GetService(serviceType.GUID, serviceType.FullName);
         }
 
         public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {

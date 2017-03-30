@@ -65,6 +65,13 @@
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
   </ItemGroup>
+  <Choose>
+    <When Condition="$(VSTarget) != '14.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>

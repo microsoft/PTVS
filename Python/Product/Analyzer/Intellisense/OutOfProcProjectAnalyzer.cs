@@ -1873,7 +1873,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 item = pyItem;
             }
 
-            fileId = _projectFiles.Add(path, item);
+            if (item != null) {
+                fileId = _projectFiles.Add(path, item);
+            } else {
+                fileId = -1;
+            }
 
             return item;
         }
