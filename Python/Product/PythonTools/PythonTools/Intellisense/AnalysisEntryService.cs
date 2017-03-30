@@ -16,17 +16,21 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -198,12 +202,37 @@ namespace Microsoft.PythonTools.Intellisense {
                 return analyzer != null;
             }
 
-            // If we have a REPL evaluator we'll use it's analyzer
+            // If we have a REPL evaluator we'll use its analyzer
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
                 analyzer = evaluator.Analyzer;
                 filename = evaluator.AnalysisFilename;
                 return analyzer != null;
+            }
+
+            // If we find an associated project, use its analyzer
+            // This should only happen while racing with text view creation
+            var path = textBuffer.GetFilePath();
+            if (path != null) {
+                var rdt = (IVsRunningDocumentTable4)_site.GetService(typeof(SVsRunningDocumentTable));
+                try {
+                    var cookie = rdt?.GetDocumentCookie(path) ?? VSConstants.VSCOOKIE_NIL;
+                    if (cookie != VSConstants.VSCOOKIE_NIL) {
+                        IVsHierarchy hierarchy;
+                        uint itemid;
+                        rdt.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
+                        if (hierarchy != null) {
+                            var pyProject = hierarchy.GetProject()?.GetPythonProject();
+                            if (pyProject != null) {
+                                analyzer = pyProject.GetAnalyzer();
+                                Debug.WriteLineIf(analyzer != null, "Found an analyzer that wasn't in the property bag");
+                                filename = path;
+                                return true;
+                            }
+                        }
+                    }
+                } catch (ArgumentException) {
+                }
             }
 
             analyzer = null;

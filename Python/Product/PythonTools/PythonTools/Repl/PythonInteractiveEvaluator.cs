@@ -157,17 +157,17 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 var config = Configuration;
+                IPythonInterpreterFactory factory = null;
+                if (config?.Interpreter != null) {
+                    var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                    factory = interpreterService.FindInterpreter(config.Interpreter.Id);
+                }
 
-                if (config?.Interpreter == null) {
+                if (factory == null) {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
                     var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
-                    var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                    _analyzer = new VsProjectAnalyzer(
-                        _serviceProvider,
-                        interpreterService.FindInterpreter(config.Interpreter.Id),
-                        projectFile: projectFile
-                    );
+                    _analyzer = new VsProjectAnalyzer(_serviceProvider, factory, projectFile: projectFile);
                 }
                 return _analyzer;
             }

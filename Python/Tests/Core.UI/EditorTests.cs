@@ -360,14 +360,21 @@ namespace PythonToolsUITests {
                 var window = item.Open();
                 window.Activate();
 
-                Keyboard.Type("from fob import ba\r");
-
                 var doc = app.GetDocument(item.Document.FullName);
+                System.Threading.Thread.Sleep(1000);
+
+                Keyboard.Type("from fob import ba");
+                using (doc.WaitForSession<ICompletionSession>()) {
+                    Keyboard.Type("\r");
+                }
 
                 doc.WaitForText("from fob import baz");
                 Keyboard.Type("\r");
 
-                Keyboard.Type("from fob import Ba\r");
+                Keyboard.Type("from fob import Ba");
+                using (doc.WaitForSession<ICompletionSession>()) {
+                    Keyboard.Type("\r");
+                }
                 doc.WaitForText("from fob import baz\r\nfrom fob import Baz");
             }
         }

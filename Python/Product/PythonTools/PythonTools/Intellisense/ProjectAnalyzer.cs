@@ -158,6 +158,13 @@ namespace Microsoft.PythonTools.Intellisense {
             bool implicitProject = true,
             MSBuild.Project projectFile = null
         ) {
+            if (serviceProvider == null) {
+                throw new ArgumentNullException(nameof(serviceProvider));
+            }
+            if (factory == null) {
+                throw new ArgumentNullException(nameof(factory));
+            }
+
             _errorProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
             _commentTaskProvider = (CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider));
             if (_errorProvider != null) {
