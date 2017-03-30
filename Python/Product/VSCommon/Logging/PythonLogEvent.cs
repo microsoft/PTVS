@@ -71,6 +71,10 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Information about how long requests to the out-of-proc analyzer take
         /// </summary>
-        AnalysisRequestTiming
+        AnalysisRequestTiming,
+        /// <summary>
+        /// Information about a debug REPL connection event
+        /// </summary>
+        DebugRepl
     }
 }
