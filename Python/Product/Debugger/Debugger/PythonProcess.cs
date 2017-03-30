@@ -59,6 +59,7 @@ namespace Microsoft.PythonTools.Debugger {
         private ICollection<KeyValuePair<string, int>> _breakOn;
         private bool _handleEntryPointHit = true;
         private bool _handleEntryPointBreakpoint = true;
+        private bool _isDisposed;
 
         protected PythonProcess(int pid, PythonLanguageVersion languageVersion) {
             if (languageVersion < PythonLanguageVersion.V26 && !languageVersion.IsNone()) {
@@ -173,6 +174,11 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         protected virtual void Dispose(bool disposing) {
+            if (_isDisposed) {
+                return;
+            }
+            _isDisposed = true;
+
             DebugConnectionListener.UnregisterProcess(_processGuid);
 
             if (disposing) {
@@ -200,8 +206,13 @@ namespace Microsoft.PythonTools.Debugger {
                         _connection.Dispose();
                         _connection = null;
                     }
-                    _process?.Dispose();
+                    // Avoiding ?. syntax because FxCop doesn't understand it
+                    if (_process != null) {
+                        _process.Dispose();
+                    }
                 }
+
+                _connectedEvent.Dispose();
             }
         }
 

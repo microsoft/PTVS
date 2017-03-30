@@ -246,7 +246,10 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public void Dispose() {
-            _connection?.Dispose();
+            // Avoiding ?. syntax because FxCop doesn't understand it
+            if (_connection != null) {
+                _connection.Dispose();
+            }
             // The connection dispose above won't close the stream, because we don't give it ownership
             // Disposing of the stream will cause the message thread to stop, which causes the event thread to stop
             _stream?.Dispose();
