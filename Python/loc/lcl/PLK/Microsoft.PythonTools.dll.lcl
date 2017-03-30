@@ -26,7 +26,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[A&utomatically show completions for all identifiers]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[A&utomatycznie pokaż uzupełnienia dla wszystkich identyfikatorów]]></Val>
+            <Val><![CDATA[Aut&omatycznie pokaż uzupełnienia dla wszystkich identyfikatorów]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -50,7 +50,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Committed by &typing the following characters:]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Zatwierdzone przez wpisanie następujących znaków:]]></Val>
+            <Val><![CDATA[Za&twierdzone przez wpisanie następujących znaków:]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -98,7 +98,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Member completion displays &intersection of members]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Uzupełnienie dla elementu członkowskiego wyświetla część wspólną elementów członkowskich]]></Val>
+            <Val><![CDATA[Uzupełnienie dla elementu &członkowskiego wyświetla część wspólną elementów członkowskich]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -134,7 +134,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Enter &outlining mode when files open]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Podaj tryb &zwijania przy otwieraniu plików]]></Val>
+            <Val><![CDATA[&Podaj tryb zwijania przy otwieraniu plików]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -374,7 +374,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Automatically generate completion DB on first use]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Automatycznie generuj bazę danych uzupełniania przy pierwszym użyciu]]></Val>
+            <Val><![CDATA[A&utomatycznie generuj bazę danych uzupełniania przy pierwszym użyciu]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -461,7 +461,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Show the Output Window when &installing or removing packages]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Pokaż &okno danych wyjściowych podczas instalowania lub usuwania pakietów]]></Val>
+            <Val><![CDATA[Pokaż o&kno danych wyjściowych podczas instalowania lub usuwania pakietów]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -473,7 +473,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Show the Output Window when creating &virtual environments]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Pokaż &okno danych wyjściowych podczas tworzenia środowisk wirtualnych]]></Val>
+            <Val><![CDATA[Pokaż ok&no danych wyjściowych podczas tworzenia środowisk wirtualnych]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -533,7 +533,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Warn when imported module cannot be found]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Ostrzegaj, jeśli nie można znaleźć importowanego modułu]]></Val>
+            <Val><![CDATA[Os&trzegaj, jeśli nie można znaleźć importowanego modułu]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -758,7 +758,7 @@
         <Str Cat="Edit Box">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Określa zmienne środowiskowe do ustawienia w zduplikowanym procesie w postaci:]D;]A;]D;]A;NAZWA1=wartość1]D;]A;NAZWA2=wartość2]D;]A;...]]></Val>
+            <Val><![CDATA[Określa zmienne środowiskowe do ustawienia w procesie rozmnożonym w postaci:]D;]A;]D;]A;NAZWA1=wartość1]D;]A;NAZWA2=wartość2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -779,7 +779,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Określa zmienne środowiskowe do ustawienia w zduplikowanym procesie w postaci:]D;]A;]D;]A;NAZWA1=wartość1]D;]A;NAZWA2=wartość2]D;]A;...]]></Val>
+            <Val><![CDATA[Określa zmienne środowiskowe do ustawienia w procesie rozmnożonym w postaci:]D;]A;]D;]A;NAZWA1=wartość1]D;]A;NAZWA2=wartość2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1361,7 +1361,7 @@
         <Str Cat="Edit Box">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Określa zmienne środowiskowe do ustawienia w zduplikowanym procesie w postaci:]D;]A;]D;]A;NAZWA1=wartość1]D;]A;NAZWA2=wartość2]D;]A;...]]></Val>
+            <Val><![CDATA[Określa zmienne środowiskowe do ustawienia w procesie rozmnożonym w postaci:]D;]A;]D;]A;NAZWA1=wartość1]D;]A;NAZWA2=wartość2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1382,7 +1382,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Określa zmienne środowiskowe do ustawienia w zduplikowanym procesie w postaci:]D;]A;]D;]A;NAZWA1=wartość1]D;]A;NAZWA2=wartość2]D;]A;...]]></Val>
+            <Val><![CDATA[Określa zmienne środowiskowe do ustawienia w procesie rozmnożonym w postaci:]D;]A;]D;]A;NAZWA1=wartość1]D;]A;NAZWA2=wartość2]D;]A;...]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -2632,7 +2632,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Python products and information]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Produkty środowiska &Python i informacje]]></Val>
+              <Val><![CDATA[Produkty środowiska Python i i&nformacje]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -2662,7 +2662,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Issues and suggestions]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Problemy i sugestie]]></Val>
+              <Val><![CDATA[Problemy i &sugestie]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3082,7 +3082,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Import coverage file...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Importuj plik pokrycia...]]></Val>
+              <Val><![CDATA[I&mportuj plik pokrycia...]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3202,7 +3202,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Python &Environments]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Środowiska &Python]]></Val>
+              <Val><![CDATA[Środ&owiska Python]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -6553,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6589,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

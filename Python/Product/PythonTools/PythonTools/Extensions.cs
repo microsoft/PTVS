@@ -733,7 +733,7 @@ namespace Microsoft.PythonTools {
             return (IVsDebugger)provider.GetService(typeof(SVsShellDebugger));
         }
 
-        internal static async Task RefreshVariableViews(this IServiceProvider serviceProvider) {
+        internal static async Task RefreshVariableViewsAsync(this IServiceProvider serviceProvider, CancellationToken ct = default(CancellationToken)) {
             serviceProvider.GetUIThread().MustBeCalledFromUIThread();
             EnvDTE.Debugger debugger = serviceProvider.GetDTE()?.Debugger;
             if (debugger == null) {
@@ -741,7 +741,7 @@ namespace Microsoft.PythonTools {
             }
             AD7Engine engine = AD7Engine.GetEngineForProcess(debugger.CurrentProcess);
             if (engine != null) {
-                await engine.RefreshThreadFrames(debugger.CurrentThread.ID);
+                await engine.RefreshThreadFrames(debugger.CurrentThread.ID, ct);
                 var vsDebugger = serviceProvider.GetShellDebugger() as IDebugRefreshNotification140;
                 if (vsDebugger != null) {
                     // Passing fCallstackFormattingAffected = TRUE to OnExpressionEvaluationRefreshRequested to force refresh

@@ -679,7 +679,7 @@ ConnectionInfo GetConnectionInfo() {
     return ConnectionInfo((MemoryBuffer*)pBuf, hMapFile);
 }
 
-// Error messages - must be kept in sync with PythonAttach.cs
+// Error messages - must be kept in sync with ConnErrorMessages.cs
 enum ConnErrorMessages {
     ConnError_None,
     ConnError_InterpreterNotInitialized,
@@ -701,7 +701,8 @@ enum ConnErrorMessages {
     ConnError_RemoteSecretMismatch,
     ConnError_RemoteAttachRejected,
     ConnError_RemoteInvalidUri,
-    ConnError_RemoteUnsupportedTransport
+    ConnError_RemoteUnsupportedTransport,
+    ConnError_UnsupportedVersion
 };
 
 // Ensures handles are closed when they go out of scope
@@ -881,6 +882,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         if (version == PythonVersion_Unknown) {
             connInfo.ReportError(ConnError_UnknownVersion);
             return false;
+        } else if (version < PythonVersion_26) {
+            connInfo.ReportError(ConnError_UnsupportedVersion);
+            return false;
         } else if (version >= PythonVersion_27 && version != PythonVersion_30) {
             threadSafeAddPendingCall = true;
         }
@@ -1038,9 +1042,11 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         _wsplitpath_s(filename.c_str(), drive, _MAX_DRIVE, dir, _MAX_DIR, file, _MAX_FNAME, ext, _MAX_EXT);
 
         wchar_t debuggerModuleFilePath[MAX_PATH];
+        wchar_t ipcModuleFilePath[MAX_PATH];
         wchar_t replModuleFilePath[MAX_PATH];
         wchar_t utilModuleFilePath[MAX_PATH];
         _wmakepath_s(debuggerModuleFilePath, drive, dir, L"visualstudio_py_debugger", L".py");
+        _wmakepath_s(ipcModuleFilePath, drive, dir, L"visualstudio_py_ipcjson", L".py");
         _wmakepath_s(replModuleFilePath, drive, dir, L"visualstudio_py_repl", L".py");
         _wmakepath_s(utilModuleFilePath, drive, dir, L"visualstudio_py_util", L".py");
 
@@ -1048,7 +1054,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         //
         // visualstudio_py_debugger --> visualstudio_py_repl --> visualstudio_py_util
         //                        \______________________________^
-
+        //                         \
+        //                          --> visualstudio_py_ipcjson
         auto utilModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_util"));
         auto utilModuleDict = pyModuleGetDict(utilModule.ToPython());
         LoadAndEvaluateCode(utilModuleFilePath, "visualstudio_py_util.py", connInfo, isDebug, utilModuleDict,
@@ -1060,9 +1067,15 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         LoadAndEvaluateCode(replModuleFilePath, "visualstudio_py_repl.py", connInfo, isDebug, replModuleDict,
             pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins, pyErrPrint);
 
+        auto ipcModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_ipcjson"));
+        auto ipcModuleDict = pyModuleGetDict(ipcModule.ToPython());
+        LoadAndEvaluateCode(ipcModuleFilePath, "visualstudio_py_ipcjson.py", connInfo, isDebug, ipcModuleDict,
+            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins, pyErrPrint);
+
         auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_util", utilModule.ToPython());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_repl", replModule.ToPython());
+        dictSetItem(globalsDict.ToPython(), "visualstudio_py_ipcjson", ipcModule.ToPython());
         LoadAndEvaluateCode(debuggerModuleFilePath, "visualstudio_py_debugger.py", connInfo, isDebug, globalsDict.ToPython(),
             pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins, pyErrPrint);
 

@@ -16,23 +16,26 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
@@ -84,11 +87,15 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void OnReadyForInput() {
+            OnReadyForInputAsync().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+        }
+
+        private async Task OnReadyForInputAsync() {
             if (IsInDebugBreakMode()) {
                 foreach (var engine in AD7Engine.GetEngines()) {
                     if (engine.Process != null) {
                         if (!_evaluators.ContainsKey(engine.Process.Id)) {
-                            AttachProcess(engine.Process, engine);
+                            await AttachProcessAsync(engine.Process, engine);
                         }
                     }
                 }
@@ -101,8 +108,9 @@ namespace Microsoft.PythonTools.Repl {
             if (engine != null) {
                 long? activeThreadId = ((IThreadIdMapper)engine).GetPythonThreadId((uint)_serviceProvider.GetDTE().Debugger.CurrentThread.ID);
                 if (activeThreadId != null) {
-                    AttachProcess(engine.Process, engine);
-                    ChangeActiveThread(activeThreadId.Value, false);
+                    AttachProcessAsync(engine.Process, engine).ContinueWith(t => {
+                        ChangeActiveThread(activeThreadId.Value, false);
+                    }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
                 }
             }
         }
@@ -375,21 +383,21 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void OnEngineAttached(object sender, AD7EngineEventArgs e) {
-            _serviceProvider.GetUIThread().InvokeAsync(() => {
-                AttachProcess(e.Engine.Process, e.Engine);
-            }).DoNotWait();
+            _serviceProvider.GetUIThread().InvokeAsync(async () => {
+                await AttachProcessAsync(e.Engine.Process, e.Engine);
+            }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
         private void OnEngineDetaching(object sender, AD7EngineEventArgs e) {
-            _serviceProvider.GetUIThread().InvokeAsync(() => {
-                DetachProcess(e.Engine.Process);
-            }).DoNotWait();
+            _serviceProvider.GetUIThread().InvokeAsync(async () => {
+                await DetachProcessAsync(e.Engine.Process);
+            }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
         private void OnProcessExited(object sender, ProcessExitedEventArgs e) {
-            _serviceProvider.GetUIThread().InvokeAsync(() => {
-                DetachProcess((PythonProcess)sender);
-            }).DoNotWait();
+            _serviceProvider.GetUIThread().InvokeAsync(async () => {
+                await DetachProcessAsync((PythonProcess)sender);
+            }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
         internal void SwitchProcess(PythonProcess process, bool verbose) {
@@ -403,7 +411,9 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal void AttachProcess(PythonProcess process, IThreadIdMapper threadIdMapper) {
+        internal async Task AttachProcessAsync(PythonProcess process, IThreadIdMapper threadIdMapper) {
+            _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+
             if (_evaluators.ContainsKey(process.Id)) {
                 // Process is already attached, so just switch to it if needed
                 SwitchProcess(process, false);
@@ -413,7 +423,7 @@ namespace Microsoft.PythonTools.Repl {
             process.ProcessExited += new EventHandler<ProcessExitedEventArgs>(OnProcessExited);
             var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, threadIdMapper);
             evaluator.CurrentWindow = CurrentWindow;
-            evaluator.InitializeAsync().WaitAndUnwrapExceptions();
+            await evaluator.InitializeAsync();
             evaluator.AvailableScopesChanged += new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
             evaluator.MultipleScopeSupportChanged += new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
             _evaluators.Add(process.Id, evaluator);
@@ -421,13 +431,15 @@ namespace Microsoft.PythonTools.Repl {
             _activeEvaluator = evaluator;
         }
 
-        internal void DetachProcess(PythonProcess process) {
+        internal async Task DetachProcessAsync(PythonProcess process) {
+            _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+
             int id = process.Id;
             PythonDebugProcessReplEvaluator evaluator;
             if (_evaluators.TryGetValue(id, out evaluator)) {
                 evaluator.AvailableScopesChanged -= new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
                 evaluator.MultipleScopeSupportChanged -= new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
-                process.DisconnectRepl();
+                await process.DisconnectReplAsync();
                 _evaluators.Remove(id);
                 if (_activeEvaluator == evaluator) {
                     _activeEvaluator = null;
@@ -528,7 +540,7 @@ namespace Microsoft.PythonTools.Repl {
             get { return _frameId; }
         }
 
-        protected override CommandProcessorThread Connect() {
+        protected override async Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
             var remoteProcess = _process as PythonRemoteProcess;
             if (remoteProcess == null) {
                 var conn = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
@@ -538,32 +550,34 @@ namespace Microsoft.PythonTools.Repl {
                 var proc = System.Diagnostics.Process.GetProcessById(_process.Id);
 
                 var thread = CommandProcessorThread.Create(this, conn, proc);
-                _process.ConnectRepl(portNum);
+                await _process.ConnectReplAsync(portNum);
                 return thread;
             }
 
             // Ignore SSL errors, since user was already prompted about them and chose to ignore them when he attached to this process.
-            var stream = remoteProcess.Connect(false);
-            bool connected = false;
-            try {
-                stream.Write(PythonRemoteProcess.ReplCommandBytes);
+            using (var debugConn = await remoteProcess.ConnectAsync(false, ct)) {
+                // After the REPL attach response is received, we go from
+                // using the debugger protocol to the REPL protocol.
+                // It's important to have a clean break between the 2, and at the right time.
+                // The server will send the debugger protocol response for attach
+                // before sending anything else and as soon as we read that
+                // response, we stop reading any more messages.
+                // Then we give the stream to the REPL protocol handler.
+                var response = await debugConn.SendRequestAsync(new LDP.RemoteReplAttachRequest(), ct, resp => {
+                    Debug.WriteLine("Stopping debug connection message processing. Switching from debugger protocol to REPL protocol.");
+                    // This causes the message handling loop to exit
+                    throw new OperationCanceledException();
+                });
 
-                string attachResp = stream.ReadAsciiString(PythonRemoteProcess.Accepted.Length);
-                if (attachResp != PythonRemoteProcess.Accepted) {
+                if (!response.accepted) {
                     throw new ConnectionException(ConnErrorMessages.RemoteAttachRejected);
                 }
 
-                connected = true;
-            } finally {
-                if (!connected) {
-                    if (stream != null) {
-                        stream.Close();
-                    }
-                    stream = null;
-                }
+                // Get the stream out of the connection before Dispose is called,
+                // so that the stream doesn't get closed.
+                var stream = debugConn.DetachStream();
+                return CommandProcessorThread.Create(this, stream);
             }
-
-            return CommandProcessorThread.Create(this, stream);
         }
 
         internal override void OnConnected() {

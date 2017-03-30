@@ -882,6 +882,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unsupported Python version loaded in process.
+        /// </summary>
+        public static string ConnErrorMessages_UnsupportedVersion {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_UnsupportedVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Continue
         ///Some manual steps will be required to configure your project..
         /// </summary>
@@ -1122,6 +1131,24 @@ namespace Microsoft.PythonTools {
         public static string DebugFileUnknownCode {
             get {
                 return ResourceManager.GetString("DebugFileUnknownCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugger operation is in progress....
+        /// </summary>
+        public static string DebuggerInProgress {
+            get {
+                return ResourceManager.GetString("DebuggerInProgress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugging is not supported for Python 2.5 and earlier..
+        /// </summary>
+        public static string DebuggerPythonVersionNotSupported {
+            get {
+                return ResourceManager.GetString("DebuggerPythonVersionNotSupported", resourceCulture);
             }
         }
         
@@ -2643,6 +2670,15 @@ namespace Microsoft.PythonTools {
         public static string GroupingClassificationType {
             get {
                 return ResourceManager.GetString("GroupingClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide &amp;details.
+        /// </summary>
+        public static string HideDetails {
+            get {
+                return ResourceManager.GetString("HideDetails", resourceCulture);
             }
         }
         
@@ -4649,6 +4685,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show &amp;details.
+        /// </summary>
+        public static string ShowDetails {
+            get {
+                return ResourceManager.GetString("ShowDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python source analysis is not up to date.
         /// </summary>
         public static string SourceAnalysisNotUpToDate {
@@ -4822,6 +4867,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please press Ctrl+C to copy the contents of this dialog and report this error..
+        /// </summary>
+        public static string UnexpectedError_Instruction {
+            get {
+                return ResourceManager.GetString("UnexpectedError_Instruction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please press Ctrl+C to copy the contents of this dialog and report this error to our &lt;a href=&quot;issuetracker&quot;&gt;issue tracker&lt;/a&gt;..
+        /// </summary>
+        public static string UnexpectedError_InstructionWithLink {
+            get {
+                return ResourceManager.GetString("UnexpectedError_InstructionWithLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unexpected error occurred.
+        /// </summary>
+        public static string UnexpectedError_Title {
+            get {
+                return ResourceManager.GetString("UnexpectedError_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while upgrading projects: {0}.
         /// </summary>
         public static string UnexpectedUpgradeError {
@@ -4989,6 +5061,15 @@ namespace Microsoft.PythonTools {
         public static string UpgradedInterpreterReferenceFailed {
             get {
                 return ResourceManager.GetString("UpgradedInterpreterReferenceFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project..
+        /// </summary>
+        public static string UpgradedInterpreterReferenceRemoved {
+            get {
+                return ResourceManager.GetString("UpgradedInterpreterReferenceRemoved", resourceCulture);
             }
         }
         

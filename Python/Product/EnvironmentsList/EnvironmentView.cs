@@ -45,11 +45,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             new InterpreterConfiguration(AddNewEnvironmentViewId, AddNewEnvironmentViewId)
         };
 
-        public static readonly EnvironmentView OnlineHelpView = new EnvironmentView(
-            OnlineHelpViewId,
-            Resources.EnvironmentViewOnlineHelpLabel
-        );
-
         // Names of properties that will be requested from interpreter configurations
         internal const string CompanyKey = "Company";
         internal const string SupportUrlKey = "SupportUrl";
@@ -70,7 +65,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private EnvironmentView(string id, string localizedName) {
             Configuration = new InterpreterConfiguration(id, id);
-            LocalizedDisplayName = localizedName;
+            Description = LocalizedDisplayName = localizedName;
+            Extensions = new ObservableCollection<object>();
         }
 
         internal EnvironmentView(
@@ -134,6 +130,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             ev.Extensions = new ObservableCollection<object>();
             ev.Extensions.Add(new ConfigurationExtensionProvider(service, alwaysCreateNew: true));
             return ev;
+        }
+
+        public static EnvironmentView CreateOnlineHelpEnvironmentView() {
+            return new EnvironmentView(OnlineHelpViewId, Resources.EnvironmentViewOnlineHelpLabel);
+        }
+
+        public static EnvironmentView CreateMissingEnvironmentView(string id, string description) {
+            return new EnvironmentView(id, description + Strings.MissingSuffix);
         }
 
         public static bool IsAddNewEnvironmentView(string id) => AddNewEnvironmentViewId.Equals(id);
@@ -227,7 +231,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         #region Configuration Dependency Properties
 
-        private static readonly DependencyPropertyKey DescriptionPropertyKey = DependencyProperty.RegisterReadOnly("Description", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
+        private static readonly DependencyPropertyKey DescriptionPropertyKey = DependencyProperty.RegisterReadOnly("Description", typeof(string), typeof(EnvironmentView), new PropertyMetadata(""));
         private static readonly DependencyPropertyKey PrefixPathPropertyKey = DependencyProperty.RegisterReadOnly("PrefixPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey InterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly("InterpreterPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey WindowsInterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly("WindowsInterpreterPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
@@ -240,8 +244,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly DependencyProperty PathEnvironmentVariableProperty = PathEnvironmentVariablePropertyKey.DependencyProperty;
 
         public string Description {
-            get { return Factory == null ? string.Empty : (string)GetValue(DescriptionProperty); }
-            set { if (Factory != null) { SetValue(DescriptionPropertyKey, value); } }
+            get { return (string)GetValue(DescriptionProperty) ?? ""; }
+            set { SetValue(DescriptionPropertyKey, value ?? ""); }
         }
 
         public string PrefixPath {
@@ -268,20 +272,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         #region Extra Information Dependency Properties
 
-        private static readonly DependencyPropertyKey CompanyPropertyKey = DependencyProperty.RegisterReadOnly("Company", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
-        private static readonly DependencyPropertyKey SupportUrlPropertyKey = DependencyProperty.RegisterReadOnly("SupportUrl", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
+        private static readonly DependencyPropertyKey CompanyPropertyKey = DependencyProperty.RegisterReadOnly("Company", typeof(string), typeof(EnvironmentView), new PropertyMetadata(""));
+        private static readonly DependencyPropertyKey SupportUrlPropertyKey = DependencyProperty.RegisterReadOnly("SupportUrl", typeof(string), typeof(EnvironmentView), new PropertyMetadata(""));
 
         public static readonly DependencyProperty CompanyProperty = CompanyPropertyKey.DependencyProperty;
         public static readonly DependencyProperty SupportUrlProperty = SupportUrlPropertyKey.DependencyProperty;
 
         public string Company {
-            get { return Factory == null ? string.Empty : (string)GetValue(CompanyProperty); }
-            set { if (Factory != null) { SetValue(CompanyPropertyKey, value); } }
+            get { return (string)GetValue(CompanyProperty) ?? ""; }
+            set { SetValue(CompanyPropertyKey, value ?? ""); }
         }
 
         public string SupportUrl {
-            get { return Factory == null ? string.Empty : (string)GetValue(SupportUrlProperty); }
-            set { if (Factory != null) { SetValue(SupportUrlPropertyKey, value); } }
+            get { return (string)GetValue(SupportUrlProperty) ?? ""; }
+            set { SetValue(SupportUrlPropertyKey, value ?? ""); }
         }
 
         #endregion

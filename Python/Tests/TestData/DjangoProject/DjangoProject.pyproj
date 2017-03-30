@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -11,7 +11,8 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Django launcher</LaunchProvider>
-    <WebBrowserUrl></WebBrowserUrl>
+    <WebBrowserUrl>
+    </WebBrowserUrl>
     <OutputPath>.</OutputPath>
     <Name>DjangoApplication1</Name>
     <RootNamespace>DjangoApplication1</RootNamespace>
@@ -27,6 +28,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Oar\admin.py" />
+    <Compile Include="Oar\migrations\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Oar\models.py" />
     <Compile Include="Oar\tests.py" />
     <Compile Include="Oar\views.py" />
@@ -44,6 +48,7 @@
   <ItemGroup>
     <Folder Include="Oar\" />
     <Folder Include="Fob\" />
+    <Folder Include="Oar\migrations\" />
     <Folder Include="Templates" />
     <Folder Include="Templates\admin" />
     <Folder Include="Templates\polls" />

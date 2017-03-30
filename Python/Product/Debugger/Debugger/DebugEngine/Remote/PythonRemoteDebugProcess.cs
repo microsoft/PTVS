@@ -18,13 +18,16 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.VisualStudio.Debugger.Interop;
+using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteDebugProcess : IDebugProcess2, IDebugProcessSecurity2 {
-
         private readonly PythonRemoteDebugPort _port;
         private readonly int _pid;
         private readonly string _exe;
@@ -155,32 +158,30 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             get { return _version; }
         }
 
-        public static PythonRemoteDebugProcess Connect(PythonRemoteDebugPort port) {
+        public static async Task<PythonRemoteDebugProcess> ConnectAsync(PythonRemoteDebugPort port, CancellationToken ct) {
             PythonRemoteDebugProcess process = null;
 
             // Connect to the remote debugging server and obtain process information. If any errors occur, display an error dialog, and keep
             // trying for as long as user clicks "Retry".
             while (true) {
-                Stream stream = null;
+                DebugConnection debugConn = null;
                 ConnectionException connEx = null;
                 try {
                     // Process information is not sensitive, so ignore any SSL certificate errors, rather than bugging the user with warning dialogs.
-                    stream = PythonRemoteProcess.Connect(port.Uri, false);
+                    debugConn = await PythonRemoteProcess.ConnectAsync(port.Uri, false, ct);
                 } catch (ConnectionException ex) {
                     connEx = ex;
                 }
 
-                using (stream) {
-                    if (stream != null) {
+                using (debugConn) {
+                    if (debugConn != null) {
                         try {
-                            stream.Write(PythonRemoteProcess.InfoCommandBytes);
-                            int pid = stream.ReadInt32();
-                            string exe = stream.ReadString();
-                            string username = stream.ReadString();
-                            string version = stream.ReadString();
-                            process = new PythonRemoteDebugProcess(port, pid, exe, username, version);
+                            var response = await debugConn.SendRequestAsync(new LDP.RemoteDebuggerInfoRequest(), ct);
+                            process = new PythonRemoteDebugProcess(port, response.processId, response.executable, response.user, response.pythonVersion);
                             break;
                         } catch (IOException ex) {
+                            connEx = new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
+                        } catch (FailedRequestException ex) {
                             connEx = new ConnectionException(ConnErrorMessages.RemoteNetworkError, ex);
                         }
                     }

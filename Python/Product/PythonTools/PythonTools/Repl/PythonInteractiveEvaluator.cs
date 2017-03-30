@@ -371,7 +371,7 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
-                thread = Connect();
+                thread = await ConnectAsync(default(CancellationToken));
 
                 var newerThread = Interlocked.CompareExchange(ref _thread, thread, null);
                 if (newerThread != null) {
@@ -487,7 +487,7 @@ namespace Microsoft.PythonTools.Repl {
                 ExecutionResult result = await thread.ExecuteText(text);
 
                 try {
-                    await _serviceProvider.GetUIThread().InvokeTask(() => _serviceProvider.RefreshVariableViews());
+                    await _serviceProvider.GetUIThread().InvokeTask(async () => await _serviceProvider.RefreshVariableViewsAsync());
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.Fail(ex.ToString());
                 }

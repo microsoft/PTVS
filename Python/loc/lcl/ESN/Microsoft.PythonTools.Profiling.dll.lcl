@@ -191,7 +191,7 @@
         <Str Cat="Text">
           <Val><![CDATA[_Open project]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[_Abrir proyecto]]></Val>
+            <Val><![CDATA[A_brir proyecto]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -236,7 +236,7 @@
         <Str Cat="Text">
           <Val><![CDATA[S_tandalone script]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Script _independiente]]></Val>
+            <Val><![CDATA[_Script independiente]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -760,7 +760,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -796,7 +796,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

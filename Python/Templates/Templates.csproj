@@ -64,7 +64,7 @@
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <Content Include="..\Product\Core\License_en-US.rtf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>

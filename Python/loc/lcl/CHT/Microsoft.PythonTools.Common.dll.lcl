@@ -2726,7 +2726,7 @@
         <Str Cat="Text">
           <Val><![CDATA[We won't move any files from where they are now.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[我們無法將任何檔案從其目前的位置移出。]]></Val>
+            <Val><![CDATA[我們不會將任何檔案從其目前所在位置移出。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5050,7 +5050,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5086,7 +5086,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

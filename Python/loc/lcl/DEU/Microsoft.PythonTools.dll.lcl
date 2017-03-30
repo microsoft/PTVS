@@ -122,7 +122,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Add new line on enter at end of fully typed word]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Am Ende eines vollständig eingegebenen Worts bei EINGABE eine &neue Zeile einfügen]]></Val>
+            <Val><![CDATA[Am Ende eines &vollständig eingegebenen Worts bei EINGABE eine neue Zeile einfügen]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -212,7 +212,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Break on SystemExit exception with exit code of &zero]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Bei SystemExit-Ausnahme mit Exitcode 0 anhalten]]></Val>
+            <Val><![CDATA[Bei &SystemExit-Ausnahme mit Exitcode 0 anhalten]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -260,7 +260,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Wait for input when process exits abnormally]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Auf Eingabe warten, wenn der Prozess abnormal beendet wird]]></Val>
+            <Val><![CDATA[Auf Eingabe warten, wenn der &Prozess abnormal beendet wird]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -386,7 +386,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Ignore system-wide PYTHONPATH variables]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Systemweite PYTHONPATH-Variablen ignorieren]]></Val>
+            <Val><![CDATA[Syst&emweite PYTHONPATH-Variablen ignorieren]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -644,7 +644,7 @@
         <Str Cat="Radio Button">
           <Val><![CDATA[&Never evaluate expressions]]></Val>
           <Tgt Cat="Radio Button" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Ausdrücke nie auswerten]]></Val>
+            <Val><![CDATA[Ausdrücke &nie auswerten]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -2632,7 +2632,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Python products and information]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Python-Produkte und -Informationen]]></Val>
+              <Val><![CDATA[Python-Produkte und -&Informationen]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -2662,7 +2662,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Issues and suggestions]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Probleme und Vorschläge]]></Val>
+              <Val><![CDATA[Probleme und &Vorschläge]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3112,7 +3112,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Interactive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Interaktives &Python-Fenster]]></Val>
+              <Val><![CDATA[Interaktives Python-&Fenster]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3172,7 +3172,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Debug Interactive]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Interaktives Debuggen in &Python]]></Val>
+              <Val><![CDATA[Interaktives Debu&ggen in Python]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -6553,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6589,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17076.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

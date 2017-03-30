@@ -170,13 +170,16 @@ namespace Microsoft.PythonTools.Intellisense {
                         null,
                         null
                     );
-                    if (extractInfo == null) {
+                    if (extractInfo == null || extractInfo.Data == null) {
                         return null;
                     }
 
                     var changes = extractInfo.Data.changes;
                     var tracker = extractInfo.GetTracker(extractInfo.Data.version);
                     var originalBuffer = _view.TextBuffer;
+                    if (changes == null || tracker == null || originalBuffer == null) {
+                        return null;
+                    }
 
                     return _parent._changePreviewFactory.Value.CreateDiffView(
                         changes,

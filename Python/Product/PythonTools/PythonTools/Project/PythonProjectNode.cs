@@ -1387,7 +1387,19 @@ namespace Microsoft.PythonTools.Project {
             psi.UseShellExecute = false;
             psi.WorkingDirectory = path;
 
-            var config = GetLaunchConfigurationOrThrow();
+            LaunchConfiguration config = null;
+            try {
+                config = GetLaunchConfigurationOrThrow();
+            } catch (NoInterpretersException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return VSConstants.S_OK;
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return VSConstants.S_OK;
+            } catch (IOException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return VSConstants.S_OK;
+            }
             if (interpreterConfig != null) {
                 config = config.Clone(interpreterConfig);
             }
@@ -1408,19 +1420,17 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var env = PathUtils.MergeEnvironments(
-                PathUtils.MergeEnvironments(
-                    Environment.GetEnvironmentVariables().AsEnumerable<string, string>(),
-                    config.GetEnvironmentVariables(),
-                    "PATH"
-                ),
+                Site.GetPythonToolsService().GetFullEnvironment(config),
                 new KeyValuePair<string, string>[] {
                     new KeyValuePair<string, string>("PATH", paths),
                 },
-                "PATH", config.Interpreter.PathEnvironmentVariable
+                "PATH"
             );
 
             foreach (var kv in env) {
-                psi.EnvironmentVariables[kv.Key] = kv.Value;
+                if (!string.IsNullOrEmpty(kv.Key)) {
+                    psi.EnvironmentVariables[kv.Key] = kv.Value;
+                }
             }
 
             Process.Start(psi);

@@ -14,10 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Diagnostics;
-using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Debugger.Remote;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             if (!_deleted) {
                 _deleted = true;
-                _breakpoint.Remove();
+                TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.RemoveAsync(ct));
                 _pendingBreakpoint.OnBoundBreakpointDeleted(this);
                 _engine.BreakpointManager.RemoveBoundBreakpoint(_breakpoint);
             }
@@ -71,9 +71,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             bool enabled = fEnable == 0 ? false : true;
             if (_enabled != enabled) {
                 if (!enabled) {
-                    _breakpoint.Disable();
+                    TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.DisableAsync(ct));
                 } else {
-                    _breakpoint.Add();
+                    TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.AddAsync(ct));
                 }
             }
             _enabled = enabled;
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugBoundBreakpoint2.SetCondition(BP_CONDITION bpCondition) {
-            _breakpoint.SetCondition(bpCondition.styleCondition.ToPython(), bpCondition.bstrCondition);
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.SetConditionAsync(bpCondition.styleCondition.ToPython(), bpCondition.bstrCondition, ct));
             return VSConstants.S_OK;
         }
 
@@ -118,34 +118,23 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 // remote debug type due to issues with communicating this command
                 pdwHitCount = 1;
             } else {
-                var task = _breakpoint.GetHitCountAsync();
-                try {
-                    if (!task.Wait(remoteProcess != null ? 5000 : 1000)) {
-                        pdwHitCount = 0;
-                        return VSConstants.E_FAIL;
-                    }
-                    pdwHitCount = (uint)task.Result;
-                } catch (AggregateException ae) {
-                    if (ae.InnerExceptions.OfType<OperationCanceledException>().Any()) {
-                        pdwHitCount = 1;
-                    } else if (ae.InnerExceptions.Count == 1) {
-                        throw ae.InnerException;
-                    } else {
-                        throw;
-                    }
-                }
+                pdwHitCount = (uint)TaskHelpers.RunSynchronouslyOnUIThread(async ct => {
+                    var timeoutToken = remoteProcess != null ? CancellationTokens.After5s : CancellationTokens.After1s;
+                    var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutToken);
+                    return await _breakpoint.GetHitCountAsync(linkedSource.Token);
+                });
             }
 
             return VSConstants.S_OK;
         }
 
         int IDebugBoundBreakpoint2.SetHitCount(uint dwHitCount) {
-            _breakpoint.SetHitCount((int)dwHitCount);
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.SetHitCountAsync((int)dwHitCount, ct));
             return VSConstants.S_OK;
         }
 
         int IDebugBoundBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount) {
-            _breakpoint.SetPassCount(bpPassCount.stylePassCount.ToPython(), (int)bpPassCount.dwPassCount);
+            TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.SetPassCountAsync(bpPassCount.stylePassCount.ToPython(), (int)bpPassCount.dwPassCount, ct));
             return VSConstants.S_OK;
         }
 

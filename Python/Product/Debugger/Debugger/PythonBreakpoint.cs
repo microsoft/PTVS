@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -72,73 +73,55 @@ namespace Microsoft.PythonTools.Debugger {
         /// Requests the remote process enable the break point.  An event will be raised on the process
         /// when the break point is received.
         /// </summary>
-        public void Add() {
-            _process.BindBreakpoint(this);
+        public async Task AddAsync(CancellationToken ct) {
+            await _process.BindBreakpointAsync(this, ct);
         }
 
-        public bool IsDjangoBreakpoint {
-            get {
-                return _isDjangoBreakpoint;
-            }
-        }
+        public bool IsDjangoBreakpoint => _isDjangoBreakpoint;
 
         /// <summary>
         /// Removes the provided break point
         /// </summary>
-        public void Remove() {
-            _process.RemoveBreakPoint(this);
+        public Task RemoveAsync(CancellationToken ct) {
+            return _process.RemoveBreakpointAsync(this, ct);
         }
 
-        public void Disable() {
-            _process.DisableBreakPoint(this);
+        public Task DisableAsync(CancellationToken ct) {
+            return _process.DisableBreakpointAsync(this, ct);
         }
 
-        internal int Id {
-            get { return _breakpointId; }
-        }
+        internal int Id => _breakpointId;
 
-        public string Filename {
-            get { return _filename; }
-        }
+        public string Filename => _filename;
 
-        public int LineNo {
-            get { return _lineNo; }
-        }
+        public int LineNo => _lineNo;
 
-        public PythonBreakpointConditionKind ConditionKind {
-            get { return _conditionKind; }
-        }
+        public PythonBreakpointConditionKind ConditionKind => _conditionKind;
 
-        public string Condition {
-            get { return _condition; }
-        }
+        public string Condition => _condition;
 
-        public PythonBreakpointPassCountKind PassCountKind {
-            get { return _passCountKind; }
-        }
+        public PythonBreakpointPassCountKind PassCountKind => _passCountKind;
 
-        public int PassCount {
-            get { return _passCount; }
-        }
+        public int PassCount => _passCount;
 
-        internal void SetCondition(PythonBreakpointConditionKind kind, string condition) {
+        internal Task SetConditionAsync(PythonBreakpointConditionKind kind, string condition, CancellationToken ct) {
             _conditionKind = kind;
             _condition = condition;
-            _process.SetBreakPointCondition(this);
+            return _process.SetBreakpointConditionAsync(this, ct);
         }
 
-        internal void SetPassCount(PythonBreakpointPassCountKind kind, int passCount) {
+        internal Task SetPassCountAsync(PythonBreakpointPassCountKind kind, int passCount, CancellationToken ct) {
             _passCountKind = kind;
             _passCount = passCount;
-            _process.SetBreakPointPassCount(this);
+            return _process.SetBreakpointPassCountAsync(this, ct);
         }
 
-        internal Task<int> GetHitCountAsync() {
-            return _process.GetBreakPointHitCountAsync(this);
+        internal Task<int> GetHitCountAsync(CancellationToken ct = default(CancellationToken)) {
+            return _process.GetBreakpointHitCountAsync(this, ct);
         }
 
-        internal void SetHitCount(int count) {
-            _process.SetBreakPointHitCount(this, count);
+        internal Task SetHitCountAsync(int count, CancellationToken ct = default(CancellationToken)) {
+            return _process.SetBreakpointHitCountAsync(this, count, ct);
         }
     }
 }

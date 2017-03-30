@@ -260,7 +260,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Wait for input when process exits abnormally]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Při neobvyklém ukončení procesu &počkat na vstup]]></Val>
+            <Val><![CDATA[Při &neobvyklém ukončení procesu počkat na vstup]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -374,7 +374,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Automatically generate completion DB on first use]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Při prvním použití &automaticky vytvořit databázi pro dokončování]]></Val>
+            <Val><![CDATA[Při prvním p&oužití automaticky vytvořit databázi pro dokončování]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -461,7 +461,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[Show the Output Window when &installing or removing packages]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Při &instalaci nebo odebírání balíčků zobrazit okno výstupu]]></Val>
+            <Val><![CDATA[Při instalaci nebo o&debírání balíčků zobrazit okno výstupu]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -6094,6 +6094,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";UnableToReadVerbosity" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to read build verbosity setting.]D;]A;]D;]A;{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nejde číst nastavení podrobností buildu.]D;]A;]D;]A;{0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";UnableToRemoveFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The file does not exist on disk but is present in your project and cannot be removed.  Please remove the item from the project before attempting to rename an item to a filename of the same name.]]></Val>
@@ -6544,7 +6553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6580,7 +6589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17081.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

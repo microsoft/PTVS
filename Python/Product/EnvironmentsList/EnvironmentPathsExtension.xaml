@@ -47,6 +47,7 @@
                             </Button>
                             <Label x:Name="IsDefaultMessage"
                                    Visibility="Collapsed"
+                                   Padding="0"
                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>

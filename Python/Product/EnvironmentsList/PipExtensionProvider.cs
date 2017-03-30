@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             string indexName = null
         ) {
             _factory = factory;
-            _packageManager = _factory.PackageManager;
+            _packageManager = _factory?.PackageManager;
             if (_packageManager == null) {
                 throw new NotSupportedException();
             }

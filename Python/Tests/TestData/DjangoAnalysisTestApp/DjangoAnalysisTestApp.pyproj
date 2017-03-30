@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Name>DjangoAnalysisTestApp</Name>
@@ -16,7 +16,8 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Django launcher</LaunchProvider>
-    <WebBrowserUrl></WebBrowserUrl>
+    <WebBrowserUrl>
+    </WebBrowserUrl>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -38,17 +39,24 @@
     <Compile Include="DjangoAnalysisTestApp\settings.py" />
     <Compile Include="DjangoAnalysisTestApp\urls.py" />
     <Compile Include="DjangoAnalysisTestApp\wsgi.py" />
+    <Compile Include="test_render\urls.py" />
+    <Compile Include="test_render\views.py" />
+    <Compile Include="test_render\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DjangoAnalysisTestApp\" />
     <Folder Include="myapp\" />
     <Folder Include="myapp\templates\" />
     <Folder Include="myapp\templates\myapp\" />
+    <Folder Include="test_render\" />
+    <Folder Include="test_render\templates\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="myapp\templates\myapp\mymodel2_details.html" />
     <Content Include="myapp\templates\myapp\details.html" />
     <Content Include="myapp\templates\myapp\index.html" />
+    <Content Include="test_render\templates\test_render.html" />
+    <Content Include="test_render\templates\test_render_to_response.html" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Django.targets" />
   <ProjectExtensions>

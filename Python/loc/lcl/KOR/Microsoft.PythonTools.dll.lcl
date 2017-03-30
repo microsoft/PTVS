@@ -4616,7 +4616,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for creating an application using the Flask web framework with the Jinja template engine. It features sample pages that use the Twitter Bootstrap framework for responsive web design.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Jinja 템플릿 엔진을 통해 Flash 웹 프레임워크를 사용하는 응용 프로그램을 만들기 위한 프로젝트입니다. 반응형 웹 디자인용 Twitter Bootstrap 프레임워크를 사용하는 샘플 페이지를 제공합니다.]]></Val>
+            <Val><![CDATA[Jinja 템플릿 엔진을 통해 Flask 웹 프레임워크를 사용하는 응용 프로그램을 만들기 위한 프로젝트입니다. 반응형 웹 디자인용 Twitter Bootstrap 프레임워크를 사용하는 샘플 페이지를 제공합니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

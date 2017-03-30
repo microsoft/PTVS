@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private IServiceProvider _site;
 
         private EnvironmentView _addNewEnvironmentView;
+        private EnvironmentView _onlineHelpView;
 
         private AnalyzerStatusListener _listener;
         private readonly object _listenerLock = new object();
@@ -363,29 +364,51 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     select = selectView?.Configuration?.Id;
                 }
 
-                var configs = _interpreters.Configurations.Where(f => f.IsUIVisible());
-                configs = configs.Concat(Enumerable.Repeat(EnvironmentView.OnlineHelpView.Configuration, 1));
-                if (_addNewEnvironmentView != null) {
-                    configs = configs.Concat(Enumerable.Repeat(_addNewEnvironmentView.Configuration, 1));
-                }
+                // We allow up to three retries at this process to handle race
+                // conditions where an interpreter disappears between the
+                // point where we enumerate known configuration IDs and convert
+                // them into a view. The first time that happens, we insert a
+                // stub entry, and on the subsequent pass it will be removed.
+                bool anyMissing = true;
+                for (int retries = 3; retries > 0 && anyMissing; --retries) {
+                    var configs = _interpreters.Configurations.Where(f => f.IsUIVisible()).ToList();
+                    if (_onlineHelpView != null) {
+                        configs.Add(_onlineHelpView.Configuration);
+                    }
+                    if (_addNewEnvironmentView != null) {
+                        configs.Add(_addNewEnvironmentView.Configuration);
+                    }
 
-                _environments.Merge(
-                    configs,
-                    ev => ev.Configuration,
-                    c => c,
-                    c => {
-                        if (EnvironmentView.IsAddNewEnvironmentView(c.Id)) {
-                            return _addNewEnvironmentView;
-                        } else if (EnvironmentView.IsOnlineHelpView(c.Id)) {
-                            return EnvironmentView.OnlineHelpView;
-                        }
-                        var view = new EnvironmentView(_service, _interpreters, _interpreters.FindInterpreter(c.Id), null);
-                        OnViewCreated(view);
-                        return view;
-                    },
-                    InterpreterConfigurationComparer.Instance,
-                    InterpreterConfigurationComparer.Instance
-                );
+                    anyMissing = false;
+                    _environments.Merge(
+                        configs,
+                        ev => ev.Configuration,
+                        c => c,
+                        c => {
+                            if (EnvironmentView.IsAddNewEnvironmentView(c.Id)) {
+                                return _addNewEnvironmentView;
+                            } else if (EnvironmentView.IsOnlineHelpView(c.Id)) {
+                                return _onlineHelpView;
+                            }
+                            var fact = _interpreters.FindInterpreter(c.Id);
+                            EnvironmentView view = null;
+                            try {
+                                if (fact != null) {
+                                    view = new EnvironmentView(_service, _interpreters, fact, null);
+                                }
+                            } catch (ArgumentException) {
+                            }
+                            if (view == null) {
+                                view = EnvironmentView.CreateMissingEnvironmentView(c.Id + "+Missing", c.Description);
+                                anyMissing = true;
+                            }
+                            OnViewCreated(view);
+                            return view;
+                        },
+                        InterpreterConfigurationComparer.Instance,
+                        InterpreterConfigurationComparer.Instance
+                    );
+                }
 
                 if (select != null) {
                     var selectView = _environments.FirstOrDefault(v => v.Factory != null &&
@@ -448,8 +471,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if (_service != null) {
                     _service.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
                     _addNewEnvironmentView = EnvironmentView.CreateAddNewEnvironmentView(_service);
+                    _onlineHelpView = EnvironmentView.CreateOnlineHelpEnvironmentView();
                 } else {
                     _addNewEnvironmentView = null;
+                    _onlineHelpView = null;
                 }
                 if (_interpreters != null) {
                     Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();

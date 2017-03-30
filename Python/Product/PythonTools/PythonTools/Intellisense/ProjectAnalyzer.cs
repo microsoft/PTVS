@@ -390,7 +390,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var conn = new Connection(
                 process.StandardInput.BaseStream,
+                true,
                 process.StandardOutput.BaseStream,
+                true,
                 null,
                 AP.RegisteredTypes,
                 "ProjectAnalyzer"

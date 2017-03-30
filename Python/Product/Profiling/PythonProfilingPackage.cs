@@ -253,7 +253,19 @@ namespace Microsoft.PythonTools.Profiling {
         private static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
             var project = projectToProfile.GetPythonProject();
 
-            var config = project?.GetLaunchConfigurationOrThrow();
+            LaunchConfiguration config = null;
+            try {
+                config = project?.GetLaunchConfigurationOrThrow();
+            } catch (NoInterpretersException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return;
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return;
+            } catch (IOException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return;
+            }
             if (config == null) {
                 MessageBox.Show(Strings.ProjectInterpreterNotFound.FormatUI(projectToProfile.Name), Strings.ProductTitle);
                 return;

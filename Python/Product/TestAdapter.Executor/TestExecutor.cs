@@ -483,7 +483,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var stream = new NetworkStream(socket, ownsSocket: true);
                 _connection = new Connection(
                     new MemoryStream(),
+                    true,
                     stream,
+                    true,
                     RequestHandler,
                     TP.RegisteredTypes,
                     "TestExecutor"

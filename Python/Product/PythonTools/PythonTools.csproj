@@ -701,7 +701,7 @@
     <None Include="Theme\Repl\contrast.vstheme" />
     <None Include="Theme\Repl\dark.vstheme" />
     <None Include="Theme\Repl\light.vstheme" />
-    <Note Include="ptvsd\__main__.py" />
+    <None Include="ptvsd\__main__.py" />
     <Content Include="pip_downloader.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -770,6 +770,10 @@
     </_ThemePkgDef>
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v14.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
+    <Content Include="visualstudio_py_ipcjson.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
