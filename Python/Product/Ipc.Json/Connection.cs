@@ -430,8 +430,14 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 return null;
             }
 
+            // ReadAsync may not read everything in one call, so keep reading
+            // until we have it all. This is triggered when going over tcp.
             char[] buffer = new char[contentLength];
-            await reader.ReadAsync(buffer, 0, contentLength).ConfigureAwait(false);
+            int totalReceived = 0;
+            while (totalReceived < contentLength) {
+                int received = await reader.ReadAsync(buffer, totalReceived, contentLength - totalReceived).ConfigureAwait(false);
+                totalReceived += received;
+            }
 
             return new string(buffer);
         }
