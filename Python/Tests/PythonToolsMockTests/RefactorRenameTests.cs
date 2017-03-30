@@ -227,6 +227,42 @@ namespace PythonToolsMockTests {
                     new ExpectedPreviewItem("self._C__longname()")
                 )
             );
+
+            // "__" is not a private name
+            RefactorTest("__", "__f",
+                new[] {
+                    new FileInput(
+@"class C:
+    def __f(self):
+        pass
+
+    def g(self):
+        self.__f()
+
+    def x(self):
+        self._C__f()
+    ",
+@"class C:
+    def __(self):
+        pass
+
+    def g(self):
+        self.__()
+
+    def x(self):
+        self.__()
+    "
+
+                    )
+                },
+                false,
+                null,
+                new ExpectedPreviewItem("test.py",
+                    new ExpectedPreviewItem("def __f(self):"),
+                    new ExpectedPreviewItem("self.__f()"),
+                    new ExpectedPreviewItem("self._C__f()")
+                )
+            );
         }
 
         [TestMethod, Priority(1)]
