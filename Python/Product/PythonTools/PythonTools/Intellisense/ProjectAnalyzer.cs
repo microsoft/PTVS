@@ -232,7 +232,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 task => {
                     var result = task.Result;
                     if (result == null) {
-                        Debug.Fail("Analyzer initialization failed with no result");
                         _conn = null;
                     } else if (!String.IsNullOrWhiteSpace(result.error)) {
                         Debug.Fail("Analyzer initialization failed with " + result.error);
