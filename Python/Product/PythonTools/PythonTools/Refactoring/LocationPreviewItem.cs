@@ -39,8 +39,6 @@ namespace Microsoft.PythonTools.Refactoring {
         public LocationPreviewItem(VsProjectAnalyzer analyzer, FilePreviewItem parent, AnalysisLocation locationInfo, VariableType type) {
             Debug.Assert(locationInfo.Column >= 1, "Invalid location info (Column)");
             Debug.Assert(locationInfo.Line >= 1, "Invalid location info (Line)");
-            Line = locationInfo.Line;
-            //Column = locationInfo.Column;
             _parent = parent;
             Type = type;
             _text = string.Empty;
@@ -84,12 +82,13 @@ namespace Microsoft.PythonTools.Refactoring {
                 }
             }
 
-            if (start < 0 || length < 0) {
+            if (start < 0 || length <= 0) {
                 Debug.Fail("Expected valid span");
                 return;
             }
 
             _text = text.TrimStart(_whitespace);
+            Line = locationInfo.Line;
             Column = start + 1;
             _span = new Span(start - (text.Length - _text.Length), length);
         }
@@ -138,7 +137,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 return false;
             }
 
-            if (newName.StartsWith("__")) {
+            if (newName.StartsWith("__") && newName.Length > 2) {
                 // renaming from private name to private name, so just rename the non-prefixed portion
                 start += prefix.Length;
                 length -= prefix.Length;
