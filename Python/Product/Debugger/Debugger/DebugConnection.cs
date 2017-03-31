@@ -100,7 +100,39 @@ namespace Microsoft.PythonTools.Debugger {
 
         public async Task<T> SendRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken), Action<T> postResponseAction = null)
             where T : Response, new() {
-            return await _connection.SendRequestAsync(request, cancellationToken, postResponseAction);
+
+            // We'll never receive a response if we end up exiting out of
+            // Connection.ProcessMessages during this request.
+            // If that happens, we cancel the request.
+            using (var stopped = new CancellationTokenSource())
+            using (var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, stopped.Token)) {
+                EventHandler handler = (object sender, EventArgs ea) => {
+                    try {
+                        stopped.Cancel();
+                    } catch (ObjectDisposedException) {
+                    }
+                };
+
+                ProcessingMessagesEnded += handler;
+
+                try {
+                    // Final check before we send the request, if the state
+                    // changes after this then our handler will be invoked.
+                    lock (_isListeningLock) {
+                        if (!_isListening) {
+                            throw new OperationCanceledException();
+                        }
+                    }
+
+                    return await _connection.SendRequestAsync(
+                        request,
+                        linkedSource.Token,
+                        postResponseAction
+                    );
+                } finally {
+                    ProcessingMessagesEnded -= handler;
+                }
+            }
         }
 
         internal void SetProcess(Guid debugId) {
