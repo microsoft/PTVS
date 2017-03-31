@@ -107,7 +107,10 @@ namespace Microsoft.PythonTools.Debugger {
             using (var stopped = new CancellationTokenSource())
             using (var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, stopped.Token)) {
                 EventHandler handler = (object sender, EventArgs ea) => {
-                    stopped.Cancel();
+                    try {
+                        stopped.Cancel();
+                    } catch (ObjectDisposedException) {
+                    }
                 };
 
                 ProcessingMessagesEnded += handler;
