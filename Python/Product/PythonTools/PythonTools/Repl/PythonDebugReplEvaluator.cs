@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -542,16 +543,17 @@ namespace Microsoft.PythonTools.Repl {
 
         protected override async Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
             var remoteProcess = _process as PythonRemoteProcess;
-            if (remoteProcess == null) {
-                try {
-                    _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.DebugRepl, new Logging.DebugReplInfo {
-                        RemoteProcess = false,
-                        Version = _process.LanguageVersion.ToVersion().ToString()
-                    });
-                } catch (Exception ex) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-                }
 
+            try {
+                _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.DebugRepl, new Logging.DebugReplInfo {
+                    RemoteProcess = remoteProcess != null,
+                    Version = _process.LanguageVersion.ToVersion().ToString()
+                });
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+
+            if (remoteProcess == null) {
                 var conn = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
                 conn.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 conn.Listen(0);
@@ -572,29 +574,27 @@ namespace Microsoft.PythonTools.Repl {
                 // before sending anything else and as soon as we read that
                 // response, we stop reading any more messages.
                 // Then we give the stream to the REPL protocol handler.
-                var response = await debugConn.SendRequestAsync(new LDP.RemoteReplAttachRequest(), ct, resp => {
-                    Debug.WriteLine("Stopping debug connection message processing. Switching from debugger protocol to REPL protocol.");
+                try {
+                    var response = await debugConn.SendRequestAsync(new LDP.RemoteReplAttachRequest(), ct, resp => {
+                        Debug.WriteLine("Stopping debug connection message processing. Switching from debugger protocol to REPL protocol.");
 
-                    try {
-                        _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.DebugRepl, new Logging.DebugReplInfo {
-                            RemoteProcess = true,
-                            Version = _process.LanguageVersion.ToVersion().ToString()
-                        });
-                    } catch (Exception ex) {
-                        Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                        // This causes the message handling loop to exit
+                        throw new OperationCanceledException();
+                    });
+
+                    if (!response.accepted) {
+                        WriteError(Strings.ConnErrorMessages_RemoteAttachRejected);
+                        return null;
                     }
-                    // This causes the message handling loop to exit
-                    throw new OperationCanceledException();
-                });
 
-                if (!response.accepted) {
-                    throw new ConnectionException(ConnErrorMessages.RemoteAttachRejected);
+                    // Get the stream out of the connection before Dispose is called,
+                    // so that the stream doesn't get closed.
+                    var stream = debugConn.DetachStream();
+                    return CommandProcessorThread.Create(this, stream);
+                } catch (FailedRequestException ex) {
+                    WriteError(ex.Message);
+                    return null;
                 }
-
-                // Get the stream out of the connection before Dispose is called,
-                // so that the stream doesn't get closed.
-                var stream = debugConn.DetachStream();
-                return CommandProcessorThread.Create(this, stream);
             }
         }
 

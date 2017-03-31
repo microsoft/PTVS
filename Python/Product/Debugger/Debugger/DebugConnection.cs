@@ -124,11 +124,17 @@ namespace Microsoft.PythonTools.Debugger {
                         }
                     }
 
-                    return await _connection.SendRequestAsync(
-                        request,
-                        linkedSource.Token,
-                        postResponseAction
-                    );
+                    try {
+                        return await _connection.SendRequestAsync(
+                            request,
+                            linkedSource.Token,
+                            postResponseAction
+                        );
+                    } catch (IOException ex) {
+                        throw new OperationCanceledException(ex.Message, ex);
+                    } catch (ObjectDisposedException ex) {
+                        throw new OperationCanceledException(ex.Message, ex);
+                    }
                 } finally {
                     ProcessingMessagesEnded -= handler;
                 }

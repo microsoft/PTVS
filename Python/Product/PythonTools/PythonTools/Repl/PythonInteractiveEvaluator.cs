@@ -371,7 +371,11 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
-                thread = await ConnectAsync(default(CancellationToken));
+                try {
+                    thread = await ConnectAsync(default(CancellationToken));
+                } catch (OperationCanceledException) {
+                    thread = null;
+                }
 
                 var newerThread = Interlocked.CompareExchange(ref _thread, thread, null);
                 if (newerThread != null) {
