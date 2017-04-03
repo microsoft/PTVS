@@ -835,6 +835,9 @@
       <Item ItemId=";ConnErrorMessages_UnsupportedVersion" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unsupported Python version loaded in process]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[La version de Python en cours de chargement n'est pas prise en charge]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1696,6 +1699,9 @@
       <Item ItemId=";DebuggerPythonVersionNotSupported" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Le débogage n'est pas pris en charge dans Python 2.5 et antérieur.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2584,6 +2590,9 @@
       <Item ItemId=";HideDetails" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Hide &details]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Masquer les &détails]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4540,6 +4549,9 @@
       <Item ItemId=";ShowDetails" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show &details]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Afficher les &détails]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4717,12 +4729,18 @@
       <Item ItemId=";UnexpectedError_Instruction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please press Ctrl+C to copy the contents of this dialog and report this error.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Appuyez sur Ctrl+C pour copier le contenu de cette boîte de dialogue et signaler cette erreur.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UnexpectedError_InstructionWithLink" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please press Ctrl+C to copy the contents of this dialog and report this error to our <a href="issuetracker">issue tracker</a>.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Appuyez sur Ctrl+C pour copier le contenu de cette boîte de dialogue et signaler cette erreur dans notre système de <a href="issuetracker">suivi des problèmes</a>.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4918,6 +4936,9 @@
       <Item ItemId=";UpgradedInterpreterReferenceRemoved" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Impossible de mettre à niveau une référence d'environnement. Vérifiez l'élément Environnements Python dans l'Explorateur de solutions et sélectionnez un environnement pour votre projet.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

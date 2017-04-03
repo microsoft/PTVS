@@ -835,6 +835,9 @@
       <Item ItemId=";ConnErrorMessages_UnsupportedVersion" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unsupported Python version loaded in process]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[サポートされていない Python バージョンがプロセスに読み込まれました]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1696,6 +1699,9 @@
       <Item ItemId=";DebuggerPythonVersionNotSupported" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[デバッグは、Python 2.5 以前のバージョンではサポートされていません。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2584,6 +2590,9 @@
       <Item ItemId=";HideDetails" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Hide &details]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[詳細の非表示(&D)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4540,6 +4549,9 @@
       <Item ItemId=";ShowDetails" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Show &details]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[詳細の表示(&D)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4717,12 +4729,18 @@
       <Item ItemId=";UnexpectedError_Instruction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please press Ctrl+C to copy the contents of this dialog and report this error.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ctrl+C を押してこのダイアログのコンテンツをコピーして、エラーを報告してください。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UnexpectedError_InstructionWithLink" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please press Ctrl+C to copy the contents of this dialog and report this error to our <a href="issuetracker">issue tracker</a>.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ctrl+C を押してこのダイアログのコンテンツをコピーして、<a href="issuetracker">問題の追跡ツール</a>にこのエラーを報告してください。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4918,6 +4936,9 @@
       <Item ItemId=";UpgradedInterpreterReferenceRemoved" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[環境参照をアップグレードできませんでした。ソリューション エクスプローラーの Python 環境項目を確認して、プロジェクトの環境を選択してください。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
