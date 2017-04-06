@@ -598,8 +598,10 @@ def breakpoint_path_match(vs_path, local_path):
 
 def update_all_thread_stacks(blocking_thread = None, check_is_blocked = True):
     THREADS_LOCK.acquire()
-    all_threads = list(THREADS.values())
-    THREADS_LOCK.release()
+    try:
+        all_threads = list(THREADS.values())
+    finally:
+        THREADS_LOCK.release()
     
     for cur_thread in all_threads:
         if cur_thread is blocking_thread:
@@ -1608,11 +1610,13 @@ def try_bind_break_point(mod_filename, module, bp):
 
 def mark_all_threads_for_break(stepping = STEPPING_BREAK, skip_thread = None):
     THREADS_LOCK.acquire()
-    for thread in THREADS.values():
-        if thread is skip_thread:
-            continue
-        thread.stepping = stepping
-    THREADS_LOCK.release()
+    try:
+        for thread in THREADS.values():
+            if thread is skip_thread:
+                continue
+            thread.stepping = stepping
+    finally:
+        THREADS_LOCK.release()
 
 
 class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
@@ -1640,12 +1644,6 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
         global debugger_thread_id
         debugger_thread_id = -1
         DebuggerLoop.instance = None
-
-    def on_internal_error(self, output):
-        self.send_debug_event(
-            name='legacyInternalError',
-            output=output,
-        )
 
     def on_legacyStepInto(self, request, args):
         thread = get_thread_from_id(args['threadId'])
@@ -1826,14 +1824,12 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
         mark_all_threads_for_break()
 
     def on_legacyGetThreadFrames(self, request, args):
-        tid = args['threadId']
+        thread = get_thread_from_id(args['threadId'])
 
         self.send_debug_response(request)
 
-        THREADS_LOCK.acquire()
-        thread = THREADS[tid]
-        THREADS_LOCK.release()
-        thread.enum_thread_frames_locally()
+        if thread is not None:
+            thread.enum_thread_frames_locally()
 
     def on_legacyResumeAll(self, request, args):
         self.send_debug_response(request)
@@ -1842,8 +1838,11 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
     def _resume_all(self):
         # resume all
         THREADS_LOCK.acquire()
-        all_threads = list(THREADS.values())
-        THREADS_LOCK.release()
+        try:
+            all_threads = list(THREADS.values())
+        finally:
+            THREADS_LOCK.release()
+
         for thread in all_threads:
             thread._block_starting_lock.acquire()
             if thread.stepping == STEPPING_BREAK or thread.stepping == STEPPING_ATTACH_BREAK:
@@ -1853,34 +1852,28 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
             thread._block_starting_lock.release()
 
     def on_legacyResumeThread(self, request, args):
-        tid = args['threadId']
+        thread = get_thread_from_id(args['threadId'])
 
         self.send_debug_response(request)
 
-        THREADS_LOCK.acquire()
-        thread = THREADS[tid]
-        THREADS_LOCK.release()
-
-        if thread.reported_process_loaded:
-            thread.reported_process_loaded = False
-            self._resume_all()
-        else:
-            thread.unblock()
+        if thread is not None:
+            if thread.reported_process_loaded:
+                thread.reported_process_loaded = False
+                self._resume_all()
+            else:
+                thread.unblock()
 
     def on_legacyAutoResumeThread(self, request, args):
-        tid = args['threadId']
+        thread = get_thread_from_id(args['threadId'])
 
         self.send_debug_response(request)
 
-        THREADS_LOCK.acquire()
-        thread = THREADS[tid]
-        THREADS_LOCK.release()
-
-        stepping = thread.stepping
-        if ((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and thread.cur_frame.f_lineno != thread.stopped_on_line): 
-            report_step_finished(tid)
-        else:
-            self._resume_all()
+        if thread is not None:
+            stepping = thread.stepping
+            if ((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and thread.cur_frame.f_lineno != thread.stopped_on_line): 
+                report_step_finished(tid)
+            else:
+                self._resume_all()
 
     def on_legacySetExceptionInfo(self, request, args):
         self.send_debug_response(request)
@@ -1916,11 +1909,10 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
             BREAK_ON.handler_lock.release()
 
     def on_legacyClearStepping(self, request, args):
-        tid = args['threadId']
+        thread = get_thread_from_id(args['threadId'])
 
         self.send_debug_response(request)
 
-        thread = get_thread_from_id(tid)
         if thread is not None:
             thread.stepping = STEPPING_NONE
 
@@ -1930,9 +1922,11 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
         lineno = args['lineNo']
         try:
             THREADS_LOCK.acquire()
-            THREADS[tid].cur_frame.f_lineno = lineno
-            newline = THREADS[tid].cur_frame.f_lineno
-            THREADS_LOCK.release()
+            try:
+                THREADS[tid].cur_frame.f_lineno = lineno
+                newline = THREADS[tid].cur_frame.f_lineno
+            finally:
+                THREADS_LOCK.release()
 
             self.send_debug_response(
                 request,
@@ -2046,9 +2040,11 @@ def new_thread_wrapper(func, posargs, kwargs):
         func(*posargs, **kwargs)
     finally:
         THREADS_LOCK.acquire()
-        if not cur_thread.detach:
-            del THREADS[cur_thread.id]
-        THREADS_LOCK.release()
+        try:
+            if not cur_thread.detach:
+                del THREADS[cur_thread.id]
+        finally:
+            THREADS_LOCK.release()
 
         if not DETACHED:
             report_thread_exit(cur_thread)
@@ -2059,8 +2055,11 @@ def report_new_thread(new_thread):
 
 def report_all_threads():
     THREADS_LOCK.acquire()
-    all_threads = list(THREADS.values())
-    THREADS_LOCK.release()
+    try:
+        all_threads = list(THREADS.values())
+    finally:
+        THREADS_LOCK.release()
+
     for cur_thread in all_threads:
         report_new_thread(cur_thread)
 
@@ -2347,10 +2346,13 @@ def attach_connected_process(debug_options, report = False, block = False):
 
     if report:
         THREADS_LOCK.acquire()
-        all_threads = list(THREADS.values())
-        if block:
-            main_thread = THREADS[thread.get_ident()]
-        THREADS_LOCK.release()
+        try:
+            all_threads = list(THREADS.values())
+            if block:
+                main_thread = THREADS[thread.get_ident()]
+        finally:
+            THREADS_LOCK.release()
+
         for cur_thread in all_threads:
             report_new_thread(cur_thread)
         for filename, module in MODULES:
@@ -2394,8 +2396,10 @@ def detach_process():
 def detach_threads():
     # tell all threads to stop tracing...
     THREADS_LOCK.acquire()
-    all_threads = list(THREADS.items())
-    THREADS_LOCK.release()
+    try:
+        all_threads = list(THREADS.items())
+    finally:
+        THREADS_LOCK.release()
 
     for tid, pyThread in all_threads:
         if not _INTERCEPTING_FOR_ATTACH:
@@ -2407,8 +2411,10 @@ def detach_threads():
 
     if not _INTERCEPTING_FOR_ATTACH:
         THREADS_LOCK.acquire()
-        THREADS.clear()
-        THREADS_LOCK.release()
+        try:
+            THREADS.clear()
+        finally:
+            THREADS_LOCK.release()
         
     BREAKPOINTS.clear()
 
@@ -2417,10 +2423,13 @@ def new_thread(tid = None, set_break = False, frame = None):
     if tid == debugger_thread_id:
         return None
 
-    cur_thread = Thread(tid)    
+    cur_thread = Thread(tid)
     THREADS_LOCK.acquire()
-    THREADS[cur_thread.id] = cur_thread
-    THREADS_LOCK.release()
+    try:
+        THREADS[cur_thread.id] = cur_thread
+    finally:
+        THREADS_LOCK.release()
+
     cur_thread.push_frame(frame)
     if set_break:
         cur_thread.stepping = STEPPING_ATTACH_BREAK
@@ -2595,8 +2604,10 @@ def debug(file, port_num, debug_id, debug_options, run_as = 'script'):
     finally:
         sys.settrace(None)
         THREADS_LOCK.acquire()
-        del THREADS[cur_thread.id]
-        THREADS_LOCK.release()
+        try:
+            del THREADS[cur_thread.id]
+        finally:
+            THREADS_LOCK.release()
         report_thread_exit(cur_thread)
 
         # Give VS debugger a chance to process commands
