@@ -1313,6 +1313,7 @@
                                  Style="{StaticResource {x:Type TextBox}}"
                                  AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
                                  AutomationProperties.HelpText="{TemplateBinding HelpText}"
+                                 AutomationProperties.LabeledBy="{TemplateBinding AutomationProperties.LabeledBy}"
                                  IsReadOnly="{Binding IsReadOnly,Mode=OneWay,RelativeSource={RelativeSource TemplatedParent}}"
                                  Text="{Binding Text,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.ToolTip>
@@ -1341,6 +1342,7 @@
                                 Margin="1 4 4 4"
                                 VerticalAlignment="Center"
                                 Style="{TemplateBinding BrowseButtonStyle}"
+                                AutomationProperties.Name="{TemplateBinding BrowseAutomationName}"
                                 CommandParameter="{TemplateBinding BrowseCommandParameter}"
                                 CommandTarget="{Binding ElementName=_TextBox}" />
                     </Grid>
@@ -1382,7 +1384,8 @@
                                   IsTextSearchEnabled="True"
                                   IsTextSearchCaseSensitive="False"
                                   AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
-                                  AutomationProperties.HelpText="{TemplateBinding HelpText}">
+                                  AutomationProperties.HelpText="{TemplateBinding HelpText}"
+                                  AutomationProperties.LabeledBy="{TemplateBinding AutomationProperties.LabeledBy}">
                             <ComboBox.ToolTip>
                                 <ToolTip Placement="Bottom" Content="{TemplateBinding HelpText}">
                                     <ToolTip.ContentTemplate>
