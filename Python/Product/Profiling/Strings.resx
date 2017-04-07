@@ -277,15 +277,15 @@ Error:
     <value>_Start</value>
   </data>
   <data name="LaunchProfiling_InterpreterPathBrowseButtonDescription" xml:space="preserve">
-    <value>Browse for interpreter path</value>
+    <value>Browse file dialog for interpreter path</value>
   </data>
   <data name="LaunchProfiling_OpenProjectComboBoxDescription" xml:space="preserve">
-    <value>List of projects</value>
+    <value>Project to profile</value>
   </data>
   <data name="LaunchProfiling_ScriptBrowseButtonDescription" xml:space="preserve">
-    <value>Browse for script</value>
+    <value>Browse file dialog for script</value>
   </data>
   <data name="LaunchProfiling_WorkingDirectoryBrowseButtonDescription" xml:space="preserve">
-    <value>Browse for working directory</value>
+    <value>Browse folder dialog for working directory</value>
   </data>
 </root>

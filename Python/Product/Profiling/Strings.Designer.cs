@@ -209,7 +209,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Browse for interpreter path.
+        ///   Looks up a localized string similar to Browse file dialog for interpreter path.
         /// </summary>
         public static string LaunchProfiling_InterpreterPathBrowseButtonDescription {
             get {
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List of projects.
+        ///   Looks up a localized string similar to Project to profile.
         /// </summary>
         public static string LaunchProfiling_OpenProjectComboBoxDescription {
             get {
@@ -272,7 +272,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Browse for script.
+        ///   Looks up a localized string similar to Browse file dialog for script.
         /// </summary>
         public static string LaunchProfiling_ScriptBrowseButtonDescription {
             get {
@@ -335,7 +335,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Browse for working directory.
+        ///   Looks up a localized string similar to Browse folder dialog for working directory.
         /// </summary>
         public static string LaunchProfiling_WorkingDirectoryBrowseButtonDescription {
             get {
