@@ -39,7 +39,8 @@
                                     </Grid.ColumnDefinitions>
                                     <Control Grid.Column="0"
                                                     Margin="3 0"
-                                                    Style="{StaticResource PythonEnvironmentImage}" />
+                                                    Style="{StaticResource PythonEnvironmentImage}"
+                                             IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionMakeDefaultLabel}"/>
@@ -57,7 +58,8 @@
 
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
-                                                    Style="{StaticResource ActiveEnvironmentImage}" />
+                                                    Style="{StaticResource ActiveEnvironmentImage}"
+                                                    IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}"/>
@@ -75,7 +77,8 @@
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Opacity="0.5"
-                                                    Style="{StaticResource PythonEnvironmentImage}" />
+                                                    Style="{StaticResource PythonEnvironmentImage}"
+                                                    IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionCannotBeDefaultLabel}"/>
@@ -110,7 +113,8 @@
                                     </Grid.ColumnDefinitions>
                                     <Control Grid.Column="0"
                                              Margin="3 0"
-                                             Style="{StaticResource InteractiveWindowImage}" />
+                                             Style="{StaticResource InteractiveWindowImage}"
+                                             IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionOpenInteractiveWindowLabel}"/>
@@ -130,7 +134,8 @@
                                     </Grid.ColumnDefinitions>
                                     <Control Grid.Column="0"
                                              Margin="3 0"
-                                             Style="{StaticResource SettingsImage}" />
+                                             Style="{StaticResource SettingsImage}"
+                                             IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionOpenInteractiveScriptsLabel}"/>
@@ -156,7 +161,8 @@
                                     </Grid.ColumnDefinitions>
                                     <Control Grid.Column="0"
                                              Margin="3 0"
-                                             Style="{StaticResource CheckBoxUncheckedImage}" />
+                                             Style="{StaticResource CheckBoxUncheckedImage}"
+                                             IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonLabel}"/>
@@ -176,7 +182,8 @@
                                     </Grid.ColumnDefinitions>
                                     <Control Grid.Column="0"
                                              Margin="3 0"
-                                             Style="{StaticResource CheckBoxCheckedImage}" />
+                                             Style="{StaticResource CheckBoxCheckedImage}"
+                                             IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionDisableIPythonLabel}"/>
@@ -197,7 +204,8 @@
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
-                                                    Style="{StaticResource ConsoleImage}" />
+                                                    Style="{StaticResource ConsoleImage}"
+                                                    IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionOpenInPowerShell}"/>
                                 </Grid>
@@ -231,7 +239,8 @@
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
-                                                    Style="{StaticResource SettingsImage}" />
+                                                    Style="{StaticResource SettingsImage}"
+                                                    IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
                                                Text="{x:Static l:Resources.EnvironmentPathsExtensionConfigureEnvironmentLabel}"/>
@@ -253,7 +262,8 @@
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
-                                                    Style="{StaticResource FolderClosedImage}" />
+                                                    Style="{StaticResource FolderClosedImage}"
+                                                    IsTabStop="False"/>
                                     <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
                                            Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
                                            Content="{Binding PrefixPath,Mode=OneWay}" />
@@ -288,7 +298,8 @@
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
-                                                    Style="{StaticResource PythonConsoleApplicationImage}" />
+                                                    Style="{StaticResource PythonConsoleApplicationImage}"
+                                                    IsTabStop="False"/>
                                     <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
                                            Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
                                            Content="{Binding InterpreterPath,Mode=OneWay}" />
@@ -323,7 +334,8 @@
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
-                                                    Style="{StaticResource PythonApplicationImage}" />
+                                                    Style="{StaticResource PythonApplicationImage}"
+                                                    IsTabStop="False"/>
                                     <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
                                            Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
                                            Content="{Binding WindowsInterpreterPath,Mode=OneWay}" />
@@ -369,7 +381,8 @@
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
-                                                    Style="{StaticResource HelpImage}" />
+                                                    Style="{StaticResource HelpImage}"
+                                                    IsTabStop="False"/>
                                     <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
                                            Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
                                            Content="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"/>

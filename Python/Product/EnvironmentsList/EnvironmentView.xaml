@@ -80,7 +80,7 @@
                             AutomationProperties.Name="{x:Static l:Resources.EnvironmentViewNeedRefreshAutomationName}"
                             AutomationProperties.HelpText="{x:Static l:Resources.EnvironmentViewNeedRefreshAutomationHelp}"
                             Visibility="Hidden">
-                        <Control Style="{StaticResource RefreshImage}" />
+                        <Control Style="{StaticResource RefreshImage}" IsTabStop="False" />
                     </Button>
 
                     <Button x:Name="InteractiveWindowButton"
@@ -92,7 +92,7 @@
                             CommandParameter="{Binding}"
                             ToolTip="{x:Static l:Resources.EnvironmentViewInteractiveWindowTooltip}"
                             AutomationProperties.Name="{x:Static l:Resources.EnvironmentViewInteractiveWindowAutomationName}">
-                        <Control Style="{StaticResource InteractiveWindowImage}" />
+                        <Control Style="{StaticResource InteractiveWindowImage}" IsTabStop="False" />
                     </Button>
                 </Grid>
 
