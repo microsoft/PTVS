@@ -165,6 +165,7 @@ You can get more information by running Visual Studio with the /log parameter on
     <value>A different template with the name '{0}' already exists in '{1}'.
 
 Please delete the installed template and try again.</value>
+    <comment>{0} is a template name; {1} is a file path</comment>
   </data>
   <data name="InstallingCookiecutterStarted" xml:space="preserve">
     <value>----- Installing cookiecutter -----</value>
@@ -177,45 +178,58 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="CloningTemplateStarted" xml:space="preserve">
     <value>----- Cloning template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="CloningTemplateSuccess" xml:space="preserve">
     <value>----- Successfully cloned template '{0}' to '{1}' -----</value>
+    <comment>{0} is a template name; {1} is a file path</comment>
   </data>
   <data name="CloningTemplateFailed" xml:space="preserve">
     <value>----- Failed to clone template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="LoadingTemplateStarted" xml:space="preserve">
     <value>----- Loading template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="LoadingTemplateSuccess" xml:space="preserve">
     <value>----- Successfully loaded template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="LoadingTemplateFailed" xml:space="preserve">
     <value>----- Failed to load template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="RunningTemplateStarted" xml:space="preserve">
     <value>----- Creating files using template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="RunningTemplateSuccess" xml:space="preserve">
     <value>----- Successfully created files using template '{0}' into '{1}' -----</value>
+    <comment>{0} is a template name; {1} is a file path</comment>
   </data>
   <data name="RunningTemplateFailed" xml:space="preserve">
     <value>----- Failed to create files using template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="ReplacedFilesHeader" xml:space="preserve">
     <value>The following files were backed up and then replaced:</value>
   </data>
   <data name="ReplacedFile" xml:space="preserve">
     <value> - '{0}' was saved as '{1}'.</value>
+    <comment>{0} and {1} are file names</comment>
   </data>
   <data name="DeletingTemplateStarted" xml:space="preserve">
     <value>----- Deleting template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="DeletingTemplateSuccess" xml:space="preserve">
     <value>----- Successfully deleted template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="DeletingTemplateFailed" xml:space="preserve">
     <value>----- Failed to delete template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="CheckingForAllUpdatesStarted" xml:space="preserve">
     <value>----- Checking for template updates -----</value>
@@ -231,6 +245,7 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="CheckingTemplateUpdateStarted" xml:space="preserve">
     <value>----- Checking for update to template '{0}' from '{1}' -----</value>
+    <comment>{0} is a template name; {1} is a URL</comment>
   </data>
   <data name="CheckingTemplateUpdateFound" xml:space="preserve">
     <value>An update is available.</value>
@@ -246,12 +261,15 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="UpdatingTemplateStarted" xml:space="preserve">
     <value>----- Updating template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="UpdatingTemplateSuccess" xml:space="preserve">
     <value>----- Successfully updated template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="UpdatingTemplateFailed" xml:space="preserve">
     <value>----- Failed to update template '{0}' -----</value>
+    <comment>{0} is a template name</comment>
   </data>
   <data name="AddToProjectError" xml:space="preserve">
     <value>Files were successfully created, but there was an issue adding the files to your project.\n{0}</value>
@@ -276,6 +294,7 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="ProcessExitCodeMessage" xml:space="preserve">
     <value>{0} returned an exit code of {1}.</value>
+    <comment>{0} is a program name; {1} is a number</comment>
   </data>
   <data name="ConnectionStringFormatIncorrect" xml:space="preserve">
     <value>The connection string appears to be in incorrect format. Would you like to re-create it?</value>
@@ -285,18 +304,23 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="CookiecutterClient_Invalidurl" xml:space="preserve">
     <value>'{0}' from _visual_studio section in context file should be an absolute http or https url.</value>
+    <comment>{0} is a user-provided string that is not a valid URL</comment>
   </data>
   <data name="CookiecutterClient_WrongJsonType" xml:space="preserve">
     <value>'{0}' from _visual_studio section in context file should be of type '{1}', instead of '{2}'.</value>
+    <comment>{0} is a property name; {1} and {2} are value type names</comment>
   </data>
   <data name="CookiecutterClient_ReferenceNotFound" xml:space="preserve">
     <value>'{0}' is referenced from _visual_studio section in context file but was not found.</value>
+    <comment>{0} is the name of a configurable field</comment>
   </data>
   <data name="CookiecutterClient_MissingProperty" xml:space="preserve">
     <value>'{0}' property is required on '{1}'.</value>
+    <comment>{0} is the property name; {1} is an element name from a user provided configuration file</comment>
   </data>
   <data name="CookiecutterClient_UnsupportedJsonElementTypeForPorperty" xml:space="preserve">
     <value>Unsupported json element type in context file for property '{0}'.</value>
+    <comment>{0} is a user-provided string that is not recognized</comment>
   </data>
   <data name="SearchPage_SearchWatermark" xml:space="preserve">
     <value>Enter search terms or template location</value>

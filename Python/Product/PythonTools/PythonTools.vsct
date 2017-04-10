@@ -407,7 +407,7 @@ permissions and limitations under the License.
           <ButtonText>&amp;Generate requirements.txt</ButtonText>
           <ToolTipText>Generates or updates a requirements.txt file listing the packages in this environment.</ToolTipText>
           <CanonicalName>Generate RequirementsTxt</CanonicalName>
-          <LocCanonicalName>Generate RequiremenstTxt</LocCanonicalName>
+          <LocCanonicalName>Generate RequirementsTxt</LocCanonicalName>
         </Strings>
       </Button>
 
