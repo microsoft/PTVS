@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Browse folder dialog for interpreter path.
+        ///   Looks up a localized string similar to Browse for interpreter path.
         /// </summary>
         public static string ConfigurationExtensionInterpreterPathBrowseButton {
             get {
@@ -268,7 +268,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Browse folder dialog for prefix path.
+        ///   Looks up a localized string similar to Browse for prefix path.
         /// </summary>
         public static string ConfigurationExtensionPrefixPathBrowseButton {
             get {
@@ -340,7 +340,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Browse folder dialog for windowed interpreter path.
+        ///   Looks up a localized string similar to Browse for windowed interpreter path.
         /// </summary>
         public static string ConfigurationExtensionWindowedInterpreterPathBrowseButton {
             get {

@@ -224,7 +224,7 @@
     <value>Prefix path</value>
   </data>
   <data name="ConfigurationExtensionPrefixPathBrowseButton" xml:space="preserve">
-    <value>Browse folder dialog for prefix path</value>
+    <value>Browse for prefix path</value>
   </data>
   <data name="ConfigurationExtensionPrefixPathWatermark" xml:space="preserve">
     <value>e.g. C:\PythonXY</value>
@@ -236,7 +236,7 @@
     <value>Interpreter path</value>
   </data>
   <data name="ConfigurationExtensionInterpreterPathBrowseButton" xml:space="preserve">
-    <value>Browse folder dialog for interpreter path</value>
+    <value>Browse for interpreter path</value>
   </data>
   <data name="ConfigurationExtensionInterpreterPathWatermark" xml:space="preserve">
     <value>e.g. C:\PythonXY\python.exe</value>
@@ -248,7 +248,7 @@
     <value>Windowed interpreter</value>
   </data>
   <data name="ConfigurationExtensionWindowedInterpreterPathBrowseButton" xml:space="preserve">
-    <value>Browse folder dialog for windowed interpreter path</value>
+    <value>Browse for windowed interpreter path</value>
   </data>
   <data name="ConfigurationExtensionWindowedInterpreterPathWatermark" xml:space="preserve">
     <value>e.g. C:\PythonXY\pythonw.exe</value>

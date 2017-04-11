@@ -38,8 +38,8 @@
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
                                     <Control Grid.Column="0"
-                                                    Margin="3 0"
-                                                    Style="{StaticResource PythonEnvironmentImage}"
+                                             Margin="3 0"
+                                             Style="{StaticResource PythonEnvironmentImage}"
                                              IsTabStop="False"/>
                                     <TextBlock Grid.Column="1"
                                                TextWrapping="WrapWithOverflow"
