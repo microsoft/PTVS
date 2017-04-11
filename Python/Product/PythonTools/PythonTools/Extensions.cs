@@ -375,22 +375,27 @@ namespace Microsoft.PythonTools {
 
         internal static PythonProjectNode GetProjectFromFile(this IServiceProvider serviceProvider, string filename) {
             var docTable = serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
-            var cookie = docTable.GetDocumentCookie(filename);
-
-            if (cookie != VSConstants.VSCOOKIE_NIL) {
-                IVsHierarchy hierarchy;
-                uint itemid;
-                docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
-                var project = hierarchy.GetProject();
-                if (project != null) {
-                    return project.GetPythonProject();
-                }
-
-                object projectObj;
-                ErrorHandler.ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
-                return (projectObj as EnvDTE.Project)?.GetPythonProject();
+            uint cookie = VSConstants.VSCOOKIE_NIL;
+            try {
+                cookie = docTable.GetDocumentCookie(filename);
+            } catch (ArgumentException) {
             }
-            return null;
+
+            if (cookie == VSConstants.VSCOOKIE_NIL) {
+                return null;
+            }
+
+            IVsHierarchy hierarchy;
+            uint itemid;
+            docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
+            var project = hierarchy.GetProject();
+            if (project != null) {
+                return project.GetPythonProject();
+            }
+
+            object projectObj;
+            ErrorHandler.ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
+            return (projectObj as EnvDTE.Project)?.GetPythonProject();
         }
         
         internal static ITrackingSpan GetCaretSpan(this ITextView view) {

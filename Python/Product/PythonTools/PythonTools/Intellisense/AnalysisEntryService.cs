@@ -214,24 +214,11 @@ namespace Microsoft.PythonTools.Intellisense {
             // This should only happen while racing with text view creation
             var path = textBuffer.GetFilePath();
             if (path != null) {
-                var rdt = (IVsRunningDocumentTable4)_site.GetService(typeof(SVsRunningDocumentTable));
-                try {
-                    var cookie = rdt?.GetDocumentCookie(path) ?? VSConstants.VSCOOKIE_NIL;
-                    if (cookie != VSConstants.VSCOOKIE_NIL) {
-                        IVsHierarchy hierarchy;
-                        uint itemid;
-                        rdt.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
-                        if (hierarchy != null) {
-                            var pyProject = hierarchy.GetProject()?.GetPythonProject();
-                            if (pyProject != null) {
-                                analyzer = pyProject.GetAnalyzer();
-                                Debug.WriteLineIf(analyzer != null, "Found an analyzer that wasn't in the property bag");
-                                filename = path;
-                                return true;
-                            }
-                        }
-                    }
-                } catch (ArgumentException) {
+                analyzer = _site.GetProjectFromFile(path)?.GetAnalyzer();
+                if (analyzer != null) {
+                    Debug.WriteLine("Found an analyzer on " + path + " that wasn't in the property bag");
+                    filename = path;
+                    return true;
                 }
             }
 
