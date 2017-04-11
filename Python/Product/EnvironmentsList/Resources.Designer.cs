@@ -169,6 +169,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Browse for interpreter path.
+        /// </summary>
+        public static string ConfigurationExtensionInterpreterPathBrowseButton {
+            get {
+                return ResourceManager.GetString("ConfigurationExtensionInterpreterPathBrowseButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Executable Files (*.exe)|*.exe|All Files (*.*)|*.*.
         /// </summary>
         public static string ConfigurationExtensionInterpreterPathBrowseFilter {
@@ -259,6 +268,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Browse for prefix path.
+        /// </summary>
+        public static string ConfigurationExtensionPrefixPathBrowseButton {
+            get {
+                return ResourceManager.GetString("ConfigurationExtensionPrefixPathBrowseButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The prefix path specifies the directory containing all files needed for this environment. It may be used for searching installed libraries or deploying an environment to another machine..
         /// </summary>
         public static string ConfigurationExtensionPrefixPathHelp {
@@ -318,6 +336,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static string ConfigurationExtensionResetTooltip {
             get {
                 return ResourceManager.GetString("ConfigurationExtensionResetTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Browse for windowed interpreter path.
+        /// </summary>
+        public static string ConfigurationExtensionWindowedInterpreterPathBrowseButton {
+            get {
+                return ResourceManager.GetString("ConfigurationExtensionWindowedInterpreterPathBrowseButton", resourceCulture);
             }
         }
         

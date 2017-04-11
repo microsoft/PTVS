@@ -31,8 +31,11 @@
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
-                    
-            <Label Grid.Row="0" Content="{x:Static ui:Strings.LaunchProfiling_WhatToProfile}" Margin="6 12 6 0" FontWeight="Bold" />
+
+            <Label Grid.Row="0"
+                   Content="{x:Static ui:Strings.LaunchProfiling_WhatToProfile}"
+                   Margin="6 12 6 0"
+                   FontWeight="Bold"/>
 
             <RadioButton Grid.Row="1" Margin="12 12 12 4"
                          Content="{x:Static ui:Strings.LaunchProfiling_OpenProject}"
@@ -46,6 +49,7 @@
                       SelectedItem="{Binding Project}"
                       Margin="8 4" Padding="4 6" VerticalContentAlignment="Center"
                       DisplayMemberPath="Name"
+                      AutomationProperties.Name="{x:Static ui:Strings.LaunchProfiling_OpenProjectComboBoxDescription}"
                       AutomationProperties.AutomationId="Project" />
 
             <RadioButton Grid.Row="3" Margin="12 12 12 4"
@@ -67,17 +71,22 @@
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
                     </Grid.RowDefinitions>
-                    <Label Grid.Row="0" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_PythonInterpreter}"
-                            Padding="0" VerticalAlignment="Center" />
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Name="InterpreterLabel"
+                           Content="{x:Static ui:Strings.LaunchProfiling_PythonInterpreter}"
+                           Padding="0" VerticalAlignment="Center" />
                     <ComboBox Grid.Row="0" Grid.Column="1" Margin="4 4"
-                                ItemsSource="{Binding Standalone.AvailableInterpreters}"
-                                SelectedItem="{Binding Standalone.Interpreter,UpdateSourceTrigger=PropertyChanged}"
-                                IsEditable="False"
-                                DisplayMemberPath="Name"
-                                AutomationProperties.AutomationId="Standalone.Interpreter" />
+                              ItemsSource="{Binding Standalone.AvailableInterpreters}"
+                              SelectedItem="{Binding Standalone.Interpreter,UpdateSourceTrigger=PropertyChanged}"
+                              IsEditable="False"
+                              DisplayMemberPath="Name"
+                              AutomationProperties.LabeledBy="{Binding ElementName=InterpreterLabel}"
+                              AutomationProperties.AutomationId="Standalone.Interpreter" />
 
-                    <Label Grid.Row="1" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_InterpreterPath}"
-                            Padding="0" VerticalAlignment="Center" />
+                    <Label Grid.Row="1" Grid.Column="0"
+                           Name="InterpreterPathLabel"
+                           Content="{x:Static ui:Strings.LaunchProfiling_InterpreterPath}"
+                           Padding="0" VerticalAlignment="Center" />
                     <Grid Grid.Row="1" Grid.Column="1" Margin="4"
                             IsEnabled="{Binding Standalone.CanSpecifyInterpreterPath}">
                         <Grid.ColumnDefinitions>
@@ -86,14 +95,18 @@
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" 
                                     Text="{Binding Standalone.InterpreterPath,UpdateSourceTrigger=PropertyChanged}"
+                                    AutomationProperties.LabeledBy="{Binding ElementName=InterpreterPathLabel}"
                                     AutomationProperties.AutomationId="Standalone.InterpreterPath" />
                         <Button Grid.Column="1" Margin="4 0 0 0" Content="{x:Static ui:Strings.LaunchProfiling_BrowseButton}"
                                 Click="FindInterpreterClick"
+                                AutomationProperties.Name="{x:Static ui:Strings.LaunchProfiling_InterpreterPathBrowseButtonDescription}"
                                 Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
                     </Grid>
 
-                    <Label Grid.Row="2" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_Script}"
-                            Padding="0" VerticalAlignment="Center" />
+                    <Label Grid.Row="2" Grid.Column="0"
+                           Name="ScriptLabel"
+                           Content="{x:Static ui:Strings.LaunchProfiling_Script}"
+                           Padding="0" VerticalAlignment="Center" />
                     <Grid Grid.Row="2" Grid.Column="1" Margin="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -101,14 +114,18 @@
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" 
                                     Text="{Binding Standalone.ScriptPath,UpdateSourceTrigger=PropertyChanged}"
+                                    AutomationProperties.LabeledBy="{Binding ElementName=ScriptLabel}"
                                     AutomationProperties.AutomationId="Standalone.ScriptPath" />
                         <Button Grid.Column="1" Margin="4 0 0 0" Content="{x:Static ui:Strings.LaunchProfiling_BrowseButton}"
                                 Click="FindScriptClick"
+                                AutomationProperties.Name="{x:Static ui:Strings.LaunchProfiling_ScriptBrowseButtonDescription}"
                                 Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
                     </Grid>
 
-                    <Label Grid.Row="3" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_WorkingDirectory}"
-                            Padding="0" VerticalAlignment="Center" />
+                    <Label Grid.Row="3" Grid.Column="0"
+                           Name="WorkingDirectoryLabel"
+                           Content="{x:Static ui:Strings.LaunchProfiling_WorkingDirectory}"
+                           Padding="0" VerticalAlignment="Center" />
                     <Grid Grid.Row="3" Grid.Column="1" Margin="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -116,16 +133,21 @@
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" 
                                     Text="{Binding Standalone.WorkingDirectory,UpdateSourceTrigger=PropertyChanged}" 
+                                    AutomationProperties.LabeledBy="{Binding ElementName=WorkingDirectoryLabel}"
                                     AutomationProperties.AutomationId="Standalone.WorkingDirectory" />
                         <Button Grid.Column="1" Margin="4 0 0 0" Content="{x:Static ui:Strings.LaunchProfiling_BrowseButton}" 
                                 Click="FindWorkingDirectoryClick"
+                                AutomationProperties.Name="{x:Static ui:Strings.LaunchProfiling_WorkingDirectoryBrowseButtonDescription}"
                                 Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
                     </Grid>
 
-                    <Label Grid.Row="4" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_CommandLineArguments}"
-                            Padding="0" VerticalAlignment="Center" />
+                    <Label Grid.Row="4" Grid.Column="0"
+                           Name="CommandLineArgumentsLabel"
+                           Content="{x:Static ui:Strings.LaunchProfiling_CommandLineArguments}"
+                           Padding="0" VerticalAlignment="Center" />
                     <TextBox Grid.Row="4" Grid.Column="1" Margin="4"
                                 Text="{Binding Standalone.Arguments,UpdateSourceTrigger=PropertyChanged}"
+                                AutomationProperties.LabeledBy="{Binding ElementName=CommandLineArgumentsLabel}"
                                 AutomationProperties.AutomationId="Standalone.Arguments" />
                 </Grid>
             </GroupBox>

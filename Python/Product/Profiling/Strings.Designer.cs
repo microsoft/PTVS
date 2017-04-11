@@ -209,6 +209,15 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Browse file dialog for interpreter path.
+        /// </summary>
+        public static string LaunchProfiling_InterpreterPathBrowseButtonDescription {
+            get {
+                return ResourceManager.GetString("LaunchProfiling_InterpreterPathBrowseButtonDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _OK.
         /// </summary>
         public static string LaunchProfiling_OK {
@@ -223,6 +232,15 @@ namespace Microsoft.PythonTools.Profiling {
         public static string LaunchProfiling_OpenProject {
             get {
                 return ResourceManager.GetString("LaunchProfiling_OpenProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project to profile.
+        /// </summary>
+        public static string LaunchProfiling_OpenProjectComboBoxDescription {
+            get {
+                return ResourceManager.GetString("LaunchProfiling_OpenProjectComboBoxDescription", resourceCulture);
             }
         }
         
@@ -250,6 +268,15 @@ namespace Microsoft.PythonTools.Profiling {
         public static string LaunchProfiling_Script {
             get {
                 return ResourceManager.GetString("LaunchProfiling_Script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Browse file dialog for script.
+        /// </summary>
+        public static string LaunchProfiling_ScriptBrowseButtonDescription {
+            get {
+                return ResourceManager.GetString("LaunchProfiling_ScriptBrowseButtonDescription", resourceCulture);
             }
         }
         
@@ -304,6 +331,15 @@ namespace Microsoft.PythonTools.Profiling {
         public static string LaunchProfiling_WorkingDirectory {
             get {
                 return ResourceManager.GetString("LaunchProfiling_WorkingDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Browse folder dialog for working directory.
+        /// </summary>
+        public static string LaunchProfiling_WorkingDirectoryBrowseButtonDescription {
+            get {
+                return ResourceManager.GetString("LaunchProfiling_WorkingDirectoryBrowseButtonDescription", resourceCulture);
             }
         }
         

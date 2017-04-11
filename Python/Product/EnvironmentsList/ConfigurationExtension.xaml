@@ -67,54 +67,78 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <Label Grid.Column="0" Grid.Row="0" Content="{x:Static l:Resources.ConfigurationExtensionDescriptionLabel}"/>
+                <Label Grid.Column="0" Grid.Row="0"
+                       Name="DescriptionLabel"
+                       Content="{x:Static l:Resources.ConfigurationExtensionDescriptionLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="1"
                                                   Text="{Binding Description,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionDescriptionHelp}"
-                                                  Watermark="{x:Static l:Resources.ConfigurationExtensionDescriptionWatermark}"/>
+                                                  Watermark="{x:Static l:Resources.ConfigurationExtensionDescriptionWatermark}"
+                                                  AutomationProperties.LabeledBy="{Binding ElementName=DescriptionLabel}"/>
 
-                <Label Grid.Column="0" Grid.Row="2" Content="{x:Static l:Resources.ConfigurationExtensionPrefixPathLabel}"/>
+                <Label Grid.Column="0" Grid.Row="2"
+                       Name="PrefixPathLabel"
+                       Content="{x:Static l:Resources.ConfigurationExtensionPrefixPathLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="3"
                                                   Text="{Binding PrefixPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                                   Watermark="{x:Static l:Resources.ConfigurationExtensionPrefixPathWatermark}"
                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionPrefixPathHelp}"
-                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}"/>
+                                                  AutomationProperties.LabeledBy="{Binding ElementName=PrefixPathLabel}"
+                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}"
+                                                  BrowseAutomationName="{x:Static l:Resources.ConfigurationExtensionPrefixPathBrowseButton}"/>
 
-                <Label Grid.Column="0" Grid.Row="4" Content="{x:Static l:Resources.ConfigurationExtensionInterpreterPathLabel}"/>
+                <Label Grid.Column="0" Grid.Row="4"
+                       Name="InterpreterPathLabel"
+                       Content="{x:Static l:Resources.ConfigurationExtensionInterpreterPathLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="5"
                                                   Text="{Binding InterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                                   Watermark="{x:Static l:Resources.ConfigurationExtensionInterpreterPathWatermark}"
                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionInterpreterPathHelp}"
+                                                  AutomationProperties.LabeledBy="{Binding ElementName=InterpreterPathLabel}"
                                                   BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
-                                                  BrowseCommandParameter="{x:Static l:Resources.ConfigurationExtensionInterpreterPathBrowseFilter}"/>
+                                                  BrowseCommandParameter="{x:Static l:Resources.ConfigurationExtensionInterpreterPathBrowseFilter}"
+                                                  BrowseAutomationName="{x:Static l:Resources.ConfigurationExtensionInterpreterPathBrowseButton}"/>
 
-                <Label Grid.Column="0" Grid.Row="6" Content="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathLabel}"/>
+                <Label Grid.Column="0" Grid.Row="6"
+                       Name="WindowedInterpreterPathLabel"
+                       Content="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="7"
                                                   Text="{Binding WindowsInterpreterPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                                   Watermark="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathWatermark}"
                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathHelp}"
+                                                  AutomationProperties.LabeledBy="{Binding ElementName=WindowedInterpreterPathLabel}"
                                                   BrowseButtonStyle="{StaticResource BrowseOpenFileButton}"
-                                                  BrowseCommandParameter="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathBrowseFilter}"/>
+                                                  BrowseCommandParameter="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathBrowseFilter}"
+                                                  BrowseAutomationName="{x:Static l:Resources.ConfigurationExtensionWindowedInterpreterPathBrowseButton}"/>
 
-                <Label Grid.Column="0" Grid.Row="8" Content="{x:Static l:Resources.ConfigurationExtensionLanguageVersionLabel}"/>
+                <Label Grid.Column="0" Grid.Row="8"
+                       Name="LanguageVersionLabel"
+                       Content="{x:Static l:Resources.ConfigurationExtensionLanguageVersionLabel}"/>
                 <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="9"
                                                    Value="{Binding VersionName,Mode=TwoWay}"
                                                    Values="{Binding VersionNames}"
                                                    Watermark="{x:Static l:Resources.ConfigurationExtensionLanguageVersionWatermark}"
-                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionLanguageVersionHelp}"/>
+                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionLanguageVersionHelp}"
+                                                   AutomationProperties.LabeledBy="{Binding ElementName=LanguageVersionLabel}"/>
 
-                <Label Grid.Column="0" Grid.Row="10" Content="{x:Static l:Resources.ConfigurationExtensionArchitectureLabel}"/>
+                <Label Grid.Column="0" Grid.Row="10"
+                       Name="ArchitectureLabel"
+                       Content="{x:Static l:Resources.ConfigurationExtensionArchitectureLabel}"/>
                 <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="11"
                                                    Value="{Binding ArchitectureName,Mode=TwoWay}"
                                                    Values="{Binding ArchitectureNames}"
                                                    Watermark="{x:Static l:Resources.ConfigurationExtensionArchitectureWatermark}"
-                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionArchitectureHelp}"/>
+                                                   HelpText="{x:Static l:Resources.ConfigurationExtensionArchitectureHelp}"
+                                                   AutomationProperties.LabeledBy="{Binding ElementName=ArchitectureLabel}"/>
 
-                <Label Grid.Column="0" Grid.Row="12" Content="{x:Static l:Resources.ConfigurationExtensionPathEnvVarLabel}"/>
+                <Label Grid.Column="0" Grid.Row="12"
+                       Name="PathEnvVarLabel"
+                       Content="{x:Static l:Resources.ConfigurationExtensionPathEnvVarLabel}"/>
                 <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="13"
                                                   Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                                   Watermark="{x:Static l:Resources.ConfigurationExtensionPathEnvVarWatermark}"
-                                                  HelpText="{x:Static l:Resources.ConfigurationExtensionPathEnvVarHelp}"/>
+                                                  HelpText="{x:Static l:Resources.ConfigurationExtensionPathEnvVarHelp}"
+                                                  AutomationProperties.LabeledBy="{Binding ElementName=PathEnvVarLabel}"/>
             </Grid>
         </ScrollViewer>
         

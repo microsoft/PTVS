@@ -210,7 +210,8 @@
         </StackPanel>
         <ScrollViewer Grid.Row="1" Margin="4">
             <ItemsControl ItemsSource="{Binding Path=ContextItems}"
-                          ItemTemplateSelector="{StaticResource contextItemSelector}" />
+                          ItemTemplateSelector="{StaticResource contextItemSelector}"
+                          IsTabStop="False"/>
         </ScrollViewer>
         <StackPanel Grid.Row="2" Margin="4" Orientation="Vertical">
             <StackPanel Grid.Row="2" Orientation="Horizontal">

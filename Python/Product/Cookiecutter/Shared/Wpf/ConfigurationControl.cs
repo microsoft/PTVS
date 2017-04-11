@@ -26,6 +26,7 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty BrowseButtonStyleProperty = DependencyProperty.Register("BrowseButtonStyle", typeof(Style), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty BrowseCommandParameterProperty = DependencyProperty.Register("BrowseCommandParameter", typeof(object), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
+        public static readonly DependencyProperty BrowseAutomationNameProperty = DependencyProperty.Register("BrowseAutomationName", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
 
         public string Watermark {
             get { return (string)GetValue(WatermarkProperty); }
@@ -55,6 +56,11 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public object BrowseCommandParameter {
             get { return (object)GetValue(BrowseCommandParameterProperty); }
             set { SetValue(BrowseCommandParameterProperty, value); }
+        }
+
+        public string BrowseAutomationName {
+            get { return (string)GetValue(BrowseAutomationNameProperty); }
+            set { SetValue(BrowseAutomationNameProperty, value); }
         }
     }
 
