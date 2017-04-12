@@ -70,6 +70,9 @@
       <Item ItemId=";AddReferenceExtensions" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Extension Modules (*.dll;*.pyd)|*.dll;*.pyd|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Moduły rozszerzeń języka Python (*.dll;*.pyd)|*.dll;*.pyd|Wszystkie pliki (*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2596,6 +2599,9 @@
       <Item ItemId=";ImportCoverageCommandFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki XML pokrycia (*.xml)|*.xml|Wszystkie pliki (*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2791,6 +2797,9 @@
       <Item ItemId=";ImportWizard_ProjectFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Project Files (*.pyproj)|*.pyproj|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pliki projektu Python (*.pyproj)|*.pyproj|Wszystkie pliki (*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5080,6 +5089,9 @@
       <Item ItemId=";ZipAndEggArchiveFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Zip Archives (*.zip;*.egg)|*.zip;*.egg|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Archiwa w formacie Zip (*.zip;*.egg)|*.zip;*.egg|Wszystkie pliki (*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5119,7 +5131,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17089.6]]></Val>
+        <Val><![CDATA[3.0.17100.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5155,7 +5167,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17089.6]]></Val>
+        <Val><![CDATA[3.0.17100.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
