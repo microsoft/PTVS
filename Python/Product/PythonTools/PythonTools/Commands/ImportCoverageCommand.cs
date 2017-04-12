@@ -17,9 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.CodeCoverage;
-using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
@@ -79,23 +80,24 @@ namespace Microsoft.PythonTools.Commands {
 
                 // Discover what version we should use for this if one hasn't been provided...
                 if (version == null) {
+                    var entryService = _serviceProvider.GetEntryService();
                     foreach (var file in fileInfo) {
-                        var project = _serviceProvider.GetProjectFromFile(file.Filename);
-                        if (project != null) {
-                            version = project.ActiveInterpreter.Configuration.Version.ToLanguageVersion();
+                        version = entryService.GetAnalyzersForFile(file.Filename)
+                            .OfType<VsProjectAnalyzer>()
+                            .Select(a => (PythonLanguageVersion?)a.LanguageVersion)
+                            .FirstOrDefault();
+                        if (version.HasValue) {
                             break;
                         }
                     }
-                }
 
-                if (version == null) {
-                    var interpreters = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                    version = interpreters?.DefaultInterpreter.Configuration.Version.ToLanguageVersion()
-                        ?? PythonLanguageVersion.None;
+                    if (version == null) {
+                        version = (entryService.DefaultAnalyzer as VsProjectAnalyzer)?.LanguageVersion;
+                    }
                 }
 
                 // Convert that into offsets within the actual code
-                var covInfo = Import(fileInfo, version.Value);
+                var covInfo = Import(fileInfo, version ?? PythonLanguageVersion.None);
 
                 // Then export as .coveragexml
                 new CoverageExporter(outp, covInfo).Export();

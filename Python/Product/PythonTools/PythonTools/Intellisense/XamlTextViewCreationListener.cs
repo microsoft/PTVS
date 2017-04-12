@@ -51,7 +51,8 @@ namespace Microsoft.PythonTools.Intellisense {
             ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
             
             if (textView != null) {
-                var analyzer = _serviceProvider.GetProjectFromFile(textView.GetFilePath())?.GetAnalyzer();
+                var entryService = _serviceProvider.GetEntryService();
+                var analyzer = entryService.GetVsAnalyzer(textView, null);
                 if (analyzer != null) {
                     var monitorResult = analyzer.MonitorTextBufferAsync(textView.TextBuffer)
                         .ContinueWith(
