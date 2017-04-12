@@ -16,6 +16,7 @@
 
 using System;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +33,7 @@ namespace Microsoft.VisualStudioTools {
             _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
             _factory = new TaskFactory(_scheduler);
             _uiThread = Thread.CurrentThread;
+            Trace.TraceInformation("Setting TID {0}:{1} as UI thread", _uiThread.ManagedThreadId, _uiThread.Name ?? "(null)");
         }
 
         public static void EnsureService(IServiceContainer container) {

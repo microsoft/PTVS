@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -65,6 +66,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
 
             Console.WriteLine(
+                "Unknown Service {0} ({1:B})",
+                typeName ?? Type.GetTypeFromCLSID(serviceType, false)?.FullName ?? "(unknown)",
+                serviceType
+            );
+            Debug.WriteLine(
                 "Unknown Service {0} ({1:B})",
                 typeName ?? Type.GetTypeFromCLSID(serviceType, false)?.FullName ?? "(unknown)",
                 serviceType

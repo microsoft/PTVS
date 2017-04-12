@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -44,12 +45,14 @@ namespace PythonToolsMockTests {
         [TestInitialize]
         public void TestInit() {
             MockPythonToolsPackage.SuppressTaskProvider = true;
+            VsProjectAnalyzer.SuppressTaskProvider = true;
             _vs = new MockVs();
         }
 
         [TestCleanup]
         public void TestCleanup() {
             MockPythonToolsPackage.SuppressTaskProvider = false;
+            VsProjectAnalyzer.SuppressTaskProvider = false;
             _vs.Dispose();
         }
 

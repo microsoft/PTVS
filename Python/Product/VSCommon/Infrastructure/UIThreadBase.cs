@@ -166,12 +166,20 @@ namespace Microsoft.VisualStudioTools {
 
         [Conditional("DEBUG")]
         public static void MustBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
-            Debug.Assert(self is MockUIThreadBase || !self.InvokeRequired, message);
+            if (self is MockUIThreadBase || !self.InvokeRequired) {
+                return;
+            }
+
+            Debug.Fail(message, new StackTrace().ToString());
         }
 
         [Conditional("DEBUG")]
         public static void MustNotBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
-            Debug.Assert(self is MockUIThreadBase || self.InvokeRequired, message);
+            if (self is MockUIThreadBase || self.InvokeRequired) {
+                return;
+            }
+            
+            Debug.Fail(message, new StackTrace().ToString());
         }
 
     }
