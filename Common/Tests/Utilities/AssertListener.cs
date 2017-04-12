@@ -62,7 +62,7 @@ namespace TestUtilities {
                 }
                 throw new AggregateException(ex.Select(e => e.SourceException));
             } else if (ex.Length == 1) {
-                Console.Error.WriteLine(ex[0].ToString());
+                Console.Error.WriteLine(ex[0].SourceException.ToString());
                 ex[0].Throw();
             }
         }

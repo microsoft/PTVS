@@ -90,6 +90,9 @@ namespace Microsoft.PythonTools.Intellisense {
         internal Task ReloadTask;
         internal int _parsePending;
 
+        // Used by tests to avoid creating TaskProvider objects
+        internal static bool SuppressTaskProvider = false;
+
         /// <summary>
         /// The recommended timeout to use when waiting on analysis information.
         /// </summary>
@@ -168,8 +171,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 throw new ArgumentNullException(nameof(factory));
             }
 
-            _errorProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
-            _commentTaskProvider = (CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider));
+            if (!SuppressTaskProvider) {
+                _errorProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
+                _commentTaskProvider = (CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider));
+            }
             if (_errorProvider != null) {
                 _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(serviceProvider, _errorProvider);
             }
