@@ -35,11 +35,11 @@ using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
@@ -47,8 +47,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools {
             StandardGlyphGroup group;
             switch (objectType) {
                 case PythonMemberType.Class: group = StandardGlyphGroup.GlyphGroupClass; break;
-                case PythonMemberType.DelegateInstance: 
+                case PythonMemberType.DelegateInstance:
                 case PythonMemberType.Delegate: group = StandardGlyphGroup.GlyphGroupDelegate; break;
                 case PythonMemberType.Enum: group = StandardGlyphGroup.GlyphGroupEnum; break;
                 case PythonMemberType.Namespace: group = StandardGlyphGroup.GlyphGroupNamespace; break;
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools {
             if (spanLength < line.Length) {
                 spanLength += 1;
             }
-            
+
             var classifications = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, spanLength));
             // Handle "|"
             if (classifications == null || classifications.Count == 0) {
@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools {
             }
 
             var secondLastToken = classifications.Count >= 2 ? classifications[classifications.Count - 2] : null;
-            if (lastToken.Span.Start == position && lastToken.CanComplete() && 
+            if (lastToken.Span.Start == position && lastToken.CanComplete() &&
                 (secondLastToken == null ||             // Handle "|fob"
                  position > secondLastToken.Span.End || // Handle "if |fob"
                  !secondLastToken.CanComplete())) {     // Handle "abc.|fob"
@@ -373,24 +373,62 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
-        internal static PythonProjectNode GetProjectFromFile(this IServiceProvider serviceProvider, string filename) {
+        internal static ITextBuffer GetTextBufferFromOpenFile(this IServiceProvider serviceProvider, string filename) {
             var docTable = serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
-            var cookie = docTable.GetDocumentCookie(filename);
-
-            if (cookie != VSConstants.VSCOOKIE_NIL) {
-                IVsHierarchy hierarchy;
-                uint itemid;
-                docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
-                var project = hierarchy.GetProject();
-                if (project != null) {
-                    return project.GetPythonProject();
-                }
-
-                object projectObj;
-                ErrorHandler.ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
-                return (projectObj as EnvDTE.Project)?.GetPythonProject();
+            uint cookie = VSConstants.VSCOOKIE_NIL;
+            try {
+                cookie = docTable.GetDocumentCookie(filename);
+            } catch (ArgumentException) {
             }
-            return null;
+
+            if (cookie == VSConstants.VSCOOKIE_NIL) {
+                return null;
+            }
+
+            var vsBuffer = docTable.GetDocumentData(cookie) as IVsTextBuffer;
+            if (vsBuffer == null) {
+                return null;
+            }
+
+            var adapterService = serviceProvider.GetComponentModel().GetService<IVsEditorAdaptersFactoryService>();
+            return adapterService.GetDataBuffer(vsBuffer);
+        }
+
+        internal static PythonProjectNode GetProjectFromOpenFile(this IServiceProvider serviceProvider, string filename) {
+            var docTable = serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
+            uint cookie = VSConstants.VSCOOKIE_NIL;
+            try {
+                cookie = docTable.GetDocumentCookie(filename);
+            } catch (ArgumentException) {
+            }
+
+            if (cookie == VSConstants.VSCOOKIE_NIL) {
+                return null;
+            }
+            IVsHierarchy hierarchy;
+            uint itemid;
+            docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
+            if (hierarchy == null) {
+                return null;
+            }
+            var project = hierarchy.GetProject();
+            if (project != null) {
+                return project.GetPythonProject();
+            }
+
+            object projectObj;
+            ErrorHandler.ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
+            return (projectObj as EnvDTE.Project)?.GetPythonProject();
+        }
+
+        internal static PythonProjectNode GetProjectContainingFile(this IServiceProvider serviceProvider, string filename) {
+            var sln = (IVsSolution)serviceProvider.GetService(typeof(SVsSolution));
+            return sln.EnumerateLoadedPythonProjects()
+                .FirstOrDefault(p => p.FindNodeByFullPath(filename) != null);
+        }
+
+        internal static PythonProjectNode GetProjectFromFile(this IServiceProvider serviceProvider, string filename) {
+            return serviceProvider.GetProjectFromOpenFile(filename) ?? serviceProvider.GetProjectContainingFile(filename);
         }
         
         internal static ITrackingSpan GetCaretSpan(this ITextView view) {

@@ -15,14 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
@@ -30,17 +32,46 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Intellisense {
     public interface IAnalysisEntryService {
+        /// <summary>
+        /// Tries to get the analyzer and filename of the specified text buffer.
+        /// </summary>
+        /// <returns>True if an analyzer and filename are found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
         bool TryGetAnalyzer(ITextBuffer textBuffer, out ProjectAnalyzer analyzer, out string filename);
+        /// <summary>
+        /// Tries to get the analyzer and filename of the specified text view. This is
+        /// equivalent to using the view's default text buffer, with some added checks
+        /// for non-standard editors.
+        /// </summary>
+        /// <returns>True if an analyzer and filename are found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
         bool TryGetAnalyzer(ITextView textView, out ProjectAnalyzer analyzer, out string filename);
+        /// <summary>
+        /// Gets all the analyzers that apply to the specified file. Must be
+        /// called from the UI thread.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="filename"/> is null or empty.</exception>
+        IEnumerable<ProjectAnalyzer> GetAnalyzersForFile(string filename);
 
+        /// <summary>
+        /// Returns a task that will be completed when an analyzer is assigned to the text buffer.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
         Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken);
+        /// <summary>
+        /// Returns a task that will be completed when an analyzer is assigned to the text view.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
         Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Returns the default analyzer for the Visual Studio session. Must be accessed from
+        /// the UI thread.
+        /// </summary>
         ProjectAnalyzer DefaultAnalyzer { get; }
     }
 
@@ -148,16 +179,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region IAnalysisEntryService members
 
-        /// <summary>
-        /// Returns the default analyzer for the Visual Studio session. Must be called from
-        /// the UI thread.
-        /// </summary>
         public ProjectAnalyzer DefaultAnalyzer => _site.GetPythonToolsService().DefaultAnalyzer;
 
-        /// <summary>
-        /// Returns a task that will be completed when an analyzer is assigned to the text buffer.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
         public Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken) {
             if (textBuffer == null) {
                 throw new ArgumentNullException(nameof(textBuffer));
@@ -173,10 +196,6 @@ namespace Microsoft.PythonTools.Intellisense {
             ).Task;
         }
 
-        /// <summary>
-        /// Returns a task that will be completed when an analyzer is assigned to the text view.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
         public Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken) {
             if (textView == null) {
                 throw new ArgumentNullException(nameof(textView));
@@ -185,11 +204,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return WaitForAnalyzerAsync(textView.TextBuffer, cancellationToken);
         }
 
-        /// <summary>
-        /// Tries to get the analyzer and filename of the specified text buffer.
-        /// </summary>
-        /// <returns>True if an analyzer and filename are found.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
         public bool TryGetAnalyzer(ITextBuffer textBuffer, out ProjectAnalyzer analyzer, out string filename) {
             if (textBuffer == null) {
                 throw new ArgumentNullException(nameof(textBuffer));
@@ -214,24 +228,11 @@ namespace Microsoft.PythonTools.Intellisense {
             // This should only happen while racing with text view creation
             var path = textBuffer.GetFilePath();
             if (path != null) {
-                var rdt = (IVsRunningDocumentTable4)_site.GetService(typeof(SVsRunningDocumentTable));
-                try {
-                    var cookie = rdt?.GetDocumentCookie(path) ?? VSConstants.VSCOOKIE_NIL;
-                    if (cookie != VSConstants.VSCOOKIE_NIL) {
-                        IVsHierarchy hierarchy;
-                        uint itemid;
-                        rdt.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
-                        if (hierarchy != null) {
-                            var pyProject = hierarchy.GetProject()?.GetPythonProject();
-                            if (pyProject != null) {
-                                analyzer = pyProject.GetAnalyzer();
-                                Debug.WriteLineIf(analyzer != null, "Found an analyzer that wasn't in the property bag");
-                                filename = path;
-                                return true;
-                            }
-                        }
-                    }
-                } catch (ArgumentException) {
+                analyzer = _site.GetProjectFromFile(path)?.GetAnalyzer();
+                if (analyzer != null) {
+                    Debug.WriteLine("Found an analyzer on " + path + " that wasn't in the property bag");
+                    filename = path;
+                    return true;
                 }
             }
 
@@ -240,13 +241,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        /// <summary>
-        /// Tries to get the analyzer and filename of the specified text view. This is
-        /// equivalent to using the view's default text buffer, with some added checks
-        /// for non-standard editors.
-        /// </summary>
-        /// <returns>True if an analyzer and filename are found.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
         public bool TryGetAnalyzer(ITextView textView, out ProjectAnalyzer analyzer, out string filename) {
             if (textView == null) {
                 throw new ArgumentNullException(nameof(textView));
@@ -269,6 +263,51 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return false;
+        }
+
+        public IEnumerable<ProjectAnalyzer> GetAnalyzersForFile(string filename) {
+            if (string.IsNullOrEmpty(filename)) {
+                throw new ArgumentNullException(nameof(filename));
+            }
+
+            var seen = new HashSet<VsProjectAnalyzer>();
+
+            // If we have an open document, return that
+            var buffer = _site.GetTextBufferFromOpenFile(filename);
+            if (buffer != null) {
+                var analyzer = GetVsAnalyzer(null, buffer);
+                if (analyzer != null && seen.Add(analyzer)) {
+                    yield return analyzer;
+                }
+            }
+
+            // Yield all loaded projects containing the file
+            var sln = (IVsSolution)_site.GetService(typeof(SVsSolution));
+            if (sln != null) {
+                if (Path.IsPathRooted(filename)) {
+                    foreach (var project in sln.EnumerateLoadedPythonProjects()) {
+                        if (project.FindNodeByFullPath(filename) != null) {
+                            var analyzer = project.GetAnalyzer();
+                            if (analyzer != null && seen.Add(analyzer)) {
+                                yield return analyzer;
+                            }
+                        }
+                    }
+                } else {
+                    var withSlash = "\\" + filename;
+                    foreach (var project in sln.EnumerateLoadedPythonProjects()) {
+                        if (project.AllVisibleDescendants.Any(n => n.Url.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
+                            n.Url.EndsWith(withSlash, StringComparison.OrdinalIgnoreCase))) {
+                            var analyzer = project.GetAnalyzer();
+                            if (analyzer != null && seen.Add(analyzer)) {
+                                yield return analyzer;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // TODO: When we add non-project attached analyzers, return them here
         }
 
         #endregion
