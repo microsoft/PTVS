@@ -38,6 +38,16 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 namespace AnalysisTests {
     [TestClass]
     public partial class AnalysisTest : BaseAnalysisTest {
+        [TestInitialize]
+        public void TestInitialize() {
+            StartAnalysisLog();
+        }
+
+        [TestCleanup]
+        public void TestCleanup() {
+            EndAnalysisLog();
+        }
+
         #region Test Cases
 
         [TestMethod, Priority(0)]
@@ -2753,6 +2763,33 @@ abc()
                 new VariableLocation(1, 7, VariableType.Definition, "oar"),     // definition 
                 new VariableLocation(2, 17, VariableType.Reference, "fob"),     // import
                 new VariableLocation(4, 1, VariableType.Reference, "fob")       // call
+            );
+        }
+
+        [TestMethod, Priority(2), TestCategory("ExpectFail")]
+        public void SuperclassMemberReferencesCrossModule() {
+            // https://github.com/Microsoft/PTVS/issues/2271
+
+            var fobText = @"
+from oar import abc
+
+class bcd(abc):
+    def test(self):
+        self.x
+";
+            var oarText = @"class abc(object):
+    def __init__(self):
+        self.x = 123
+";
+
+            var state = CreateAnalyzer(DefaultFactoryV3);
+            var fobMod = state.AddModule("fob", fobText);
+            var oarMod = state.AddModule("oar", oarText);
+            state.WaitForAnalysis();
+
+            state.AssertReferences(fobMod, "self.x", oarText.IndexOfEnd("self.x"),
+                new VariableLocation(3, 14, VariableType.Definition, "oar"),
+                new VariableLocation(6, 14, VariableType.Reference, "fob")
             );
         }
 
