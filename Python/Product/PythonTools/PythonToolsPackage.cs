@@ -279,6 +279,41 @@ namespace Microsoft.PythonTools {
                 null;
         }
 
+        internal static bool LaunchFile(IServiceProvider provider, string filename, bool debug, bool saveDirtyFiles) {
+            var project = (IPythonProject)provider.GetProjectFromOpenFile(filename) ?? new DefaultPythonProject(provider, filename);
+            var starter = GetLauncher(provider, project);
+            if (starter == null) {
+                Debug.Fail("Failed to get project launcher");
+                return false;
+            }
+
+            if (saveDirtyFiles) {
+                var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+                if (rdt != null) {
+                    // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
+                    // when VS settings include prompt for save on build
+                    var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
+                    var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
+                    if (hr == VSConstants.E_ABORT) {
+                        return false;
+                    }
+                }
+            }
+
+            try {
+                starter.LaunchFile(filename, debug);
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            } catch (NoInterpretersException ex) {
+                OpenNoInterpretersHelpPage(provider, ex.HelpPage);
+                return false;
+            }
+
+            return true;
+        }
+
+
         ToolWindowPane IPythonToolsToolWindowService.GetWindowPane(Type windowType, bool create) {
             return FindWindowPane(windowType, 0, create) as ToolWindowPane;
         }
@@ -380,8 +415,6 @@ namespace Microsoft.PythonTools {
                 new OpenDebugReplCommand(this), 
                 new ExecuteInReplCommand(this), 
                 new SendToReplCommand(this), 
-                new StartWithoutDebuggingCommand(this), 
-                new StartDebuggingCommand(this), 
                 new FillParagraphCommand(this), 
                 new DiagnosticsCommand(this),
                 new RemoveImportsCommand(this, true),
