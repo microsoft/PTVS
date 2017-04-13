@@ -90,15 +90,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case CommonConstants.StartDebuggingCmdId:
                     case CommonConstants.StartWithoutDebuggingCmdId:
-                        IProjectLauncher starter = ((CommonProjectNode)ProjectMgr).GetLauncher();
-                        if (starter != null) {
-                            if (!Utilities.SaveDirtyFiles()) {
-                                // Abort
-                                return VSConstants.E_ABORT;
-                            }
-
-                            starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
-                        }
+                        PythonToolsPackage.LaunchFile(ProjectMgr.Site, Url, cmd == CommonConstants.StartDebuggingCmdId, true);
                         return VSConstants.S_OK;
                 }
             }

@@ -436,6 +436,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
             int totalReceived = 0;
             while (totalReceived < contentLength) {
                 int received = await reader.ReadAsync(buffer, totalReceived, contentLength - totalReceived).ConfigureAwait(false);
+                if (received == 0 && reader.EndOfStream) {
+                    break;
+                }
                 totalReceived += received;
             }
 

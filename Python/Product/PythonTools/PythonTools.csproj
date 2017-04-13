@@ -431,7 +431,6 @@
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
-    <Compile Include="PythonTools\Commands\StartScriptCommand.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>

@@ -787,6 +787,10 @@ namespace Microsoft.PythonTools.Language {
                     case PkgCmdIDList.cmdidExtractMethodIntegratedShell:
                         ExtractMethod();
                         return VSConstants.S_OK;
+                    case CommonConstants.StartDebuggingCmdId:
+                    case CommonConstants.StartWithoutDebuggingCmdId:
+                        PythonToolsPackage.LaunchFile(_serviceProvider, _textView.GetFilePath(), nCmdID == CommonConstants.StartDebuggingCmdId, true);
+                        return VSConstants.S_OK;
                 }
 
             }
@@ -840,10 +844,10 @@ namespace Microsoft.PythonTools.Language {
                     switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd97CmdID.GotoDefn:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            return VSConstants.S_OK;
+                            break;
                         case VSConstants.VSStd97CmdID.FindReferences:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            return VSConstants.S_OK;
+                            break;
                     }
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
@@ -853,17 +857,17 @@ namespace Microsoft.PythonTools.Language {
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
-                            {
-                                prgCmds[i].cmdf = CommandDisabledAndHidden;
-                            }
-                            return VSConstants.S_OK;
+                            prgCmds[i].cmdf = CommandDisabledAndHidden;
+                            break;
                         case PkgCmdIDList.cmdidExtractMethodIntegratedShell:
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
-                            {
-                                prgCmds[i].cmdf = CommandDisabledAndHidden;
-                            }
+                            prgCmds[i].cmdf = CommandDisabledAndHidden;
+                            break;
+                        case CommonConstants.StartDebuggingCmdId:
+                        case CommonConstants.StartWithoutDebuggingCmdId:
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
                         default:
                             lock (PythonToolsPackage.CommandsLock) {
@@ -891,38 +895,41 @@ namespace Microsoft.PythonTools.Language {
                         case VSConstants.VSStd2KCmdID.QUICKINFO:
                         case VSConstants.VSStd2KCmdID.PARAMINFO:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            return VSConstants.S_OK;
+                            break;
 
                         case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
                             tagger = _textView.GetOutliningTagger();
                             if (tagger != null && tagger.Enabled) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             }
-                            return VSConstants.S_OK;
+                            break;
 
                         case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
                             tagger = _textView.GetOutliningTagger();
                             if (tagger != null && !tagger.Enabled) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             }
-                            return VSConstants.S_OK;
+                            break;
 
                         case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                         case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
                         case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:
                         case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            return VSConstants.S_OK;
+                            break;
                         case VSConstants.VSStd2KCmdID.EXTRACTMETHOD:
                             QueryStatusExtractMethod(prgCmds, i);
-                            return VSConstants.S_OK;
+                            break;
                         case VSConstants.VSStd2KCmdID.RENAME:
                             QueryStatusRename(prgCmds, i);
-                            return VSConstants.S_OK;
+                            break;
                     }
                 }
             }
 
+            if (prgCmds.All(f => f.cmdf != 0)) {
+                return VSConstants.S_OK;
+            }
 
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
