@@ -74,6 +74,8 @@ namespace Microsoft.VisualStudioTools.Project {
             get;
         }
 
+        public virtual string Name => Caption;
+
         /// <summary>
         /// The Caption of the node.
         /// </summary>
@@ -591,7 +593,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     break;
 
                 case __VSHPROPID.VSHPROPID_Name:
-                    result = this.Caption;
+                    result = Name;
                     break;
 
                 case __VSHPROPID.VSHPROPID_ExpandByDefault:

@@ -60,6 +60,8 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+        public override string Name => CommonUtils.GetFileOrDirectoryName(ItemNode.Url);
+
         public override int SortPriority {
             get { return DefaultSortOrderNode.FolderNode; }
         }
