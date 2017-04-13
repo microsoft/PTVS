@@ -177,9 +177,11 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-#endregion
+        public override string Name => CommonUtils.GetFileOrDirectoryName(ItemNode.Url);
 
-#region ctor
+        #endregion
+
+        #region ctor
 #if !DEV14_OR_LATER
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static FileNode() {
