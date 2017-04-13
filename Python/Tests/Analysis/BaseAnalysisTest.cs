@@ -47,13 +47,11 @@ namespace AnalysisTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestInitialize]
         public void StartAnalysisLog() {
             AnalysisLog.Reset();
             AnalysisLog.Output = Console.Out;
         }
 
-        [TestCleanup]
         public void EndAnalysisLog() {
             AnalysisLog.Flush();
             AnalysisLog.Output = null;
