@@ -232,7 +232,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         /// <summary>
-        /// Starts the procesing of incoming messages using Task.Run.
+        /// Starts the processing of incoming messages using Task.Run.
         /// </summary>
         public void StartProcessing() {
             Task.Run(() => ProcessMessages());
@@ -247,30 +247,17 @@ namespace Microsoft.PythonTools.Ipc.Json {
         public async Task ProcessMessages() {
             try {
                 var reader = new StreamReader(_reader, Encoding.UTF8);
-                string line;
-                while ((line = await ReadPacket(reader).ConfigureAwait(false)) != null) {
-                    string message = "";
-                    JObject packet = null;
-                    try {
-                        packet = JsonConvert.DeserializeObject<JObject>(line);
-                    } catch (JsonSerializationException ex) {
-                        message = ": " + ex.Message;
-                    } catch (JsonReaderException ex) {
-                        message = ": " + ex.Message;
-                    }
-
+                while (true) {
+                    var packet = await ReadPacketAsJObject(reader);
                     if (packet == null) {
-                        if (reader.EndOfStream || !reader.BaseStream.CanRead) {
-                            return;
-                        }
-                        await WriteError("Failed to parse packet" + message).ConfigureAwait(false);
-                        return;
+                        break;
                     }
 
                     var type = packet["type"].ToObject<string>();
                     var seq = packet["seq"].ToObject<int?>();
 
                     if (seq == null) {
+                        // TODO: this will process the packet anyway, that seems wrong
                         await WriteError("Missing sequence number").ConfigureAwait(false);
                     }
 
@@ -279,11 +266,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
                         case PacketType.Response: ProcessResponse(packet); break;
                         case PacketType.Event: ProcessEvent(packet); break;
                         default:
-                            await WriteError("Bad packet type: " + type ?? "<null>").ConfigureAwait(false);
-                            break;
+                            throw new InvalidDataException("Bad packet type: " + type ?? "<null>");
                     }
-
                 }
+            } catch (InvalidDataException ex) {
+                // TODO: unsure that it makes sense to do this, but it's the equivalent of what it did before
+                await WriteError(ex.Message);
             } catch (OperationCanceledException) {
             } catch (ObjectDisposedException) {
             }
@@ -388,13 +376,38 @@ namespace Microsoft.PythonTools.Ipc.Json {
             _logFile?.Dispose();
         }
 
+        internal static async Task<JObject> ReadPacketAsJObject(StreamReader reader) {
+            var line = await ReadPacket(reader).ConfigureAwait(false);
+            if (line == null) {
+                return null;
+            }
+
+            string message = "";
+            JObject packet = null;
+            try {
+                packet = JsonConvert.DeserializeObject<JObject>(line);
+            } catch (JsonSerializationException ex) {
+                message = ": " + ex.Message;
+            } catch (JsonReaderException ex) {
+                message = ": " + ex.Message;
+            }
+
+            if (packet == null) {
+                if (reader.EndOfStream || !reader.BaseStream.CanRead) {
+                    return null;
+                }
+                throw new InvalidDataException("Failed to parse packet" + message);
+            }
+
+            return packet;
+        }
 
         /// <summary>
         /// Reads a single message from the protocol buffer.  First reads in any headers until a blank
         /// line is received.  Then reads in the body of the message.  The headers must include a Content-Length
         /// header specifying the length of the body.
         /// </summary>
-        private async Task<string> ReadPacket(StreamReader reader) {
+        private static async Task<string> ReadPacket(StreamReader reader) {
             Dictionary<string, string> headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             string line;
             while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null) {
@@ -407,8 +420,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     // Probably getting an error message, so read all available
                     // text and write an error.
                     var error = line + reader.ReadToEnd();
-                    await WriteError("Malformed header, expected 'name: value'" + Environment.NewLine + error).ConfigureAwait(false);
-                    return null;
+                    throw new InvalidDataException("Malformed header, expected 'name: value'" + Environment.NewLine + error);
                 }
                 headers[split[0]] = split[1];
             }
@@ -421,13 +433,11 @@ namespace Microsoft.PythonTools.Ipc.Json {
             int contentLength;
 
             if (!headers.TryGetValue(Headers.ContentLength, out contentLengthStr)) {
-                await WriteError("Content-Length not specified on request").ConfigureAwait(false);
-                return null;
+                throw new InvalidDataException("Content-Length not specified on request");
             }
 
             if (!Int32.TryParse(contentLengthStr, out contentLength) || contentLength < 0) {
-                await WriteError("Invalid Content-Length: " + contentLengthStr).ConfigureAwait(false);
-                return null;
+                throw new InvalidDataException("Invalid Content-Length: " + contentLengthStr);
             }
 
             // ReadAsync may not read everything in one call, so keep reading
