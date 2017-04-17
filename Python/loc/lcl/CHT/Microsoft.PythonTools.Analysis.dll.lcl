@@ -71,7 +71,7 @@
         <Str Cat="Text">
           <Val><![CDATA[If checked, removes blank lines between methods and inserts the number specified below. Otherwise, lines between methods are not modified.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[如果已核取，即會移除方法之間的空白行，並插入以下指定的數字。否則不會修改方法之間的行。]]></Val>
+            <Val><![CDATA[如有核取，請移除方法之間的空白行，並插入下列的指定數字，否則將不會修改方法之間的行。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -553,7 +553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17102.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -589,7 +589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17102.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
