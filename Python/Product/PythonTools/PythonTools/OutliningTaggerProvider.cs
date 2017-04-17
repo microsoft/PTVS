@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
     [Export(typeof(ITaggerProvider)), ContentType(PythonCoreConstants.ContentType)]
@@ -100,10 +101,16 @@ namespace Microsoft.PythonTools {
                 return _tags;
             }
 
-            private async void OnNewParseTree(AnalysisEntry entry) {
-                var snapshot = _buffer.CurrentSnapshot;
+            private void OnNewParseTree(AnalysisEntry entry) {
+                _pyService.Site.GetUIThread().InvokeTask(() => UpdateTagsAsync(entry))
+                    .HandleAllExceptions(_pyService.Site, GetType())
+                    .DoNotWait();
+            }
 
+            private async System.Threading.Tasks.Task UpdateTagsAsync(AnalysisEntry entry) {
+                var snapshot = _buffer.CurrentSnapshot;
                 Interlocked.Exchange(ref _processing, null)?.Cancel();
+
                 var tags = await entry.Analyzer.GetOutliningTagsAsync(snapshot);
                 if (tags != null) {
                     var cts = new CancellationTokenSource();
