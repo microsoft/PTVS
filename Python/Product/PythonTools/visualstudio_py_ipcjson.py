@@ -66,7 +66,7 @@ class SocketIO(object):
 
     def _send(self, **payload):
         content = json.dumps(payload).encode('utf-8')
-        headers = ('Content-Length: %d\n\n' % (len(content), )).encode('utf-8')
+        headers = ('Content-Length: %d\r\n\r\n' % (len(content), )).encode('ascii')
         if self.__logfile is not None:
             self.__logfile.write(content)
             self.__logfile.write('\n'.encode('utf-8'))
@@ -74,12 +74,12 @@ class SocketIO(object):
         self.__socket.send(headers)
         self.__socket.send(content)
 
-    def _buffered_read_line_as_utf8(self):
+    def _buffered_read_line_as_ascii(self):
         '''
-        Reads bytes until it encounters a newline, and returns the bytes
-        utf-8 decoded, newline is excluded from the return value.
+        Reads bytes until it encounters newline chars, and returns the bytes
+        ascii decoded, newline chars are excluded from the return value.
         '''
-        newline = '\n'.encode('utf-8')
+        newline = '\r\n'.encode('ascii')
         while newline not in self.__buffer:
             temp = self.__socket.recv(1024)
             self.__buffer += temp
@@ -87,7 +87,7 @@ class SocketIO(object):
         index = self.__buffer.index(newline)
         line = self.__buffer[:index]
         self.__buffer = self.__buffer[index+len(newline):]
-        return line.decode('utf-8', 'replace')
+        return line.decode('ascii', 'replace')
 
     def _buffered_read_as_utf8(self, length):
         while len(self.__buffer) < length:
@@ -98,20 +98,18 @@ class SocketIO(object):
         return content.decode('utf-8', 'replace')
 
     def _wait_for_message(self):
-        # read all headers
+        # base protocol defined at https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#base-protocol
+        # read all headers, ascii encoded separated by '\r\n'
+        # end of headers is indicated by an empty line
         headers = {}
-        line = self._buffered_read_line_as_utf8()
+        line = self._buffered_read_line_as_ascii()
         while line:
-            if line == '\n':
-                # end of headers
-                break
-
             parts = line.split(':')
             if len(parts) == 2:
                 headers[parts[0]] = parts[1]
             else:
                 raise InvalidHeaderError("Malformed header, expected 'name: value'\n{0}".format(line))
-            line = self._buffered_read_line_as_utf8()
+            line = self._buffered_read_line_as_ascii()
 
         # validate headers
         try:
@@ -122,7 +120,7 @@ class SocketIO(object):
         except KeyError:
             raise InvalidHeaderError("Invalid Content-Length: {0}".format(length_text))
 
-        # read content
+        # read content, utf-8 encoded
         content = self._buffered_read_as_utf8(length)
         msg = json.loads(content)
         self._receive_message(msg)

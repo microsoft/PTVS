@@ -246,7 +246,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// <returns></returns>
         public async Task ProcessMessages() {
             try {
-                var reader = new StreamReader(_reader, Encoding.UTF8);
+                var reader = new ProtocolReader(_reader);
                 while (true) {
                     var packet = await ReadPacketAsJObject(reader);
                     if (packet == null) {
@@ -254,23 +254,28 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     }
 
                     var type = packet["type"].ToObject<string>();
-                    var seq = packet["seq"].ToObject<int?>();
-
-                    if (seq == null) {
-                        // TODO: this will process the packet anyway, that seems wrong
-                        await WriteError("Missing sequence number").ConfigureAwait(false);
-                    }
-
                     switch (type) {
-                        case PacketType.Request: await ProcessRequest(packet, seq); break;
-                        case PacketType.Response: ProcessResponse(packet); break;
-                        case PacketType.Event: ProcessEvent(packet); break;
+                        case PacketType.Request: {
+                                var seq = packet["seq"].ToObject<int?>();
+                                if (seq == null) {
+                                    throw new InvalidDataException("Request is missing seq attribute");
+                                }
+                                await ProcessRequest(packet, seq);
+                            }
+                            break;
+                        case PacketType.Response:
+                            ProcessResponse(packet);
+                            break;
+                        case PacketType.Event:
+                            ProcessEvent(packet);
+                            break;
                         default:
                             throw new InvalidDataException("Bad packet type: " + type ?? "<null>");
                     }
                 }
             } catch (InvalidDataException ex) {
-                // TODO: unsure that it makes sense to do this, but it's the equivalent of what it did before
+                Debug.Assert(false, "Terminating ProcessMessages loop due to InvalidDataException", ex.Message);
+                // TODO: unsure that it makes sense to do this, but it maintains existing behavior
                 await WriteError(ex.Message);
             } catch (OperationCanceledException) {
             } catch (ObjectDisposedException) {
@@ -326,7 +331,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         private async Task ProcessRequest(JObject packet, int? seq) {
-            var command = packet["command"].ToObject<string>();            
+            var command = packet["command"].ToObject<string>();
             var arguments = packet["arguments"];
 
             Request request;
@@ -376,7 +381,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             _logFile?.Dispose();
         }
 
-        internal static async Task<JObject> ReadPacketAsJObject(StreamReader reader) {
+        internal static async Task<JObject> ReadPacketAsJObject(ProtocolReader reader) {
             var line = await ReadPacket(reader).ConfigureAwait(false);
             if (line == null) {
                 return null;
@@ -385,7 +390,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
             string message = "";
             JObject packet = null;
             try {
-                packet = JsonConvert.DeserializeObject<JObject>(line);
+                // JObject.Parse is more strict than JsonConvert.DeserializeObject<JObject>,
+                // the latter happily deserializes malformed json.
+                packet = JObject.Parse(line);
             } catch (JsonSerializationException ex) {
                 message = ": " + ex.Message;
             } catch (JsonReaderException ex) {
@@ -393,9 +400,6 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
 
             if (packet == null) {
-                if (reader.EndOfStream || !reader.BaseStream.CanRead) {
-                    return null;
-                }
                 throw new InvalidDataException("Failed to parse packet" + message);
             }
 
@@ -407,19 +411,23 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// line is received.  Then reads in the body of the message.  The headers must include a Content-Length
         /// header specifying the length of the body.
         /// </summary>
-        private static async Task<string> ReadPacket(StreamReader reader) {
+        private static async Task<string> ReadPacket(ProtocolReader reader) {
             Dictionary<string, string> headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             string line;
-            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null) {
+            while ((line = await reader.ReadHeaderLineAsync().ConfigureAwait(false)) != null) {
                 if (String.IsNullOrEmpty(line)) {
                     // end of headers for this request...
                     break;
                 }
                 var split = line.Split(_headerSeparator, 2);
                 if (split.Length != 2) {
-                    // Probably getting an error message, so read all available
-                    // text and write an error.
-                    var error = line + reader.ReadToEnd();
+                    // Probably getting an error message, so read all available text
+                    var error = line;
+                    try {
+                        // Encoding is uncertain since this is malformed
+                        error += Encoding.UTF8.GetString(await reader.ReadToEndAsync());
+                    } catch (ArgumentException) {
+                    }
                     throw new InvalidDataException("Malformed header, expected 'name: value'" + Environment.NewLine + error);
                 }
                 headers[split[0]] = split[1];
@@ -440,19 +448,17 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 throw new InvalidDataException("Invalid Content-Length: " + contentLengthStr);
             }
 
-            // ReadAsync may not read everything in one call, so keep reading
-            // until we have it all. This is triggered when going over tcp.
-            char[] buffer = new char[contentLength];
-            int totalReceived = 0;
-            while (totalReceived < contentLength) {
-                int received = await reader.ReadAsync(buffer, totalReceived, contentLength - totalReceived).ConfigureAwait(false);
-                if (received == 0 && reader.EndOfStream) {
-                    break;
-                }
-                totalReceived += received;
+            var contentBinary = await reader.ReadContentAsync(contentLength);
+            if (contentBinary.Length != contentLength) {
+                throw new InvalidDataException(string.Format("Content length does not match Content-Length header. Expected {0} bytes but read {1} bytes.", contentLength, contentBinary.Length));
             }
 
-            return new string(buffer);
+            try {
+                var text = Encoding.UTF8.GetString(contentBinary);
+                return text;
+            } catch (ArgumentException ex) {
+                throw new InvalidDataException("Content is not valid UTF-8.", ex);
+            }
         }
 
         private async Task SendResponseAsync(
@@ -482,11 +488,13 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// <summary>
         /// Sends a single message across the wire.
         /// </summary>
+        /// <remarks>
+        /// Base protocol defined at https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#base-protocol
+        /// </remarks>
         private async Task SendMessage(ProtocolMessage packet, CancellationToken cancel) {
             var str = JsonConvert.SerializeObject(packet);
             LogToDisk(str);
             try {
-                var bytes = Encoding.UTF8.GetBytes(str);
                 try {
                     await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
                 } catch (ArgumentNullException) {
@@ -495,11 +503,17 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     throw new ObjectDisposedException(nameof(_writeLock));
                 }
                 try {
-                    var contentLengthStr = "Content-Length: " + bytes.Length + "\n\n";
-                    var contentLength = Encoding.UTF8.GetBytes(contentLengthStr);
+                    // The content part is encoded using the charset provided in the Content-Type field.
+                    // It defaults to utf-8, which is the only encoding supported right now.
+                    var contentBytes = Encoding.UTF8.GetBytes(str);
 
-                    await _writer.WriteAsync(contentLength, 0, contentLength.Length).ConfigureAwait(false);
-                    await _writer.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+                    // The header part is encoded using the 'ascii' encoding.
+                    // This includes the '\r\n' separating the header and content part.
+                    var header = "Content-Length: " + contentBytes.Length + "\r\n\r\n";
+                    var headerBytes = Encoding.ASCII.GetBytes(header);
+
+                    await _writer.WriteAsync(headerBytes, 0, headerBytes.Length).ConfigureAwait(false);
+                    await _writer.WriteAsync(contentBytes, 0, contentBytes.Length).ConfigureAwait(false);
                     await _writer.FlushAsync(cancel).ConfigureAwait(false);
                 } finally {
                     _writeLock.Release();
