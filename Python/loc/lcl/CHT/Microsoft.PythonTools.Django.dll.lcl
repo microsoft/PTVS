@@ -131,7 +131,7 @@
         <Str Cat="Text">
           <Val><![CDATA[To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[為確保能將您的專案正確地部署至 Microsoft Azure 雲端服務，請透過 [新增項目]5D; 對話方塊，遵循提供的指示，將 Web 角色支援檔案項目新增至您的專案。]]></Val>
+            <Val><![CDATA[為確保您的專案能夠正確地部署至 Microsoft Azure 雲端服務，請使用 [新增項目]5D; 對話方塊並遵循其中所提供的指示，將 Web 角色支援檔案項目新增至您的專案。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -694,7 +694,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17102.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -730,7 +730,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17102.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

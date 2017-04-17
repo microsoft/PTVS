@@ -368,7 +368,7 @@
         <Str Cat="Text">
           <Val><![CDATA[To ensure your project will deploy correctly to Microsoft Azure Cloud Service, add the Web Role Support Files item to your project through the Add New Item dialog and follow the instructions provided.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[プロジェクトが Microsoft Azure Cloud Service に正しくデプロイされるようにするには、[新しい項目の追加]5D; ダイアログを使用して [Web ロール サポート ファイル]5D; の項目をプロジェクトに追加して、表示されている手順に従います。]]></Val>
+            <Val><![CDATA[プロジェクトが Microsoft Azure Cloud Services に正しくデプロイされるようにするには、[新しい項目の追加]5D; ダイアログを使用して [Web ロール サポート ファイル]5D; の項目をプロジェクトに追加して、表示されている手順に従います。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -949,7 +949,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3979,7 +3979,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -5131,7 +5131,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17089.6]]></Val>
+        <Val><![CDATA[3.0.17102.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5167,7 +5167,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17089.6]]></Val>
+        <Val><![CDATA[3.0.17102.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
