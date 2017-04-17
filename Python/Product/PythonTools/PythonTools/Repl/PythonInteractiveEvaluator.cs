@@ -352,8 +352,8 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 var scriptsPath = ScriptsPath;
-                if (!Directory.Exists(scriptsPath) && Configuration != null) {
-                    scriptsPath = GetScriptsPath(_serviceProvider, DisplayName, Configuration.Interpreter);
+                if (!Directory.Exists(scriptsPath) && Configuration?.Interpreter != null) {
+                    scriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
                 }
 
                 if (!string.IsNullOrEmpty(scriptsPath)) {
@@ -421,11 +421,9 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             Configuration = pyProj.GetLaunchConfigurationOrThrow();
-            ScriptsPath = GetScriptsPath(
-                _serviceProvider,
-                PathUtils.GetAbsoluteDirectoryPath(pyProj.ProjectHome, "Scripts"),
-                Configuration.Interpreter
-            );
+            if (Configuration?.Interpreter != null) {
+                ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+            }
 
             _projectWithHookedEvents = pyProj;
             pyProj.ActiveInterpreterChanged += Project_ConfigurationChanged;
