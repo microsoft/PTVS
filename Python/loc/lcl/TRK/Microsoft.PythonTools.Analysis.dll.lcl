@@ -71,7 +71,7 @@
         <Str Cat="Text">
           <Val><![CDATA[If checked, removes blank lines between methods and inserts the number specified below. Otherwise, lines between methods are not modified.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[İşaretlenirse metotlar arasındaki boş satırları kaldırır ve aşağıda belirtilen sayıyı ekler. Aksi halde, metotlar arasındaki satırlar değiştirilmez.]]></Val>
+            <Val><![CDATA[İşaretlenirse metotlar arasındaki boş satırları kaldırır ve aşağıda belirtilen satır sayısını ekler. Aksi halde, metotlar arasındaki satırlar değiştirilmez.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -553,7 +553,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17061.1]]></Val>
+        <Val><![CDATA[3.0.17107.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -589,7 +589,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17061.1]]></Val>
+        <Val><![CDATA[3.0.17107.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
