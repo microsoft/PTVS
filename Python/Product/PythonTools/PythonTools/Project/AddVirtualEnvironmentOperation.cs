@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -100,11 +101,19 @@ namespace Microsoft.PythonTools.Project {
             }
 
             WriteOutput(Strings.RequirementsTxtInstalling.FormatUI(txt));
-            if (await factory.PackageManager.InstallAsync(
-                PackageSpec.FromArguments("-r " + ProcessOutput.QuoteSingleArgument(txt)),
-                new VsPackageManagerUI(_project.Site),
-                CancellationToken.None
-            )) {
+            bool success = false;
+            try {
+                success = await factory.PackageManager.InstallAsync(
+                    PackageSpec.FromArguments("-r " + ProcessOutput.QuoteSingleArgument(txt)),
+                    new VsPackageManagerUI(_project.Site),
+                    CancellationToken.None
+                );
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                WriteOutput(ex.Message);
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+
+            if (success) {
                 WriteOutput(Strings.PackageInstallSucceeded.FormatUI(Path.GetFileName(txt)));
             } else {
                 WriteOutput(Strings.PackageInstallFailed.FormatUI(Path.GetFileName(txt)));
