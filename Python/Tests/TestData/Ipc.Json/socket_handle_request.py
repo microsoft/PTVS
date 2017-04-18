@@ -15,6 +15,7 @@ class SocketIpcChannel(_ipc.SocketIO, _ipc.IpcChannel):
             request,
             success=True,
             message='',
+            requestText=args['dataText'],
             responseText='test response text'
         )
 

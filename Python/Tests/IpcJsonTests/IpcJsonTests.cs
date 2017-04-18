@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -54,11 +54,14 @@ namespace IpcJsonTests {
         public async Task DotNetHandleRequest() {
             InitConnection(async (requestArgs, done) => {
                 switch (requestArgs.Command) {
-                    case TestDataProtocol.TestRequest.Command:
-                        await done(new TestDataProtocol.TestResponse() {
-                            responseText = "test response text",
-                        });
-                        break;
+                    case TestDataProtocol.TestRequest.Command: {
+                            var testRequest = requestArgs.Request as TestDataProtocol.TestRequest;
+                            await done(new TestDataProtocol.TestResponse() {
+                                requestText = testRequest.dataText,
+                                responseText = "test response text",
+                            });
+                            break;
+                        }
                     default:
                         throw new InvalidOperationException();
                 }
@@ -73,7 +76,38 @@ namespace IpcJsonTests {
                 dataTextList = new string[] { "value 1", "value 2" },
             }, CancellationTokens.After5s);
 
+            Assert.AreEqual("request data text", response.requestText);
             Assert.AreEqual("test response text", response.responseText);
+        }
+
+        [TestMethod, Priority(1)]
+        public async Task DotNetHandleRequestUnicode() {
+            InitConnection(async (requestArgs, done) => {
+                switch (requestArgs.Command) {
+                    case TestDataProtocol.TestRequest.Command: {
+                            var testRequest = requestArgs.Request as TestDataProtocol.TestRequest;
+                            await done(new TestDataProtocol.TestResponse() {
+                                requestText = testRequest.dataText,
+                                responseText = "この文は、テストです。私はこれがうまく願っています。",
+                            });
+                            break;
+                        }
+                    default:
+                        throw new InvalidOperationException();
+                }
+            });
+
+            _client.EventReceived += (object sender, EventReceivedEventArgs e) => {
+                Assert.Fail();
+            };
+
+            var response = await _client.SendRequestAsync(new TestDataProtocol.TestRequest() {
+                dataText = "データテキストを要求する",
+                dataTextList = new string[] { "value 1", "value 2" },
+            }, CancellationTokens.After5s);
+
+            Assert.AreEqual("データテキストを要求する", response.requestText);
+            Assert.AreEqual("この文は、テストです。私はこれがうまく願っています。", response.responseText);
         }
 
         [TestMethod, Priority(1)]
@@ -94,6 +128,29 @@ namespace IpcJsonTests {
                 StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s
             );
 
+            Assert.AreEqual("request data text", response.requestText);
+            Assert.AreEqual("test response text", response.responseText);
+        }
+
+        [TestMethod, Priority(1)]
+        public async Task PythonHandleRequestUnicode() {
+            InitConnection(PythonSocketHandleRequest);
+
+            _client.EventReceived += (object sender, EventReceivedEventArgs e) => {
+                Assert.Fail();
+            };
+
+            var response = await _client.SendRequestAsync(new TestDataProtocol.TestRequest() {
+                dataText = "データテキストを要求する 请输入",
+                dataTextList = new string[] { "value 1", "value 2" },
+            }, StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s);
+
+            await _client.SendRequestAsync(
+                new TestDataProtocol.DisconnectRequest(),
+                StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s
+            );
+
+            Assert.AreEqual("データテキストを要求する 请输入", response.requestText);
             Assert.AreEqual("test response text", response.responseText);
         }
 
@@ -290,6 +347,7 @@ namespace IpcJsonTests {
         }
 
         public sealed class TestResponse : Response {
+            public string requestText;
             public string responseText;
             public string[] responseTextList;
         }
