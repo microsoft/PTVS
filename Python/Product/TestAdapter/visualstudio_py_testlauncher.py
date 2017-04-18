@@ -36,7 +36,6 @@ if sys.version_info[0] < 3:
     else:
         from io import open
 
-import visualstudio_py_ipcjson as _vsipc
 
 class _TestOutput(object):
     """file like object which redirects output to the repl window."""
@@ -102,9 +101,23 @@ class _TestOutputBuffer(object):
     def seek(self, pos, whence = 0):
         return self.buffer.seek(pos, whence)
 
-class _IpcChannel(_vsipc.SocketIO, _vsipc.IpcChannel):
+class _IpcChannel(object):
     def __init__(self, socket):
-        super(_IpcChannel, self).__init__(socket=socket)
+        self.socket = socket
+        self.seq = 0
+        self.lock = thread.allocate_lock()
+
+    def close(self):
+        self.socket.close()
+
+    def send_event(self, name, **args):
+        with self.lock:
+            body = {'type': 'event', 'seq': self.seq, 'event':name, 'body':args}
+            self.seq += 1
+            content = json.dumps(body).encode('utf8')
+            headers = ('Content-Length: %d\n\n' % (len(content), )).encode('utf8')
+            self.socket.send(headers)
+            self.socket.send(content)
 
 _channel = None
 
