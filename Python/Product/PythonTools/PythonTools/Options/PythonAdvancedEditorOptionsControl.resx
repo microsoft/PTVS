@@ -123,10 +123,10 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="_completionCommitedBy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 16</value>
+    <value>4, 15</value>
   </data>
   <data name="_completionCommitedBy.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_completionCommitedBy.Size" type="System.Drawing.Size, System.Drawing">
     <value>458, 20</value>
@@ -154,10 +154,10 @@
     <value>True</value>
   </data>
   <data name="_completionCommitedByLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 0</value>
+    <value>4, 0</value>
   </data>
   <data name="_completionCommitedByLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
+    <value>4, 0, 4, 0</value>
   </data>
   <data name="_completionCommitedByLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>219, 13</value>
@@ -190,10 +190,10 @@
     <value>True</value>
   </data>
   <data name="_enterCommits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 42</value>
+    <value>4, 39</value>
   </data>
   <data name="_enterCommits.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_enterCommits.Size" type="System.Drawing.Size, System.Drawing">
     <value>182, 17</value>
@@ -223,10 +223,10 @@
     <value>True</value>
   </data>
   <data name="_intersectMembers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 3</value>
+    <value>4, 2</value>
   </data>
   <data name="_intersectMembers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_intersectMembers.Size" type="System.Drawing.Size, System.Drawing">
     <value>272, 17</value>
@@ -271,10 +271,10 @@
     <value>True</value>
   </data>
   <data name="_newLineAfterCompleteCompletion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 65</value>
+    <value>4, 60</value>
   </data>
   <data name="_newLineAfterCompleteCompletion.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_newLineAfterCompleteCompletion.Size" type="System.Drawing.Size, System.Drawing">
     <value>250, 17</value>
@@ -307,7 +307,7 @@
     <value>4</value>
   </data>
   <data name="tableLayoutPanel3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>470, 85</value>
+    <value>466, 79</value>
   </data>
   <data name="tableLayoutPanel3.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -331,13 +331,13 @@
     <value>Fill</value>
   </data>
   <data name="_selectionInCompletionGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 97</value>
+    <value>6, 91</value>
   </data>
   <data name="_selectionInCompletionGroupBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 3, 6, 3</value>
   </data>
   <data name="_selectionInCompletionGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>476, 104</value>
+    <value>472, 98</value>
   </data>
   <data name="_selectionInCompletionGroupBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -379,10 +379,10 @@
     <value>True</value>
   </data>
   <data name="_filterCompletions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 26</value>
+    <value>4, 23</value>
   </data>
   <data name="_filterCompletions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_filterCompletions.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 17</value>
@@ -412,10 +412,10 @@
     <value>True</value>
   </data>
   <data name="_autoListIdentifiers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 49</value>
+    <value>4, 44</value>
   </data>
   <data name="_autoListIdentifiers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_autoListIdentifiers.Size" type="System.Drawing.Size, System.Drawing">
     <value>250, 17</value>
@@ -451,7 +451,7 @@
     <value>3</value>
   </data>
   <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>470, 69</value>
+    <value>466, 63</value>
   </data>
   <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -481,7 +481,7 @@
     <value>6, 3, 6, 3</value>
   </data>
   <data name="_completionResultsGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>476, 88</value>
+    <value>472, 82</value>
   </data>
   <data name="_completionResultsGroupBox.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -523,10 +523,10 @@
     <value>True</value>
   </data>
   <data name="_outliningOnOpen.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 3</value>
+    <value>4, 2</value>
   </data>
   <data name="_outliningOnOpen.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_outliningOnOpen.Size" type="System.Drawing.Size, System.Drawing">
     <value>199, 17</value>
@@ -556,10 +556,10 @@
     <value>True</value>
   </data>
   <data name="_pasteRemovesReplPrompts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 26</value>
+    <value>4, 23</value>
   </data>
   <data name="_pasteRemovesReplPrompts.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_pasteRemovesReplPrompts.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 17</value>
@@ -589,10 +589,10 @@
     <value>True</value>
   </data>
   <data name="_colorNames.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 49</value>
+    <value>4, 44</value>
   </data>
   <data name="_colorNames.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>4, 2, 4, 2</value>
   </data>
   <data name="_colorNames.Size" type="System.Drawing.Size, System.Drawing">
     <value>159, 17</value>
@@ -625,7 +625,7 @@
     <value>3</value>
   </data>
   <data name="tableLayoutPanel4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>470, 69</value>
+    <value>466, 63</value>
   </data>
   <data name="tableLayoutPanel4.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -649,13 +649,13 @@
     <value>Fill</value>
   </data>
   <data name="_miscOptionsGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 207</value>
+    <value>6, 195</value>
   </data>
   <data name="_miscOptionsGroupBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 3, 6, 3</value>
   </data>
   <data name="_miscOptionsGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>476, 88</value>
+    <value>472, 82</value>
   </data>
   <data name="_miscOptionsGroupBox.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -697,7 +697,7 @@
     <value>4</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>488, 320</value>
+    <value>484, 302</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -723,6 +723,9 @@
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
+  <data name="$this.AutoScroll" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
   <data name="$this.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -733,7 +736,7 @@
     <value>6, 8, 6, 8</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>488, 320</value>
+    <value>484, 302</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PythonAdvancedEditorOptionsControl</value>
