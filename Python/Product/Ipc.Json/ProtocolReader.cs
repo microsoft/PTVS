@@ -36,9 +36,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// <summary>
         /// Reads an ASCII encoded header line asynchronously from the current stream
         /// and returns the data as a string. Line termination chars are '\r\n' and
-        /// are excluded from the return value. Keeps reading until it finds it, even
-        /// when there is no data no the stream. The only way to unblock it is to
-        /// dispose of the stream.
+        /// are excluded from the return value. Keeps reading until it finds it, and
+        /// if it reaches the end of the stream (no more data is read) without finding
+        /// it then it returns <c>null</c>.
         /// </summary>
         public async Task<string> ReadHeaderLineAsync() {
             // Keep reading into the buffer until it contains the '\r\n'.
@@ -46,10 +46,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
             int newLineIndex;
             while ((newLineIndex = IndexOfNewLineInBuffer(searchStartPos)) < 0) {
                 searchStartPos = Math.Max(0, _buffer.Count - 1);
-
-                // Keep reading until we get data
-                int readCount;
-                while ((readCount = await ReadIntoBuffer()) == 0) {
+                if (await ReadIntoBuffer() == 0) {
+                    return null;
                 }
             }
 
@@ -86,8 +84,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
 
             while (_buffer.Count < byteCount) {
-                var addedByteCount = await ReadIntoBuffer();
-                if (addedByteCount == 0) {
+                if (await ReadIntoBuffer() == 0) {
                     break;
                 }
             }
