@@ -15,7 +15,7 @@
 # permissions and limitations under the License.
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.1.0.0"
+__version__ = "3.0.0.0"
 
 # To update the baseline DB:
 #  1. Check out all files in Python\Product\PythonTools\CompletionDB

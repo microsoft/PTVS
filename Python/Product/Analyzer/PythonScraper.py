@@ -112,7 +112,7 @@ type_list:
 """
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.1.0.0"
+__version__ = "3.0.0.0"
 
 try:
     import cPickle as pickle

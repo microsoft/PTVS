@@ -17,7 +17,7 @@
 from __future__ import with_statement
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.1.0.0"
+__version__ = "3.0.0.0"
 
 import sys
 import json
