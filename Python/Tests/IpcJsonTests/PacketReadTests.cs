@@ -113,10 +113,29 @@ namespace IpcJsonTests {
             await ReadValidPacket(MakePacket(Encoding.UTF8.GetBytes(string.Format("From: Test\r\nContent-Length:{0}\r\nTo: You\r\n\r\n", body.Length)), body));
         }
 
+        [TestMethod, Priority(1)]
+        public async Task EmptyStream() {
+            await ReadNullPacket(MakePacket(new byte[0], new byte[0]));
+        }
+
+        [TestMethod, Priority(1)]
+        public async Task UnterminatedHeader() {
+            await ReadNullPacket(MakePacket(Encoding.ASCII.GetBytes("NoTerminator"), new byte[0]));
+
+            var body = MakeBody(validJson1);
+            await ReadNullPacket(MakePacket(Encoding.UTF8.GetBytes(string.Format("Content-Length:{0}\n\n", body.Length)), body));
+        }
+
         private static async Task ReadValidPacket(Stream stream) {
             var reader = new ProtocolReader(stream);
             var packet = await Connection.ReadPacketAsJObject(reader);
             Assert.IsNotNull(packet);
+        }
+
+        private static async Task ReadNullPacket(Stream stream) {
+            var reader = new ProtocolReader(stream);
+            var packet = await Connection.ReadPacketAsJObject(reader);
+            Assert.IsNull(packet);
         }
 
         private static async Task ReadInvalidPacket(Stream stream) {
