@@ -162,7 +162,8 @@ namespace Microsoft.PythonTools.Intellisense {
             IServiceProvider serviceProvider,
             IPythonInterpreterFactory factory,
             bool implicitProject = true,
-            MSBuild.Project projectFile = null
+            MSBuild.Project projectFile = null,
+            string comment = null
         ) {
             if (serviceProvider == null) {
                 throw new ArgumentNullException(nameof(serviceProvider));
@@ -200,7 +201,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _conn = StartConnection(
-                projectFile?.FullPath ?? (implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
+                comment.IfNullOrEmpty(projectFile?.FullPath).IfNullOrEmpty(implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
                 out _analysisProcess
             );
             _userCount = 1;
