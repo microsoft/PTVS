@@ -67,6 +67,7 @@
                             </Label>
                             <Label x:Name="CannotBeDefaultMessage"
                                    Visibility="Collapsed"
+                                   Padding="0"
                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionCannotBeDefaultLabel}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -370,7 +371,7 @@
                                     CommandParameter="{Binding SupportUrl,Mode=OneWay}"
                                     ToolTip="{Binding SupportUrl,Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
-                                    Margin="6 1"
+                                    Margin="6 4 6 4"
                                     HorizontalAlignment="Left"
                                     AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"
                                     AutomationProperties.HelpText="{Binding SupportUrl,Mode=OneWay}">
@@ -410,7 +411,7 @@
                 </Style>
             </StackPanel.Resources>
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentIsDefault}" Margin="0 3" />
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SupportInformation}" Margin="0 3" />
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SupportInformation}" Margin="0" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InteractiveLinks}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentLinks}" Margin="0 3" />
         </StackPanel>
