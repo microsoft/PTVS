@@ -71,6 +71,10 @@ namespace Microsoft.PythonTools.Infrastructure {
             return string.Format(CultureInfo.InvariantCulture, str, args);
         }
 
+        public static string IfNullOrEmpty(this string str, string fallback) {
+            return string.IsNullOrEmpty(str) ? fallback : str;
+        }
+
         public static bool IsTrue(this string str) {
             bool asBool;
             return !string.IsNullOrWhiteSpace(str) && (
