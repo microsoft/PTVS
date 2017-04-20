@@ -15,9 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterConfiguration : IEquatable<InterpreterConfiguration> {
+        private readonly string _description;
+        private string _fullDescription;
+
         /// <summary>
         /// <para>Constructs a new interpreter configuration based on the
         /// provided values.</para>
@@ -37,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
             InterpreterUIMode uiMode = InterpreterUIMode.Normal
         ) {
             Id = id;
-            Description = description;
+            _description = description ?? "";
             PrefixPath = prefixPath;
             InterpreterPath = path;
             WindowsInterpreterPath = string.IsNullOrEmpty(winPath) ? path : winPath;
@@ -55,7 +61,28 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets a friendly description of the interpreter
         /// </summary>
-        public string Description { get; }
+        public string Description => _fullDescription ?? _description;
+
+        /// <summary>
+        /// Changes the description to be less likely to be
+        /// ambiguous with other interpreters.
+        /// </summary>
+        private void SwitchToFullDescription() {
+            bool hasVersion = _description.Contains(Version.ToString());
+            bool hasArch = _description.IndexOf(Architecture.ToString(), StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                _description.IndexOf(Architecture.ToString("x"), StringComparison.CurrentCultureIgnoreCase) >= 0;
+
+            if (hasVersion && hasArch) {
+                // Regular description is sufficient
+                _fullDescription = null;
+            } else if (hasVersion) {
+                _fullDescription = "{0} ({1})".FormatUI(_description, Architecture);
+            } else if (hasArch) {
+                _fullDescription = "{0} ({1})".FormatUI(_description, Version);
+            } else {
+                _fullDescription = "{0} ({1}, {2})".FormatUI(_description, Version, Architecture);
+            }
+        }
 
         /// <summary>
         /// Returns the prefix path of the Python installation. All files
@@ -115,6 +142,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var cmp = StringComparer.OrdinalIgnoreCase;
             return cmp.Equals(PrefixPath, other.PrefixPath) &&
                 string.Equals(Id, other.Id) &&
+                cmp.Equals(Description, other.Description) &&
                 cmp.Equals(InterpreterPath, other.InterpreterPath) &&
                 cmp.Equals(WindowsInterpreterPath, other.WindowsInterpreterPath) &&
                 cmp.Equals(PathEnvironmentVariable, other.PathEnvironmentVariable) &&
@@ -127,6 +155,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var cmp = StringComparer.OrdinalIgnoreCase;
             return cmp.GetHashCode(PrefixPath ?? "") ^
                 Id.GetHashCode() ^
+                cmp.GetHashCode(Description) ^
                 cmp.GetHashCode(InterpreterPath ?? "") ^
                 cmp.GetHashCode(WindowsInterpreterPath ?? "") ^
                 cmp.GetHashCode(PathEnvironmentVariable ?? "") ^
@@ -137,6 +166,20 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public override string ToString() {
             return Description;
+        }
+
+        /// <summary>
+        /// Attempts to update descriptions to be unique within the
+        /// provided sequence by adding information about the
+        /// interpreter that is missing from the default description.
+        /// </summary>
+        public static void DisambiguateDescriptions(IReadOnlyList<InterpreterConfiguration> configs) {
+            foreach (var c in configs) {
+                c._fullDescription = null;
+            }
+            foreach (var c in configs.GroupBy(i => i._description ?? "").Where(g => g.Count() > 1).SelectMany()) {
+                c.SwitchToFullDescription();
+            }
         }
     }
 }
