@@ -16,13 +16,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterConfiguration : IEquatable<InterpreterConfiguration> {
-        private string _description, _fullDescription;
+        private readonly string _description;
+        private string _fullDescription;
 
         /// <summary>
         /// <para>Constructs a new interpreter configuration based on the
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
             InterpreterUIMode uiMode = InterpreterUIMode.Normal
         ) {
             Id = id;
-            _description = description;
+            _description = description ?? "";
             PrefixPath = prefixPath;
             InterpreterPath = path;
             WindowsInterpreterPath = string.IsNullOrEmpty(winPath) ? path : winPath;
@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var cmp = StringComparer.OrdinalIgnoreCase;
             return cmp.GetHashCode(PrefixPath ?? "") ^
                 Id.GetHashCode() ^
-                cmp.GetHashCode(Description ?? "") ^
+                cmp.GetHashCode(Description) ^
                 cmp.GetHashCode(InterpreterPath ?? "") ^
                 cmp.GetHashCode(WindowsInterpreterPath ?? "") ^
                 cmp.GetHashCode(PathEnvironmentVariable ?? "") ^
