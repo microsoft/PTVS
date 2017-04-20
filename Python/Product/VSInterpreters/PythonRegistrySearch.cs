@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -119,6 +120,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
             }
+
+            InterpreterConfiguration.DisambiguateDescriptions(_info.Select(i => i.Configuration).ToArray());
         }
 
         private InterpreterConfiguration TryReadConfiguration(
