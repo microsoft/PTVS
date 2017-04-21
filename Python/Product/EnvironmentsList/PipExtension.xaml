@@ -41,7 +41,7 @@
 
                             <Button Grid.Column="2"
                                     VerticalAlignment="Center"
-                                    Focusable="False"
+                                    Focusable="True"
                                     Margin="4"
                                     Cursor="Hand"
                                     Command="{x:Static l:PipExtension.UpgradePackage}"
@@ -87,7 +87,7 @@
 
                             <Button Grid.Column="3"
                                     VerticalAlignment="Center"
-                                    Focusable="False"
+                                    Focusable="True"
                                     Margin="4"
                                     Cursor="Hand"
                                     Command="{x:Static l:PipExtension.UninstallPackage}"
