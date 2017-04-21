@@ -51,6 +51,8 @@ SKIP_TB_PREFIXES = [
 
 class InvalidHeaderError(Exception): pass
 
+class InvalidContentError(Exception): pass
+
 class SocketIO(object):
     def __init__(self, *args, **kwargs):
         super(SocketIO, self).__init__(*args, **kwargs)
@@ -82,9 +84,13 @@ class SocketIO(object):
         newline = '\r\n'.encode('ascii')
         while newline not in self.__buffer:
             temp = self.__socket.recv(1024)
+            if not temp:
+                raise InvalidHeaderError("Malformed header, could not find line terminator")
             self.__buffer += temp
 
         index = self.__buffer.index(newline)
+        if index < 0:
+            return None
         line = self.__buffer[:index]
         self.__buffer = self.__buffer[index+len(newline):]
         return line.decode('ascii', 'replace')
@@ -92,7 +98,11 @@ class SocketIO(object):
     def _buffered_read_as_utf8(self, length):
         while len(self.__buffer) < length:
             temp = self.__socket.recv(1024)
+            if not temp:
+                break
             self.__buffer += temp
+        if length != len(self.__buffer):
+            raise InvalidContentError('Expected to read {0} bytes of content, but only read {1} bytes.'.format(length, len(self.__buffer)))
         content = self.__buffer[:length]
         self.__buffer = self.__buffer[length:]
         return content.decode('utf-8', 'replace')
@@ -114,11 +124,14 @@ class SocketIO(object):
         # validate headers
         try:
             length_text = headers['Content-Length']
-            length = int(length_text)
+            try:
+                length = int(length_text)
+            except ValueError:
+                raise InvalidHeaderError("Invalid Content-Length: {0}".format(length_text))
         except NameError:
-            raise InvalidHeaderError('Content-Length not specified on request')
+            raise InvalidHeaderError('Content-Length not specified in headers')
         except KeyError:
-            raise InvalidHeaderError("Invalid Content-Length: {0}".format(length_text))
+            raise InvalidHeaderError('Content-Length not specified in headers')
 
         # read content, utf-8 encoded
         content = self._buffered_read_as_utf8(length)
