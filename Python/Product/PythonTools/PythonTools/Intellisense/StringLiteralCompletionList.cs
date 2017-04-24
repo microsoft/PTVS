@@ -31,6 +31,8 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides file path completion
     /// </summary>
     internal class StringLiteralCompletionList : CompletionAnalysis {
+        private const int MaxItems = 10000;
+
         internal StringLiteralCompletionList(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
             : base(serviceProvider, session, view, span, textBuffer, options) {
         }
@@ -164,18 +166,38 @@ namespace Microsoft.PythonTools.Intellisense {
                 return Enumerable.Empty<EntryInfo>();
             }
 
-            var dirs = PathUtils.EnumerateDirectories(dir, recurse: false, fullPaths: true)
+            var dirNames = PathUtils.EnumerateDirectories(dir, recurse: false, fullPaths: false).ToList();
+            var fileNames = PathUtils.EnumerateFiles(dir, recurse: false, fullPaths: false).ToList();
+
+            if (dirNames.Count + fileNames.Count > MaxItems) {
+                Debug.Write($"Found {dirNames.Count} dirs and {fileNames.Count} files");
+                var filter = PathUtils.GetFileOrDirectoryName(text);
+                if (!string.IsNullOrEmpty(filter)) {
+                    Debug.WriteLine($"Filtering filenames with '{filter}'");
+                    dirNames.RemoveAll(d => !d.StartsWith(filter, StringComparison.OrdinalIgnoreCase));
+                    fileNames.RemoveAll(f => !f.StartsWith(filter, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+            if (dirNames.Count + fileNames.Count > MaxItems) {
+                Debug.Write($"Aborting due to {dirNames.Count} dirs and {fileNames.Count} files");
+                return Enumerable.Empty<EntryInfo>();
+            }
+
+            var prefixedRoot = PathUtils.EnsureEndSeparator(RestorePrefix(dir, prefix, prefixReplacement));
+            var root = PathUtils.EnsureEndSeparator(dir);
+
+            var dirs = dirNames
                 .Select(d => new EntryInfo {
-                    Caption = PathUtils.GetFileOrDirectoryName(d),
-                    InsertionText = RestorePrefix(d, prefix, prefixReplacement) + "\\",
-                    Tooltip = d,
+                    Caption = d,
+                    InsertionText = prefixedRoot + d + "\\",
+                    Tooltip = root + d,
                     IsFile = false
                 });
-            var files = PathUtils.EnumerateFiles(dir, recurse: false, fullPaths: true)
+            var files = fileNames
                 .Select(f => new EntryInfo {
-                    Caption = PathUtils.GetFileOrDirectoryName(f),
-                    InsertionText = RestorePrefix(f, prefix, prefixReplacement),
-                    Tooltip = f,
+                    Caption = f,
+                    InsertionText = prefixedRoot + f,
+                    Tooltip = root + f,
                     IsFile = true
                 });
 

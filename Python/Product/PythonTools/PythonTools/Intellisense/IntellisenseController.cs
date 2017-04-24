@@ -258,9 +258,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 var sigHelpSession = Volatile.Read(ref _sigHelpSession);
                 var literalSpan = GetStringLiteralSpan();
                 if (literalSpan.HasValue &&
-                    ShouldTriggerStringCompletionSession(prefs, literalSpan.Value) &&
+                    // UNDONE: Do not automatically trigger file path completions github#2352
+                    //ShouldTriggerStringCompletionSession(prefs, literalSpan.Value) &&
                     (session?.IsDismissed ?? true)) {
-                    TriggerCompletionSession(false);
+                    //TriggerCompletionSession(false);
                     return;
                 }
 
