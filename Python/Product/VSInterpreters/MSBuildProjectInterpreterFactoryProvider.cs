@@ -490,7 +490,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     Config,
                     new InterpreterFactoryCreationOptions {
                         PackageManager = new PipPackageManager(),
-                        DatabasePath = dbPath
+                        DatabasePath = dbPath,
+                        WatchFileSystem = true
                     }
                 );
             }
