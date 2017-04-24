@@ -82,6 +82,8 @@ namespace Microsoft.PythonTools.Project {
         private Dictionary<object, Action<object>> _actionsOnClose;
         private readonly PythonProject _pythonProject;
 
+        private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
+
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             _searchPaths.Changed += SearchPaths_Changed;
 
@@ -1321,15 +1323,28 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var statusBar = Site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
-            if (statusBar != null) {
-                statusBar.SetText(Strings.AnalyzingProject);
-                object index = (short)0;
-                statusBar.Animation(1, ref index);
-                statusBar.FreezeOutput(1);
+            try {
+                if (!_recreatingAnalyzer.Wait(0)) {
+                    // Someone else is recreating, so wait for them to finish and return
+                    await _recreatingAnalyzer.WaitAsync();
+                    _recreatingAnalyzer.Release();
+                    return;
+                }
+            } catch (ObjectDisposedException) {
+                return;
             }
 
+            IVsStatusbar statusBar = null;
+            bool statusBarConfigured = false;
             try {
+                if ((statusBar = Site.GetService(typeof(SVsStatusbar)) as IVsStatusbar) != null) {
+                    statusBar.SetText(Strings.AnalyzingProject);
+                    object index = (short)0;
+                    statusBar.Animation(1, ref index);
+                    statusBar.FreezeOutput(1);
+                    statusBarConfigured = true;
+                }
+
                 RefreshInterpreters();
 
                 if (_analyzer != null) {
@@ -1361,11 +1376,15 @@ namespace Microsoft.PythonTools.Project {
             } catch (ObjectDisposedException) {
                 // Raced with project disposal
             } finally {
-                if (statusBar != null) {
-                    statusBar.FreezeOutput(0);
-                    object index = (short)0;
-                    statusBar.Animation(0, ref index);
-                    statusBar.Clear();
+                try {
+                    if (statusBar != null && statusBarConfigured) {
+                        statusBar.FreezeOutput(0);
+                        object index = (short)0;
+                        statusBar.Animation(0, ref index);
+                        statusBar.Clear();
+                    }
+                } finally {
+                    _recreatingAnalyzer.Release();
                 }
             }
         }
