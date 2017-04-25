@@ -183,7 +183,7 @@ namespace IpcJsonTests {
             searchPaths.Add(workingDir);
 
             var env = new List<KeyValuePair<string, string>>();
-            env.Add(new KeyValuePair<string, string>("PYTHONPATH", string.Join(";", searchPaths)));
+            env.Add(new KeyValuePair<string, string>(Version.Configuration.PathEnvironmentVariable, string.Join(";", searchPaths)));
 
             var arguments = new List<string>();
             arguments.Add(serverScriptPath);
