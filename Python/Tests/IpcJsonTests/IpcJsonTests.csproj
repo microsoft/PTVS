@@ -53,8 +53,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PythonPacketReadTests.cs" />
-    <Compile Include="PacketReadTests.cs" />
+    <Compile Include="PacketProvider.cs" />
+    <Compile Include="PacketReadCSharpTests.cs" />
+    <Compile Include="PacketReadPythonTests.cs" />
     <Compile Include="IpcJsonTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
