@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IpcJsonTests {
     [TestClass]
-    public class PacketReadCSharpTests {
+    public class IpcJsonPacketReadCSharpTests {
         [TestMethod, Priority(1)]
         public async Task ValidPackets() {
             await TestValidPacketAsync(PacketProvider.GetValidPacket1());

@@ -30,7 +30,7 @@ using TestUtilities.Python;
 
 namespace IpcJsonTests {
     [TestClass]
-    public class PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests {
         private Stream _clientStream;
         private readonly AutoResetEvent _connected = new AutoResetEvent(false);
 
@@ -179,7 +179,7 @@ namespace IpcJsonTests {
             var workingDir = Path.GetDirectoryName(serverScriptPath);
 
             var searchPaths = new HashSet<string>();
-            searchPaths.Add(IpcJsonTests.PtvsdSearchPath);
+            searchPaths.Add(IpcJsonConnectionTests.PtvsdSearchPath);
             searchPaths.Add(workingDir);
 
             var env = new List<KeyValuePair<string, string>>();
@@ -250,7 +250,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTestsIpy : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTestsIpy : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -265,7 +265,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTests27 : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests27 : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -280,7 +280,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTests30 : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests30 : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -295,7 +295,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTests31 : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests31 : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -310,7 +310,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTests32 : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests32 : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -325,7 +325,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTests33 : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests33 : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -340,7 +340,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTests34 : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests34 : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -355,7 +355,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTests35 : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests35 : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -370,7 +370,7 @@ namespace IpcJsonTests {
     }
 
     [TestClass]
-    public class PacketReadPythonTests36 : PacketReadPythonTests {
+    public class IpcJsonPacketReadPythonTests36 : IpcJsonPacketReadPythonTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();

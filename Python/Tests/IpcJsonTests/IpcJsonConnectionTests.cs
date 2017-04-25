@@ -31,7 +31,7 @@ using TestUtilities.Python;
 
 namespace IpcJsonTests {
     [TestClass]
-    public class IpcJsonTests {
+    public class IpcJsonConnectionTests {
         private Connection _client;
         private Connection _server;
         private readonly AutoResetEvent _connected = new AutoResetEvent(false);
