@@ -70,7 +70,7 @@ namespace IpcJsonTests {
 
         public static IEnumerable<Packet> GetTruncatedJsonPackets() {
             // Valid packet, but the json is invalid because it's truncated
-            for (int i = 1; i < validJson1.Length; i++) {
+            for (int i = 1; i < validJson1.Length; i += 3) {
                 yield return MakePacketFromJson(validJson1.Substring(0, validJson1.Length - i), badContent: true);
             }
         }
@@ -79,7 +79,7 @@ namespace IpcJsonTests {
             // Full json is in the stream, but the header was corrupted and the
             // Content-Length value is SMALLER than it should be, so the packet body
             // will miss parts of the json at the end.
-            for (int i = 1; i < validJson1.Length; i++) {
+            for (int i = 1; i < validJson1.Length; i += 3) {
                 var json = MakeBody(validJson1);
                 var headers = MakeHeaders(i);
                 yield return MakePacket(headers, json, badContent: true);

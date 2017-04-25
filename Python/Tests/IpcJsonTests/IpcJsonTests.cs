@@ -264,7 +264,7 @@ namespace IpcJsonTests {
 
         internal static string PtvsdSearchPath {
             get {
-                return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
+                return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py", typeof(Connection).Assembly)));
             }
         }
 

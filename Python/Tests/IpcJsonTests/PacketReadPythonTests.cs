@@ -42,6 +42,17 @@ namespace IpcJsonTests {
             PythonTestData.Deploy();
         }
 
+        [TestInitialize]
+        public void TestInit() {
+            Version.AssertInstalled();
+        }
+
+        internal virtual PythonVersion Version {
+            get {
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
+            }
+        }
+
         [TestMethod, Priority(1)]
         public async Task ValidPackets() {
             await TestValidPacketAsync(PacketProvider.GetValidPacket1());
@@ -179,7 +190,7 @@ namespace IpcJsonTests {
             arguments.Add("-r");
             arguments.Add(portNum.ToString());
             var proc = ProcessOutput.Run(
-                PythonPaths.Python27.InterpreterPath,
+                Version.InterpreterPath,
                 arguments,
                 workingDir,
                 env,
@@ -235,6 +246,141 @@ namespace IpcJsonTests {
             var socket = ((Socket)ar.AsyncState).EndAccept(ar);
             _clientStream = new NetworkStream(socket, ownsSocket: true);
             _connected.Set();
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTestsIpy : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTests27 : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTests30 : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python30 ?? PythonPaths.Python30_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTests31 : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTests32 : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTests33 : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTests34 : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python34 ?? PythonPaths.Python34_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTests35 : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class PacketReadPythonTests36 : PacketReadPythonTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python36 ?? PythonPaths.Python36_x64;
+            }
         }
     }
 }
