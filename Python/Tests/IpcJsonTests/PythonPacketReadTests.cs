@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -65,7 +66,7 @@ namespace IpcJsonTests {
             for (int i = 1; i < validJson1.Length; i++) {
                 await TestInvalidPacketAsync(
                     MakePacketFromJson(validJson1.Substring(0, validJson1.Length - i)),
-                    "json.decoder.JSONDecodeError"
+                    "visualstudio_py_ipcjson.InvalidContentError"
                 );
             }
         }
@@ -80,7 +81,7 @@ namespace IpcJsonTests {
                 var headers = MakeHeaders(i);
                 await TestInvalidPacketAsync(
                     MakePacket(headers, json),
-                    "json.decoder.JSONDecodeError"
+                    "visualstudio_py_ipcjson.InvalidContentError"
                 );
             }
         }
@@ -96,7 +97,7 @@ namespace IpcJsonTests {
                 var headers = MakeHeaders(json.Length + i);
                 await TestInvalidPacketAsync(
                     MakePacket(headers, json, endJunk),
-                    "json.decoder.JSONDecodeError"
+                    "visualstudio_py_ipcjson.InvalidContentError"
                 );
             }
         }
@@ -161,41 +162,52 @@ namespace IpcJsonTests {
 
         [TestMethod, Priority(1)]
         public async Task EmptyStream() {
-            await TestValidPacketAsync(MakePacket(new byte[0], new byte[0]));
+            await TestUnterminatedHeaderPacketAsync(MakePacket(new byte[0], new byte[0]), "");
         }
 
         [TestMethod, Priority(1)]
         public async Task UnterminatedHeader() {
-            await TestInvalidPacketAsync(
+            await TestUnterminatedHeaderPacketAsync(
                 MakePacket(Encoding.ASCII.GetBytes("NoTerminator"), new byte[0]),
                 "visualstudio_py_ipcjson.InvalidHeaderError"
             );
 
             var body = MakeBody(validJson1);
-            await TestInvalidPacketAsync(
+            await TestUnterminatedHeaderPacketAsync(
                 MakePacket(Encoding.ASCII.GetBytes(string.Format("Content-Length:{0}\n\n", body.Length)), body),
                 "visualstudio_py_ipcjson.InvalidHeaderError"
             );
         }
 
-        private async Task TestValidPacketAsync(byte[] packet) {
-            using (var proc = InitConnection(PythonParsingTestPath)) {
-                await WritePacketAsync(packet);
-                if (!proc.Wait(TimeSpan.FromSeconds(5))) {
-                    proc.Kill();
-                    Assert.Fail("Python process did not exit");
-                }
-                CheckProcessResult(proc);
-            }
+        private Task TestValidPacketAsync(byte[] packet) {
+            return TestPacketAsync(packet);
         }
 
-        private async Task TestInvalidPacketAsync(byte[] packet, string expectedError) {
+        private Task TestInvalidPacketAsync(byte[] packet, string expectedError) {
+            return TestPacketAsync(packet, expectedError, closeStream: false);
+        }
+
+        private Task TestUnterminatedHeaderPacketAsync(byte[] packet, string expectedError) {
+            return TestPacketAsync(packet, expectedError, closeStream: true);
+        }
+
+        private async Task TestPacketAsync(byte[] packet, string expectedError = null, bool closeStream = false) {
             using (var proc = InitConnection(PythonParsingTestPath)) {
                 await WritePacketAsync(packet);
-                if (!proc.Wait(TimeSpan.FromSeconds(5))) {
+                if (closeStream) {
+                    // We expect the process to be busy reading headers
+                    var closed = proc.Wait(TimeSpan.FromMilliseconds(500));
+                    Assert.IsFalse(closed);
+
+                    // Close the stream so it gets unblocked
+                    _clientStream.Close();
+                }
+
+                if (!proc.Wait(TimeSpan.FromSeconds(2))) {
                     proc.Kill();
                     Assert.Fail("Python process did not exit");
                 }
+
                 CheckProcessResult(proc, expectedError);
             }
         }
@@ -271,6 +283,8 @@ namespace IpcJsonTests {
         }
 
         private void CheckProcessResult(ProcessOutput proc, string expectedError = null) {
+            Console.WriteLine(String.Join(Environment.NewLine, proc.StandardOutputLines));
+            Debug.WriteLine(String.Join(Environment.NewLine, proc.StandardErrorLines));
             if (!string.IsNullOrEmpty(expectedError)) {
                 var matches = proc.StandardErrorLines.Where(err => err.Contains(expectedError));
                 if (matches.Count() == 0) {

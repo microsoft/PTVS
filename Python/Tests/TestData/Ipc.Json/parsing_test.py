@@ -15,7 +15,10 @@ class TestChannelBase(object):
 
     def process_one_message(self):
         self._wait_for_message()
-        return self.__message.pop(0)
+        try:
+            return self.__message.pop(0)
+        except IndexError:
+            return None
 
     def _receive_message(self, message):
         self.__message.append(message)
@@ -31,8 +34,11 @@ def main():
     (opts, _) = parser.parse_args()
 
     channel = TestChannel(port = opts.result_port)
-    msg = channel.process_one_message()
-    channel.close()
+    try:
+        msg = channel.process_one_message()
+        print(msg)
+    finally:
+        channel.close()
 
     sys.exit(0)
 
