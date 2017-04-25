@@ -121,6 +121,9 @@
       <Item ItemId=";ExecutableFilesFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executable files (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[실행 파일(*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|모든 파일(*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -349,6 +352,9 @@
       <Item ItemId=";PerformanceReportFilesFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance Report Files (*.vsp;*.vsps)|*.vsp;*.vsps|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[성능 보고서 파일(*.vsp;*.vsps)|*.vsp;*.vsps|모든 파일(*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -436,6 +442,9 @@
       <Item ItemId=";PythonFilesFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 파일(*.py;*.pyw)|*.py;*.pyw|모든 파일(*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -787,7 +796,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17102.1]]></Val>
+        <Val><![CDATA[3.0.17109.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -823,7 +832,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17102.1]]></Val>
+        <Val><![CDATA[3.0.17109.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

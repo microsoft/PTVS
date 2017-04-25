@@ -70,6 +70,9 @@
       <Item ItemId=";AddReferenceExtensions" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Extension Modules (*.dll;*.pyd)|*.dll;*.pyd|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 확장 모듈(*.dll;*.pyd)|*.dll;*.pyd|모든 파일(*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -946,7 +949,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3976,7 +3979,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -5086,6 +5089,9 @@
       <Item ItemId=";ZipAndEggArchiveFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Zip Archives (*.zip;*.egg)|*.zip;*.egg|All Files (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zip 보관 파일(*.zip;*.egg)|*.zip;*.egg|모든 파일(*.*)|*.*]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5125,7 +5131,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17089.6]]></Val>
+        <Val><![CDATA[3.0.17109.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5161,7 +5167,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17089.6]]></Val>
+        <Val><![CDATA[3.0.17109.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
