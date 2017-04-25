@@ -135,7 +135,7 @@ namespace IpcJsonTests {
             Assert.IsTrue(packet.BadHeaders || packet.BadContent);
             return TestPacketAsync(packet,
                 packet.BadHeaders ? "visualstudio_py_ipcjson.InvalidHeaderError" : "visualstudio_py_ipcjson.InvalidContentError",
-                closeStream: false
+                closeStream: packet.ReadPastEndOfStream
             );
         }
 

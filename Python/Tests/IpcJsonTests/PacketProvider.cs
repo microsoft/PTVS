@@ -105,7 +105,7 @@ namespace IpcJsonTests {
             for (int i = 1; i < 5; i++) {
                 var json = MakeBody(validJson1);
                 var headers = MakeHeaders(json.Length + i);
-                yield return MakePacket(headers, json, badContent: true);
+                yield return MakePacket(headers, json, badContent: true, blocked: true);
             }
         }
 
@@ -116,8 +116,8 @@ namespace IpcJsonTests {
             return MakePacket(headers, encoded, badContent: badContent);
         }
 
-        private static Packet MakePacket(byte[] headers, byte[] encoded, byte[] endJunk = null, bool badHeaders = false, bool badContent = false) {
-            return new Packet(headers, encoded, endJunk, badHeaders, badContent);
+        private static Packet MakePacket(byte[] headers, byte[] encoded, byte[] endJunk = null, bool badHeaders = false, bool badContent = false, bool blocked = false) {
+            return new Packet(headers, encoded, endJunk, badHeaders, badContent, blocked);
         }
 
         private static byte[] MakeBody(string json) {
@@ -133,8 +133,9 @@ namespace IpcJsonTests {
         private List<byte> _data = new List<byte>();
         public bool BadHeaders { get; }
         public bool BadContent { get; }
+        public bool ReadPastEndOfStream { get; }
 
-        public Packet(byte[] headers, byte[] content, byte[] endJunk = null, bool badHeaders = false, bool badContent = false) {
+        public Packet(byte[] headers, byte[] content, byte[] endJunk = null, bool badHeaders = false, bool badContent = false, bool readPastEndOfStream = false) {
             _data.AddRange(headers);
             _data.AddRange(content);
             if (endJunk != null) {
@@ -142,6 +143,7 @@ namespace IpcJsonTests {
             }
             BadHeaders = badHeaders;
             BadContent = badContent;
+            ReadPastEndOfStream = readPastEndOfStream;
         }
 
         public Stream AsStream() {

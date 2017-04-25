@@ -102,24 +102,11 @@ class SocketIO(object):
         return line.decode('ascii', 'replace')
 
     def _buffered_read_as_utf8(self, length):
-        # socket.recv may return fewer bytes than requested.
-        # To avoid socket.recv blocking if there are no bytes at all
-        # we temporarily switch to non-blocking mode, and handle
-        # socket.error, which means there was no data available.
-        # This will typically happen in negative scenarios where
-        # the header was corrupted / has incorrect length and we
-        # try to read more data than was written to the socket.
-        self.__socket.setblocking(0)
-        try:
-            while len(self.__buffer) < length:
-                temp = self.__socket.recv(1024)
-                if not temp:
-                    break
-                self.__buffer += temp
-        except socket.error:
-            pass
-        finally:
-            self.__socket.setblocking(1)
+        while len(self.__buffer) < length:
+            temp = self.__socket.recv(1024)
+            if not temp:
+                break
+            self.__buffer += temp
 
         if len(self.__buffer) < length:
             raise InvalidContentError('Expected to read {0} bytes of content, but only read {1} bytes.'.format(length, len(self.__buffer)))
