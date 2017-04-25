@@ -35,26 +35,26 @@ namespace IpcJsonTests {
 
         public static Packet GetNoPacket() => MakePacket(new byte[0], new byte[0]);
 
-        public static Packet GetUnterminatedPacket() => MakePacket(Encoding.ASCII.GetBytes("NoTerminator"), new byte[0]);
+        public static Packet GetUnterminatedPacket() => MakePacket(Encoding.ASCII.GetBytes("NoTerminator"), new byte[0], badHeaders: true);
 
         public static Packet GetInvalidContentLengthIntegerTooLargePacket() {
-            return MakePacket(Encoding.ASCII.GetBytes("Content-Length: 2147483649\r\n\r\n"), MakeBody(validJson1));
+            return MakePacket(Encoding.ASCII.GetBytes("Content-Length: 2147483649\r\n\r\n"), MakeBody(validJson1), badHeaders: true);
         }
 
         public static Packet GetInvalidContentLengthNegativeIntegerPacket() {
-            return MakePacket(Encoding.ASCII.GetBytes("Content-Length: -1\r\n\r\n"), MakeBody(validJson1));
+            return MakePacket(Encoding.ASCII.GetBytes("Content-Length: -1\r\n\r\n"), MakeBody(validJson1), badHeaders: true);
         }
 
         public static Packet GetInvalidContentLengthNotIntegerPacket() {
-            return MakePacket(Encoding.ASCII.GetBytes("Content-Length: BAD\r\n\r\n"), MakeBody(validJson1));
+            return MakePacket(Encoding.ASCII.GetBytes("Content-Length: BAD\r\n\r\n"), MakeBody(validJson1), badHeaders: true);
         }
 
         public static Packet GetMissingContentLengthPacket() {
-            return MakePacket(Encoding.ASCII.GetBytes("From: Test\r\n\r\n"), MakeBody(validJson1));
+            return MakePacket(Encoding.ASCII.GetBytes("From: Test\r\n\r\n"), MakeBody(validJson1), badHeaders: true);
         }
 
         public static Packet GetMalformedHeaderPacket() {
-            return MakePacket(Encoding.ASCII.GetBytes("Content-Length\r\n\r\n"), MakeBody(validJson1));
+            return MakePacket(Encoding.ASCII.GetBytes("Content-Length\r\n\r\n"), MakeBody(validJson1), badHeaders: true);
         }
 
         public static Packet GetAdditionalHeadersPacket() {
@@ -65,13 +65,13 @@ namespace IpcJsonTests {
 
         public static Packet GetIncorrectlyTerminatedPacket() {
             var body = MakeBody(validJson1);
-            return MakePacket(Encoding.ASCII.GetBytes(string.Format("Content-Length:{0}\n\n", body.Length)), body);
+            return MakePacket(Encoding.ASCII.GetBytes(string.Format("Content-Length:{0}\n\n", body.Length)), body, badHeaders: true);
         }
 
         public static IEnumerable<Packet> GetTruncatedJsonPackets() {
             // Valid packet, but the json is invalid because it's truncated
             for (int i = 1; i < validJson1.Length; i++) {
-                yield return MakePacketFromJson(validJson1.Substring(0, validJson1.Length - i));
+                yield return MakePacketFromJson(validJson1.Substring(0, validJson1.Length - i), badContent: true);
             }
         }
 
@@ -82,7 +82,7 @@ namespace IpcJsonTests {
             for (int i = 1; i < validJson1.Length; i++) {
                 var json = MakeBody(validJson1);
                 var headers = MakeHeaders(i);
-                yield return MakePacket(headers, json);
+                yield return MakePacket(headers, json, badContent: true);
             }
         }
 
@@ -94,7 +94,7 @@ namespace IpcJsonTests {
             for (int i = 1; i < endJunk.Length; i++) {
                 var json = MakeBody(validJson1);
                 var headers = MakeHeaders(json.Length + i);
-                yield return MakePacket(headers, json, endJunk);
+                yield return MakePacket(headers, json, endJunk, badContent: true);
             }
         }
 
@@ -105,19 +105,19 @@ namespace IpcJsonTests {
             for (int i = 1; i < 5; i++) {
                 var json = MakeBody(validJson1);
                 var headers = MakeHeaders(json.Length + i);
-                yield return MakePacket(headers, json);
+                yield return MakePacket(headers, json, badContent: true);
             }
         }
 
-        private static Packet MakePacketFromJson(string json) {
+        private static Packet MakePacketFromJson(string json, bool badContent = false) {
             var encoded = MakeBody(json);
             var headers = MakeHeaders(encoded.Length);
 
-            return MakePacket(headers, encoded);
+            return MakePacket(headers, encoded, badContent: badContent);
         }
 
-        private static Packet MakePacket(byte[] headers, byte[] encoded, byte[] endJunk = null) {
-            return new Packet(headers, encoded, endJunk);
+        private static Packet MakePacket(byte[] headers, byte[] encoded, byte[] endJunk = null, bool badHeaders = false, bool badContent = false) {
+            return new Packet(headers, encoded, endJunk, badHeaders, badContent);
         }
 
         private static byte[] MakeBody(string json) {
@@ -131,13 +131,17 @@ namespace IpcJsonTests {
 
     class Packet {
         private List<byte> _data = new List<byte>();
+        public bool BadHeaders { get; }
+        public bool BadContent { get; }
 
-        public Packet(byte[] headers, byte[] content, byte[] endJunk = null) {
+        public Packet(byte[] headers, byte[] content, byte[] endJunk = null, bool badHeaders = false, bool badContent = false) {
             _data.AddRange(headers);
             _data.AddRange(content);
             if (endJunk != null) {
                 _data.AddRange(endJunk);
             }
+            BadHeaders = badHeaders;
+            BadContent = badContent;
         }
 
         public Stream AsStream() {

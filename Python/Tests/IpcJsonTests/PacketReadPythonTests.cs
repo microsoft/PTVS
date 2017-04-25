@@ -42,11 +42,6 @@ namespace IpcJsonTests {
             PythonTestData.Deploy();
         }
 
-        private static string validJson1 = @"{'request_seq':1,'success':true,'command':'initialize','message':null,'body':{'failedLoads':[],'error':null},'type':'response','seq':2}".Replace('\'', '"');
-        private static string validJson2 = @"{'event':'childFileAnalyzed','body':{'filename':'C:\\Projects\\RemoteDebugApp\\RemoteDebugApp.py','fileId':1,'isTemporaryFile':false,'suppressErrorList':false},'type':'event','seq':5}".Replace('\'', '"');
-        private static string validUtf8Json1 = @"{'event':'childFileAnalyzed','body':{'filename':'C:\\Projects\\RemoteDebugApp\\この文は、テストです。私はこれがうまく願っています。.py','fileId':1,'isTemporaryFile':false,'suppressErrorList':false},'type':'event','seq':5}".Replace('\'', '"');
-        private static string validUtf8Json2 = @"{'event':'childFileAnalyzed','body':{'filename':'C:\\Projects\\RemoteDebugApp\\é.py','fileId':1,'isTemporaryFile':false,'suppressErrorList':false},'type':'event','seq':5}".Replace('\'', '"');
-
         [TestMethod, Priority(1)]
         public async Task ValidPackets() {
             await TestValidPacketAsync(PacketProvider.GetValidPacket1());
@@ -62,46 +57,46 @@ namespace IpcJsonTests {
         [TestMethod, Priority(1)]
         public async Task TruncatedJson() {
             foreach (var packet in PacketProvider.GetTruncatedJsonPackets()) {
-                await TestInvalidPacketAsync(packet, "visualstudio_py_ipcjson.InvalidContentError");
+                await TestInvalidPacketAsync(packet);
             }
         }
 
         [TestMethod, Priority(1)]
         public async Task IncorrectContentLengthUnderread() {
             foreach (var packet in PacketProvider.GetIncorrectContentLengthUnderreadPackets()) {
-                await TestInvalidPacketAsync(packet, "visualstudio_py_ipcjson.InvalidContentError");
+                await TestInvalidPacketAsync(packet);
             }
         }
 
         [TestMethod, Priority(1)]
         public async Task IncorrectContentLengthOverread() {
             foreach (var packet in PacketProvider.GetIncorrectContentLengthOverreadPackets()) {
-                await TestInvalidPacketAsync(packet, "visualstudio_py_ipcjson.InvalidContentError");
+                await TestInvalidPacketAsync(packet);
             }
         }
 
         [TestMethod, Priority(1)]
         public async Task IncorrectContentLengthOverreadEndOfStream() {
             foreach (var packet in PacketProvider.GetIncorrectContentLengthOverreadEndOfStreamPackets()) {
-                await TestInvalidPacketAsync(packet, "visualstudio_py_ipcjson.InvalidContentError");
+                await TestInvalidPacketAsync(packet);
             }
         }
 
         [TestMethod, Priority(1)]
         public async Task InvalidContentLengthType() {
-            await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthIntegerTooLargePacket(), "visualstudio_py_ipcjson.InvalidHeaderError");
-            await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthNegativeIntegerPacket(), "visualstudio_py_ipcjson.InvalidHeaderError");
-            await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthNotIntegerPacket(), "visualstudio_py_ipcjson.InvalidHeaderError");
+            await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthIntegerTooLargePacket());
+            await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthNegativeIntegerPacket());
+            await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthNotIntegerPacket());
         }
 
         [TestMethod, Priority(1)]
         public async Task MissingContentLength() {
-            await TestInvalidPacketAsync(PacketProvider.GetMissingContentLengthPacket(), "visualstudio_py_ipcjson.InvalidHeaderError");
+            await TestInvalidPacketAsync(PacketProvider.GetMissingContentLengthPacket());
         }
 
         [TestMethod, Priority(1)]
         public async Task MalformedHeader() {
-            await TestInvalidPacketAsync(PacketProvider.GetMalformedHeaderPacket(), "visualstudio_py_ipcjson.InvalidHeaderError");
+            await TestInvalidPacketAsync(PacketProvider.GetMalformedHeaderPacket());
         }
 
         [TestMethod, Priority(1)]
@@ -111,32 +106,44 @@ namespace IpcJsonTests {
 
         [TestMethod, Priority(1)]
         public async Task EmptyStream() {
-            await TestNoPacketAsync(PacketProvider.GetNoPacket(), "");
+            await TestNoPacketAsync(PacketProvider.GetNoPacket());
         }
 
         [TestMethod, Priority(1)]
         public async Task UnterminatedHeader() {
-            await TestNoPacketAsync(PacketProvider.GetUnterminatedPacket(), "visualstudio_py_ipcjson.InvalidHeaderError");
-            await TestNoPacketAsync(PacketProvider.GetIncorrectlyTerminatedPacket(), "visualstudio_py_ipcjson.InvalidHeaderError");
+            await TestNoPacketAsync(PacketProvider.GetUnterminatedPacket());
+            await TestNoPacketAsync(PacketProvider.GetIncorrectlyTerminatedPacket());
         }
 
         private Task TestValidPacketAsync(Packet packet) {
+            Assert.IsFalse(packet.BadHeaders || packet.BadContent);
             return TestPacketAsync(packet);
         }
 
-        private Task TestInvalidPacketAsync(Packet packet, string expectedError) {
-            return TestPacketAsync(packet, expectedError, closeStream: false);
+        private Task TestInvalidPacketAsync(Packet packet) {
+            Assert.IsTrue(packet.BadHeaders || packet.BadContent);
+            return TestPacketAsync(packet,
+                packet.BadHeaders ? "visualstudio_py_ipcjson.InvalidHeaderError" : "visualstudio_py_ipcjson.InvalidContentError",
+                closeStream: false
+            );
         }
 
-        private Task TestNoPacketAsync(Packet packet, string expectedError) {
+        private Task TestNoPacketAsync(Packet packet) {
+            string expectedError = null;
+            if (packet.BadHeaders) {
+                expectedError = "visualstudio_py_ipcjson.InvalidHeaderError";
+            } else if (packet.BadContent) {
+                expectedError = "visualstudio_py_ipcjson.InvalidContentError";
+            }
             return TestPacketAsync(packet, expectedError, closeStream: true);
         }
 
         private async Task TestPacketAsync(Packet packet, string expectedError = null, bool closeStream = false) {
             using (var proc = InitConnection(PythonParsingTestPath)) {
-                await WritePacketAsync(packet);
+                var bytes = packet.AsBytes();
+                await _clientStream.WriteAsync(bytes, 0, bytes.Length);
                 if (closeStream) {
-                    // We expect the process to be busy reading headers
+                    // We expect the process to be busy reading headers and not exit
                     var closed = proc.Wait(TimeSpan.FromMilliseconds(500));
                     Assert.IsFalse(closed);
 
@@ -151,11 +158,6 @@ namespace IpcJsonTests {
 
                 CheckProcessResult(proc, expectedError);
             }
-        }
-
-        private async Task WritePacketAsync(Packet packet) {
-            var bytes = packet.AsBytes();
-            await _clientStream.WriteAsync(bytes, 0, bytes.Length);
         }
 
         private ProcessOutput InitConnection(string serverScriptPath) {

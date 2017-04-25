@@ -96,6 +96,7 @@ namespace IpcJsonTests {
         }
 
         private static async Task TestValidPacketAsync(Packet packet) {
+            Assert.IsFalse(packet.BadHeaders || packet.BadContent);
             var reader = new ProtocolReader(packet.AsStream());
             var obj = await Connection.ReadPacketAsJObject(reader);
             Assert.IsNotNull(obj);
@@ -108,6 +109,7 @@ namespace IpcJsonTests {
         }
 
         private static async Task TestInvalidPacketAsync(Packet packet) {
+            Assert.IsTrue(packet.BadHeaders || packet.BadContent);
             var reader = new ProtocolReader(packet.AsStream());
             try {
                 var obj = await Connection.ReadPacketAsJObject(reader);
