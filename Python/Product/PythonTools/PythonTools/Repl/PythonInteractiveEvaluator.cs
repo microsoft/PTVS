@@ -459,14 +459,19 @@ namespace Microsoft.PythonTools.Repl {
             // TODO: Allow customizing the scripts path
             //var root = _serviceProvider.GetPythonToolsService().InteractiveOptions.ScriptsPath;
             string root;
-            if (!provider.TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_VisualStudioDir, out root)) {
-                root = PathUtils.GetAbsoluteDirectoryPath(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    "Visual Studio {0}".FormatInvariant(AssemblyVersionInfo.VSName)
-                );
-            }
+            try {
+                if (!provider.TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_VisualStudioDir, out root)) {
+                    root = PathUtils.GetAbsoluteDirectoryPath(
+                        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                        "Visual Studio {0}".FormatInvariant(AssemblyVersionInfo.VSName)
+                    );
+                }
 
-            root = PathUtils.GetAbsoluteDirectoryPath(root, "Python Scripts");
+                root = PathUtils.GetAbsoluteDirectoryPath(root, "Python Scripts");
+            } catch (ArgumentException ex) {
+                ex.ReportUnhandledException(provider, typeof(PythonInteractiveEvaluator));
+                return null;
+            }
 
             string candidate;
             if (!string.IsNullOrEmpty(displayName)) {

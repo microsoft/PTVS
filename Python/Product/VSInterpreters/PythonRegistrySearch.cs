@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -136,9 +137,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 return null;
             }
 
-            var prefixPath = PathUtils.NormalizePath(installKey.GetValue(null) as string);
-            var exePath = PathUtils.NormalizePath(installKey.GetValue("ExecutablePath") as string);
-            var exewPath = PathUtils.NormalizePath(installKey.GetValue("WindowedExecutablePath") as string);
+            string prefixPath, exePath, exewPath;
+            try {
+                prefixPath = PathUtils.NormalizePath(installKey.GetValue(null) as string);
+                exePath = PathUtils.NormalizePath(installKey.GetValue("ExecutablePath") as string);
+                exewPath = PathUtils.NormalizePath(installKey.GetValue("WindowedExecutablePath") as string);
+            } catch (ArgumentException ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                return null;
+            }
             if (pythonCoreCompatibility && !string.IsNullOrEmpty(prefixPath)) {
                 if (string.IsNullOrEmpty(exePath)) {
                     exePath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
