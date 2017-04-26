@@ -164,7 +164,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Command Line _Arguments:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Arguments de la ligne de _commande :]]></Val>
+            <Val><![CDATA[Ar_guments de la ligne de commande :]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -299,7 +299,7 @@
         <Str Cat="Text">
           <Val><![CDATA[_Working Directory:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Réperto_ire de travail :]]></Val>
+            <Val><![CDATA[Ré_pertoire de travail :]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -796,7 +796,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17102.1]]></Val>
+        <Val><![CDATA[3.0.17114.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -832,7 +832,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17102.1]]></Val>
+        <Val><![CDATA[3.0.17114.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
