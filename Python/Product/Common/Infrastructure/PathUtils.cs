@@ -60,6 +60,9 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// <summary>
         /// Normalizes and returns the provided path.
         /// </summary>
+        /// <exception cref="ArgumentException">
+        /// If the provided path contains invalid characters.
+        /// </exception>
         public static string NormalizePath(string path) {
             if (string.IsNullOrEmpty(path)) {
                 return string.Empty;
