@@ -754,7 +754,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (ShouldAnalyze(toScrape.Concat(toAnalyze))) {
                     if (!_all && _treatPathsAsStandardLibrary.Contains(fileGroup[0].LibraryPath)) {
                         _all = true;
-                        TraceInformation("Adding /all because the {0} is builtin or stdlib".FormatInvariant(fileGroup[0].LibraryPath));
+                        TraceInformation("Adding /all because this group is builtin or stdlib");
                         // Include all the file groups we've already seen.
                         _scrapeFileGroups.InsertRange(0, candidateScrapeFileGroups);
                         analyzeFileGroups.InsertRange(0, candidateAnalyzeFileGroups);
