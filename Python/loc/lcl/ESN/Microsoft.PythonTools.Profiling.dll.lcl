@@ -227,7 +227,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Python _Interpreter:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[_Intérprete de Python:]]></Val>
+            <Val><![CDATA[Intér_prete de Python:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -796,7 +796,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17102.1]]></Val>
+        <Val><![CDATA[3.0.17114.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -832,7 +832,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17102.1]]></Val>
+        <Val><![CDATA[3.0.17114.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
