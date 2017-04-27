@@ -134,6 +134,19 @@ namespace Microsoft.CookiecutterTools.View {
             }
         }
 
+        private void OnItemPreviewKeyDown(object sender, KeyEventArgs e) {
+            var item = sender as TreeViewItem;
+            if (item != null) {
+                if (e.Key == Key.Enter) {
+                    var continuation = item.DataContext as ContinuationViewModel;
+                    if (continuation != null) {
+                        e.Handled = true;
+                        ViewModel.LoadMoreTemplatesAsync(continuation.ContinuationToken).DoNotWait();
+                    }
+                }
+            }
+        }
+
         public void LoadTemplate() {
             TemplateViewModel collidingTemplate;
             if (ViewModel.IsCloneNeeded(ViewModel.SelectedTemplate) && ViewModel.IsCloneCollision(ViewModel.SelectedTemplate, out collidingTemplate)) {

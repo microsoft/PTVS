@@ -140,6 +140,7 @@
                   Margin="4 4 0 8"
                   ItemsSource="{Binding Path=SearchResults}"
                   Focusable="True"
+                  IsTabStop="True"
                   SelectedItemChanged="TreeView_SelectedItemChanged">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type vm:CategorizedViewModel}" ItemsSource="{Binding Path=Templates}">
@@ -202,7 +203,8 @@
                                 Margin="3 3"
                                 Command="{x:Static vm:CookiecutterViewModel.LoadMore}"
                                 CommandParameter="{Binding Path=ContinuationToken,Mode=OneWay}"
-                                HorizontalAlignment="Left">
+                                HorizontalAlignment="Left"
+                                IsTabStop="False">
                             <TextBlock Text="{x:Static cct:Strings.SearchPage_LoadMore}"/>
                         </Button>
                     </StackPanel>
@@ -213,6 +215,7 @@
                     <Setter Property="IsExpanded" Value="True" />
                     <EventSetter Event="MouseDoubleClick" Handler="OnItemMouseDoubleClick" />
                     <EventSetter Event="TreeViewItem.PreviewMouseRightButtonDown" Handler="OnItemPreviewMouseRightButtonDown"/>
+                    <EventSetter Event="PreviewKeyDown" Handler="OnItemPreviewKeyDown"/>
                 </Style>
             </TreeView.ItemContainerStyle>
         </TreeView>
