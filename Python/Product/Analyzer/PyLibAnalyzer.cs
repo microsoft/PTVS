@@ -725,7 +725,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (!outOfDate.Any()) {
                         filesToKeep.UnionWith(builtinModulePaths);
                     } else {
-                        TraceVerbose(
+                        TraceInformation(
                             "Adding /all because the following built-in modules needed updating: {0}",
                             string.Join(";", outOfDate)
                         );
@@ -754,7 +754,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (ShouldAnalyze(toScrape.Concat(toAnalyze))) {
                     if (!_all && _treatPathsAsStandardLibrary.Contains(fileGroup[0].LibraryPath)) {
                         _all = true;
-                        TraceVerbose("Adding /all because the above module is builtin or stdlib");
+                        TraceInformation("Adding /all because this group is builtin or stdlib");
                         // Include all the file groups we've already seen.
                         _scrapeFileGroups.InsertRange(0, candidateScrapeFileGroups);
                         analyzeFileGroups.InsertRange(0, candidateAnalyzeFileGroups);
@@ -842,7 +842,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var destPath = GetOutputFile(file);
                 if (!File.Exists(destPath) ||
                     File.GetLastWriteTimeUtc(file.SourceFile) > File.GetLastWriteTimeUtc(destPath)) {
-                    TraceVerbose("Including {0} because {1} needs updating", file.LibraryPath, file.FullName);
+                    TraceInformation("Including {0} because {1} needs updating", file.LibraryPath, file.FullName);
                     return true;
                 }
             }
@@ -1313,10 +1313,10 @@ namespace Microsoft.PythonTools.Analysis {
                             var errors = new CollectingErrorSink();
                             var opts = new ParserOptions() { BindReferences = true, ErrorSink = errors };
 
-                            TraceInformation("Parsing \"{0}\" (\"{1}\")", item.ModuleName, item.SourceFile);
+                            TraceVerbose("Parsing \"{0}\" (\"{1}\")", item.ModuleName, item.SourceFile);
                             item.Tree = Parser.CreateParser(sourceUnit, _version.ToLanguageVersion(), opts).ParseFile();
                             if (errors.Errors.Any() || errors.Warnings.Any()) {
-                                TraceWarning("File \"{0}\" contained parse errors", item.SourceFile);
+                                TraceWarning("File \"{0}\" (\"{1}\") contained parse errors", item.ModuleName, item.SourceFile);
                                 TraceInformation(string.Join(Environment.NewLine, errors.Errors.Concat(errors.Warnings)
                                     .Select(er => string.Format("{0} {1}", er.Span, er.Message))));
                             }
@@ -1344,7 +1344,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                         try {
                             if (item.Tree != null) {
-                                TraceInformation("Analyzing \"{0}\"", item.ModuleName);
+                                TraceInformation("Analyzing \"{0}\" (\"{1}\")", item.ModuleName, item.SourceFile);
                                 item.Entry.Analyze(_cancel, true);
                                 TraceVerbose("Analyzed \"{0}\"", item.SourceFile);
                             }
