@@ -17,11 +17,9 @@
 using System.ComponentModel;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
-    class ErrorViewModel : INotifyPropertyChanged {
+    class ErrorViewModel : TreeItemViewModel {
         private string _errorDescription;
         private string _errorDetails;
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public ErrorViewModel() {
         }
@@ -36,7 +34,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _errorDescription) {
                     _errorDescription = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ErrorDescription)));
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(ErrorDescription)));
                 }
             }
         }
@@ -49,7 +47,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _errorDetails) {
                     _errorDetails = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ErrorDetails)));
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(ErrorDetails)));
                 }
             }
         }

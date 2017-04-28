@@ -14,13 +14,35 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.ComponentModel;
+
 namespace Microsoft.CookiecutterTools.ViewModel {
-    class LoadingViewModel : TreeItemViewModel {
-        public LoadingViewModel() {
+    class TreeItemViewModel : INotifyPropertyChanged {
+        private bool _isSelected;
+
+        /// <summary>
+        /// Constructor for design view.
+        /// </summary>
+        public TreeItemViewModel() {
         }
 
-        public bool Selectable => false;
+        public bool IsSelected {
+            get {
+                return _isSelected;
+            }
 
-        public override string ToString() => Strings.SearchPage_LoadingTemplate;
+            set {
+                if (value != _isSelected) {
+                    _isSelected = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(PropertyChangedEventArgs ea) {
+            PropertyChanged?.Invoke(this, ea);
+        }
     }
 }
