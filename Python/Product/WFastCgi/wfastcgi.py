@@ -276,9 +276,8 @@ def read_fastcgi_input(stream, req_id, content):
     wsgi environment array"""
     res = _REQUESTS[req_id].params
     if 'wsgi.input' not in res:
-        res['wsgi.input'] = content
-    else:
-        res['wsgi.input'] += content
+        res['wsgi.input'] = BytesIO()
+    res['wsgi.input'].write(content)
 
     if not content:
         # we've hit the end of the input stream, time to process input...
@@ -289,10 +288,8 @@ def read_fastcgi_data(stream, req_id, content):
     """reads FastCGI data stream and publishes it as wsgi.data"""
     res = _REQUESTS[req_id].params
     if 'wsgi.data' not in res:
-        res['wsgi.data'] = content
-    else:
-        res['wsgi.data'] += content
-
+        res['wsgi.data'] = BytesIO()
+    res['wsgi.data'].write(content)
 
 def read_fastcgi_abort_request(stream, req_id, content):
     """reads the wsgi abort request, which we ignore, we'll send the
@@ -666,7 +663,9 @@ class handle_response(object):
 
     def __enter__(self):
         record = self.record
-        record.params['wsgi.input'] = BytesIO(record.params['wsgi.input'])
+        record.params['wsgi.input'].seek(0)
+        if 'wsgi.data' in record.params:
+            record.params['wsgi.data'].seek(0)
         record.params['wsgi.version'] = (1, 0)
         record.params['wsgi.url_scheme'] = 'https' if record.params.get('HTTPS', '').lower() == 'on' else 'http'
         record.params['wsgi.multiprocess'] = True
