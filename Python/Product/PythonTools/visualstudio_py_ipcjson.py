@@ -51,6 +51,8 @@ SKIP_TB_PREFIXES = [
 
 class InvalidHeaderError(Exception): pass
 
+class InvalidContentError(Exception): pass
+
 class SocketIO(object):
     def __init__(self, *args, **kwargs):
         super(SocketIO, self).__init__(*args, **kwargs)
@@ -78,13 +80,23 @@ class SocketIO(object):
         '''
         Reads bytes until it encounters newline chars, and returns the bytes
         ascii decoded, newline chars are excluded from the return value.
+        Blocks until: newline chars are read OR socket is closed.
         '''
         newline = '\r\n'.encode('ascii')
         while newline not in self.__buffer:
             temp = self.__socket.recv(1024)
+            if not temp:
+                break
             self.__buffer += temp
 
-        index = self.__buffer.index(newline)
+        if not self.__buffer:
+            return None
+
+        try:
+            index = self.__buffer.index(newline)
+        except ValueError:
+            raise InvalidHeaderError('Header line not terminated')
+
         line = self.__buffer[:index]
         self.__buffer = self.__buffer[index+len(newline):]
         return line.decode('ascii', 'replace')
@@ -92,7 +104,13 @@ class SocketIO(object):
     def _buffered_read_as_utf8(self, length):
         while len(self.__buffer) < length:
             temp = self.__socket.recv(1024)
+            if not temp:
+                break
             self.__buffer += temp
+
+        if len(self.__buffer) < length:
+            raise InvalidContentError('Expected to read {0} bytes of content, but only read {1} bytes.'.format(length, len(self.__buffer)))
+
         content = self.__buffer[:length]
         self.__buffer = self.__buffer[length:]
         return content.decode('utf-8', 'replace')
@@ -111,19 +129,34 @@ class SocketIO(object):
                 raise InvalidHeaderError("Malformed header, expected 'name: value'\n{0}".format(line))
             line = self._buffered_read_line_as_ascii()
 
+        # end of stream
+        if not line and not headers:
+            return
+
         # validate headers
         try:
             length_text = headers['Content-Length']
-            length = int(length_text)
+            try:
+                length = int(length_text)
+            except ValueError:
+                raise InvalidHeaderError("Invalid Content-Length: {0}".format(length_text))
         except NameError:
-            raise InvalidHeaderError('Content-Length not specified on request')
+            raise InvalidHeaderError('Content-Length not specified in headers')
         except KeyError:
-            raise InvalidHeaderError("Invalid Content-Length: {0}".format(length_text))
+            raise InvalidHeaderError('Content-Length not specified in headers')
+
+        if length < 0 or length > 2147483647:
+            raise InvalidHeaderError("Invalid Content-Length: {0}".format(length))
 
         # read content, utf-8 encoded
         content = self._buffered_read_as_utf8(length)
-        msg = json.loads(content)
-        self._receive_message(msg)
+        try:
+            msg = json.loads(content)
+            self._receive_message(msg)
+        except ValueError:
+            raise InvalidContentError('Error deserializing message content.')
+        except json.decoder.JSONDecodeError:
+            raise InvalidContentError('Error deserializing message content.')
 
     def _close(self):
         if self.__own_socket:

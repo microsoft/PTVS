@@ -31,7 +31,7 @@ using TestUtilities.Python;
 
 namespace IpcJsonTests {
     [TestClass]
-    public class IpcJsonTests {
+    public class IpcJsonConnectionTests {
         private Connection _client;
         private Connection _server;
         private readonly AutoResetEvent _connected = new AutoResetEvent(false);
@@ -262,9 +262,9 @@ namespace IpcJsonTests {
             _connected.WaitOne();
         }
 
-        private static string PtvsdSearchPath {
+        internal static string PtvsdSearchPath {
             get {
-                return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
+                return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py", typeof(Connection).Assembly)));
             }
         }
 

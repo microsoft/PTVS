@@ -53,14 +53,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PacketReadTests.cs" />
-    <Compile Include="IpcJsonTests.cs" />
+    <Compile Include="PacketProvider.cs" />
+    <Compile Include="IpcJsonPacketReadCSharpTests.cs" />
+    <Compile Include="IpcJsonPacketReadPythonTests.cs" />
+    <Compile Include="IpcJsonConnectionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
+      <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
+      <Name>Analysis</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\Ipc.Json\Ipc.Json.csproj">
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
