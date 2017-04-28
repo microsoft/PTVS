@@ -988,7 +988,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 parent.Templates.Remove(loading);
                 if (alterSelection && loadingStillSelected) {
                     // Loading was still selected, so select something else.
-                    var newLast = GitHub.Templates.LastOrDefault() as TreeItemViewModel;
+                    var newLast = parent.Templates.LastOrDefault() as TreeItemViewModel;
                     if (newLast != null) {
                         newLast.IsSelected = true;
                     }
