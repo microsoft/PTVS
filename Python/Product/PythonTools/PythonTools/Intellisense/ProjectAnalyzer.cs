@@ -374,6 +374,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     // race w/ process exit...
                 }
                 _analysisProcess.Dispose();
+                _conn?.Dispose();
             });
 
             try {
@@ -381,7 +382,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 _processExitedCancelSource.Dispose();
             } catch (ObjectDisposedException) {
             }
-            _conn?.Dispose();
         }
 
         #endregion
