@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 namespace Microsoft.CookiecutterTools.ViewModel {
-    class ContinuationViewModel {
+    class ContinuationViewModel : TreeItemViewModel {
         public ContinuationViewModel() :
             this(null) {
         }
@@ -27,5 +27,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public bool Selectable => false;
 
         public string ContinuationToken { get; set; }
+
+        public override string ToString() => Strings.SearchPage_LoadMore;
     }
 }

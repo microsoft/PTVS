@@ -18,7 +18,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
-    class CategorizedViewModel : INotifyPropertyChanged {
+    class CategorizedViewModel : TreeItemViewModel {
         private string _displayName;
 
         /// <summary>
@@ -42,14 +42,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _displayName) {
                     _displayName = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(DisplayName)));
                 }
             }
         }
 
         public ObservableCollection<object> Templates { get; } = new ObservableCollection<object>();
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public override string ToString() => _displayName;
     }

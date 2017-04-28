@@ -213,6 +213,7 @@
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                     <Setter Property="IsExpanded" Value="True" />
+                    <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}"/>
                     <EventSetter Event="MouseDoubleClick" Handler="OnItemMouseDoubleClick" />
                     <EventSetter Event="TreeViewItem.PreviewMouseRightButtonDown" Handler="OnItemPreviewMouseRightButtonDown"/>
                     <EventSetter Event="PreviewKeyDown" Handler="OnItemPreviewKeyDown"/>
