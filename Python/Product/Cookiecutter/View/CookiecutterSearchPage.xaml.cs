@@ -107,18 +107,10 @@ namespace Microsoft.CookiecutterTools.View {
 
         private void OnItemMouseDoubleClick(object sender, MouseButtonEventArgs args) {
             var item = sender as TreeViewItem;
-            if (item != null) {
-                if (item.IsSelected) {
-                    var template = item.DataContext as TemplateViewModel;
-                    if (template != null) {
-                        if (template != ViewModel.SelectedTemplate) {
-                            ViewModel.SelectedTemplate = template;
-                        }
-
-                        if (ViewModel.CanLoadSelectedTemplate) {
-                            LoadTemplate();
-                        }
-                    }
+            if (item != null && item.IsSelected) {
+                var template = item.DataContext as TemplateViewModel;
+                if (template != null) {
+                    LoadTemplate(template);
                 }
             }
         }
@@ -136,14 +128,30 @@ namespace Microsoft.CookiecutterTools.View {
 
         private void OnItemPreviewKeyDown(object sender, KeyEventArgs e) {
             var item = sender as TreeViewItem;
-            if (item != null) {
+            if (item != null && item.IsSelected) {
                 if (e.Key == Key.Enter) {
                     var continuation = item.DataContext as ContinuationViewModel;
                     if (continuation != null) {
                         e.Handled = true;
                         ViewModel.LoadMoreTemplatesAsync(continuation.ContinuationToken).DoNotWait();
+                    } else {
+                        var template = item.DataContext as TemplateViewModel;
+                        if (template != null) {
+                            e.Handled = true;
+                            LoadTemplate(template);
+                        }
                     }
                 }
+            }
+        }
+
+        private void LoadTemplate(TemplateViewModel template) {
+            if (template != ViewModel.SelectedTemplate) {
+                ViewModel.SelectedTemplate = template;
+            }
+
+            if (ViewModel.CanLoadSelectedTemplate) {
+                LoadTemplate();
             }
         }
 
