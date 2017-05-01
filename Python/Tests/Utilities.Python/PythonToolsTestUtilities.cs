@@ -78,6 +78,10 @@ namespace TestUtilities.Python {
             serviceProvider.ComponentModel.AddExtension<IInterpreterRegistryService>(() => optService.Value);
             serviceProvider.ComponentModel.AddExtension<IInterpreterOptionsService>(() => optService.Value);
 
+            var analysisEntryServiceCreator = new Lazy<AnalysisEntryService>(() => new AnalysisEntryService(serviceProvider));
+            serviceProvider.ComponentModel.AddExtension<IAnalysisEntryService>(() => analysisEntryServiceCreator.Value);
+            serviceProvider.ComponentModel.AddExtension(() => analysisEntryServiceCreator.Value);
+
             if (suppressTaskProvider) {
                 serviceProvider.AddService(typeof(ErrorTaskProvider), null, true);
                 serviceProvider.AddService(typeof(CommentTaskProvider), null, true);
