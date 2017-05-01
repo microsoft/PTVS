@@ -1083,6 +1083,8 @@ namespace Microsoft.PythonTools.Project {
                     }
                     _customCommands = null;
                 }
+
+                _recreatingAnalyzer.Dispose();
             }
 
             base.Dispose(disposing);
@@ -1384,7 +1386,10 @@ namespace Microsoft.PythonTools.Project {
                         statusBar.Clear();
                     }
                 } finally {
-                    _recreatingAnalyzer.Release();
+                    try {
+                        _recreatingAnalyzer.Release();
+                    } catch (ObjectDisposedException) {
+                    }
                 }
             }
         }
