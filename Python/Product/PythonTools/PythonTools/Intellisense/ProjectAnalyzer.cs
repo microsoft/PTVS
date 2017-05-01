@@ -2133,11 +2133,23 @@ namespace Microsoft.PythonTools.Intellisense {
             var snapshot = translator.TextBuffer.CurrentSnapshot;
             foreach (var tag in tags) {
                 // translate the span from the version we last parsed to the current version
-                var span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
-
+                SnapshotSpan span;
                 int headerIndex = tag.headerIndex;
-                if (tag.headerIndex != -1) {
-                    headerIndex = translator.TranslateForward(headerIndex);
+
+                try {
+                    span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
+                } catch (ArgumentOutOfRangeException) {
+                    // Failed to get the "correct" span, so skip this tag
+                    continue;
+                }
+
+                if (headerIndex >= 0) {
+                    try {
+                        headerIndex = translator.TranslateForward(headerIndex);
+                    } catch (ArgumentOutOfRangeException) {
+                        // Failed to get the correct header index, so use the start point
+                        headerIndex = -1;
+                    }
                 }
 
                 yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
