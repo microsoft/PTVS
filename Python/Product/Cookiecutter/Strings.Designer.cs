@@ -497,11 +497,20 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Output folder path.
+        ///   Looks up a localized string similar to Output folder path for created files.
         /// </summary>
         public static string OptionsPage_CreateToAutomationName {
             get {
                 return ResourceManager.GetString("OptionsPage_CreateToAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Browse for output folder path.
+        /// </summary>
+        public static string OptionsPage_CreateToBrowseAutomationName {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreateToBrowseAutomationName", resourceCulture);
             }
         }
         
@@ -547,6 +556,15 @@ namespace Microsoft.CookiecutterTools {
         public static string OptionsPage_Name {
             get {
                 return ResourceManager.GetString("OptionsPage_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Browse for database connection.
+        /// </summary>
+        public static string OptionsPage_OdbcConnectionBrowseAutomationName {
+            get {
+                return ResourceManager.GetString("OptionsPage_OdbcConnectionBrowseAutomationName", resourceCulture);
             }
         }
         
