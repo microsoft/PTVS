@@ -478,7 +478,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
             // Ensure that there's a selection, to avoid focus issues
             // when tabbing to the search results.
-            if (SearchResults.Where(cat => cat.IsSelected).Count() == 0) {
+            if (!SearchResults.Any(cat => cat.IsSelected)) {
                 var first = SearchResults.FirstOrDefault();
                 if (first != null) {
                     first.IsSelected = true;
