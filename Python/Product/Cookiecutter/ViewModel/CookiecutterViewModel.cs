@@ -476,16 +476,20 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             SearchResults.Add(Recommended);
             SearchResults.Add(GitHub);
 
+            // Ensure that there's a selection, to avoid focus issues
+            // when tabbing to the search results.
+            if (SearchResults.Where(cat => cat.IsSelected).Count() == 0) {
+                var first = SearchResults.FirstOrDefault();
+                if (first != null) {
+                    first.IsSelected = true;
+                }
+            }
+
             var recommendedTask = AddFromSourceAsync(_recommendedSource, searchTerm, Recommended, false, ct);
             var installedTask = AddFromSourceAsync(_installedSource, searchTerm, Installed, false, ct);
             var githubTask = AddFromSourceAsync(_githubSource, searchTerm, GitHub, false, ct);
 
             await Task.WhenAll(recommendedTask, installedTask, githubTask);
-
-            var first = SearchResults.FirstOrDefault();
-            if (first != null) {
-                first.IsSelected = true;
-            }
         }
 
         public async Task DeleteTemplateAsync(TemplateViewModel template) {
