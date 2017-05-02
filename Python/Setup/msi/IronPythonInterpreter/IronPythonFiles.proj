@@ -25,9 +25,6 @@
     <ItemTemplate Include="$(BuildRoot)Python\Templates\IronPython\ItemTemplates\Python\WpfWindow\*">
       <TemplateName>WpfWindow</TemplateName>
     </ItemTemplate>
-    <ProjectTemplate Include="$(BuildRoot)Python\Templates\IronPython\ProjectTemplates\Python\SilverlightProject\*">
-      <TemplateName>SilverlightProject</TemplateName>
-    </ProjectTemplate>
     <ProjectTemplate Include="$(BuildRoot)Python\Templates\IronPython\ProjectTemplates\Python\WinformsProject\*">
       <TemplateName>WinformsProject</TemplateName>
     </ProjectTemplate>
