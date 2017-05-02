@@ -79,15 +79,6 @@ namespace Microsoft.IronPythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chiron.exe was not found. Ensure the Silverlight Tools component of IronPython has been installed..
-        /// </summary>
-        internal static string IronPythonSilverlightToolsNotFound {
-            get {
-                return ResourceManager.GetString("IronPythonSilverlightToolsNotFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Specifies arguments which are passed to the script and available via sys.argv..
         /// </summary>
         internal static string Launcher_ArgumentsHelp {
