@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     });
                 }
 
-                return _projectInfo.Values.SelectMany(x => x._containers).Select(x => x.Value);
+                return _projectInfo.Values.SelectMany(x => x.GetAllContainers());
             }
         }
 
@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             ProjectInfo projectInfo;
             if (_projectInfo.TryGetValue(project, out projectInfo)) {
                 TestContainer container;
-                if (projectInfo._containers.TryGetValue(path, out container)) {
+                if (projectInfo.TryGetContainer(path, out container)) {
                     return container;
                 }
             }
@@ -166,7 +166,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         sealed class ProjectInfo : IDisposable {
             private readonly PythonProject _project;
             private readonly TestContainerDiscoverer _discoverer;
-            public readonly Dictionary<string, TestContainer> _containers;
+            private readonly Dictionary<string, TestContainer> _containers;
+            private readonly object _containersLock = new object();
             private ProjectAnalyzer _analyzer;
 
             public ProjectInfo(TestContainerDiscoverer discoverer, PythonProject project) {
@@ -183,6 +184,24 @@ namespace Microsoft.PythonTools.TestAdapter {
                     _analyzer.AnalysisComplete -= AnalysisComplete;
                 }
                 _project.ProjectAnalyzerChanged -= ProjectAnalyzerChanged;
+            }
+
+            public TestContainer[] GetAllContainers() {
+                lock (_containersLock) {
+                    return _containers.Select(x => x.Value).ToArray();
+                }
+            }
+
+            public bool TryGetContainer(string path, out TestContainer container) {
+                lock (_containersLock) {
+                    return _containers.TryGetValue(path, out container);
+                }
+            }
+
+            private bool RemoveContainer(string path) {
+                lock (_containersLock) {
+                    return _containers.Remove(path);
+                }
             }
 
             private async void RegisterWithAnalyzer() {
@@ -227,7 +246,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (testCases.Length != 0) {
                     TestContainer existing;
                     bool changed = true;
-                    if (_containers.TryGetValue(path, out existing)) {
+                    if (TryGetContainer(path, out existing)) {
                         // we have an existing entry, let's see if any of the tests actually changed.
                         if (existing.TestCases.Length == testCases.Length) {
                             changed = false;
@@ -244,21 +263,23 @@ namespace Microsoft.PythonTools.TestAdapter {
                     if (changed) {
                         // we have a new entry or some of the tests changed
                         int version = (existing?.Version ?? 0) + 1;
-                        _containers[path] = new TestContainer(
-                            _discoverer,
-                            path,
-                            _project,
-                            version,
-                            Architecture,
-                            testCases
-                        );
+                        lock (_containersLock) {
+                            _containers[path] = new TestContainer(
+                                _discoverer,
+                                path,
+                                _project,
+                                version,
+                                Architecture,
+                                testCases
+                            );
+                        }
 
                         if (notify) {
                             ContainersChanged();
                         }
                         return true;
                     }
-                } else if (_containers.Remove(path)) {
+                } else if (RemoveContainer(path)) {
                     // Raise containers changed event...
                     if (notify) {
                         ContainersChanged();
