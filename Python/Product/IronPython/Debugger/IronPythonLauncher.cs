@@ -17,19 +17,13 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
-using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Debugger {
     class IronPythonLauncher : IProjectLauncher {
