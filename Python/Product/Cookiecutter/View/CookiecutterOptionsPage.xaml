@@ -97,6 +97,7 @@
                                                               HelpText="{Binding Description}"
                                                               Watermark="{Binding Default}"
                                                               BrowseButtonStyle="{StaticResource BrowseOdbcButton}"
+                                                              BrowseAutomationName="{x:Static cct:Strings.OptionsPage_OdbcConnectionBrowseAutomationName}"
                                                               AutomationProperties.Name="{Binding Label}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
@@ -189,6 +190,7 @@
                                               Watermark="{x:Static cct:Strings.OptionsPage_CreateToWatermark}"
                                               BrowseButtonStyle="{StaticResource BrowseFolderButton}"
                                               AutomationProperties.Name="{x:Static cct:Strings.OptionsPage_CreateToAutomationName}"
+                                              BrowseAutomationName="{x:Static cct:Strings.OptionsPage_CreateToBrowseAutomationName}"
                                               HelpText="{x:Static cct:Strings.OptionsPage_CreateToTooltip}">
                 <wpf:ConfigurationTextBoxWithHelp.Resources>
                     <Style TargetType="{x:Type Button}">

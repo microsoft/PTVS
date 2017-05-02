@@ -125,7 +125,7 @@
                     </Style>
                 </Grid.Resources>
                 
-                <wpf:ConfigurationTextBoxWithHelp Margin="0 0 0 0"
+                <wpf:ConfigurationTextBoxWithHelp Margin="0 0 -4 0"
                                                   Text="{Binding Path=SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                   HelpText="{x:Static cct:Strings.SearchPage_SearchTooltip}"
                                                   AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_SearchAutomationName}"

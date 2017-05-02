@@ -47,7 +47,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public ObservableCollection<object> Templates { get; } = new ObservableCollection<object>();
+        public ObservableCollection<TreeItemViewModel> Templates { get; } = new ObservableCollection<TreeItemViewModel>();
 
         public override string ToString() => _displayName;
     }

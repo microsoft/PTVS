@@ -291,7 +291,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void UserControl_KeyUp(object sender, KeyEventArgs e) {
-            if (e.Key == Key.Apps) {
+            if (e.Key == Key.Apps || (e.SystemKey == Key.F10 && (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)) {
                 var element = (FrameworkElement)sender;
                 var point = element.PointToScreen(new Point(0, 0));
 
