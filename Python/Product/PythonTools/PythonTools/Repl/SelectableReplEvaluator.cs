@@ -267,6 +267,8 @@ namespace Microsoft.PythonTools.Repl {
 
         private void InteractiveWindow_Closed(object sender, EventArgs e) {
             ClearPersistedEvaluator();
+            AbortExecution();
+            Dispose();
         }
 
         #region Multiple Scope Support
