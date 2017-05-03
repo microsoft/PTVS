@@ -59,10 +59,10 @@ def download_data():
     #from pandas import read_excel
     #frame = read_excel(URL)
 
-    # If your data is in a private Azure blob, install 'azure' and use
-    # BlobService.get_blob_to_path() with read_table() or read_excel()
-    #import azure.storage
-    #service = azure.storage.BlobService(ACCOUNT_NAME, ACCOUNT_KEY)
+    # If your data is in a private Azure blob, install 'azure-storage' and use
+    # BlockBlobService.get_blob_to_path() with read_table() or read_excel()
+    #from azure.storage.blob import BlockBlobService
+    #service = BlockBlobService(ACCOUNT_NAME, ACCOUNT_KEY)
     #service.get_blob_to_path(container_name, blob_name, 'my_data.csv')
     #frame = read_table('my_data.csv', ...
 
@@ -129,7 +129,7 @@ def get_features_and_labels(frame):
     #X, y = arr[:, 1:], arr[:, 0]
     
     # Use 80% of the data for training; test against the rest
-    from sklearn.cross_validation import train_test_split
+    from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
     # sklearn.pipeline.make_pipeline could also be used to chain 

@@ -60,10 +60,10 @@ def download_data():
     #from pandas import read_excel
     #frame = read_excel(URL)
 
-    # If your data is in a private Azure blob, install 'azure' and use
-    # BlobService.get_blob_to_path() with read_table() or read_excel()
-    #import azure.storage
-    #service = azure.storage.BlobService(ACCOUNT_NAME, ACCOUNT_KEY)
+    # If your data is in a private Azure blob, install 'azure-storage' and use
+    # BlockBlobService.get_blob_to_path() with read_table() or read_excel()
+    #from azure.storage.blob import BlockBlobService
+    #service = BlockBlobService(ACCOUNT_NAME, ACCOUNT_KEY)
     #service.get_blob_to_path(container_name, blob_name, 'my_data.csv')
     #frame = read_table('my_data.csv', ...
 
