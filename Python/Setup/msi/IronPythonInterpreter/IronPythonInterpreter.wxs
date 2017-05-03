@@ -10,7 +10,7 @@
       <Directory Id="Dir_$(var.key)ItemTemplates_WpfWindow" Name="WpfWindow" />
     </DirectoryRef>
     <DirectoryRef Id="Dir_$(var.key)ProjectTemplates">
-      <?foreach temp in SilverlightProject;WinformsProject;WpfProject;ConsoleProject?>
+      <?foreach temp in WinformsProject;WpfProject;ConsoleProject?>
         <Directory Id="Dir_$(var.key)ProjectTemplates_$(var.temp)" Name="$(var.temp)" />
       <?endforeach?>
     </DirectoryRef>

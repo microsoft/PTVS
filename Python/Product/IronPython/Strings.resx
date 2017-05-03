@@ -132,9 +132,6 @@
   <data name="ProductTitle" xml:space="preserve">
     <value>Visual Studio - Python support</value>
   </data>
-  <data name="IronPythonSilverlightToolsNotFound" xml:space="preserve">
-    <value>Chiron.exe was not found. Ensure the Silverlight Tools component of IronPython has been installed.</value>
-  </data>
   <data name="IronPythonLauncherDescription" xml:space="preserve">
     <value>Use the .NET debugger. This enables debugging IronPython code alongside other .NET code such as C# or VB.NET.</value>
   </data>

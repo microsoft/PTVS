@@ -148,12 +148,6 @@
   <data name="5003" xml:space="preserve">
     <value>A project for creating a command-line IronPython application</value>
   </data>
-  <data name="5004" xml:space="preserve">
-    <value>IronPython Silverlight Web Page</value>
-  </data>
-  <data name="5005" xml:space="preserve">
-    <value>A project for creating a web page scripted on the client side with IronPython via Silverlight</value>
-  </data>
   <data name="5006" xml:space="preserve">
     <value>IronPython Windows Forms Application</value>
   </data>

@@ -138,9 +138,6 @@
   <data name="3002" xml:space="preserve">
     <value>Wpf Application</value>
   </data>
-  <data name="3003" xml:space="preserve">
-    <value>IronPython Silverlight Page</value>
-  </data>
   <data name="114" xml:space="preserve">
     <value>Intellisense</value>
   </data>
