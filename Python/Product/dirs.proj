@@ -48,7 +48,9 @@
     <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" Condition="$(VSTarget) != '15.0'" />
 
     <ProjectFile Include="Uwp\Uwp.csproj" Condition="'$(IncludeUwp)' == 'True'"/>
-    
+
+    <ProjectFile Include="Wsl\Wsl.csproj" Condition="'$(IncludeWsl)' == 'True'"/>
+
     <ProjectFile Include="Core\Core.csproj" />
     <ProjectFile Include="..\Templates\Templates.csproj" />
   </ItemGroup>

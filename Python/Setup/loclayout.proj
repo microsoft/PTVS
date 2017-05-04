@@ -54,6 +54,9 @@
         Microsoft.PythonTools.Uwp.Interpreter.dll;
         Microsoft.PythonTools.Uwp.Wizards.dll;
         " Condition="$(IncludeUwp)" />
+    <ManagedFiles Include="
+        Microsoft.PythonTools.Wsl.dll;
+        " Condition="$(IncludeWsl)" />
 
     <CodeSnippets Include="
         $(BinariesOutputPath)Snippets\SnippetsIndex.xml;
