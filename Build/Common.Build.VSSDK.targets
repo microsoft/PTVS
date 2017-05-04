@@ -208,4 +208,25 @@
              Query="/vsx11:PackageManifest/vsx11:Installation/@InstalledByMsi"
              Value="false" />
   </Target>
+
+  <!--
+  Invoke build with /t:CreateVsixContainer and /p:RebuildVsixOnly to use
+  existing build outputs (likely signed by this stage) to regenerate the VSIX.
+  -->
+  <PropertyGroup>
+    <RebuildVsixOnly Condition="$(RebuildVsixOnly) == ''">false</RebuildVsixOnly>
+    <BuildProjectReferences Condition="$(RebuildVsixOnly)">false</BuildProjectReferences>
+  </PropertyGroup>
+  
+  <Target Name="_UpdateBinariesForVsix" AfterTargets="GetVSIXSourceItems" Condition="$(RebuildVsixOnly)">
+    <ItemGroup>
+      <_VSIWithBinary Include="@(VSIXSourceItem)" Condition="Exists('$(BinariesOutputPath)\%(Filename)%(Extension)') and ('%(Extension)' == '.dll' or '%(Extension)' == '.exe')">
+        <PreferredPath>$(BinariesOutputPath)\%(Filename)%(Extension)</PreferredPath>
+      </_VSIWithBinary>
+      <VSIXSourceItem Remove="@(_VSIWithBinary)" />
+      <VSIXSourceItem Include="%(_VSIWithBinary.PreferredPath)" />
+    </ItemGroup>
+    <Message Text="Updated VSIX source items" Importance="high" />
+    <Message Text="  @(VSIXSourceItem->'%(FullPath)', '%0D%0A  ')" Importance="high" />
+  </Target>
 </Project>

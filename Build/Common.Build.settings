@@ -170,7 +170,14 @@
     </ProjectReference2>
     <ProjectFile>
       <Properties>BuildRoot=$(BuildRoot)</Properties>
+      <BuildTarget>Build</BuildTarget>
+      <CleanTarget>Clean</CleanTarget>
     </ProjectFile>
+    <SequencedProjectFile>
+      <Properties>BuildRoot=$(BuildRoot)</Properties>
+      <BuildTarget>Build</BuildTarget>
+      <CleanTarget>Clean</CleanTarget>
+    </SequencedProjectFile>
   </ItemDefinitionGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />

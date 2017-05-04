@@ -8,5 +8,8 @@
     
     <!-- Include UWP by default -->
     <IncludeUwp Condition="'$(IncludeUwp)' == ''">true</IncludeUwp>
+    
+    <!-- Include WSL by default -->
+    <IncludeWsl Condition="'$(IncludeWsl)' == ''">true</IncludeWsl>
   </PropertyGroup>
 </Project>
