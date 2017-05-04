@@ -17,7 +17,6 @@
       <_ProjectFile Include="@(ProjectFile)">
         <Properties Condition="%(ProjectFile.Extension) != '.wixproj' or $(Platform) != 'Win32'">%(ProjectFile.Properties);Platform=$(Platform)</Properties>
         <Properties Condition="%(ProjectFile.Extension) == '.wixproj' and $(Platform) == 'Win32'">%(ProjectFile.Properties);Platform=x86</Properties>
-        <BuildTarget>%(ProjectFile.BuildTarget)</BuildTarget>
       </_ProjectFile>
     </ItemGroup>
   </Target>
