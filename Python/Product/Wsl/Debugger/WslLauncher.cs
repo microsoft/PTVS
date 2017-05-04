@@ -113,6 +113,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
         private Process StartWithoutDebugger(LaunchConfiguration config) {
             var sh = CreateScriptFile(
                 GetPyVariable(config.Interpreter?.Version),
+                // TODO: Search paths
                 "$py {0} {1} {2}".FormatInvariant(
                     config.InterpreterArguments,
                     config.ScriptName == null ? "" : QuoteSingleArgument(FixPath(config.ScriptName)),
@@ -150,8 +151,9 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
 
             var sh = CreateScriptFile(
                 GetPyVariable(config.Interpreter?.Version),
+                // TODO: Search paths
                 string.Join(" ",
-                    "export PYTHONPATH={0};".FormatInvariant(QuoteSingleArgument(FixPath(PtvsdSearchPath))),
+                    "PYTHONPATH={0}".FormatInvariant(QuoteSingleArgument(FixPath(PtvsdSearchPath))),
                     "$py",
                     config.InterpreterArguments,
                     "-m",
@@ -242,6 +244,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
 
 
         private static string FixPath(string path) {
+            // TODO: Use `bash.exe -c pwd` to resolve path
             var dir = PathUtils.GetParent(path);
             var newDir = GetFinalPathName(dir);
             if (newDir != dir) {
