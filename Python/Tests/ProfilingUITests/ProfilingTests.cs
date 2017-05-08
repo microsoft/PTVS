@@ -289,7 +289,7 @@ namespace ProfilingUITests {
                 using (var perfTarget = new PythonPerfTarget(app.WaitForDialog())) {
                     perfTarget.SelectProfileScript();
 
-                    perfTarget.InterpreterComboBox.SelectItem("Python 2.7");
+                    perfTarget.InterpreterComboBox.SelectItem("Python 2.7 (32-bit)");
                     perfTarget.ScriptName = testFile;
                     perfTarget.WorkingDir = Path.GetDirectoryName(testFile);
 
@@ -307,7 +307,7 @@ namespace ProfilingUITests {
 
                 // re-open the dialog, verify the settings
                 using (var perfTarget = new PythonPerfTarget(app.WaitForDialog())) {
-                    Assert.AreEqual("Python 2.7", perfTarget.SelectedInterpreter);
+                    Assert.AreEqual("Python 2.7 (32-bit)", perfTarget.SelectedInterpreter);
                     Assert.AreEqual(TestData.GetPath(@"TestData\ProfileTest\Program.py"), perfTarget.ScriptName);
                 }
             }

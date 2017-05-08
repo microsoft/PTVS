@@ -142,7 +142,7 @@ namespace TestUtilities.UI.Python {
             } catch {
                 // If the package is not loaded yet then the command may not
                 // work. Force load the package by opening the Launch dialog.
-                using (var dialog = new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Python.LaunchProfiling"))) {
+                using (var dialog = new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Analyze.LaunchProfiling"))) {
                 }
                 Dte.ExecuteCommand("Python.PerformanceExplorer");
             }
@@ -153,7 +153,7 @@ namespace TestUtilities.UI.Python {
         /// </summary>
         public PythonPerfTarget LaunchPythonProfiling() {
             _deletePerformanceSessions = true;
-            return new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Python.LaunchProfiling"));
+            return new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Analyze.LaunchProfiling"));
         }
 
         /// <summary>
