@@ -113,6 +113,7 @@
     <Compile Include="PythonProjectTest.cs" />
     <Compile Include="PythonReplWindowProxySettings.cs" />
     <Compile Include="PythonToolsTestUtilities.cs" />
+    <Compile Include="EditorWindowExtensions.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />
   </ItemGroup>
   <ItemGroup>

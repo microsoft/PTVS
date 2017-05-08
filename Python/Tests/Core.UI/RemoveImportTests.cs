@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading;
-using EnvDTE;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -342,6 +341,8 @@ def f():
                     var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                     doc.TextView.Caret.MoveTo(point);
                 });
+
+                doc.WaitForAnalyzerAtCaret();
 
                 if (allScopes) {
                     app.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.AllScopes");
