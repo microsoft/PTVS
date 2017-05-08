@@ -52,6 +52,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.VSInterpreters",
     "Microsoft.PythonTools.WebRole",
     "Microsoft.PythonTools.Workspace",
+    "Microsoft.PythonTools.Wsl",
     "Microsoft.PythonTools.XamlDesignerSupport",
     "MockVsTests",
     "ProfilingUITests",
