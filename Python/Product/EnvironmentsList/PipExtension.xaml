@@ -187,6 +187,7 @@
 
         <Grid.Resources>
             <wpf:Lambda x:Key="Visibility">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+            <wpf:Lambda x:Key="VisibilityIfAll"><![CDATA[(bool b, bool c) => b && c ? Visibility.Visible : Visibility.Collapsed]]></wpf:Lambda>
             <wpf:Lambda x:Key="VisibilityOrHidden">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
             <wpf:Lambda x:Key="Hidden">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
             <wpf:Lambda x:Key="Collapsed">(bool b) => b ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
@@ -223,6 +224,7 @@
                          Margin="2"
                          Background="Transparent"
                          BorderBrush="Transparent"
+                         IsEnabled="{Binding IsPipInstalled,Mode=OneWay}"
                          Text="{Binding SearchQuery,UpdateSourceTrigger=PropertyChanged}"
                          AutomationProperties.Name="{x:Static l:Resources.PipExtensionSearchPyPILabel}">
                     <TextBox.InputBindings>
@@ -239,8 +241,14 @@
                    Margin="8 2"
                    IsHitTestVisible="False"
                    Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}"
-                   Visibility="{Binding Text.IsEmpty,ElementName=SearchQueryText,Converter={StaticResource Visibility}}"
-                   Text="{x:Static l:Resources.PipExtensionSearchPyPILabel}"/>
+                   Text="{x:Static l:Resources.PipExtensionSearchPyPILabel}">
+            <TextBlock.Visibility>
+                <MultiBinding Converter="{StaticResource VisibilityIfAll}">
+                    <Binding Path="IsPipInstalled" Mode="OneWay"  />
+                    <Binding ElementName="SearchQueryText" Path="Text.IsEmpty" />
+                </MultiBinding>
+            </TextBlock.Visibility>
+        </TextBlock>
 
         <ProgressBar Grid.Row="1"
                      IsIndeterminate="True"

@@ -123,7 +123,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private void InstallPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = _provider.CanExecute && !string.IsNullOrEmpty(e.Parameter as string);
+            e.CanExecute = _provider.CanExecute &&
+                !string.IsNullOrEmpty(e.Parameter as string) &&
+                (_provider.IsPipInstalled ?? false);
             e.Handled = true;
         }
 
@@ -200,6 +202,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider.OperationFinished += PipExtensionProvider_UpdateComplete;
             _provider.IsPipInstalledChanged += PipExtensionProvider_IsPipInstalledChanged;
             _provider.InstalledPackagesChanged += PipExtensionProvider_InstalledPackagesChanged;
+
+            IsPipInstalled = _provider.IsPipInstalled ?? true;
 
             _installCommandView = new InstallPackageView(this);
 
