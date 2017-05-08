@@ -564,13 +564,17 @@ namespace Microsoft.PythonTools {
         #endregion
 
         public Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
+            if (config == null) {
+                throw new ArgumentNullException(nameof(config));
+            }
+
             // Start with global environment, add configured environment,
             // then add search paths.
             var baseEnv = Environment.GetEnvironmentVariables();
             // Clear search paths from the global environment. The launch
             // configuration should include the existing value
 
-            var pathVar = config.Interpreter.PathEnvironmentVariable;
+            var pathVar = config.Interpreter?.PathEnvironmentVariable;
             if (string.IsNullOrEmpty(pathVar)) {
                 pathVar = "PYTHONPATH";
             }
