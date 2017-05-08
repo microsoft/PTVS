@@ -139,6 +139,16 @@ namespace Microsoft.PythonTools.Commands {
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             var textView = CommonPackage.GetActiveTextView(_serviceProvider);
 
+            var scriptName = textView?.GetFilePath();
+
+            if (!string.IsNullOrEmpty(scriptName) && pyProj != null) {
+                if (pyProj.FindNodeByFullPath(scriptName) == null) {
+                    // Starting a script that isn't in the project,
+                    // so don't use the project settings.
+                    pyProj = null;
+                }
+            }
+
             LaunchConfiguration config = null;
             try {
                 config = pyProj?.GetLaunchConfigurationOrThrow();
@@ -146,13 +156,18 @@ namespace Microsoft.PythonTools.Commands {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);
                 return;
             }
-            if (config == null && textView != null) {
+            if (config == null) {
                 var interpreters = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                config = new LaunchConfiguration(interpreters.DefaultInterpreter.Configuration) {
-                    ScriptName = textView.GetFilePath(),
-                    WorkingDirectory = PathUtils.GetParent(textView.GetFilePath())
-                };
+                config = new LaunchConfiguration(interpreters.DefaultInterpreter.Configuration);
+            } else {
+                config = config.Clone();
             }
+
+            if (!string.IsNullOrEmpty(scriptName)) {
+                config.ScriptName = scriptName;
+                config.WorkingDirectory = PathUtils.GetParent(scriptName);
+            }
+
             if (config == null) {
                 Debug.Fail("Should not be executing command when it is invisible");
                 return;
