@@ -448,8 +448,8 @@
       <Item ItemId=";OptionsPage_CreateToAutomationName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Output folder path for created files]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[輸出資料夾路徑]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[所建立之檔案的輸出資料夾路徑]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Output folder path]]></Val>
