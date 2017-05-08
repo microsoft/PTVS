@@ -103,6 +103,7 @@ namespace PythonToolsTests {
                 Assert.IsFalse(evaluator.CanExecuteCode("# Comment"));
                 Assert.IsTrue(evaluator.CanExecuteCode("\r\n"));
                 Assert.IsFalse(evaluator.CanExecuteCode("\r\n#Comment"));
+                Assert.IsFalse(evaluator.CanExecuteCode("# hello\r\n#world\r\n"));
             }
         }
 

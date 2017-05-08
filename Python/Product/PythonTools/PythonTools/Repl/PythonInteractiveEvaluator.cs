@@ -319,7 +319,10 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public bool CanExecuteCode(string text) {
-            if (text.EndsWith("\n") || string.IsNullOrEmpty(text)) {
+            if (string.IsNullOrEmpty(text)) {
+                return true;
+            }
+            if (string.IsNullOrWhiteSpace(text) && text.EndsWith("\n")) {
                 return true;
             }
 
@@ -327,7 +330,10 @@ namespace Microsoft.PythonTools.Repl {
             using (var parser = Parser.CreateParser(new StringReader(text), LanguageVersion)) {
                 ParseResult pr;
                 parser.ParseInteractiveCode(out pr);
-                if (pr == ParseResult.Empty || pr == ParseResult.IncompleteToken || pr == ParseResult.IncompleteStatement) {
+                if (pr == ParseResult.IncompleteStatement) {
+                    return text.EndsWith("\n");
+                }
+                if (pr == ParseResult.Empty || pr == ParseResult.IncompleteToken) {
                     return false;
                 }
             }
