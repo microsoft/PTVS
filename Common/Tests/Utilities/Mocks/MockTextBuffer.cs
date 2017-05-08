@@ -31,6 +31,7 @@ namespace TestUtilities.Mocks {
         private PropertyCollection _properties;
 
         public MockTextBuffer(string content) {
+            _snapshot = new MockTextSnapshot(this, content);
         }
 
         public MockTextBuffer(string content, string contentType, string filename = null) {
