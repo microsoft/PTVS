@@ -172,9 +172,9 @@ namespace Microsoft.PythonTools {
                             break;
                         }
                     } else {
+                        previousCellStart = cellStart.LineNumber;
                         var cellEnd = CodeCellAnalysis.FindEndOfCell(cellStart, line);
                         if (cellEnd.LineNumber > cellStart.LineNumber) {
-                            previousCellStart = cellStart.LineNumber;
                             yield return GetTagSpan(snapshot, cellStart.Start, cellEnd.End);
                         }
                         if (cellEnd.LineNumber + 1 < snapshot.LineCount) {
