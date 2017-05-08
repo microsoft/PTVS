@@ -924,7 +924,7 @@ namespace ProfilingUITests {
             using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app,
                     profiling,
-                    "{2AF0F10D-7135-4994-9156-5D01C9C11B7E};2.7",
+                    "Global|PythonCore|2.7-32",
                     TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -945,7 +945,7 @@ namespace ProfilingUITests {
                     Mouse.DoubleClick(System.Windows.Input.MouseButton.Left);
 
                     using (var perfTarget = new PythonPerfTarget(app.WaitForDialog())) {
-                        Assert.AreEqual("Python 2.7", perfTarget.SelectedInterpreter);
+                        Assert.AreEqual("Python 2.7 (32-bit)", perfTarget.SelectedInterpreter);
                         Assert.AreEqual("", perfTarget.Arguments);
                         Assert.IsTrue(perfTarget.ScriptName.EndsWith("Program.py"));
                         Assert.IsTrue(perfTarget.ScriptName.StartsWith(perfTarget.WorkingDir));
@@ -1590,42 +1590,6 @@ namespace ProfilingUITests {
                 new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
             );
         }
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void Python64Bit() {
-            PythonPaths.Python27_x64.AssertInstalled();
-
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            using (var app = OpenProfileTestProject(out project, out profiling, null)) {
-                var session = LaunchProcess(app, profiling, "{9A7A9026-48C1-4688-9D5D-E5699D47D074};2.7",
-                    TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
-                    TestData.GetPath(@"TestData\ProfileTest"),
-                    "",
-                    false
-                );
-                try {
-                    while (profiling.IsProfiling) {
-                        Thread.Sleep(100);
-                    }
-
-                    var report = session.GetReport(1);
-                    Assert.IsNotNull(report);
-                    var filename = report.Filename;
-                    Assert.IsTrue(filename.Contains("BuiltinsProfile"));
-
-                    Assert.IsNull(session.GetReport(2));
-
-                    Assert.IsNotNull(session.GetReport(report.Filename));
-                    Assert.IsTrue(File.Exists(filename));
-
-                    VerifyReport(report, true, "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring");
-                } finally {
-                    profiling.RemoveSession(session, false);
-                }
-            }
-        }
-
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
