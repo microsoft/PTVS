@@ -130,7 +130,7 @@ namespace Microsoft.PythonTools.Intellisense {
             line = cellStart;
 
             var snapshot = line.Snapshot;
-            ITextSnapshotLine end = null;
+            ITextSnapshotLine end = null, endInclWhitespace = null, endInclComment = null;
             foreach(var current in LinesForward(line)) {
                 var text = current.GetText();
                 if (IsCellMarker(text)) {
@@ -139,20 +139,34 @@ namespace Microsoft.PythonTools.Intellisense {
                         end = line;
                     } else {
                         // Found the start of the next cell, so we're finished
+
+                        // Don't want to include comments belonging to the next
+                        // cell.
+                        endInclComment = null;
                         break;
                     }
-                } else if (string.IsNullOrWhiteSpace(text) || text.TrimStart().StartsWith("#")) {
+                } else if (string.IsNullOrWhiteSpace(text)) {
                     // Keep looking for the next cell marker. If we find it, we
                     // won't want to have updated the end line.
-                    if (includeWhitespace) {
-                        end = current;
+                    if (endInclComment != null) {
+                        // Possibly within the next comment, so only update this
+                        // ending.
+                        endInclComment = current;
+                    } else {
+                        // Not inside the next comment yet, so keep the whitespace.
+                        endInclWhitespace = current;
                     }
+                } else if (text.TrimStart().StartsWith("#")) {
+                    // Keep looking for the next cell marker. If we find it, we
+                    // won't want to have updated the end line.
+                    endInclComment = current;
                 } else {
                     end = current;
+                    endInclComment = endInclWhitespace = null;
                 }
             }
 
-            return end;
+            return endInclComment ?? (includeWhitespace ? endInclWhitespace : null) ?? end;
         }
 
     }
