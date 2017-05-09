@@ -136,8 +136,9 @@ namespace CookiecutterTests {
             Assert.AreEqual(1, _vm.Installed.Templates.Count);
             Assert.AreEqual(6, _vm.Recommended.Templates.Count);
 
-            Assert.AreEqual(28, _vm.GitHub.Templates.Count);
-            Assert.AreEqual(27, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
+            // For GitHub results, check for a range since the exact count is bit inconsistent.
+            Assert.IsTrue(_vm.GitHub.Templates.Count > 25 && _vm.GitHub.Templates.Count < 32);
+            Assert.AreEqual(_vm.GitHub.Templates.Count - 1, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
             Assert.AreEqual(1, _vm.GitHub.Templates.OfType<ContinuationViewModel>().Count());
 
             var continuationVM = _vm.GitHub.Templates.Last() as ContinuationViewModel;
@@ -145,8 +146,8 @@ namespace CookiecutterTests {
             Assert.IsFalse(string.IsNullOrEmpty(continuationVM.ContinuationToken));
 
             await _vm.LoadMoreTemplatesAsync(continuationVM.ContinuationToken);
-            Assert.AreEqual(53, _vm.GitHub.Templates.Count);
-            Assert.AreEqual(52, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
+            Assert.IsTrue(_vm.GitHub.Templates.Count > 50 && _vm.GitHub.Templates.Count < 64);
+            Assert.AreEqual(_vm.GitHub.Templates.Count - 1, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
             Assert.AreEqual(1, _vm.GitHub.Templates.OfType<ContinuationViewModel>().Count());
 
             // The old "Load more" will be removed, but another one will be added after the new batch of results
