@@ -36,7 +36,6 @@ def main():
     channel = TestChannel(port = opts.result_port)
     try:
         msg = channel.process_one_message()
-        print(msg)
     finally:
         channel.close()
 
