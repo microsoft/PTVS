@@ -185,7 +185,7 @@ namespace CookiecutterTests {
             await _vm.SearchAsync();
 
             Assert.AreEqual(0, _vm.Installed.Templates.Count);
-            Assert.AreEqual(0, _vm.GitHub.Templates.Count);
+            Assert.AreEqual(0, _vm.GitHub.Templates.Where(t => t.GetType() != typeof(ErrorViewModel)).Count());
             Assert.AreEqual(0, _vm.Recommended.Templates.Count);
             Assert.AreEqual(0, _vm.Custom.Templates.Count);
         }
