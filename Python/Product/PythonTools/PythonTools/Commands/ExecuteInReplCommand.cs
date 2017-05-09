@@ -143,9 +143,10 @@ namespace Microsoft.PythonTools.Commands {
 
             if (!string.IsNullOrEmpty(scriptName) && pyProj != null) {
                 if (pyProj.FindNodeByFullPath(scriptName) == null) {
-                    // Starting a script that isn't in the project,
-                    // so don't use the project settings.
-                    pyProj = null;
+                    // Starting a script that isn't in the project.
+                    // Try and find the project. If we fail, we will
+                    // use the default environment.
+                    pyProj = _serviceProvider.GetProjectFromFile(scriptName);
                 }
             }
 

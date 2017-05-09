@@ -413,7 +413,12 @@ namespace Microsoft.PythonTools {
             }
             var project = hierarchy.GetProject();
             if (project != null) {
-                return project.GetPythonProject();
+                var pyProj = project.GetPythonProject();
+                var node = pyProj?.FindNodeByFullPath(filename);
+                if (node == null || !node.IsVisible) {
+                    return null;
+                }
+                return pyProj;
             }
 
             object projectObj;
