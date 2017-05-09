@@ -93,6 +93,18 @@
       <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <Choose>
+    <When Condition="$(VSTarget) == '15.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Threading, Version=15.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <Compile Include="DjangoAzureTests.cs" />
     <Compile Include="DjangoDebugProjectTests.cs" />

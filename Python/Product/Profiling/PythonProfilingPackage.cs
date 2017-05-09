@@ -192,7 +192,9 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal SessionNode ProfileTarget(ProfilingTarget target, bool openReport = true) {
-            return ThreadHelper.Generic.Invoke(() => {
+            return ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
                 bool save;
                 string name = target.GetProfilingName(this, out save);
                 var session = ShowPerformanceExplorer().Sessions.AddTarget(target, name, save);
@@ -203,7 +205,9 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal void StartProfiling(ProfilingTarget target, SessionNode session, bool openReport = true) {
-            ThreadHelper.Generic.Invoke(() => {
+            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
                 if (!Utilities.SaveDirtyFiles()) {
                     // Abort
                     return;
