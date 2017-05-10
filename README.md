@@ -1,10 +1,8 @@
-# Python Tools for Visual Studio
+# Python tools for Visual Studio
 
-## Note: Python support is in the [preview of Visual Studio 2017](https://visualstudio.com/vs/preview?wt.mc_id=github_microsoft_ptvs) at this time.
+Python support for [Visual Studio 2017](https://aka.ms/PTVS) is developed and managed here.
 
-Python support for [Visual Studio 2017](https://visualstudio.com/?wt.mc_id=github_microsoft_ptvs) is developed and managed here.
-
-Visit our page on [VisualStudio.com](https://aka.ms/PTVS) for an overview and download links, and check out our [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube. Full documentation is available at [docs.microsoft.com](https://aka.ms/PTVSDocs).
+Visit our page on [VisualStudio.com](https://aka.ms/PTVS) for an overview and download links, and check out our documentation on [docs.microsoft.com](https://aka.ms/PTVSDocs) and our (old) [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube.
 
 Feel free to file issues or ask questions on our [issue tracker](http://github.com/Microsoft/PTVS/issues), and we welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs/tree/master/docs/python) repository.
 
@@ -12,9 +10,9 @@ Feel free to file issues or ask questions on our [issue tracker](http://github.c
 
 ![Build status for master branch](https://mseng.visualstudio.com/_apis/public/build/definitions/b21de0ba-dffd-474c-b888-7112d5e6397b/2921/badge)
 
-## Visual Studio 2017 Installation
+## Visual Studio 2017 installation
 
-The Python development workload is available as part of the [preview version of Visual Studio 2017](https://visualstudio.com/vs/preview?wt.mc_id=github_microsoft_ptvs). This installs side-by-side with the regular install of Visual Studio 2017 and includes all features from the stable release as well as early previews of new functionality. See [our blog post](http://blogs.msdn.microsoft.com/pythonengineering/2017/03/07/python-support-in-vs2017/) for more details.
+The Python development workload is available as part of [Visual Studio 2017](https://aka.ms/PTVS) Community, Professional and Enterprise. To install, run the [normal VS installer](https://visualstudio.com/vs/downloads?wt.mc_id=github_microsoft_com) and select either the **Python development workload** or the **Data science and analytical applications workload**.
 
 ## Visual Studio 2015 and earlier
 
