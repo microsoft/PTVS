@@ -102,7 +102,7 @@ namespace DjangoUITests {
                     using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
                         Assert.IsNotNull(console);
 
-                        console.WaitForTextEnd("The Python REPL process has exited", ">");
+                        console.WaitForTextEnd("The interactive Python process has exited.", ">");
 
                         Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("0 static files copied"));
                     }
@@ -169,20 +169,20 @@ namespace DjangoUITests {
                 );
 
                 var appFolder = project.ProjectItems.Item("Fob");
-                Assert.IsNotNull(appFolder.Collection.Item("models.py"));
-                Assert.IsNotNull(appFolder.Collection.Item("tests.py"));
-                Assert.IsNotNull(appFolder.Collection.Item("views.py"));
-                Assert.IsNotNull(appFolder.Collection.Item("__init__.py"));
+                Assert.IsNotNull(appFolder.ProjectItems.Item("models.py"));
+                Assert.IsNotNull(appFolder.ProjectItems.Item("tests.py"));
+                Assert.IsNotNull(appFolder.ProjectItems.Item("views.py"));
+                Assert.IsNotNull(appFolder.ProjectItems.Item("__init__.py"));
 
                 app.SolutionExplorerTreeView.SelectProject(project);
-                app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
+                app.Dte.ExecuteCommand("Project.DjangoCheckDjango17");
 
                 using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
                     Assert.IsNotNull(console);
                     console.WaitForTextEnd(
-                        "Executing manage.py validate",
-                        "0 errors found",
-                        "The Python REPL process has exited",
+                        "Executing manage.py check",
+                        "System check identified no issues (0 silenced).",
+                        "The interactive Python process has exited.",
                         ">"
                     );
                 }
@@ -273,7 +273,7 @@ namespace DjangoUITests {
                 );
                 app.SolutionExplorerTreeView.SelectProject(project);
 
-                app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewMultiselectProjectreferencesItems.Properties");
+                app.Dte.ExecuteCommand("Project.Properties");
                 var window = app.Dte.Windows.OfType<EnvDTE.Window>().FirstOrDefault(w => w.Caption == project.Name);
                 Assert.IsNotNull(window);
 
