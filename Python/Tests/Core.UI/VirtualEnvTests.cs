@@ -359,21 +359,21 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
                 app.OpenSolutionExplorer().SelectProject(project);
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 32-bit 2.7\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7 (32-bit)\"");
 
                 using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    Assert.AreEqual("Python 32-bit 2.7", baseInterp);
+                    Assert.AreEqual("Python 2.7 (32-bit)", baseInterp);
                     createVenv.Cancel();
                 }
 
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 32-bit 3.3\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.3 (32-bit)\"");
 
                 using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    Assert.AreEqual("Python 32-bit 3.3", baseInterp);
+                    Assert.AreEqual("Python 3.3 (32-bit)", baseInterp);
                     createVenv.Cancel();
                 }
             }
