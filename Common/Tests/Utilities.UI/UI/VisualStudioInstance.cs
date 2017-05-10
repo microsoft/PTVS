@@ -46,7 +46,11 @@ namespace TestUtilities.UI {
             _app = new VisualStudioApp();
             Project = _app.OpenProject(solution.Filename);
 
-            ThreadHelper.Generic.Invoke(Keyboard.Reset);
+            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                Keyboard.Reset();
+            });
+
             _solutionExplorer = _app.OpenSolutionExplorer();
             SelectSolutionNode();
         }

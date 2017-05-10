@@ -69,7 +69,9 @@ namespace Microsoft.PythonTools.Uwp.Debugger {
         }
 
         void IDkmExceptionTriggerHitNotification.OnExceptionTriggerHit(DkmExceptionTriggerHit hit, DkmEventDescriptorS eventDescriptor) {
-            ThreadHelper.Generic.Invoke(() => {
+            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
                 var exceptionInfo = hit.Exception as VisualStudio.Debugger.Native.DkmWin32ExceptionInformation;
 
                 if (exceptionInfo.Code == RemoteDebugStartExceptionCode) {
@@ -101,13 +103,17 @@ namespace Microsoft.PythonTools.Uwp.Debugger {
                             hit.Process.WriteMemory(exceptionInfo.ExceptionParameters[0], BitConverter.GetBytes(true));
 
                             // Start the task to attach to the remote Python debugger session
-                            System.Threading.Tasks.Task.Factory.StartNew(Instance.AttachRemoteProcessFunction);
+                            StartAttachRemoteProcess();
                         }
                     }
                 }
             });
 
             eventDescriptor.Suppress();
+        }
+
+        private void StartAttachRemoteProcess() {
+            System.Threading.Tasks.Task.Factory.StartNew(Instance.AttachRemoteProcessFunction);
         }
 
         public int OnModeChange(DBGMODE dbgmodeNew) {

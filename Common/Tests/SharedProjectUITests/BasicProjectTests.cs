@@ -1743,11 +1743,17 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                             uint itemid;
 
                             Console.WriteLine(relativeName);
-                            ThreadHelper.Generic.Invoke(() => ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(relativeName, out found, priority, out itemid)));
+                            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(relativeName, out found, priority, out itemid));
+                            });
                             Assert.AreNotEqual(0, found);
 
                             Console.WriteLine(absoluteName);
-                            ThreadHelper.Generic.Invoke(() => ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(absoluteName, out found, priority, out itemid)));
+                            ThreadHelper.JoinableTaskFactory.Run(async() => {
+                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(absoluteName, out found, priority, out itemid));
+                            });
                             Assert.AreNotEqual(0, found);
                         }
                     }

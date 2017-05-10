@@ -340,9 +340,8 @@ def f():
                 doc.Invoke(() => {
                     var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                     doc.TextView.Caret.MoveTo(point);
+                    doc.WaitForAnalyzerAtCaret();
                 });
-
-                doc.WaitForAnalyzerAtCaret();
 
                 if (allScopes) {
                     app.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.AllScopes");

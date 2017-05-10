@@ -1254,7 +1254,8 @@ namespace DjangoUITests {
 
         private static bool SetBraceCompletion(VisualStudioApp app, bool value) {
             bool oldValue = false;
-            ThreadHelper.Generic.Invoke(() => {
+            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 HtmlSettings.InsertMatchingBraces = false;
                 HtmlSettings.InsertEndTags = false;
             });

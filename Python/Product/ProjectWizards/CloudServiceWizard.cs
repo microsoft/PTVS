@@ -66,11 +66,15 @@ namespace Microsoft.PythonTools.ProjectWizards {
         }
 
         private static bool AreToolsInstalled(IServiceProvider provider) {
+#if DEV15_OR_LATER
             var setupService = provider.GetService(typeof(SVsSetupCompositionService)) as IVsSetupCompositionService;
             // If we fail to get the setup service, we're probably in a whole lot of trouble
             // Likely the "install" step will fail too, but at least we'll have given users a
             // hint and they might go to Setup and repair things.
             return setupService?.IsPackageInstalled(RequiredPackage) ?? false;
+#else
+            return true;
+#endif
         }
 
         private static void InstallTools(IServiceProvider provider) {

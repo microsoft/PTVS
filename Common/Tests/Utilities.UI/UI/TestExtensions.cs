@@ -54,7 +54,9 @@ namespace TestUtilities.UI {
         public static bool GetNodeState(this EnvDTE.Project project, string item, __VSHIERARCHYITEMSTATE state) {
             IVsHierarchy hier = null;
             uint id = 0;
-            ThreadHelper.Generic.Invoke((Action)(() => {
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
                 hier = ((dynamic)project).Project as IVsHierarchy;
                 object projectDir;
                 ErrorHandler.ThrowOnFailure(
@@ -71,7 +73,7 @@ namespace TestUtilities.UI {
                         hier.ParseCanonicalName(itemPath + "\\", out id)
                     );
                 }
-            }));
+            });
 
             // make sure we're still expanded.
             var solutionWindow = UIHierarchyUtilities.GetUIHierarchyWindow(
