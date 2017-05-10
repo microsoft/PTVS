@@ -179,12 +179,10 @@ namespace DjangoUITests {
 
                 using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
                     Assert.IsNotNull(console);
-                    console.WaitForTextEnd(
-                        "Executing manage.py check",
-                        "System check identified no issues (0 silenced).",
-                        "The interactive Python process has exited.",
-                        ">"
-                    );
+                    console.WaitForTextEnd("The interactive Python process has exited.", ">");
+
+                    Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("Executing manage.py check"));
+                    Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("System check identified no issues (0 silenced)."));
                 }
 
                 app.SolutionExplorerTreeView.SelectProject(project);
@@ -281,6 +279,12 @@ namespace DjangoUITests {
                 var hwnd = window.HWnd;
                 var projProps = new ProjectPropertiesWindow(new IntPtr(hwnd));
 
+                // FYI This is broken on Dev15 (15.0 up to latest build as of now 15.3 build 26507)
+                // Active page can't be changed via UI automation.
+                // Bug 433488 has been filed.
+                // - InvokePattern is not available
+                // - SelectionItemPattern is available (according to Inspect) but does not work
+                // - Default action does nothing
                 var debugPage = projProps[new Guid(PythonConstants.DebugPropertyPageGuid)];
                 Assert.IsNotNull(debugPage);
 

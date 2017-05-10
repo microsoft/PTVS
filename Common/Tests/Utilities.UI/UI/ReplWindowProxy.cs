@@ -120,8 +120,6 @@ namespace TestUtilities.UI {
 
                 Hide();
             });
-
-            _app.Dispose();
         }
 
         public void OnDispose(Action action) {
