@@ -285,9 +285,8 @@ sub_package";
             doc.Invoke(() => {
                 var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                 doc.TextView.Caret.MoveTo(point);
+                doc.WaitForAnalyzerAtCaret();
             });
-
-            doc.WaitForAnalyzerAtCaret();
 
             if (expectedActions.Length > 0) {
                 using (var sh = doc.StartSmartTagSession()) {
