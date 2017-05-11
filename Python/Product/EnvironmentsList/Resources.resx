@@ -358,9 +358,6 @@
   <data name="EnvironmentPathsExtensionEnableIPythonLabel" xml:space="preserve">
     <value>Use IPython interactive mode</value>
   </data>
-  <data name="EnvironmentPathsExtensionDisableIPythonLabel" xml:space="preserve">
-    <value>Use IPython interactive mode</value>
-  </data>
   <data name="EnvironmentPathsExtensionOpenInPowerShell" xml:space="preserve">
     <value>Open in PowerShell</value>
   </data>
@@ -403,9 +400,6 @@
   </data>
   <data name="StandardLibraryModuleListItem" xml:space="preserve">
     <value>(Standard Library)</value>
-  </data>
-  <data name="EnvironmentPathsExtensionDisableIPythonAutomationName" xml:space="preserve">
-    <value>Disable IPython interactive mode</value>
   </data>
   <data name="EnvironmentPathsExtensionEnableIPythonAutomationName" xml:space="preserve">
     <value>Enable IPython interactive mode</value>

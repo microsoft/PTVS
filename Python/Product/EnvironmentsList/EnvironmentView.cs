@@ -34,9 +34,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand MakeGlobalDefault = new RoutedCommand();
         public static readonly RoutedCommand MakeActiveInCurrentProject = new RoutedCommand();
 
-        public static readonly RoutedCommand EnableIPythonInteractive = new RoutedCommand();
-        public static readonly RoutedCommand DisableIPythonInteractive = new RoutedCommand();
-
         private const string AddNewEnvironmentViewId = "__AddNewEnvironmentView";
         private const string OnlineHelpViewId = "__OnlineHelpView";
 
@@ -289,6 +286,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         #endregion
+
+        public static readonly DependencyProperty IsIPythonModeEnabledProperty = DependencyProperty.Register("IsIPythonModeEnabled", typeof(bool), typeof(EnvironmentView), new FrameworkPropertyMetadata(OnIsIPythonModeEnabledChanged));
+
+        public bool IsIPythonModeEnabled {
+            get { return (bool)GetValue(IsIPythonModeEnabledProperty); }
+            set { SetValue(IsIPythonModeEnabledProperty, value); }
+        }
+
+        public Action<EnvironmentView, bool> IPythonModeEnabledSetter { get; set; }
+
+        private static void OnIsIPythonModeEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            var view = (EnvironmentView)d;
+            view.IPythonModeEnabledSetter?.Invoke(view, (bool)e.NewValue);
+        }
     }
 
     public sealed class EnvironmentViewTemplateSelector : DataTemplateSelector {
