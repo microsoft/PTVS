@@ -102,7 +102,7 @@ namespace DjangoUITests {
                     using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
                         Assert.IsNotNull(console);
 
-                        console.WaitForTextEnd("The Python REPL process has exited", ">");
+                        console.WaitForTextEnd("The interactive Python process has exited.", ">");
 
                         Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("0 static files copied"));
                     }
@@ -169,22 +169,20 @@ namespace DjangoUITests {
                 );
 
                 var appFolder = project.ProjectItems.Item("Fob");
-                Assert.IsNotNull(appFolder.Collection.Item("models.py"));
-                Assert.IsNotNull(appFolder.Collection.Item("tests.py"));
-                Assert.IsNotNull(appFolder.Collection.Item("views.py"));
-                Assert.IsNotNull(appFolder.Collection.Item("__init__.py"));
+                Assert.IsNotNull(appFolder.ProjectItems.Item("models.py"));
+                Assert.IsNotNull(appFolder.ProjectItems.Item("tests.py"));
+                Assert.IsNotNull(appFolder.ProjectItems.Item("views.py"));
+                Assert.IsNotNull(appFolder.ProjectItems.Item("__init__.py"));
 
                 app.SolutionExplorerTreeView.SelectProject(project);
-                app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
+                app.Dte.ExecuteCommand("Project.DjangoCheckDjango17");
 
                 using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
                     Assert.IsNotNull(console);
-                    console.WaitForTextEnd(
-                        "Executing manage.py validate",
-                        "0 errors found",
-                        "The Python REPL process has exited",
-                        ">"
-                    );
+                    console.WaitForTextEnd("The interactive Python process has exited.", ">");
+
+                    Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("Executing manage.py check"));
+                    Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("System check identified no issues (0 silenced)."));
                 }
 
                 app.SolutionExplorerTreeView.SelectProject(project);
@@ -273,7 +271,7 @@ namespace DjangoUITests {
                 );
                 app.SolutionExplorerTreeView.SelectProject(project);
 
-                app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewMultiselectProjectreferencesItems.Properties");
+                app.Dte.ExecuteCommand("Project.Properties");
                 var window = app.Dte.Windows.OfType<EnvDTE.Window>().FirstOrDefault(w => w.Caption == project.Name);
                 Assert.IsNotNull(window);
 
@@ -281,6 +279,12 @@ namespace DjangoUITests {
                 var hwnd = window.HWnd;
                 var projProps = new ProjectPropertiesWindow(new IntPtr(hwnd));
 
+                // FYI This is broken on Dev15 (15.0 up to latest build as of now 15.3 build 26507)
+                // Active page can't be changed via UI automation.
+                // Bug 433488 has been filed.
+                // - InvokePattern is not available
+                // - SelectionItemPattern is available (according to Inspect) but does not work
+                // - Default action does nothing
                 var debugPage = projProps[new Guid(PythonConstants.DebugPropertyPageGuid)];
                 Assert.IsNotNull(debugPage);
 
