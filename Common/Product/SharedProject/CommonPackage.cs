@@ -214,9 +214,11 @@ namespace Microsoft.VisualStudioTools {
         }
 
         internal static void OpenWebBrowser(string url) {
-            var uri = new Uri(url);
-            Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
-            return;
+            try {
+                var uri = new Uri(url);
+                Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
+            } catch (UriFormatException) {
+            }
         }
 
         internal static void OpenVsWebBrowser(System.IServiceProvider serviceProvider, string url) {
