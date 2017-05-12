@@ -359,21 +359,21 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
                 app.OpenSolutionExplorer().SelectProject(project);
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 32-bit 2.7\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7 (32-bit)\"");
 
                 using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    Assert.AreEqual("Python 32-bit 2.7", baseInterp);
+                    Assert.AreEqual("Python 2.7 (32-bit)", baseInterp);
                     createVenv.Cancel();
                 }
 
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 32-bit 3.3\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.3 (32-bit)\"");
 
                 using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    Assert.AreEqual("Python 32-bit 3.3", baseInterp);
+                    Assert.AreEqual("Python 3.3 (32-bit)", baseInterp);
                     createVenv.Cancel();
                 }
             }
@@ -434,9 +434,9 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
-                Assert.AreEqual(string.Format("env (Python {0} {1})",
-                    dis.CurrentDefault.Configuration.Architecture,
-                    dis.CurrentDefault.Configuration.Version
+                Assert.AreEqual(string.Format("env (Python {0} ({1}))",
+                    dis.CurrentDefault.Configuration.Version,
+                    dis.CurrentDefault.Configuration.Architecture
                 ), envName);
             }
         }
@@ -461,7 +461,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
                 Assert.AreEqual(
-                    string.Format("venv (Python 32-bit 3.{0})", python.Version.ToVersion().Minor),
+                    string.Format("venv (Python 3.{0} (32-bit))", python.Version.ToVersion().Minor),
                     envName
                 );
             }
