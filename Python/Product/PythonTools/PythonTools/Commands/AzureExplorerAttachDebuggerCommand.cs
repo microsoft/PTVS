@@ -87,9 +87,9 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             if (debugUri != null) {
-                CommonPackage.OpenWebBrowser(debugUri.AbsoluteUri);
+                CommonPackage.OpenWebBrowser(_serviceProvider, debugUri.AbsoluteUri);
             } else {
-                CommonPackage.OpenWebBrowser("http://go.microsoft.com/fwlink/?LinkID=624026");
+                CommonPackage.OpenWebBrowser(_serviceProvider, "http://go.microsoft.com/fwlink/?LinkID=624026");
             }
         }
 

@@ -38,8 +38,10 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     sealed partial class AddInterpreter : DialogWindowVersioningWorkaround, IDisposable {
         private readonly AddInterpreterView _view;
+        private readonly IServiceProvider _site;
 
         private AddInterpreter(PythonProjectNode project, IInterpreterOptionsService service) {
+            _site = project.Site;
             _view = new AddInterpreterView(project, project.Site, project.InterpreterIds);
             DataContext = _view;
 
@@ -84,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void WebChooseInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
-            PythonToolsPackage.OpenWebBrowser(PythonToolsPackage.InterpreterHelpUrl);
+            PythonToolsPackage.OpenWebBrowser(_site, PythonToolsPackage.InterpreterHelpUrl);
         }
     }
 }

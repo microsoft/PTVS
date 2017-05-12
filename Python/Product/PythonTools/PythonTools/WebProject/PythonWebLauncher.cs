@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Project.Web {
                         try {
                             var web = _serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
                             if (web == null) {
-                                CommonPackage.OpenWebBrowser(url);
+                                CommonPackage.OpenWebBrowser(_serviceProvider, url);
                                 return;
                             }
 

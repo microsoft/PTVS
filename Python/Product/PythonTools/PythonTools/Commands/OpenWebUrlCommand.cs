@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            CommonPackage.OpenWebBrowser(_url);
+            CommonPackage.OpenWebBrowser(_serviceProvider, _url);
         }
 
         public override int CommandId { get; }

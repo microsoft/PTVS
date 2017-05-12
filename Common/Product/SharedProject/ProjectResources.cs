@@ -169,6 +169,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string v35 = "v35";
         internal const string v4 = "v4";
         internal const string Warning = "Warning";
+        internal const string WebBrowseNavigateError = "WebBrowseNavigateError";
         internal const string WorkingDirectory = "WorkingDirectory";
         internal const string WorkingDirectoryDescription = "WorkingDirectoryDescription";
         internal const string WinExe = "WinExe";
