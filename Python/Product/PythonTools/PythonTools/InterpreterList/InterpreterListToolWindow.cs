@@ -109,16 +109,6 @@ namespace Microsoft.PythonTools.InterpreterList {
                 OpenInCommandPrompt_CanExecute
             ));
             list.CommandBindings.Add(new CommandBinding(
-                EnvironmentView.EnableIPythonInteractive,
-                EnableIPythonInteractive_Executed,
-                EnableIPythonInteractive_CanExecute
-            ));
-            list.CommandBindings.Add(new CommandBinding(
-                EnvironmentView.DisableIPythonInteractive,
-                DisableIPythonInteractive_Executed,
-                DisableIPythonInteractive_CanExecute
-            ));
-            list.CommandBindings.Add(new CommandBinding(
                 EnvironmentPathsExtension.OpenInBrowser,
                 OpenInBrowser_Executed,
                 OpenInBrowser_CanExecute
@@ -178,49 +168,28 @@ namespace Microsoft.PythonTools.InterpreterList {
             e.Handled = true;
         }
 
-        private void EnableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var path = GetScriptPath(e.Parameter as EnvironmentView);
-            e.CanExecute = path != null && !File.Exists(PathUtils.GetAbsoluteFilePath(path, "mode.txt"));
-            e.Handled = true;
+        private bool QueryIPythonEnabled(EnvironmentView view) {
+            var path = GetScriptPath(view);
+            return path != null && File.Exists(PathUtils.GetAbsoluteFilePath(path, "mode.txt"));
         }
 
-        private void EnableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var path = GetScriptPath(e.Parameter as EnvironmentView);
+        private void SetIPythonEnabled(EnvironmentView view, bool enable) {
+            var path = GetScriptPath(view);
             if (!EnsureScriptDirectory(path)) {
                 return;
             }
 
-            path = PathUtils.GetAbsoluteFilePath(path, "mode.txt");
             try {
-                File.WriteAllText(path, Strings.ReplScriptPathIPythonModeTxtContents);
+                path = PathUtils.GetAbsoluteFilePath(path, "mode.txt");
+                if (enable) {
+                    File.WriteAllText(path, Strings.ReplScriptPathIPythonModeTxtContents);
+                } else {
+                    if (File.Exists(path)) {
+                        File.Delete(path);
+                    }
+                }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
-                return;
-            }
-
-            e.Handled = true;
-        }
-
-        private void DisableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var path = GetScriptPath(e.Parameter as EnvironmentView);
-            e.CanExecute = path != null && File.Exists(PathUtils.GetAbsoluteFilePath(path, "mode.txt"));
-            e.Handled = true;
-        }
-
-        private void DisableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var path = GetScriptPath(e.Parameter as EnvironmentView);
-            if (!EnsureScriptDirectory(path)) {
-                return;
-            }
-
-            path = PathUtils.GetAbsoluteFilePath(path, "mode.txt");
-            if (File.Exists(path)) {
-                try {
-                    File.Delete(path);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
-                    return;
-                }
             }
         }
 
@@ -229,6 +198,9 @@ namespace Microsoft.PythonTools.InterpreterList {
             if (view.Factory == null) {
                 return;
             }
+
+            view.IPythonModeEnabledSetter = SetIPythonEnabled;
+            view.IsIPythonModeEnabled = QueryIPythonEnabled(view);
 
             try {
                 var pep = new PipExtensionProvider(view.Factory);

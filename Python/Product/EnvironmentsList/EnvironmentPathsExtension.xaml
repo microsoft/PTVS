@@ -144,52 +144,14 @@
                             </Button>
 
                             <!--
-                            This command is not expected to remain long-term,
+                            This is not expected to remain long-term,
                             but should be replaced with a more general startup
                             script tool.
                             -->
-                            <Button Command="{x:Static l:EnvironmentView.EnableIPythonInteractive}"
-                                    CommandParameter="{Binding}"
-                                    Style="{StaticResource NavigationButton}"
-                                    Margin="12 6 6 6"
-                                    HorizontalAlignment="Left"
-                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}"
-                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonAutomationName}">
-                                <Grid Background="Transparent">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="auto" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <Control Grid.Column="0"
-                                             Margin="3 0"
-                                             Style="{StaticResource CheckBoxUncheckedImage}"
-                                             IsTabStop="False"/>
-                                    <TextBlock Grid.Column="1"
-                                               TextWrapping="WrapWithOverflow"
-                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonLabel}"/>
-                                </Grid>
-                            </Button>
-                            <Button Command="{x:Static l:EnvironmentView.DisableIPythonInteractive}"
-                                    CommandParameter="{Binding}"
-                                    Style="{StaticResource NavigationButton}"
-                                    Margin="12 6 6 6"
-                                    HorizontalAlignment="Left"
-                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}"
-                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionDisableIPythonAutomationName}">
-                                <Grid Background="Transparent">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="auto" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <Control Grid.Column="0"
-                                             Margin="3 0"
-                                             Style="{StaticResource CheckBoxCheckedImage}"
-                                             IsTabStop="False"/>
-                                    <TextBlock Grid.Column="1"
-                                               TextWrapping="WrapWithOverflow"
-                                               Text="{x:Static l:Resources.EnvironmentPathsExtensionDisableIPythonLabel}"/>
-                                </Grid>
-                            </Button>
+                            <CheckBox Margin="12 6 6 6"
+                                      IsChecked="{Binding IsIPythonModeEnabled}"
+                                      Content="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonLabel}"
+                                      AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonAutomationName}"/>
 
                             <Button Command="{x:Static l:EnvironmentView.OpenInPowerShell}"
                                     CommandParameter="{Binding Mode=OneWay}"

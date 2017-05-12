@@ -49,6 +49,8 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
             if (withDb != null && !string.IsNullOrEmpty(withDb.DatabasePath)) {
                 e.View.Extensions.Add(new DBExtensionProvider(withDb));
             }
+            e.View.IPythonModeEnabledSetter = SetIPythonEnabled;
+            e.View.IsIPythonModeEnabled = QueryIPythonEnabled(e.View);
         }
 
 
@@ -123,14 +125,13 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
             e.Handled = true;
         }
 
-        private void EnableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var path = GetScriptsPath(e.Parameter as EnvironmentView);
-            e.CanExecute = !string.IsNullOrEmpty(path) && !File.Exists(Path.Combine(path, "__test_mode.txt"));
-            e.Handled = true;
+        private bool QueryIPythonEnabled(EnvironmentView view) {
+            var path = GetScriptsPath(view);
+            return !string.IsNullOrEmpty(path) && !File.Exists(Path.Combine(path, "__test_mode.txt"));
         }
 
-        private void EnableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var path = GetScriptsPath(e.Parameter as EnvironmentView);
+        private void SetIPythonEnabled(EnvironmentView view, bool enable) {
+            var path = GetScriptsPath(view);
             if (string.IsNullOrEmpty(path)) {
                 return;
             }
@@ -139,24 +140,12 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
                 Directory.CreateDirectory(path);
             }
 
-            File.WriteAllText(Path.Combine(path, "__test_mode.txt"), "# Contents of the file");
-        }
-
-        private void DisableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var path = GetScriptsPath(e.Parameter as EnvironmentView);
-            e.CanExecute = !string.IsNullOrEmpty(path) && File.Exists(Path.Combine(path, "__test_mode.txt"));
-            e.Handled = true;
-        }
-
-        private void DisableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var path = GetScriptsPath(e.Parameter as EnvironmentView);
-            if (string.IsNullOrEmpty(path)) {
-                return;
-            }
-
-            path = Path.Combine(path, "__test_mode.txt");
-            if (File.Exists(path)) {
-                File.Delete(path);
+            if (enable) {
+                File.WriteAllText(Path.Combine(path, "__test_mode.txt"), "# Contents of the file");
+            } else {
+                if (File.Exists(path)) {
+                    File.Delete(path);
+                }
             }
         }
 

@@ -16,17 +16,9 @@
         <CommandBinding Command="{x:Static el:EnvironmentView.OpenInCommandPrompt}"
                         CanExecute="OpenConsole_CanExecute"
                         Executed="OpenConsole_Executed" />
-
         <CommandBinding Command="{x:Static el:EnvironmentView.OpenInteractiveScripts}"
                         CanExecute="OpenInteractiveScripts_CanExecute"
                         Executed="OpenInteractiveScripts_Executed" />
-        <CommandBinding Command="{x:Static el:EnvironmentView.EnableIPythonInteractive}"
-                        CanExecute="EnableIPythonInteractive_CanExecute"
-                        Executed="EnableIPythonInteractive_Executed" />
-        <CommandBinding Command="{x:Static el:EnvironmentView.DisableIPythonInteractive}"
-                        CanExecute="DisableIPythonInteractive_CanExecute"
-                        Executed="DisableIPythonInteractive_Executed" />
-
         <CommandBinding Command="{x:Static el:EnvironmentPathsExtension.OpenInBrowser}"
                         CanExecute="OpenInBrowser_CanExecute"
                         Executed="OpenInBrowser_Executed" />
