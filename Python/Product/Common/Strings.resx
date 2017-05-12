@@ -1690,18 +1690,6 @@ Connect anyway?</value>
     <value> (missing)</value>
     <comment>Leading space is important</comment>
   </data>
-  <data name="DiagnosticsWindow_SaveAll" xml:space="preserve">
-    <value>_Save all...</value>
-  </data>
-  <data name="DiagnosticsWindow_CopyAll" xml:space="preserve">
-    <value>_Copy all...</value>
-  </data>
-  <data name="DiagnosticsWindow_Close" xml:space="preserve">
-    <value>C_lose</value>
-  </data>
-  <data name="DiagnosticsWindow_Title" xml:space="preserve">
-    <value>Visual Studio - Python Diagnostic Info</value>
-  </data>
   <data name="DiagnosticsWindow_TextFileFilter" xml:space="preserve">
     <value>Text Files (*.txt)|*.txt|All Files (*.*)|*.*</value>
   </data>
@@ -2048,5 +2036,8 @@ Expand selection to the full expression?</value>
   </data>
   <data name="UpgradedInterpreterReferenceRemoved" xml:space="preserve">
     <value>An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.</value>
+  </data>
+  <data name="DiagnosticsLogCopiedToClipboard" xml:space="preserve">
+    <value>Diagnostics log was copied to the clipboard.</value>
   </data>
 </root>

@@ -257,9 +257,6 @@
     <Compile Include="PythonTools\CodeCoverage\CoverageMapper.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoveragePyConverter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageScope.cs" />
-    <Compile Include="PythonTools\Commands\DiagnosticsWindow.xaml.cs">
-      <DependentUpon>DiagnosticsWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
@@ -283,6 +280,16 @@
     <Compile Include="PythonTools\Intellisense\VersionedResponse.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.Designer.cs">
+      <DependentUpon>PythonDiagnosticsOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
     <Compile Include="PythonTools\SearchPathManager.cs" />
     <Compile Include="PythonTools\Project\VsPackageManagerUI.cs" />
@@ -428,7 +435,7 @@
     <Compile Include="PythonTools\Project\InterpretersPackageNodeProperties.cs" />
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCommand.cs" />
-    <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
+    <Compile Include="PythonTools\DiagnosticsProvider.cs" />
     <Compile Include="PythonTools\Commands\ExecuteInReplCommand.cs" />
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
@@ -842,6 +849,9 @@
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Options\PythonDiagnosticsOptionsControl.resx">
+      <DependentUpon>PythonDiagnosticsOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonGeneralOptionsControl.resx">
       <DependentUpon>PythonGeneralOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -897,10 +907,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="PythonTools\Commands\DiagnosticsWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="PythonTools\Intellisense\CompletionControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -1785,20 +1785,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to C_lose.
+        ///   Looks up a localized string similar to Diagnostics log was copied to the clipboard..
         /// </summary>
-        public static string DiagnosticsWindow_Close {
+        public static string DiagnosticsLogCopiedToClipboard {
             get {
-                return ResourceManager.GetString("DiagnosticsWindow_Close", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to _Copy all....
-        /// </summary>
-        public static string DiagnosticsWindow_CopyAll {
-            get {
-                return ResourceManager.GetString("DiagnosticsWindow_CopyAll", resourceCulture);
+                return ResourceManager.GetString("DiagnosticsLogCopiedToClipboard", resourceCulture);
             }
         }
         
@@ -1812,29 +1803,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to _Save all....
-        /// </summary>
-        public static string DiagnosticsWindow_SaveAll {
-            get {
-                return ResourceManager.GetString("DiagnosticsWindow_SaveAll", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Text Files (*.txt)|*.txt|All Files (*.*)|*.*.
         /// </summary>
         public static string DiagnosticsWindow_TextFileFilter {
             get {
                 return ResourceManager.GetString("DiagnosticsWindow_TextFileFilter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Visual Studio - Python Diagnostic Info.
-        /// </summary>
-        public static string DiagnosticsWindow_Title {
-            get {
-                return ResourceManager.GetString("DiagnosticsWindow_Title", resourceCulture);
             }
         }
         

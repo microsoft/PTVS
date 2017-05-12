@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools {
         private readonly PythonToolsLogger _logger;
         private readonly Lazy<AdvancedEditorOptions> _advancedOptions;
         private readonly Lazy<DebuggerOptions> _debuggerOptions;
+        private readonly Lazy<DiagnosticsOptions> _diagnosticsOptions;
         private readonly Lazy<GeneralOptions> _generalOptions;
         private readonly Lazy<PythonInteractiveOptions> _debugInteractiveOptions;
         private readonly Lazy<PythonInteractiveOptions> _interactiveOptions;
@@ -60,6 +61,7 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<SurveyNewsService> _surveyNews;
         private readonly AnalysisEntryService _entryService;
         private readonly IdleManager _idleManager;
+        private readonly DiagnosticsProvider _diagnosticsProvider;
         private ExpansionCompletionSource _expansionCompletions;
         private Func<CodeFormattingOptions> _optionsFactory;
         private const string _formattingCat = "Formatting";
@@ -92,6 +94,7 @@ namespace Microsoft.PythonTools {
             _idleManager = new IdleManager(container);
             _advancedOptions = new Lazy<AdvancedEditorOptions>(CreateAdvancedEditorOptions);
             _debuggerOptions = new Lazy<DebuggerOptions>(CreateDebuggerOptions);
+            _diagnosticsOptions = new Lazy<DiagnosticsOptions>(CreateDiagnosticsOptions);
             _generalOptions = new Lazy<GeneralOptions>(CreateGeneralOptions);
             _surveyNews = new Lazy<SurveyNewsService>(() => new SurveyNewsService(this));
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
@@ -99,6 +102,7 @@ namespace Microsoft.PythonTools {
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
             _entryService = ComponentModel.GetService<AnalysisEntryService>();
+            _diagnosticsProvider = new DiagnosticsProvider(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
         }
@@ -187,6 +191,10 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        internal string GetDiagnosticsLog(bool includeAnalysisLogs) {
+            return _diagnosticsProvider.GetLog(includeAnalysisLogs);
+        }
+
         private IInterpreterOptionsService CreateInterpreterOptionsService() {
             var service = ComponentModel.GetService<IInterpreterOptionsService>();
             // may not available in some test cases
@@ -225,6 +233,7 @@ namespace Microsoft.PythonTools {
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
+        public DiagnosticsOptions DiagnosticsOptions => _diagnosticsOptions.Value;
         public GeneralOptions GeneralOptions => _generalOptions.Value;
         internal PythonInteractiveOptions DebugInteractiveOptions => _debugInteractiveOptions.Value;
 
@@ -236,6 +245,12 @@ namespace Microsoft.PythonTools {
 
         private DebuggerOptions CreateDebuggerOptions() {
             var opts = new DebuggerOptions(this);
+            opts.Load();
+            return opts;
+        }
+
+        private DiagnosticsOptions CreateDiagnosticsOptions() {
+            var opts = new DiagnosticsOptions(this);
             opts.Load();
             return opts;
         }
@@ -598,7 +613,5 @@ namespace Microsoft.PythonTools {
             }
             return env;
         }
-
-
     }
 }
