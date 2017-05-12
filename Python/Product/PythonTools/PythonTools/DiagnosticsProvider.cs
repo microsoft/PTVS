@@ -23,22 +23,15 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Project.Web;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Commands {
-    /// <summary>
-    /// Provides the command for starting a file or the start item of a project in the REPL window.
-    /// </summary>
-    internal sealed class DiagnosticsCommand : Command {
+namespace Microsoft.PythonTools {
+    internal sealed class DiagnosticsProvider {
         private readonly IServiceProvider _serviceProvider;
 
         private static readonly IEnumerable<string> InterestingDteProperties = new[] {
@@ -79,45 +72,27 @@ namespace Microsoft.PythonTools.Commands {
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
         );
 
-        public DiagnosticsCommand(IServiceProvider serviceProvider) {
+        public DiagnosticsProvider(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
-            var ui = _serviceProvider.GetUIThread();
-            var cts = new CancellationTokenSource();
-            bool skipAnalysisLog = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
-            var dlg = new DiagnosticsWindow(_serviceProvider, Task.Run(() => GetData(ui, skipAnalysisLog, cts.Token), cts.Token));
-            dlg.ShowModal();
-            cts.Cancel();
-        }
-
-        private string GetData(UIThreadBase ui, bool skipAnalysisLog, CancellationToken cancel) {
+        public string GetLog(bool includeAnalysisLog) {
             StringBuilder res = new StringBuilder();
 
-            string pythonPathIsMasked = "";
-            EnvDTE.DTE dte = null;
-            IPythonInterpreterFactoryProvider[] knownProviders = null;
-            IPythonLauncherProvider[] launchProviders = null;
-            InMemoryLogger inMemLogger = null;
-            ui.Invoke((Action)(() => {
-                pythonPathIsMasked = _serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath
-                    ? " (masked)"
-                    : "";
-                dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
-                var model = _serviceProvider.GetComponentModel();
-                knownProviders = model.GetExtensions<IPythonInterpreterFactoryProvider>().ToArray();
-                launchProviders = model.GetExtensions<IPythonLauncherProvider>().ToArray();
-                inMemLogger = model.GetService<InMemoryLogger>();
-            }));
+            var pythonPathIsMasked = _serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath
+                ? " (masked)"
+                : "";
+            var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
+            var model = _serviceProvider.GetComponentModel();
+            var knownProviders = model.GetExtensions<IPythonInterpreterFactoryProvider>().ToArray();
+            var launchProviders = model.GetExtensions<IPythonLauncherProvider>().ToArray();
+            var inMemLogger = model.GetService<InMemoryLogger>();
 
             res.AppendLine("Projects: ");
 
             var projects = dte.Solution.Projects;
 
             foreach (EnvDTE.Project project in projects) {
-                cancel.ThrowIfCancellationRequested();
-
                 string name;
                 try {
                     // Some projects will throw rather than give us a unique
@@ -150,14 +125,12 @@ namespace Microsoft.PythonTools.Commands {
 
                     var pyProj = project.GetPythonProject();
                     if (pyProj != null) {
-                        ui.Invoke((Action)(() => {
-                            foreach (var prop in InterestingProjectProperties) {
-                                var propValue = pyProj.GetProjectProperty(prop);
-                                if (propValue != null) {
-                                    res.AppendLine("        " + prop + ": " + propValue);
-                                }
+                        foreach (var prop in InterestingProjectProperties) {
+                            var propValue = pyProj.GetProjectProperty(prop);
+                            if (propValue != null) {
+                                res.AppendLine("        " + prop + ": " + propValue);
                             }
-                        }));
+                        }
 
                         foreach (var factory in pyProj.InterpreterFactories) {
                             res.AppendLine();
@@ -184,8 +157,6 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Environments: ");
             foreach (var provider in knownProviders.MaybeEnumerate()) {
-                cancel.ThrowIfCancellationRequested();
-
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var config in provider.GetInterpreterConfigurations()) {
                     res.AppendLine("        Id: " + config.Id);
@@ -202,8 +173,6 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Launchers:");
             foreach (var launcher in launchProviders.MaybeEnumerate()) {
-                cancel.ThrowIfCancellationRequested();
-
                 res.AppendLine("    Launcher: " + launcher.GetType().FullName);
                 res.AppendLine("        " + launcher.Description);
                 res.AppendLine("        " + launcher.Name);
@@ -220,7 +189,7 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine();
             }
 
-            if (!skipAnalysisLog) {
+            if (includeAnalysisLog) {
                 try {
                     res.AppendLine("System events:");
 
@@ -250,8 +219,6 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Loaded assemblies:");
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {
-                cancel.ThrowIfCancellationRequested();
-
                 AssemblyFileVersionAttribute assemFileVersion;
                 var error = "(null)";
                 try {
@@ -283,12 +250,10 @@ namespace Microsoft.PythonTools.Commands {
             }
             res.AppendLine();
 
-            if (!skipAnalysisLog) {
+            if (includeAnalysisLog) {
                 res.AppendLine("Environment Analysis Logs: ");
                 foreach (var provider in knownProviders) {
                     foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
-                        cancel.ThrowIfCancellationRequested();
-
                         res.AppendLine(factory.Configuration.Description);
                         string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
                         if (!string.IsNullOrEmpty(analysisLog)) {
@@ -308,10 +273,6 @@ namespace Microsoft.PythonTools.Commands {
             } catch {
                 return "<undefined>";
             }
-        }
-
-        public override int CommandId {
-            get { return (int)PkgCmdIDList.cmdidDiagnostics; }
         }
     }
 }
