@@ -369,7 +369,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void OnlineHelp_Executed(object sender, ExecutedRoutedEventArgs e) {
-            VisualStudioTools.CommonPackage.OpenVsWebBrowser(_site, PythonToolsPackage.InterpreterHelpUrl);
+            VisualStudioTools.CommonPackage.OpenWebBrowser(_site, PythonToolsPackage.InterpreterHelpUrl);
             e.Handled = true;
         }
 
@@ -436,7 +436,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
-            PythonToolsPackage.OpenVsWebBrowser(_site, (string)e.Parameter);
+            PythonToolsPackage.OpenWebBrowser(_site, (string)e.Parameter);
         }
 
         internal static void OpenAt(IServiceProvider site, IPythonInterpreterFactory interpreter, Type extension = null) {

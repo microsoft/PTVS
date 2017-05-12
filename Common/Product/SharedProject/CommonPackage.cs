@@ -19,8 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudioTools.Navigation;
-using Microsoft.VisualStudioTools.Project;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -29,6 +28,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Navigation;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.VisualStudioTools {
     public abstract class CommonPackage : Package, IOleComponent {
@@ -213,23 +214,49 @@ namespace Microsoft.VisualStudioTools {
             base.Initialize();
         }
 
-        internal static void OpenWebBrowser(string url) {
-            var uri = new Uri(url);
-            Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
-            return;
+        internal static void OpenWebBrowser(System.IServiceProvider serviceProvider, string url) {
+            // TODO: In a future VS 2017 release, SVsWebBrowsingService will have the ability
+            // to open in an external browser, and we may want to switch to using that, as it
+            // may be safer/better than Process.Start.
+            serviceProvider.GetUIThread().Invoke(() => {
+                try {
+                    var uri = new Uri(url);
+                    Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Utilities.ShowMessageBox(
+                       serviceProvider,
+                       SR.GetString(SR.WebBrowseNavigateError, url, ex.Message),
+                       null,
+                       OLEMSGICON.OLEMSGICON_CRITICAL,
+                       OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                       OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
+                    );
+                }
+            });
         }
 
         internal static void OpenVsWebBrowser(System.IServiceProvider serviceProvider, string url) {
             serviceProvider.GetUIThread().Invoke(() => {
                 var web = serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
                 if (web == null) {
-                    OpenWebBrowser(url);
+                    OpenWebBrowser(serviceProvider, url);
                     return;
                 }
 
-                IVsWindowFrame frame;
-                ErrorHandler.ThrowOnFailure(web.Navigate(url, (uint)__VSWBNAVIGATEFLAGS.VSNWB_ForceNew, out frame));
-                frame.Show();
+                try {
+                    IVsWindowFrame frame;
+                    ErrorHandler.ThrowOnFailure(web.Navigate(url, (uint)__VSWBNAVIGATEFLAGS.VSNWB_ForceNew, out frame));
+                    frame.Show();
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Utilities.ShowMessageBox(
+                       serviceProvider,
+                       SR.GetString(SR.WebBrowseNavigateError, url, ex.Message),
+                       null,
+                       OLEMSGICON.OLEMSGICON_CRITICAL,
+                       OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                       OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
+                    );
+                }
             });
         }
 

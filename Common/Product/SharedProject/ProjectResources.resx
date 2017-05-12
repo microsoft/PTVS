@@ -685,4 +685,9 @@ You can get more information by running Visual Studio with the /log parameter on
 {0}</value>
     <comment>{0} will be embedded exception text</comment>
   </data>
+  <data name="WebBrowseNavigateError" xml:space="preserve">
+    <value>Error navigating to URL '{0}'.
+{1}</value>
+    <comment>{1} will be embedded exception text</comment>
+  </data>
 </root>

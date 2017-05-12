@@ -72,7 +72,9 @@ namespace Microsoft.PythonTools.Debugger {
                 _serviceProvider.GlobalInvoke(cmdId,  "1F5E080F-CBD2-459C-8267-39fd83032166");
             } else if (dialog.SelectedButton == downloadSymbols) {
                 PythonToolsPackage.OpenWebBrowser(
-                    string.Format("http://go.microsoft.com/fwlink/?LinkId=308954&clcid=0x{0:X}", CultureInfo.CurrentCulture.LCID));
+                    _serviceProvider,
+                    string.Format("http://go.microsoft.com/fwlink/?LinkId=308954&clcid=0x{0:X}", CultureInfo.CurrentCulture.LCID)
+                );
             }
         }
 

@@ -24,26 +24,19 @@ namespace Microsoft.PythonTools.Commands {
     internal sealed class OpenWebUrlCommand : Command {
         private readonly IServiceProvider _serviceProvider;
         private readonly string _url;
-        private readonly bool _useVSBrowser;
 
         public OpenWebUrlCommand(
             IServiceProvider serviceProvider,
             string url,
-            uint commandId,
-            bool useVSBrowser = true
+            uint commandId
         ) {
             _serviceProvider = serviceProvider;
             _url = url;
-            _useVSBrowser = useVSBrowser;
             CommandId = (int)commandId;
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            if (_useVSBrowser) {
-                CommonPackage.OpenVsWebBrowser(_serviceProvider, _url);
-            } else {
-                CommonPackage.OpenWebBrowser(_url);
-            }
+            CommonPackage.OpenWebBrowser(_serviceProvider, _url);
         }
 
         public override int CommandId { get; }

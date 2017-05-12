@@ -143,7 +143,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void WebChooseInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
-            PythonToolsPackage.OpenWebBrowser(PythonToolsPackage.InterpreterHelpUrl);
+            PythonToolsPackage.OpenWebBrowser(_site, PythonToolsPackage.InterpreterHelpUrl);
             DialogResult = false;
             Close();
         }

@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools {
 
             lock (_surveyNewsUrlLock) {
                 if (!string.IsNullOrEmpty(_surveyNewsUrl)) {
-                    PythonToolsPackage.OpenVsWebBrowser(_pyService.Site, _surveyNewsUrl);
+                    PythonToolsPackage.OpenWebBrowser(_pyService.Site, _surveyNewsUrl);
                     _surveyNewsUrl = null;
                 }
             }
