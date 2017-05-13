@@ -20,6 +20,11 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Intellisense;
 
+// Workaround for bug in Dev15 RC
+// https://github.com/dotnet/roslyn/issues/14785
+using DictOfStringToObject = System.Collections.Generic.Dictionary<string, object>;
+
+
 namespace Microsoft.PythonTools.Analysis.Browser {
     class RawView : IAnalysisItemView {
         readonly string _name;
@@ -61,7 +66,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 return "list(dict)";
             } else if (item is List<object>) {
                 return "list(object)";
-            } else if (item is Dictionary<string, object>[]) {
+            } else if (item is DictOfStringToObject[]) {
                 return "tuple(dict(str -> object))";
             } else if (item is object[]) {
                 return "tuple(object)";
