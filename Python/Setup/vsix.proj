@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <FilesToSign Include="@(ProjectFile->'$(OutputPath)%(OutputName)')">
-      <Authenticode>Vsix</Authenticode>
+      <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
   </ItemGroup>
 
