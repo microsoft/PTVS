@@ -2081,7 +2081,7 @@ def report_exception(frame, exc_info, tid, break_type):
         'typename': get_exception_name(exc_type),
         'message': str(exc_value),
     }
-    if break_type == 1:
+    if break_type == BREAK_TYPE_UNHANDLED:
         data['breaktype'] = 'unhandled'
     if tb_value:
         try:
