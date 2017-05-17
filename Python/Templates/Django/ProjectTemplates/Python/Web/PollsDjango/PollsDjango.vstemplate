@@ -20,6 +20,10 @@
       <ProjectItem ReplaceParameters="true">manage.py</ProjectItem>
       <ProjectItem OpenInWebBrowser="true">readme.html</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\__init__.py">project-__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\settings.py">project-settings.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\urls.py">project-urls.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\wsgi.py">project-wsgi.py</ProjectItem>
       <Folder Name="app" TargetFolderName="app">
         <Folder Name="migrations" TargetFolderName="migrations">
           <ProjectItem>__init__.py</ProjectItem>
@@ -77,12 +81,6 @@
         <ProjectItem>tests.py</ProjectItem>
         <ProjectItem>urls.py</ProjectItem>
         <ProjectItem>views.py</ProjectItem>
-      </Folder>
-      <Folder Name="PollsDjango" TargetFolderName="$safeprojectname$">
-        <ProjectItem ReplaceParameters="true">__init__.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">settings.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">urls.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">wsgi.py</ProjectItem>
       </Folder>
     </Project>
   </TemplateContent>
