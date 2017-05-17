@@ -2,8 +2,8 @@
 Repository of polls that stores data in Azure Table Storage.
 """
 
-from azure import WindowsAzureMissingResourceError
-from azure.storage import TableService
+from azure.common import AzureMissingResourceHttpError
+from azure.storage.table import TableService
 
 from . import Poll, Choice, PollNotFound
 from . import _load_samples_json
@@ -74,7 +74,7 @@ class Repository(object):
             poll.choices = [_choice_from_entity(choice_entity)
                             for choice_entity in choice_entities]
             return poll
-        except WindowsAzureMissingResourceError:
+        except AzureMissingResourceHttpError:
             raise PollNotFound()
 
     def increment_vote(self, poll_key, choice_key):
@@ -83,8 +83,8 @@ class Repository(object):
             partition, row = _key_to_partition_and_row(choice_key)
             entity = self.svc.get_entity(self.choice_table, partition, row)
             entity.Votes += 1
-            self.svc.update_entity(self.choice_table, partition, row, entity)
-        except WindowsAzureMissingResourceError:
+            self.svc.update_entity(self.choice_table, entity)
+        except AzureMissingResourceHttpError:
             raise PollNotFound()
 
     def add_sample_polls(self):

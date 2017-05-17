@@ -1,4 +1,4 @@
 Flask<1
-pyjade<3
-azure<1
+pyjade<5
+azure-storage<1
 pymongo<3

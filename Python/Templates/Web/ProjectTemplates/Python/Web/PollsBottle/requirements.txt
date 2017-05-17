@@ -1,3 +1,3 @@
-azure<1
+azure-storage<1
 bottle<1
 pymongo<3
