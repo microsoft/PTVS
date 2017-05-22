@@ -37,12 +37,14 @@
                                      x:Name="IsUpToDate"
                                      Margin="2"
                                      Style="{StaticResource CheckMarkImage}"
+                                     Focusable="False"
                                      ToolTip="{x:Static l:Resources.DBExtensionIsUpToDateToolTip}"/>
                             <Control Grid.Column="0"
                                      x:Name="IsNotUpToDate"
                                      Visibility="Hidden"
                                      Margin="2"
                                      Style="{StaticResource ExclamationPointImage}"
+                                     Focusable="False"
                                      ToolTip="{x:Static l:Resources.DBExtensionIsNotUpToDateToolTip}"/>
                         </Grid>
                         <DataTemplate.Triggers>
@@ -71,6 +73,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Control Grid.Column="0"
                                              Margin="3"
+                                             Focusable="False"
                                              Style="{StaticResource RefreshImage}" />
                                     <AccessText Grid.Column="1"
                                                 VerticalAlignment="Center"

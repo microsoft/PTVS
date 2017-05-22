@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _isUpToDate = true;
         }
 
-        public override string ToString() => Name;
+        public override string ToString() => Resources.DBExtensionModuleAutomationName.FormatUI(Name, TotalModules);
 
         public static IEnumerable<DBPackageView> FromModuleList(
             IList<string> modules,
