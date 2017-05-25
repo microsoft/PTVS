@@ -421,6 +421,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1} modules).
+        /// </summary>
+        public static string DBExtensionModuleAutomationName {
+            get {
+                return ResourceManager.GetString("DBExtensionModuleAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ({0} modules).
         /// </summary>
         public static string DBExtensionModuleCountLabel {

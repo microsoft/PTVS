@@ -601,6 +601,7 @@
 
                         <ToggleButton x:Name="ExpanderButton" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsTabStop="False"
                                       IsChecked="{Binding IsExpanded,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
+                                      Focusable="False"
                                       Foreground="{TemplateBinding Foreground}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">

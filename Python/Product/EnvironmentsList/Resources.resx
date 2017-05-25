@@ -138,6 +138,10 @@
   <data name="DBExtensionModuleCountLabel" xml:space="preserve">
     <value>({0} modules)</value>
   </data>
+  <data name="DBExtensionModuleAutomationName" xml:space="preserve">
+    <value>{0} ({1} modules)</value>
+    <comment>{0} is the package name, {1} is the module count.</comment>
+  </data>
   <data name="DBExtensionIsUpToDateToolTip" xml:space="preserve">
     <value>This package is up to date in the completion DB.</value>
   </data>

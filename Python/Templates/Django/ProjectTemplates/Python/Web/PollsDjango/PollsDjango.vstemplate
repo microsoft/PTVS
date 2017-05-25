@@ -20,70 +20,50 @@
       <ProjectItem ReplaceParameters="true">manage.py</ProjectItem>
       <ProjectItem OpenInWebBrowser="true">readme.html</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
-      <Folder Name="app" TargetFolderName="app">
-        <Folder Name="migrations" TargetFolderName="migrations">
-          <ProjectItem>__init__.py</ProjectItem>
-          <ProjectItem>0001_initial.py</ProjectItem>
-        </Folder>
-        <Folder Name="static" TargetFolderName="static">
-          <Folder Name="app" TargetFolderName="app">
-            <Folder Name="content" TargetFolderName="content">
-              <ProjectItem>bootstrap.css</ProjectItem>
-              <ProjectItem>bootstrap.min.css</ProjectItem>
-              <ProjectItem>site.css</ProjectItem>
-            </Folder>
-            <Folder Name="fonts" TargetFolderName="fonts">
-              <ProjectItem>glyphicons-halflings-regular.eot</ProjectItem>
-              <ProjectItem>glyphicons-halflings-regular.svg</ProjectItem>
-              <ProjectItem>glyphicons-halflings-regular.ttf</ProjectItem>
-              <ProjectItem>glyphicons-halflings-regular.woff</ProjectItem>
-            </Folder>
-            <Folder Name="scripts" TargetFolderName="scripts">
-              <ProjectItem>_references.js</ProjectItem>
-              <ProjectItem>bootstrap.js</ProjectItem>
-              <ProjectItem>bootstrap.min.js</ProjectItem>
-              <ProjectItem>jquery.validate.js</ProjectItem>
-              <ProjectItem>jquery.validate.min.js</ProjectItem>
-              <ProjectItem>jquery.validate.unobtrusive.js</ProjectItem>
-              <ProjectItem>jquery.validate.unobtrusive.min.js</ProjectItem>
-              <ProjectItem>jquery.validate-vsdoc.js</ProjectItem>
-              <ProjectItem>jquery-1.10.2.intellisense.js</ProjectItem>
-              <ProjectItem>jquery-1.10.2.js</ProjectItem>
-              <ProjectItem>jquery-1.10.2.min.js</ProjectItem>
-              <ProjectItem>jquery-1.10.2.min.map</ProjectItem>
-              <ProjectItem>modernizr-2.6.2.js</ProjectItem>
-              <ProjectItem>respond.js</ProjectItem>
-              <ProjectItem>respond.min.js</ProjectItem>
-            </Folder>
-          </Folder>
-        </Folder>
-        <Folder Name="templates" TargetFolderName="templates">
-          <Folder Name="app" TargetFolderName="app">
-            <ProjectItem>about.html</ProjectItem>
-            <ProjectItem>contact.html</ProjectItem>
-            <ProjectItem>details.html</ProjectItem>
-            <ProjectItem>index.html</ProjectItem>
-            <ProjectItem>layout.html</ProjectItem>
-            <ProjectItem>login.html</ProjectItem>
-            <ProjectItem>loginpartial.html</ProjectItem>
-            <ProjectItem>results.html</ProjectItem>
-          </Folder>
-        </Folder>
-        <ProjectItem>__init__.py</ProjectItem>
-        <ProjectItem>admin.py</ProjectItem>
-        <ProjectItem>forms.py</ProjectItem>
-        <ProjectItem>models.py</ProjectItem>
-        <ProjectItem>samples.json</ProjectItem>
-        <ProjectItem>tests.py</ProjectItem>
-        <ProjectItem>urls.py</ProjectItem>
-        <ProjectItem>views.py</ProjectItem>
-      </Folder>
-      <Folder Name="PollsDjango" TargetFolderName="$safeprojectname$">
-        <ProjectItem ReplaceParameters="true">__init__.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">settings.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">urls.py</ProjectItem>
-        <ProjectItem ReplaceParameters="true">wsgi.py</ProjectItem>
-      </Folder>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\__init__.py">project-__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\settings.py">project-settings.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\urls.py">project-urls.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\wsgi.py">project-wsgi.py</ProjectItem>
+      <ProjectItem TargetFileName="app\__init__.py">app-__init__.py</ProjectItem>
+      <ProjectItem TargetFileName="app\admin.py">app-admin.py</ProjectItem>
+      <ProjectItem TargetFileName="app\forms.py">app-forms.py</ProjectItem>
+      <ProjectItem TargetFileName="app\models.py">app-models.py</ProjectItem>
+      <ProjectItem TargetFileName="app\samples.json">app-samples.json</ProjectItem>
+      <ProjectItem TargetFileName="app\tests.py">app-tests.py</ProjectItem>
+      <ProjectItem TargetFileName="app\urls.py">app-urls.py</ProjectItem>
+      <ProjectItem TargetFileName="app\views.py">app-views.py</ProjectItem>
+      <ProjectItem TargetFileName="app\migrations\__init__.py">app-migrations-__init__.py</ProjectItem>
+      <ProjectItem TargetFileName="app\migrations\0001_initial.py">app-migrations-0001_initial.py</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\content\bootstrap.css">bootstrap.css</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\content\bootstrap.min.css">bootstrap.min.css</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\content\site.css">site.css</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\fonts\glyphicons-halflings-regular.eot">glyphicons-halflings-regular.eot</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\fonts\glyphicons-halflings-regular.svg">glyphicons-halflings-regular.svg</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\fonts\glyphicons-halflings-regular.ttf">glyphicons-halflings-regular.ttf</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\fonts\glyphicons-halflings-regular.woff">glyphicons-halflings-regular.woff</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\_references.js">_references.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\bootstrap.js">bootstrap.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\bootstrap.min.js">bootstrap.min.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery.validate.js">jquery.validate.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery.validate.min.js">jquery.validate.min.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery.validate.unobtrusive.js">jquery.validate.unobtrusive.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery.validate.unobtrusive.min.js">jquery.validate.unobtrusive.min.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery.validate-vsdoc.js">jquery.validate-vsdoc.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery-1.10.2.intellisense.js">jquery-1.10.2.intellisense.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery-1.10.2.js">jquery-1.10.2.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery-1.10.2.min.js">jquery-1.10.2.min.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\jquery-1.10.2.min.map">jquery-1.10.2.min.map</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\modernizr-2.6.2.js">modernizr-2.6.2.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\respond.js">respond.js</ProjectItem>
+      <ProjectItem TargetFileName="app\static\app\scripts\respond.min.js">respond.min.js</ProjectItem>
+      <ProjectItem TargetFileName="app\templates\app\about.html">about.html</ProjectItem>
+      <ProjectItem TargetFileName="app\templates\app\contact.html">contact.html</ProjectItem>
+      <ProjectItem TargetFileName="app\templates\app\details.html">details.html</ProjectItem>
+      <ProjectItem TargetFileName="app\templates\app\index.html">index.html</ProjectItem>
+      <ProjectItem TargetFileName="app\templates\app\layout.html">layout.html</ProjectItem>
+      <ProjectItem TargetFileName="app\templates\app\login.html">login.html</ProjectItem>
+      <ProjectItem TargetFileName="app\templates\app\loginpartial.html">loginpartial.html</ProjectItem>
+      <ProjectItem TargetFileName="app\templates\app\results.html">results.html</ProjectItem>
     </Project>
   </TemplateContent>
   <WizardExtension>

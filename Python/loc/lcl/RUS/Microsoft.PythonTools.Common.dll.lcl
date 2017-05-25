@@ -949,7 +949,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1732,20 +1732,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiagnosticsWindow_Close" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";DiagnosticsLogCopiedToClipboard" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[C_lose]]></Val>
+          <Val><![CDATA[Diagnostics log was copied to the clipboard.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[_Закрыть]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";DiagnosticsWindow_CopyAll" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[_Copy all...]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[_Копировать все...]]></Val>
+            <Val><![CDATA[Журнал диагностики скопирован в буфер обмена.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1759,29 +1750,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiagnosticsWindow_SaveAll" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[_Save all...]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[_Сохранить все...]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DiagnosticsWindow_TextFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Text Files (*.txt)|*.txt|All Files (*.*)|*.*]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";DiagnosticsWindow_Title" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Visual Studio - Python Diagnostic Info]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Visual Studio — диагностические сведения Python]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3979,7 +3952,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -5134,7 +5107,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17089.6]]></Val>
+        <Val><![CDATA[3.0.17132.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5170,7 +5143,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17089.6]]></Val>
+        <Val><![CDATA[3.0.17132.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
