@@ -1,53 +1,53 @@
 <Themes>
   <Theme Name="Light" GUID="{de3dbbcd-f642-433c-8353-8f1df4370aba}">
     <Category Name="Text Editor" GUID="{75A05685-00A8-4DED-BAE5-E7A50BFA929A}">
-      <!--<Color Name="Interactive - Black">
+      <Color Name="Python Interactive - Black">
         <Foreground Type="CT_RAW" Source="FF000000" />
       </Color>
-      <Color Name="Interactive - Blue">
+      <Color Name="Python Interactive - Blue">
         <Foreground Type="CT_RAW" Source="FFFF0000" />
-      </Color>-->
-      <Color Name="Interactive - Cyan">
-        <Foreground Type="CT_RAW" Source="FFC0C000" />
       </Color>
-      <!--<Color Name="Interactive - DarkBlue">
-        <Foreground Type="CT_RAW" Source="FF7F0000" />
+      <Color Name="Python Interactive - Cyan">
+        <Foreground Type="CT_RAW" Source="FF908000" />
       </Color>
-      <Color Name="Interactive - DarkCyan">
-        <Foreground Type="CT_RAW" Source="FF7F7F00" />
+      <Color Name="Python Interactive - DarkBlue">
+        <Foreground Type="CT_RAW" Source="FF800000" />
       </Color>
-      <Color Name="Interactive - DarkGray">
-        <Foreground Type="CT_RAW" Source="FF7F7F7F" />
+      <Color Name="Python Interactive - DarkCyan">
+        <Foreground Type="CT_RAW" Source="FF606000" />
       </Color>
-      <Color Name="Interactive - DarkGreen">
-        <Foreground Type="CT_RAW" Source="FF007F00" />
+      <Color Name="Python Interactive - DarkGray">
+        <Foreground Type="CT_RAW" Source="FF505050" />
       </Color>
-      <Color Name="Interactive - DarkMagenta">
-        <Foreground Type="CT_RAW" Source="FF7F007F" />
+      <Color Name="Python Interactive - DarkGreen">
+        <Foreground Type="CT_RAW" Source="FF005000" />
       </Color>
-      <Color Name="Interactive - DarkRed">
-        <Foreground Type="CT_RAW" Source="FF00007F" />
+      <Color Name="Python Interactive - DarkMagenta">
+        <Foreground Type="CT_RAW" Source="FF800080" />
       </Color>
-      <Color Name="Interactive - DarkYellow">
-        <Foreground Type="CT_RAW" Source="FF7F7F00" />
+      <Color Name="Python Interactive - DarkRed">
+        <Foreground Type="CT_RAW" Source="FF000080" />
       </Color>
-      <Color Name="Interactive - Gray">
-        <Foreground Type="CT_RAW" Source="FFC0C0C0" />
-      </Color>-->
-      <Color Name="Interactive - Green">
-        <Foreground Type="CT_RAW" Source="FF00C000" />
+      <Color Name="Python Interactive - DarkYellow">
+        <Foreground Type="CT_RAW" Source="FF005050" />
       </Color>
-      <!--<Color Name="Interactive - Magenta">
-        <Foreground Type="CT_RAW" Source="FFFF00FF" />
+      <Color Name="Python Interactive - Gray">
+        <Foreground Type="CT_RAW" Source="FF707070" />
       </Color>
-      <Color Name="Interactive - Red">
-        <Foreground Type="CT_RAW" Source="FF0000FF" />
-      </Color>-->
-      <Color Name="Interactive - White">
-        <Foreground Type="CT_RAW" Source="FF7F7F7F" />
+      <Color Name="Python Interactive - Green">
+        <Foreground Type="CT_RAW" Source="FF008000" />
       </Color>
-      <Color Name="Interactive - Yellow">
-        <Foreground Type="CT_RAW" Source="FF20C0C0" />
+      <Color Name="Python Interactive - Magenta">
+        <Foreground Type="CT_RAW" Source="FFD000D0" />
+      </Color>
+      <Color Name="Python Interactive - Red">
+        <Foreground Type="CT_RAW" Source="FF0000D0" />
+      </Color>
+      <Color Name="Python Interactive - White">
+        <Foreground Type="CT_RAW" Source="FF767676" />
+      </Color>
+      <Color Name="Python Interactive - Yellow">
+        <Foreground Type="CT_RAW" Source="FF007676" />
       </Color>
     </Category>
   </Theme>

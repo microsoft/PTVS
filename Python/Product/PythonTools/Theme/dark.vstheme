@@ -17,16 +17,16 @@
         <Foreground Type="CT_RAW" Source="FFB0C94E" />
       </Color>
       <Color Name="Python module">
-        <Foreground Type="CT_RAW" Source="FFC563BD" />
+        <Foreground Type="CT_RAW" Source="FFD090E0" />
       </Color>
       <Color Name="Python parameter">
-        <Foreground Type="CT_RAW" Source="FF7F7F7F" />
+        <Foreground Type="CT_RAW" Source="FFB4B4B4" />
       </Color>
       <Color Name="Python function">
         <Foreground Type="CT_RAW" Source="FFC8C8C8" />
       </Color>
       <Color Name="Python builtin">
-        <Foreground Type="CT_RAW" Source="FFD69C56" />
+        <Foreground Type="CT_RAW" Source="FFE0B070" />
       </Color>
       <Color Name="Django template tag">
         <Foreground Type="CT_RAW" Source="FFC8C8C8" />

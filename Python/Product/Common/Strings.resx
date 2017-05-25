@@ -2040,4 +2040,52 @@ Expand selection to the full expression?</value>
   <data name="DiagnosticsLogCopiedToClipboard" xml:space="preserve">
     <value>Diagnostics log was copied to the clipboard.</value>
   </data>
+  <data name="PythonInteractive_Black" xml:space="preserve">
+    <value>Python Interactive - black</value>
+  </data>
+  <data name="PythonInteractive_Blue" xml:space="preserve">
+    <value>Python Interactive - blue</value>
+  </data>
+  <data name="PythonInteractive_Cyan" xml:space="preserve">
+    <value>Python Interactive - cyan</value>
+  </data>
+  <data name="PythonInteractive_DarkBlue" xml:space="preserve">
+    <value>Python Interactive - dark blue</value>
+  </data>
+  <data name="PythonInteractive_DarkCyan" xml:space="preserve">
+    <value>Python Interactive - dark cyan</value>
+  </data>
+  <data name="PythonInteractive_DarkGray" xml:space="preserve">
+    <value>Python Interactive - dark gray</value>
+  </data>
+  <data name="PythonInteractive_DarkGreen" xml:space="preserve">
+    <value>Python Interactive - dark green</value>
+  </data>
+  <data name="PythonInteractive_DarkMagenta" xml:space="preserve">
+    <value>Python Interactive - dark magenta</value>
+  </data>
+  <data name="PythonInteractive_DarkRed" xml:space="preserve">
+    <value>Python Interactive - dark red</value>
+  </data>
+  <data name="PythonInteractive_DarkYellow" xml:space="preserve">
+    <value>Python Interactive - dark yellow</value>
+  </data>
+  <data name="PythonInteractive_Gray" xml:space="preserve">
+    <value>Python Interactive - gray</value>
+  </data>
+  <data name="PythonInteractive_Green" xml:space="preserve">
+    <value>Python Interactive - green</value>
+  </data>
+  <data name="PythonInteractive_Magenta" xml:space="preserve">
+    <value>Python Interactive - magenta</value>
+  </data>
+  <data name="PythonInteractive_Red" xml:space="preserve">
+    <value>Python Interactive - red</value>
+  </data>
+  <data name="PythonInteractive_White" xml:space="preserve">
+    <value>Python Interactive - white</value>
+  </data>
+  <data name="PythonInteractive_Yellow" xml:space="preserve">
+    <value>Python Interactive - yellow</value>
+  </data>
 </root>

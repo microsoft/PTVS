@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -3643,6 +3643,150 @@ namespace Microsoft.PythonTools {
         public static string PythonGeneralPropertyPageLabel {
             get {
                 return ResourceManager.GetString("PythonGeneralPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - black.
+        /// </summary>
+        public static string PythonInteractive_Black {
+            get {
+                return ResourceManager.GetString("PythonInteractive_Black", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - blue.
+        /// </summary>
+        public static string PythonInteractive_Blue {
+            get {
+                return ResourceManager.GetString("PythonInteractive_Blue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - cyan.
+        /// </summary>
+        public static string PythonInteractive_Cyan {
+            get {
+                return ResourceManager.GetString("PythonInteractive_Cyan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - dark blue.
+        /// </summary>
+        public static string PythonInteractive_DarkBlue {
+            get {
+                return ResourceManager.GetString("PythonInteractive_DarkBlue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - dark cyan.
+        /// </summary>
+        public static string PythonInteractive_DarkCyan {
+            get {
+                return ResourceManager.GetString("PythonInteractive_DarkCyan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - dark gray.
+        /// </summary>
+        public static string PythonInteractive_DarkGray {
+            get {
+                return ResourceManager.GetString("PythonInteractive_DarkGray", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - dark green.
+        /// </summary>
+        public static string PythonInteractive_DarkGreen {
+            get {
+                return ResourceManager.GetString("PythonInteractive_DarkGreen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - dark magenta.
+        /// </summary>
+        public static string PythonInteractive_DarkMagenta {
+            get {
+                return ResourceManager.GetString("PythonInteractive_DarkMagenta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - dark red.
+        /// </summary>
+        public static string PythonInteractive_DarkRed {
+            get {
+                return ResourceManager.GetString("PythonInteractive_DarkRed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - dark yellow.
+        /// </summary>
+        public static string PythonInteractive_DarkYellow {
+            get {
+                return ResourceManager.GetString("PythonInteractive_DarkYellow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - gray.
+        /// </summary>
+        public static string PythonInteractive_Gray {
+            get {
+                return ResourceManager.GetString("PythonInteractive_Gray", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - green.
+        /// </summary>
+        public static string PythonInteractive_Green {
+            get {
+                return ResourceManager.GetString("PythonInteractive_Green", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - magenta.
+        /// </summary>
+        public static string PythonInteractive_Magenta {
+            get {
+                return ResourceManager.GetString("PythonInteractive_Magenta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - red.
+        /// </summary>
+        public static string PythonInteractive_Red {
+            get {
+                return ResourceManager.GetString("PythonInteractive_Red", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - white.
+        /// </summary>
+        public static string PythonInteractive_White {
+            get {
+                return ResourceManager.GetString("PythonInteractive_White", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interactive - yellow.
+        /// </summary>
+        public static string PythonInteractive_Yellow {
+            get {
+                return ResourceManager.GetString("PythonInteractive_Yellow", resourceCulture);
             }
         }
         
