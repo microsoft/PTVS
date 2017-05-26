@@ -258,7 +258,7 @@
     <value>e.g. C:\PythonXY\pythonw.exe</value>
   </data>
   <data name="ConfigurationExtensionWindowedInterpreterPathHelp" xml:space="preserve">
-    <value>The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &amp;quot;pythonw.exe&amp;quot;, but it may be different for some interpreters.</value>
+    <value>The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called "pythonw.exe", but it may be different for some interpreters.</value>
   </data>
   <data name="ConfigurationExtensionWindowedInterpreterPathBrowseFilter" xml:space="preserve">
     <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
