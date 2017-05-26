@@ -358,7 +358,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &amp;quot;pythonw.exe&amp;quot;, but it may be different for some interpreters..
+        ///   Looks up a localized string similar to The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &quot;pythonw.exe&quot;, but it may be different for some interpreters..
         /// </summary>
         public static string ConfigurationExtensionWindowedInterpreterPathHelp {
             get {
