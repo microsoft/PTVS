@@ -35,6 +35,7 @@
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
 
                 <ResourceDictionary>
+                    <Style TargetType="{x:Type l:DataListBox}" BasedOn="{StaticResource {x:Type ListBox}}" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -96,9 +97,11 @@
 
             <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}" x:Key="WithLocalizedName">
                 <Setter Property="AutomationProperties.Name" Value="{Binding LocalizedDisplayName,Mode=OneWay}" />
+                <Setter Property="AutomationProperties.HelpText" Value="{Binding LocalizedHelpText,Mode=OneWay}" />
             </Style>
             <Style TargetType="{x:Type ComboBoxItem}" x:Key="Combo_WithLocalizedName">
                 <Setter Property="AutomationProperties.Name" Value="{Binding LocalizedDisplayName,Mode=OneWay}" />
+                <Setter Property="AutomationProperties.HelpText" Value="{Binding LocalizedHelpText,Mode=OneWay}" />
             </Style>
         </Grid.Resources>
 
@@ -115,23 +118,23 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <ListBox x:Name="ListOfEnvironments_Horizontal"
-                     Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
-                     Grid.IsSharedSizeScope="True"
-                     ScrollViewer.CanContentScroll="False"
-                     MaxWidth="300"
-                     VerticalAlignment="Stretch"
-                     BorderThickness="0"
-                     SelectionChanged="EnvironmentsList_SelectionChanged"
-                     ItemsSource="{Binding Environments}"
-                     AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}"
-                     ItemContainerStyle="{StaticResource WithLocalizedName}">
-                <ListBox.ItemTemplateSelector>
+            <l:DataListBox x:Name="ListOfEnvironments_Horizontal"
+                           Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
+                           Grid.IsSharedSizeScope="True"
+                           ScrollViewer.CanContentScroll="False"
+                           MaxWidth="300"
+                           VerticalAlignment="Stretch"
+                           BorderThickness="0"
+                           SelectionChanged="EnvironmentsList_SelectionChanged"
+                           ItemsSource="{Binding Environments}"
+                           AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}"
+                           ItemContainerStyle="{StaticResource WithLocalizedName}">
+                <l:DataListBox.ItemTemplateSelector>
                     <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
                                                        OnlineHelp="{StaticResource OnlineHelpListItem}"
                                                        Environment="{StaticResource EnvironmentListItem}" />
-                </ListBox.ItemTemplateSelector>
-            </ListBox>
+                </l:DataListBox.ItemTemplateSelector>
+            </l:DataListBox>
 
             <ListBox Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
                      MinWidth="120" MaxWidth="250"
@@ -191,22 +194,22 @@
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
 
-            <ListBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                     ScrollViewer.CanContentScroll="False"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     VerticalAlignment="Stretch"
-                     HorizontalAlignment="Stretch"
-                     BorderThickness="0"
-                     SelectionChanged="EnvironmentsList_SelectionChanged"
-                     ItemsSource="{Binding Environments}"
-                     AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}"
-                     ItemContainerStyle="{StaticResource WithLocalizedName}">
-                <ListBox.ItemTemplateSelector>
+            <l:DataListBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                           ScrollViewer.CanContentScroll="False"
+                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                           VerticalAlignment="Stretch"
+                           HorizontalAlignment="Stretch"
+                           BorderThickness="0"
+                           SelectionChanged="EnvironmentsList_SelectionChanged"
+                           ItemsSource="{Binding Environments}"
+                           AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}"
+                           ItemContainerStyle="{StaticResource WithLocalizedName}">
+                <l:DataListBox.ItemTemplateSelector>
                     <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
                                                        OnlineHelp="{StaticResource OnlineHelpListItem}"
                                                        Environment="{StaticResource EnvironmentListItem}" />
-                </ListBox.ItemTemplateSelector>
-            </ListBox>
+                </l:DataListBox.ItemTemplateSelector>
+            </l:DataListBox>
 
             <ComboBox Grid.Row="1" Grid.Column="0"
                       Margin="3"

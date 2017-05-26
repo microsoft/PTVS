@@ -59,10 +59,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public IPythonInterpreterFactory Factory { get; }
         public InterpreterConfiguration Configuration { get; }
         public string LocalizedDisplayName { get; }
+        public string LocalizedHelpText { get; }
 
-        private EnvironmentView(string id, string localizedName) {
+        private EnvironmentView(string id, string localizedName, string localizedHelpText) {
             Configuration = new InterpreterConfiguration(id, id);
             Description = LocalizedDisplayName = localizedName;
+            LocalizedHelpText = localizedHelpText ?? "";
             Extensions = new ObservableCollection<object>();
         }
 
@@ -120,21 +122,23 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             Company = _registry.GetProperty(Factory.Configuration.Id, CompanyKey) as string ?? "";
             SupportUrl = _registry.GetProperty(Factory.Configuration.Id, SupportUrlKey) as string ?? "";
+
+            LocalizedHelpText = Company;
         }
 
         public static EnvironmentView CreateAddNewEnvironmentView(IInterpreterOptionsService service) {
-            var ev = new EnvironmentView(AddNewEnvironmentViewId, Resources.EnvironmentViewCustomAutomationName);
+            var ev = new EnvironmentView(AddNewEnvironmentViewId, Resources.EnvironmentViewCustomAutomationName, null);
             ev.Extensions = new ObservableCollection<object>();
             ev.Extensions.Add(new ConfigurationExtensionProvider(service, alwaysCreateNew: true));
             return ev;
         }
 
         public static EnvironmentView CreateOnlineHelpEnvironmentView() {
-            return new EnvironmentView(OnlineHelpViewId, Resources.EnvironmentViewOnlineHelpLabel);
+            return new EnvironmentView(OnlineHelpViewId, Resources.EnvironmentViewOnlineHelpLabel, null);
         }
 
         public static EnvironmentView CreateMissingEnvironmentView(string id, string description) {
-            return new EnvironmentView(id, description + Strings.MissingSuffix);
+            return new EnvironmentView(id, description + Strings.MissingSuffix, null);
         }
 
         public static bool IsAddNewEnvironmentView(string id) => AddNewEnvironmentViewId.Equals(id);
