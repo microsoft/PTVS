@@ -716,7 +716,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HotTrackKey}}" />
-                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HighlightTextKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HotTrackTextKey}}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HighlightKey}}" />

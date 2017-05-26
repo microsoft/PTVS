@@ -35,7 +35,8 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object GrayTextKey = VsBrushes.GrayTextKey;
         public static readonly object HighlightKey = VsBrushes.HighlightKey;
         public static readonly object HighlightTextKey = VsBrushes.HighlightTextKey;
-        public static readonly object HotTrackKey = VsBrushes.CommandBarMouseOverBackgroundGradientKey;
+        public static readonly object HotTrackKey = VsBrushes.CommandBarHoverKey;
+        public static readonly object HotTrackTextKey = VsBrushes.CommandBarTextHoverKey;
 
         public static readonly object TooltipBackgroundKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.BackgroundBrush);
         public static readonly object TooltipBackgroundColorKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.BackgroundColor);
