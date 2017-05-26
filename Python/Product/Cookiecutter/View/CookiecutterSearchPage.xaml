@@ -11,6 +11,7 @@
       xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:imagecatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
       xmlns:cct="clr-namespace:Microsoft.CookiecutterTools"
+      xmlns:ccv="clr-namespace:Microsoft.CookiecutterTools.View"
       wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools Microsoft.CookiecutterTools.ViewModel"
       mc:Ignorable="d" 
       d:DataContext="{Binding Source={d:DesignData Source=CookiecutterControlDesignData.xaml}}"
@@ -136,13 +137,13 @@
         </StackPanel>
 
         <!-- Results -->
-        <TreeView Grid.Row="2"
+        <ccv:CookiecutterTreeView Grid.Row="2"
                   Margin="4 4 0 8"
                   ItemsSource="{Binding Path=SearchResults}"
                   Focusable="True"
                   IsTabStop="True"
-                  SelectedItemChanged="TreeView_SelectedItemChanged">
-            <TreeView.Resources>
+                  SelectedItemChanged="TreeView_SelectedItemChanged" InvokeItem="OnInvokeTemplate">
+            <ccv:CookiecutterTreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type vm:CategorizedViewModel}" ItemsSource="{Binding Path=Templates}">
                     <TextBlock Margin="0 4 0 4"
                                FontWeight="Bold"
@@ -209,8 +210,8 @@
                         </Button>
                     </StackPanel>
                 </DataTemplate>
-            </TreeView.Resources>
-            <TreeView.ItemContainerStyle>
+            </ccv:CookiecutterTreeView.Resources>
+            <ccv:CookiecutterTreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                     <Setter Property="IsExpanded" Value="True" />
                     <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}"/>
@@ -218,8 +219,8 @@
                     <EventSetter Event="TreeViewItem.PreviewMouseRightButtonDown" Handler="OnItemPreviewMouseRightButtonDown"/>
                     <EventSetter Event="PreviewKeyDown" Handler="OnItemPreviewKeyDown"/>
                 </Style>
-            </TreeView.ItemContainerStyle>
-        </TreeView>
+            </ccv:CookiecutterTreeView.ItemContainerStyle>
+        </ccv:CookiecutterTreeView>
 
         <!-- Next + Status -->
         <StackPanel Grid.Row="3" Orientation="Vertical">
