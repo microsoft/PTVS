@@ -2,52 +2,52 @@
   <Theme Name="High Contrast" GUID="{a5c004b4-2d4b-494e-bf01-45fc492522c7}">
     <Category Name="Text Editor" GUID="{75A05685-00A8-4DED-BAE5-E7A50BFA929A}">
       <Color Name="Python Interactive - Black">
-        <Foreground Type="CT_RAW" Source="FFDCDCDC" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - Blue">
-        <Foreground Type="CT_RAW" Source="FFFFAD8C" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - Cyan">
-        <Foreground Type="CT_RAW" Source="FFFFFF00" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - DarkBlue">
-        <Foreground Type="CT_RAW" Source="FFFF8050" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - DarkCyan">
-        <Foreground Type="CT_RAW" Source="FFA0A000" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - DarkGray">
-        <Foreground Type="CT_RAW" Source="FF909090" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - DarkGreen">
-        <Foreground Type="CT_RAW" Source="FF00A000" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - DarkMagenta">
-        <Foreground Type="CT_RAW" Source="FFE040E0" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - DarkRed">
-        <Foreground Type="CT_RAW" Source="FF8080C0" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - DarkYellow">
-        <Foreground Type="CT_RAW" Source="FF009090" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - Gray">
-        <Foreground Type="CT_RAW" Source="FFD0D0D0" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - Green">
-        <Foreground Type="CT_RAW" Source="FF00FF00" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - Magenta">
-        <Foreground Type="CT_RAW" Source="FFFF60FF" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - Red">
-        <Foreground Type="CT_RAW" Source="FF4040FF" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - White">
         <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python Interactive - Yellow">
-        <Foreground Type="CT_RAW" Source="FF00FFFF" />
+        <Foreground Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
     </Category>
   </Theme>
