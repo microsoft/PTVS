@@ -139,6 +139,7 @@
                           Fill="{Binding Foreground,ElementName=CustomLabel}">
                     </Path>
                     <Label Grid.Column="1" VerticalAlignment="Center" Name="CustomLabel"
+                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
                            Content="{x:Static l:Resources.EnvironmentViewCustomLabel}"
                            AutomationProperties.Name="{x:Static l:Resources.EnvironmentViewCustomAutomationName}"/>
                 </Grid>
@@ -198,6 +199,7 @@
                                          Stroke="{TemplateBinding BorderBrush}"
                                          Fill="{TemplateBinding Background}"/>
                                 <TextBlock Text="?"
+                                           Foreground="{TemplateBinding Foreground}"
                                            HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                            TextAlignment="Center"
                                            Margin="3 3 4 3"
@@ -214,6 +216,7 @@
                     <Trigger Property="IsMouseOver" Value="True">
                         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                         <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                        <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                     </Trigger>
                     <Trigger Property="IsChecked" Value="True">
                         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HighlightKey}}" />

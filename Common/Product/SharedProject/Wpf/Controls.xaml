@@ -469,6 +469,7 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                 <Setter Property="img:ImageThemingUtilities.ImageBackgroundColor" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverColorKey}}" />
             </Trigger>
             <Trigger Property="IsExpanded" Value="True">
@@ -513,14 +514,30 @@
     <!-- see also https://msdn.microsoft.com/en-us/library/ms752048(v=vs.100).aspx -->
     <Style TargetType="{x:Type TreeView}" BasedOn="{StaticResource ControlNoHover}">
         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.TreeViewBackgroundKey}}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="KeyboardNavigation.TabNavigation" Value="Local" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type TreeView}">
+                    <Border Name="Border" 
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            Background="{TemplateBinding Background}">
+                        <ScrollViewer Focusable="False" CanContentScroll="False" Padding="4">
+                            <ItemsPresenter KeyboardNavigation.IsTabStop="True" />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style TargetType="{x:Type TreeViewItem}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.TreeViewForegroundKey}}" />
-        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisualStyle}" />
+        <Setter Property="KeyboardNavigation.IsTabStop" Value="False" />
+        <Setter Property="KeyboardNavigation.TabNavigation" Value="Continue"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TreeViewItem">
@@ -629,8 +646,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                Margin="0" Padding="{TemplateBinding Padding}"
-                                FocusVisualStyle="{x:Null}">
+                                Margin="0" Padding="{TemplateBinding Padding}">
                             <Grid>
                                 <Button x:Name="Header"
                                         ClickMode="Hover"
@@ -641,8 +657,7 @@
                                         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                         VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                         Margin="0"
-                                        IsTabStop="False"
-                                        FocusVisualStyle="{TemplateBinding FocusVisualStyle}">
+                                        IsTabStop="False">
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Grid Background="{TemplateBinding Background}">
@@ -701,6 +716,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HotTrackKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HighlightTextKey}}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HighlightKey}}" />
@@ -788,6 +804,7 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundPressedKey}}" />
@@ -861,6 +878,7 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundPressedKey}}" />
@@ -1122,9 +1140,11 @@
                                 <Condition Property="IsEditable" Value="True" />
                             </MultiTrigger.Conditions>
                             <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                         </MultiTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                         </Trigger>
                         <Trigger Property="HasItems" Value="False">
                             <Setter Property="Height" TargetName="DropDownBorder" Value="95" />

@@ -54,7 +54,7 @@
         <Setter Property="Margin" Value="3 0" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
-    
+
     <Style TargetType="{x:Type Label}">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}" />
         <Setter Property="FontFamily" Value="Segoe UI" />
@@ -154,7 +154,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-    
+
     <Style TargetType="{x:Type Control}" BasedOn="{StaticResource ControlNoHover}">
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -163,7 +163,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-    
+
     <!-- This style should match Control as much as possible -->
     <Style x:Key="ControlLike" TargetType="{x:Type Border}">
         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundKey}}" />
@@ -250,7 +250,7 @@
                                               Margin="{TemplateBinding Padding}"
                                               RecognizesAccessKey="True" />
                         </Border>
-                        
+
                         <ContentPresenter Grid.Row="3"
                                           Margin="{TemplateBinding Padding}"/>
                     </Grid>
@@ -264,7 +264,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-    
+
     <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Control}}">
         <Setter Property="Margin" Value="6" />
         <Setter Property="Padding" Value="6 3" />
@@ -389,7 +389,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-    
+
     <Style x:Key="NavigationButtonInList" BasedOn="{StaticResource NavigationButton}" TargetType="{x:Type Button}">
         <Style.Triggers>
             <DataTrigger Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
@@ -469,6 +469,7 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                 <Setter Property="img:ImageThemingUtilities.ImageBackgroundColor" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverColorKey}}" />
             </Trigger>
             <Trigger Property="IsExpanded" Value="True">
@@ -715,6 +716,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HotTrackKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HighlightTextKey}}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HighlightKey}}" />
@@ -725,7 +727,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type Control}}">
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
@@ -802,6 +804,7 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundPressedKey}}" />
@@ -875,6 +878,7 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundPressedKey}}" />
@@ -1136,9 +1140,11 @@
                                 <Condition Property="IsEditable" Value="True" />
                             </MultiTrigger.Conditions>
                             <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                         </MultiTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                         </Trigger>
                         <Trigger Property="HasItems" Value="False">
                             <Setter Property="Height" TargetName="DropDownBorder" Value="95" />
@@ -1165,7 +1171,7 @@
         <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
         <Setter Property="Padding" Value="8 0 0 5" />
     </Style>
-    
+
     <Style TargetType="{x:Type wpf:LabelledControl}">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="Margin" Value="0 0 0 8" />
