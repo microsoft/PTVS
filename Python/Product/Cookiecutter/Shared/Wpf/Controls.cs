@@ -49,7 +49,8 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ControlForegroundKey = VsBrushes.WindowTextKey;
         public static readonly object ControlBorderKey = VsBrushes.ComboBoxBorderKey;
         public static readonly object ControlBackgroundHoverKey = VsBrushes.ComboBoxMouseOverBackgroundGradientKey;
-        public static readonly object ControlBorderHoverKey = VsBrushes.ComboBoxMouseOverGlyphKey;
+        public static readonly object ControlBorderHoverKey = VsBrushes.ComboBoxMouseOverBorderKey;
+        public static readonly object ControlForegroundHoverKey = VsBrushes.CommandBarTextHoverKey;
         public static readonly object ControlBackgroundPressedKey = VsBrushes.ComboBoxMouseDownBackgroundKey;
         public static readonly object ControlForegroundPressedKey = VsBrushes.ComboBoxGlyphKey;
         public static readonly object ControlBorderPressedKey = VsBrushes.ComboBoxMouseDownBorderKey;

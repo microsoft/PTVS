@@ -246,7 +246,7 @@
     <value>e.g. C:\PythonXY\python.exe</value>
   </data>
   <data name="ConfigurationExtensionInterpreterPathHelp" xml:space="preserve">
-    <value>The interpreter path is the executable file used to run Python. Normally this is called &amp;quot;python.exe&amp;quot;, but it may be different for some interpreters.</value>
+    <value>The interpreter path is the executable file used to run Python. Normally this is called "python.exe", but it may be different for some interpreters.</value>
   </data>
   <data name="ConfigurationExtensionWindowedInterpreterPathLabel" xml:space="preserve">
     <value>Windowed interpreter</value>
@@ -291,7 +291,7 @@
     <value>e.g. PYTHONPATH</value>
   </data>
   <data name="ConfigurationExtensionPathEnvVarHelp" xml:space="preserve">
-    <value>This environment variable is set to specify search paths that should be added to sys.path. Normally this should be set to &amp;quot;PYTHONPATH&amp;quot;, but it may be different for some interpreters.</value>
+    <value>This environment variable is set to specify search paths that should be added to sys.path. Normally this should be set to "PYTHONPATH", but it may be different for some interpreters.</value>
   </data>
   <data name="ConfigurationExtensionApplyLabel" xml:space="preserve">
     <value>_Apply</value>

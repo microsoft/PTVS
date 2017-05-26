@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -187,7 +187,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The interpreter path is the executable file used to run Python. Normally this is called &amp;quot;python.exe&amp;quot;, but it may be different for some interpreters..
+        ///   Looks up a localized string similar to The interpreter path is the executable file used to run Python. Normally this is called &quot;python.exe&quot;, but it may be different for some interpreters..
         /// </summary>
         public static string ConfigurationExtensionInterpreterPathHelp {
             get {
@@ -241,7 +241,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This environment variable is set to specify search paths that should be added to sys.path. Normally this should be set to &amp;quot;PYTHONPATH&amp;quot;, but it may be different for some interpreters..
+        ///   Looks up a localized string similar to This environment variable is set to specify search paths that should be added to sys.path. Normally this should be set to &quot;PYTHONPATH&quot;, but it may be different for some interpreters..
         /// </summary>
         public static string ConfigurationExtensionPathEnvVarHelp {
             get {
