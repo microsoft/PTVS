@@ -1,4 +1,4 @@
-#! python3.4 -b
+#! python3.6 -b
 
 THEME_NAME = 'PythonToolsInteractive'
 THEME_PKGDEF = 'Microsoft.PythonTools.Repl.theme.v{}.0.pkgdef'

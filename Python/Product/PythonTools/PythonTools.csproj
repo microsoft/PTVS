@@ -688,7 +688,9 @@
   <ItemGroup>
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
-    <None Include="Theme\contrast.vstheme" />
+    <None Include="Theme\contrast.vstheme">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="NoSurveyNewsFeed.htmlsrc" />
     <None Include="NoInterpreters.htmlsrc" />
     <None Include="ptvsd\attach_server.py" />
@@ -705,10 +707,18 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="ptvsd\__init__.py" />
-    <None Include="Theme\Repl\blue.vstheme" />
-    <None Include="Theme\Repl\contrast.vstheme" />
-    <None Include="Theme\Repl\dark.vstheme" />
-    <None Include="Theme\Repl\light.vstheme" />
+    <None Include="Theme\Repl\blue.vstheme">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Theme\Repl\contrast.vstheme">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Theme\Repl\dark.vstheme">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Theme\Repl\light.vstheme">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="ptvsd\__main__.py" />
     <Content Include="pip_downloader.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
