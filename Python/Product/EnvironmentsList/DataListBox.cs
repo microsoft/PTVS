@@ -30,18 +30,18 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return new DataListBoxItemAutomationPeer(item, this);
             }
         }
-    }
     
-    sealed class DataListBoxItemAutomationPeer : ListBoxItemAutomationPeer {
-        public DataListBoxItemAutomationPeer(object owner, SelectorAutomationPeer selectorAutomationPeer) : base(owner, selectorAutomationPeer) {
-        }
+        sealed class DataListBoxItemAutomationPeer : ListBoxItemAutomationPeer {
+            public DataListBoxItemAutomationPeer(object owner, SelectorAutomationPeer selectorAutomationPeer) : base(owner, selectorAutomationPeer) {
+            }
 
-        protected override string GetClassNameCore() {
-            return "DataListBoxItem";
-        }
+            protected override string GetClassNameCore() {
+                return "DataListBoxItem";
+            }
 
-        protected override AutomationControlType GetAutomationControlTypeCore() {
-            return AutomationControlType.DataItem;
+            protected override AutomationControlType GetAutomationControlTypeCore() {
+                return AutomationControlType.DataItem;
+            }
         }
     }
 }
