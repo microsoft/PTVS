@@ -164,6 +164,7 @@
     <Compile Include="Model\TemplateContext.cs" />
     <Compile Include="Model\DteCommand.cs" />
     <Compile Include="ViewModel\TreeItemViewModel.cs" />
+    <Compile Include="View\CookiecutterTreeView.cs" />
     <Compile Include="View\LoadingPage.xaml.cs">
       <DependentUpon>LoadingPage.xaml</DependentUpon>
     </Compile>

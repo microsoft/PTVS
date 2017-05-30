@@ -130,19 +130,30 @@ namespace Microsoft.CookiecutterTools.View {
             var item = sender as TreeViewItem;
             if (item != null && item.IsSelected) {
                 if (e.Key == Key.Enter) {
-                    var continuation = item.DataContext as ContinuationViewModel;
-                    if (continuation != null) {
+                    if (DoInvoke(item.DataContext)) {
                         e.Handled = true;
-                        ViewModel.LoadMoreTemplatesAsync(continuation.ContinuationToken).DoNotWait();
-                    } else {
-                        var template = item.DataContext as TemplateViewModel;
-                        if (template != null) {
-                            e.Handled = true;
-                            LoadTemplate(template);
-                        }
                     }
                 }
             }
+        }
+
+        private void OnInvokeTemplate(object sender, InvokeEventArgs e) {
+            DoInvoke(e.Item);
+        }
+
+        private bool DoInvoke(object item) {
+            var continuation = item as ContinuationViewModel;
+            if (continuation != null) {
+                ViewModel.LoadMoreTemplatesAsync(continuation.ContinuationToken).DoNotWait();
+                return true;
+            } else {
+                var template = item as TemplateViewModel;
+                if (template != null) {
+                    LoadTemplate(template);
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void LoadTemplate(TemplateViewModel template) {
