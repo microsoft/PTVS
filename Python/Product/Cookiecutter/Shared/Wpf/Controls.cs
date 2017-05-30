@@ -82,13 +82,15 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ComboBoxPopupForegroundKey = VsBrushes.WindowTextKey;
 
         public static readonly object ButtonForegroundPressedKey = VsBrushes.ToolWindowButtonDownActiveGlyphKey;
-        public static readonly object ButtonBackgroundPressedKey = VsBrushes.ComboBoxMouseOverBorderKey;
-        public static readonly object ButtonBackgroundHoverKey = VsBrushes.CommandBarHoverOverSelectedKey;
-        public static readonly object ButtonBorderHoverKey = VsBrushes.ComboBoxMouseOverGlyphKey;
+        public static readonly object ButtonBackgroundPressedKey = VsBrushes.ToolWindowButtonDownKey;
+        public static readonly object ButtonForegroundHoverKey = VsBrushes.ComboBoxMouseOverGlyphKey;
+        public static readonly object ButtonBackgroundHoverKey = VsBrushes.ComboBoxMouseOverBackgroundGradientKey;
+        public static readonly object ButtonBorderHoverKey = VsBrushes.ToolWindowButtonHoverActiveBorderKey;
         public static readonly object ButtonForegroundPressedColorKey = VsColors.ToolWindowButtonDownActiveGlyphKey;
-        public static readonly object ButtonBackgroundPressedColorKey = VsColors.ComboBoxMouseOverBorderKey;
-        public static readonly object ButtonBackgroundHoverColorKey = VsColors.CommandBarHoverOverSelectedKey;
-        public static readonly object ButtonBorderHoverColorKey = VsColors.ComboBoxMouseOverGlyphKey;
+        public static readonly object ButtonBackgroundPressedColorKey = VsColors.ToolWindowButtonDownKey;
+        public static readonly object ButtonForegroundHoverColorKey = VsColors.ComboBoxMouseOverGlyphKey;
+        public static readonly object ButtonBackgroundHoverColorKey = VsColors.ComboBoxMouseOverBackgroundBeginKey;
+        public static readonly object ButtonBorderHoverColorKey = VsColors.ToolWindowButtonHoverActiveBorderKey;
 
         public static readonly object ScrollBarBackgroundKey = VsBrushes.ScrollBarBackgroundKey;
         public static readonly object ScrollBarThumbBackgroundKey = VsBrushes.ScrollBarThumbBackgroundKey;
