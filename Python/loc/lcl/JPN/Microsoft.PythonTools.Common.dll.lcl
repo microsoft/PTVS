@@ -3559,6 +3559,9 @@
       <Item ItemId=";PythonInteractive_Cyan" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Interactive - cyan]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python Interactive - シアン]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3574,6 +3577,9 @@
       <Item ItemId=";PythonInteractive_DarkCyan" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Interactive - dark cyan]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python Interactive - 濃いシアン]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3598,6 +3604,9 @@
       <Item ItemId=";PythonInteractive_DarkMagenta" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Interactive - dark magenta]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python Interactive - 濃いマゼンタ]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3640,6 +3649,9 @@
       <Item ItemId=";PythonInteractive_Magenta" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Interactive - magenta]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python Interactive - マゼンタ]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
