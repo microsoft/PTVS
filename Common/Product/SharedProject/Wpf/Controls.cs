@@ -83,8 +83,8 @@ namespace Microsoft.VisualStudioTools.Wpf {
 
         public static readonly object ButtonForegroundPressedKey = VsBrushes.ToolWindowButtonDownActiveGlyphKey;
         public static readonly object ButtonBackgroundPressedKey = VsBrushes.ToolWindowButtonDownKey;
-        public static readonly object ButtonForegroundHoverKey = VsBrushes.ComboBoxMouseOverGlyphKey;
-        public static readonly object ButtonBackgroundHoverKey = VsBrushes.ComboBoxMouseOverBackgroundGradientKey;
+        public static readonly object ButtonForegroundHoverKey = VsBrushes.ToolWindowButtonHoverActiveGlyphKey;
+        public static readonly object ButtonBackgroundHoverKey = VsBrushes.ToolWindowButtonHoverActiveKey;
         public static readonly object ButtonBorderHoverKey = VsBrushes.ToolWindowButtonHoverActiveBorderKey;
         public static readonly object ButtonForegroundPressedColorKey = VsColors.ToolWindowButtonDownActiveGlyphKey;
         public static readonly object ButtonBackgroundPressedColorKey = VsColors.ToolWindowButtonDownKey;

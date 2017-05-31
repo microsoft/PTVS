@@ -491,16 +491,6 @@
             <Trigger Property="AcceptsReturn" Value="False">
                 <Setter Property="VerticalContentAlignment" Value="Center" />
             </Trigger>
-            <MultiTrigger>
-                <MultiTrigger.Conditions>
-                    <Condition Property="AcceptsReturn" Value="True" />
-                    <Condition Property="IsMouseOver" Value="True" />
-                </MultiTrigger.Conditions>
-                <MultiTrigger.Setters>
-                    <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
-                    <Setter Property="img:ImageThemingUtilities.ImageBackgroundColor" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverColorKey}}" />
-                </MultiTrigger.Setters>
-            </MultiTrigger>
         </Style.Triggers>
     </Style>
 
@@ -789,11 +779,23 @@
                             <Setter Property="Opacity" TargetName="optionMark" Value="0" />
                             <Setter Property="Opacity" TargetName="indeterminateMark" Value="1" />
                         </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
+                            <Setter TargetName="indeterminateMark" Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundPressedKey}}" />
+                            <Setter TargetName="indeterminateMark" Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundPressedKey}}" />
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
         <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
+            </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundPressedKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderPressedKey}}" />
@@ -858,6 +860,12 @@
                         <Trigger Property="IsChecked" Value="True">
                             <Setter Property="Opacity" TargetName="optionMark" Value="1" />
                         </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundPressedKey}}" />
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -866,7 +874,6 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundPressedKey}}" />
@@ -1072,6 +1079,7 @@
                                       BorderThickness="{TemplateBinding BorderThickness}"
                                       Background="{TemplateBinding Background}"
                                       Foreground="{TemplateBinding Foreground}"
+                                      TextElement.Foreground="{TemplateBinding Foreground}"
                                       Grid.ColumnSpan="2"
                                       IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                             <ToggleButton.Style>
@@ -1119,7 +1127,13 @@
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           IsHitTestVisible="False"
                                           Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                            <ContentPresenter.Resources>
+                                <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="Foreground" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ComboBox}}" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <MultiTrigger>
@@ -1128,11 +1142,11 @@
                                 <Condition Property="IsEditable" Value="True" />
                             </MultiTrigger.Conditions>
                             <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
-                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                         </MultiTrigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
                             <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
+                            <Setter Property="TextElement.Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
                         </Trigger>
                         <Trigger Property="HasItems" Value="False">
                             <Setter Property="Height" TargetName="DropDownBorder" Value="95" />
