@@ -696,7 +696,8 @@ namespace Microsoft.PythonTools {
 
         internal static bool TryGetShellProperty<T>(this IServiceProvider provider, __VSSPROPID propId, out T value) {
             object obj;
-            if (ErrorHandler.Failed(provider.GetShell().GetProperty((int)propId, out obj))) {
+            var shell = provider.GetShell();
+            if (shell == null || ErrorHandler.Failed(shell.GetProperty((int)propId, out obj))) {
                 value = default(T);
                 return false;
             }

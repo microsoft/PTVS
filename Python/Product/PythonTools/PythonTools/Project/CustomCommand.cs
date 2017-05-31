@@ -627,6 +627,7 @@ namespace Microsoft.PythonTools.Project {
                 WorkingDirectory = startInfo.WorkingDirectory,
                 Environment = startInfo.EnvironmentVariables.ToDictionary(kv => kv.Key, kv => kv.Value)
             };
+            pyEvaluator.Configuration.LaunchOptions[PythonInteractiveEvaluator.DoNotResetConfigurationLaunchOption] = "true";
 
             project.AddActionOnClose((object)replWindow, InteractiveWindowProvider.Close);
 

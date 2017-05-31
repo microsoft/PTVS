@@ -71,6 +71,8 @@ namespace Microsoft.PythonTools.Repl {
 
         private bool _isDisposed;
 
+        internal const string DoNotResetConfigurationLaunchOption = "DoNotResetConfiguration";
+
         public PythonInteractiveEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _deferredOutput = new StringBuilder();
@@ -432,9 +434,11 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            Configuration = pyProj.GetLaunchConfigurationOrThrow();
-            if (Configuration?.Interpreter != null) {
-                ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+            if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
+                Configuration = pyProj.GetLaunchConfigurationOrThrow();
+                if (Configuration?.Interpreter != null) {
+                    ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
+                }
             }
 
             _projectWithHookedEvents = pyProj;
