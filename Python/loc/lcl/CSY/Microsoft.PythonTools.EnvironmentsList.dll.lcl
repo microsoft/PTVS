@@ -319,7 +319,7 @@
       <Item ItemId=";ConfigurationExtensionWindowedInterpreterPathHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called "pythonw.exe", but it may be different for some interpreters.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Cesta k interpretu zobrazená v okně je spustitelný soubor, který slouží ke spuštění Pythonu bez zobrazení okna konzoly. Obvykle se nazývá pythonw.exe, ale u některých interpretů se může lišit.]]></Val>
           </Tgt>
           <Prev Cat="Text">
