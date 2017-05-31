@@ -177,5 +177,8 @@
       <Name>VSCommon</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>
