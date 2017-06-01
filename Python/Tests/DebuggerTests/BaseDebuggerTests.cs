@@ -645,14 +645,18 @@ namespace DebuggerTests {
             }
         }
 
-        internal async Task StartAndWaitForExitAsync(PythonProcess process) {
+        internal async Task StartAndWaitForExitAsync(PythonProcessRunInfo processRunInfo) {
             bool exited = false;
             try {
-                await process.StartAsync();
-                exited = process.WaitForExit(DefaultWaitForExitTimeout);
+                await processRunInfo.Process.StartAsync();
+
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
+                exited = processRunInfo.Process.WaitForExit(DefaultWaitForExitTimeout);
             } finally {
-                if (!exited && !process.HasExited) {
-                    process.Terminate();
+                if (!exited && !processRunInfo.Process.HasExited) {
+                    processRunInfo.Process.Terminate();
                     Assert.Fail("Timeout while waiting for Python process to exit.");
                 }
             }
@@ -694,12 +698,14 @@ namespace DebuggerTests {
             p.Dispose();
         }
 
-        internal object DebugProcess(PythonDebugger debugger, string runFileName, string cwd, string arguments, bool resumeOnProcessLoaded, object onLoaded, string interpreterOptions) {
-            throw new NotImplementedException();
-        }
-
         protected static CancellationToken TimeoutToken() {
             return CancellationTokens.After5s;
         }
+    }
+
+    class PythonProcessRunInfo {
+        public PythonProcess Process;
+        public ExceptionDispatchInfo ProcessLoadedException;
+        public AutoResetEvent ProcessLoaded = new AutoResetEvent(false);
     }
 }
