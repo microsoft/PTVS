@@ -3605,7 +3605,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Python Interactive - dark magenta]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Интерактивное окно Python — темно-красный]]></Val>
+            <Val><![CDATA[Интерактивное окно Python — темно-пурпурный]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
