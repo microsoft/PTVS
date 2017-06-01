@@ -89,6 +89,7 @@
     </Content>
     <None Include="TestTargets\Microsoft.PythonTools.Django.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.targets" />
+    <None Include="TestTargets\Microsoft.PythonTools.uwp.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Web.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Worker.targets" />
   </ItemGroup>

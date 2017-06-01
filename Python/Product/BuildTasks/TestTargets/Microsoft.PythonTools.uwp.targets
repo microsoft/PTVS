@@ -17,9 +17,5 @@ See the Apache Version 2.0 License for specific language governing
 permissions and limitations under the License.
 -->
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <_PythonUwpToolsPath>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft Corporation\Python Tools for Visual Studio - UWP\3.0</_PythonUwpToolsPath>
-  </PropertyGroup>
-  
   <Import Project="$(_PythonUwpToolsPath)\Microsoft.PythonTools.Uwp.targets" />
 </Project>
