@@ -319,8 +319,8 @@
       <Item ItemId=";ConfigurationExtensionWindowedInterpreterPathHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called "pythonw.exe", but it may be different for some interpreters.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[具範圍限制的解譯器路徑是可執行檔，用於啟動 Python 但不顯示主控台視窗。這一般稱為 &quot;pythonw.exe&quot;，但對於某些解譯器而言可能會不同。]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[視窗型解譯器路徑是用於啟動 Python 而不顯示主控台視窗的可執行檔。這一般稱為 "pythonw.exe:，但對於某些解譯器而言可能會不同。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &quot;pythonw.exe&quot;, but it may be different for some interpreters.]]></Val>
