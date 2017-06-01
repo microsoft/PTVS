@@ -583,26 +583,21 @@ namespace Microsoft.PythonTools.Infrastructure {
 
             // Do a BFS of the filesystem to ensure we find the match closest to
             // the root directory.
-            var dirQueue = new Queue<string>();
-            dirQueue.Enqueue(root);
-            dirQueue.Enqueue("<EOD>");
+            var dirQueue = new Queue<KeyValuePair<string, int>>();
+            dirQueue.Enqueue(new KeyValuePair<string, int>(root, 0));
             while (dirQueue.Any()) {
-                var dir = dirQueue.Dequeue();
-                if (dir == "<EOD>") {
-                    depthLimit -= 1;
-                    if (depthLimit <= 0) {
-                        return null;
-                    }
-                    continue;
-                }
+                var dirDepth = dirQueue.Dequeue();
+                string dir = dirDepth.Key;
                 var result = EnumerateFiles(dir, file, recurse: false).FirstOrDefault();
                 if (result != null) {
                     return result;
                 }
-                foreach (var subDir in EnumerateDirectories(dir, recurse: false)) {
-                    dirQueue.Enqueue(subDir);
+                int depth = dirDepth.Value;
+                if (depth < depthLimit) {
+                    foreach (var subDir in EnumerateDirectories(dir, recurse: false)) {
+                        dirQueue.Enqueue(new KeyValuePair<string, int>(subDir, depth + 1));
+                    }
                 }
-                dirQueue.Enqueue("<EOD>");
             }
             return null;
         }

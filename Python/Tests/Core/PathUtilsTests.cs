@@ -21,10 +21,17 @@ using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace PythonToolsTests {
     [TestClass]
     public class PathUtilsTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy(includeTestData: true);
+        }
+
         [TestMethod, Priority(1)]
         public void TestMakeUri() {
             Assert.AreEqual(@"C:\a\b\c\", PathUtils.MakeUri(@"C:\a\b\c", true, UriKind.Absolute).LocalPath);
@@ -676,6 +683,31 @@ namespace PythonToolsTests {
             AssertUtil.ContainsExactly(files.Where(f => !File.Exists(Path.Combine(windows, f))));
             // Expect only one extension
             AssertUtil.ContainsExactly(files.Select(f => Path.GetExtension(f).ToLowerInvariant()).ToSet(), ".exe");
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestFindFile() {
+            var root = TestData.GetPath("TestData");
+            // File is too deep - should not find
+            Assert.IsNull(PathUtils.FindFile(root, "9E90EF25FCE648B397D0CCEC67305A68.txt", depthLimit: 0));
+
+            // Find file with BFS
+            Assert.IsNotNull(PathUtils.FindFile(root, "9E90EF25FCE648B397D0CCEC67305A68.txt", depthLimit: 1));
+
+            // Find file with correct firstCheck
+            Assert.IsNotNull(PathUtils.FindFile(root, "9E90EF25FCE648B397D0CCEC67305A68.txt", depthLimit: 1, firstCheck: new[] { "FindFile" }));
+
+            // Find file with incorrect firstCheck
+            Assert.IsNotNull(PathUtils.FindFile(root, "9E90EF25FCE648B397D0CCEC67305A68.txt", depthLimit: 1, firstCheck: new[] { "FindFileX" }));
+
+            // File is too deep
+            Assert.IsNull(PathUtils.FindFile(root, "D75BD8CE1BBA41A7A2547CF3652AD3AF.txt", depthLimit: 0));
+            Assert.IsNull(PathUtils.FindFile(root, "D75BD8CE1BBA41A7A2547CF3652AD3AF.txt", depthLimit: 1));
+            Assert.IsNull(PathUtils.FindFile(root, "D75BD8CE1BBA41A7A2547CF3652AD3AF.txt", depthLimit: 2));
+            Assert.IsNull(PathUtils.FindFile(root, "D75BD8CE1BBA41A7A2547CF3652AD3AF.txt", depthLimit: 3));
+
+            // File is found
+            Assert.IsNotNull(PathUtils.FindFile(root, "D75BD8CE1BBA41A7A2547CF3652AD3AF.txt", depthLimit: 4));
         }
 
         private IEnumerable<Tuple<string, string>> Pairs(params string[] items) {
