@@ -203,11 +203,13 @@ namespace DebuggerTests {
         private async Task ChildTestAsync(string filename, int lineNo, string text, int frame, params ChildInfo[] children) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) => {
+            var processRunInfo = CreateProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) => {
                 var breakPoint = newproc.AddBreakpoint(filename, lineNo);
                 await breakPoint.AddAsync(default(CancellationToken));
                 thread = newthread;
             });
+
+            var process = processRunInfo.Process;
 
             AutoResetEvent brkHit = new AutoResetEvent(false);
             process.BreakpointHit += (sender, args) => {
@@ -217,8 +219,12 @@ namespace DebuggerTests {
             try {
                 await process.StartAsync();
 
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
                 AssertWaited(brkHit);
 
+                Assert.IsNotNull(thread);
                 var frames = thread.Frames;
 
                 AutoResetEvent evalComplete = new AutoResetEvent(false);
@@ -319,17 +325,17 @@ namespace DebuggerTests {
 
             var debugger = new PythonDebugger();
             PythonThread thread = null;
-            AutoResetEvent processLoaded = new AutoResetEvent(false);
-            var process =
-                DebugProcess(
+            var processRunInfo =
+                CreateProcess(
                     debugger,
                     Path.Combine(DebuggerTestPath, "SetNextLine.py"),
                     resumeOnProcessLoaded: false,
                     onLoaded: (newproc, newthread) => {
                         thread = newthread;
-                        processLoaded.Set();
                     }
                 );
+
+            var process = processRunInfo.Process;
 
             AutoResetEvent brkHit = new AutoResetEvent(false);
             AutoResetEvent stepDone = new AutoResetEvent(false);
@@ -343,7 +349,8 @@ namespace DebuggerTests {
             try {
                 await process.StartAsync();
 
-                AssertWaited(processLoaded);
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
 
                 var moduleFrame = thread.Frames[0];
                 Assert.AreEqual(1, moduleFrame.StartLine);
@@ -402,15 +409,19 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
 
             PythonThread thread = null;
-            AutoResetEvent loaded = new AutoResetEvent(false);
-            var process = DebugProcess(debugger, DebuggerTestPath + "BreakAllTest.py", (newproc, newthread) => {
-                loaded.Set();
+            var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "BreakAllTest.py", (newproc, newthread) => {
                 thread = newthread;
             });
 
+            var process = processRunInfo.Process;
+
             try {
                 await process.StartAsync();
-                AssertWaited(loaded);
+
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
+                Assert.IsNotNull(thread);
 
                 // let loop run
                 Thread.Sleep(500);
@@ -437,15 +448,19 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
 
             PythonThread thread = null;
-            AutoResetEvent loaded = new AutoResetEvent(false);
-            var process = DebugProcess(debugger, DebuggerTestPath + "InfiniteThreads.py", (newproc, newthread) => {
-                loaded.Set();
+            var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "InfiniteThreads.py", (newproc, newthread) => {
                 thread = newthread;
             });
 
+            var process = processRunInfo.Process;
+
             try {
                 await process.StartAsync();
-                AssertWaited(loaded);
+
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
+                Assert.IsNotNull(thread);
 
                 AutoResetEvent breakComplete = new AutoResetEvent(false);
                 process.AsyncBreakComplete += (sender, args) => {
@@ -526,11 +541,13 @@ namespace DebuggerTests {
         private async Task EvalTestAsync(string filename, int lineNo, string frameName, int frameIndex, PythonEvaluationResultReprKind reprKind, EvalResult eval) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) => {
+            var processRunInfo = CreateProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) => {
                 var breakPoint = newproc.AddBreakpoint(filename, lineNo);
                 await breakPoint.AddAsync(TimeoutToken());
                 thread = newthread;
             });
+
+            var process = processRunInfo.Process;
 
             AutoResetEvent brkHit = new AutoResetEvent(false);
             process.BreakpointHit += (sender, args) => {
@@ -539,8 +556,13 @@ namespace DebuggerTests {
 
             try {
                 await process.StartAsync();
+
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
                 AssertWaited(brkHit);
 
+                Assert.IsNotNull(thread);
                 var frames = thread.Frames;
 
                 PythonEvaluationResult obj = null;
@@ -731,8 +753,8 @@ namespace DebuggerTests {
 
             PythonThread thread = null;
             AutoResetEvent loaded = new AutoResetEvent(false);
-            var process =
-                DebugProcess(
+            var processRunInfo =
+                CreateProcess(
                     debugger,
                     filename,
                     async (newproc, newthread) => {
@@ -743,6 +765,8 @@ namespace DebuggerTests {
                     }
                 );
 
+            var process = processRunInfo.Process;
+
             AutoResetEvent breakpointHit = new AutoResetEvent(false);
             process.BreakpointHit += (sender, args) => {
                 breakpointHit.Set();
@@ -750,6 +774,9 @@ namespace DebuggerTests {
 
             await process.StartAsync();
             try {
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
                 AssertWaited(breakpointHit);
 
                 // Handle order inconsitencies accross interpreters
@@ -1077,15 +1104,18 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
 
             PythonThread thread = null;
-            AutoResetEvent loaded = new AutoResetEvent(false);
-            var process = DebugProcess(debugger, DebuggerTestPath + "SteppingTest.py", (newproc, newthread) => {
+            var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "SteppingTest.py", (newproc, newthread) => {
                 thread = newthread;
-                loaded.Set();
             });
+
+            var process = processRunInfo.Process;
 
             await process.StartAsync();
             try {
-                AssertWaited(loaded);
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
+                Assert.IsNotNull(thread);
                 Assert.IsTrue(thread.Frames[0].FileName.EndsWith("SteppingTest.py"), "did not break in SteppingTest.py; instead, " + thread.Frames[0].FileName);
                 Assert.AreEqual(1, thread.Frames[0].StartLine);
             } finally {
@@ -1107,13 +1137,15 @@ namespace DebuggerTests {
 
             var debugger = new PythonDebugger();
             string fn = Path.Combine(DebuggerTestPath, "StepBreakBreak.py");
-            var process = DebugProcess(debugger, fn, async (newproc, newthread) => {
+            var processRunInfo = CreateProcess(debugger, fn, async (newproc, newthread) => {
                 PythonBreakpoint breakPoint = newproc.AddBreakpointByFileExtension(2, fn);
                 await breakPoint.AddAsync(TimeoutToken());
 
                 breakPoint = newproc.AddBreakpointByFileExtension(3, fn);
                 await breakPoint.AddAsync(TimeoutToken());
             }, cwd: DebuggerTestPath);
+
+            var process = processRunInfo.Process;
 
             int hitBp = 0;
             process.BreakpointHit += async (sender, args) => {
@@ -1129,7 +1161,7 @@ namespace DebuggerTests {
                     sentStep = true;
                 }
             };
-            await StartAndWaitForExitAsync(process);
+            await StartAndWaitForExitAsync(processRunInfo);
         }
 
         [TestMethod, Priority(1)]
@@ -1207,13 +1239,15 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
             string filename = Path.Combine(DebuggerTestPath, "ThreadJoin.py");
             PythonThread thread = null;
-            var process = DebugProcess(debugger, filename, async (newproc, newthread) => {
+            var processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) => {
                 thread = newthread;
                 var bp = newproc.AddBreakpoint(filename, 5);
                 await bp.AddAsync(TimeoutToken());
             },
                 debugOptions: PythonDebugOptions.WaitOnAbnormalExit | PythonDebugOptions.WaitOnNormalExit
             );
+
+            var process = processRunInfo.Process;
 
             AutoResetEvent bpHit = new AutoResetEvent(false);
 
@@ -1239,6 +1273,9 @@ namespace DebuggerTests {
             await process.StartAsync();
 
             try {
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
                 if (!bpHit.WaitOne(10000)) {
                     Assert.Fail("Failed to hit breakpoint");
                 }
@@ -1287,7 +1324,7 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
             PythonBreakpoint bp = null;
-            var process = DebugProcess(debugger, filename, async (newproc, newthread) =>
+            var processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) =>
             {
                 thread = newthread;
                 bp = newproc.AddBreakpoint(filename, line);
@@ -1295,6 +1332,9 @@ namespace DebuggerTests {
             },
                 debugOptions: PythonDebugOptions.RedirectOutput
             );
+
+            var process = processRunInfo.Process;
+
             try {
                 bool updated = false;
                 int hitCount = 0;
@@ -1317,6 +1357,9 @@ namespace DebuggerTests {
                 };
 
                 await process.StartAsync();
+
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
 
                 WaitForExit(process);
 
@@ -1489,11 +1532,13 @@ namespace DebuggerTests {
 
             PythonThread thread = null;
             PythonBreakpoint breakPoint = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + "BreakpointTest.py", async (newproc, newthread) => {
+            var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "BreakpointTest.py", async (newproc, newthread) => {
                 breakPoint = newproc.AddBreakpoint("doesnotexist.py", 1);
                 await breakPoint.AddAsync(TimeoutToken());
                 thread = newthread;
             });
+
+            var process = processRunInfo.Process;
 
             bool bindFailed = false;
             process.BreakpointBindFailed += (sender, args) => {
@@ -1501,7 +1546,7 @@ namespace DebuggerTests {
                 Assert.AreEqual(breakPoint, args.Breakpoint);
             };
 
-            await StartAndWaitForExitAsync(process);
+            await StartAndWaitForExitAsync(processRunInfo);
 
             Assert.IsTrue(bindFailed, "Should not have bound the breakpoint");
         }
@@ -1733,7 +1778,7 @@ namespace DebuggerTests {
             Console.WriteLine("Testing {0}", filename);
 
             bool loaded = false;
-            var process = DebugProcess(debugger, filename, async (processObj, threadObj) => {
+            var processRunInfo = CreateProcess(debugger, filename, async (processObj, threadObj) => {
                 loaded = true;
                 await processObj.SetExceptionInfoAsync(
                     (int)defaultExceptionMode,
@@ -1743,6 +1788,8 @@ namespace DebuggerTests {
                     TimeoutToken()
                 );
             }, debugOptions: debugOptions);
+
+            var process = processRunInfo.Process;
 
             var raised = new List<Tuple<string, string>>();
             process.ExceptionRaised += async (sender, args) => {
@@ -1756,7 +1803,7 @@ namespace DebuggerTests {
                 }
             };
 
-            await StartAndWaitForExitAsync(process);
+            await StartAndWaitForExitAsync(processRunInfo);
 
             if (Version.Version == PythonLanguageVersion.V30 && raised.Count > exceptions.Length) {
                 // Python 3.0 raises an exception as the process shuts down.
@@ -1871,7 +1918,8 @@ namespace DebuggerTests {
         }
 
         private void TestGetHandledExceptionRanges(PythonDebugger debugger, string filename, params ExceptionHandlerInfo[] expected) {
-            var process = DebugProcess(debugger, filename, (processObj, threadObj) => { });
+            var processRunInfo = CreateProcess(debugger, filename, (processObj, threadObj) => { });
+            var process = processRunInfo.Process;
 
             var actual = process.GetHandledExceptionRanges(filename);
             Assert.AreEqual(expected.Length, actual.Count);
@@ -1897,14 +1945,15 @@ namespace DebuggerTests {
         }
 
         private async Task TestModuleLoadAsync(PythonDebugger debugger, string filename, params string[] expectedModulesLoaded) {
-            var process = DebugProcess(debugger, filename);
+            var processRunInfo = CreateProcess(debugger, filename);
+            var process = processRunInfo.Process;
 
             List<string> receivedFilenames = new List<string>();
             process.ModuleLoaded += (sender, args) => {
                 receivedFilenames.Add(args.Module.Filename);
             };
 
-            await StartAndWaitForExitAsync(process);
+            await StartAndWaitForExitAsync(processRunInfo);
 
             Assert.IsTrue(receivedFilenames.Count >= expectedModulesLoaded.Length, "did not receive enough module names");
             var set = new HashSet<string>();
@@ -1960,7 +2009,8 @@ namespace DebuggerTests {
         }
 
         private async Task TestExitCodeAsync(PythonDebugger debugger, string filename, int expectedExitCode, string interpreterOptions = null, string pythonExe = null) {
-            var process = DebugProcess(debugger, filename, interpreterOptions: interpreterOptions, pythonExe: pythonExe);
+            var processRunInfo = CreateProcess(debugger, filename, interpreterOptions: interpreterOptions, pythonExe: pythonExe);
+            var process = processRunInfo.Process;
 
             // Collect these values and assert on them on the main thread
             bool threadCreated = false, threadExited = false;
@@ -1990,7 +2040,7 @@ namespace DebuggerTests {
                 }
             };
 
-            await StartAndWaitForExitAsync(process);
+            await StartAndWaitForExitAsync(processRunInfo);
             // Only wait a little while - the process should have already exited
             // by the time we get here, but we may not have received the event
             // yet.
@@ -2005,21 +2055,29 @@ namespace DebuggerTests {
             Assert.AreEqual(expectedExitCode, exitCode, String.Format("Unexpected Python process exit code for '{0}'", filename));
         }
 
-        private new PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string pythonExe = null) {
+        private PythonProcessRunInfo CreateProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string pythonExe = null) {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
-            var process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
-            process.ProcessLoaded += async (sender, args) => {
-                onLoaded?.Invoke(process, args.Thread);
-                if (resumeOnProcessLoaded) {
-                    await process.ResumeAsync(TimeoutToken());
+
+            PythonProcessRunInfo processRunInfo = new PythonProcessRunInfo();
+            processRunInfo.Process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
+            processRunInfo.Process.ProcessLoaded += async (sender, args) => {
+                try {
+                    onLoaded?.Invoke(processRunInfo.Process, args.Thread);
+                    if (resumeOnProcessLoaded) {
+                        await processRunInfo.Process.ResumeAsync(TimeoutToken());
+                    }
+                } catch (Exception e) {
+                    processRunInfo.ProcessLoadedException = ExceptionDispatchInfo.Capture(e);
                 }
+
+                processRunInfo.ProcessLoaded.Set();
             };
-            process.DebuggerOutput += (sender, args) => {
+            processRunInfo.Process.DebuggerOutput += (sender, args) => {
                 Console.WriteLine(args.Output);
             };
 
-            return process;
+            return processRunInfo;
         }
 
         #endregion
@@ -2044,7 +2102,7 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
             var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
 
-            var process = DebugProcess(debugger, Path.Combine(DebuggerTestPath, "Output.py"), (processObj, threadObj) => {
+            var processRunInfo = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "Output.py"), (processObj, threadObj) => {
                 processObj.DebuggerOutput += (sender, e) => {
                     if (expectedOutput.Count != 0) {
                         Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
@@ -2052,8 +2110,14 @@ namespace DebuggerTests {
                 };
             }, debugOptions: PythonDebugOptions.RedirectOutput);
 
+            var process = processRunInfo.Process;
+
             try {
                 await process.StartAsync();
+
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
                 Thread.Sleep(1000);
             } finally {
                 WaitForExit(process);
@@ -2066,7 +2130,7 @@ namespace DebuggerTests {
                 var debugger = new PythonDebugger();
 
                 bool gotOutput = false;
-                var process = DebugProcess(debugger, Path.Combine(DebuggerTestPath, "StdoutBuffer3x.py"), (processObj, threadObj) => {
+                var process = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "StdoutBuffer3x.py"), (processObj, threadObj) => {
                     processObj.DebuggerOutput += (sender, args) => {
                         Assert.IsFalse(gotOutput, "got output more than once");
                         gotOutput = true;
@@ -2091,14 +2155,20 @@ namespace DebuggerTests {
             var expectedOutput = "Provide A: fob\n";
             string actualOutput = string.Empty;
 
-            var process = DebugProcess(debugger, Path.Combine(DebuggerTestPath, "InputFunction.py"), (processObj, threadObj) => {
+            var processRunInfo = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "InputFunction.py"), (processObj, threadObj) => {
                 processObj.DebuggerOutput += (sender, args) => {
                     actualOutput += args.Output;
                 };
             }, debugOptions: PythonDebugOptions.RedirectOutput | PythonDebugOptions.RedirectInput);
 
+            var process = processRunInfo.Process;
+
             try {
                 await process.StartAsync();
+
+                AssertWaited(processRunInfo.ProcessLoaded);
+                processRunInfo.ProcessLoadedException?.Throw();
+
                 Thread.Sleep(1000);
                 process.SendStringToStdInput("fob\n");
             } finally {
