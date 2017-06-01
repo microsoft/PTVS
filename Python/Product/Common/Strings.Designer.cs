@@ -268,7 +268,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create a virtual environment.
+        ///   Looks up a localized string similar to Create a virtual environment using virtualenv.
         /// </summary>
         public static string AddVirtualEnvironmentWindow_CreateVirtualEnv {
             get {
