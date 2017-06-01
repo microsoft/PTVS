@@ -320,7 +320,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called "pythonw.exe", but it may be different for some interpreters.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Pencereli yorumlayıcı yolu, bir konsol penceresi görüntülemeden Python'u başlatmak için kullanılan yürütülebilir dosyadır. Normalde "pythonw.exe" adını taşır ancak bazı yorumlayıcılar için bu farklı olabilir.]A;]]></Val>
+            <Val><![CDATA[Pencereli yorumlayıcı yolu, bir konsol penceresi görüntülemeden Python'u başlatmak için kullanılan yürütülebilir dosyadır. Normalde "pythonw.exe" adını taşır ancak bazı yorumlayıcılar için bu farklı olabilir.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &quot;pythonw.exe&quot;, but it may be different for some interpreters.]]></Val>

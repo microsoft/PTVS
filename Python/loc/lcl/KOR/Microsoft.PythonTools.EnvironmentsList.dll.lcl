@@ -319,8 +319,8 @@
       <Item ItemId=";ConfigurationExtensionWindowedInterpreterPathHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called "pythonw.exe", but it may be different for some interpreters.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[창 인터프리터 경로는 콘솔 창을 표시하지 않고 Python을 시작하는 데 사용되는 실행 파일입니다. 이 파일의 이름은 보통 &quot;pythonw.exe&quot;이지만 인터프리터에 따라 이름이 다를 수도 있습니다.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[창 인터프리터 경로는 콘솔 창을 표시하지 않고 Python을 시작하는 데 사용되는 실행 파일입니다. 이 파일의 이름은 보통 "pythonw.exe"이지만 인터프리터에 따라 이름이 다를 수도 있습니다.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The windowed interpreter path is the executable file used to start Python without displaying a console window. Normally this is called &quot;pythonw.exe&quot;, but it may be different for some interpreters.]]></Val>
