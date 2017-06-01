@@ -101,6 +101,7 @@
     <Compile Include="Mocks\MockTextImageVersion.cs" />
     <Compile Include="Mocks\MockTextViewModel.cs" />
     <Compile Include="Mocks\MockVsShell.cs" />
+    <Compile Include="Mocks\TextVersionWorkaround.cs" />
     <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />
