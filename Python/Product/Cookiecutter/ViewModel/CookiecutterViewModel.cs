@@ -460,12 +460,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (searchTerm.StartsWith("http")) {
                     searchTermTemplate.DisplayName = searchTerm;
                     searchTermTemplate.RemoteUrl = searchTerm;
+                    searchTermTemplate.Category = Custom.DisplayName;
                     Custom.Templates.Add(searchTermTemplate);
                     SearchResults.Add(Custom);
                     return;
                 } else if (Directory.Exists(searchTerm)) {
                     searchTermTemplate.DisplayName = searchTerm;
                     searchTermTemplate.ClonedPath = searchTerm;
+                    searchTermTemplate.Category = Custom.DisplayName;
                     Custom.Templates.Add(searchTermTemplate);
                     SearchResults.Add(Custom);
                     return;
@@ -969,6 +971,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     vm.OwnerUrl = t.OwnerUrl;
                     vm.RemoteUrl = t.RemoteUrl;
                     vm.ClonedPath = t.LocalFolderPath;
+                    vm.Category = parent.DisplayName;
                     vm.IsUpdateAvailable = t.UpdateAvailable == true;
                     parent.Templates.Add(vm);
                 }

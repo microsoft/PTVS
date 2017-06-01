@@ -39,6 +39,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
+        public virtual string AutomationName => ToString();
+        public virtual string AutomationHelpText => null;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(PropertyChangedEventArgs ea) {

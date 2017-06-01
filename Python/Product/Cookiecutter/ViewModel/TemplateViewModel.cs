@@ -27,6 +27,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _clonedPath;
         private string _description;
         private string _avatarUrl;
+        private string _category;
         private bool _isSearchTerm;
         private bool _isUpdateAvailable;
 
@@ -111,6 +112,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _displayName) {
                     _displayName = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(DisplayName)));
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(AutomationName)));
                 }
             }
         }
@@ -217,9 +219,27 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _isUpdateAvailable) {
                     _isUpdateAvailable = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsUpdateAvailable)));
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(AutomationHelpText)));
                 }
             }
         }
+
+        public string Category {
+            get {
+                return _category;
+            }
+            set {
+                if (value != _category) {
+                    _category = value;
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(Category)));
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(AutomationHelpText)));
+                }
+            }
+        }
+
+        public override string AutomationHelpText =>
+            (IsUpdateAvailable ? Strings.SearchPage_CategoryHelpTextUpdate : Strings.SearchPage_CategoryHelpTextNoUpdate)
+                .FormatUI(Category);
 
         private void RefreshOwnerTooltip() {
             var owner = RepositoryOwner;

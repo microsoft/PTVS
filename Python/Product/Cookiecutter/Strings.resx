@@ -494,4 +494,12 @@ Please delete the installed template and try again.</value>
   <data name="OptionsPage_OdbcConnectionBrowseAutomationName" xml:space="preserve">
     <value>Browse for database connection</value>
   </data>
+  <data name="SearchPage_CategoryHelpTextNoUpdate" xml:space="preserve">
+    <value>Category: {0}.</value>
+    <comment>{0} is a category name</comment>
+  </data>
+  <data name="SearchPage_CategoryHelpTextUpdate" xml:space="preserve">
+    <value>Category: {0}. Update is available</value>
+    <comment>{0} is a category name</comment>
+  </data>
 </root>
