@@ -593,7 +593,7 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>Add the virtual environment</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_CreateVirtualEnv" xml:space="preserve">
-    <value>Create a virtual environment</value>
+    <value>Create a virtual environment using virtualenv</value>
   </data>
   <data name="AddVirtualEnvironmentWindow_CreateVEnv" xml:space="preserve">
     <value>Create a virtual environment using venv</value>

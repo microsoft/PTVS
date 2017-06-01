@@ -45,7 +45,9 @@
                     </Style>
 
                     <DataTemplate x:Key="NameTemplate" DataType="{x:Type ptvs:InterpreterView}">
-                        <Label Name="InterpreterName" Content="{Binding Name}" />
+                        <TextBlock Name="InterpreterName"
+                                   Text="{Binding Name}"
+                                   Padding="3"/>
                     </DataTemplate>
                     
                     <DataTemplate x:Key="ErrorMessage">
