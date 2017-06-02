@@ -63,7 +63,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string DefaultIndexFwLink = "https://go.microsoft.com/fwlink/?linkid=834538";
         private static Task<Uri> _DefaultIndexTask = Task.Run(() => Resolve(DefaultIndexFwLink));
         private const string DefaultIndexName = "PyPI";
-        
+
+        private const string UserAgent = "PythonToolsForVisualStudio/" + AssemblyVersionInfo.Version;
+
         protected PipPackageCache(
             Uri index,
             string indexName,
@@ -187,6 +189,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             using (var client = new WebClient()) {
                 Stream data;
+                client.Headers[HttpRequestHeader.UserAgent] = UserAgent;
                 try {
                     data = await client.OpenReadTaskAsync(new Uri(Index, entry.Name + "/json"))
                         .ConfigureAwait(false);
@@ -310,6 +313,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             string htmlList;
             using (var client = new WebClient()) {
+                client.Headers[HttpRequestHeader.UserAgent] = UserAgent;
                 // ../simple is a list of <a href="package">package</a>
                 try {
                     htmlList = await client.DownloadStringTaskAsync(new Uri(Index, "../simple")).ConfigureAwait(false);
@@ -455,6 +459,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var req = WebRequest.CreateHttp(uri);
             req.Method = "HEAD";
             req.AllowAutoRedirect = false;
+            req.UserAgent = UserAgent;
             try {
                 using (var resp = req.GetResponse()) {
                     return new Uri(resp.Headers.Get("Location") ?? uri);
