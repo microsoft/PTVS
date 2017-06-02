@@ -672,11 +672,20 @@ namespace DebuggerTests {
         }
 
         internal void TerminateProcess(PythonProcess p) {
+            // Killing the process will cause multiple ObjectDisposedException
+            // which are expected since the communication stream is forcibly closed.
+            // Disable their logging to reduce the noise.
+            bool removedLogging = AssertListener.RemoveLoggedExceptionType(typeof(ObjectDisposedException));
+
             try {
                 p.Terminate();
             } catch (Exception ex) {
                 Console.WriteLine("Failed to detach process");
                 Console.WriteLine(ex);
+            } finally {
+                if (removedLogging) {
+                    AssertListener.AddLoggedExceptionType(typeof(ObjectDisposedException));
+                }
             }
         }
 
