@@ -16,18 +16,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
     public class AssertListener : TraceListener {
         private readonly SynchronizationContext _testContext;
         private readonly List<ExceptionDispatchInfo> _unhandled = new List<ExceptionDispatchInfo>();
+        private static readonly Concurrent​Dictionary<Type, bool> _loggedExceptionTypes = new Concurrent​Dictionary<Type, bool>();
 
         private AssertListener() {
             _testContext = SynchronizationContext.Current;
@@ -44,8 +45,28 @@ namespace TestUtilities {
                 Debug.Listeners.Add(listener);
                 Debug.Listeners.Remove("Default");
 
+                AddLoggedExceptionType(typeof(NullReferenceException));
+                AddLoggedExceptionType(typeof(ObjectDisposedException));
+
                 AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             }
+        }
+
+        public static void AddLoggedExceptionType(Type exceptionType) {
+            if (exceptionType == null) {
+                throw new ArgumentNullException(nameof(exceptionType));
+            }
+
+            _loggedExceptionTypes[exceptionType] = true;
+        }
+
+        public static bool RemoveLoggedExceptionType(Type exceptionType) {
+            if (exceptionType == null) {
+                throw new ArgumentNullException(nameof(exceptionType));
+            }
+
+            bool val;
+            return _loggedExceptionTypes.TryRemove(exceptionType, out val);
         }
 
         public static void ThrowUnhandled() {
@@ -68,15 +89,18 @@ namespace TestUtilities {
         }
 
         static void CurrentDomain_FirstChanceException(object sender, FirstChanceExceptionEventArgs e) {
-            if (e.Exception is NullReferenceException || e.Exception is ObjectDisposedException) {
-                // Exclude safe handle messages because they are noisy
-                if (!e.Exception.Message.Contains("Safe handle has been closed")) {
-                    var log = new EventLog("Application");
-                    log.Source = "Application Error";
-                    log.WriteEntry(
-                        "First-chance exception: " + e.Exception.ToString(),
-                        EventLogEntryType.Warning
-                    );
+            foreach (var type in _loggedExceptionTypes) {
+                if (type.Key.IsAssignableFrom(e.Exception.GetType())) {
+                    // Exclude safe handle messages because they are noisy
+                    if (!e.Exception.Message.Contains("Safe handle has been closed")) {
+                        var log = new EventLog("Application");
+                        log.Source = "Application Error";
+                        log.WriteEntry(
+                            "First-chance exception: " + e.Exception.ToString(),
+                            EventLogEntryType.Warning
+                        );
+                    }
+                    break;
                 }
             }
         }
