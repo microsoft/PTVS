@@ -2088,4 +2088,7 @@ Expand selection to the full expression?</value>
   <data name="PythonInteractive_Yellow" xml:space="preserve">
     <value>Python Interactive - yellow</value>
   </data>
+  <data name="RemoveReplPrompts" xml:space="preserve">
+    <value>Remove Interactive Prompts</value>
+  </data>
 </root>

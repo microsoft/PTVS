@@ -4089,6 +4089,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove Interactive Prompts.
+        /// </summary>
+        public static string RemoveReplPrompts {
+            get {
+                return ResourceManager.GetString("RemoveReplPrompts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Cancel.
         /// </summary>
         public static string RenameVariable_Cancel {

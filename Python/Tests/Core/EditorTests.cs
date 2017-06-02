@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -409,6 +410,61 @@ string'''";
         }
 
         #endregion Outlining Statements
+
+        #region REPL prompt removal
+
+        [TestMethod, Priority(0)]
+        public void RemoveReplPrompts() {
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("", null));
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts(">>>", null));
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts(">>> ", null));
+            Assert.AreEqual("    ", ReplPromptHelpers.RemovePrompts(">>>     ", null));
+            Assert.AreEqual("pass", ReplPromptHelpers.RemovePrompts(">>> pass", null));
+            Assert.AreEqual(" pass", ReplPromptHelpers.RemovePrompts(">>>  pass", null));
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("...", null));
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("... ", null));
+            Assert.AreEqual("    ", ReplPromptHelpers.RemovePrompts("...     ", null));
+            Assert.AreEqual("pass", ReplPromptHelpers.RemovePrompts("... pass", null));
+            Assert.AreEqual(" pass", ReplPromptHelpers.RemovePrompts("...  pass", null));
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("In[1]:", null));
+            Assert.AreEqual("    ", ReplPromptHelpers.RemovePrompts("In [ 2 ]  :     ", null));
+            Assert.AreEqual("pass", ReplPromptHelpers.RemovePrompts("In [ 2 ]  : pass", null));
+            Assert.AreEqual(" pass", ReplPromptHelpers.RemovePrompts("In [ 2 ]  :  pass", null));
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("...:", null));
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("    ...:", null));
+            Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("  ...: ", null));
+            Assert.AreEqual("    ", ReplPromptHelpers.RemovePrompts("  ...:     ", null));
+            Assert.AreEqual("pass", ReplPromptHelpers.RemovePrompts("  ...: pass", null));
+            Assert.AreEqual(" pass", ReplPromptHelpers.RemovePrompts("  ...:  pass", null));
+
+            Assert.AreEqual(@"x = 1
+print(x)
+if True:
+    pass
+
+
+print(x)
+1
+
+if True:
+    print(x)
+
+1".Replace("\r\n", "\n"), ReplPromptHelpers.RemovePrompts(@">>> x = 1
+>>> print(x)
+>>> if True:
+...     pass
+...
+
+In [2]: print(x)
+1
+
+In [3]: if True:
+   ...:     print(x)
+   ...: 
+1", "\n"));
+        }
+
+        #endregion
 
         private static StringLiteralCompletionList.EntryInfo MakeEntryInfo(string rootpath, string filename, string insertionText = null, string fullpath = null, bool? isFile = null) {
             var realIsFile = isFile ?? !string.IsNullOrEmpty(Path.GetExtension(filename));
