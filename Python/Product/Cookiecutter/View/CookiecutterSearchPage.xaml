@@ -215,6 +215,8 @@
                 <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                     <Setter Property="IsExpanded" Value="True" />
                     <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}"/>
+                    <Setter Property="AutomationProperties.Name" Value="{Binding AutomationName, Mode=OneWay}" />
+                    <Setter Property="AutomationProperties.HelpText" Value="{Binding AutomationHelpText, Mode=OneWay}" />
                     <EventSetter Event="MouseDoubleClick" Handler="OnItemMouseDoubleClick" />
                     <EventSetter Event="TreeViewItem.PreviewMouseRightButtonDown" Handler="OnItemPreviewMouseRightButtonDown"/>
                     <EventSetter Event="PreviewKeyDown" Handler="OnItemPreviewKeyDown"/>

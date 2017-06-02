@@ -668,6 +668,24 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Category: {0}..
+        /// </summary>
+        public static string SearchPage_CategoryHelpTextNoUpdate {
+            get {
+                return ResourceManager.GetString("SearchPage_CategoryHelpTextNoUpdate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Category: {0}. Update is available.
+        /// </summary>
+        public static string SearchPage_CategoryHelpTextUpdate {
+            get {
+                return ResourceManager.GetString("SearchPage_CategoryHelpTextUpdate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Checking for updates....
         /// </summary>
         public static string SearchPage_CheckingUpdates {
