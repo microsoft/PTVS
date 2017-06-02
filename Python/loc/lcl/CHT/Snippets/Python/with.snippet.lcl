@@ -24,7 +24,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[with]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[含]]></Val>
+          <Val><![CDATA[with]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
