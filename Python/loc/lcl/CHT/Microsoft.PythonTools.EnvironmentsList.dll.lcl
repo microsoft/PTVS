@@ -809,7 +809,7 @@
         <Str Cat="Text">
           <Val><![CDATA["pip install {0}"]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA["pip 安裝 {0}"]]></Val>
+            <Val><![CDATA["pip install {0}"]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
