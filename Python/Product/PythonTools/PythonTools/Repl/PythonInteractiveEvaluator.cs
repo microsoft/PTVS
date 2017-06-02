@@ -24,6 +24,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -582,9 +583,15 @@ namespace Microsoft.PythonTools.Repl {
                     return res.ToString();
                 }
             }
-            return EditFilter.RemoveReplPrompts(
-                _serviceProvider.GetPythonToolsService(),
-                Clipboard.GetText(),
+
+            var txt = Clipboard.GetText();
+            if (!_serviceProvider.GetPythonToolsService().AdvancedOptions.PasteRemovesReplPrompts) {
+                return txt;
+            }
+
+
+            return ReplPromptHelpers.RemovePrompts(
+                txt,
                 _window.TextView.Options.GetNewLineCharacter()
             );
         }

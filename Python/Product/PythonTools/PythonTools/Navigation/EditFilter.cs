@@ -22,6 +22,7 @@ using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Refactoring;
@@ -40,7 +41,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using IServiceProvider = System.IServiceProvider;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Language {
     /// <summary>
@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools.Language {
         private readonly IEditorOperations _editorOps;
         private readonly PythonToolsService _pyService;
         private readonly AnalysisEntryService _entryService;
+        private readonly ITextBufferUndoManagerProvider _undoManagerProvider;
         private readonly IOleCommandTarget _next;
 
         private EditFilter(
@@ -82,6 +83,7 @@ namespace Microsoft.PythonTools.Language {
             _componentModel = model;
             _pyService = _serviceProvider.GetPythonToolsService();
             _entryService = _componentModel.GetService<AnalysisEntryService>();
+            _undoManagerProvider = _componentModel.GetService<ITextBufferUndoManagerProvider>();
             _next = next;
 
             BraceMatcher.WatchBraceHighlights(textView, _componentModel);
@@ -649,15 +651,19 @@ namespace Microsoft.PythonTools.Language {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Paste:
-                        if (Clipboard.ContainsData("VisualStudioEditorOperationsLineCutCopyClipboardTag")) {
-                            // Copying a full line, so we won't strip prompts.
-                            // Deferring to VS paste also inserts the entire
-                            // line rather than breaking up the current one.
+                        if (!_pyService.AdvancedOptions.PasteRemovesReplPrompts) {
+                            // Not stripping prompts, so don't use our logic
                             break;
                         }
-                        string updated = RemoveReplPrompts(_pyService, Clipboard.GetText(), _textView.Options.GetNewLineCharacter());
-                        if (updated != null) {
-                            _editorOps.ReplaceSelection(updated);
+                        var beforePaste = _textView.TextSnapshot;
+                        if (_editorOps.Paste()) {
+                            var afterPaste = _textView.TextSnapshot;
+                            var um = _undoManagerProvider.GetTextBufferUndoManager(afterPaste.TextBuffer);
+                            using (var undo = um.TextBufferUndoHistory.CreateTransaction(Strings.RemoveReplPrompts)) {
+                                if (ReplPromptHelpers.RemovePastedPrompts(beforePaste, afterPaste)) {
+                                    undo.Complete();
+                                }
+                            }
                             return VSConstants.S_OK;
                         }
                         break;
@@ -958,44 +964,6 @@ namespace Microsoft.PythonTools.Language {
         }
 
 #endregion
-
-        internal static string RemoveReplPrompts(
-            PythonToolsService pyService,
-            string text,
-            string newline
-        ) {
-            if (string.IsNullOrEmpty(text)) {
-                return text;
-            }
-
-            if (!pyService.AdvancedOptions.PasteRemovesReplPrompts) {
-                return null;
-            }
-
-            string[] lines = text.Replace("\r\n", "\n").Split('\n');
-
-            bool allPrompts = true;
-            foreach (var line in lines) {
-                if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
-                    if (!string.IsNullOrWhiteSpace(line)) {
-                        allPrompts = false;
-                        break;
-                    }
-                }
-            }
-
-            if (!allPrompts) {
-                return text;
-            }
-
-            for (int i = 0; i < lines.Length; i++) {
-                if (!string.IsNullOrWhiteSpace(lines[i])) {
-                    lines[i] = lines[i].Substring(4);
-                }
-            }
-
-            return string.Join(newline, lines);
-        }
 
         internal void DoIdle(IOleComponentManager compMgr) {
         }
