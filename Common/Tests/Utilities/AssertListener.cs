@@ -38,6 +38,8 @@ namespace TestUtilities {
             set { }
         }
 
+        public static bool LogObjectDisposedExceptions { get; set; } = true;
+
         public static void Initialize() {
             var listener = new AssertListener();
             if (null == Debug.Listeners[listener.Name]) {
@@ -68,7 +70,7 @@ namespace TestUtilities {
         }
 
         static void CurrentDomain_FirstChanceException(object sender, FirstChanceExceptionEventArgs e) {
-            if (e.Exception is NullReferenceException || e.Exception is ObjectDisposedException) {
+            if (e.Exception is NullReferenceException || (e.Exception is ObjectDisposedException && LogObjectDisposedExceptions)) {
                 // Exclude safe handle messages because they are noisy
                 if (!e.Exception.Message.Contains("Safe handle has been closed")) {
                     var log = new EventLog("Application");
