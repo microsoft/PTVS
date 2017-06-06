@@ -267,8 +267,10 @@ namespace DebuggerTests {
                                     }
                                 }
 
-                                await breakpoint.AddAsync(TimeoutToken());
+                                // Bind failed and succeeded events expect to find the breakpoint
+                                // in the dictionary, so update it before sending the add request.
                                 bps.Add(breakpoint, bp);
+                                await breakpoint.AddAsync(TimeoutToken());
                             }
 
                             OnProcessLoaded?.Invoke(newproc);
