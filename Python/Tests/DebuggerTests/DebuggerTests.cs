@@ -332,6 +332,7 @@ namespace DebuggerTests {
                     resumeOnProcessLoaded: false,
                     onLoaded: (newproc, newthread) => {
                         thread = newthread;
+                        return Task.CompletedTask;
                     }
                 );
 
@@ -411,6 +412,7 @@ namespace DebuggerTests {
             PythonThread thread = null;
             var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "BreakAllTest.py", (newproc, newthread) => {
                 thread = newthread;
+                return Task.CompletedTask;
             });
 
             var process = processRunInfo.Process;
@@ -450,6 +452,7 @@ namespace DebuggerTests {
             PythonThread thread = null;
             var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "InfiniteThreads.py", (newproc, newthread) => {
                 thread = newthread;
+                return Task.CompletedTask;
             });
 
             var process = processRunInfo.Process;
@@ -1106,6 +1109,7 @@ namespace DebuggerTests {
             PythonThread thread = null;
             var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "SteppingTest.py", (newproc, newthread) => {
                 thread = newthread;
+                return Task.CompletedTask;
             });
 
             var process = processRunInfo.Process;
@@ -1918,7 +1922,7 @@ namespace DebuggerTests {
         }
 
         private void TestGetHandledExceptionRanges(PythonDebugger debugger, string filename, params ExceptionHandlerInfo[] expected) {
-            var processRunInfo = CreateProcess(debugger, filename, (processObj, threadObj) => { });
+            var processRunInfo = CreateProcess(debugger, filename);
             var process = processRunInfo.Process;
 
             var actual = process.GetHandledExceptionRanges(filename);
@@ -2055,7 +2059,7 @@ namespace DebuggerTests {
             Assert.AreEqual(expectedExitCode, exitCode, String.Format("Unexpected Python process exit code for '{0}'", filename));
         }
 
-        private PythonProcessRunInfo CreateProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string pythonExe = null) {
+        private PythonProcessRunInfo CreateProcess(PythonDebugger debugger, string filename, Func<PythonProcess, PythonThread, Task> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string pythonExe = null) {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
 
@@ -2063,7 +2067,9 @@ namespace DebuggerTests {
             processRunInfo.Process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
             processRunInfo.Process.ProcessLoaded += async (sender, args) => {
                 try {
-                    onLoaded?.Invoke(processRunInfo.Process, args.Thread);
+                    if (onLoaded != null) {
+                        await onLoaded(processRunInfo.Process, args.Thread);
+                    }
                     if (resumeOnProcessLoaded) {
                         await processRunInfo.Process.ResumeAsync(TimeoutToken());
                     }
@@ -2108,6 +2114,7 @@ namespace DebuggerTests {
                         Assert.AreEqual(expectedOutput.Dequeue(), e.Output);
                     }
                 };
+                return Task.CompletedTask;
             }, debugOptions: PythonDebugOptions.RedirectOutput);
 
             var process = processRunInfo.Process;
@@ -2136,6 +2143,7 @@ namespace DebuggerTests {
                         gotOutput = true;
                         Assert.AreEqual("fob", args.Output);
                     };
+                    return Task.CompletedTask;
                 }, debugOptions: PythonDebugOptions.RedirectOutput);
 
                 await StartAndWaitForExitAsync(process);
@@ -2159,6 +2167,7 @@ namespace DebuggerTests {
                 processObj.DebuggerOutput += (sender, args) => {
                     actualOutput += args.Output;
                 };
+                return Task.CompletedTask;
             }, debugOptions: PythonDebugOptions.RedirectOutput | PythonDebugOptions.RedirectInput);
 
             var process = processRunInfo.Process;
