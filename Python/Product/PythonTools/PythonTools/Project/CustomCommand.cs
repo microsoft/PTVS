@@ -353,12 +353,20 @@ namespace Microsoft.PythonTools.Project {
             }
 
             public override void Show() {
-                _errorListProvider.Show();
+                try {
+                    _errorListProvider.Show();
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                }
             }
 
             public override void ShowAndActivate() {
-                _errorListProvider.Show();
-                _errorListProvider.BringToFront();
+                try {
+                    _errorListProvider.Show();
+                    _errorListProvider.BringToFront();
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                }
             }
 
             private void OnNavigate(object sender, EventArgs e) {
