@@ -263,7 +263,7 @@
         <Str Cat="Text">
           <Val><![CDATA[S_tandalone script]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[S_cript autônomo]]></Val>
+            <Val><![CDATA[Scrip_t autônomo]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -796,7 +796,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17109.1]]></Val>
+        <Val><![CDATA[3.0.17150.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -832,7 +832,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17109.1]]></Val>
+        <Val><![CDATA[3.0.17150.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
