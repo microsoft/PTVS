@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             try {
                 GetUIThread(_serviceProvider).Invoke(() => ErrorHandler.ThrowOnFailure(_pane.Activate()));
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                ex.ReportUnhandledException(_serviceProvider, GetType());
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
         }
 
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                     }
                 });
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                ex.ReportUnhandledException(_serviceProvider, GetType());
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
         }
 
