@@ -334,4 +334,32 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             return base.SelectTemplate(item, container);
         }
     }
+
+    public sealed class EnvironmentViewItemContainerSelector : StyleSelector {
+        public Style Environment { get; set; }
+        public Style OnlineHelp { get; set; }
+
+        public override Style SelectStyle(object item, DependencyObject container) {
+            return SelectStyle(item as EnvironmentView)
+                ?? container.GetValue(ItemsControl.ItemContainerStyleProperty) as Style
+                ?? base.SelectStyle(item, container);
+        }
+
+        private Style SelectStyle(EnvironmentView ev) {
+            if (ev == null) {
+                return null;
+            }
+
+            if (EnvironmentView.IsOnlineHelpView(ev) && OnlineHelp != null) {
+                return OnlineHelp;
+            }
+
+            if (Environment != null) {
+                return Environment;
+            }
+
+            return null;
+        }
+
+    }
 }
