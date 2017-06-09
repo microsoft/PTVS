@@ -43,8 +43,7 @@
                                 Name="Button"
                                 Command="ApplicationCommands.Help"
                                 HorizontalAlignment="Left"
-                                GotFocus="OnlineHelpListItem_GotFocus"
-                                LostFocus="OnlineHelpListItem_LostFocus">
+                                GotFocus="OnlineHelpListItem_GotFocus">
                             <Grid Background="Transparent">
                                 <Label VerticalAlignment="Center"
                                        Foreground="{Binding Foreground,ElementName=Button}"

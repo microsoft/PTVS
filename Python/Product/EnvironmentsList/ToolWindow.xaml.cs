@@ -557,23 +557,17 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        private static void SelectListBoxItem(DependencyObject child, bool isSelected) {
-            while (child != null) {
+        private void OnlineHelpListItem_GotFocus(object sender, RoutedEventArgs e) {
+            for (var child = sender as DependencyObject;
+                child != null;
+                child = VisualTreeHelper.GetParent(child)
+            ) {
                 var lbi = child as ListBoxItem;
                 if (lbi != null) {
                     lbi.IsSelected = true;
                     return;
                 }
-                child = VisualTreeHelper.GetParent(child);
             }
-        }
-
-        private void OnlineHelpListItem_GotFocus(object sender, RoutedEventArgs e) {
-            SelectListBoxItem(sender as DependencyObject, true);
-        }
-
-        private void OnlineHelpListItem_LostFocus(object sender, RoutedEventArgs e) {
-            SelectListBoxItem(sender as DependencyObject, false);
         }
 
         class InterpreterConfigurationComparer : IEqualityComparer<InterpreterConfiguration>, IComparer<InterpreterConfiguration> {
