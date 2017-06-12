@@ -526,6 +526,7 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="WebGroup"/>
         <Icon guid="ImageCatalogGuid" id="WebDestination"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>&amp;Python products and information</ButtonText>
           <ToolTipText>Opens a web site to help you discover Python-related products and information from Microsoft.</ToolTipText>
