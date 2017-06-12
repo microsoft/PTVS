@@ -133,6 +133,8 @@
     <Compile Include="MockSmartTagBroker.cs" />
     <Compile Include="MockSmartTagSession.cs" />
     <Compile Include="MockStandardClassificationService.cs" />
+    <Compile Include="MockTextBufferUndoManager.cs" />
+    <Compile Include="MockTextBufferUndoManagerProvider.cs" />
     <Compile Include="MockTextMarkerProviderFactory.cs" />
     <Compile Include="MockToolWindow.cs" />
     <Compile Include="MockTreeNode.cs" />
