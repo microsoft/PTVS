@@ -874,10 +874,21 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         private static PythonLanguageVersion GetLanguageVersion(string options) {
             PythonLanguageVersion langVersion;
-            if (options == null || !Enum.TryParse<PythonLanguageVersion>(options, out langVersion)) {
-                langVersion = DefaultVersion;
+            Version ver;
+            if (string.IsNullOrEmpty(options)) {
+                return DefaultVersion;
             }
-            return langVersion;
+            if (Enum.TryParse(options, out langVersion)) {
+                return langVersion;
+            }
+            if (Version.TryParse(options, out ver)) {
+                try {
+                    return ver.ToLanguageVersion();
+                } catch (InvalidOperationException) {
+                    // Version is not supported
+                }
+            }
+            return DefaultVersion;
         }
 
         // Resume a process launched by IDebugEngineLaunch2.LaunchSuspended
