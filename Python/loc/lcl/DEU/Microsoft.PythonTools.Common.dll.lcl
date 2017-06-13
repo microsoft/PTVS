@@ -204,10 +204,13 @@
       </Item>
       <Item ItemId=";AddVirtualEnvironmentWindow_CreateVirtualEnv" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Create a virtual environment]]></Val>
+          <Val><![CDATA[Create a virtual environment using virtualenv]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Virtuelle Umgebung erstellen]]></Val>
+            <Val><![CDATA[Virtuelle Umgebung mit "virtualenv" erstellen]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Create a virtual environment]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3979,6 +3982,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";RemoveReplPrompts" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Remove Interactive Prompts]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Interaktive Eingabeaufforderungen entfernen]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";RenameVariable_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
@@ -5248,7 +5260,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17146.1]]></Val>
+        <Val><![CDATA[3.0.17160.3]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5284,7 +5296,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17146.1]]></Val>
+        <Val><![CDATA[3.0.17160.3]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
