@@ -389,14 +389,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 } while (enumerator.MoveNext());
             }
 
-            if (start.HasValue && lastToken != null && (lastToken.Span.End.Position - start.Value.Start.Position) >= 0) {
-                return new SnapshotSpan(
+            if (start.HasValue && lastToken != null && (lastToken.Span.End.Position - start.Value.Start.Position) >= 0)
+            {
+                var spanToReturn = new SnapshotSpan(
                     Snapshot,
                     new Span(
                         start.Value.Start.Position,
                         lastToken.Span.End.Position - start.Value.Start.Position
                     )
                 );
+                // To handle a case where a space is returned for displaying the type signature.
+                if (string.IsNullOrWhiteSpace(spanToReturn.GetText()))
+                {
+                    return null;
+                }
+                return spanToReturn;
             }
 
             return _span.GetSpan(_snapshot);
