@@ -415,6 +415,16 @@ permissions and limitations under the License.
       <!--========================================== Miscellaneous commands =========================================-->
       <!--===========================================================================================================-->
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidDiagnostics" priority="0x0100" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
+        <Strings>
+          <ButtonText>&amp;Diagnostic Info...</ButtonText>
+          <ToolTipText>Displays detailed diagnostic information.</ToolTipText>
+          <CanonicalName>Diagnostic Info</CanonicalName>
+          <LocCanonicalName>Diagnostic Info</LocCanonicalName>
+        </Strings>
+      </Button>
+
       <Button guid="guidPythonToolsCmdSet" id="cmdidImportCoverage" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
@@ -1108,6 +1118,7 @@ permissions and limitations under the License.
       <IDSymbol name="cmdidExecuteFileInRepl" value="0x0102" />
       <IDSymbol name="cmdidSendToRepl" value="0x0103"/>
       <IDSymbol name="cmdidFillParagraph" value="0x0105"/>
+      <IDSymbol name="cmdidDiagnostics" value ="0x0106" />
       <IDSymbol name="cmdidRemoveImports" value ="0x0107" />
       <IDSymbol name="cmdidRemoveImportsCurrentScope" value ="0x0108" />
       <IDSymbol name="cmdidRefactorRename" value ="0x0109" />
