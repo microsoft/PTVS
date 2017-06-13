@@ -1,0 +1,36 @@
+<Themes>
+  <Theme Name="Blue" GUID="{a4d6a176-b948-4b29-8c66-53c97a1ed7d0}" MinVSVersion="12">
+    <Category Name="Text Editor" GUID="{75A05685-00A8-4DED-BAE5-E7A50BFA929A}">
+      <!--<Color Name="Python operator">
+        <Foreground Type="CT_RAW" Source="FF000000" />
+      </Color>
+      <Color Name="Python grouping">
+        <Foreground Type="CT_RAW" Source="FF000000" />
+      </Color>
+      <Color Name="Python comma">
+        <Foreground Type="CT_RAW" Source="FF000000" />
+      </Color>
+      <Color Name="Python dot">
+        <Foreground Type="CT_RAW" Source="FF000000" />
+      </Color>
+      <Color Name="Python class">
+        <Foreground Type="CT_RAW" Source="FFAF912B" />
+      </Color>
+      <Color Name="Python module">
+        <Foreground Type="CT_RAW" Source="FF8A006F" />
+      </Color>
+      <Color Name="Python parameter">
+        <Foreground Type="CT_RAW" Source="FF808080" />
+      </Color>
+      <Color Name="Python function">
+        <Foreground Type="CT_RAW" Source="FF000000" />
+      </Color>
+      <Color Name="Python builtin">
+        <Foreground Type="CT_RAW" Source="FFFF0000" />
+      </Color>
+      <Color Name="Django template tag">
+        <Foreground Type="CT_RAW" Source="FF808000" />
+      </Color>-->
+    </Category>
+  </Theme>
+</Themes>
