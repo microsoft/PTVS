@@ -389,8 +389,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } while (enumerator.MoveNext());
             }
 
-            if (start.HasValue && lastToken != null && (lastToken.Span.End.Position - start.Value.Start.Position) >= 0)
-            {
+            if (start.HasValue && lastToken != null && (lastToken.Span.End.Position - start.Value.Start.Position) >= 0) {
                 var spanToReturn = new SnapshotSpan(
                     Snapshot,
                     new Span(
@@ -399,8 +398,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     )
                 );
                 // To handle a case where a space is returned for displaying the type signature.
-                if (string.IsNullOrWhiteSpace(spanToReturn.GetText()))
-                {
+                if (string.IsNullOrWhiteSpace(spanToReturn.GetText())) {
                     return null;
                 }
                 return spanToReturn;
