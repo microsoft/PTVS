@@ -258,6 +258,7 @@
     <Compile Include="PythonTools\CodeCoverage\CoverageMapper.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoveragePyConverter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageScope.cs" />
+    <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
