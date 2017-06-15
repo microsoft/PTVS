@@ -70,7 +70,8 @@
                                                               Text="{Binding Val, Mode=TwoWay}"
                                                               HelpText="{Binding Description}"
                                                               Watermark="{Binding Default}"
-                                                              AutomationProperties.Name="{Binding Label}"/>
+                                                              AutomationProperties.Name="{Binding Label}"
+                                                              AutomationProperties.HelpText="{Binding Description}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
@@ -98,7 +99,8 @@
                                                               Watermark="{Binding Default}"
                                                               BrowseButtonStyle="{StaticResource BrowseOdbcButton}"
                                                               BrowseAutomationName="{x:Static cct:Strings.OptionsPage_OdbcConnectionBrowseAutomationName}"
-                                                              AutomationProperties.Name="{Binding Label}"/>
+                                                              AutomationProperties.Name="{Binding Label}"
+                                                              AutomationProperties.HelpText="{Binding Description}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
@@ -124,7 +126,8 @@
                                                                Value="{Binding Val, Mode=TwoWay}"
                                                                Values="{Binding Items}"
                                                                HelpText="{Binding Description}"
-                                                               AutomationProperties.Name="{Binding Label}"/>
+                                                               AutomationProperties.Name="{Binding Label}"
+                                                               AutomationProperties.HelpText="{Binding Description}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
@@ -156,7 +159,8 @@
                                                                Value="{Binding Val, Mode=TwoWay}"
                                                                Values="{StaticResource ResourceKey=yesnoValues}"
                                                                HelpText="{Binding Description}"
-                                                               AutomationProperties.Name="{Binding Label}"/>
+                                                               AutomationProperties.Name="{Binding Label}"
+                                                               AutomationProperties.HelpText="{Binding Description}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
