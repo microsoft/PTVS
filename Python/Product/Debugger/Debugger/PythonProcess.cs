@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -34,8 +35,8 @@ namespace Microsoft.PythonTools.Debugger {
     /// </summary>
     class PythonProcess : IDisposable {
         private readonly Process _process;
-        private readonly Dictionary<long, PythonThread> _threads = new Dictionary<long, PythonThread>();
-        private readonly Dictionary<int, PythonBreakpoint> _breakpoints = new Dictionary<int, PythonBreakpoint>();
+        private readonly ConcurrentDictionary<long, PythonThread> _threads = new ConcurrentDictionary<long, PythonThread>();
+        private readonly ConcurrentDictionary<int, PythonBreakpoint> _breakpoints = new ConcurrentDictionary<int, PythonBreakpoint>();
         private readonly IdDispenser _ids = new IdDispenser();
         private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();
         private readonly Dictionary<int, ChildrenInfo> _pendingChildEnums = new Dictionary<int, ChildrenInfo>();
@@ -448,11 +449,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         internal IList<PythonThread> GetThreads() {
-            List<PythonThread> threads = new List<PythonThread>();
-            foreach (var thread in _threads.Values) {
-                threads.Add(thread);
-            }
-            return threads;
+            return _threads.Values.ToList();
         }
 
         internal PythonAst GetAst(string filename) {
@@ -688,10 +685,8 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void OnLegacyThreadExit(object sender, LDP.ThreadExitEvent e) {
             PythonThread thread;
-            if (_threads.TryGetValue(e.threadId, out thread)) {
+            if (_threads.TryRemove(e.threadId, out thread)) {
                 ThreadExited?.Invoke(this, new ThreadEventArgs(thread));
-
-                _threads.Remove(e.threadId);
                 Debug.WriteLine("Thread exited, {0} active threads", _threads.Count);
             }
         }
@@ -1050,7 +1045,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         internal async Task RemoveBreakpointAsync(PythonBreakpoint unboundBreakpoint, CancellationToken ct) {
-            _breakpoints.Remove(unboundBreakpoint.Id);
+            PythonBreakpoint bp;
+            _breakpoints.TryRemove(unboundBreakpoint.Id, out bp);
             await DisableBreakpointAsync(unboundBreakpoint, ct);
         }
 
