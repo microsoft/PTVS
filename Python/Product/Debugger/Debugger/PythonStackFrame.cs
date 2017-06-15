@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public Task ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind, Action<PythonEvaluationResult> completion, CancellationToken ct) {
-            return _thread.Process.ExecuteTextAsync(text, reprKind, this, completion, ct);
+            return _thread.Process.ExecuteTextAsync(text, reprKind, this, false, completion, ct);
         }
 
         public async Task<PythonEvaluationResult> ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind = PythonEvaluationResultReprKind.Normal, CancellationToken ct = default(CancellationToken)) {

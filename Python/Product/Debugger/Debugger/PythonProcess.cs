@@ -203,6 +203,7 @@ namespace Microsoft.PythonTools.Debugger {
                         _connection.LegacyThreadCreate -= OnLegacyThreadCreate;
                         _connection.LegacyThreadExit -= OnLegacyThreadExit;
                         _connection.LegacyThreadFrameList -= OnLegacyThreadFrameList;
+                        _connection.LegacyModulesChanged -= OnLegacyModulesChanged;
                         _connection.Dispose();
                         _connection = null;
                     }
@@ -391,6 +392,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _connection.LegacyThreadCreate += OnLegacyThreadCreate;
                 _connection.LegacyThreadExit += OnLegacyThreadExit;
                 _connection.LegacyThreadFrameList += OnLegacyThreadFrameList;
+                _connection.LegacyModulesChanged += OnLegacyModulesChanged;
 
                 // This must be done under the lock so that any handlers that are added after we assigned _connection
                 // above won't get called twice, once from Connected add handler, and the second time below. 
@@ -574,9 +576,16 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void OnLegacyDebuggerOutput(object sender, LDP.DebuggerOutputEvent e) {
             PythonThread thread;
-            if (_threads.TryGetValue(e.threadId, out thread)) {
-                DebuggerOutput?.Invoke(this, new OutputEventArgs(thread, e.output));
+            if (!_threads.TryGetValue(e.threadId, out thread)) {
+                // Not finding the thread is okay in the case where output
+                // comes in as result of code executing in debug REPL at
+                // module scope rather than at thread/frame scope.
+                // This is because code executed at module scope is done
+                // on the debugger event handling thread.
+                thread = null;
             }
+
+            DebuggerOutput?.Invoke(this, new OutputEventArgs(thread, e.output, e.isStdOut));
         }
 
         private void OnLegacyAsyncBreak(object sender, LDP.AsyncBreakEvent e) {
@@ -944,7 +953,7 @@ namespace Microsoft.PythonTools.Debugger {
             return response.hitCount;
         }
 
-        internal async Task ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult> completion, CancellationToken ct) {
+        internal async Task ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind, PythonStackFrame pythonStackFrame, bool printResult, Action<PythonEvaluationResult> completion, CancellationToken ct) {
             int executeId = _ids.Allocate();
             lock (_pendingExecutes) {
                 _pendingExecutes[executeId] = new CompletionInfo(completion, text, pythonStackFrame);
@@ -957,7 +966,32 @@ namespace Microsoft.PythonTools.Debugger {
                 frameId = pythonStackFrame.FrameId,
                 frameKind = ToLDPFrameKind(pythonStackFrame.Kind),
                 reprKind = ToLDPReprKind(reprKind),
+                printResult = printResult
             }, ct);
+        }
+
+        internal async Task ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind, string moduleName, bool printResult, Action<PythonEvaluationResult> completion, CancellationToken ct) {
+            int executeId = _ids.Allocate();
+            lock (_pendingExecutes) {
+                _pendingExecutes[executeId] = new CompletionInfo(completion, text, null);
+            }
+
+            await SendDebugRequestAsync(new LDP.ExecuteTextRequest() {
+                text = text,
+                executionId = executeId,
+                moduleName = moduleName,
+                reprKind = ToLDPReprKind(reprKind),
+                printResult = printResult
+            }, ct);
+        }
+
+        private void OnLegacyModulesChanged(object sender, LDP.ModulesChangedEvent e) {
+            ModulesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal async Task<KeyValuePair<string, string>[]> GetModuleNamesAndPaths() {
+            var response = await SendDebugRequestAsync(new LDP.ListReplModulesRequest(), new CancellationToken());
+            return response.modules.Select(m => new KeyValuePair<string, string>(m.name, m.fileName)).ToArray();
         }
 
         internal async Task<PythonEvaluationResult[]> GetChildrenAsync(string text, PythonStackFrame pythonStackFrame, CancellationToken ct) {
@@ -1031,21 +1065,6 @@ namespace Microsoft.PythonTools.Debugger {
                 breakpointFileName = unboundBreakpoint.Filename,
                 breakpointLineNo = unboundBreakpoint.LineNo,
             }, ct);
-        }
-
-        internal async Task ConnectReplAsync(int portNum, CancellationToken ct = default(CancellationToken)) {
-            await SendDebugRequestAsync(new LDP.ConnectReplRequest() {
-                portNum = portNum,
-            }, ct);
-        }
-
-        internal async Task DisconnectReplAsync(CancellationToken ct = default(CancellationToken)) {
-            try {
-                await SendDebugRequestAsync(new LDP.DisconnectReplRequest() {
-                }, ct);
-            } catch (OperationCanceledException) {
-                // If the process has terminated, we expect an exception
-            }
         }
 
         internal async Task<bool> SetLineNumberAsync(PythonStackFrame pythonStackFrame, int lineNo, CancellationToken ct) {
@@ -1152,6 +1171,7 @@ namespace Microsoft.PythonTools.Debugger {
         public event EventHandler<BreakpointEventArgs> BreakpointBindSucceeded;
         public event EventHandler<BreakpointEventArgs> BreakpointBindFailed;
         public event EventHandler<OutputEventArgs> DebuggerOutput;
+        public event EventHandler<EventArgs> ModulesChanged;
 
         #endregion
 

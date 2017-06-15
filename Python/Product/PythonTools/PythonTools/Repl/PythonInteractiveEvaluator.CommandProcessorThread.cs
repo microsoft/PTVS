@@ -53,7 +53,6 @@ namespace Microsoft.PythonTools.Repl {
         private static readonly byte[] SetModuleCommandBytes = MakeCommand("setm");
         private static readonly byte[] InputLineCommandBytes = MakeCommand("inpl");
         private static readonly byte[] ExecuteFileCommandBytes = MakeCommand("excx");
-        private static readonly byte[] DebugAttachCommandBytes = MakeCommand("dbga");
 
         private static byte[] MakeCommand(string cmd) {
             var b = Encoding.ASCII.GetBytes(cmd);
@@ -206,18 +205,6 @@ namespace Microsoft.PythonTools.Repl {
                 return thread;
             }
 
-            public static CommandProcessorThread Create(
-                PythonInteractiveEvaluator evaluator,
-                Stream stream
-            ) {
-                var thread = new CommandProcessorThread(evaluator, null);
-                thread._stream = stream;
-                // Should be quickly replaced, but it's the best guess we have
-                thread._currentWorkingDirectory = Environment.CurrentDirectory;
-                thread.StartOutputThread(false);
-                return thread;
-            }
-
             public bool IsConnected {
                 get {
                     using (new StreamLock(this, throwIfDisconnected: false)) {
@@ -328,8 +315,6 @@ namespace Microsoft.PythonTools.Repl {
                         }
                     }
 
-                    _eval.OnConnected();
-
                     using (new StreamLock(this, throwIfDisconnected: true)) {
                         if (_deferredExecute != null) {
                             _deferredExecute();
@@ -363,7 +348,6 @@ namespace Microsoft.PythonTools.Repl {
                                 case "MODC": HandleModulesChanged(); break;
                                 case "PRPC": HandlePromptChanged(); break;
                                 case "RDLN": HandleReadLine(); break;
-                                case "DETC": HandleDebuggerDetach(); break;
                                 case "DPNG": HandleDisplayPng(); break;
                                 case "DXAM": HandleDisplayXaml(); break;
                                 case "CHWD": HandleWorkingDirectoryChanged(); break;
@@ -421,10 +405,6 @@ namespace Microsoft.PythonTools.Repl {
                     } catch (IOException) {
                     }
                 });
-            }
-
-            private void HandleDebuggerDetach() {
-                _eval.OnDetach();
             }
 
             private void HandleDisplayPng() {
@@ -827,16 +807,6 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 return new CompletionResult(name, PythonMemberType.Field);
-            }
-
-            public async Task<string> GetScopeByFilenameAsync(string path) {
-                await GetAvailableScopesAndPathsAsync();
-
-                string res;
-                if (_fileToModuleName != null && _fileToModuleName.TryGetValue(path, out res)) {
-                    return res;
-                }
-                return null;
             }
 
             public void SetScope(string scopeName) {
