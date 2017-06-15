@@ -37,7 +37,6 @@ namespace PythonToolsTests {
         private PythonDebugReplEvaluator _evaluator;
         private MockReplWindow _window;
         private List<PythonProcess> _processes;
-        private string _moduleFileExtension;
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -65,7 +64,6 @@ namespace PythonToolsTests {
             _window = new MockReplWindow(_evaluator);
             _evaluator._Initialize(_window);
             _processes = new List<PythonProcess>();
-            _moduleFileExtension = Version.Version < Microsoft.PythonTools.Parsing.PythonLanguageVersion.V30 && Version.IsCPython ? ".pyc" : ".py";
         }
 
         [TestCleanup]
@@ -182,7 +180,7 @@ NameError: name 'does_not_exist' is not defined
                 var actualItem = scopesAndPaths.SingleOrDefault(d => d.Key == expectedItem.Key);
                 Assert.IsNotNull(actualItem);
                 if (!string.IsNullOrEmpty(expectedItem.Value)) {
-                    Assert.IsTrue(PathUtils.IsSamePath(Path.Combine(Version.PrefixPath, "lib", expectedItem.Value + _moduleFileExtension), actualItem.Value));
+                    Assert.IsTrue(PathUtils.IsSamePath(Path.Combine(Version.PrefixPath, "lib", expectedItem.Value), Path.ChangeExtension(actualItem.Value, null)));
                 } else {
                     Assert.IsNull(actualItem.Value);
                 }
@@ -198,7 +196,7 @@ NameError: name 'does_not_exist' is not defined
             // Change to the dis module
             Assert.AreEqual("Current module changed to dis", ExecuteCommand(new SwitchModuleCommand(), "dis"));
             Assert.AreEqual("dis", _evaluator.CurrentScopeName);
-            Assert.IsTrue(PathUtils.IsSamePath(_evaluator.CurrentScopePath, Path.Combine(Version.PrefixPath, "lib", "dis" + _moduleFileExtension)));
+            Assert.IsTrue(PathUtils.IsSamePath(Path.ChangeExtension(_evaluator.CurrentScopePath, null), Path.Combine(Version.PrefixPath, "lib", "dis")));
             Assert.AreEqual("", ExecuteText("test = 'world'"));
             Assert.AreEqual("'world'", ExecuteText("test"));
 
