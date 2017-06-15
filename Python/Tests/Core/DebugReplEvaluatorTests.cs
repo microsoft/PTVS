@@ -377,9 +377,14 @@ NameError: name 'does_not_exist' is not defined
 
             _processes.Add(process);
 
+            long? threadAtBreakpoint = null;
+
             using (var brkHit = new AutoResetEvent(false))
             using (var procExited = new AutoResetEvent(false)) {
-                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => SafeSetEvent(brkHit);
+                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => {
+                    threadAtBreakpoint = e.Thread.Id;
+                    SafeSetEvent(brkHit);
+                };
                 EventHandler<ProcessExitedEventArgs> processExitedHandler = (s, e) => SafeSetEvent(procExited);
                 process.BreakpointHit += breakpointHitHandler;
                 process.ProcessExited += processExitedHandler;
@@ -405,6 +410,13 @@ NameError: name 'does_not_exist' is not defined
             }
 
             await _evaluator.AttachProcessAsync(process, new MockThreadIdMapper());
+
+            // AttachProcessAsync calls InitializeAsync which sets the active
+            // thread by using the DTE (which is null in these tests), so we
+            // adjust it to the correct thread where breakpoint was hit.
+            if (threadAtBreakpoint != null) {
+                _evaluator.ChangeActiveThread(threadAtBreakpoint.Value, false);
+            }
         }
 
         private class MockThreadIdMapper : IThreadIdMapper {
