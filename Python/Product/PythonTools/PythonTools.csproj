@@ -722,6 +722,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <None Include="ptvsd\setup.py" />
     <Content Include="Snippets\Python\for.snippet">
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>

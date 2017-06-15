@@ -15,7 +15,7 @@
 # permissions and limitations under the License.
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.1.0.0"
+__version__ = "3.2.0.0"
 
 __all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'is_attached', 'AttachAlreadyEnabledError']
 
@@ -79,7 +79,7 @@ import ptvsd.visualstudio_py_ipcjson as vsipc
 #   already attached), the server responds with accepted=False and closes the connection. 
 
 DEFAULT_PORT = 5678
-PTVSDBG_VER = 7 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
+PTVSDBG_VER = 8 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
 PTVSDBG = 'PTVSDBG'
 
 _attach_enabled = False
