@@ -22,14 +22,18 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Telemetry;
 using Newtonsoft.Json;
 
@@ -69,6 +73,13 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private OperationStatus _creatingStatus;
         private OperationStatus _checkingUpdateStatus;
         private OperationStatus _updatingStatus;
+
+        private string _statusMessage, _statusHelp;
+        private ImageMoniker _statusImage;
+        private Visibility _statusVisibility = Visibility.Collapsed;
+        private Visibility _statusImageVisibility = Visibility.Collapsed;
+        private Visibility _statusProgressVisibility = Visibility.Collapsed;
+        private Visibility _statusUpdateProgressVisibility = Visibility.Collapsed;
 
         private TemplateViewModel _selectedTemplate;
         private CancellationTokenSource _templateRefreshCancelTokenSource;
@@ -125,6 +136,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             Recommended = new CategorizedViewModel(Strings.TemplateCategoryRecommended);
             GitHub = new CategorizedViewModel(Strings.TemplateCategoryGitHub);
             Custom = new CategorizedViewModel(Strings.TemplateCategoryCustom);
+
+            PropertyChanged += UpdateStatus;
+        }
+
+        protected void OnPropertyChange([CallerMemberName] string name = null) {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         public string SearchTerm {
@@ -135,7 +152,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _searchTerm) {
                     _searchTerm = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SearchTerm)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -148,7 +165,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _outputFolderPath) {
                     _outputFolderPath = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OutputFolderPath)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -161,7 +178,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _openInExplorerFolderPath) {
                     _openInExplorerFolderPath = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OpenInExplorerFolderPath)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -174,7 +191,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _selectedDescription) {
                     _selectedDescription = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedDescription)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -186,7 +203,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
             set {
                 _selectedImage = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedImage)));
+                OnPropertyChange();
             }
         }
 
@@ -198,10 +215,120 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _selectedLocation) {
                     _selectedLocation = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedLocation)));
+                    OnPropertyChange();
                 }
             }
         }
+
+        public string StatusMessage => _statusMessage;
+        public string StatusHelp => _statusHelp;
+        public ImageMoniker StatusImage => _statusImage;
+        public Visibility StatusVisibility => _statusVisibility;
+        public Visibility StatusImageVisibility => _statusImageVisibility;
+        public Visibility StatusProgressVisibility => _statusProgressVisibility;
+        public Visibility StatusUpdateProgressVisibility => _statusUpdateProgressVisibility;
+
+        private void SetStatus(
+            string message,
+            string help = null,
+            ImageMoniker? image = null,
+            bool? visible = null,
+            bool progressVisible = false,
+            bool updateProgressVisible = false
+        ) {
+            _statusMessage = message ?? string.Empty;
+            _statusHelp = help ?? string.Empty;
+            _statusImage = image ?? default(ImageMoniker);
+            _statusImageVisibility = image.HasValue ? Visibility.Visible : Visibility.Collapsed;
+            bool v = (visible ?? !string.IsNullOrEmpty(message));
+            _statusVisibility = v ? Visibility.Visible : Visibility.Collapsed;
+            _statusProgressVisibility = progressVisible ? Visibility.Visible : Visibility.Collapsed;
+            _statusUpdateProgressVisibility = updateProgressVisible ? Visibility.Visible : Visibility.Collapsed;
+
+            if (!v) {
+                OnPropertyChange(nameof(StatusVisibility));
+            }
+            OnPropertyChange(nameof(StatusMessage));
+            OnPropertyChange(nameof(StatusHelp));
+            OnPropertyChange(nameof(StatusImage));
+            OnPropertyChange(nameof(StatusImageVisibility));
+            OnPropertyChange(nameof(StatusProgressVisibility));
+            OnPropertyChange(nameof(StatusUpdateProgressVisibility));
+            if (v) {
+                OnPropertyChange(nameof(StatusVisibility));
+            }
+        }
+
+        private void UpdateStatus(object sender, PropertyChangedEventArgs e) {
+            switch (e.PropertyName) {
+                case nameof(InstallingStatus):
+                case nameof(CloningStatus):
+                case nameof(LoadingStatus):
+                //case nameof(CreatingStatus):
+                case nameof(CheckingUpdateStatus):
+                case nameof(UpdatingStatus):
+                    break;
+                default:
+                    return;
+            }
+
+            OnPropertyChange(nameof(IsBusy));
+
+            if (InstallingStatus == OperationStatus.InProgress) {
+                SetStatus(
+                    Strings.SearchPage_PreparingFirstTime,
+                    Strings.SearchPage_PreparingFirstTimeTooltip,
+                    KnownMonikers.Loading,
+                    progressVisible: true
+                );
+            } else if (CloningStatus == OperationStatus.InProgress) {
+                SetStatus(Strings.SearchPage_CloningRepository, progressVisible: true);
+            } else if (LoadingStatus == OperationStatus.InProgress) {
+                SetStatus(Strings.SearchPage_LoadingTemplate, progressVisible: true);
+            } else if (CheckingUpdateStatus == OperationStatus.InProgress) {
+                SetStatus(Strings.SearchPage_CheckingUpdates, updateProgressVisible: true);
+            } else if (UpdatingStatus == OperationStatus.InProgress) {
+                SetStatus(Strings.SearchPage_UpdatingTemplate, progressVisible: true);
+            } else if (InstallingStatus == OperationStatus.Failed) {
+                SetStatus(
+                    Strings.SearchPage_ErrorInstallingCookiecutter,
+                    image: KnownMonikers.StatusError
+                );
+            } else if (CloningStatus == OperationStatus.Failed) {
+                SetStatus(
+                    Strings.SearchPage_ErrorCloningRepository,
+                    image: KnownMonikers.StatusError
+                );
+            } else if (LoadingStatus == OperationStatus.Failed) {
+                SetStatus(
+                    Strings.SearchPage_ErrorLoadingTemplate,
+                    image: KnownMonikers.StatusError
+                );
+            } else if (CheckingUpdateStatus == OperationStatus.Failed) {
+                SetStatus(
+                    Strings.SearchPage_ErrorCheckingUpdates,
+                    image: KnownMonikers.StatusError
+                );
+            } else if (UpdatingStatus == OperationStatus.Failed) {
+                SetStatus(
+                    Strings.SearchPage_UpdatingTemplateError,
+                    image: KnownMonikers.StatusError
+                );
+            } else if (CheckingUpdateStatus == OperationStatus.Succeeded) {
+                SetStatus(
+                    Strings.SearchPage_CheckingUpdatesCompleted,
+                    image: KnownMonikers.StatusOK
+                );
+            } else if (UpdatingStatus == OperationStatus.Succeeded) {
+                SetStatus(
+                    Strings.SearchPage_UpdatingTemplateCompleted,
+                    image: KnownMonikers.StatusOK
+                );
+            } else {
+                SetStatus(null);
+            }
+        }
+
 
         public OperationStatus InstallingStatus {
             get {
@@ -211,8 +338,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _installingStatus) {
                     _installingStatus = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InstallingStatus)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -225,8 +351,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _cloningStatus) {
                     _cloningStatus = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CloningStatus)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -239,8 +364,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _loadingStatus) {
                     _loadingStatus = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoadingStatus)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -253,8 +377,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _creatingStatus) {
                     _creatingStatus = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CreatingStatus)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -267,8 +390,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _checkingUpdateStatus) {
                     _checkingUpdateStatus = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckingUpdateStatus)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -281,8 +403,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _updatingStatus) {
                     _updatingStatus = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UpdatingStatus)));
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -305,7 +426,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _checkingUpdatePercentComplete) {
                     _checkingUpdatePercentComplete = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckingUpdatePercentComplete)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -317,7 +438,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _fixedOutputFolder) {
                     _fixedOutputFolder = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FixedOutputFolder)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -330,7 +451,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _hasPostCommands) {
                     _hasPostCommands = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasPostCommands)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -343,7 +464,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _shouldExecutePostCommands) {
                     _shouldExecutePostCommands = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShouldExecutePostCommands)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -356,7 +477,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _targetProjectLocation) {
                     _targetProjectLocation = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TargetProjectLocation)));
+                    OnPropertyChange();
                 }
             }
         }
@@ -369,7 +490,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             set {
                 if (value != _selectedTemplate) {
                     _selectedTemplate = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedTemplate)));
+                    OnPropertyChange();
                 }
             }
         }
