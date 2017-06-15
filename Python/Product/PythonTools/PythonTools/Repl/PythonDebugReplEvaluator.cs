@@ -402,6 +402,27 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal async Task AttachProcessAsync(PythonProcess process, IThreadIdMapper threadIdMapper) {
+            // The fact that this is only called from UI thread is no guarantee
+            // that there won't be more than one "instance" of this method in
+            // progress at any time (though only one is executing while others are paused).
+
+            // It's possible because this is an async method with await(s), and
+            // UI thread execution will temporarily continue somewhere else when
+            // await is used, and that somewhere else can be code that calls
+            // into this method with the same process id!
+
+            // The more relevant trigger for this cooperative multitasking is
+            // the await on evaluator.InitializeAsync, and when that happens
+            // the evaluator is not in the _evaluators dictionary yet.
+
+            // If a second caller comes in (on the same UI thread) during that
+            // await, it gets past the first check because it's not in _evaluators,
+            // and then checks the _attachingTasks dictionary and know to wait
+            // for that instead of creating a new evaluator.
+
+            // Note that adding the uninitialized evaluator to the _evaluators
+            // dictionary would be a potentially bug prone solution, as other
+            // code may try to use it before it's fully initialized.
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
             if (_evaluators.ContainsKey(process.Id)) {
@@ -410,12 +431,11 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            // Multiple callers can execute in this method simultaneously (due to async/await)
-            // so we need to protect against 2 callers trying to create evaulators for the same process.
-
             // Keep track of evaluators that are in progress of attaching, and if
             // we are getting called to attach for one that is already in progress,
             // just wait for it to finish before returning.
+            // Important: dictionary must be checked (and updated) before any
+            // await call to avoid race condition.
             Task attachingTask;
             TaskCompletionSource<object> attachingTcs = null;
             if (_attachingTasks.TryGetValue(process.Id, out attachingTask)) {
