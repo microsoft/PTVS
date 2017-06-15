@@ -19,16 +19,18 @@ from __future__ import with_statement, absolute_import
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.2.0.0"
 
+# This module MUST NOT import threading in global scope. This is because in a direct (non-ptvsd)
+# attach scenario, it is loaded on the injected debugger attach thread, and if threading module
+# hasn't been loaded already, it will assume that the thread on which it is being loaded is the
+# main thread. This will cause issues when the thread goes away after attach completes.
+
 import json
 import os.path
 import itertools
 import socket
 import sys
 import traceback
-try:
-    import thread
-except:
-    import _thread as thread
+from ptvsd.util import to_bytes
 
 _TRACE = None
 
@@ -56,7 +58,7 @@ class InvalidContentError(Exception): pass
 class SocketIO(object):
     def __init__(self, *args, **kwargs):
         super(SocketIO, self).__init__(*args, **kwargs)
-        self.__buffer = b''
+        self.__buffer = to_bytes('')
         self.__port = kwargs.get('port')
         self.__socket = kwargs.get('socket')
         self.__own_socket = kwargs.get('own_socket', True)
@@ -190,6 +192,10 @@ class IpcChannel(object):
     def __init__(self, *args, **kwargs):
         # This class is meant to be last in the list of base classes
         # Don't call super because object's __init__ doesn't take arguments
+        try:
+            import thread
+        except:
+            import _thread as thread
         self.__seq = itertools.count()
         self.__exit = False
         self.__lock = thread.allocate_lock()

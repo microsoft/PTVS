@@ -27,8 +27,11 @@ import os
 import os.path
 import sys
 import traceback
+
 try:
-    import visualstudio_py_debugger as vspd
+    ptvs_lib_path = os.path.dirname(__file__)
+    sys.path.insert(0, ptvs_lib_path)
+    import ptvsd.debugger as vspd
 except:
     traceback.print_exc()
     print('''
@@ -41,6 +44,8 @@ Press Enter to close. . .''')
     except NameError:
         input()
     sys.exit(1)
+finally:
+    sys.path.remove(ptvs_lib_path)
 
 # Arguments are:
 # 1. Working directory.
@@ -78,7 +83,7 @@ sys.path[0] = ''
 vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 
 # remove all state we imported
-del sys, os
+del sys, os, traceback
 
 # and start debugging
 vspd.debug(filename, port_num, debug_id, debug_options, run_as)

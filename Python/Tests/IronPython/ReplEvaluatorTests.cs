@@ -170,7 +170,7 @@ namespace IronPythonTests {
 
                 await replEval.ExecuteText("print '[%s]' % sys.gettrace()");
                 AssertUtil.AreEqual(
-                    new Regex(@"\[\<bound method Thread.trace_func of \<Thread.+\>\>\]"),
+                    new Regex(@"\[None\]"),
                     replWindow.Output
                 );
                 replWindow.ClearScreen();

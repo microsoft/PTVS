@@ -43,25 +43,8 @@ import runpy
 import datetime
 from codecs import BOM_UTF8
 
-try:
-    # In the local attach scenario, visualstudio_py_util is injected into globals()
-    # by PyDebugAttach before loading this module, and cannot be imported.
-    _vspu = visualstudio_py_util
-except:
-    try:
-        import visualstudio_py_util as _vspu
-    except ImportError:
-        import ptvsd.visualstudio_py_util as _vspu
-
-try:
-    # In the local attach scenario, visualstudio_py_ipcjson is injected into globals()
-    # by PyDebugAttach before loading this module, and cannot be imported.
-    _vsipc = visualstudio_py_ipcjson
-except:
-    try:
-        import visualstudio_py_ipcjson as _vsipc
-    except ImportError:
-        import ptvsd.visualstudio_py_ipcjson as _vsipc
+import ptvsd.util as _vspu
+import ptvsd.ipcjson as _vsipc
 
 to_bytes = _vspu.to_bytes
 exec_file = _vspu.exec_file
@@ -69,15 +52,7 @@ exec_module = _vspu.exec_module
 exec_code = _vspu.exec_code
 safe_repr = _vspu.SafeRepr()
 
-try:
-    # In the local attach scenario, visualstudio_py_repl is injected into globals()
-    # by PyDebugAttach before loading this module, and cannot be imported.
-    _vspr = visualstudio_py_repl
-except:
-    try:
-        import visualstudio_py_repl as _vspr
-    except ImportError:
-        import ptvsd.visualstudio_py_repl as _vspr
+import ptvsd.repl as _vspr
 
 try:
     import stackless
@@ -122,6 +97,12 @@ from encodings import utf_8
 # save start_new_thread so we can call it later, we'll intercept others calls to it.
 
 debugger_dll_handle = None
+
+def set_debugger_dll_handle(handle):
+    global debugger_dll_handle
+    debugger_dll_handle = handle
+
+
 DETACHED = True
 def thread_creator(func, args, kwargs = {}, *extra_args):
     if not isinstance(args, tuple):
@@ -880,8 +861,9 @@ class Thread(object):
             current.trace_function = current_tf
 
     def trace_func(self, frame, event, arg):
-        # If we're so far into process shutdown that sys is already gone, just stop tracing.
-        if sys is None:
+        # If we're so far into process shutdown that modules are being unloaded, stop tracing
+        # since we can't rely on any modules we've imported to still be working.
+        if sys is None or not sys.modules:
             return None
         elif self.is_sending:
             # https://pytools.codeplex.com/workitem/1864 
@@ -2318,15 +2300,18 @@ def start_debugger_loop(sock):
 
 def attach_process(port_num, debug_id, debug_options, report = False, block = False):
     for i in xrange(50):
+        failure_cause = None
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect(('127.0.0.1', port_num))
             break
-        except:
+        except Exception:
+            import traceback
+            failure_cause = traceback.format_exc()
             import time
             time.sleep(50./1000)
     else:
-        raise Exception('failed to attach')
+        raise Exception('Attach failed:\n\n' + failure_cause)
 
     start_debugger_loop(sock)
 
@@ -2617,11 +2602,6 @@ def parse_debug_options(s):
     return set([opt.strip() for opt in s.split(',')])
 
 def debug(file, port_num, debug_id, debug_options, run_as = 'script'):
-    # remove us from modules so there's no trace of us
-    sys.modules['$visualstudio_py_debugger'] = sys.modules['visualstudio_py_debugger']
-    __name__ = '$visualstudio_py_debugger'
-    del sys.modules['visualstudio_py_debugger']
-
     wait_on_normal_exit = 'WaitOnNormalExit' in debug_options
 
     attach_process(port_num, debug_id, debug_options, report = True)

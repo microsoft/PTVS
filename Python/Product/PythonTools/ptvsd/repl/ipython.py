@@ -17,12 +17,12 @@
 """Implements REPL support over IPython/ZMQ for VisualStudio"""
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.0.0.0"
+__version__ = "3.1.0.0"
 
 import re
 import sys
-from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
-from visualstudio_py_util import to_bytes
+from ptvsd.repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
+from ptvsd.util import to_bytes
 try:
     import thread
 except:
@@ -405,10 +405,10 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
 def __visualstudio_debugger_init():    
     import sys
     sys.path.append(''' + repr(path.dirname(__file__)) + ''')
-    import visualstudio_py_debugger
-    new_thread = visualstudio_py_debugger.new_thread()
+    import ptvsd.debugger
+    new_thread = ptvsd.debugger.new_thread()
     sys.settrace(new_thread.trace_func)
-    visualstudio_py_debugger.intercept_threads(True)
+    ptvsd.debugger.intercept_threads(True)
 
 __visualstudio_debugger_init()
 del __visualstudio_debugger_init
@@ -417,13 +417,13 @@ del __visualstudio_debugger_init
     def attach_process(self, port, debugger_id):
         self.run_command('''
 def __visualstudio_debugger_attach():
-    import visualstudio_py_debugger
+    import ptvsd.debugger
 
     def do_detach():
-        visualstudio_py_debugger.DETACH_CALLBACKS.remove(do_detach)
+        ptvsd.debugger.DETACH_CALLBACKS.remove(do_detach)
 
-    visualstudio_py_debugger.DETACH_CALLBACKS.append(do_detach)
-    visualstudio_py_debugger.attach_process(''' + str(port) + ''', ''' + repr(debugger_id) + ''', report = True, block = True)
+    ptvsd.debugger.DETACH_CALLBACKS.append(do_detach)
+    ptvsd.debugger.attach_process(''' + str(port) + ''', ''' + repr(debugger_id) + ''', report = True, block = True)
 
 __visualstudio_debugger_attach()
 del __visualstudio_debugger_attach

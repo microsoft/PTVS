@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Ipc.Json;
 namespace Microsoft.PythonTools.Debugger {
     // IMPORTANT:
     // Names of all fields, commands and events must match the names in
-    // visualstudio_py_debugger.py and attach_server.py
+    // ptvsd/debugger.py and ptvsd/attach_server.py
     internal static class LegacyDebuggerProtocol {
         public static readonly Dictionary<string, Type> RegisteredTypes = CollectCommands();
 

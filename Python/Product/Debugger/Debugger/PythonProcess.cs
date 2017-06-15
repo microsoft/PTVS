@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             processInfo.Arguments = 
                 (String.IsNullOrWhiteSpace(interpreterOptions) ? "" : (interpreterOptions + " ")) +
-                "\"" + PythonToolsInstallPath.GetFile("visualstudio_py_launcher.py") + "\" " +
+                "\"" + PythonToolsInstallPath.GetFile("ptvsd_launcher.py") + "\" " +
                 "\"" + dir + "\" " +
                 " " + DebugConnectionListener.ListenerPort + " " +
                 " " + _processGuid + " " +
