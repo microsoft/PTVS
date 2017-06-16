@@ -20,10 +20,12 @@ namespace Microsoft.PythonTools.Debugger {
     sealed class OutputEventArgs : EventArgs {
         private readonly string _output;
         private readonly PythonThread _thread;
+        private readonly bool _isStdOut;
 
-        public OutputEventArgs(PythonThread thread, string output) {
+        public OutputEventArgs(PythonThread thread, string output, bool isStdOut) {
             _thread = thread;
             _output = output;
+            _isStdOut = isStdOut;
         }
 
         public PythonThread Thread {
@@ -35,6 +37,12 @@ namespace Microsoft.PythonTools.Debugger {
         public string Output {
             get {
                 return _output;
+            }
+        }
+
+        public bool IsStdOut {
+            get {
+                return _isStdOut;
             }
         }
     }

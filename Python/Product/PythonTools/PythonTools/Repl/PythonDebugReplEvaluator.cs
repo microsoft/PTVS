@@ -16,27 +16,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Runtime.ExceptionServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
-using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
-using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
@@ -50,6 +41,7 @@ namespace Microsoft.PythonTools.Repl {
     {
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
+        private readonly Dictionary<int, Task> _attachingTasks = new Dictionary<int, Task>();
         private EnvDTE.DebuggerEvents _debuggerEvents;
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
@@ -156,7 +148,6 @@ namespace Microsoft.PythonTools.Repl {
             if (t != null) {
                 return await t;
             }
-            // No evaluator, so say we succeeded
             return true;
         }
 
@@ -180,9 +171,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IEnumerable<string> GetAvailableScopes() {
-            // TODO: Localization: we may need to do something with <CurrentFrame> string. Is it displayed?
-            // It also appears visualstudio_py_repl.py so it probably needs to be in sync with it.
-            string[] fixedScopes = new string[] { "<CurrentFrame>" };
+            string[] fixedScopes = new string[] { Strings.DebugReplCurrentFrameScope };
             if (_activeEvaluator != null) {
                 return fixedScopes.Concat(_activeEvaluator.GetAvailableScopes());
             } else {
@@ -413,6 +402,27 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal async Task AttachProcessAsync(PythonProcess process, IThreadIdMapper threadIdMapper) {
+            // The fact that this is only called from UI thread is no guarantee
+            // that there won't be more than one "instance" of this method in
+            // progress at any time (though only one is executing while others are paused).
+
+            // It's possible because this is an async method with await(s), and
+            // UI thread execution will temporarily continue somewhere else when
+            // await is used, and that somewhere else can be code that calls
+            // into this method with the same process id!
+
+            // The more relevant trigger for this cooperative multitasking is
+            // the await on evaluator.InitializeAsync, and when that happens
+            // the evaluator is not in the _evaluators dictionary yet.
+
+            // If a second caller comes in (on the same UI thread) during that
+            // await, it gets past the first check because it's not in _evaluators,
+            // and then checks the _attachingTasks dictionary and know to wait
+            // for that instead of creating a new evaluator.
+
+            // Note that adding the uninitialized evaluator to the _evaluators
+            // dictionary would be a potentially bug prone solution, as other
+            // code may try to use it before it's fully initialized.
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
             if (_evaluators.ContainsKey(process.Id)) {
@@ -421,15 +431,37 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
+            // Keep track of evaluators that are in progress of attaching, and if
+            // we are getting called to attach for one that is already in progress,
+            // just wait for it to finish before returning.
+            // Important: dictionary must be checked (and updated) before any
+            // await call to avoid race condition.
+            Task attachingTask;
+            TaskCompletionSource<object> attachingTcs = null;
+            if (_attachingTasks.TryGetValue(process.Id, out attachingTask)) {
+                await attachingTask;
+                return;
+            } else {
+                attachingTcs = new TaskCompletionSource<object>();
+                _attachingTasks.Add(process.Id, attachingTcs.Task);
+            }
+
             process.ProcessExited += new EventHandler<ProcessExitedEventArgs>(OnProcessExited);
             var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, threadIdMapper);
             evaluator.CurrentWindow = CurrentWindow;
-            await evaluator.InitializeAsync();
             evaluator.AvailableScopesChanged += new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
             evaluator.MultipleScopeSupportChanged += new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
+            await evaluator.InitializeAsync();
             _evaluators.Add(process.Id, evaluator);
 
             _activeEvaluator = evaluator;
+
+            // Only refresh available scopes after the active evaluator has
+            // been changed, because that's where the UI will look.
+            await evaluator.RefreshAvailableScopes();
+
+            attachingTcs.SetResult(null);
+            _attachingTasks.Remove(process.Id);
         }
 
         internal async Task DetachProcessAsync(PythonProcess process) {
@@ -440,7 +472,6 @@ namespace Microsoft.PythonTools.Repl {
             if (_evaluators.TryGetValue(id, out evaluator)) {
                 evaluator.AvailableScopesChanged -= new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
                 evaluator.MultipleScopeSupportChanged -= new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
-                await process.DisconnectReplAsync();
                 _evaluators.Remove(id);
                 if (_activeEvaluator == evaluator) {
                     _activeEvaluator = null;
@@ -487,242 +518,6 @@ namespace Microsoft.PythonTools.Repl {
 
         public string GetPrompt() {
             return _activeEvaluator?.GetPrompt();
-        }
-    }
-
-    [InteractiveWindowRole("Debug")]
-    [ContentType(PythonCoreConstants.ContentType)]
-    [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-    internal class PythonDebugProcessReplEvaluator : PythonInteractiveEvaluator {
-        private ExceptionDispatchInfo _connectFailure;
-        private readonly PythonProcess _process;
-        private readonly IThreadIdMapper _threadIdMapper;
-        private long _threadId;
-        private int _frameId;
-        private PythonLanguageVersion _languageVersion;
-
-        public PythonDebugProcessReplEvaluator(IServiceProvider serviceProvider, PythonProcess process, IThreadIdMapper threadIdMapper)
-            : base(serviceProvider) {
-            _process = process;
-            _threadIdMapper = threadIdMapper;
-            _threadId = process.GetThreads()[0].Id;
-            _languageVersion = process.LanguageVersion;
-            DisplayName = Strings.DebugReplDisplayName;
-
-            EnsureConnectedOnCreate();
-        }
-
-        private async void EnsureConnectedOnCreate() {
-            try {
-                await EnsureConnectedAsync();
-            } catch (Exception ex) {
-                _connectFailure = ExceptionDispatchInfo.Capture(ex);
-            }
-        }
-
-        protected override Task ExecuteStartupScripts(string scriptsPath) {
-            // Do not execute scripts for debug evaluator
-            return Task.FromResult<object>(null);
-        }
-
-        public PythonProcess Process {
-            get { return _process; }
-
-        }
-        public int ProcessId {
-            get { return _process.Id; }
-        }
-
-        public long ThreadId {
-            get { return _threadId; }
-        }
-
-        public int FrameId {
-            get { return _frameId; }
-        }
-
-        protected override async Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
-            var remoteProcess = _process as PythonRemoteProcess;
-
-            try {
-                _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.DebugRepl, new Logging.DebugReplInfo {
-                    RemoteProcess = remoteProcess != null,
-                    Version = _process.LanguageVersion.ToVersion().ToString()
-                });
-            } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-            }
-
-            if (remoteProcess == null) {
-                var conn = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
-                conn.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-                conn.Listen(0);
-                var portNum = ((IPEndPoint)conn.LocalEndPoint).Port;
-                var proc = System.Diagnostics.Process.GetProcessById(_process.Id);
-
-                var thread = CommandProcessorThread.Create(this, conn, proc);
-                await _process.ConnectReplAsync(portNum);
-                return thread;
-            }
-
-            // Ignore SSL errors, since user was already prompted about them and chose to ignore them when he attached to this process.
-            using (var debugConn = await remoteProcess.ConnectAsync(false, ct)) {
-                // After the REPL attach response is received, we go from
-                // using the debugger protocol to the REPL protocol.
-                // It's important to have a clean break between the 2, and at the right time.
-                // The server will send the debugger protocol response for attach
-                // before sending anything else and as soon as we read that
-                // response, we stop reading any more messages.
-                // Then we give the stream to the REPL protocol handler.
-                try {
-                    var response = await debugConn.SendRequestAsync(new LDP.RemoteReplAttachRequest(), ct, resp => {
-                        Debug.WriteLine("Stopping debug connection message processing. Switching from debugger protocol to REPL protocol.");
-
-                        // This causes the message handling loop to exit
-                        throw new OperationCanceledException();
-                    });
-
-                    if (!response.accepted) {
-                        WriteError(Strings.ConnErrorMessages_RemoteAttachRejected);
-                        return null;
-                    }
-
-                    // Get the stream out of the connection before Dispose is called,
-                    // so that the stream doesn't get closed.
-                    var stream = debugConn.DetachStream();
-                    return CommandProcessorThread.Create(this, stream);
-                } catch (FailedRequestException ex) {
-                    WriteError(ex.Message);
-                    return null;
-                }
-            }
-        }
-
-        internal override void OnConnected() {
-            // Finish initialization now that the socket connection has been established
-            var threads = _process.GetThreads();
-            PythonThread activeThread = null;
-
-            var dte = _serviceProvider.GetDTE();
-            if (dte != null) {
-                // If we are broken into the debugger, let's set the debug REPL active thread
-                // to be the one that is active in the debugger
-                var dteDebugger = dte.Debugger;
-                if (dteDebugger.CurrentMode == EnvDTE.dbgDebugMode.dbgBreakMode &&
-                    dteDebugger.CurrentProcess != null &&
-                    dteDebugger.CurrentThread != null) {
-                    if (_process.Id == dteDebugger.CurrentProcess.ProcessID) {
-                        var activeThreadId = _threadIdMapper.GetPythonThreadId((uint)dteDebugger.CurrentThread.ID);
-                        activeThread = threads.SingleOrDefault(t => t.Id == activeThreadId);
-                    }
-                }
-            }
-
-            if (activeThread == null) {
-                activeThread = threads.Count > 0 ? threads[0] : null;
-            }
-
-            if (activeThread != null) {
-                SwitchThread(activeThread, false);
-            }
-        }
-
-        internal IList<PythonThread> GetThreads() {
-            return _process.GetThreads();
-        }
-
-        internal IList<PythonStackFrame> GetFrames() {
-            PythonThread activeThread = _process.GetThreads().SingleOrDefault(t => t.Id == _threadId);
-            return activeThread != null ? activeThread.Frames : new List<PythonStackFrame>();
-        }
-
-        internal void SwitchThread(PythonThread thread, bool verbose) {
-            var frame = thread.Frames.FirstOrDefault();
-            if (frame == null) {
-                WriteError(Strings.DebugReplCannotChangeCurrentThreadNoFrame.FormatUI(thread.Id));
-                return;
-            }
-
-            _threadId = thread.Id;
-            _frameId = frame.FrameId;
-            _thread?.SetThreadAndFrameCommand(thread.Id, _frameId, frame.Kind);
-            if (verbose) {
-                WriteOutput(Strings.DebugReplThreadChanged.FormatUI(_threadId, _frameId));
-            }
-        }
-
-        internal void SwitchFrame(PythonStackFrame frame) {
-            _frameId = frame.FrameId;
-            _thread?.SetThreadAndFrameCommand(frame.Thread.Id, frame.FrameId, frame.Kind);
-            WriteOutput(Strings.DebugReplFrameChanged.FormatUI(frame.FrameId));
-        }
-
-        internal void FrameUp() {
-            var frames = GetFrames();
-            var currentFrame = frames.SingleOrDefault(f => f.FrameId == _frameId);
-            if (currentFrame != null) {
-                int index = frames.IndexOf(currentFrame);
-                if (index < (frames.Count - 1)) {
-                    SwitchFrame(frames[index + 1]);
-                }
-            }
-        }
-
-        internal void FrameDown() {
-            var frames = GetFrames();
-            var currentFrame = frames.SingleOrDefault(f => f.FrameId == _frameId);
-            if (currentFrame != null) {
-                int index = frames.IndexOf(currentFrame);
-                if (index > 0) {
-                    SwitchFrame(frames[index - 1]);
-                }
-            }
-        }
-
-        internal void StepOut() {
-            UpdateDTEDebuggerProcessAndThread();
-            _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepOut();
-        }
-
-        internal void StepInto() {
-            UpdateDTEDebuggerProcessAndThread();
-            _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepInto();
-        }
-
-        internal void StepOver() {
-            UpdateDTEDebuggerProcessAndThread();
-            _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepOver();
-        }
-
-        internal void Resume() {
-            UpdateDTEDebuggerProcessAndThread();
-            _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.Go();
-        }
-
-        private void UpdateDTEDebuggerProcessAndThread() {
-            EnvDTE.Process dteActiveProcess = null;
-            foreach (EnvDTE.Process dteProcess in _serviceProvider.GetDTE().Debugger.DebuggedProcesses) {
-                if (dteProcess.ProcessID == _process.Id) {
-                    dteActiveProcess = dteProcess;
-                    break;
-                }
-            }
-
-            if (dteActiveProcess != _serviceProvider.GetDTE().Debugger.CurrentProcess) {
-                _serviceProvider.GetDTE().Debugger.CurrentProcess = dteActiveProcess;
-            }
-
-            EnvDTE.Thread dteActiveThread = null;
-            foreach (EnvDTE.Thread dteThread in _serviceProvider.GetDTE().Debugger.CurrentProgram.Threads) {
-                if (_threadIdMapper.GetPythonThreadId((uint)dteThread.ID) == _threadId) {
-                    dteActiveThread = dteThread;
-                    break;
-                }
-            }
-
-            if (dteActiveThread != _serviceProvider.GetDTE().Debugger.CurrentThread) {
-                _serviceProvider.GetDTE().Debugger.CurrentThread = dteActiveThread;
-            }
         }
     }
 

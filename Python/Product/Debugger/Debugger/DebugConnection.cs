@@ -66,13 +66,13 @@ namespace Microsoft.PythonTools.Debugger {
         public event EventHandler<LDP.EnumChildrenEvent> LegacyEnumChildren;
         public event EventHandler<LDP.ThreadFrameListEvent> LegacyThreadFrameList;
         public event EventHandler<LDP.RemoteConnectedEvent> LegacyRemoteConnected;
+        public event EventHandler<LDP.ModulesChangedEvent> LegacyModulesChanged;
 
         public DebugConnection(Stream stream) {
             _stream = stream;
             _connection = new Connection(stream, false, stream, false, null, LDP.RegisteredTypes, "DebugConnection");
             _connection.EventReceived += _connection_EventReceived;
         }
-
 
         private void _connection_EventReceived(object sender, EventReceivedEventArgs e) {
             // Process events in a separate thread from the one that is processing messages
@@ -260,6 +260,9 @@ namespace Microsoft.PythonTools.Debugger {
                         break;
                     case LDP.RemoteConnectedEvent.Name:
                         LegacyRemoteConnected?.Invoke(this, (LDP.RemoteConnectedEvent)e.Event);
+                        break;
+                    case LDP.ModulesChangedEvent.Name:
+                        LegacyModulesChanged?.Invoke(this, (LDP.ModulesChangedEvent)e.Event);
                         break;
                     case LDP.RequestHandlersEvent.Name:
                         LegacyRequestHandlers?.Invoke(this, (LDP.RequestHandlersEvent)e.Event);

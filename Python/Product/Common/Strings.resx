@@ -1627,6 +1627,13 @@ Connect anyway?</value>
     <comment>{0} is function name
 {1} is filename</comment>
   </data>
+  <data name="DebugReplCannotRetrieveFrameError" xml:space="preserve">
+    <value>Could not retrieve the current frame.</value>
+  </data>
+  <data name="DebugReplCurrentFrameScope" xml:space="preserve">
+    <value>&lt;Current Frame&gt;</value>
+    <comment>&lt; and &gt; are significant, to differentiate from the other regular module names in the list.</comment>
+  </data>
   <data name="DebugReplModuleName" xml:space="preserve">
     <value>&lt;REPL&gt;</value>
   </data>

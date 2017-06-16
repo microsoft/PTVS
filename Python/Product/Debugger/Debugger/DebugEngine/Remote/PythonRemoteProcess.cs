@@ -30,7 +30,7 @@ using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteProcess : PythonProcess {
-        public const byte DebuggerProtocolVersion = 7; // must be kept in sync with PTVSDBG_VER in attach_server.py
+        public const byte DebuggerProtocolVersion = 8; // must be kept in sync with PTVSDBG_VER in attach_server.py
         public const string DebuggerSignature = "PTVSDBG";
         private const int ConnectTimeoutMs = 5000;
 

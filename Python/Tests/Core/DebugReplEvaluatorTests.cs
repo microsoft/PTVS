@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -158,6 +159,35 @@ NameError: name 'does_not_exist' is not defined
         }
 
         [TestMethod, Priority(1)]
+        public async Task AvailableScopes() {
+            await AttachAsync("DebugReplTest1.py", 3);
+
+            var expectedData = new Dictionary<string, string>() {
+                { "<Current Frame>", null },
+                { "abc", "abc" },
+                { "dis", "dis" },
+            };
+
+            Assert.IsTrue(_evaluator.EnableMultipleScopes);
+
+            var scopes = _evaluator.GetAvailableScopes().ToArray();
+            foreach (var expectedItem in expectedData) {
+                CollectionAssert.Contains(scopes, expectedItem.Key);
+            }
+
+            var scopesAndPaths = _evaluator.GetAvailableScopesAndPaths().ToArray();
+            foreach (var expectedItem in expectedData) {
+                var actualItem = scopesAndPaths.SingleOrDefault(d => d.Key == expectedItem.Key);
+                Assert.IsNotNull(actualItem);
+                if (!string.IsNullOrEmpty(expectedItem.Value)) {
+                    Assert.IsTrue(PathUtils.IsSamePath(Path.Combine(Version.PrefixPath, "lib", expectedItem.Value), Path.ChangeExtension(actualItem.Value, null)));
+                } else {
+                    Assert.IsNull(actualItem.Value);
+                }
+            }
+        }
+
+        [TestMethod, Priority(1)]
         public async Task ChangeModule() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -165,11 +195,23 @@ NameError: name 'does_not_exist' is not defined
 
             // Change to the dis module
             Assert.AreEqual("Current module changed to dis", ExecuteCommand(new SwitchModuleCommand(), "dis"));
+            Assert.AreEqual("dis", _evaluator.CurrentScopeName);
+            Assert.IsTrue(PathUtils.IsSamePath(Path.ChangeExtension(_evaluator.CurrentScopePath, null), Path.Combine(Version.PrefixPath, "lib", "dis")));
             Assert.AreEqual("", ExecuteText("test = 'world'"));
             Assert.AreEqual("'world'", ExecuteText("test"));
 
-            // Change back to the current frame
-            Assert.AreEqual("Current module changed to <CurrentFrame>", ExecuteCommand(new SwitchModuleCommand(), "<CurrentFrame>"));
+            // Change back to the current frame (using localized name)
+            Assert.AreEqual("Current module changed to <Current Frame>", ExecuteCommand(new SwitchModuleCommand(), "<Current Frame>"));
+            Assert.AreEqual("<Current Frame>", _evaluator.CurrentScopeName);
+            Assert.AreEqual("", _evaluator.CurrentScopePath);
+            Assert.AreEqual("", ExecuteText("test", false));
+            Assert.IsTrue(_window.Error.Contains("NameError:"));
+            Assert.AreEqual("'hello'", ExecuteText("a"));
+
+            // Change back to the current frame (using fixed and backwards compatible name)
+            Assert.AreEqual("Current module changed to <Current Frame>", ExecuteCommand(new SwitchModuleCommand(), "<CurrentFrame>"));
+            Assert.AreEqual("<Current Frame>", _evaluator.CurrentScopeName);
+            Assert.AreEqual("", _evaluator.CurrentScopePath);
             Assert.AreEqual("", ExecuteText("test", false));
             Assert.IsTrue(_window.Error.Contains("NameError:"));
             Assert.AreEqual("'hello'", ExecuteText("a"));
@@ -331,14 +373,18 @@ NameError: name 'does_not_exist' is not defined
             PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, async (newproc, newthread) => {
                 var breakPoint = newproc.AddBreakpointByFileExtension(lineNo, filename);
                 await breakPoint.AddAsync(TimeoutToken());
-            },
-            debugOptions: PythonDebugOptions.CreateNoWindow);
+            });
 
             _processes.Add(process);
 
+            long? threadAtBreakpoint = null;
+
             using (var brkHit = new AutoResetEvent(false))
             using (var procExited = new AutoResetEvent(false)) {
-                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => SafeSetEvent(brkHit);
+                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => {
+                    threadAtBreakpoint = e.Thread.Id;
+                    SafeSetEvent(brkHit);
+                };
                 EventHandler<ProcessExitedEventArgs> processExitedHandler = (s, e) => SafeSetEvent(procExited);
                 process.BreakpointHit += breakpointHitHandler;
                 process.ProcessExited += processExitedHandler;
@@ -364,6 +410,13 @@ NameError: name 'does_not_exist' is not defined
             }
 
             await _evaluator.AttachProcessAsync(process, new MockThreadIdMapper());
+
+            // AttachProcessAsync calls InitializeAsync which sets the active
+            // thread by using the DTE (which is null in these tests), so we
+            // adjust it to the correct thread where breakpoint was hit.
+            if (threadAtBreakpoint != null) {
+                _evaluator.ChangeActiveThread(threadAtBreakpoint.Value, false);
+            }
         }
 
         private class MockThreadIdMapper : IThreadIdMapper {

@@ -17,7 +17,7 @@
 from __future__ import with_statement
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.1.0.0"
+__version__ = "3.2.0.0"
 
 # This module MUST NOT import threading in global scope. This is because in a direct (non-ptvsd)
 # attach scenario, it is loaded on the injected debugger attach thread, and if threading module
@@ -93,6 +93,25 @@ if sys.platform == 'cli':
     import clr
     from System.Runtime.CompilerServices import ConditionalWeakTable
     IPY_SEEN_MODULES = ConditionalWeakTable[object, object]()
+
+    clr.AddReference('Microsoft.Dynamic')
+    clr.AddReference('Microsoft.Scripting')
+    clr.AddReference('IronPython')
+    from Microsoft.Scripting import KeyboardInterruptException
+    from Microsoft.Scripting import ParamDictionaryAttribute
+    from IronPython.Runtime.Operations import PythonOps
+    from IronPython.Runtime import PythonContext
+    from Microsoft.Scripting import SourceUnit, SourceCodeKind
+    from Microsoft.Scripting.Runtime import Scope
+
+    python_context = clr.GetCurrentRuntime().GetLanguage(PythonContext)
+
+    from System import DBNull, ParamArrayAttribute
+    builtin_method_descriptor_type = type(list.append)
+
+    import System
+    NamespaceType = type(System)
+
 
 # Import encodings early to avoid import on the debugger thread, which may cause deadlock
 from encodings import utf_8
@@ -1242,28 +1261,28 @@ class Thread(object):
         self.unblock_work = work
         self.unblock()
 
-    def run_on_thread(self, text, cur_frame, execution_id, frame_kind, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
+    def run_on_thread(self, text, cur_frame, execution_id, frame_kind, print_result, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
         self._block_starting_lock.acquire()
         
         if not self._is_blocked:
             report_execution_error('<expression cannot be evaluated at this time>', execution_id)
         elif not self._is_working:
-            self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id, frame_kind, repr_kind))
+            self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id, frame_kind, print_result, repr_kind))
         else:
             report_execution_error('<error: previous evaluation has not completed>', execution_id)
-        
+
         self._block_starting_lock.release()
 
     def run_on_thread_no_report(self, text, cur_frame, frame_kind):
         self._block_starting_lock.acquire()
-        
+
         if not self._is_blocked:
             pass
         elif not self._is_working:
             self.schedule_work(lambda : self.run_locally_no_report(text, cur_frame, frame_kind))
         else:
             pass
-        
+
         self._block_starting_lock.release()
 
     def enum_child_on_thread(self, text, cur_frame, execution_id, frame_kind):
@@ -1297,28 +1316,26 @@ class Thread(object):
         except:
             pass
 
-    def compile(self, text, cur_frame):
+    def run_locally(self, text, cur_frame, execution_id, frame_kind, print_result, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
         try:
-            code = compile(text, '<debug input>', 'eval')
-        except:
-            code = compile(text, '<debug input>', 'exec')
-        return code
-
-    def run_locally(self, text, cur_frame, execution_id, frame_kind, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
-        try:
-            code = self.compile(text, cur_frame)
+            code = compile_eval_or_exec(text)
             res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
             self.locals_to_fast(cur_frame)
             # Report any updated variable values first
             self.enum_thread_frames_locally()
+            if print_result:
+                sys.displayhook(res)
             report_execution_result(execution_id, res, repr_kind)
         except:
             # Report any updated variable values first
             self.enum_thread_frames_locally()
+            if print_result:
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                _vspr.print_exception_frames(exc_type, exc_value, exc_tb)
             report_execution_exception(execution_id, sys.exc_info())
 
     def run_locally_no_report(self, text, cur_frame, frame_kind):
-        code = self.compile(text, cur_frame)
+        code = compile_eval_or_exec(text)
         res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
         self.locals_to_fast(cur_frame)
         sys.displayhook(res)
@@ -1627,7 +1644,7 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
         super(DebuggerLoop, self).__init__(socket=socket)
         
         DebuggerLoop.instance = self
-        self.repl_backend = None
+        self._cur_repl_modules = set()
 
     def loop(self):
         try:
@@ -1790,32 +1807,6 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
             if bp_info is not None:
                 bp_info.remove_breakpoint(lineno)
 
-    def on_legacyConnectRepl(self, request, args):
-        port_num = args['portNum']
-
-        self.send_debug_response(request)
-
-        _start_new_thread(self.connect_to_repl_backend, (port_num,))
-
-    def connect_to_repl_backend(self, port_num):
-        DONT_DEBUG.append(path.normcase(_vspr.__file__))
-        self.repl_backend = _vspr.DebugReplBackend(self)
-        self.repl_backend.connect_from_debugger(port_num)
-        self.repl_backend.execution_loop()
-
-    def connect_to_repl_backend_using_socket(self, sock):
-        DONT_DEBUG.append(path.normcase(_vspr.__file__))
-        self.repl_backend = _vspr.DebugReplBackend(self)
-        self.repl_backend.connect_from_debugger_using_socket(sock)
-        self.repl_backend.execution_loop()
-
-    def on_legacyDisconnectRepl(self, request, args):
-        self.send_debug_response(request)
-
-        if self.repl_backend is not None:
-            self.repl_backend.disconnect_from_debugger()
-            self.repl_backend = None
-
     def on_legacyBreakAll(self, request, args):
         self.send_debug_response(request)
 
@@ -1954,12 +1945,43 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
         eid = args['executionId']
         frame_kind = args['frameKind']
         repr_kind = args['reprKind']
+        module_name = args['moduleName']
+        print_result = args['printResult']
 
         self.send_debug_response(request)
 
-        thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
-        if thread is not None and cur_frame is not None:
-            thread.run_on_thread(text, cur_frame, eid, frame_kind, repr_kind)
+        if module_name:
+            self.execute_code_in_module(text, module_name, eid, print_result, repr_kind)
+        else:
+            thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
+            if thread is not None and cur_frame is not None:
+                thread.run_on_thread(text, cur_frame, eid, frame_kind, print_result, repr_kind)
+
+        # keep track of the module set so the debug REPL can update its available scopes
+        new_modules = _vspr.get_cur_module_set()
+        try:
+            if new_modules != self._cur_repl_modules:
+                self.send_debug_event(name='legacyModulesChanged')
+        except:
+            pass
+        self._cur_repl_modules = new_modules
+
+    def execute_code_in_module(self, text, module_name, execution_id, print_result, repr_kind):
+        try:
+            mod = sys.modules.get(module_name)
+            if mod is not None:
+                code = compile_eval_or_exec(text)
+                res = eval(code, mod.__dict__, mod.__dict__)
+                if print_result:
+                    sys.displayhook(res)
+                report_execution_result(execution_id, res, repr_kind)
+            else:
+                stderr.write("Unknown module '{0}'\n".format(module_name))
+                report_execution_exception(execution_id, sys.exc_info())
+        except:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            _vspr.print_exception_frames(exc_type, exc_value, exc_tb)
+            report_execution_exception(execution_id, sys.exc_info())
 
     def execute_code_no_report(self, text, tid, fid, frame_kind):
         # execute given text in specified frame, without sending back the results
@@ -2018,6 +2040,18 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
     def on_legacyLastAck(self, request, args):
         self.send_debug_response(request)
         last_ack_event.set()
+
+    def on_legacyListReplModules(self, request, args):
+        try:
+            res = _vspr.get_module_names()
+            res.sort()
+        except:
+            res = []
+
+        self.send_debug_response(
+            request,
+            modules=[dict(name=m[0], fileName=m[1]) for m in res]
+        )
 
     def send_debug_event(self, name, **args):
         with _SendLockCtx:
@@ -2221,6 +2255,13 @@ def report_children(execution_id, children):
 def get_code_filename(code):
     return path.abspath(code.co_filename)
 
+def compile_eval_or_exec(text):
+    try:
+        code = compile(text, '<debug input>', 'eval')
+    except:
+        code = compile(text, '<debug input>', 'exec')
+    return code
+
 NONEXPANDABLE_TYPES = [int, str, bool, float, object, type(None), unicode]
 try:
     NONEXPANDABLE_TYPES.append(long)
@@ -2369,6 +2410,8 @@ def attach_connected_process(debug_options, report = False, block = False):
     if 'RedirectOutput' in debug_options:
         enable_output_redirection()
 
+    send_debug_event(name='legacyModulesChanged')
+
 # Try to detach cooperatively, notifying the debugger as we do so.
 def detach_process_and_notify_debugger():
     if DebuggerLoop.instance:
@@ -2464,9 +2507,6 @@ def enable_output_redirection():
     sys.stdout = _DebuggerOutput(sys.stdout, is_stdout = True)
     sys.stderr = _DebuggerOutput(sys.stderr, is_stdout = False)
 
-def connect_repl_using_socket(sock):
-    _start_new_thread(DebuggerLoop.instance.connect_to_repl_backend_using_socket, (sock,))
-
 class _DebuggerOutput(object):
     """file like object which redirects output to the repl window."""
     errors = 'strict'
@@ -2496,6 +2536,7 @@ class _DebuggerOutput(object):
                 name='legacyDebuggerOutput',
                 threadId=thread.get_ident(),
                 output=value,
+                isStdOut=self.is_stdout,
             )
         if self.old_out:
             self.old_out.write(value)
