@@ -91,9 +91,19 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
+            if (_rawSpan.Length <= 0) {
+                Debug.Fail($"Expected span {_rawSpan} to be non-empty");
+                return;
+            }
+
             SnapshotSpan target = _spanTranslator.TranslateForward(
                 new Span(_rawSpan.Start.Index, _rawSpan.Length)
             );
+
+            if (target.Length <= 0) {
+                Debug.Fail($"Expected translated span {target} to be non-empty");
+                return;
+            }
 
             var tagSpan = _spanTranslator.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
                 target.Start,
