@@ -956,7 +956,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Interaktives {0}-Fenster]]></Val>
+            <Val><![CDATA[Interaktives Fenster für "{0}"]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4112,7 +4112,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Interaktives {0}]]></Val>
+            <Val><![CDATA[{0} (interaktiv)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4310,7 +4310,7 @@
         <Str Cat="Text">
           <Val><![CDATA[&Switch this tab]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Diese Registerkarte wechseln]]></Val>
+            <Val><![CDATA[&Diese Registerkarte umstellen]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5260,7 +5260,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17166.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5296,7 +5296,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17166.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

@@ -24,7 +24,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[except (try/except)]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[tranne (try/except)]]></Val>
+          <Val><![CDATA[except (try/except)]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />

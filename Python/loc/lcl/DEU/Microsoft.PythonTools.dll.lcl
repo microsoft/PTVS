@@ -482,7 +482,7 @@
         <Str Cat="Combo Box">
           <Val><![CDATA[Don't]]></Val>
           <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Kein]]></Val>
+            <Val><![CDATA[Nicht melden]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -2173,7 +2173,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Add Remove Environments]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Umgebungen hinzufügen/entfernen]]></Val>
+              <Val><![CDATA[Umgebungen hinzufügen entfernen]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -2605,7 +2605,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Generate RequirementsTxt]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA["requirements.txt" generieren]]></Val>
+              <Val><![CDATA[RequirementsTxt generieren]]></Val>
             </Tgt>
             <Prev Cat="Button">
               <Val><![CDATA[Generate RequiremenstTxt]]></Val>
