@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Repl {
             var eval = window.GetPythonEvaluator();
             if (eval != null) {
                 finder.Search(eval.Configuration.WorkingDirectory);
-                foreach (var p in eval.Configuration.SearchPaths) {
+                foreach (var p in eval.Configuration.SearchPaths.MaybeEnumerate()) {
                     finder.Search(p);
                 }
             }

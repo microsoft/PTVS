@@ -62,17 +62,16 @@ namespace Microsoft.PythonTools.Repl {
             return b;
         }
 
-
-        protected virtual Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
+        private Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThreadOrThrow();
 
             var interpreterPath = Configuration?.GetInterpreterPath();
             if (string.IsNullOrWhiteSpace(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(DisplayName));
-                return null;
+                return Task.FromResult<CommandProcessorThread>(null);
             } else if (!File.Exists(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotFound);
-                return null;
+                return Task.FromResult<CommandProcessorThread>(null);
             }
 
             var processInfo = new ProcessStartInfo(interpreterPath);
