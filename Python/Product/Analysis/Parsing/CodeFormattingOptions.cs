@@ -263,13 +263,13 @@ namespace Microsoft.PythonTools.Parsing {
 
         #region Wrapping
 
-        [CodeFormattingExample("# Wrapped to 40 columns:\r\n# There should be one-- and preferably\r\n# only one --obvious way to do it.", "# Not wapped:\r\n# There should be one-- and preferably only one --obvious way to do it.")]
+        [CodeFormattingExampleResource("WrapCommentsShort_Example", "WrapCommentsLong_Example")]
         [CodeFormattingCategory(CodeFormattingCategory.Wrapping)]
         [CodeFormattingDescription("WrapCommentsShort", "WrapCommentsLong")]
         [CodeFormattingDefaultValue(true)]
         public bool WrapComments { get; set; }
 
-        [CodeFormattingExample("Sets the width for wrapping comments and doc strings.")]
+        [CodeFormattingExampleResource("WrappingWidth_Doc")]
         [CodeFormattingCategory(CodeFormattingCategory.Wrapping)]
         [CodeFormattingDescription("WrappingWidthShort", "WrappingWidthLong")]
         [CodeFormattingDefaultValue(80)]

@@ -41,12 +41,14 @@ namespace Microsoft.PythonTools.Options {
             // _formatOnPaste
             // 
             resources.ApplyResources(this._formatOnPaste, "_formatOnPaste");
+            this._formatOnPaste.AutoEllipsis = true;
             this._formatOnPaste.Name = "_formatOnPaste";
             this._formatOnPaste.UseVisualStyleBackColor = true;
             // 
             // _pasteRemovesReplPrompts
             // 
             resources.ApplyResources(this._pasteRemovesReplPrompts, "_pasteRemovesReplPrompts");
+            this._pasteRemovesReplPrompts.AutoEllipsis = true;
             this._pasteRemovesReplPrompts.Name = "_pasteRemovesReplPrompts";
             this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
             // 

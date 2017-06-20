@@ -538,11 +538,42 @@ namespace Microsoft.PythonTools.Analysis {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to # Not wrapped:
+        ///# There should be one-- and preferably only one --obvious way to do it..
+        /// </summary>
+        internal static string WrapCommentsLong_Example {
+            get {
+                return ResourceManager.GetString("WrapCommentsLong_Example", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Wrap comments that are too wide.
         /// </summary>
         internal static string WrapCommentsShort {
             get {
                 return ResourceManager.GetString("WrapCommentsShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # Wrapped to 40 columns:
+        ///# There should be one-- and preferably
+        ///# only one --obvious way to do it..
+        /// </summary>
+        internal static string WrapCommentsShort_Example {
+            get {
+                return ResourceManager.GetString("WrapCommentsShort_Example", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # Sets the width for wrapping comments
+        ///# and documentation strings..
+        /// </summary>
+        internal static string WrappingWidth_Doc {
+            get {
+                return ResourceManager.GetString("WrappingWidth_Doc", resourceCulture);
             }
         }
         

@@ -68,6 +68,7 @@ namespace Microsoft.PythonTools.Options {
             // 
             // neverEvaluateButton
             // 
+            this.neverEvaluateButton.AutoEllipsis = true;
             resources.ApplyResources(this.neverEvaluateButton, "neverEvaluateButton");
             this.neverEvaluateButton.Name = "neverEvaluateButton";
             this.neverEvaluateButton.TabStop = true;
@@ -76,6 +77,7 @@ namespace Microsoft.PythonTools.Options {
             // 
             // evaluateNoCallsButton
             // 
+            this.evaluateNoCallsButton.AutoEllipsis = true;
             resources.ApplyResources(this.evaluateNoCallsButton, "evaluateNoCallsButton");
             this.evaluateNoCallsButton.Name = "evaluateNoCallsButton";
             this.evaluateNoCallsButton.TabStop = true;
@@ -84,6 +86,7 @@ namespace Microsoft.PythonTools.Options {
             // 
             // alwaysEvaluateButton
             // 
+            this.alwaysEvaluateButton.AutoEllipsis = true;
             resources.ApplyResources(this.alwaysEvaluateButton, "alwaysEvaluateButton");
             this.alwaysEvaluateButton.Name = "alwaysEvaluateButton";
             this.alwaysEvaluateButton.TabStop = true;
@@ -92,6 +95,7 @@ namespace Microsoft.PythonTools.Options {
             // 
             // liveCompletionsOnlyCheckBox
             // 
+            this.liveCompletionsOnlyCheckBox.AutoEllipsis = true;
             resources.ApplyResources(this.liveCompletionsOnlyCheckBox, "liveCompletionsOnlyCheckBox");
             this.liveCompletionsOnlyCheckBox.Name = "liveCompletionsOnlyCheckBox";
             this.liveCompletionsOnlyCheckBox.UseVisualStyleBackColor = true;
@@ -123,6 +127,7 @@ namespace Microsoft.PythonTools.Options {
             // useSmartHistoryCheckBox
             // 
             resources.ApplyResources(this.useSmartHistoryCheckBox, "useSmartHistoryCheckBox");
+            this.useSmartHistoryCheckBox.AutoEllipsis = true;
             this.tableLayoutPanel1.SetColumnSpan(this.useSmartHistoryCheckBox, 3);
             this.useSmartHistoryCheckBox.Name = "useSmartHistoryCheckBox";
             this.useSmartHistoryCheckBox.UseVisualStyleBackColor = true;

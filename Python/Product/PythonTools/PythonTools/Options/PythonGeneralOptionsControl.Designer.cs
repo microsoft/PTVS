@@ -59,6 +59,7 @@ namespace Microsoft.PythonTools.Options {
             // 
             // _showOutputWindowForVirtualEnvCreate
             // 
+            this._showOutputWindowForVirtualEnvCreate.AutoEllipsis = true;
             resources.ApplyResources(this._showOutputWindowForVirtualEnvCreate, "_showOutputWindowForVirtualEnvCreate");
             this.tableLayoutPanel3.SetColumnSpan(this._showOutputWindowForVirtualEnvCreate, 2);
             this._showOutputWindowForVirtualEnvCreate.Name = "_showOutputWindowForVirtualEnvCreate";
@@ -66,6 +67,7 @@ namespace Microsoft.PythonTools.Options {
             // 
             // _showOutputWindowForPackageInstallation
             // 
+            this._showOutputWindowForPackageInstallation.AutoEllipsis = true;
             resources.ApplyResources(this._showOutputWindowForPackageInstallation, "_showOutputWindowForPackageInstallation");
             this.tableLayoutPanel3.SetColumnSpan(this._showOutputWindowForPackageInstallation, 2);
             this._showOutputWindowForPackageInstallation.Name = "_showOutputWindowForPackageInstallation";
@@ -74,6 +76,7 @@ namespace Microsoft.PythonTools.Options {
             // _autoAnalysis
             // 
             resources.ApplyResources(this._autoAnalysis, "_autoAnalysis");
+            this._autoAnalysis.AutoEllipsis = true;
             this.tableLayoutPanel3.SetColumnSpan(this._autoAnalysis, 2);
             this._autoAnalysis.Name = "_autoAnalysis";
             this._autoAnalysis.UseVisualStyleBackColor = true;
@@ -81,6 +84,7 @@ namespace Microsoft.PythonTools.Options {
             // _updateSearchPathsForLinkedFiles
             // 
             resources.ApplyResources(this._updateSearchPathsForLinkedFiles, "_updateSearchPathsForLinkedFiles");
+            this._updateSearchPathsForLinkedFiles.AutoEllipsis = true;
             this.tableLayoutPanel3.SetColumnSpan(this._updateSearchPathsForLinkedFiles, 2);
             this._updateSearchPathsForLinkedFiles.Name = "_updateSearchPathsForLinkedFiles";
             this._updateSearchPathsForLinkedFiles.UseVisualStyleBackColor = true;
@@ -122,6 +126,7 @@ namespace Microsoft.PythonTools.Options {
             // 
             // _elevatePip
             // 
+            this._elevatePip.AutoEllipsis = true;
             resources.ApplyResources(this._elevatePip, "_elevatePip");
             this.tableLayoutPanel3.SetColumnSpan(this._elevatePip, 2);
             this._elevatePip.Name = "_elevatePip";
@@ -130,6 +135,7 @@ namespace Microsoft.PythonTools.Options {
             // _unresolvedImportWarning
             // 
             resources.ApplyResources(this._unresolvedImportWarning, "_unresolvedImportWarning");
+            this._unresolvedImportWarning.AutoEllipsis = true;
             this.tableLayoutPanel3.SetColumnSpan(this._unresolvedImportWarning, 2);
             this._unresolvedImportWarning.Name = "_unresolvedImportWarning";
             this._unresolvedImportWarning.UseVisualStyleBackColor = true;
@@ -137,6 +143,7 @@ namespace Microsoft.PythonTools.Options {
             // _clearGlobalPythonPath
             // 
             resources.ApplyResources(this._clearGlobalPythonPath, "_clearGlobalPythonPath");
+            this._clearGlobalPythonPath.AutoEllipsis = true;
             this.tableLayoutPanel3.SetColumnSpan(this._clearGlobalPythonPath, 2);
             this._clearGlobalPythonPath.Name = "_clearGlobalPythonPath";
             this._clearGlobalPythonPath.UseVisualStyleBackColor = true;
