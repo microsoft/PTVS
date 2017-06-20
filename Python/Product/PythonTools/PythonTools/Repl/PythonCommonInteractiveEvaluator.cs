@@ -22,7 +22,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -394,8 +393,15 @@ namespace Microsoft.PythonTools.Repl {
         private static Regex _splitLineRegex = new Regex(_splitRegexPattern);
 
         public string FormatClipboard() {
-            if (Clipboard.ContainsData(DataFormats.CommaSeparatedValue)) {
-                string data = Clipboard.GetData(DataFormats.CommaSeparatedValue) as string;
+            // WPF and Windows Forms Clipboard behavior differs when it comes
+            // to DataFormats.CommaSeparatedValue.
+            // WPF will always return the data as a string, no matter how it
+            // was set, but Windows Forms may return a Stream or a string.
+            // Use WPF Clipboard fully qualified name to ensure we don't
+            // accidentally end up using the wrong clipboard implementation
+            // if this code is moved.
+            if (System.Windows.Clipboard.ContainsData(System.Windows.DataFormats.CommaSeparatedValue)) {
+                string data = System.Windows.Clipboard.GetData(System.Windows.DataFormats.CommaSeparatedValue) as string;
                 if (data != null) {
                     string[] lines = data.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                     StringBuilder res = new StringBuilder();
@@ -418,7 +424,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            var txt = Clipboard.GetText();
+            var txt = System.Windows.Clipboard.GetText();
             if (!_serviceProvider.GetPythonToolsService().AdvancedOptions.PasteRemovesReplPrompts) {
                 return txt;
             }
