@@ -64,12 +64,14 @@ namespace Microsoft.PythonTools.Options {
             // _enterCommits
             // 
             resources.ApplyResources(this._enterCommits, "_enterCommits");
+            this._enterCommits.AutoEllipsis = true;
             this._enterCommits.Name = "_enterCommits";
             this._enterCommits.UseVisualStyleBackColor = true;
             // 
             // _intersectMembers
             // 
             resources.ApplyResources(this._intersectMembers, "_intersectMembers");
+            this._intersectMembers.AutoEllipsis = true;
             this._intersectMembers.Name = "_intersectMembers";
             this._intersectMembers.UseVisualStyleBackColor = true;
             // 
@@ -92,6 +94,7 @@ namespace Microsoft.PythonTools.Options {
             // _newLineAfterCompleteCompletion
             // 
             resources.ApplyResources(this._newLineAfterCompleteCompletion, "_newLineAfterCompleteCompletion");
+            this._newLineAfterCompleteCompletion.AutoEllipsis = true;
             this._newLineAfterCompleteCompletion.Name = "_newLineAfterCompleteCompletion";
             this._newLineAfterCompleteCompletion.UseVisualStyleBackColor = true;
             // 
@@ -113,12 +116,14 @@ namespace Microsoft.PythonTools.Options {
             // _filterCompletions
             // 
             resources.ApplyResources(this._filterCompletions, "_filterCompletions");
+            this._filterCompletions.AutoEllipsis = true;
             this._filterCompletions.Name = "_filterCompletions";
             this._filterCompletions.UseVisualStyleBackColor = true;
             // 
             // _autoListIdentifiers
             // 
             resources.ApplyResources(this._autoListIdentifiers, "_autoListIdentifiers");
+            this._autoListIdentifiers.AutoEllipsis = true;
             this._autoListIdentifiers.Name = "_autoListIdentifiers";
             this._autoListIdentifiers.UseVisualStyleBackColor = true;
             // 
@@ -140,18 +145,21 @@ namespace Microsoft.PythonTools.Options {
             // _outliningOnOpen
             // 
             resources.ApplyResources(this._outliningOnOpen, "_outliningOnOpen");
+            this._outliningOnOpen.AutoEllipsis = true;
             this._outliningOnOpen.Name = "_outliningOnOpen";
             this._outliningOnOpen.UseVisualStyleBackColor = true;
             // 
             // _pasteRemovesReplPrompts
             // 
             resources.ApplyResources(this._pasteRemovesReplPrompts, "_pasteRemovesReplPrompts");
+            this._pasteRemovesReplPrompts.AutoEllipsis = true;
             this._pasteRemovesReplPrompts.Name = "_pasteRemovesReplPrompts";
             this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
             // 
             // _colorNames
             // 
             resources.ApplyResources(this._colorNames, "_colorNames");
+            this._colorNames.AutoEllipsis = true;
             this._colorNames.Name = "_colorNames";
             this._colorNames.UseVisualStyleBackColor = true;
             // 

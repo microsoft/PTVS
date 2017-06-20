@@ -48,6 +48,7 @@
             // _includeAnalysisLogs
             // 
             resources.ApplyResources(this._includeAnalysisLogs, "_includeAnalysisLogs");
+            this._includeAnalysisLogs.AutoEllipsis = true;
             this._includeAnalysisLogs.Checked = true;
             this._includeAnalysisLogs.CheckState = System.Windows.Forms.CheckState.Checked;
             this._includeAnalysisLogs.Name = "_includeAnalysisLogs";

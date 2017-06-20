@@ -285,4 +285,19 @@
   <data name="RemoveExtraLinesBetweenMethodsShort" xml:space="preserve">
     <value>Remove blank lines between methods</value>
   </data>
+  <data name="WrapCommentsLong_Example" xml:space="preserve">
+    <value># Not wrapped:
+# There should be one-- and preferably only one --obvious way to do it.</value>
+    <comment>Line breaks and # symbols must be preserved. No new line breaks should be added.</comment>
+  </data>
+  <data name="WrapCommentsShort_Example" xml:space="preserve">
+    <value># Wrapped to 40 columns:
+# There should be one-- and preferably
+# only one --obvious way to do it.</value>
+    <comment>Line breaks and # symbols must be preserved. There must be no more than 40 characters on each line of the localized text (except for the first line)</comment>
+  </data>
+  <data name="WrappingWidth_Doc" xml:space="preserve">
+    <value># Sets the width for wrapping comments
+# and documentation strings.</value>
+  </data>
 </root>

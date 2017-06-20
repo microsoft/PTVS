@@ -15,35 +15,37 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Parsing {
     /// <summary>
     /// Provides binary examples for a code formatting option of how it affects the code
     /// when the option is turned on or off.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple=false)]
-    public sealed class CodeFormattingExampleAttribute : Attribute {
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public class CodeFormattingExampleAttribute : Attribute {
         private readonly string _on, _off;
 
-        internal CodeFormattingExampleAttribute(string doc) {
-            _on = _off = doc;
-        }
+        internal CodeFormattingExampleAttribute(string doc) : this(doc, doc) { }
 
         internal CodeFormattingExampleAttribute(string on, string off) {
             _on = on;
             _off = off;
         }
 
-        public string On {
-            get {
-                return _on;
-            }
-        }
+        public virtual string On => _on;
+        public virtual string Off => _off;
+    }
 
-        public string Off {
-            get {
-                return _off;
-            }
-        }
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+    public class CodeFormattingExampleResourceAttribute : CodeFormattingExampleAttribute {
+        internal CodeFormattingExampleResourceAttribute(string docResourceId)
+            : base(docResourceId) { }
+
+        internal CodeFormattingExampleResourceAttribute(string onResourceId, string offResourceId)
+            : base(onResourceId, offResourceId) { }
+
+        public override string On => Resources.ResourceManager.GetString(base.On);
+        public override string Off => Resources.ResourceManager.GetString(base.Off);
     }
 }
