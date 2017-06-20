@@ -15,7 +15,7 @@
 # permissions and limitations under the License.
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.1.0.0"
+__version__ = "3.2.0.0"
 
 __all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'is_attached', 'AttachAlreadyEnabledError']
 
@@ -77,16 +77,9 @@ import ptvsd.visualstudio_py_ipcjson as vsipc
 #   From there on the socket is assumed to be using the normal PTVS debugging protocol.
 #   If attaching was not successful (which can happen if some other debugger is
 #   already attached), the server responds with accepted=False and closes the connection. 
-#
-# 'legacyRemoteReplAttach'
-#   Attach REPL to the process. If successful, the server responds with
-#   accepted=True, and from there on the socket is assumed to be using the
-#   normal PTVS REPL (binary) protocol. If not successful (which can happen if
-#   there is no debugger attached), the server responds with accepted=False and
-#   closes the connection. 
 
 DEFAULT_PORT = 5678
-PTVSDBG_VER = 7 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
+PTVSDBG_VER = 8 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
 PTVSDBG = 'PTVSDBG'
 
 _attach_enabled = False
@@ -367,35 +360,6 @@ class AttachLoop(vsipc.SocketIO, vsipc.IpcChannel):
                 vspd.mark_all_threads_for_break(vspd.STEPPING_ATTACH_BREAK)
 
                 _attached.set()
-
-                # Prevent from closing the socket, it will be used by debugger
-                self.__owned_socket = None
-            else:
-                self.send_response(
-                    request,
-                    accepted=False,
-                )
-        finally:
-            self.set_exit()
-
-    def on_legacyRemoteReplAttach(self, request, args):
-        if self.__waiting_for_authentication:
-            self.send_response(
-                request,
-                success=False,
-                message='legacyRemoteDebuggerAuthenticate request must be sent first.',
-            )
-            self.set_exit()
-            return
-
-        try:
-            if not vspd.DETACHED:
-                self.send_response(
-                    request,
-                    accepted=True,
-                )
-
-                vspd.connect_repl_using_socket(self.__owned_socket)
 
                 # Prevent from closing the socket, it will be used by debugger
                 self.__owned_socket = None

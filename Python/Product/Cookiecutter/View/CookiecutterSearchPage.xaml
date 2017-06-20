@@ -59,8 +59,6 @@
                             <TextBlock Grid.Column="0" Text="{Binding Path=DisplayName}"/>
                         </Grid>
                     </DataTemplate>
-                    <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-                    <wpf:Lambda x:Key="OperationStatusFailedToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Failed ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="OperationStatusSucceededToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Succeeded ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
@@ -170,12 +168,12 @@
                                             Margin="0 0 0 2"
                                             Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplateWarning}">
                         </imaging:CrispImage>
-                        <TextBlock Margin="3 3"
+                        <ccv:LiveTextBlock Margin="3 3"
                                    Text="{Binding Path=ErrorDescription}">
-                            <TextBlock.ToolTip>
+                            <ccv:LiveTextBlock.ToolTip>
                                 <TextBlock TextWrapping="Wrap" Text="{Binding Path=ErrorDetails}"/>
-                            </TextBlock.ToolTip>
-                        </TextBlock>
+                            </ccv:LiveTextBlock.ToolTip>
+                        </ccv:LiveTextBlock>
                     </StackPanel>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vm:LoadingViewModel}">
@@ -232,122 +230,26 @@
                 HorizontalAlignment="Left"
                 Content="{x:Static cct:Strings.SearchPage_NextButton}"/>
 
-            <StackPanel Margin="4 4 4 8"
+            <StackPanel Margin="4 0"
                         Orientation="Vertical"
-                        Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
-                <Separator/>
-                <TextBlock Text="{x:Static cct:Strings.SearchPage_PreparingFirstTime}"
-                           ToolTip="{x:Static cct:Strings.SearchPage_PreparingFirstTimeTooltip}"/>
-                <ProgressBar Margin="4" IsIndeterminate="True"/>
-            </StackPanel>
+                        Visibility="{Binding StatusVisibility}">
+                <Separator Margin="0 4"/>
 
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_ErrorInstallingCookiecutter}"/>
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_ErrorInstallingCookiecutter}"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Vertical"
-                        Visibility="{Binding Path=CloningStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
-                <Separator/>
-                <TextBlock Text="{x:Static cct:Strings.SearchPage_CloningRepository}"/>
-                <ProgressBar Margin="4" IsIndeterminate="True"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        Visibility="{Binding Path=CloningStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_ErrorCloningRepository}"/>
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_ErrorCloningRepository}"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Vertical"
-                        Visibility="{Binding Path=LoadingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
-                <Separator/>
-                <TextBlock Text="{x:Static cct:Strings.SearchPage_LoadingTemplate}"/>
-                <ProgressBar Margin="4" IsIndeterminate="True"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        Visibility="{Binding Path=LoadingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_ErrorLoadingTemplate}"/>
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_ErrorLoadingTemplate}"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Vertical"
-                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
-                <Separator/>
-                <TextBlock Text="{x:Static cct:Strings.SearchPage_CheckingUpdates}"/>
-                <ProgressBar Margin="4" Value="{Binding Path=CheckingUpdatePercentComplete,Mode=OneWay}" Maximum="100"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"
-                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_CheckingUpdatesCompleted}"/>
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_CheckingUpdatesCompleted}"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_ErrorCheckingUpdates}"/>
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_ErrorCheckingUpdates}"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Vertical"
-                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
-                <Separator/>
-                <TextBlock Text="{x:Static cct:Strings.SearchPage_UpdatingTemplate}"/>
-                <ProgressBar Margin="4" IsIndeterminate="True"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"
-                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_UpdatingTemplateCompleted}"/>
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_UpdatingTemplateCompleted}"/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"
-                                    AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_UpdatingTemplateError}"/>
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_UpdatingTemplateError}"/>
+                <StackPanel Orientation="Horizontal">
+                    <imaging:CrispImage Width="16" Height="16"
+                                        Moniker="{Binding StatusImage}"
+                                        AutomationProperties.HelpText="{Binding StatusMessage}"
+                                        Visibility="{Binding StatusImageVisibility}"/>
+                    <ccv:LiveTextBlock Margin="4 0 0 0"
+                                       Text="{Binding StatusMessage}"
+                                       TextWrapping="Wrap"
+                                       ToolTip="{Binding StatusHelp}" />
+                </StackPanel>
+                <ProgressBar Margin="4" IsIndeterminate="True"
+                             Visibility="{Binding StatusProgressVisibility}"/>
+                <ProgressBar Margin="4"
+                             Value="{Binding Path=CheckingUpdatePercentComplete,Mode=OneWay}" Maximum="100"
+                             Visibility="{Binding StatusUpdateProgressVisibility}"/>
             </StackPanel>
 
             <Separator Margin="4"/>

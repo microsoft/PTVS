@@ -161,6 +161,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }));
         }
 
+        private static void RefreshingDBChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            d.SetValue(RefreshDBButtonVisibilityPropertyKey, ((bool)e.NewValue) ? Visibility.Hidden : Visibility.Visible);
+            d.SetValue(RefreshProgressVisibilityPropertyKey, ((bool)e.NewValue) ? Visibility.Visible : Visibility.Hidden);
+        }
+
+
         #region Read-only State Dependency Properties
 
         private static readonly DependencyPropertyKey IsConfigurablePropertyKey = DependencyProperty.RegisterReadOnly("IsConfigurable", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
@@ -170,8 +176,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private static readonly DependencyPropertyKey IsCheckingDatabasePropertyKey = DependencyProperty.RegisterReadOnly("IsCheckingDatabase", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey RefreshDBProgressPropertyKey = DependencyProperty.RegisterReadOnly("RefreshDBProgress", typeof(int), typeof(EnvironmentView), new PropertyMetadata(0));
         private static readonly DependencyPropertyKey RefreshDBMessagePropertyKey = DependencyProperty.RegisterReadOnly("RefreshDBMessage", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
-        private static readonly DependencyPropertyKey IsRefreshingDBPropertyKey = DependencyProperty.RegisterReadOnly("IsRefreshingDB", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
+        private static readonly DependencyPropertyKey IsRefreshingDBPropertyKey = DependencyProperty.RegisterReadOnly("IsRefreshingDB", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false, RefreshingDBChanged));
         private static readonly DependencyPropertyKey IsRefreshDBProgressIndeterminatePropertyKey = DependencyProperty.RegisterReadOnly("IsRefreshDBProgressIndeterminate", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
+        private static readonly DependencyPropertyKey RefreshDBButtonVisibilityPropertyKey = DependencyProperty.RegisterReadOnly("RefreshDBButtonVisibility", typeof(Visibility), typeof(EnvironmentView), new PropertyMetadata(Visibility.Visible));
+        private static readonly DependencyPropertyKey RefreshProgressVisibilityPropertyKey = DependencyProperty.RegisterReadOnly("RefreshProgressVisibility", typeof(Visibility), typeof(EnvironmentView), new PropertyMetadata(Visibility.Hidden));
 
         public static readonly DependencyProperty IsConfigurableProperty = IsConfigurablePropertyKey.DependencyProperty;
         public static readonly DependencyProperty CanBeDefaultProperty = CanBeDefaultPropertyKey.DependencyProperty;
@@ -182,6 +190,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly DependencyProperty RefreshDBProgressProperty = RefreshDBProgressPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsRefreshingDBProperty = IsRefreshingDBPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsRefreshDBProgressIndeterminateProperty = IsRefreshDBProgressIndeterminatePropertyKey.DependencyProperty;
+        public static readonly DependencyProperty RefreshDBButtonVisibilityProperty = RefreshDBButtonVisibilityPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty RefreshProgressVisibilityProperty = RefreshProgressVisibilityPropertyKey.DependencyProperty;
 
         public bool IsConfigurable {
             get { return Factory == null ? false : (bool)GetValue(IsConfigurableProperty); }
@@ -333,5 +343,33 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             return base.SelectTemplate(item, container);
         }
+    }
+
+    public sealed class EnvironmentViewItemContainerSelector : StyleSelector {
+        public Style Environment { get; set; }
+        public Style OnlineHelp { get; set; }
+
+        public override Style SelectStyle(object item, DependencyObject container) {
+            return SelectStyle(item as EnvironmentView)
+                ?? container.GetValue(ItemsControl.ItemContainerStyleProperty) as Style
+                ?? base.SelectStyle(item, container);
+        }
+
+        private Style SelectStyle(EnvironmentView ev) {
+            if (ev == null) {
+                return null;
+            }
+
+            if (EnvironmentView.IsOnlineHelpView(ev) && OnlineHelp != null) {
+                return OnlineHelp;
+            }
+
+            if (Environment != null) {
+                return Environment;
+            }
+
+            return null;
+        }
+
     }
 }

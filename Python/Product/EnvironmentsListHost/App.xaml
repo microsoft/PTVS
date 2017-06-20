@@ -16,7 +16,7 @@
         <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlForegroundKey}" Color="{x:Static SystemColors.ControlTextColor}" />
         <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlBorderKey}" Color="{x:Static SystemColors.ControlLightColor}" />
         <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlBackgroundHoverKey}" Color="{x:Static SystemColors.ControlLightColor}" />
-        <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlBorderHoverKey}" Color="{x:Static SystemColors.ControlColor}" />
+        <!--<SolidColorBrush x:Key="{x:Static wpf:Controls.ControlBorderHoverKey}" Color="{x:Static SystemColors.ControlColor}" />-->
         <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlBackgroundPressedKey}" Color="{x:Static SystemColors.ControlLightLightColor}" />
         <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlForegroundPressedKey}" Color="{x:Static SystemColors.ControlDarkColor}" />
         <SolidColorBrush x:Key="{x:Static wpf:Controls.ControlBorderPressedKey}" Color="{x:Static SystemColors.ControlDarkDarkColor}" />

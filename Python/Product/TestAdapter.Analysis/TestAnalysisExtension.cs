@@ -66,13 +66,13 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 object filename, className, methodName, startLine, startColumn, endLine, kind;
-                if (dict.TryGetValue(Serialize.Filename, out filename) &&
-                    dict.TryGetValue(Serialize.ClassName, out className) &&
-                    dict.TryGetValue(Serialize.MethodName, out methodName) &&
-                    dict.TryGetValue(Serialize.StartLine, out startLine) &&
-                    dict.TryGetValue(Serialize.StartColumn, out startColumn) &&
-                    dict.TryGetValue(Serialize.EndLine, out endLine) &&
-                    dict.TryGetValue(Serialize.Kind, out kind)) {
+                if (dict.TryGetValue(Serialize.Filename, out filename) && filename != null &&
+                    dict.TryGetValue(Serialize.ClassName, out className) && className != null &&
+                    dict.TryGetValue(Serialize.MethodName, out methodName) && methodName != null &&
+                    dict.TryGetValue(Serialize.StartLine, out startLine) && startLine != null &&
+                    dict.TryGetValue(Serialize.StartColumn, out startColumn) && startColumn != null &&
+                    dict.TryGetValue(Serialize.EndLine, out endLine) && endLine != null &&
+                    dict.TryGetValue(Serialize.Kind, out kind) && kind != null) {
                     tests.Add(
                         new TestCaseInfo(
                             filename.ToString(),

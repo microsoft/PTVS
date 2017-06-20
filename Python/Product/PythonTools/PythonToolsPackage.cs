@@ -417,6 +417,7 @@ namespace Microsoft.PythonTools {
                 new ExecuteInReplCommand(this), 
                 new SendToReplCommand(this), 
                 new FillParagraphCommand(this), 
+                new DiagnosticsCommand(this),
                 new RemoveImportsCommand(this, true),
                 new RemoveImportsCommand(this, false),
                 new OpenInterpreterListCommand(this),

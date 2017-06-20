@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:l="clr-namespace:Microsoft.PythonTools.EnvironmentsList"
+             xmlns:inf="clr-namespace:Microsoft.PythonTools.Infrastructure;assembly=Microsoft.PythonTools.VSCommon"
              xmlns:s="clr-namespace:System;assembly=mscorlib"
              xmlns:scm="clr-namespace:System.ComponentModel;assembly=System"
              xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
@@ -57,58 +58,6 @@
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
-                    
-                    <DataTemplate DataType="{x:Type l:DBEnvironmentView}" x:Key="ProgressView">
-                        <Grid>
-                            <Button x:Name="_Button"
-                                    Command="{x:Static l:DBExtension.StartRefreshDB}"
-                                    CommandParameter="{Binding EnvironmentView}"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    AutomationProperties.Name="{x:Static l:Resources.DBExtensionRefreshDBAutomationName}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="auto" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <Control Grid.Column="0"
-                                             Margin="3"
-                                             Focusable="False"
-                                             Style="{StaticResource RefreshImage}" />
-                                    <AccessText Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                Text="{x:Static l:Resources.DBExtensionRefreshDBLabel}"/>
-                                </Grid>
-                            </Button>
-
-                            <ProgressBar x:Name="_Progress"
-                                         Value="{Binding EnvironmentView.RefreshDBProgress,Mode=OneWay}"
-                                         IsIndeterminate="{Binding EnvironmentView.IsRefreshDBProgressIndeterminate,Mode=OneWay}"
-                                         Maximum="100"
-                                         MinHeight="8"
-                                         Margin="4"
-                                         Visibility="Hidden"
-                                         Focusable="False"
-                                         ToolTipService.ShowDuration="{x:Static s:Int32.MaxValue}" />
-
-                            <TextBlock x:Name="_ProgressMessage"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Visibility="Hidden"
-                                       Margin="5 4"
-                                       TextTrimming="CharacterEllipsis"
-                                       Text="{Binding EnvironmentView.RefreshDBMessage,Mode=OneWay}"
-                                       ToolTip="{Binding EnvironmentView.RefreshDBMessage,Mode=OneWay}"/>
-                        </Grid>
-                        
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding EnvironmentView.IsRefreshingDB}" Value="True">
-                                <Setter TargetName="_Button" Property="Visibility" Value="Hidden" />
-                                <Setter TargetName="_Progress" Property="Visibility" Value="Visible" />
-                                <Setter TargetName="_ProgressMessage" Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -125,10 +74,47 @@
             <CollectionViewSource x:Key="SortedPackages" Source="{Binding Packages}" />
         </Grid.Resources>
 
-        <ContentControl Content="{Binding}"
-                        ContentTemplate="{StaticResource ProgressView}"
-                        Focusable="False"/>
-        
+        <Grid DataContext="{Binding EnvironmentView}">
+            <Button Command="{x:Static l:DBExtension.StartRefreshDB}"
+                    CommandParameter="{Binding}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Visibility="{Binding RefreshDBButtonVisibility}"
+                    AutomationProperties.Name="{x:Static l:Resources.DBExtensionRefreshDBAutomationName}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Control Grid.Column="0"
+                             Margin="3"
+                             Focusable="False"
+                             Style="{StaticResource RefreshImage}" />
+                    <AccessText Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Text="{x:Static l:Resources.DBExtensionRefreshDBLabel}"/>
+                </Grid>
+            </Button>
+
+            <ProgressBar Value="{Binding RefreshDBProgress,Mode=OneWay}"
+                         IsIndeterminate="{Binding IsRefreshDBProgressIndeterminate,Mode=OneWay}"
+                         Maximum="100"
+                         MinHeight="8"
+                         Margin="4"
+                         Visibility="{Binding RefreshProgressVisibility}"
+                         Focusable="False"
+                         ToolTipService.ShowDuration="{x:Static s:Int32.MaxValue}" />
+
+            <inf:LiveTextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Visibility="{Binding RefreshProgressVisibility}"
+                               Margin="5 4"
+                               TextTrimming="CharacterEllipsis"
+                               IsHitTestVisible="False"
+                               Text="{Binding RefreshDBMessage,Mode=OneWay}"
+                               ToolTip="{Binding RefreshDBMessage,Mode=OneWay}"/>
+        </Grid>
+
         <ListBox Grid.Row="2"
                  x:Name="_packageList"
                  IsTextSearchEnabled="True"

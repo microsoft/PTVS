@@ -204,10 +204,13 @@
       </Item>
       <Item ItemId=";AddVirtualEnvironmentWindow_CreateVirtualEnv" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Create a virtual environment]]></Val>
+          <Val><![CDATA[Create a virtual environment using virtualenv]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[가상 환경 만들기]]></Val>
+            <Val><![CDATA[virtualenv를 사용하여 가상 환경 만들기]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Create a virtual environment]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1313,7 +1316,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<REPL input>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<REPL input>]]></Val>
+            <Val><![CDATA[<REPL 입력>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1628,7 +1631,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<unknown location, not in Python code>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<unknown location, not in Python code>]]></Val>
+            <Val><![CDATA[<알 수 없는 위치, Python 코드에 없음>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1655,7 +1658,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<unknown exception type>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<unknown exception type>]]></Val>
+            <Val><![CDATA[<알 수 없는 예외 유형>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2249,7 +2252,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<failed to get preview>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<failed to get preview>]]></Val>
+            <Val><![CDATA[<미리 보기를 가져오지 못함>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3218,7 +3221,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<No completions>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<No completions>]]></Val>
+            <Val><![CDATA[<완료된 항목 없음>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3975,6 +3978,15 @@
           <Val><![CDATA[The remote server at {0} is not running a remote debugging server, or may be running an unsupported version.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[{0}의 원격 서버에서 원격 디버깅 서버를 실행하고 있지 않거나 지원되지 않는 버전을 실행하고 있을 수 있습니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoveReplPrompts" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Remove Interactive Prompts]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[대화식 프롬프트 제거]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5248,7 +5260,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17150.1]]></Val>
+        <Val><![CDATA[3.0.17166.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5284,7 +5296,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17150.1]]></Val>
+        <Val><![CDATA[3.0.17166.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

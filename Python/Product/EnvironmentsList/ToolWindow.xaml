@@ -36,6 +36,37 @@
 
                 <ResourceDictionary>
                     <Style TargetType="{x:Type l:DataListBox}" BasedOn="{StaticResource {x:Type ListBox}}" />
+
+                    <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="OnlineHelpListItem">
+                        <Button Style="{StaticResource NavigationButtonInList}"
+                                Margin="6"
+                                Name="Button"
+                                Command="ApplicationCommands.Help"
+                                HorizontalAlignment="Left"
+                                GotFocus="OnlineHelpListItem_GotFocus">
+                            <Grid Background="Transparent">
+                                <Label VerticalAlignment="Center"
+                                       Foreground="{Binding Foreground,ElementName=Button}"
+                                       Content="{x:Static l:Resources.EnvironmentViewOnlineHelpLabel}"/>
+                            </Grid>
+                        </Button>
+                        <DataTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </Trigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="ExtensionListItem">
+                        <TextBlock Text="{Binding LocalizedDisplayName}"
+                                   Margin="4" />
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="ExtensionComboItem">
+                        <TextBlock Text="{Binding LocalizedDisplayName}"
+                                   Margin="4" />
+                    </DataTemplate>
+
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -103,6 +134,10 @@
                 <Setter Property="AutomationProperties.Name" Value="{Binding LocalizedDisplayName,Mode=OneWay}" />
                 <Setter Property="AutomationProperties.HelpText" Value="{Binding LocalizedHelpText,Mode=OneWay}" />
             </Style>
+
+            <Style x:Key="OnlineHelpItemContainerStyle" TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                <Setter Property="IsTabStop" Value="False" />
+            </Style>
         </Grid.Resources>
 
         <Grid x:Name="HorizontalLayout" Visibility="Collapsed">
@@ -127,13 +162,16 @@
                            BorderThickness="0"
                            SelectionChanged="EnvironmentsList_SelectionChanged"
                            ItemsSource="{Binding Environments}"
-                           AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}"
-                           ItemContainerStyle="{StaticResource WithLocalizedName}">
+                           AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}">
                 <l:DataListBox.ItemTemplateSelector>
                     <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
                                                        OnlineHelp="{StaticResource OnlineHelpListItem}"
                                                        Environment="{StaticResource EnvironmentListItem}" />
                 </l:DataListBox.ItemTemplateSelector>
+                <l:DataListBox.ItemContainerStyleSelector>
+                    <l:EnvironmentViewItemContainerSelector OnlineHelp="{StaticResource OnlineHelpItemContainerStyle}"
+                                                            Environment="{StaticResource WithLocalizedName}"/>
+                </l:DataListBox.ItemContainerStyleSelector>
             </l:DataListBox>
 
             <ListBox Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"
@@ -144,7 +182,7 @@
                      ItemsSource="{Binding Extensions}"
                      ItemTemplate="{StaticResource ExtensionListItem}"
                      AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ExtensionsName}"
-                     ItemContainerStyle="{StaticResource WithLocalizedName}" />
+                     ItemContainerStyle="{StaticResource WithLocalizedName}"/>
 
             <ContentControl Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
                             Content="{Binding Environments.CurrentItem}"
@@ -202,13 +240,16 @@
                            BorderThickness="0"
                            SelectionChanged="EnvironmentsList_SelectionChanged"
                            ItemsSource="{Binding Environments}"
-                           AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}"
-                           ItemContainerStyle="{StaticResource WithLocalizedName}">
+                           AutomationProperties.Name="{x:Static l:Resources.ToolWindow_ListOfEnvironmentsName}">
                 <l:DataListBox.ItemTemplateSelector>
                     <l:EnvironmentViewTemplateSelector AddNewEnvironment="{StaticResource AddNewEnvironmentListItem}"
                                                        OnlineHelp="{StaticResource OnlineHelpListItem}"
                                                        Environment="{StaticResource EnvironmentListItem}" />
                 </l:DataListBox.ItemTemplateSelector>
+                <l:DataListBox.ItemContainerStyleSelector>
+                    <l:EnvironmentViewItemContainerSelector OnlineHelp="{StaticResource OnlineHelpItemContainerStyle}"
+                                                            Environment="{StaticResource WithLocalizedName}"/>
+                </l:DataListBox.ItemContainerStyleSelector>
             </l:DataListBox>
 
             <ComboBox Grid.Row="1" Grid.Column="0"

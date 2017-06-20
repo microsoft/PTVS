@@ -28,6 +28,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
@@ -553,6 +554,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (list != null && e.AddedItems.Count > 0) {
                 list.ScrollIntoView(e.AddedItems[0]);
                 e.Handled = true;
+            }
+        }
+
+        private void OnlineHelpListItem_GotFocus(object sender, RoutedEventArgs e) {
+            for (var child = sender as DependencyObject;
+                child != null;
+                child = VisualTreeHelper.GetParent(child)
+            ) {
+                var lbi = child as ListBoxItem;
+                if (lbi != null) {
+                    lbi.IsSelected = true;
+                    return;
+                }
             }
         }
 

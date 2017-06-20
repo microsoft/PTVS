@@ -43,6 +43,11 @@ namespace Microsoft.PythonTools.Interpreter {
         protected readonly Dictionary<string, PackageSpec> _cache;
         protected DateTime _cacheAge;
 
+        // The live cache contains names of package specs that are fully up to date
+        // in the cache.
+        protected readonly HashSet<string> _liveCache;
+        protected DateTime _liveCacheAge;
+
         protected int _userCount; // protected by _knownCachesLock
         private long _writeVersion;
 
@@ -54,9 +59,8 @@ namespace Microsoft.PythonTools.Interpreter {
             TimeSpan.FromSeconds(1.0)
         );
 
-        // When files return 404 from PyPI, we put them in here to avoid trying
-        // to request them again.
-        private static HashSet<string> NotOnPyPI = new HashSet<string>();
+        // Don't make multiple requests for the same package
+        private readonly Dictionary<string, TaskCompletionSource<PackageSpec>> _activeRequests = new Dictionary<string, TaskCompletionSource<PackageSpec>>();
 
         // These constants are substituted where necessary, but are not stored
         // in instance variables so we can differentiate between set and unset.
@@ -65,6 +69,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string DefaultIndexName = "PyPI";
 
         private const string UserAgent = "PythonToolsForVisualStudio/" + AssemblyVersionInfo.Version;
+
+        private static readonly TimeSpan CacheAgeLimit = TimeSpan.FromHours(6);
+        private static readonly TimeSpan LiveCacheAgeLimit = TimeSpan.FromHours(1);
 
         protected PipPackageCache(
             Uri index,
@@ -75,6 +82,8 @@ namespace Microsoft.PythonTools.Interpreter {
             _indexName = indexName;
             _cachePath = cachePath;
             _cache = new Dictionary<string, PackageSpec>();
+            _liveCacheAge = DateTime.UtcNow;
+            _liveCache = new HashSet<string>();
         }
 
         public static PipPackageCache GetCache(Uri index = null, string indexName = null) {
@@ -143,8 +152,12 @@ namespace Microsoft.PythonTools.Interpreter {
                         _cacheAge = DateTime.MinValue;
                     }
                 }
-                if (_cacheAge.AddHours(6) < DateTime.Now) {
+                if (_cacheAge + CacheAgeLimit < DateTime.UtcNow) {
                     await RefreshCacheAsync(cancel).ConfigureAwait(false);
+                    lock (_liveCache) {
+                        _liveCache.Clear();
+                        _liveCacheAge = DateTime.UtcNow;
+                    }
                 }
 
                 return _cache.Values.Select(p => p.Clone()).ToList();
@@ -177,102 +190,155 @@ namespace Microsoft.PythonTools.Interpreter {
             return false;
         }
 
+        private bool IsInLiveCache(string name) {
+            lock (_liveCache) {
+                if (_liveCacheAge + LiveCacheAgeLimit < DateTime.UtcNow) {
+                    _liveCache.Clear();
+                    _liveCacheAge = DateTime.UtcNow;
+                    return false;
+                } else {
+                    return _liveCache.Contains(name);
+                }
+            }
+        }
+
+        private void AddToLiveCache(string name) {
+            lock (_liveCache) {
+                if (_liveCacheAge + LiveCacheAgeLimit < DateTime.UtcNow) {
+                    _liveCache.Clear();
+                    _liveCacheAge = DateTime.UtcNow;
+                }
+                _liveCache.Add(name);
+            }
+        }
+
         public async Task<PackageSpec> GetPackageInfoAsync(PackageSpec entry, CancellationToken cancel) {
             string description = null;
             List<string> versions = null;
 
-            lock (NotOnPyPI) {
-                if (NotOnPyPI.Contains(entry.Name)) {
-                    return new PackageSpec();
+            bool useCache = IsInLiveCache(entry.Name);
+
+            if (useCache) {
+                using (await _cacheLock.LockAsync(cancel)) {
+                    PackageSpec result;
+                    if (_cache.TryGetValue(entry.Name, out result)) {
+                        return result.Clone();
+                    } else {
+                        return new PackageSpec();
+                    }
                 }
             }
 
-            using (var client = new WebClient()) {
-                Stream data;
-                client.Headers[HttpRequestHeader.UserAgent] = UserAgent;
-                try {
-                    data = await client.OpenReadTaskAsync(new Uri(Index, entry.Name + "/json"))
-                        .ConfigureAwait(false);
-                } catch (WebException ex) {
-                    if ((ex.Response as HttpWebResponse)?.StatusCode == HttpStatusCode.NotFound) {
-                        lock (NotOnPyPI) {
-                            NotOnPyPI.Add(entry.Name);
+            TaskCompletionSource<PackageSpec> tcs = null;
+            Task<PackageSpec> t = null;
+            lock (_activeRequests) {
+                if (_activeRequests.TryGetValue(entry.Name, out tcs)) {
+                    t = tcs.Task;
+                } else {
+                    _activeRequests[entry.Name] = tcs = new TaskCompletionSource<PackageSpec>();
+                }
+            }
+
+            if (t != null) {
+                return (await t).Clone();
+            }
+
+            try {
+                using (var client = new WebClient()) {
+                    Stream data;
+                    client.Headers[HttpRequestHeader.UserAgent] = UserAgent;
+                    try {
+                        data = await client.OpenReadTaskAsync(new Uri(Index, entry.Name + "/json"))
+                            .ConfigureAwait(false);
+                    } catch (WebException) {
+                        // No net access or no such package
+                        AddToLiveCache(entry.Name);
+                        return new PackageSpec();
+                    }
+
+                    try {
+                        using (var reader = JsonReaderWriterFactory.CreateJsonReader(data, new XmlDictionaryReaderQuotas())) {
+                            var doc = XDocument.Load(reader);
+
+                            // TODO: Get package URL
+                            //url = (string)doc.Document
+                            //    .Elements("root")
+                            //    .Elements("info")
+                            //    .Elements("package_url")
+                            //    .FirstOrDefault();
+
+                            description = (string)doc.Document
+                                .Elements("root")
+                                .Elements("info")
+                                .Elements("description")
+                                .FirstOrDefault();
+
+                            versions = doc.Document
+                                .Elements("root")
+                                .Elements("releases")
+                                .Elements()
+                                .Attributes("item")
+                                .Select(a => a.Value)
+                                .ToList();
                         }
+                    } catch (InvalidOperationException) {
                     }
-
-                    // No net access or no such package
-                    return new PackageSpec();
                 }
 
-                try {
-                    using (var reader = JsonReaderWriterFactory.CreateJsonReader(data, new XmlDictionaryReaderQuotas())) {
-                        var doc = XDocument.Load(reader);
+                bool changed = false;
+                PackageSpec result;
 
-                        // TODO: Get package URL
-                        //url = (string)doc.Document
-                        //    .Elements("root")
-                        //    .Elements("info")
-                        //    .Elements("package_url")
-                        //    .FirstOrDefault();
+                using (await _cacheLock.LockAsync(cancel)) {
+                    if (!_cache.TryGetValue(entry.Name, out result)) {
+                        result = _cache[entry.Name] = new PackageSpec(entry.Name);
+                    }
 
-                        description = (string)doc.Document
-                            .Elements("root")
-                            .Elements("info")
-                            .Elements("description")
+                    if (!string.IsNullOrEmpty(description)) {
+                        var lines = description.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        var firstLine = string.Join(
+                            " ",
+                            lines.TakeWhile(s => !IsSeparatorLine(s)).Select(s => s.Trim())
+                        );
+                        if (firstLine.Length > 500) {
+                            firstLine = firstLine.Substring(0, 497) + "...";
+                        }
+                        if (firstLine == "UNKNOWN") {
+                            firstLine = string.Empty;
+                        }
+
+                        result.Description = firstLine;
+                        changed = true;
+                    }
+
+                    if (versions != null) {
+                        var updateVersion = PackageVersion.TryParseAll(versions)
+                            .Where(v => v.IsFinalRelease)
+                            .OrderByDescending(v => v)
                             .FirstOrDefault();
-                        
-                        versions = doc.Document
-                            .Elements("root")
-                            .Elements("releases")
-                            .Elements()
-                            .Attributes("item")
-                            .Select(a => a.Value)
-                            .ToList();
+                        result.ExactVersion = updateVersion;
+                        changed = true;
                     }
-                } catch (InvalidOperationException) {
+                }
+
+                if (changed) {
+                    TriggerWriteCacheToDisk();
+                    AddToLiveCache(entry.Name);
+                }
+
+                var r = result.Clone();
+
+                // Inform other waiters that we have completed
+                tcs.TrySetResult(r);
+
+                return r;
+            } catch (Exception ex) {
+                tcs.TrySetException(ex);
+                throw;
+            } finally {
+                lock (_activeRequests) {
+                    _activeRequests.Remove(entry.Name);
                 }
             }
-
-            bool changed = false;
-            PackageSpec result;
-
-            using (await _cacheLock.LockAsync(cancel)) {
-                if (!_cache.TryGetValue(entry.Name, out result)) {
-                    result = _cache[entry.Name] = new PackageSpec(entry.Name);
-                }
-
-                if (!string.IsNullOrEmpty(description)) {
-                    var lines = description.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                    var firstLine = string.Join(
-                        " ",
-                        lines.TakeWhile(s => !IsSeparatorLine(s)).Select(s => s.Trim())
-                    );
-                    if (firstLine.Length > 500) {
-                        firstLine = firstLine.Substring(0, 497) + "...";
-                    }
-                    if (firstLine == "UNKNOWN") {
-                        firstLine = string.Empty;
-                    }
-
-                    result.Description = firstLine;
-                    changed = true;
-                }
-
-                if (versions != null) {
-                    var updateVersion = PackageVersion.TryParseAll(versions)
-                        .Where(v => v.IsFinalRelease)
-                        .OrderByDescending(v => v)
-                        .FirstOrDefault();
-                    result.ExactVersion = updateVersion;
-                    changed = true;
-                }
-            }
-
-            if (changed) {
-                TriggerWriteCacheToDisk();
-            }
-
-            return result.Clone();
         }
 
         #region Cache File Management
@@ -352,7 +418,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 TriggerWriteCacheToDisk();
             }
 
-            _cacheAge = DateTime.Now;
+            _cacheAge = DateTime.UtcNow;
         }
 
         private async void TriggerWriteCacheToDisk() {
@@ -404,7 +470,7 @@ namespace Microsoft.PythonTools.Interpreter {
         protected async Task ReadCacheFromDiskAsync(CancellationToken cancel) {
             Debug.Assert(_cacheLock.CurrentCount == 0, "Cache must be locked before calling ReadCacheFromDiskAsync");
 
-            var newCacheAge = DateTime.Now;
+            var newCacheAge = DateTime.UtcNow;
             var newCache = new Dictionary<string, PackageSpec>();
             using (await LockFile(_cachePath + ".lock", cancel).ConfigureAwait(false))
             using (var file = new StreamReader(_cachePath, Encoding.UTF8)) {

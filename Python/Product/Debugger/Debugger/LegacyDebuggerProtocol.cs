@@ -187,6 +187,8 @@ namespace Microsoft.PythonTools.Debugger {
             public int frameId;
             public FrameKind frameKind;
             public ReprKind reprKind;
+            public string moduleName;
+            public bool printResult;
         }
 
         public sealed class DetachRequest : GenericRequest {
@@ -202,20 +204,6 @@ namespace Microsoft.PythonTools.Debugger {
 
             public int defaultBreakOnMode;
             public ExceptionInfo[] breakOn;
-        }
-
-        public sealed class ConnectReplRequest : GenericRequest {
-            public const string Command = "legacyConnectRepl";
-
-            public override string command => Command;
-
-            public int portNum;
-        }
-
-        public sealed class DisconnectReplRequest : GenericRequest {
-            public const string Command = "legacyDisconnectRepl";
-
-            public override string command => Command;
         }
 
         public sealed class LastAckRequest : GenericRequest {
@@ -314,14 +302,14 @@ namespace Microsoft.PythonTools.Debugger {
             public int pythonMicro;
         }
 
-        public sealed class RemoteReplAttachRequest : Request<RemoteReplAttachResponse> {
-            public const string Command = "legacyRemoteReplAttach";
+        public sealed class ListReplModulesRequest : Request<ListReplModulesResponse> {
+            public const string Command = "legacyListReplModules";
 
             public override string command => Command;
         }
 
-        public sealed class RemoteReplAttachResponse : Response {
-            public bool accepted;
+        public sealed class ListReplModulesResponse : Response {
+            public ModuleItem[] modules;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -456,6 +444,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             public long threadId;
             public string output;
+            public bool isStdOut;
         }
 
         public sealed class ExecutionResultEvent : Event {
@@ -493,6 +482,12 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
             public string threadName;
             public ThreadFrameItem[] threadFrames;
+        }
+
+        public sealed class ModulesChangedEvent : Event {
+            public const string Name = "legacyModulesChanged";
+
+            public override string name => Name;
         }
 
         //////////////////////////////////////////////////////////////////////
@@ -576,6 +571,11 @@ namespace Microsoft.PythonTools.Debugger {
             public int lineStart;
             public int lineEnd;
             public string[] expressions;
+        }
+
+        public sealed class ModuleItem {
+            public string name;
+            public string fileName;
         }
     }
 }

@@ -158,5 +158,15 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
             var url = (string)e.Parameter;
             Process.Start(url)?.Dispose();
         }
+
+        private void Help_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = true;
+            e.Handled = true;
+        }
+
+        private void Help_Executed(object sender, ExecutedRoutedEventArgs e) {
+            MessageBox.Show("Opening help in browser");
+            e.Handled = true;
+        }
     }
 }

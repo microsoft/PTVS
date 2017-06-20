@@ -18,7 +18,7 @@
 from distutils.core import setup
 
 setup(name='ptvsd',
-      version='3.1.0',
+      version='3.2.0',
       description='Visual Studio remote debugging server for Python',
       license='Apache License 2.0',
       author='Microsoft Corporation',

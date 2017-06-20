@@ -874,10 +874,21 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         private static PythonLanguageVersion GetLanguageVersion(string options) {
             PythonLanguageVersion langVersion;
-            if (options == null || !Enum.TryParse<PythonLanguageVersion>(options, out langVersion)) {
-                langVersion = DefaultVersion;
+            Version ver;
+            if (string.IsNullOrEmpty(options)) {
+                return DefaultVersion;
             }
-            return langVersion;
+            if (Enum.TryParse(options, out langVersion)) {
+                return langVersion;
+            }
+            if (Version.TryParse(options, out ver)) {
+                try {
+                    return ver.ToLanguageVersion();
+                } catch (InvalidOperationException) {
+                    // Version is not supported
+                }
+            }
+            return DefaultVersion;
         }
 
         // Resume a process launched by IDebugEngineLaunch2.LaunchSuspended
@@ -1436,9 +1447,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private void OnDebuggerOutput(object sender, OutputEventArgs e) {
-            AD7Thread thread;
-            if (!_threads.TryGetValue(e.Thread, out thread)) {
-                _threads[e.Thread] = thread = new AD7Thread(this, e.Thread);
+            // Output from debug REPL code execution may be run on debugger
+            // event handling thread, and e.Thread will be null.
+            AD7Thread thread = null;
+            if (e.Thread != null) {
+                if (!_threads.TryGetValue(e.Thread, out thread)) {
+                    _threads[e.Thread] = thread = new AD7Thread(this, e.Thread);
+                }
             }
 
             Send(new AD7DebugOutputStringEvent2(e.Output), AD7DebugOutputStringEvent2.IID, thread);

@@ -149,6 +149,11 @@
     <Compile Include="PythonLaunchConfigurationProvider.cs" />
     <Compile Include="PythonLaunchDebugTargetProvider.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Microsoft.PythonTools.SuppressDpl.pkgdef">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

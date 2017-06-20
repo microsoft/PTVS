@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools {
         public const uint cmdidExecuteFileInRepl = 0x102;
         public const uint cmdidSendToRepl = 0x103;
         public const uint cmdidFillParagraph = 0x105;
+        public const uint cmdidDiagnostics = 0x106;
         public const uint cmdidRemoveImports = 0x107;
         public const uint cmdidRemoveImportsCurrentScope = 0x108;
         public const uint cmdidRefactorRenameIntegratedShell = 0x109;

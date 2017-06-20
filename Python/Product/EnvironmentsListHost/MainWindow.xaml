@@ -22,6 +22,9 @@
         <CommandBinding Command="{x:Static el:EnvironmentPathsExtension.OpenInBrowser}"
                         CanExecute="OpenInBrowser_CanExecute"
                         Executed="OpenInBrowser_Executed" />
+        <CommandBinding Command="ApplicationCommands.Help"
+                        CanExecute="Help_CanExecute"
+                        Executed="Help_Executed" />
     </Window.CommandBindings>
     <Grid>
         <el:ToolWindow x:Name="EnvironmentsToolWindow" />

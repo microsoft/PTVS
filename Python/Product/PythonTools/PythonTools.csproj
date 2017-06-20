@@ -258,6 +258,7 @@
     <Compile Include="PythonTools\CodeCoverage\CoverageMapper.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoveragePyConverter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageScope.cs" />
+    <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
@@ -293,6 +294,8 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\Repl\PythonCommonInteractiveEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\PythonDebugProcessReplEvaluator.cs" />
     <Compile Include="PythonTools\SearchPathManager.cs" />
     <Compile Include="PythonTools\Project\VsPackageManagerUI.cs" />
     <Compile Include="PythonTools\ProvideBraceCompletionAttribute.cs" />
@@ -696,10 +699,18 @@
     <None Include="ptvsd\attach_server.py" />
     <None Include="Theme\Microsoft.PythonTools.theme.v14.0.pkgdef" />
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
-    <None Include="Theme\dark.vstheme">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="Theme\dark.vstheme" />
+    <None Include="Theme\blue.vstheme" />
+    <None Include="Theme\light.vstheme" />
+    <None Include="Theme\additionalcontrast.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
+    <None Include="Theme\Repl\Microsoft.PythonTools.theme.v14.0.pkgdef" />
+    <None Include="Theme\Repl\Microsoft.PythonTools.theme.v15.0.pkgdef" />
+    <None Include="Theme\Repl\dark.vstheme" />
+    <None Include="Theme\Repl\blue.vstheme" />
+    <None Include="Theme\Repl\light.vstheme" />
+    <None Include="Theme\Repl\additionalcontrast.vstheme" />
+    <None Include="Theme\Repl\make_theme_pkgdef.py" />
     <Content Include="NoInterpreters.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -709,17 +720,12 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="ptvsd\__init__.py" />
-    <None Include="Theme\Repl\blue.vstheme" />
-    <None Include="Theme\Repl\contrast.vstheme">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Theme\Repl\dark.vstheme" />
-    <None Include="Theme\Repl\light.vstheme" />
     <None Include="ptvsd\__main__.py" />
     <Content Include="pip_downloader.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <None Include="ptvsd\setup.py" />
     <Content Include="Snippets\Python\for.snippet">
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
@@ -775,15 +781,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ReadmeStyle.css" />
-    <None Include="Theme\Repl\make_theme_pkgdef.py" />
-    <_ThemePkgDef Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v$(VSTarget).pkgdef">
-      <IncludeInVsix>true</IncludeInVsix>
-      <Link>Microsoft.PythonTools.Repl.theme.pkgdef</Link>
-      <VSIXSubPath>.</VSIXSubPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </_ThemePkgDef>
-    <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v14.0.pkgdef" />
-    <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
     <Content Include="visualstudio_py_ipcjson.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
