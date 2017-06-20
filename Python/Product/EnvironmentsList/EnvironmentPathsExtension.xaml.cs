@@ -94,5 +94,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 Clipboard.SetDataObject((IDataObject)e.Parameter);
             }
         }
+
+        private void IsIPythonModeEnabled_Loaded(object sender, RoutedEventArgs e) {
+            var ev = (e.Source as FrameworkElement)?.DataContext as EnvironmentView;
+            if (ev == null) {
+                return;
+            }
+
+            e.Handled = true;
+            if (ev.IsIPythonModeEnabled.HasValue) {
+                return;
+            }
+
+            ev.IsIPythonModeEnabled = ev.IPythonModeEnabledGetter?.Invoke(ev) ?? false;
+        }
     }
 }
