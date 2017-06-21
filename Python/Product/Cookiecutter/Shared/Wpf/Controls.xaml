@@ -685,7 +685,8 @@
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
     </Style>
     <Style TargetType="{x:Type ListBoxItem}">
-        <Setter Property="Background" Value="{x:Null}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="IsHitTestVisible" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
