@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
 
             view.IPythonModeEnabledSetter = SetIPythonEnabled;
-            view.IsIPythonModeEnabled = QueryIPythonEnabled(view);
+            view.IPythonModeEnabledGetter = QueryIPythonEnabled;
 
             try {
                 var pep = new PipExtensionProvider(view.Factory);

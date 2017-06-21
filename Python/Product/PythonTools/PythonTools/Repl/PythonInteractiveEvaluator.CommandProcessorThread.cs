@@ -103,6 +103,9 @@ namespace Microsoft.PythonTools.Repl {
                 processInfo.WorkingDirectory = CommonUtils.GetParent(processInfo.FileName);
             }
 
+            // Ensure that pydoc doesn't use redirection through an external process to display help
+            processInfo.Environment["TERM"] = "dumb";
+
 #if DEBUG
             if (!debugMode) {
 #endif
@@ -716,19 +719,6 @@ namespace Microsoft.PythonTools.Repl {
             public void AbortCommand() {
                 using (new StreamLock(this, throwIfDisconnected: true)) {
                     _stream.Write(AbortCommandBytes);
-                }
-            }
-
-            public void SetThreadAndFrameCommand(long thread, int frame, FrameKind frameKind) {
-                using (new StreamLock(this, throwIfDisconnected: true)) {
-                    _stream.Write(SetThreadAndFrameCommandBytes);
-                    _stream.WriteInt64(thread);
-                    _stream.WriteInt32(frame);
-                    _stream.WriteInt32((int)frameKind);
-                    // TODO: Localization: we may need to do something with <CurrentFrame> string. Is it displayed?
-                    // It also appears visualstudio_py_repl.py so it probably needs to be in sync with it.
-                    _currentScope = "<CurrentFrame>";
-                    _currentScopeFileName = null;
                 }
             }
 

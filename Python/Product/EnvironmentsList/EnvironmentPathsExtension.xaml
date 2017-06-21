@@ -149,6 +149,7 @@
                             script tool.
                             -->
                             <CheckBox Margin="12 6 6 6"
+                                      Loaded="IsIPythonModeEnabled_Loaded"
                                       IsChecked="{Binding IsIPythonModeEnabled}"
                                       Content="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonLabel}"
                                       AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonAutomationName}"/>

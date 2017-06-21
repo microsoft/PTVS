@@ -84,7 +84,14 @@ namespace Microsoft.PythonTools.Interpreter {
             if (_libWatchers != null) {
                 CreateLibraryWatchers().DoNotWait();
             }
-            _refreshIsCurrentTrigger?.Change(1000, Timeout.Infinite);
+
+            Task.Delay(100).ContinueWith(async t => {
+                try {
+                    await UpdateIsReadyAsync(false, CancellationToken.None);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                }
+            }).DoNotWait();
         }
 
         public IPythonInterpreterFactory Factory => _factory;
@@ -140,7 +147,9 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public bool IsReady {
-            get { return _isReady; }
+            get {
+                return _isReady;
+            }
             private set {
                 if (_isReady != value) {
                     _isReady = value;

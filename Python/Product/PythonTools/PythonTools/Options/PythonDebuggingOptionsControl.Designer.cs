@@ -37,30 +37,35 @@ namespace Microsoft.PythonTools.Options {
             // _promptOnBuildError
             // 
             resources.ApplyResources(this._promptOnBuildError, "_promptOnBuildError");
+            this._promptOnBuildError.AutoEllipsis = true;
             this._promptOnBuildError.Name = "_promptOnBuildError";
             this._promptOnBuildError.UseVisualStyleBackColor = true;
             // 
             // _waitOnAbnormalExit
             // 
             resources.ApplyResources(this._waitOnAbnormalExit, "_waitOnAbnormalExit");
+            this._waitOnAbnormalExit.AutoEllipsis = true;
             this._waitOnAbnormalExit.Name = "_waitOnAbnormalExit";
             this._waitOnAbnormalExit.UseVisualStyleBackColor = true;
             // 
             // _waitOnNormalExit
             // 
             resources.ApplyResources(this._waitOnNormalExit, "_waitOnNormalExit");
+            this._waitOnNormalExit.AutoEllipsis = true;
             this._waitOnNormalExit.Name = "_waitOnNormalExit";
             this._waitOnNormalExit.UseVisualStyleBackColor = true;
             // 
             // _teeStdOut
             // 
             resources.ApplyResources(this._teeStdOut, "_teeStdOut");
+            this._teeStdOut.AutoEllipsis = true;
             this._teeStdOut.Name = "_teeStdOut";
             this._teeStdOut.UseVisualStyleBackColor = true;
             // 
             // _breakOnSystemExitZero
             // 
             resources.ApplyResources(this._breakOnSystemExitZero, "_breakOnSystemExitZero");
+            this._breakOnSystemExitZero.AutoEllipsis = true;
             this._breakOnSystemExitZero.Name = "_breakOnSystemExitZero";
             this._breakOnSystemExitZero.UseVisualStyleBackColor = true;
             // 
@@ -78,6 +83,7 @@ namespace Microsoft.PythonTools.Options {
             // _debugStdLib
             // 
             resources.ApplyResources(this._debugStdLib, "_debugStdLib");
+            this._debugStdLib.AutoEllipsis = true;
             this._debugStdLib.Name = "_debugStdLib";
             this._debugStdLib.UseVisualStyleBackColor = true;
             // 

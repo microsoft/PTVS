@@ -32,6 +32,7 @@ namespace TestUtilities.UI.Python {
             IntFirstMember = "bit_length";
             RawInput = "raw_input";
             IPythonIntDocumentation = Python2IntDocumentation;
+            ExitHelp = Python2ExitHelp;
             Print42Output = "42";
             ImportError = "ImportError: No module named {0}";
         }
@@ -83,6 +84,51 @@ namespace TestUtilities.UI.Python {
             });
         }
 
+        public const string Python2ExitHelp = @"Help on Quitter in module site object:
+
+class Quitter(__builtin__.object)
+ |  Methods defined here:
+ |  
+ |  __call__(self, code=None)
+ |  
+ |  __init__(self, name)
+ |  
+ |  __repr__(self)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+";
+
+        public const string Python3ExitHelp = @"Help on Quitter in module _sitebuiltins object:
+
+class Quitter(builtins.object)
+ |  Methods defined here:
+ |  
+ |  __call__(self, code=None)
+ |      Call self as a function.
+ |  
+ |  __init__(self, name, eof)
+ |      Initialize self.  See help(type(self)) for accurate signature.
+ |  
+ |  __repr__(self)
+ |      Return repr(self).
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+";
+
         public const string Python2IntDocumentation = @"Type:        int
 String form: 42
 Docstring:
@@ -124,6 +170,8 @@ Base 0 means to interpret the base from the string as an integer literal.
         public string SourceFileName { get; set; }
 
         public string IPythonIntDocumentation { get; set; }
+
+        public string ExitHelp { get; set; }
 
         public string IntFirstMember { get; set; }
 

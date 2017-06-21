@@ -291,6 +291,21 @@ repl is not None");
             }
         }
 
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public virtual void TestPydocRedirected() {
+            // We run this test on multiple interpreters because pydoc
+            // output redirection has changed on Python 3.x
+            // https://github.com/Microsoft/PTVS/issues/2531
+            using (var interactive = Prepare()) {
+                interactive.SubmitCode("help(exit)");
+                interactive.WaitForText(
+                    ">help(exit)",
+                    Settings.ExitHelp,
+                    ">"
+                );
+            }
+        }
 
         #region Helper Methods
 

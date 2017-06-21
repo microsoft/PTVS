@@ -301,13 +301,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         #endregion
 
-        public static readonly DependencyProperty IsIPythonModeEnabledProperty = DependencyProperty.Register("IsIPythonModeEnabled", typeof(bool), typeof(EnvironmentView), new FrameworkPropertyMetadata(OnIsIPythonModeEnabledChanged));
+        public static readonly DependencyProperty IsIPythonModeEnabledProperty = DependencyProperty.Register("IsIPythonModeEnabled", typeof(bool?), typeof(EnvironmentView), new FrameworkPropertyMetadata(null, OnIsIPythonModeEnabledChanged));
 
-        public bool IsIPythonModeEnabled {
-            get { return (bool)GetValue(IsIPythonModeEnabledProperty); }
+        public bool? IsIPythonModeEnabled {
+            get { return (bool?)GetValue(IsIPythonModeEnabledProperty); }
             set { SetValue(IsIPythonModeEnabledProperty, value); }
         }
 
+        public Func<EnvironmentView, bool> IPythonModeEnabledGetter { get; set; }
         public Action<EnvironmentView, bool> IPythonModeEnabledSetter { get; set; }
 
         private static void OnIsIPythonModeEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
