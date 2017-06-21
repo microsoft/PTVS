@@ -107,11 +107,11 @@ namespace Microsoft.PythonTools.Debugger {
                         EventHandler<LDP.LocalConnectedEvent> eventReceived = (object sender, LDP.LocalConnectedEvent ea) => {
                             result = (ConnErrorMessages)ea.result;
                             debugId = ea.processGuid;
+                            debugConn.Authenticated();
                             try {
                                 connectedEvent.Set();
                             } catch (ObjectDisposedException) {
                             }
-                            debugConn.Authenticated();
                         };
 
                         debugConn.LegacyLocalConnected += eventReceived;
