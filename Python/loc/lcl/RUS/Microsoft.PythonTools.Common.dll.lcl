@@ -1316,7 +1316,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<REPL input>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<REPL input>]]></Val>
+            <Val><![CDATA[<входные данные REPL>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1631,7 +1631,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<unknown location, not in Python code>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<unknown location, not in Python code>]]></Val>
+            <Val><![CDATA[<неизвестное расположение, не в коде Python>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1658,7 +1658,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<unknown exception type>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<unknown exception type>]]></Val>
+            <Val><![CDATA[<неизвестный тип исключения>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2252,7 +2252,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<failed to get preview>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<failed to get preview>]]></Val>
+            <Val><![CDATA[<не удалось получить предварительную версию>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3221,7 +3221,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<No completions>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<No completions>]]></Val>
+            <Val><![CDATA[<Нет выполнений>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5263,7 +5263,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17166.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5299,7 +5299,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17166.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
