@@ -77,7 +77,8 @@ namespace ReplWindowUITests {
                 return new PythonReplWindowProxySettings {
                     Version = PythonPaths.Python30,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation
+                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -90,7 +91,8 @@ namespace ReplWindowUITests {
                 return new PythonReplWindowProxySettings {
                     Version = PythonPaths.Python31,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation
+                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -103,7 +105,8 @@ namespace ReplWindowUITests {
                 return new PythonReplWindowProxySettings {
                     Version = PythonPaths.Python32,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation
+                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -117,6 +120,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python33,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -131,6 +135,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python34,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -145,6 +150,22 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python35,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    ImportError = "ImportError: No module named '{0}'"
+                };
+            }
+        }
+    }
+
+    [TestClass]
+    public class ReplWindowPython36Tests : ReplWindowPythonTests {
+        internal override PythonReplWindowProxySettings Settings {
+            get {
+                return new PythonReplWindowProxySettings {
+                    Version = PythonPaths.Python36,
+                    RawInput = "input",
+                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -187,7 +208,8 @@ namespace ReplWindowUITests {
                 return new PythonReplWindowProxySettings {
                     Version = PythonPaths.Python31_x64,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation
+                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -200,7 +222,8 @@ namespace ReplWindowUITests {
                 return new PythonReplWindowProxySettings {
                     Version = PythonPaths.Python32_x64,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation
+                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -214,6 +237,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python33_x64,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -228,6 +252,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python34_x64,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -242,6 +267,22 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python35_x64,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    ImportError = "ImportError: No module named '{0}'"
+                };
+            }
+        }
+    }
+
+    [TestClass]
+    public class ReplWindowPython36x64Tests : ReplWindowPythonTests {
+        internal override PythonReplWindowProxySettings Settings {
+            get {
+                return new PythonReplWindowProxySettings {
+                    Version = PythonPaths.Python36_x64,
+                    RawInput = "input",
+                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
