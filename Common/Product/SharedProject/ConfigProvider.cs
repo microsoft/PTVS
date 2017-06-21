@@ -44,6 +44,8 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string x86Platform = "x86";
         internal const string x64Platform = "x64";
         internal const string ARMPlatform = "ARM";
+        internal const string DebugConfiguration = "Debug";
+        internal const string ReleaseConfiguration = "Release";
 
         private ProjectNode project;
         private EventSinkCollection cfgEventSinks = new EventSinkCollection();
@@ -236,7 +238,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="actual">The actual number of property names returned.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         public virtual int GetCfgNames(uint celt, string[] names, uint[] actual) {
-            // get's called twice, once for allocation, then for retrieval            
+            // gets called twice, once for allocation, then for retrieval
             int i = 0;
 
             string[] configList = GetPropertiesConditionedOn(ProjectFileConstants.Configuration);
@@ -477,10 +479,6 @@ namespace Microsoft.VisualStudioTools.Project {
         private string[] GetPlatformsFromProject() {
             string[] platforms = GetPropertiesConditionedOn(ProjectFileConstants.Platform);
 
-            if (platforms == null || platforms.Length == 0) {
-                return new string[] { x86Platform, AnyCPUPlatform, x64Platform, ARMPlatform };
-            }
-
             for (int i = 0; i < platforms.Length; i++) {
                 platforms[i] = ConvertPlatformToVsProject(platforms[i]);
             }
@@ -570,11 +568,25 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Get all the configurations in the project.
         /// </summary>
         internal string[] GetPropertiesConditionedOn(string constant) {
-            List<string> configurations = null;
+            List<string> conditions = null;
             this.project.BuildProject.ReevaluateIfNecessary();
-            this.project.BuildProject.ConditionedProperties.TryGetValue(constant, out configurations);
+            this.project.BuildProject.ConditionedProperties.TryGetValue(constant, out conditions);
 
-            return (configurations == null) ? new string[] { } : configurations.ToArray();
+            if (conditions != null && conditions.Count > 0) {
+                return conditions.ToArray();
+            }
+
+            // No conditions, so return defaults
+
+            if (constant.Equals(ProjectFileConstants.Configuration)) {
+                return new[] { DebugConfiguration, ReleaseConfiguration };
+            }
+
+            if (constant.Equals(ProjectFileConstants.Platform)) {
+                return new[] { x86Platform, AnyCPUPlatform, x64Platform, ARMPlatform };
+            }
+
+            return Array.Empty<string>();
         }
 
     }

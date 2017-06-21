@@ -178,18 +178,6 @@
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
       <Name>EnvironmentsList</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\IronPythonResolver\IronPythonResolver.csproj">
-      <Project>{31f224b1-68da-4524-9a1c-95f22492775b}</Project>
-      <Name>IronPythonResolver</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\IronPython\IronPython.csproj">
-      <Project>{5ae43c93-8ef6-4d57-bc10-511035ef56c5}</Project>
-      <Name>IronPython</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\IronPython\IronPython.Interpreter.csproj">
-      <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
-      <Name>IronPython.Interpreter</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Product\VSCommon\VSCommon.csproj">
       <Project>{A52AC77F-6DF9-4387-BB08-8DED3FD95A0F}</Project>
       <Name>VSCommon</Name>
