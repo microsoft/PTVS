@@ -861,12 +861,34 @@ namespace TestUtilities.UI {
                     File.Delete(suoPath);
                 }
             }
-            
-            var t = Task.Run(() => {
-                ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
-                // Force all projects to load before running any tests.
-                solution4.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
-            });
+
+            Task t;
+            if (fullPath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase)) {
+                t = Task.Run(() => {
+                    ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
+                    // Force all projects to load before running any tests.
+                    solution4.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
+                });
+            } else {
+                t = Task.Run(() => {
+                    Guid guidNull = Guid.Empty;
+                    Guid iidUnknown = Guid.Empty;
+                    IntPtr projPtr;
+                    ErrorHandler.ThrowOnFailure(solution.CreateProject(
+                        ref guidNull,
+                        fullPath,
+                        "",
+                        "",
+                        (uint)__VSCREATEPROJFLAGS.CPF_OPENFILE |
+                            (uint)__VSCREATEPROJFLAGS2.CPF_OPEN_STANDALONE |
+                            (uint)__VSCREATEPROJFLAGS.CPF_SILENT,
+                        ref iidUnknown,
+                        out projPtr
+                    ));
+                    // Force all projects to load before running any tests.
+                    solution4.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
+                });
+            }
             using (var cts = System.Diagnostics.Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(30000)) {
                 try {
                     if (!t.Wait(1000, cts.Token)) {

@@ -163,6 +163,28 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
+        public void LoadPythonProjectWithNoConfigurations() {
+            using (var app = new VisualStudioApp()) {
+                string fullPath = Path.GetFullPath(@"TestData\NoConfigurations\HelloWorld.pyproj");
+                Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
+                app.OpenProject(fullPath);
+
+                Assert.IsTrue(app.Dte.Solution.IsOpen, "The solution is not open");
+                Assert.IsTrue(app.Dte.Solution.Projects.Count == 1, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", app.Dte.Solution.Projects.Count));
+
+                var iter = app.Dte.Solution.Projects.GetEnumerator();
+                Assert.IsTrue(iter.MoveNext());
+                Project project = (Project)iter.Current;
+                Assert.AreEqual("HelloWorld.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
+
+                // Expect an exception here causing the test to fail
+                var value = (string)project.Properties.Item("CommandLineArguments").Value;
+                Assert.AreEqual("expected", value);
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadFlavoredProject() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\FlavoredProject.sln");
