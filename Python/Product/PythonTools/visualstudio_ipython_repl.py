@@ -252,7 +252,9 @@ class VsStdInChannel(DefaultHandler, StdInChannel):
 
 
 class VsHBChannel(DefaultHandler, HBChannel):
-    pass
+    if is_ipython_versionorgreater(3, 0):
+        def call_handlers(self, time_since_last_hb):
+            pass
 
 
 class VsKernelManager(KernelManager, KernelClient):
@@ -339,23 +341,25 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
 
     def get_members(self, expression):
         """returns a tuple of the type name, instance members, and type members"""
-        text = expression + '.'
+        text = (expression + '.') if expression else ''
         if is_ipython_versionorgreater(3, 0):
             self.km.complete(text)
         else:
             self.km.shell_channel.complete(text, text, 1)
-                
+
         self.members_lock.acquire()
-        
+
         reply = self.complete_reply
-        
+
         res = {}
         text_len = len(text)
         for member in reply['matches']:
-            res[member[text_len:]] = 'object'
+            m_name = member[text_len:]
+            if not any(c in m_name for c in '%!?-.,'):
+                res[member[text_len:]] = 'object'
 
-        return ('unknown', res, {})
-        
+        return 'unknown', res, {}
+
     def get_signatures(self, expression):
         """returns doc, args, vargs, varkw, defaults."""
         
