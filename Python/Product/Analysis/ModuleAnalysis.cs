@@ -584,7 +584,9 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var s in scope.EnumerateTowardsGlobal) {
                 foreach (var kvp in s.GetAllMergedVariables()) {
                     // deliberately overwrite variables from outer scopes
-                    result[kvp.Key] = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
+                    var values = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
+                    values.Add(new SyntheticDefinitionInfo(kvp.Value.Definitions));
+                    result[kvp.Key] = values;
                 }
             }
 

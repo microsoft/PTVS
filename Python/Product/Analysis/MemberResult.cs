@@ -20,52 +20,53 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
     public struct MemberResult {
         private readonly string _name;
         private string _completion;
-        private readonly Func<IEnumerable<AnalysisValue>> _vars;
-        private readonly Func<PythonMemberType> _type;
+        private readonly Lazy<IEnumerable<AnalysisValue>> _vars;
+        private readonly Lazy<PythonMemberType> _type;
+
+        private static readonly Lazy<IEnumerable<AnalysisValue>> EmptyValues =
+            new Lazy<IEnumerable<AnalysisValue>>(Enumerable.Empty<AnalysisValue>);
 
         internal MemberResult(string name, IEnumerable<AnalysisValue> vars) {
             _name = _completion = name;
-            _vars = () => vars ?? Empty;
+            _vars = new Lazy<IEnumerable<AnalysisValue>>(() => vars.MaybeEnumerate());
             _type = null;
-            _type = GetMemberType;
+            _type = new Lazy<PythonMemberType>(GetMemberType);
         }
 
         public MemberResult(string name, PythonMemberType type) {
             _name = _completion = name;
-            _type = () => type;
-            _vars = () => Empty;
+            _type = new Lazy<PythonMemberType>(() => type);
+            _vars = null;
         }
 
         public MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
             _name = name;
-            _vars = () => vars ?? Empty;
+            _vars = new Lazy<IEnumerable<AnalysisValue>>(() => vars.MaybeEnumerate());
             _completion = completion;
+            _type = null;
             if (type != null) {
-                _type = () => type.Value;
+                _type = new Lazy<PythonMemberType>(() => type.Value);
             } else {
-                _type = null;
-                _type = GetMemberType;
+                _type = new Lazy<PythonMemberType>(GetMemberType);
             }
         }
 
         internal MemberResult(string name, Func<IEnumerable<AnalysisValue>> vars, Func<PythonMemberType> type) {
             _name = _completion = name;
-            Func<IEnumerable<AnalysisValue>> empty = () => Empty;
-            _vars = vars ?? empty;
-            _type = type;
+            _vars = vars == null ? EmptyValues : new Lazy<IEnumerable<AnalysisValue>>(vars);
+            _type = new Lazy<PythonMemberType>(type ?? (() => PythonMemberType.Unknown));
         }
 
         public MemberResult FilterCompletion(string completion) {
             return new MemberResult(Name, completion, Values, MemberType);
         }
-
-        private static AnalysisValue[] Empty = new AnalysisValue[0];
 
         public string Name {
             get { return _name; }
@@ -84,7 +85,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 var doc = new StringBuilder();
 
-                foreach (var ns in _vars()) {
+                foreach (var ns in Values) {
                     var docString = ns.Description ?? string.Empty;
                     if (docSeen.Add(docString)) {
                         docs.Add(docString);
@@ -126,17 +127,13 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public PythonMemberType MemberType {
-            get {
-                return _type();
-            }
-        }
+        public PythonMemberType MemberType => _type.Value;
 
         private PythonMemberType GetMemberType() {
             bool includesNone = false;
             PythonMemberType result = PythonMemberType.Unknown;
 
-            var allVars = _vars().SelectMany(ns => {
+            var allVars = Values.SelectMany(ns => {
                 var mmi = ns as MultipleMemberInfo;
                 if (mmi != null) {
                     return mmi.Members;
@@ -145,7 +142,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             });
 
-            foreach (var ns in allVars) {
+            foreach (var ns in allVars.MaybeEnumerate()) {
                 if (ns == null) {
                     Debug.Fail("Unexpected null AnalysisValue");
                     continue;
@@ -159,6 +156,8 @@ namespace Microsoft.PythonTools.Analysis {
                         nsType = PythonMemberType.Function;
                     } else if (ci.ClassInfo == ci.ProjectState.ClassInfos[BuiltinTypeId.Type]) {
                         nsType = PythonMemberType.Class;
+                    } else if (ci.ClassInfo == ci.ProjectState.ClassInfos[BuiltinTypeId.Module]) {
+                        nsType = PythonMemberType.Module;
                     }
                 }
 
@@ -171,6 +170,8 @@ namespace Microsoft.PythonTools.Analysis {
                 } else if (result == PythonMemberType.Constant && nsType == PythonMemberType.Instance) {
                     // Promote from Constant to Instance
                     result = PythonMemberType.Instance;
+                } else if (nsType == PythonMemberType.Unknown) {
+                    // No change
                 } else {
                     return PythonMemberType.Multiple;
                 }
@@ -181,26 +182,14 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
-        internal IEnumerable<AnalysisValue> Values {
-            get {
-                return _vars();
-            }
-        }
+        internal IEnumerable<AnalysisValue> Values => _vars.Value;
 
         /// <summary>
         /// Gets the location(s) for the member(s) if they are available.
         /// 
         /// New in 1.5.
         /// </summary>
-        public IEnumerable<LocationInfo> Locations {
-            get {
-                foreach (var ns in _vars()) {
-                    foreach (var location in ns.Locations) {
-                        yield return location;
-                    }
-                }
-            }
-        }
+        public IEnumerable<LocationInfo> Locations => Values.SelectMany(ns => ns.Locations);
 
         public override bool Equals(object obj) {
             if (!(obj is MemberResult)) {

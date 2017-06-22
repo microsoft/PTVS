@@ -26,9 +26,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 foreach (var extension in extensions) {
 
                     if (!_registeredExtensions.Contains(extension.Value)) {
-                        
+
                         newExtensions.Add(extension.Value);
                         if (extension.Metadata.ContainsKey("Name") && extension.Metadata["Name"] is string) {
                             _extensionsByName[(string)extension.Metadata["Name"]] = extension.Value;
@@ -1125,7 +1125,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
             }
-            
+
 
             return new AP.NavigationResponse() {
                 version = bufferVersion?.Version ?? -1,
@@ -1244,7 +1244,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 kind = GetVariableType(type),
                 file = location?.FilePath
             };
-        }        
+        }
 
         private static string GetVariableType(VariableType type) {
             switch (type) {
@@ -1451,6 +1451,25 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
+        private static IEnumerable<MemberResult> GetModuleVariables(
+            IPythonProjectEntry entry,
+            GetMemberOptions opts,
+            string prefix
+        ) {
+            var analysis = entry?.Analysis;
+            if (analysis == null) {
+                yield break;
+            }
+
+            foreach (var m in analysis.GetAllAvailableMembers(SourceLocation.None, opts)) {
+                if (m.Values.Any(v => v.DeclaringModule == entry)) {
+                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) {
+                        yield return m;
+                    }
+                }
+            }
+        }
+
         private Response GetAllMembers(Request request) {
             var req = (AP.GetAllMembersRequest)request;
 
@@ -1458,16 +1477,11 @@ namespace Microsoft.PythonTools.Intellisense {
             var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly | req.options;
 
             foreach (var entry in _projectFiles) {
-                var analysis = (entry.Value as IPythonProjectEntry)?.Analysis;
-                if (analysis != null) {
-                    members = members.Concat(analysis.GetAllAvailableMembers(SourceLocation.None, opts)
-                        .Where(mr => mr.Values.Any(v => v.DeclaringModule == entry.Value)));
-                }
+                members = members.Concat(
+                    GetModuleVariables(entry.Value as IPythonProjectEntry, opts, req.prefix)
+                );
             }
 
-            if (!string.IsNullOrEmpty(req.prefix)) {
-                members = members.Where(mr => mr.Name.StartsWith(req.prefix));
-            }
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
 
             return new AP.CompletionsResponse() {
