@@ -30,27 +30,29 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly Lazy<IEnumerable<AnalysisValue>> _vars;
         private readonly Lazy<PythonMemberType> _type;
 
+        private static readonly Lazy<PythonMemberType> UnknownType =
+            new Lazy<PythonMemberType>(() => PythonMemberType.Unknown);
         private static readonly Lazy<IEnumerable<AnalysisValue>> EmptyValues =
             new Lazy<IEnumerable<AnalysisValue>>(Enumerable.Empty<AnalysisValue>);
 
         internal MemberResult(string name, IEnumerable<AnalysisValue> vars) {
             _name = _completion = name;
             _vars = new Lazy<IEnumerable<AnalysisValue>>(() => vars.MaybeEnumerate());
-            _type = null;
+            _type = UnknownType;
             _type = new Lazy<PythonMemberType>(GetMemberType);
         }
 
         public MemberResult(string name, PythonMemberType type) {
             _name = _completion = name;
             _type = new Lazy<PythonMemberType>(() => type);
-            _vars = null;
+            _vars = EmptyValues;
         }
 
         public MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
             _name = name;
             _vars = new Lazy<IEnumerable<AnalysisValue>>(() => vars.MaybeEnumerate());
             _completion = completion;
-            _type = null;
+            _type = UnknownType;
             if (type != null) {
                 _type = new Lazy<PythonMemberType>(() => type.Value);
             } else {
@@ -61,7 +63,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal MemberResult(string name, Func<IEnumerable<AnalysisValue>> vars, Func<PythonMemberType> type) {
             _name = _completion = name;
             _vars = vars == null ? EmptyValues : new Lazy<IEnumerable<AnalysisValue>>(vars);
-            _type = new Lazy<PythonMemberType>(type ?? (() => PythonMemberType.Unknown));
+            _type = type == null ? UnknownType : new Lazy<PythonMemberType>(type);
         }
 
         public MemberResult FilterCompletion(string completion) {
