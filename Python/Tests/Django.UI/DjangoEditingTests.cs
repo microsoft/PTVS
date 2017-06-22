@@ -432,6 +432,7 @@ namespace DjangoUITests {
             );
         }
 
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2720
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion2() {
@@ -1437,6 +1438,7 @@ namespace DjangoUITests {
             );
         }
 
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2719
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions2() {
@@ -1519,6 +1521,7 @@ namespace DjangoUITests {
             );
         }
 
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2719
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions5() {
@@ -1947,6 +1950,7 @@ namespace DjangoUITests {
             );
         }
 
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2719
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletionsJS() {
