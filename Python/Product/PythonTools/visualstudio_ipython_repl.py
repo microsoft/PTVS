@@ -356,7 +356,7 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
         for member in reply['matches']:
             m_name = member[text_len:]
             if not any(c in m_name for c in '%!?-.,'):
-                res[member[text_len:]] = 'object'
+                res[m_name] = 'object'
 
         return 'unknown', res, {}
 
