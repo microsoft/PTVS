@@ -27,7 +27,7 @@
 
                             <TextBlock Grid.Column="1"
                                        VerticalAlignment="Center"
-                                       Text="{Binding Name}"/>
+                                       Text="{Binding FullName}"/>
 
                             <TextBlock Grid.Column="2"
                                        VerticalAlignment="Center"
