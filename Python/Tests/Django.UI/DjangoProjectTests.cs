@@ -188,7 +188,8 @@ namespace DjangoUITests {
                 app.SolutionExplorerTreeView.SelectProject(project);
 
                 using (var newItem = NewItemDialog.FromDte(app)) {
-                    AutomationWrapper.Select(newItem.ProjectTypes.FindItem("HTML Page"));
+                    var htmlPage = newItem.ProjectTypes.FindItem("HTML Page");
+                    htmlPage.Select();
                     newItem.FileName = "NewPage.html";
                     newItem.OK();
                 }
@@ -259,6 +260,7 @@ namespace DjangoUITests {
             }
         }
 
+        [Ignore] // https://devdiv.visualstudio.com/DevDiv/_workitems?id=433488
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DebugProjectProperties() {

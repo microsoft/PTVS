@@ -688,7 +688,8 @@ namespace PythonToolsUITests {
                 selectedHierarchy.AdviseHierarchyEvents(events, out cookie);
 
                 using (var newItem = NewItemDialog.FromDte(app)) {
-                    AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Empty Python File"));
+                    var pythonFile = newItem.ProjectTypes.FindItem("Empty Python File");
+                    pythonFile.Select();
                     newItem.FileName = "zmodule1.py";
                     newItem.OK();
                 }
@@ -744,14 +745,15 @@ namespace PythonToolsUITests {
                 const string filename = "Program2.py";
 
                 using (var addItemDlg = NewItemDialog.FromDte(app)) {
-                    AutomationWrapper.Select(addItemDlg.ProjectTypes.FindItem("Empty Python File"));
+                    var pythonFile = addItemDlg.ProjectTypes.FindItem("Empty Python File");
+                    pythonFile.Select();
                     addItemDlg.FileName = filename;
                     addItemDlg.OK();
                 }
 
                 VisualStudioApp.CheckMessageBox(
                     MessageBoxButton.Yes,
-                    "A file with the same name", filename, "already exists. Do you want to overwrite it?"
+                    "A file named", filename, "already exists. Do you want to overwrite it?"
                 );
 
                 app.OpenSolutionExplorer().WaitForChildOfProject(project, "Program2.py");
