@@ -840,7 +840,7 @@ namespace DebuggerUITests {
                     "'" + TestData.GetPath(@"TestData\DebuggerProject").Replace("\\", "\\\\") + "'"
                 );
                 Assert.AreEqual(
-                    "'" + TestData.GetPath(@"TestData\DebuggerProject\Sub").Replace("\\", "\\\\") + "'",
+                    "'" + TestData.GetPath(@"TestData\DebuggerProject").Replace("\\", "\\\\") + "'",
                     app.Dte.Debugger.GetExpression("os.path.abspath(os.curdir)").Value
                 );
                 app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
