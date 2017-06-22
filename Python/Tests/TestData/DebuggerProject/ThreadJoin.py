@@ -10,8 +10,6 @@ def g():
 def f():
     g()
 
-from threading import Thread
-
 def n():
     t1 = Thread(target=f,name="F_thread")
     t1.start()
