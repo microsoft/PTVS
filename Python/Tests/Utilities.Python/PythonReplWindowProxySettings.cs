@@ -84,6 +84,21 @@ namespace TestUtilities.UI.Python {
             });
         }
 
+        public const string IronPython27ExitHelp = @"Help on Quitter in module site object:
+
+class Quitter(__builtin__.object)
+ |  Methods defined here:
+ |  
+ |  __call__(self, code=None)
+ |  
+ |  __dict__ = <dictproxy object>
+ |  __init__(self, name)
+ |  
+ |  __repr__(self)
+ |  
+ |  __weakref__ = <attribute '__weakref__' of <class 'site.Quitter'> objects
+";
+
         public const string Python2ExitHelp = @"Help on Quitter in module site object:
 
 class Quitter(__builtin__.object)
@@ -105,7 +120,49 @@ class Quitter(__builtin__.object)
  |      list of weak references to the object (if defined)
 ";
 
-        public const string Python3ExitHelp = @"Help on Quitter in module _sitebuiltins object:
+        public const string Python3ExitHelp = @"Help on Quitter in module site object:
+
+class Quitter(builtins.object)
+ |  Methods defined here:
+ |  
+ |  __call__(self, code=None)
+ |  
+ |  __init__(self, name)
+ |  
+ |  __repr__(self)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+";
+
+        public const string Python34ExitHelp = @"Help on Quitter in module _sitebuiltins object:
+
+class Quitter(builtins.object)
+ |  Methods defined here:
+ |  
+ |  __call__(self, code=None)
+ |  
+ |  __init__(self, name, eof)
+ |  
+ |  __repr__(self)
+ |  
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |  
+ |  __dict__
+ |      dictionary for instance variables (if defined)
+ |  
+ |  __weakref__
+ |      list of weak references to the object (if defined)
+";
+
+        public const string Python35ExitHelp = @"Help on Quitter in module _sitebuiltins object:
 
 class Quitter(builtins.object)
  |  Methods defined here:
