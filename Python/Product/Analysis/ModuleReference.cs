@@ -25,9 +25,12 @@ namespace Microsoft.PythonTools.Analysis {
 
         private readonly Lazy<HashSet<ModuleInfo>> _references = new Lazy<HashSet<ModuleInfo>>();
 
-        public ModuleReference(IModule module = null) {
+        public ModuleReference(IModule module = null, string name = null) {
             Module = module;
+            name = name ?? "";
         }
+
+        public string Name { get; }
 
         public AnalysisValue AnalysisModule {
             get {

@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             int total = _analyzers.Sum(r => r.Result?.completions?.Length ?? 0);
             foreach (var a in _analyzers) {
                 token.ThrowIfCancellationRequested();
-                if (a.Result?.completions?.Length == 0) {
+                if ((a.Result?.completions?.Length ?? 0) == 0) {
                     continue;
                 }
 

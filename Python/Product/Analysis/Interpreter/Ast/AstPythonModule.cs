@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -28,10 +29,28 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly List<string> _childModules;
         private readonly Dictionary<string, IMember> _members;
 
-        public static IPythonModule FromFile(IPythonInterpreter interpreter, string sourceFile, PythonLanguageVersion langVersion) {
+        public static IPythonModule FromFile(
+            IPythonInterpreter interpreter,
+            string sourceFile,
+            PythonLanguageVersion langVersion
+        ) => FromFile(interpreter, sourceFile, langVersion, null);
+
+        public static IPythonModule FromFile(
+            IPythonInterpreter interpreter,
+            string sourceFile,
+            PythonLanguageVersion langVersion,
+            string moduleFullName
+        ) {
             using (var stream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
-                return FromStream(interpreter, stream, sourceFile, langVersion);
+                return FromStream(interpreter, stream, sourceFile, langVersion, moduleFullName);
             }
+        }
+
+        // Avoid hitting the filesystem, but exclude non-importable
+        // paths. Ideally, we'd stop at the first path that's a known
+        // search path, except we don't know search paths here.
+        private static bool IsPackageCheck(string path) {
+            return ModulePath.IsImportable(PathUtils.GetFileOrDirectoryName(path));
         }
 
         public static IPythonModule FromStream(
@@ -39,13 +58,26 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Stream sourceFile,
             string fileName,
             PythonLanguageVersion langVersion
+        ) => FromStream(interpreter, sourceFile, fileName, langVersion, null);
+
+        public static IPythonModule FromStream(
+            IPythonInterpreter interpreter,
+            Stream sourceFile,
+            string fileName,
+            PythonLanguageVersion langVersion,
+            string moduleFullName
         ) {
             PythonAst ast;
             using (var parser = Parser.CreateParser(sourceFile, langVersion)) {
                 ast = parser.ParseFile();
             }
 
-            return new AstPythonModule(interpreter, ast, fileName);
+            return new AstPythonModule(
+                moduleFullName ?? ModulePath.FromFullPath(fileName, isPackage: IsPackageCheck).FullName,
+                interpreter,
+                ast,
+                fileName
+            );
         }
 
         internal AstPythonModule() {
@@ -57,8 +89,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _members = new Dictionary<string, IMember>();
         }
 
-        internal AstPythonModule(IPythonInterpreter interpreter, PythonAst ast, string filePath) {
-            Name = ast.Name;
+        internal AstPythonModule(string moduleName, IPythonInterpreter interpreter, PythonAst ast, string filePath) {
+            Name = moduleName;
             Documentation = ast.Documentation;
             FilePath = filePath;
             Locations = new[] { new LocationInfo(filePath, 1, 1) };
