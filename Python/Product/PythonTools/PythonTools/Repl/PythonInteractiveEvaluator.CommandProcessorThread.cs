@@ -75,17 +75,16 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var processInfo = new ProcessStartInfo(interpreterPath);
+            processInfo.UseShellExecute = false;
 
 #if DEBUG
             bool debugMode = Environment.GetEnvironmentVariable("_PTVS_DEBUG_REPL") != null;
             processInfo.CreateNoWindow = !debugMode;
-            processInfo.UseShellExecute = debugMode;
             processInfo.RedirectStandardOutput = !debugMode;
             processInfo.RedirectStandardError = !debugMode;
             processInfo.RedirectStandardInput = !debugMode;
 #else
             processInfo.CreateNoWindow = true;
-            processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = true;
             processInfo.RedirectStandardError = true;
             processInfo.RedirectStandardInput = true;
