@@ -92,7 +92,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
             if (_rawSpan.Length <= 0) {
-                Debug.Fail($"Expected span {_rawSpan} to be non-empty");
                 return;
             }
 
@@ -101,7 +100,6 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             if (target.Length <= 0) {
-                Debug.Fail($"Expected translated span {target} to be non-empty");
                 return;
             }
 
