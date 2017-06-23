@@ -188,12 +188,8 @@ namespace DjangoTests {
         public async Task TemplateLocals() {
             Init(DbState.OarApp);
 
-            // TODO: investigate why latest_poll_list is no longer a local, can't be evaluated
-            await DjangoLocalsTestAsync("polls\\index.html", 3, new string[0]);
-            await DjangoLocalsTestAsync("polls\\index.html", 4, new[] { "forloop", "poll" });
-
-            //await DjangoLocalsTestAsync("polls\\index.html", 3, new[] { "latest_poll_list" });
-            //await DjangoLocalsTestAsync("polls\\index.html", 4, new[] { "forloop", "latest_poll_list", "poll" });
+            await DjangoLocalsTestAsync("polls\\index.html", 3, new[] { "latest_poll_list" });
+            await DjangoLocalsTestAsync("polls\\index.html", 4, new[] { "forloop", "latest_poll_list", "poll" });
         }
 
         private async Task DjangoLocalsTestAsync(string filename, int breakLine, string[] expectedLocals) {
