@@ -121,7 +121,28 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
-        private async Task UpdateSearchPathPackages(CancellationToken cancellationToken) {
+        private async void BeginUpdateSearchPathPackages() {
+            var cts = new CancellationTokenSource();
+            var oldCts = Interlocked.Exchange(ref _searchPathPackagesCancellation, cts);
+            try {
+                oldCts?.Cancel();
+                oldCts?.Dispose();
+            } catch (ObjectDisposedException) {
+            }
+
+            try {
+                await Task.Run(() => UpdateSearchPathPackagesAsync(cts.Token));
+            } catch (OperationCanceledException) {
+            } catch (ObjectDisposedException) {
+            } catch (Exception ex) {
+                // Cannot do anything more useful with the exception message here
+                Debug.Fail(ex.ToString());
+            } finally {
+                Interlocked.CompareExchange(ref _searchPathPackagesCancellation, null, cts)?.Dispose();
+            }
+        }
+
+        private async Task UpdateSearchPathPackagesAsync(CancellationToken cancellationToken) {
             var packageDict = new Dictionary<string, string>();
 
             foreach(var searchPath in _searchPaths.MaybeEnumerate()) {
@@ -287,17 +308,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _searchPathDb = null;
             _zipPackageCache = null;
 
-            var cts = new CancellationTokenSource();
-            var oldCts = Interlocked.Exchange(ref _searchPathPackagesCancellation, cts);
-            try {
-                oldCts?.Cancel();
-                oldCts?.Dispose();
-            } catch (ObjectDisposedException) {
-            }
-            UpdateSearchPathPackages(cts.Token)
-                .SilenceException<OperationCanceledException>()
-                .ContinueWith(t => Interlocked.CompareExchange(ref _searchPathPackagesCancellation, null, cts)?.Dispose())
-                .DoNotWait();
+            BeginUpdateSearchPathPackages();
 
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
