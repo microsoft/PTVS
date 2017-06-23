@@ -68,7 +68,6 @@ namespace ReplWindowUITests {
                 };
             }
         }
-        public override void AttachReplTest() { }
     }
 
     [TestClass]
@@ -199,8 +198,6 @@ namespace ReplWindowUITests {
                 };
             }
         }
-
-        public override void AttachReplTest() { }
     }
 
     [TestClass]
