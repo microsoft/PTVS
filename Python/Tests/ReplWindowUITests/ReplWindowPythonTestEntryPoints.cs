@@ -63,11 +63,11 @@ namespace ReplWindowUITests {
             get {
                 return new PythonReplWindowProxySettings {
                     Version = PythonPaths.IronPython27,
-                    SourceFileName = "string"
+                    SourceFileName = "string",
+                    ExitHelp = PythonReplWindowProxySettings.IronPython27ExitHelp
                 };
             }
         }
-        public override void AttachReplTest() { }
     }
 
     [TestClass]
@@ -135,7 +135,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python34,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    ExitHelp = PythonReplWindowProxySettings.Python34ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -150,7 +150,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python35,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -165,7 +165,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python36,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -194,11 +194,10 @@ namespace ReplWindowUITests {
                 return new PythonReplWindowProxySettings {
                     Version = PythonPaths.IronPython27_x64,
                     SourceFileName = "string",
+                    ExitHelp = PythonReplWindowProxySettings.IronPython27ExitHelp
                 };
             }
         }
-
-        public override void AttachReplTest() { }
     }
 
     [TestClass]
@@ -252,7 +251,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python34_x64,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    ExitHelp = PythonReplWindowProxySettings.Python34ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -267,7 +266,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python35_x64,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -282,7 +281,7 @@ namespace ReplWindowUITests {
                     Version = PythonPaths.Python36_x64,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }

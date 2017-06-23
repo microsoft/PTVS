@@ -144,10 +144,10 @@ namespace ReplWindowUITests {
         public virtual void QuitAndReset() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("quit()");
-                interactive.WaitForText(">quit()", "The Python REPL process has exited", ">");
+                interactive.WaitForText(">quit()", "The interactive Python process has exited.", ">");
                 interactive.Reset();
 
-                interactive.WaitForText(">quit()", "The Python REPL process has exited", "Resetting execution engine", ">");
+                interactive.WaitForText(">quit()", "The interactive Python process has exited.", "Resetting Python state.", ">");
                 interactive.SubmitCode("42");
 
                 interactive.WaitForTextEnd(">42", "42", ">");
@@ -165,61 +165,6 @@ namespace ReplWindowUITests {
                 );
 
                 interactive.WaitForTextEnd("DONE", ">");
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void AttachReplTest() {
-            using (var interactive = Prepare(enableAttach: true)) {
-                var app = interactive.App;
-                var project = app.OpenProject(@"TestData\DebuggerProject.sln");
-
-                Assert.IsNotNull(PythonToolsPackage.GetStartupProject(app.ServiceProvider), "Startup project was not set");
-                Assert.IsTrue(interactive.Settings.EnableAttach, "EnableAttach was not set");
-
-                using (var dis = new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
-                    var activeDescr = app.GetService<UIThreadBase>().Invoke(() => project.GetPythonProject().GetInterpreterFactory().Configuration.Description);
-                    Assert.AreEqual(dis.CurrentDefault.Configuration.Description, activeDescr);
-
-                    interactive.Reset();
-                    interactive.ClearScreen();
-
-                    const string attachCmd = "$attach";
-                    interactive.SubmitCode(attachCmd);
-                    app.OnDispose(() => {
-                        if (app.Dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgDesignMode) {
-                            app.DismissAllDialogs();
-                            try {
-                                app.ExecuteCommand("Debug.StopDebugging");
-                            } catch (COMException) {
-                            }
-                            WaitForMode(app.Dte.Debugger, EnvDTE.dbgDebugMode.dbgDesignMode);
-                        }
-                    });
-
-                    app.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
-                    interactive.WaitForText(">" + attachCmd, ">");
-
-                    WaitForMode(app.Dte.Debugger, EnvDTE.dbgDebugMode.dbgRunMode);
-
-                    interactive.Show();
-
-                    const string import = "import BreakpointTest";
-                    interactive.SubmitCode(import, wait: false);
-                    interactive.WaitForText(">" + attachCmd, ">" + import, "");
-
-                    WaitForMode(app.Dte.Debugger, EnvDTE.dbgDebugMode.dbgBreakMode);
-
-                    Assert.AreEqual(EnvDTE.dbgEventReason.dbgEventReasonBreakpoint, app.Dte.Debugger.LastBreakReason);
-                    Assert.AreEqual(app.Dte.Debugger.BreakpointLastHit.FileLine, 1);
-
-                    app.ExecuteCommand("Debug.DetachAll");
-
-                    WaitForMode(app.Dte.Debugger, EnvDTE.dbgDebugMode.dbgDesignMode);
-
-                    interactive.WaitForText(">" + attachCmd, ">" + import, "hello", ">");
-                }
             }
         }
 
