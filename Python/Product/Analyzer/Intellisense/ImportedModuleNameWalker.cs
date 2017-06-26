@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string[] _module;
 
         public ImportedModuleNameWalker(string module, int location) : base(location) {
-            _module = module?.Split('.');
+            _module = module?.Split('.') ?? Array.Empty<string>();
         }
 
         public string ImportedName { get; private set; } = null;
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override bool Walk(ImportStatement node) {
-            foreach(var n in node.Names.MaybeEnumerate()) {
+            foreach (var n in node.Names.MaybeEnumerate()) {
                 if (n.StartIndex <= Location && Location <= n.EndIndex) {
                     SetName(n);
                     break;
