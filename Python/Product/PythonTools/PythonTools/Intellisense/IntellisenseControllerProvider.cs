@@ -145,11 +145,24 @@ namespace Microsoft.PythonTools.Intellisense {
 
             try {
                 os.GetSite(typeof(VisualStudio.OLE.Interop.IServiceProvider).GUID, out unkSite);
+                if (unkSite == IntPtr.Zero) {
+                    return;
+                }
                 var sp = Marshal.GetObjectForIUnknown(unkSite) as VisualStudio.OLE.Interop.IServiceProvider;
+                if (sp == null) {
+                    return;
+                }
 
                 sp.QueryService(typeof(SVsWindowFrame).GUID, typeof(IVsWindowFrame).GUID, out unkFrame);
+                if (unkFrame == IntPtr.Zero) {
+                    return;
+                }
 
                 var frame = Marshal.GetObjectForIUnknown(unkFrame) as IVsWindowFrame;
+                if (frame == null) {
+                    return;
+                }
+
                 frame.SetGuidProperty((int)__VSFPROPID.VSFPROPID_InheritKeyBindings, VSConstants.GUID_TextEditorFactory);
             } finally {
                 if (unkSite != IntPtr.Zero) {
