@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -6506,6 +6507,28 @@ def f():
                 var entry1 = state.AddModule("NullNamedArgument", "def fn(**kwargs): pass");
                 var entry2 = state.AddModule("test", "import NullNamedArgument; NullNamedArgument.fn(a=0, ]]])");
                 state.WaitForAnalysis();
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ModuleNameWalker() {
+            foreach (var item in new[] {
+                new { Code="import abc", Index=7, Expected="abc", Base="" },
+                new { Code="import abc", Index=8, Expected="abc", Base="" },
+                new { Code="import abc", Index=9, Expected="abc", Base="" },
+                new { Code="import abc", Index=10, Expected="abc", Base="" },
+                new { Code="import deg, abc as A", Index=12, Expected="abc", Base="" },
+                new { Code="from abc import A", Index=6, Expected="abc", Base="" },
+                new { Code="from .deg import A", Index=9, Expected="abc.deg", Base="abc" },
+                new { Code="from .hij import A", Index=9, Expected="abc.deg.hij", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="abc.hij", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="abc.deg.hij", Base="abc.deg.HIJ" },
+            }) {
+                var entry = ProcessTextV3(item.Code);
+                var walker = new ImportedModuleNameWalker(item.Base, item.Index);
+                entry.Modules[entry.DefaultModule].Tree.Walk(walker);
+
+                Assert.AreEqual(item.Expected, walker.ImportedName);
             }
         }
 
