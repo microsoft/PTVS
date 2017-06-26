@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (!ProjectState.Modules.TryImport(_unit.DeclaringModule.Name, out existingRef)) {
                 // publish our module ref now so that we don't collect dependencies as we'll be fully processed
                 if (existingRef == null) {
-                    ProjectState.Modules[_unit.DeclaringModule.Name] = new ModuleReference(_unit.DeclaringModule);
+                    ProjectState.Modules[_unit.DeclaringModule.Name] = new ModuleReference(_unit.DeclaringModule, _unit.DeclaringModule.Name);
                 } else {
                     existingRef.Module = _unit.DeclaringModule;
                 }

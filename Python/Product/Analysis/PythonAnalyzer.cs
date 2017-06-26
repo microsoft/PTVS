@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (moduleRef != null) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
             } else {
-                Modules[_builtinName] = new ModuleReference(_builtinModule);
+                Modules[_builtinName] = new ModuleReference(_builtinModule, _builtinName);
             }
 
             FinishLoadKnownTypes(null);
@@ -561,7 +561,13 @@ namespace Microsoft.PythonTools.Analysis {
 
             public IEnumerable<AnalysisValue> GetLazyModules() {
                 foreach (var value in _loaded) {
-                    yield return value.Module;
+                    yield return new SyntheticDefinitionInfo(
+                        value.Name,
+                        null,
+                        string.IsNullOrEmpty(value.MaybeSourceFile) ?
+                            Enumerable.Empty<LocationInfo>() :
+                            new[] { new LocationInfo(value.MaybeSourceFile, 0, 0) }
+                    );
                 }
             }
 
