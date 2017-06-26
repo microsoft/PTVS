@@ -309,8 +309,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _zipPackageCache = null;
 
             BeginUpdateSearchPathPackages();
-
-            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler ModuleNamesChanged;

@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         ) {
             Name = name;
             Documentation = doc;
-            Locations = locations.ToArray();
+            Locations = locations?.ToArray() ?? Enumerable.Empty<LocationInfo>();
         }
 
         public override string Name { get; }
