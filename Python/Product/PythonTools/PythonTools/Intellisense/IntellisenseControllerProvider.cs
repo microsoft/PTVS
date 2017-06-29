@@ -123,10 +123,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region IVsTextViewCreationListener Members
 
-        public void VsTextViewCreated(VisualStudio.TextManager.Interop.IVsTextView textViewAdapter) {
+        public void VsTextViewCreated(IVsTextView textViewAdapter) {
             var textView = _adaptersFactory.GetWpfTextView(textViewAdapter);
             IntellisenseController controller;
-            if (textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
+            if (textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 controller.AttachKeyboardFilter();
             }
             InitKeyBindings(textViewAdapter);

@@ -1592,7 +1592,9 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             for(int i = 0; i < request.path.Length; ++i) {
-                entries[i] = AddNewFile(request.path[i], request.addingFromDir, out response.fileId[i]);
+                if (!string.IsNullOrEmpty(request.path[i])) {
+                    entries[i] = AddNewFile(request.path[i], request.addingFromDir, out response.fileId[i]);
+                }
             }
 
             await done(response);
