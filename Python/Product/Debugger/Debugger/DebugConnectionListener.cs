@@ -98,20 +98,20 @@ namespace Microsoft.PythonTools.Debugger {
                 try {
                     socket.Blocking = true;
 
-                var debugConn = new DebugConnection(stream);
-                try {
-                    string debugId = string.Empty;
-                    var result = ConnErrorMessages.None;
-                    using (var connectedEvent = new AutoResetEvent(false)) {
-                        EventHandler<LDP.LocalConnectedEvent> eventReceived = (object sender, LDP.LocalConnectedEvent ea) => {
-                            result = (ConnErrorMessages)ea.result;
-                            debugId = ea.processGuid;
-                            debugConn.Authenticated();
-                            try {
-                                connectedEvent.Set();
-                            } catch (ObjectDisposedException) {
-                            }
-                        };
+                    var debugConn = new DebugConnection(stream);
+                    try {
+                        string debugId = string.Empty;
+                        var result = ConnErrorMessages.None;
+                        using (var connectedEvent = new AutoResetEvent(false)) {
+                            EventHandler<LDP.LocalConnectedEvent> eventReceived = (object sender, LDP.LocalConnectedEvent ea) => {
+                                result = (ConnErrorMessages)ea.result;
+                                debugId = ea.processGuid;
+                                debugConn.Authenticated();
+                                try {
+                                    connectedEvent.Set();
+                                } catch (ObjectDisposedException) {
+                                }
+                            };
 
                             debugConn.LegacyLocalConnected += eventReceived;
                             try {
