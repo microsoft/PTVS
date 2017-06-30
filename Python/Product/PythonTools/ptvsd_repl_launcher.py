@@ -115,5 +115,8 @@ if __name__ == '__main__':
             sys.__stdout__.write(traceback.format_exc())
             sys.__stdout__.write('\n\nPress Enter to close...')
             sys.__stdout__.flush()
+        try:
+            raw_input()
+        except NameError:
             input()
         raise

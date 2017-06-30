@@ -14,18 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Debugger;
-using TestUtilities;
 
 namespace DebuggerTests {
     internal static class TastExtensions {
         public static async Task<T> CancelAfter<T>(int milliseconds, string message = null) {
             message = message ?? $"Timed out after {milliseconds} ms";
-            await Task.Delay(milliseconds);
+            await Task.Delay(Debugger.IsAttached ? Timeout.Infinite : milliseconds);
             throw new TaskCanceledException(message);
         }
 
