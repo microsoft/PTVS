@@ -85,11 +85,14 @@ namespace TestUtilities.UI.Python {
             }
 
             return app.ServiceProvider.GetUIThread().Invoke(() => {
-                app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = executionMode == "IPython" ? "visualstudio_ipython_repl.IPythonBackend" : "standard";
+                app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = executionMode == "IPython" ? IPythonBackend : StandardBackend;
                 var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
                 return (ToolWindowPane)provider.OpenOrCreate(replId);
             });
         }
+
+        public const string StandardBackend = "standard";
+        public const string IPythonBackend = "ptvsd.repl.ipython.IPythonBackend";
 
         public const string IronPython27ExitHelp = @"Help on Quitter in module site object:
 

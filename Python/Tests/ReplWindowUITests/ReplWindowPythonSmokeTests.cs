@@ -66,7 +66,7 @@ namespace ReplWindowUITests {
             using (var app = new PythonVisualStudioApp())
             using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
-                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = "standard";
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = PythonReplWindowProxySettings.StandardBackend;
                 });
 
                 var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
@@ -83,7 +83,7 @@ namespace ReplWindowUITests {
             using (var app = new PythonVisualStudioApp())
             using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
-                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = "standard";
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = PythonReplWindowProxySettings.StandardBackend;
                 });
 
                 var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
@@ -100,7 +100,7 @@ namespace ReplWindowUITests {
             using (var app = new PythonVisualStudioApp())
             using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
-                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = "standard";
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = PythonReplWindowProxySettings.StandardBackend;
                 });
 
                 var project = app.OpenProject(PythonTestData.GetUnicodePathSolution());
