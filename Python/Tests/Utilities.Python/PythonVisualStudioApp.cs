@@ -205,9 +205,11 @@ namespace TestUtilities.UI.Python {
         }
 
         public ReplWindowProxy ExecuteInInteractive(Project project, PythonReplWindowProxySettings settings = null) {
+            // Prepare makes sure that IPython mode is disabled, and that the REPL is reset and cleared
+            var window = ReplWindowProxy.Prepare(settings, project.Name);
             OpenSolutionExplorer().SelectProject(project);
             ExecuteCommand("Python.ExecuteInInteractive");
-            return GetInteractiveWindow(project);
+            return window;
         }
 
         public void SendToInteractive() {

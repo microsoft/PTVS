@@ -149,7 +149,14 @@ namespace Microsoft.PythonTools.Repl {
                     scriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
                 }
 
-                if (!string.IsNullOrEmpty(scriptsPath)) {
+                // Allow tests to control the backend without relying on the mode.txt file
+                string backendOverride = _serviceProvider.GetPythonToolsService().InteractiveBackendOverride;
+                if (!string.IsNullOrEmpty(backendOverride)) {
+                    BackendName = backendOverride;
+                }
+
+                // If BackendName is already set, don't use the value in mode.txt
+                if (string.IsNullOrEmpty(BackendName) && !string.IsNullOrEmpty(scriptsPath)) {
                     var modeFile = PathUtils.GetAbsoluteFilePath(scriptsPath, "mode.txt");
                     if (File.Exists(modeFile)) {
                         try {

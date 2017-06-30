@@ -158,15 +158,15 @@ namespace ReplWindowUITests {
     }
 
     [TestClass]
-    public class ReplWindowPython36Tests : ReplWindowPythonTests {
+    public class ReplWindowPython36Tests : ReplWindowPythonIPythonTests {
         internal override PythonReplWindowProxySettings Settings {
             get {
                 return new PythonReplWindowProxySettings {
-                    Version = PythonPaths.Python36,
+                    Version = PythonPaths.Anaconda36 ?? PythonPaths.Python36,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
                     ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
-                    ImportError = "ImportError: No module named '{0}'"
+                    ImportError = "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nModuleNotFoundError: No module named '{0}'"
                 };
             }
         }
@@ -274,15 +274,15 @@ namespace ReplWindowUITests {
     }
 
     [TestClass]
-    public class ReplWindowPython36x64Tests : ReplWindowPythonTests {
+    public class ReplWindowPython36x64Tests : ReplWindowPythonIPythonTests {
         internal override PythonReplWindowProxySettings Settings {
             get {
                 return new PythonReplWindowProxySettings {
-                    Version = PythonPaths.Python36_x64,
+                    Version = PythonPaths.Anaconda36_x64 ?? PythonPaths.Python36_x64,
                     RawInput = "input",
                     IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
                     ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
-                    ImportError = "ImportError: No module named '{0}'"
+                    ImportError = "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nModuleNotFoundError: No module named '{0}'"
                 };
             }
         }

@@ -15,13 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.PythonTools;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
@@ -55,18 +52,9 @@ namespace ReplWindowUITests {
                 Assert.Inconclusive("Interpreter missing for " + GetType().Name);
             }
 
-            if (enableAttach != s.EnableAttach) {
-                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
-                s.EnableAttach = enableAttach;
-            }
             if (addNewLineAtEndOfFullyTypedWord != s.AddNewLineAtEndOfFullyTypedWord) {
                 s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
                 s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
-            }
-            if (useIPython) {
-                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
-                s.PrimaryPrompt = ">>> ";
-                s.UseInterpreterPrompts = false;
             }
 
             return ReplWindowProxy.Prepare(s, useIPython: useIPython);
@@ -75,10 +63,15 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgv() {
-            using (var app = new PythonVisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp())
+            using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = "standard";
+                });
+
                 var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
 
-                using (var interactive = app.ExecuteInInteractive(project)) {
+                using (var interactive = app.ExecuteInInteractive(project, Settings)) {
                     interactive.WaitForTextEnd("Program.py']", ">");
                 }
             }
@@ -87,10 +80,15 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgvScriptArgs() {
-            using (var app = new PythonVisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp())
+            using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = "standard";
+                });
+
                 var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
-                using (var interactive = app.ExecuteInInteractive(project)) {
+                using (var interactive = app.ExecuteInInteractive(project, Settings)) {
                     interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ">");
                 }
             }
@@ -99,10 +97,15 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplUnicodeFilename() {
-            using (var app = new PythonVisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp())
+            using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = "standard";
+                });
+
                 var project = app.OpenProject(PythonTestData.GetUnicodePathSolution());
 
-                using (var interactive = app.ExecuteInInteractive(project)) {
+                using (var interactive = app.ExecuteInInteractive(project, Settings)) {
                     interactive.WaitForTextEnd("hello world from unicode path", ">");
                 }
             }
@@ -117,10 +120,10 @@ namespace ReplWindowUITests {
 
                 var importErrorFormat = ((PythonReplWindowProxySettings)interactive.Settings).ImportError;
                 interactive.SubmitCode("import module1");
-                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module1"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module1").Split('\n').Concat(new[] { ">" }).ToArray());
 
                 interactive.SubmitCode("import module2");
-                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2").Split('\n').Concat(new[] { ">" }).ToArray());
 
                 interactive.SubmitCode("os.chdir('A')");
                 interactive.WaitForTextEnd(">os.chdir('A')", ">");
@@ -129,7 +132,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForTextEnd(">import module1", ">");
 
                 interactive.SubmitCode("import module2");
-                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2").Split('\n').Concat(new[] { ">" }).ToArray());
 
                 interactive.SubmitCode("os.chdir('..\\B')");
                 interactive.WaitForTextEnd(">os.chdir('..\\B')", ">");

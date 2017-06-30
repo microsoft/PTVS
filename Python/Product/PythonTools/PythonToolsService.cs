@@ -369,6 +369,13 @@ namespace Microsoft.PythonTools {
 
         internal PythonInteractiveOptions InteractiveOptions => _interactiveOptions.Value;
 
+        /// <summary>
+        /// Interactive window backend. If set, it overrides the value in the
+        /// mode.txt file. For use by tests, rather than have them modify
+        /// mode.txt directly.
+        /// </summary>
+        internal string InteractiveBackendOverride { get; set; }
+
         private PythonInteractiveOptions CreateInteractiveOptions(string category) {
             var opts = new PythonInteractiveOptions(this, category);
             opts.Load();

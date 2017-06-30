@@ -15,11 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -49,7 +49,7 @@ namespace TestUtilities.UI.Python {
             return new PythonVisualStudioApp();
         }
 
-        public override ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string executionMode) {
+        public override ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string projectName, string executionMode) {
             string description = null;
             if (Version.IsCPython) {
                 description = string.Format("{0} {1}",
@@ -78,7 +78,14 @@ namespace TestUtilities.UI.Python {
                 interpreters.FindConfiguration(Version.Id)
             );
 
+            if (!string.IsNullOrEmpty(projectName)) {
+                var dteProj = app.GetProject(projectName);
+                var proj = (PythonProjectNode)dteProj.GetCommonProject();
+                replId = PythonReplEvaluatorProvider.GetEvaluatorId(proj);
+            }
+
             return app.ServiceProvider.GetUIThread().Invoke(() => {
+                app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = executionMode == "IPython" ? "visualstudio_ipython_repl.IPythonBackend" : "standard";
                 var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
                 return (ToolWindowPane)provider.OpenOrCreate(replId);
             });

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -42,11 +43,7 @@ using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
 
 namespace TestUtilities.UI {
     public abstract class ReplWindowProxySettings {
-        public ReplWindowProxySettings() {
-            PrimaryPrompt = ">>>";
-            SecondaryPrompt = "...";
-            InlinePrompts = true;
-            UseInterpreterPrompts = false;
+        protected ReplWindowProxySettings() {
         }
 
         public ReplWindowProxySettings Clone() {
@@ -59,17 +56,7 @@ namespace TestUtilities.UI {
             return new VisualStudioApp();
         }
 
-        public abstract ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string executionMode);
-
-        public string PrimaryPrompt { get; set; }
-
-        public string SecondaryPrompt { get; set; }
-
-        public bool UseInterpreterPrompts { get; set; }
-
-        public bool InlinePrompts { get; set; }
-
-        public bool EnableAttach { get; set; }
+        public abstract ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string projectName, string executionMode);
     }
 
     internal sealed class ReplWindowProxy : IDisposable {
@@ -148,6 +135,7 @@ namespace TestUtilities.UI {
 
         public static ReplWindowProxy Prepare(
             ReplWindowProxySettings settings,
+            string projectName = null,
             bool useIPython = false
         ) {
             settings.AssertValid();
@@ -155,7 +143,7 @@ namespace TestUtilities.UI {
             var app = settings.CreateApp();
             ReplWindowProxy result = null;
             try {
-                result = OpenInteractive(app, settings, useIPython ? "IPython" : "Standard");
+                result = OpenInteractive(app, settings, projectName, useIPython ? "IPython" : "Standard");
                 app = null;
 
                 for (int retries = 10; retries > 0; --retries) {
@@ -165,7 +153,7 @@ namespace TestUtilities.UI {
 
                     try {
                         var task = result.ExecuteText("print('READY')");
-                        Assert.IsTrue(task.Wait(useIPython ? 30000 : 10000), "ReplWindow did not initialize in time");
+                        Assert.IsTrue(task.Wait(useIPython ? 30000 : 15000), "ReplWindow did not initialize in time");
                         if (!task.Result.IsSuccessful) {
                             continue;
                         }
@@ -173,12 +161,27 @@ namespace TestUtilities.UI {
                         continue;
                     }
 
-                    result.WaitForTextEnd("READY", ">");
-                    if (result.TextView.TextBuffer.CurrentSnapshot.Lines
-                            .Any(l => l.GetText().Contains("Error using selected REPL back-end")) &&
-                        useIPython) {
-                        Assert.Inconclusive("IPython is not available");
+
+                    if (useIPython) {
+                        // The longer we wait, the better are the chances of detecting this error
+                        // This seems long enough to detect it when running locally
+                        Thread.Sleep(500);
+
+                        if (result.TextView.TextBuffer.CurrentSnapshot.Lines
+                                .Any(l => l.GetText().Contains("Error using selected REPL back-end"))
+                            ) {
+                            Assert.Inconclusive("IPython is not available");
+                        }
+
+                        // In IPython mode, a help header appears at startup,
+                        // but the output order is inconsistent, so we can't WaitForTextEnd
+                        // (sometimes READY appears before help, sometimes after)
+                        result.WaitForAnyLineContainsTextInternal("READY");
+                        result.WaitForReadyForInput(TimeSpan.FromSeconds(5));
+                    } else {
+                        result.WaitForTextEnd("READY", ">");
                     }
+
                     result.ClearScreen();
                     return result;
                 }
@@ -194,9 +197,10 @@ namespace TestUtilities.UI {
         private static ReplWindowProxy OpenInteractive(
             VisualStudioApp app,
             ReplWindowProxySettings settings,
+            string projectName,
             string executionMode
         ) {
-            var toolWindow = settings.ActivateInteractiveWindow(app, executionMode);
+            var toolWindow = settings.ActivateInteractiveWindow(app, projectName, executionMode);
 
 #if DEV14_OR_LATER
             var interactive = toolWindow != null ? ((IVsInteractiveWindow)toolWindow).InteractiveWindow : null;
@@ -276,6 +280,35 @@ namespace TestUtilities.UI {
             WaitForTextInternal(GetReplLines(lines), false, true);
         }
 
+        /// <summary>
+        /// Waits for any line of text to contain the specified expected text.
+        /// </summary>
+        public void WaitForAnyLineContainsText(string expected) {
+            WaitForAnyLineContainsTextInternal(expected);
+        }
+
+        private static readonly Regex IPythonPromptRegex = new Regex(
+            @"^(
+                \s*In\s*\[(?<num>\d+)\]\s*:(\s|\s*$)
+               )",
+            RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace,
+            TimeSpan.FromSeconds(0.5)
+        );
+
+        private static string RemoveIndexFromIPythonPrompt(string line) {
+            var m = IPythonPromptRegex.Match(line);
+            if (m.Success) {
+                var g = m.Groups["num"];
+                line = line.Remove(g.Index, g.Length);
+            }
+
+            return line;
+        }
+
+        private static bool IsIPythonPrompt(string text) {
+            return IPythonPromptRegex.Match(text).Success;
+        }
+
         private List<string> GetReplLines(IEnumerable<string> lines) {
 #if DEV14_OR_LATER
             dynamic eval = _window.Evaluator;
@@ -292,6 +325,9 @@ namespace TestUtilities.UI {
             }
 #endif
 
+            // IPython prompts include an incrementing index, which we must remove for comparison
+            primary = RemoveIndexFromIPythonPrompt(primary);
+
             return lines.Select(s => {
                 if (string.IsNullOrEmpty(s)) {
                     return string.Empty;
@@ -307,6 +343,32 @@ namespace TestUtilities.UI {
                     return s;
                 }
             }).ToList();
+        }
+
+        private void WaitForAnyLineContainsTextInternal(string expected, TimeSpan? timeout = null) {
+            using (var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(15)))
+            using (var changed = new ManualResetEventSlim()) {
+                EventHandler<TextContentChangedEventArgs> handler = (s, e) => changed.SetIfNotDisposed();
+                Window.TextView.TextBuffer.Changed += handler;
+                try {
+                    while (!MatchAnyLineContainsTextInternal(expected, true)) {
+                        changed.Wait(cts.Token);
+                        changed.Reset();
+                    }
+                    return;
+                } catch (OperationCanceledException) {
+                } finally {
+                    Window.TextView.TextBuffer.Changed -= handler;
+                }
+            }
+
+            Assert.Fail("Failed to find a line that contains the following text:\n{0}", expected);
+        }
+
+        private bool MatchAnyLineContainsTextInternal(string expected, bool showOutput) {
+            var snapshot = Window.TextView.TextBuffer.CurrentSnapshot;
+            var lines = snapshot.Lines;
+            return lines.Any(l => l.GetText().Contains(expected));
         }
 
         private void WaitForTextInternal(IList<string> expected, bool matchAtStart, bool matchAtEnd, TimeSpan? timeout = null) {
@@ -348,6 +410,22 @@ namespace TestUtilities.UI {
                 .SelectMany(l => l.GetText().Split('\n'))
                 .Select(l => l.TrimEnd('\r', '\n', ' '))
                 .ToList();
+
+#if DEV14_OR_LATER
+            dynamic eval = _window.Evaluator;
+            var primary = eval.PrimaryPrompt as string ?? ">>>";
+#else
+            var primary = _window.GetOptionValue(ReplOptions.PrimaryPrompt) as string ?? ">>>";
+
+            if (_window.GetOptionValue(ReplOptions.DisplayPromptInMargin) as bool? ?? false) {
+                primary = "";
+            }
+#endif
+
+            if (IsIPythonPrompt(primary)) {
+                // IPython prompts include an incrementing index, which we must remove for comparison
+                actual = actual.Select(l => RemoveIndexFromIPythonPrompt(l)).ToList();
+            }
 
             bool isMatch = true;
             var leftWidth = Math.Max("Expected".Length, expected.Max(s => s.Length));
@@ -833,19 +911,6 @@ namespace TestUtilities.UI {
                 return provider.GetClassifier(TextView.TextBuffer);
             }
         }
-
-        public void RequirePrimaryPrompt() {
-            if (string.IsNullOrEmpty(Settings.PrimaryPrompt)) {
-                Assert.Inconclusive("Test requires a non-empty primary prompt");
-            }
-        }
-
-        public void RequireSecondaryPrompt() {
-            if (string.IsNullOrEmpty(Settings.SecondaryPrompt) || !Settings.InlinePrompts) {
-                Assert.Inconclusive("Test requires a non-empty secondary prompt");
-            }
-        }
-
 
         private sealed class ReplWindowInfo {
             public readonly ManualResetEvent ReadyForInput = new ManualResetEvent(false);
