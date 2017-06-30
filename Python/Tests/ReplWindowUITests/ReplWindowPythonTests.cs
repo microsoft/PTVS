@@ -78,7 +78,7 @@ namespace ReplWindowUITests {
         /// Type "raise Exception()", hit enter, raise Exception() should have
         /// appropriate syntax color highlighting.
         /// </summary>
-        [Ignore] // TODO: file bug, No classifications are found
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2762
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SyntaxHighlightingRaiseException() {
