@@ -725,6 +725,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="ptvsd_repl_launcher.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ptvsd_loader.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="ptvsd\setup.py" />
     <Content Include="Snippets\Python\for.snippet">
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -781,19 +789,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ReadmeStyle.css" />
-    <Content Include="visualstudio_py_ipcjson.py">
+    <Content Include="ptvsd\ipcjson.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="visualstudio_py_debugger.py">
+    <Content Include="ptvsd\debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="visualstudio_py_repl.py">
+    <Content Include="ptvsd\repl\__init__.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="visualstudio_py_util.py">
+    <Content Include="ptvsd\util.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -823,7 +831,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="visualstudio_ipython_repl.py">
+    <Content Include="ptvsd\repl\ipython.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -842,7 +850,7 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="visualstudio_py_launcher.py">
+    <Content Include="ptvsd_launcher.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

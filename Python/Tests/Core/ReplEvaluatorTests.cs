@@ -122,7 +122,7 @@ namespace PythonToolsTests {
                         are.Set();
                     }
                 );
-                are.WaitOne();
+                are.WaitOne(10000);
                 var names = evaluator.GetMemberNames("");
                 Assert.IsNotNull(names);
                 AssertUtil.ContainsAtLeast(names.Select(m => m.Name), "my_new_value");

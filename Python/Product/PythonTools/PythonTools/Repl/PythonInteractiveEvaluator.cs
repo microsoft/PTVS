@@ -166,6 +166,16 @@ namespace Microsoft.PythonTools.Repl {
                         } catch (Exception ex) when (!ex.IsCriticalException()) {
                             WriteError(Strings.ReplCannotReadFile.FormatUI(modeFile));
                         }
+
+                        // Translate legacy backend names.
+                        switch (BackendName) {
+                            case "visualstudio_ipython_repl.IPythonBackend":
+                                BackendName = "ptvsd.repl.ipython.IPythonBackend";
+                                break;
+                            case "visualstudio_ipython_repl.IPythonBackendWithoutPyLab":
+                                BackendName = "ptvsd.repl.ipython.IPythonBackendWithoutPyLab";
+                                break;
+                        }
                     } else {
                         BackendName = null;
                     }

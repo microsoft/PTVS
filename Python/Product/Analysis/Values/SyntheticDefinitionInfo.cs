@@ -19,14 +19,18 @@ using System.Linq;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class SyntheticDefinitionInfo : AnalysisValue {
-        public SyntheticDefinitionInfo(IEnumerable<LocationInfo> locations) {
-            Locations = locations.ToArray();
+        public SyntheticDefinitionInfo(
+            string name,
+            string doc,
+            IEnumerable<LocationInfo> locations
+        ) {
+            Name = name;
+            Documentation = doc;
+            Locations = locations?.ToArray() ?? Enumerable.Empty<LocationInfo>();
         }
 
-        public SyntheticDefinitionInfo(IEnumerable<EncodedLocation> locations) {
-            Locations = locations.Select(e => e.GetLocationInfo()).ToArray();
-        }
-
+        public override string Name { get; }
+        public override string Documentation { get; }
         public override IEnumerable<LocationInfo> Locations { get; }
     }
 }

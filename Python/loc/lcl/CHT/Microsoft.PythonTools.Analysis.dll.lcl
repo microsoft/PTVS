@@ -490,11 +490,29 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";WrapCommentsLong_Example" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[# Not wrapped:]D;]A;# There should be one-- and preferably only one --obvious way to do it.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[# 未換行:]D;]A;# 應該只有一個-- 也最好只有一個 --明確的處理方式。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";WrapCommentsShort" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Wrap comments that are too wide]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[將太寬的註解換行]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WrapCommentsShort_Example" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[# Wrapped to 40 columns:]D;]A;# There should be one-- and preferably]D;]A;# only one --obvious way to do it.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[# 換行為 40 個資料行:]D;]A;# 應該只有一個-- 也最好]D;]A;# 只有一個 --明確的處理方式。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -513,6 +531,15 @@
           <Val><![CDATA[Maximum comment width]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[註解寬度上限]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WrappingWidth_Doc" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[# Sets the width for wrapping comments]D;]A;# and documentation strings.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[# 設定換行註解]D;]A;# 及文件字串的寬度。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -553,7 +580,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17107.2]]></Val>
+        <Val><![CDATA[3.0.17179.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -589,7 +616,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17107.2]]></Val>
+        <Val><![CDATA[3.0.17179.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

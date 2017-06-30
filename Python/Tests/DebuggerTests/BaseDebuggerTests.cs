@@ -693,11 +693,36 @@ namespace DebuggerTests {
                 if (!p.HasExited) {
                     p.Kill();
                 }
+
+                // Process.StandardOutput/Error can only be used if BeginOutput/ErrorReadLine was
+                // not called on that Process object; otherwise it throws InvalidOperationException.
+                // If that happens, presumably there's some other redirector that already traced
+                // the output, so there's nothing for us to do here.
+
                 if (p.StartInfo.RedirectStandardOutput) {
-                    ForEachLine(p.StandardOutput, s => Trace.TraceInformation("STDOUT: {0}", s));
+                    StreamReader stdout;
+                    try {
+                        stdout = p.StandardOutput;
+                    } catch (InvalidOperationException) {
+                        stdout = null;
+                    }
+
+                    if (stdout != null) {
+                        ForEachLine(stdout, s => Trace.TraceInformation("STDOUT: {0}", s));
+                    }
                 }
+
                 if (p.StartInfo.RedirectStandardError) {
-                    ForEachLine(p.StandardError, s => Trace.TraceWarning("STDERR: {0}", s));
+                    StreamReader stderr;
+                    try {
+                        stderr = p.StandardError;
+                    } catch (InvalidOperationException) {
+                        stderr = null;
+                    }
+
+                    if (stderr != null) {
+                        ForEachLine(stderr, s => Trace.TraceWarning("STDERR: {0}", s));
+                    }
                 }
             } catch (Exception ex) {
                 Console.WriteLine("Failed to kill process");

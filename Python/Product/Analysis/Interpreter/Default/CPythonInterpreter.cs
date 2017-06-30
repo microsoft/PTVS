@@ -34,6 +34,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private PythonTypeDatabase _typeDb, _searchPathDb;
         private PythonAnalyzer _state;
         private IReadOnlyList<string> _searchPaths;
+        private IReadOnlyDictionary<string, string> _searchPathPackages;
+        private CancellationTokenSource _searchPathPackagesCancellation;
         private Dictionary<string, HashSet<string>> _zipPackageCache;
 
         public CPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
@@ -52,6 +54,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             _typeDb = factory.GetCurrentDatabase();
             _searchPathDb = null;
+            _searchPathPackages = null;
             _zipPackageCache = null;
 
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
@@ -81,8 +84,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             var fromDb = (_typeDb?.GetModuleNames()).MaybeEnumerate().ToList();
 
             fromDb.AddRange((_searchPathDb?.GetModuleNames()).MaybeEnumerate());
-            
-            // TODO: Return list of not-yet-imported modules from search paths?
+
+            fromDb.AddRange((_searchPathPackages?.Keys).MaybeEnumerate());
 
             return fromDb;
         }
@@ -118,6 +121,62 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
+        private async void BeginUpdateSearchPathPackages() {
+            var cts = new CancellationTokenSource();
+            var oldCts = Interlocked.Exchange(ref _searchPathPackagesCancellation, cts);
+            try {
+                oldCts?.Cancel();
+                oldCts?.Dispose();
+            } catch (ObjectDisposedException) {
+            }
+
+            try {
+                await Task.Run(() => UpdateSearchPathPackagesAsync(cts.Token));
+            } catch (OperationCanceledException) {
+            } catch (ObjectDisposedException) {
+            } catch (Exception ex) {
+                // Cannot do anything more useful with the exception message here
+                Debug.Fail(ex.ToString());
+            } finally {
+                Interlocked.CompareExchange(ref _searchPathPackagesCancellation, null, cts)?.Dispose();
+            }
+        }
+
+        private async Task UpdateSearchPathPackagesAsync(CancellationToken cancellationToken) {
+            var packageDict = new Dictionary<string, string>();
+
+            foreach(var searchPath in _searchPaths.MaybeEnumerate()) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                IReadOnlyCollection<string> packages = null;
+                if (File.Exists(searchPath)) {
+                    packages = await GetPackagesFromZipFileAsync(searchPath, cancellationToken);
+                } else if (Directory.Exists(searchPath)) {
+                    packages = await GetPackagesFromDirectoryAsync(searchPath, cancellationToken);
+                }
+                foreach(var package in packages.MaybeEnumerate()) {
+                    packageDict[package] = searchPath;
+                }
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            Interlocked.Exchange(ref _searchPathPackages, packageDict);
+            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private async Task<IReadOnlyCollection<string>> GetPackagesFromDirectoryAsync(string searchPath, CancellationToken cancellationToken) {
+            return ModulePath.GetModulesInPath(
+                searchPath,
+                recurse: false,
+                requireInitPy: ModulePath.PythonVersionRequiresInitPyFiles(_langVersion)
+            ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).ToList();
+        }
+
+        private async Task<IReadOnlyCollection<string>> GetPackagesFromZipFileAsync(string searchPath, CancellationToken cancellationToken) {
+            // TODO: Search zip files for packages
+            return new string[0];
+        }
+
         private IPythonModule LoadModuleFromDirectory(string searchPath, string moduleName) {
             Func<string, bool> isPackage = null;
             if (!ModulePath.PythonVersionRequiresInitPyFiles(_langVersion)) {
@@ -138,7 +197,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 _searchPathDb.AddModule(package.FullName, AstPythonModule.FromFile(
                     this,
                     package.SourceFile,
-                    _factory.GetLanguageVersion()
+                    _factory.GetLanguageVersion(),
+                    package.FullName
                 ));
             }
 
@@ -247,7 +307,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _searchPaths = _state.GetSearchPaths();
             _searchPathDb = null;
             _zipPackageCache = null;
-            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+
+            BeginUpdateSearchPathPackages();
         }
 
         public event EventHandler ModuleNamesChanged;

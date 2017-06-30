@@ -46,16 +46,8 @@ import os
 import inspect
 import types
 from collections import deque
+import ptvsd.util as _vspu
 
-try:
-    # In the local attach scenario, visualstudio_py_util is injected into globals()
-    # by PyDebugAttach before loading this module, and cannot be imported.
-    _vspu = visualstudio_py_util
-except:
-    try:
-        import visualstudio_py_util as _vspu
-    except ImportError:
-        import ptvsd.visualstudio_py_util as _vspu
 to_bytes = _vspu.to_bytes
 read_bytes = _vspu.read_bytes
 read_int = _vspu.read_int
@@ -373,11 +365,11 @@ actual inspection and introspection."""
     def init_debugger(self):
         from os import path
         sys.path.append(path.dirname(__file__))
-        import visualstudio_py_debugger
-        visualstudio_py_debugger.DONT_DEBUG.append(path.normcase(__file__))
-        new_thread = visualstudio_py_debugger.new_thread()
+        import ptvsd.debugger
+        ptvsd.debugger.DONT_DEBUG.append(path.normcase(__file__))
+        new_thread = ptvsd.debugger.new_thread()
         sys.settrace(new_thread.trace_func)
-        visualstudio_py_debugger.intercept_threads(True)
+        ptvsd.debugger.intercept_threads(True)
 
     def send_image(self, filename):
         with self.send_lock:
@@ -543,7 +535,11 @@ class BasicReplBackend(ReplBackend):
                 self.exec_mod = Scope()
                 self.exec_mod.__name__ = '__main__'
             else:
-                sys.modules[mod_name] = self.exec_mod = imp.new_module(mod_name)
+                self.exec_mod = imp.new_module(mod_name)
+                # On 2.6, the below messes up the globals of the calling script
+                # if it is in sys.modules of the same name.
+                if sys.version_info >= (2, 7):
+                    sys.modules[mod_name] = self.exec_mod
         else:
             self.exec_mod = sys.modules['__main__']
 
@@ -976,7 +972,7 @@ def get_module_names():
     res = []
     for name, module in sys.modules.items():
         try:
-            if name != 'visualstudio_py_repl' and name != '$visualstudio_py_debugger':
+            if name != 'ptvsd' and not name.startswith('ptvsd.'):
                 if sys.platform == 'cli' and type(module) is NamespaceType:
                     get_namespaces(name, module, res)
                 else:
@@ -1017,7 +1013,7 @@ def is_internal_frame(tb):
     f = tb.tb_frame
     co = f.f_code
     filename = co.co_filename
-    return filename.endswith('visualstudio_py_repl.py') or filename.endswith('visualstudio_py_debugger.py')
+    return '/ptvsd/' in filename or '\\ptvsd\\' in filename
 
 '''
 This code is no longer used.
@@ -1296,75 +1292,5 @@ if sys.platform == 'cli':
         def Encoding(self):
             return System.Text.Encoding.UTF8
 
-
 BACKEND = None
 
-def _run_repl():
-    from optparse import OptionParser
-
-    parser = OptionParser(prog='repl', description='Process REPL options')
-    parser.add_option('--port', dest='port',
-                      help='the port to connect back to')
-    parser.add_option('--execution-mode', dest='backend',
-                      help='the backend to use')
-    parser.add_option('--enable-attach', dest='enable_attach', 
-                      action="store_true", default=False,
-                      help='enable attaching the debugger via $attach')
-
-    (options, args) = parser.parse_args()
-
-    # kick off repl
-    # make us available under our "normal" name, not just __main__ which we'll likely replace.
-    sys.modules['visualstudio_py_repl'] = sys.modules['__main__']
-    global __name__
-    __name__ = 'visualstudio_py_repl'
-
-    backend_type = BasicReplBackend
-    backend_error = None
-    if options.backend is not None and options.backend.lower() != 'standard':
-        try:
-            split_backend = options.backend.split('.')
-            backend_mod_name = '.'.join(split_backend[:-1])
-            backend_name = split_backend[-1]
-            backend_type = getattr(__import__(backend_mod_name), backend_name)
-        except UnsupportedReplException:
-            backend_error = sys.exc_info()[1].reason
-        except:
-            backend_error = traceback.format_exc()
-
-    # fix sys.path so that cwd is where the project lives.
-    sys.path[0] = '.'
-    # remove all of our parsed args in case we have a launch file that cares...
-    sys.argv = args or ['']
-
-    global BACKEND
-    try:
-        BACKEND = backend_type()
-    except UnsupportedReplException:
-        backend_error = sys.exc_info()[1].reason
-        BACKEND = BasicReplBackend()
-    except Exception:
-        backend_error = traceback.format_exc()
-        BACKEND = BasicReplBackend()
-    BACKEND.connect(int(options.port))
-
-    if options.enable_attach:
-        BACKEND.init_debugger()
-
-    if backend_error is not None:
-        sys.stderr.write('Error using selected REPL back-end:\n')
-        sys.stderr.write(backend_error + '\n')
-        sys.stderr.write('Using standard backend instead\n')
-
-    # execute code on the main thread which we can interrupt
-    BACKEND.execution_loop()    
-
-if __name__ == '__main__':
-    try:
-        _run_repl()
-    except:
-        if DEBUG:
-            _debug_write(traceback.format_exc())
-            _debug_write('exiting')
-            input()
-        raise

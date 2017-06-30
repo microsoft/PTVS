@@ -1176,11 +1176,11 @@ but your command history will be preserved.</value>
 #
 # Currently, supported options are:
 #   standard
-#   visualstudio_ipython_repl.IPythonBackend
-#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab
+#   ptvsd.repl.ipython.IPythonBackend
+#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab
 #
 
-visualstudio_ipython_repl.IPythonBackend</value>
+ptvsd.repl.ipython.IPythonBackend</value>
     <comment>Do not localize</comment>
   </data>
   <data name="ReplScriptPathReadmeContents" xml:space="preserve">

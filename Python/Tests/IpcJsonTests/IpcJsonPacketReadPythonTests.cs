@@ -134,7 +134,7 @@ namespace IpcJsonTests {
         private Task TestInvalidPacketAsync(Packet packet) {
             Assert.IsTrue(packet.BadHeaders || packet.BadContent);
             return TestPacketAsync(packet,
-                packet.BadHeaders ? "visualstudio_py_ipcjson.InvalidHeaderError" : "visualstudio_py_ipcjson.InvalidContentError",
+                packet.BadHeaders ? "ptvsd.ipcjson.InvalidHeaderError" : "ptvsd.ipcjson.InvalidContentError",
                 closeStream: packet.ReadPastEndOfStream
             );
         }
@@ -142,9 +142,9 @@ namespace IpcJsonTests {
         private Task TestNoPacketAsync(Packet packet) {
             string expectedError = null;
             if (packet.BadHeaders) {
-                expectedError = "visualstudio_py_ipcjson.InvalidHeaderError";
+                expectedError = "ptvsd.ipcjson.InvalidHeaderError";
             } else if (packet.BadContent) {
-                expectedError = "visualstudio_py_ipcjson.InvalidContentError";
+                expectedError = "ptvsd.ipcjson.InvalidContentError";
             }
             return TestPacketAsync(packet, expectedError, closeStream: true);
         }
@@ -204,7 +204,7 @@ namespace IpcJsonTests {
                 CheckProcessResult(proc);
             }
 
-            _connected.WaitOne();
+            _connected.WaitOne(10000);
 
             return proc;
         }

@@ -1199,6 +1199,23 @@ namespace Microsoft.PythonTools.Intellisense {
             AP.AnalysisReference[] references;
             string privatePrefix = null;
             string memberName = null;
+
+            if (pyEntry.Tree != null) {
+                var w = new ImportedModuleNameWalker(pyEntry.ModuleName, request.index);
+                pyEntry.Tree.Walk(w);
+                ModuleReference modRef;
+                if (!string.IsNullOrEmpty(w.ImportedName) &&
+                    _pyAnalyzer.Modules.TryImport(w.ImportedName, out modRef)) {
+                    // Return a module reference
+                    return new AP.AnalyzeExpressionResponse {
+                        variables = modRef.AnalysisModule.Locations
+                            .Select(l => MakeReference(l, VariableType.Definition))
+                            .ToArray(),
+                        memberName = w.ImportedName
+                    };
+                }
+            }
+
             if (pyEntry.Analysis != null) {
                 var variables = pyEntry.Analysis.GetVariables(
                     request.expr,
@@ -1258,6 +1275,17 @@ namespace Microsoft.PythonTools.Intellisense {
         private Response GetQuickInfo(AP.QuickInfoRequest request) {
             var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
             string text = null;
+
+            if (pyEntry.Tree != null) {
+                var w = new ImportedModuleNameWalker(pyEntry.ModuleName, request.index);
+                pyEntry.Tree.Walk(w);
+                if (!string.IsNullOrEmpty(w.ImportedName)) {
+                    return new AP.QuickInfoResponse {
+                        text = w.ImportedName + ": module"
+                    };
+                }
+            }
+
             if (pyEntry.Analysis != null) {
                 var values = pyEntry.Analysis.GetValues(
                     request.expr,

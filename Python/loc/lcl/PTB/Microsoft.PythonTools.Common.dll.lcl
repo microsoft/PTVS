@@ -1213,6 +1213,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";DebugReplCannotRetrieveFrameError" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not retrieve the current frame.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Não foi possível recuperar o quadro atual.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DebugReplCurrentFrameScope" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[<Current Frame>]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[<Quadro Atual>]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";DebugReplCurrentIndicator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[=> ]]></Val>
@@ -1316,7 +1334,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<REPL input>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<REPL input>]]></Val>
+            <Val><![CDATA[<entrada de REPL>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1631,7 +1649,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<unknown location, not in Python code>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<unknown location, not in Python code>]]></Val>
+            <Val><![CDATA[<local desconhecido, não está no código Python>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1658,7 +1676,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<unknown exception type>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<unknown exception type>]]></Val>
+            <Val><![CDATA[<tipo de exceção desconhecido>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2252,7 +2270,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<failed to get preview>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<failed to get preview>]]></Val>
+            <Val><![CDATA[<falha ao obter a visualização>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3221,7 +3239,7 @@
         <Str Cat="Text">
           <Val><![CDATA[<No completions>]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[<No completions>]]></Val>
+            <Val><![CDATA[<Nenhuma conclusão>]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5260,7 +5278,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17179.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5296,7 +5314,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17179.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

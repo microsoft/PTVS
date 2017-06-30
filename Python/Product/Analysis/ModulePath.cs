@@ -385,6 +385,19 @@ namespace Microsoft.PythonTools.Analysis {
         }
         
         /// <summary>
+        /// Returns true if the provided name can be imported in Python code.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static bool IsImportable(string name) {
+            try {
+                return PythonPackageRegex.IsMatch(name);
+            } catch (RegexMatchTimeoutException) {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Returns true if the provided path references an importable Python
         /// module. This function does not access the filesystem.
         /// Retuns false if an invalid string is provided. This function does

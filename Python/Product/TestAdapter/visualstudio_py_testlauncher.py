@@ -200,7 +200,7 @@ def main():
         sys.stderr = _TestOutput(sys.stderr, is_stdout = False)
 
     if opts.secret and opts.port:
-        from ptvsd.visualstudio_py_debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
+        from ptvsd.debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
         from ptvsd.attach_server import DEFAULT_PORT, enable_attach, wait_for_attach
 
         DONT_DEBUG.append(os.path.normcase(__file__))

@@ -90,7 +90,12 @@ $is_emulated = $env:EMULATED -eq "true"
 $bindir = split-path $MyInvocation.MyCommand.Path
 
 if ($is_web) {
-    $env:RootDir = join-path $env:RoleRoot (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory
+    $roledir = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory
+    if (split-path $roledir -IsAbsolute) {
+        $env:RootDir = $roledir
+    } else {
+        $env:RootDir = join-path $env:RoleRoot $roledir
+    }
 } else {
     $env:RootDir = split-path $bindir
 }
@@ -194,7 +199,8 @@ if ($is_web) {
         $quoted_wfastcgi_path = "`"$quoted_wfastcgi_path`""
     }
 
-    $appcmdargs += @(
+    $appcmdargs = @(
+        $appcmdargs,
         "set",
         "config",
         "/section:system.webServer/fastCGI",
