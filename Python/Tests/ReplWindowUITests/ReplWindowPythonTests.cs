@@ -211,6 +211,7 @@ repl is not None");
             using (var interactive = Prepare()) {
                 if (((PythonReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
                     interactive.SubmitCode("import clr");
+                    interactive.WaitForText(">import clr", ">");
                 }
 
                 Keyboard.Type("import ");
