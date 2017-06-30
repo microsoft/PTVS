@@ -37,4 +37,4 @@ finally:
 # threads in the process - and saves the current thread ID as that of the main thread. In
 # local attach, however, this code runs on the injected debugger thread; and if threading
 # is loaded on that thread, it will misidentify it as a main thread, breaking things later.
-assert(was_threading_loaded or 'threading' not in sys.modules)
+assert was_threading_loaded or 'threading' not in sys.modules

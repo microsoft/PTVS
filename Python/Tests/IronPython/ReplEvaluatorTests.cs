@@ -168,11 +168,8 @@ namespace IronPythonTests {
                 Assert.IsTrue(execute.IsSuccessful);
                 replWindow.ClearScreen();
 
-                await replEval.ExecuteText("print '[%s]' % sys.gettrace()");
-                AssertUtil.AreEqual(
-                    new Regex(@"\[None\]"),
-                    replWindow.Output
-                );
+                await replEval.ExecuteText("print '[%s]' % sys.gettrace(),");
+                Assert.AreEqual("[None]", replWindow.Output);
                 replWindow.ClearScreen();
             }
         }

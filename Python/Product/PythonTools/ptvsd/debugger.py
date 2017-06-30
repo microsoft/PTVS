@@ -45,14 +45,13 @@ from codecs import BOM_UTF8
 
 import ptvsd.util as _vspu
 import ptvsd.ipcjson as _vsipc
+import ptvsd.repl as _vspr
 
 to_bytes = _vspu.to_bytes
 exec_file = _vspu.exec_file
 exec_module = _vspu.exec_module
 exec_code = _vspu.exec_code
 safe_repr = _vspu.SafeRepr()
-
-import ptvsd.repl as _vspr
 
 try:
     import stackless
@@ -98,6 +97,7 @@ from encodings import utf_8
 
 debugger_dll_handle = None
 
+# Called by PyDebugAttach
 def set_debugger_dll_handle(handle):
     global debugger_dll_handle
     debugger_dll_handle = handle
@@ -2300,7 +2300,7 @@ def start_debugger_loop(sock):
 
 def attach_process(port_num, debug_id, debug_options, report = False, block = False):
     for i in xrange(50):
-        failure_cause = None
+        failure_cause = ''
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect(('127.0.0.1', port_num))
