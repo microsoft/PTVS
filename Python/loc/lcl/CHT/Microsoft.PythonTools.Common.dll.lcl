@@ -1213,6 +1213,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";DebugReplCannotRetrieveFrameError" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not retrieve the current frame.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[無法擷取目前的框架。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DebugReplCurrentFrameScope" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[<Current Frame>]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[<目前框架>]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";DebugReplCurrentIndicator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[=> ]]></Val>
@@ -5260,7 +5278,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17179.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5296,7 +5314,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17179.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
