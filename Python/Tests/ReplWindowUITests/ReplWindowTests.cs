@@ -190,7 +190,6 @@ namespace ReplWindowUITests {
         /// <summary>
         /// x = 42; x.car[enter] – should type "car" not complete to "conjugate"
         /// </summary>
-        [Ignore] // TODO: file bug or fix test / product
         [TestMethod, Priority(1)]
         [TestCategory("Interactive")]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -229,6 +228,7 @@ namespace ReplWindowUITests {
                 const string code = "x = 42";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
+                WaitForAnalysis(interactive);
 
                 Keyboard.Type("x.");
                 using (var sh = interactive.WaitForSession<ICompletionSession>()) {
@@ -244,7 +244,7 @@ namespace ReplWindowUITests {
         /// and should respect enter at end of word completes option.  When it
         /// does execute the text the output should be on the next line.
         /// </summary>
-        [Ignore] // TODO: file bug or fix test / product
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2755
         [TestMethod, Priority(1)]
         [TestCategory("Interactive")]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -331,7 +331,6 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Calling input while executing user code.  This should let the user start typing.
         /// </summary>
-        [Ignore] // TODO: file bug or fix test / product
         [TestMethod, Priority(1)]
         [TestCategory("Interactive")]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -343,14 +342,13 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(">x = input()", "<");
 
                 Keyboard.Type("hello\r");
-                interactive.WaitForText(">x = input()", "<hello", ">");
+                interactive.WaitForText(">x = input()", "<hello", "", ">");
 
                 interactive.SubmitCode("print(x)");
-                interactive.WaitForText(">x = input()", "<hello", ">print(x)", "hello", "", ">");
+                interactive.WaitForText(">x = input()", "<hello", "", ">print(x)", "hello", ">");
             }
         }
 
-        [Ignore] // TODO: file bug or fix test / product
         [TestMethod, Priority(1)]
         [TestCategory("Interactive")]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -364,9 +362,12 @@ namespace ReplWindowUITests {
                 Keyboard.Type("hel");
                 interactive.WaitForText(">input()", "<hel");
 
-                // attempt to type in the previous submission should move the
-                // cursor back to the end of the stdin:
+                // attempt to type in the previous submission should not do anything
                 Keyboard.Type(Key.Up);
+                Keyboard.Type("lo");
+                interactive.WaitForText(">input()", "<hel");
+
+                Keyboard.Type(Key.Down);
                 Keyboard.Type("lo");
                 interactive.WaitForText(">input()", "<hello");
             }
@@ -416,7 +417,7 @@ namespace ReplWindowUITests {
 
         #region Keyboard tests
 
-        [Ignore] // TODO: file bug or fix test / product
+        [Ignore] // TODO: create test
         [TestMethod, Priority(1)]
         [TestCategory("Interactive")]
         [HostType("VSTestHost"), TestCategory("Installed")]
