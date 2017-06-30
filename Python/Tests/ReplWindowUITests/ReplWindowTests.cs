@@ -417,28 +417,6 @@ namespace ReplWindowUITests {
 
         #region Keyboard tests
 
-        [Ignore] // TODO: create test
-        [TestMethod, Priority(1)]
-        [TestCategory("Interactive")]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void EnterAtBeginningOfLine() {
-            using (var interactive = Prepare()) {
-                // TODO (bug): complete statement detection
-                Assert.Fail("TODO (bug): complete statement detection");
-
-                //const string code = "\"\"\"";
-                //Keyboard.Type(code);
-                //Keyboard.Type(Key.Enter);
-                //Keyboard.Type(Key.Enter);
-                //interactive.WaitForText(">\"\"\"", ".", ".");
-                //
-                //Keyboard.Type("a");
-                //Keyboard.Type(Key.Left);
-                //Keyboard.Type(Key.Enter);
-                //interactive.WaitForText(">\"\"\"", ".", ".", ".a");
-            }
-        }
-
         /// <summary>
         /// Enter in a middle of a line should insert new line
         /// </summary>
@@ -924,7 +902,7 @@ namespace ReplWindowUITests {
 
         #region History tests
 
-        [Ignore] // TODO: file bug or fix test / product
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2757
         [TestMethod, Priority(1)]
         [TestCategory("Interactive")]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -961,7 +939,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        [Ignore] // TODO: file bug or fix test / product
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2757
         [TestMethod, Priority(1)]
         [TestCategory("Interactive")]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -1197,7 +1175,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        [Ignore] // TODO: file bug or fix test / product
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2760
         [TestMethod, Priority(1)]
         [TestCategory("Interactive")]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -1236,8 +1214,8 @@ input()");
                     "<"
                 );
 
-                interactive.Type("blah");
-                interactive.WaitForTextEnd("<blah", "'blah'", ">");
+                interactive.Type("blah\r");
+                interactive.WaitForTextEnd("<blah", "'blah'", "", ">");
 
                 var text = interactive.Window.TextView.TextBuffer.CurrentSnapshot.GetText();
                 var firstPrimaryPrompt = text.IndexOf(">>>");
