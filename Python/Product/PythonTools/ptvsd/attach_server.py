@@ -17,8 +17,6 @@
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.2.0.0"
 
-__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'is_attached', 'AttachAlreadyEnabledError']
-
 import atexit
 import getpass
 import os
@@ -38,9 +36,10 @@ try:
 except ImportError:
     ssl = None
 
-import ptvsd.visualstudio_py_debugger as vspd
-import ptvsd.visualstudio_py_repl as vspr
-import ptvsd.visualstudio_py_ipcjson as vsipc
+import ptvsd
+import ptvsd.debugger as vspd
+import ptvsd.repl as vspr
+import ptvsd.ipcjson as vsipc
 
 
 # The server (i.e. the Python app) waits on a TCP port provided. Whenever
@@ -78,7 +77,6 @@ import ptvsd.visualstudio_py_ipcjson as vsipc
 #   If attaching was not successful (which can happen if some other debugger is
 #   already attached), the server responds with accepted=False and closes the connection. 
 
-DEFAULT_PORT = 5678
 PTVSDBG_VER = 8 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
 PTVSDBG = 'PTVSDBG'
 
@@ -87,61 +85,7 @@ _attached = threading.Event()
 vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 
 
-class AttachAlreadyEnabledError(Exception):
-    """`ptvsd.enable_attach` has already been called in this process."""
-
-
-def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, keyfile = None, redirect_output = True):
-    """Enables Visual Studio to attach to this process remotely to debug Python
-    code.
-
-    Parameters
-    ----------
-    secret : str
-        Used to validate the clients - only those clients providing the valid
-        secret will be allowed to connect to this server. On client side, the
-        secret is prepended to the Qualifier string, separated from the
-        hostname by ``'@'``, e.g.: ``'secret@myhost.cloudapp.net:5678'``. If
-        secret is ``None``, there's no validation, and any client can connect
-        freely.
-    address : (str, int), optional 
-        Specifies the interface and port on which the debugging server should
-        listen for TCP connections. It is in the same format as used for
-        regular sockets of the `socket.AF_INET` family, i.e. a tuple of
-        ``(hostname, port)``. On client side, the server is identified by the
-        Qualifier string in the usual ``'hostname:port'`` format, e.g.:
-        ``'myhost.cloudapp.net:5678'``. Default is ``('0.0.0.0', 5678)``.
-    certfile : str, optional
-        Used to enable SSL. If not specified, or if set to ``None``, the
-        connection between this program and the debugger will be unsecure,
-        and can be intercepted on the wire. If specified, the meaning of this
-        parameter is the same as for `ssl.wrap_socket`. 
-    keyfile : str, optional
-        Used together with `certfile` when SSL is enabled. Its meaning is the
-        same as for ``ssl.wrap_socket``.
-    redirect_output : bool, optional
-        Specifies whether any output (on both `stdout` and `stderr`) produced
-        by this program should be sent to the debugger. Default is ``True``.
-
-    Notes
-    -----
-    This function returns immediately after setting up the debugging server,
-    and does not block program execution. If you need to block until debugger
-    is attached, call `ptvsd.wait_for_attach`. The debugger can be detached
-    and re-attached multiple times after `enable_attach` is called.
-
-    This function can only be called once during the lifetime of the process. 
-    On a second call, `AttachAlreadyEnabledError` is raised. In circumstances
-    where the caller does not control how many times the function will be
-    called (e.g. when a script with a single call is run more than once by
-    a hosting app or framework), the call should be wrapped in ``try..except``.
-
-    Only the thread on which this function is called, and any threads that are
-    created after it returns, will be visible in the debugger once it is
-    attached. Any threads that are already running before this function is
-    called will not be visible.
-    """
-
+def enable_attach(secret, address=('0.0.0.0', ptvsd.DEFAULT_PORT), certfile=None, keyfile=None, redirect_output=True):
     if not ssl and (certfile or keyfile):
         raise ValueError('could not import the ssl module - SSL is not supported on this version of Python')
 
@@ -156,12 +100,12 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
 
     global _attach_enabled
     if _attach_enabled:
-        raise AttachAlreadyEnabledError('ptvsd.enable_attach() has already been called in this process.')
+        raise ptvsd.AttachAlreadyEnabledError('ptvsd.enable_attach() has already been called in this process.')
     _attach_enabled = True
 
     atexit.register(vspd.detach_process_and_notify_debugger)
 
-    server = socket.socket(proto=socket.IPPROTO_TCP)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(address)
     server.listen(1)
@@ -210,35 +154,19 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
     vspd.intercept_threads(for_attach = True)
 
 
-# Alias for convenience of users of pydevd
-settrace = enable_attach
-
-
 def wait_for_attach(timeout = None):
-    """If a PTVS remote debugger is attached, returns immediately. Otherwise,
-    blocks until a remote debugger attaches to this process, or until the
-    optional timeout occurs.
-
-    Parameters
-    ----------
-    timeout : float, optional
-        The timeout for the operation in seconds (or fractions thereof).
-    """
     if vspd.DETACHED:
         _attached.clear()
         _attached.wait(timeout)
 
 
 def break_into_debugger():
-    """If a PTVS remote debugger is attached, pauses execution of all threads,
-    and breaks into the debugger with current thread as active.
-    """
     if not vspd.DETACHED:
         vspd.SEND_BREAK_COMPLETE = thread.get_ident()
         vspd.mark_all_threads_for_break()
 
+
 def is_attached():
-    """Returns ``True`` if debugger is attached, ``False`` otherwise."""
     return not vspd.DETACHED
 
 

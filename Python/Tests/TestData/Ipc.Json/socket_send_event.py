@@ -1,10 +1,6 @@
 import os
 import sys
-
-try:
-  import visualstudio_py_ipcjson as _ipc
-except ImportError:
-  import ptvsd.visualstudio_py_ipcjson as _ipc
+import ptvsd.ipcjson as _ipc
 
 class SocketIpcChannel(_ipc.SocketIO, _ipc.IpcChannel):
     def __init__(self, *args, **kwargs):

@@ -20,8 +20,8 @@ __version__ = "3.2.0.0"
 import os
 import sys
 from optparse import OptionParser
-from ptvsd.visualstudio_py_util import exec_file
-from ptvsd.visualstudio_py_debugger import DONT_DEBUG
+from ptvsd.util import exec_file
+from ptvsd.debugger import DONT_DEBUG
 from ptvsd.attach_server import DEFAULT_PORT, enable_attach, wait_for_attach
 
 parser = OptionParser(prog = 'ptvsd', usage = 'Usage: %prog [<option>]... <file> [- <args>]', version = '%prog ' + __version__)
