@@ -490,11 +490,29 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";WrapCommentsLong_Example" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[# Not wrapped:]D;]A;# There should be one-- and preferably only one --obvious way to do it.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[# Not wrapped:]D;]A;# There should be one-- and preferably only one --obvious way to do it.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";WrapCommentsShort" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Wrap comments that are too wide]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Esegui il wrapping dei commenti troppo lunghi]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WrapCommentsShort_Example" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[# Wrapped to 40 columns:]D;]A;# There should be one-- and preferably]D;]A;# only one --obvious way to do it.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[# Wrapped to 40 columns:]D;]A;# There should be one-- and preferably]D;]A;# only one --obvious way to do it.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -513,6 +531,15 @@
           <Val><![CDATA[Maximum comment width]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Lunghezza massima del commento]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WrappingWidth_Doc" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[# Sets the width for wrapping comments]D;]A;# and documentation strings.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[# Sets the width for wrapping comments]D;]A;# and documentation strings.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -553,7 +580,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17075.1]]></Val>
+        <Val><![CDATA[3.0.17179.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -589,7 +616,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17075.1]]></Val>
+        <Val><![CDATA[3.0.17179.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
