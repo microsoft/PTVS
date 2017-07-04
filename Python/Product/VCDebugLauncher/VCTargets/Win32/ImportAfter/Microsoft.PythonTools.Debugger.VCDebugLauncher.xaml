@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    *** ATTENTION CODE AUTHOR **
+    If your debugger is wrapping another debugger to modify its behavior, you should probably start with the content
+    of the wrapped debugger's XAML file, using the same property names, so that the wrapped debugger can recognize
+    the properties the user sets in their project.
+    But if you're writing your own debugger and thus this file, you SHOULD change all the property names to be unique
+    to your debugger.  For example, change the LocalDebugger- prefix with VendorNameDebugger- or something like that.
+    
+    The value of the Name attribute in <Rule Name="VendorNameCoolDebugger"> must be equal to the debugger name given 
+    in the [DebuggerScope("VendorNameCoolDebugger")] attribute found in the VendorNameCoolDebugger.cs source file
+    so that the Visual C++ project system can match up the debugger property page with the debugger launcher.
+-->
+<Rule Name="PythonDebugLaunchProvider"
+      DisplayName="Python/Native Debugging"
+      PageTemplate="debugger"
+      Description="Python/Native debugging options"
+      xmlns="http://schemas.microsoft.com/build/2009/properties">
+  <Rule.DataSource>
+    <DataSource Persistence="UserFile" />
+  </Rule.DataSource>
+  <StringProperty Name="LocalDebuggerCommand" DisplayName="Command"
+                  Description="The debug command to execute."
+                  F1Keyword="VC.Project.IVCLocalDebugPageObject.Command">
+    <StringProperty.ValueEditors>
+      <ValueEditor EditorType="DefaultFindFullPathPropertyEditor" DisplayName="&lt;py.exe&gt;">
+        <ValueEditor.Metadata>
+          <NameValuePair Name="Exename" Value="py.exe" />
+        </ValueEditor.Metadata>
+      </ValueEditor>
+      <ValueEditor EditorType="DefaultStringPropertyEditor" DisplayName="&lt;Edit...&gt;"/>
+      <ValueEditor EditorType="DefaultFilePropertyEditor" DisplayName="&lt;Browse...&gt;"/>
+    </StringProperty.ValueEditors>
+  </StringProperty>
+    
+  <StringProperty Name="LocalDebuggerCommandArguments" DisplayName="Command Arguments"
+                  Description="The command line arguments to pass to the application."
+                  F1Keyword="VC.Project.IVCLocalDebugPageObject.CommandArguments">
+    <Argument Property="LocalDebuggerCommand" />
+  </StringProperty>
+  <StringProperty Name="LocalDebuggerWorkingDirectory" DisplayName="Working Directory"
+                Description="The application's working directory. By default, the directory containing the project file."
+                Subtype="folder"
+                F1Keyword="VC.Project.IVCLocalDebugPageObject.WorkingDirectory"/>
+</Rule>
