@@ -2341,10 +2341,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 fileId = analysis.Entry.FileId,
             };
 
+            var v = $"{req.expr}:{req.index}";
             return analysis.Entry.Analyzer.EnsureSingleRequest(
                 typeof(AP.ExpressionForDataTipRequest),
-                req.expr,
-                t => t == req.expr,
+                v,
+                v.Equals,
                 async () => {
                     var resp = await analysis.Entry.Analyzer.SendRequestAsync(
                         req,
