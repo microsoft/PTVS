@@ -85,6 +85,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly HashSet<ProjectReference> _references = new HashSet<ProjectReference>();
         private bool _disposing;
 
+        private readonly ConcurrentDictionary<object, object> _activeRequests = new ConcurrentDictionary<object, object>();
+
         private readonly IPythonToolsLogger _logger;
 
         internal Task ReloadTask;
@@ -140,22 +142,29 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal async Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(AnalysisEntry analysisEntry, ITextBuffer textBuffer) {
+        internal Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(AnalysisEntry analysisEntry, ITextBuffer textBuffer) {
             var lastVersion = analysisEntry.GetAnalysisVersion(textBuffer);
 
-            var resp = await SendRequestAsync(
-                new AP.UnresolvedImportsRequest() {
-                    fileId = analysisEntry.FileId,
-                    bufferId = analysisEntry.GetBufferId(textBuffer)
-                },
-                null
-            ).ConfigureAwait(false);
+            return EnsureSingleRequest(
+                typeof(AP.UnresolvedImportsRequest),
+                lastVersion,
+                n => n == lastVersion,
+                async () => {
+                    var resp = await SendRequestAsync(
+                        new AP.UnresolvedImportsRequest() {
+                            fileId = analysisEntry.FileId,
+                            bufferId = analysisEntry.GetBufferId(textBuffer)
+                        },
+                        null
+                    ).ConfigureAwait(false);
 
-            if (resp != null) {
-                return VersionedResponse(resp, textBuffer, lastVersion);
-            }
+                    if (resp != null) {
+                        return VersionedResponse(resp, textBuffer, lastVersion);
+                    }
 
-            return null;
+                    return null;
+                }
+            );
         }
 
         internal VsProjectAnalyzer(
@@ -1772,25 +1781,93 @@ namespace Microsoft.PythonTools.Intellisense {
             return new VersionedResponse<T>(data, textBuffer, versionBeforeRequest);
         }
 
-        internal async Task<VersionedResponse<AP.AnalysisClassificationsResponse>> GetAnalysisClassificationsAsync(AnalysisEntry projFile, ITextBuffer textBuffer, bool colorNames) {
+        private struct RequestInfo<T, U> {
+            public T Value;
+            public TaskCompletionSource<U> Task;
+        }
+
+        private async Task<U> EnsureSingleRequest<T, U>(
+            object key,
+            T value,
+            Func<T, bool> valueMatches,
+            Func<Task<U>> performRequest,
+            U defaultValue = default(U)
+        ) {
+            object o;
+            RequestInfo<T, U> info = default(RequestInfo<T, U>);
+            // Spin on trying to get an existing request or add
+            // a new one. We should not normally get through this
+            // loop more than once, but it's possible under
+            // certain race conditions.
+            while (!_disposing) {
+                if (_activeRequests.TryGetValue(key, out o)) {
+                    var t = (RequestInfo<T, U>)o;
+                    if (valueMatches(t.Value)) {
+                        // Same request is already pending
+                        Debug.WriteLine($"Warning: request {key}({value}) is already pending");
+                        return await t.Task.Task.ConfigureAwait(false);
+                    } else {
+                        // Wait for the pending task and then
+                        // start a new one
+                        try {
+                            await t.Task.Task.ConfigureAwait(false);
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        }
+                    }
+                }
+                if (info.Task == null) {
+                    info.Value = value;
+                    info.Task = new TaskCompletionSource<U>();
+                }
+                if (_activeRequests.TryAdd(key, info)) {
+                    // We are now the active task, so perform the request
+                    // and then set the result of the stored Task.
+                    try {
+                        var result = await performRequest().ConfigureAwait(false);
+                        info.Task.TrySetResult(result);
+                        return result;
+                    } catch (OperationCanceledException) {
+                        info.Task.TrySetCanceled();
+                        throw;
+                    } catch (Exception ex) {
+                        info.Task.TrySetException(ex);
+                        throw;
+                    } finally {
+                        object removed;
+                        _activeRequests.TryRemove(key, out removed);
+                    }
+                }
+            }
+            return defaultValue;
+        }
+
+        private bool EndRequest(object key) {
+            object o;
+            return _activeRequests.TryRemove(key, out o);
+        }
+
+        internal Task<VersionedResponse<AP.AnalysisClassificationsResponse>> GetAnalysisClassificationsAsync(AnalysisEntry projFile, ITextBuffer textBuffer, bool colorNames) {
             var lastVersion = projFile.GetAnalysisVersion(textBuffer);
 
-            var res = await SendRequestAsync(
-                    new AP.AnalysisClassificationsRequest() {
-                        fileId = projFile.FileId,
-                        bufferId = projFile.GetBufferId(textBuffer),
-                        colorNames = colorNames
-                    }
-                ).ConfigureAwait(false);
+            return EnsureSingleRequest(
+                typeof(AP.AnalysisClassificationsRequest),
+                lastVersion,
+                n => n == lastVersion,
+                async () => {
+                    var res = await SendRequestAsync(
+                        new AP.AnalysisClassificationsRequest() {
+                            fileId = projFile.FileId,
+                            bufferId = projFile.GetBufferId(textBuffer),
+                            colorNames = colorNames
+                        }
+                    ).ConfigureAwait(false);
 
-            if (res != null) {
-                return VersionedResponse(
-                    res,
-                    textBuffer,
-                    lastVersion
-                );
-            }
-            return null;
+                    if (res != null) {
+                        return VersionedResponse(res, textBuffer, lastVersion);
+                    }
+                    return null;
+                }
+            );
         }
 
         internal async Task<AP.LocationNameResponse> GetNameOfLocationAsync(AnalysisEntry entry, ITextBuffer textBuffer, int line, int column) {
@@ -2239,7 +2316,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AnalysisVariable(type, location);
         }
 
-        internal static async Task<string> ExpressionForDataTipAsync(
+        internal static Task<string> ExpressionForDataTipAsync(
             IServiceProvider serviceProvider,
             ITextView view,
             SnapshotSpan span,
@@ -2264,9 +2341,20 @@ namespace Microsoft.PythonTools.Intellisense {
                 fileId = analysis.Entry.FileId,
             };
 
-            var resp = await analysis.Entry.Analyzer.SendRequestAsync(req, timeout: timeout).ConfigureAwait(false);
+            var v = $"{req.expr}:{req.index}";
+            return analysis.Entry.Analyzer.EnsureSingleRequest(
+                typeof(AP.ExpressionForDataTipRequest),
+                v,
+                v.Equals,
+                async () => {
+                    var resp = await analysis.Entry.Analyzer.SendRequestAsync(
+                        req,
+                        timeout: timeout
+                    ).ConfigureAwait(false);
 
-            return resp?.expression;
+                    return resp?.expression;
+                }
+            );
         }
 
         class ApplicableExpression {

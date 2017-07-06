@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,8 +28,6 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-        Justification = "ownership is unclear")]
     sealed class BufferParser : IDisposable {
         private readonly Timer _timer;
         internal readonly AnalysisEntry AnalysisEntry;
@@ -233,6 +230,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void UninitBuffer(ITextBuffer subjectBuffer) {
+            subjectBuffer.UnregisterAllHandlers();
             if (_document != null) {
                 _document.EncodingChanged -= EncodingChanged;
                 _document = null;
@@ -599,6 +597,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 return actions.ToArray();
             }
             return Array.Empty<Action<AnalysisEntry>>();
+        }
+
+        public static void UnregisterAllHandlers(this ITextBuffer buffer) {
+            buffer.UnregisterAll(_newAnalysisKey);
+            buffer.UnregisterAll(_newAnalysisEntryKey);
+            buffer.UnregisterAll(_newParseTreeKey);
+        }
+
+        private static void UnregisterAll(this ITextBuffer buffer, object key) {
+            buffer.Properties.RemoveProperty(key);
         }
     }
 }

@@ -488,6 +488,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// for the given project entry and moniker for the error source.
         /// </summary>
         public void RemoveBufferForErrorSource(AnalysisEntry entry, string moniker, ITextBuffer buffer) {
+            Clear(entry, moniker);
             lock (_errorSources) {
                 var key = new EntryKey(entry, moniker);
                 HashSet<ITextBuffer> buffers;
@@ -502,6 +503,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// the error source.
         /// </summary>
         public void ClearErrorSource(AnalysisEntry entry, string moniker) {
+            Clear(entry, moniker);
             lock (_errorSources) {
                 _errorSources.Remove(new EntryKey(entry, moniker));
             }
