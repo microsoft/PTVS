@@ -1175,80 +1175,6 @@ namespace ReplWindowUITests {
             }
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2760
-        [TestMethod, Priority(1)]
-        [TestCategory("Interactive")]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void SelectAll() {
-            using (var interactive = Prepare()) {
-                // Python interactive window.  Type $help for a list of commands.
-                // >>> def fob():
-                // ...     print('hi')
-                // ...     return 123
-                // ... 
-                // >>> fob()
-                // hi
-                // 123
-                // >>> input()
-                // blah
-                // 'blah'
-                // >>> 
-
-                EnsureInputFunction(interactive);
-                interactive.Type(@"def fob():
-print('hi')
-return 123
-
-fob()
-input()");
-
-                interactive.WaitForText(
-                    ">def fob():",
-                    ".    print('hi')",
-                    ".    return 123",
-                    ".",
-                    ">fob()",
-                    "hi",
-                    "123",
-                    ">input()",
-                    "<"
-                );
-
-                interactive.Type("blah\r");
-                interactive.WaitForTextEnd("<blah", "'blah'", "", ">");
-
-                var text = interactive.Window.TextView.TextBuffer.CurrentSnapshot.GetText();
-                var firstPrimaryPrompt = text.IndexOf(">>>");
-                var hiLiteral = text.IndexOf("'hi'");
-                var firstSecondaryPrompt = text.IndexOf("...");
-                var fobCall = text.IndexOf("fob()\r");
-                var hiOutput = text.IndexOf("hi", fobCall) + 1;
-                var oneTwoThreeOutput = text.IndexOf("123", fobCall) + 1;
-                var blahStdIn = text.IndexOf("blah") + 2;
-                var blahOutput = text.IndexOf("'blah'") + 2;
-
-                var firstSubmission = string.Format("def fob():\r\n{0}    print('hi')\r\n{0}    return 123\r\n{0}\r\n", firstSecondaryPrompt);
-
-                AssertContainingRegion(interactive, firstPrimaryPrompt + 0, firstSubmission);
-                AssertContainingRegion(interactive, firstPrimaryPrompt + 1, firstSubmission);
-                AssertContainingRegion(interactive, firstPrimaryPrompt + 2, firstSubmission);
-                AssertContainingRegion(interactive, firstPrimaryPrompt + 3, firstSubmission);
-                AssertContainingRegion(interactive, firstPrimaryPrompt + 4, firstSubmission);
-                AssertContainingRegion(interactive, hiLiteral, firstSubmission);
-                AssertContainingRegion(interactive, firstSecondaryPrompt + 0, firstSubmission);
-                AssertContainingRegion(interactive, firstSecondaryPrompt + 1, firstSubmission);
-                AssertContainingRegion(interactive, firstSecondaryPrompt + 2, firstSubmission);
-                AssertContainingRegion(interactive, firstSecondaryPrompt + 3, firstSubmission);
-                AssertContainingRegion(interactive, firstSecondaryPrompt + 4, firstSubmission);
-
-                AssertContainingRegion(interactive, fobCall, "fob()\r\n");
-                AssertContainingRegion(interactive, hiOutput, "hi\r\n123\r\n");
-                AssertContainingRegion(interactive, oneTwoThreeOutput, "hi\r\n123\r\n");
-                AssertContainingRegion(interactive, blahStdIn, "blah\r\n");
-                AssertContainingRegion(interactive, blahOutput, "'blah'\r\n");
-            }
-        }
-
         /// <summary>
         /// Tests cut when the secondary prompt is highlighted as part of the
         /// selection
@@ -1598,14 +1524,6 @@ $cls
         #endregion
 
         #region Helper methods
-
-        internal static void AssertContainingRegion(ReplWindowProxy interactive, int position, string expectedText) {
-            SnapshotSpan? span = interactive.GetContainingRegion(
-                new SnapshotPoint(interactive.TextView.TextBuffer.CurrentSnapshot, position)
-            );
-            Assert.IsNotNull(span);
-            Assert.AreEqual(expectedText, span.Value.GetText());
-        }
 
         static void EnsureInputFunction(ReplWindowProxy interactive) {
             var settings = (PythonReplWindowProxySettings)interactive.Settings;
