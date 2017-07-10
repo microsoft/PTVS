@@ -92,7 +92,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">" + code,
                     "Traceback (most recent call last):",
-                    "  File \"<" + ((PythonReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
+                    "  File \"<" + ((ReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
                     "Exception",
                     ">"
                 );
@@ -209,7 +209,7 @@ repl is not None");
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ImportCompletions() {
             using (var interactive = Prepare()) {
-                if (((PythonReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
+                if (((ReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
                     interactive.SubmitCode("import clr");
                     interactive.WaitForText(">import clr", ">");
                 }

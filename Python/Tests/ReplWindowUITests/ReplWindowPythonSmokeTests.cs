@@ -38,7 +38,7 @@ namespace ReplWindowUITests {
             PythonTestData.Deploy();
         }
 
-        internal abstract PythonReplWindowProxySettings Settings {
+        internal abstract ReplWindowProxySettings Settings {
             get;
         }
 
@@ -118,7 +118,7 @@ namespace ReplWindowUITests {
                 interactive.SubmitCode("import sys\nsys.path");
                 interactive.SubmitCode("import os\nos.chdir(r'" + TestData.GetPath("TestData\\ReplCwd") + "')");
 
-                var importErrorFormat = ((PythonReplWindowProxySettings)interactive.Settings).ImportError;
+                var importErrorFormat = ((ReplWindowProxySettings)interactive.Settings).ImportError;
                 interactive.SubmitCode("import module1");
                 interactive.WaitForTextEnd(string.Format(importErrorFormat + "\n>", "module1").Split('\n'));
 

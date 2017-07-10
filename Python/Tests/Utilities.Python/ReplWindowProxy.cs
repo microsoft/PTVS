@@ -33,6 +33,13 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Repl;
+using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Parsing;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
@@ -41,24 +48,7 @@ using Microsoft.VisualStudio.Repl;
 using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
 #endif
 
-namespace TestUtilities.UI {
-    public abstract class ReplWindowProxySettings {
-        protected ReplWindowProxySettings() {
-        }
-
-        public ReplWindowProxySettings Clone() {
-            return (ReplWindowProxySettings)MemberwiseClone();
-        }
-
-        public virtual void AssertValid() { }
-
-        public virtual VisualStudioApp CreateApp() {
-            return new VisualStudioApp();
-        }
-
-        public abstract ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string projectName, string backend);
-    }
-
+namespace TestUtilities.UI.Python {
     internal sealed class ReplWindowProxy : IDisposable {
         private readonly VisualStudioApp _app;
         private readonly ToolWindowPane _toolWindow;
@@ -143,7 +133,7 @@ namespace TestUtilities.UI {
         ) {
             settings.AssertValid();
 
-            var app = settings.CreateApp();
+            var app = new PythonVisualStudioApp();
             ReplWindowProxy result = null;
             try {
                 result = OpenInteractive(app, settings, projectName, useIPython ? IPythonBackend : StandardBackend);
@@ -197,6 +187,48 @@ namespace TestUtilities.UI {
             }
         }
 
+        private static ToolWindowPane ActivateInteractiveWindow(ReplWindowProxySettings settings, VisualStudioApp app, string projectName, string backend) {
+            string description = null;
+            if (settings.Version.IsCPython) {
+                description = string.Format("{0} {1}",
+                    settings.Version.Isx64 ? "Python 64-bit" : "Python 32-bit",
+                    settings.Version.Version.ToVersion()
+                );
+            } else if (settings.Version.IsIronPython) {
+                description = string.Format("{0} {1}",
+                    settings.Version.Isx64 ? "IronPython 64-bit" : "IronPython",
+                    settings.Version.Version.ToVersion()
+                );
+            }
+            Assert.IsNotNull(description, "Unknown interpreter");
+
+            var automation = (IVsPython)app.Dte.GetObject("VsPython");
+            var options = (IPythonOptions)automation;
+            var replOptions = options.Interactive;
+            Assert.IsNotNull(replOptions, "Could not find options for " + description);
+
+            var oldAddNewLineAtEndOfFullyTypedWord = options.Intellisense.AddNewLineAtEndOfFullyTypedWord;
+            app.OnDispose(() => options.Intellisense.AddNewLineAtEndOfFullyTypedWord = oldAddNewLineAtEndOfFullyTypedWord);
+            options.Intellisense.AddNewLineAtEndOfFullyTypedWord = settings.AddNewLineAtEndOfFullyTypedWord;
+
+            var interpreters = app.ComponentModel.GetService<IInterpreterRegistryService>();
+            var replId = PythonReplEvaluatorProvider.GetEvaluatorId(
+                interpreters.FindConfiguration(settings.Version.Id)
+            );
+
+            if (!string.IsNullOrEmpty(projectName)) {
+                var dteProj = app.GetProject(projectName);
+                var proj = (PythonProjectNode)dteProj.GetCommonProject();
+                replId = PythonReplEvaluatorProvider.GetEvaluatorId(proj);
+            }
+
+            return app.ServiceProvider.GetUIThread().Invoke(() => {
+                app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = backend;
+                var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
+                return (ToolWindowPane)provider.OpenOrCreate(replId);
+            });
+        }
+
         public string CurrentPrimaryPrompt {
             get {
 #if DEV14_OR_LATER
@@ -225,7 +257,7 @@ namespace TestUtilities.UI {
             string projectName,
             string backend
         ) {
-            var toolWindow = settings.ActivateInteractiveWindow(app, projectName, backend);
+            var toolWindow = ActivateInteractiveWindow(settings, app, projectName, backend);
 
 #if DEV14_OR_LATER
             var interactive = toolWindow != null ? ((IVsInteractiveWindow)toolWindow).InteractiveWindow : null;
@@ -951,5 +983,4 @@ namespace TestUtilities.UI {
 #endif
         }
     }
-
 }

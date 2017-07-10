@@ -37,7 +37,7 @@ using Keyboard = TestUtilities.UI.Keyboard;
 namespace ReplWindowUITests {
     [TestClass, Ignore]
     public abstract class ReplWindowTests {
-        internal abstract PythonReplWindowProxySettings Settings { get; }
+        internal abstract ReplWindowProxySettings Settings { get; }
 
         static ReplWindowTests() {
             AssertListener.Initialize();
@@ -152,7 +152,7 @@ namespace ReplWindowUITests {
                     sh.WaitForSessionDismissed();
                     interactive.WaitForText(
                         ">" + code,
-                        ">x." + ((PythonReplWindowProxySettings)interactive.Settings).IntFirstMember
+                        ">x." + ((ReplWindowProxySettings)interactive.Settings).IntFirstMember
                     );
                 }
 
@@ -209,7 +209,7 @@ namespace ReplWindowUITests {
                     ">" + code,
                     ">x.car",
                     "Traceback (most recent call last):",
-                    "  File \"<" + ((PythonReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
+                    "  File \"<" + ((ReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
                     "AttributeError: 'int' object has no attribute 'car'", ">"
                 );
             }
@@ -322,7 +322,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">" + code,
                     ">" + code2,
-                    ((PythonReplWindowProxySettings)interactive.Settings).Print42Output,
+                    ((ReplWindowProxySettings)interactive.Settings).Print42Output,
                     ">"
                 );
             }
@@ -812,7 +812,7 @@ namespace ReplWindowUITests {
 
                 interactive.CancelExecution();
 
-                if (((PythonReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
+                if (((ReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
                     interactive.WaitForTextStart(">" + code, "Traceback (most recent call last):");
                 }
                 interactive.WaitForTextEnd("KeyboardInterrupt", ">");
@@ -837,7 +837,7 @@ namespace ReplWindowUITests {
 
                 interactive.CancelExecution();
 
-                if (((PythonReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
+                if (((ReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
                     interactive.WaitForTextStart(">" + code, "Traceback (most recent call last):");
                 }
                 interactive.WaitForTextEnd("KeyboardInterrupt", ">");
@@ -882,7 +882,7 @@ namespace ReplWindowUITests {
 
                 interactive.CancelExecution();
 
-                if (((PythonReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
+                if (((ReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
                     interactive.WaitForTextStart(">" + code, "Traceback (most recent call last):");
                 } else {
                     interactive.WaitForTextStart(">" + code);
@@ -1508,7 +1508,7 @@ $cls
 
                 interactive.CancelExecution();
 
-                if (((PythonReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
+                if (((ReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
                     interactive.WaitForTextStart(">" + code, "Traceback (most recent call last):");
                 } else {
                     interactive.WaitForTextStart(">" + code);
@@ -1526,7 +1526,7 @@ $cls
         #region Helper methods
 
         static void EnsureInputFunction(ReplWindowProxy interactive) {
-            var settings = (PythonReplWindowProxySettings)interactive.Settings;
+            var settings = (ReplWindowProxySettings)interactive.Settings;
             if (settings.RawInput != "input") {
                 interactive.SubmitCode("input = " + settings.RawInput);
                 interactive.ClearScreen();
@@ -1549,9 +1549,9 @@ $cls
 
     [TestClass]
     public class ReplWindowTestsDefaultPrompt : ReplWindowTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python27 ?? PythonPaths.Python27_x64
                 };
             }

@@ -45,7 +45,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">x = 42",
                     ">?x",
-                    ((PythonReplWindowProxySettings)interactive.Settings).IPythonIntDocumentation,
+                    ((ReplWindowProxySettings)interactive.Settings).IPythonIntDocumentation,
                     "",
                     ">"
                 );
@@ -91,7 +91,7 @@ namespace ReplWindowUITests {
                     sh.WaitForSessionDismissed();
                 }
 
-                interactive.WaitForText(">x." + ((PythonReplWindowProxySettings)interactive.Settings).IntFirstMember);
+                interactive.WaitForText(">x." + ((ReplWindowProxySettings)interactive.Settings).IntFirstMember);
 
                 // clear input at repl
                 interactive.ClearInput();
