@@ -133,9 +133,10 @@ namespace Microsoft.CookiecutterTools {
             if (commandGroup == PackageGuids.guidCookiecutterCmdSet && commandsCount == 1) {
                 switch (commands[0].cmdID) {
                     case PackageIds.cmdidAddFromCookiecutter:
-                        var location = _projectSystem.GetSelectedFolderProjectLocation() != null ?
-                            (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED) :
-                            0;
+                        commands[0].cmdf = DTE.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgDesignMode &&
+                                           _projectSystem.GetSelectedFolderProjectLocation() != null
+                            ? (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED)
+                            : (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED);
                         break;
                     default:
                         commands[0].cmdf = 0;
