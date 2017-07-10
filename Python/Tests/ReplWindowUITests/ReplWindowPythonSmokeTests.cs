@@ -66,7 +66,7 @@ namespace ReplWindowUITests {
             using (var app = new PythonVisualStudioApp())
             using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
-                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = PythonReplWindowProxySettings.StandardBackend;
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
                 });
 
                 var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
@@ -83,7 +83,7 @@ namespace ReplWindowUITests {
             using (var app = new PythonVisualStudioApp())
             using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
-                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = PythonReplWindowProxySettings.StandardBackend;
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
                 });
 
                 var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
@@ -100,7 +100,7 @@ namespace ReplWindowUITests {
             using (var app = new PythonVisualStudioApp())
             using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
-                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = PythonReplWindowProxySettings.StandardBackend;
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
                 });
 
                 var project = app.OpenProject(PythonTestData.GetUnicodePathSolution());
@@ -120,10 +120,10 @@ namespace ReplWindowUITests {
 
                 var importErrorFormat = ((PythonReplWindowProxySettings)interactive.Settings).ImportError;
                 interactive.SubmitCode("import module1");
-                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module1").Split('\n').Concat(new[] { ">" }).ToArray());
+                interactive.WaitForTextEnd(string.Format(importErrorFormat + "\n>", "module1").Split('\n'));
 
                 interactive.SubmitCode("import module2");
-                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2").Split('\n').Concat(new[] { ">" }).ToArray());
+                interactive.WaitForTextEnd(string.Format(importErrorFormat + "\n>", "module2").Split('\n'));
 
                 interactive.SubmitCode("os.chdir('A')");
                 interactive.WaitForTextEnd(">os.chdir('A')", ">");
@@ -132,7 +132,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForTextEnd(">import module1", ">");
 
                 interactive.SubmitCode("import module2");
-                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2").Split('\n').Concat(new[] { ">" }).ToArray());
+                interactive.WaitForTextEnd(string.Format(importErrorFormat + "\n>", "module2").Split('\n'));
 
                 interactive.SubmitCode("os.chdir('..\\B')");
                 interactive.WaitForTextEnd(">os.chdir('..\\B')", ">");
@@ -169,14 +169,6 @@ namespace ReplWindowUITests {
 
                 interactive.WaitForTextEnd("DONE", ">");
             }
-        }
-
-        protected static void WaitForMode(EnvDTE.Debugger debugger, EnvDTE.dbgDebugMode mode) {
-            for (int i = 0; i < 30 && debugger.CurrentMode != mode; i++) {
-                Thread.Sleep(1000);
-            }
-
-            Assert.AreEqual(mode, debugger.CurrentMode);
         }
     }
 }

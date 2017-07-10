@@ -49,7 +49,7 @@ namespace TestUtilities.UI.Python {
             return new PythonVisualStudioApp();
         }
 
-        public override ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string projectName, string executionMode) {
+        public override ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string projectName, string backend) {
             string description = null;
             if (Version.IsCPython) {
                 description = string.Format("{0} {1}",
@@ -85,14 +85,11 @@ namespace TestUtilities.UI.Python {
             }
 
             return app.ServiceProvider.GetUIThread().Invoke(() => {
-                app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = executionMode == "IPython" ? IPythonBackend : StandardBackend;
+                app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = backend;
                 var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
                 return (ToolWindowPane)provider.OpenOrCreate(replId);
             });
         }
-
-        public const string StandardBackend = "standard";
-        public const string IPythonBackend = "ptvsd.repl.ipython.IPythonBackend";
 
         public const string IronPython27ExitHelp = @"Help on Quitter in module site object:
 

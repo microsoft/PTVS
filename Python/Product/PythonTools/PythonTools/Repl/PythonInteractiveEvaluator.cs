@@ -153,10 +153,8 @@ namespace Microsoft.PythonTools.Repl {
                 string backendOverride = _serviceProvider.GetPythonToolsService().InteractiveBackendOverride;
                 if (!string.IsNullOrEmpty(backendOverride)) {
                     BackendName = backendOverride;
-                }
-
-                // If BackendName is already set, don't use the value in mode.txt
-                if (string.IsNullOrEmpty(BackendName) && !string.IsNullOrEmpty(scriptsPath)) {
+                } else if (string.IsNullOrEmpty(BackendName) && !string.IsNullOrEmpty(scriptsPath)) {
+                    // If BackendName is already set, don't use the value in mode.txt
                     var modeFile = PathUtils.GetAbsoluteFilePath(scriptsPath, "mode.txt");
                     if (File.Exists(modeFile)) {
                         try {

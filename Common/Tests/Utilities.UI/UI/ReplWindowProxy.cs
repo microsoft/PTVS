@@ -56,7 +56,7 @@ namespace TestUtilities.UI {
             return new VisualStudioApp();
         }
 
-        public abstract ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string projectName, string executionMode);
+        public abstract ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string projectName, string backend);
     }
 
     internal sealed class ReplWindowProxy : IDisposable {
@@ -74,6 +74,9 @@ namespace TestUtilities.UI {
 
         private static ConditionalWeakTable<ToolWindowPane, ReplWindowInfo> _replWindows =
             new ConditionalWeakTable<ToolWindowPane, ReplWindowInfo>();
+
+        public const string StandardBackend = "standard";
+        public const string IPythonBackend = "ptvsd.repl.ipython.IPythonBackend";
 
         internal ReplWindowProxy(VisualStudioApp app, IInteractiveWindow window, ToolWindowPane toolWindow, ReplWindowProxySettings settings) {
             Assert.IsNotNull(app, "app is required");
@@ -143,7 +146,7 @@ namespace TestUtilities.UI {
             var app = settings.CreateApp();
             ReplWindowProxy result = null;
             try {
-                result = OpenInteractive(app, settings, projectName, useIPython ? "IPython" : "Standard");
+                result = OpenInteractive(app, settings, projectName, useIPython ? IPythonBackend : StandardBackend);
                 app = null;
 
                 for (int retries = 10; retries > 0; --retries) {
@@ -194,13 +197,35 @@ namespace TestUtilities.UI {
             }
         }
 
+        public string CurrentPrimaryPrompt {
+            get {
+#if DEV14_OR_LATER
+                dynamic eval = _window.Evaluator;
+                return eval.PrimaryPrompt as string ?? ">>>";
+#else
+                return _window.GetOptionValue(ReplOptions.PrimaryPrompt) as string ?? ">>>";
+#endif
+            }
+        }
+
+        public string CurrentSecondaryPrompt {
+            get {
+#if DEV14_OR_LATER
+                dynamic eval = _window.Evaluator;
+                return eval.SecondaryPrompt as string ?? "...";
+#else
+                return _window.GetOptionValue(ReplOptions.SecondaryPrompt) as string ?? "...";
+#endif
+            }
+        }
+
         private static ReplWindowProxy OpenInteractive(
             VisualStudioApp app,
             ReplWindowProxySettings settings,
             string projectName,
-            string executionMode
+            string backend
         ) {
-            var toolWindow = settings.ActivateInteractiveWindow(app, projectName, executionMode);
+            var toolWindow = settings.ActivateInteractiveWindow(app, projectName, backend);
 
 #if DEV14_OR_LATER
             var interactive = toolWindow != null ? ((IVsInteractiveWindow)toolWindow).InteractiveWindow : null;
@@ -411,17 +436,7 @@ namespace TestUtilities.UI {
                 .Select(l => l.TrimEnd('\r', '\n', ' '))
                 .ToList();
 
-#if DEV14_OR_LATER
-            dynamic eval = _window.Evaluator;
-            var primary = eval.PrimaryPrompt as string ?? ">>>";
-#else
-            var primary = _window.GetOptionValue(ReplOptions.PrimaryPrompt) as string ?? ">>>";
-
-            if (_window.GetOptionValue(ReplOptions.DisplayPromptInMargin) as bool? ?? false) {
-                primary = "";
-            }
-#endif
-
+            var primary = CurrentPrimaryPrompt;
             if (IsIPythonPrompt(primary)) {
                 // IPython prompts include an incrementing index, which we must remove for comparison
                 actual = actual.Select(l => RemoveIndexFromIPythonPrompt(l)).ToList();

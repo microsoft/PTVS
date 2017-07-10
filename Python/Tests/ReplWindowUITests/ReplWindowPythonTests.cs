@@ -265,7 +265,7 @@ repl is not None");
             // where we will re-enable them when they work properly.
             using (var interactive = Prepare()) {
                 int spaces = interactive.TextView.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId);
-                int textWidth = ">>>".Length + 3;
+                int textWidth = interactive.CurrentPrimaryPrompt.Length + 3;
 
                 int totalChars = spaces;
                 while (totalChars < textWidth) {
