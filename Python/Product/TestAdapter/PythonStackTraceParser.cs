@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 
@@ -35,11 +36,18 @@ namespace Microsoft.PythonTools.TestAdapter {
             foreach (Match match in regex.Matches(errorStackTrace)) {
                 int lineno;
                 if (int.TryParse(match.Groups[2].Value, out lineno)) {
-                    yield return new StackFrame(
-                        match.Groups[3].Value,
-                        match.Groups[1].Value,
-                        lineno
-                    );
+                    // In some cases (django), we may get a file name that isn't really a file
+                    // Ex: File "<frozen importlib._bootstrap>", line 978, in _gcd_import
+                    var file = match.Groups[1].Value;
+                    if (File.Exists(file)) {
+                        yield return new StackFrame(
+                            match.Groups[3].Value,
+                            file,
+                            lineno
+                        );
+                    } else {
+                        yield return new StackFrame(match.Groups[3].Value);
+                    }
                 }
             }
         }
