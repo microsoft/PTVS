@@ -171,7 +171,7 @@ namespace ReplWindowUITests {
                 var doc = app.GetDocument(program.Document.FullName);
                 doc.MoveCaret(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, 0));
 
-                var interactive = ReplWindowProxy.Prepare(new ReplWindowPython35Tests().Settings, false);
+                var interactive = ReplWindowProxy.Prepare(new ReplWindowPython35Tests().Settings, useIPython: false);
 
                 interactive.ExecuteText("42").Wait();
                 interactive.ClearScreen();

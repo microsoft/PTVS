@@ -65,8 +65,8 @@ namespace ReplWindowUITests {
                 Keyboard.Type("import ");
 
                 using (var sh = interactive.WaitForSession<ICompletionSession>()) {
-                    var names = sh.Session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
                     Assert.IsNotNull(sh.Session.SelectedCompletionSet, "No selected completion set");
+                    var names = sh.Session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
                     var nameset = new HashSet<string>(names);
 
                     Assert.AreEqual(names.Count, nameset.Count, "Module names were duplicated");
@@ -78,6 +78,7 @@ namespace ReplWindowUITests {
         /// Type "raise Exception()", hit enter, raise Exception() should have
         /// appropriate syntax color highlighting.
         /// </summary>
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2762
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SyntaxHighlightingRaiseException() {
@@ -91,7 +92,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">" + code,
                     "Traceback (most recent call last):",
-                    "  File \"<" + ((PythonReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
+                    "  File \"<" + ((ReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
                     "Exception",
                     ">"
                 );
@@ -208,8 +209,9 @@ repl is not None");
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ImportCompletions() {
             using (var interactive = Prepare()) {
-                if (((PythonReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
+                if (((ReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
                     interactive.SubmitCode("import clr");
+                    interactive.WaitForText(">import clr", ">");
                 }
 
                 Keyboard.Type("import ");
@@ -263,7 +265,7 @@ repl is not None");
             // where we will re-enable them when they work properly.
             using (var interactive = Prepare()) {
                 int spaces = interactive.TextView.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId);
-                int textWidth = interactive.Settings.PrimaryPrompt.Length + 3;
+                int textWidth = interactive.CurrentPrimaryPrompt.Length + 3;
 
                 int totalChars = spaces;
                 while (totalChars < textWidth) {

@@ -204,10 +204,12 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public ReplWindowProxy ExecuteInInteractive(Project project, PythonReplWindowProxySettings settings = null) {
+        public ReplWindowProxy ExecuteInInteractive(Project project, ReplWindowProxySettings settings = null) {
+            // Prepare makes sure that IPython mode is disabled, and that the REPL is reset and cleared
+            var window = ReplWindowProxy.Prepare(settings, project.Name);
             OpenSolutionExplorer().SelectProject(project);
             ExecuteCommand("Python.ExecuteInInteractive");
-            return GetInteractiveWindow(project);
+            return window;
         }
 
         public void SendToInteractive() {
@@ -215,7 +217,7 @@ namespace TestUtilities.UI.Python {
         }
 
 
-        public ReplWindowProxy WaitForInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+        public ReplWindowProxy WaitForInteractiveWindow(string title, ReplWindowProxySettings settings = null) {
             var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
             IVsInteractiveWindow window = null;
             for (int retries = 20; retries > 0 && window == null; --retries) {
@@ -230,14 +232,14 @@ namespace TestUtilities.UI.Python {
                 );
                 return null;
             }
-            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new ReplWindowProxySettings());
         }
 
-        public ReplWindowProxy GetInteractiveWindow(Project project, PythonReplWindowProxySettings settings = null) {
+        public ReplWindowProxy GetInteractiveWindow(Project project, ReplWindowProxySettings settings = null) {
             return GetInteractiveWindow(project.Name + " Interactive", settings);
         }
 
-        public ReplWindowProxy GetInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+        public ReplWindowProxy GetInteractiveWindow(string title, ReplWindowProxySettings settings = null) {
             var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
             var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
             if (window == null) {
@@ -248,7 +250,7 @@ namespace TestUtilities.UI.Python {
                 );
                 return null;
             }
-            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new ReplWindowProxySettings());
         }
 
         internal Document WaitForDocument(string docName) {
