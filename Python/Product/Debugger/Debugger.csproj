@@ -106,8 +106,6 @@
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Debugger\DebugConnection.cs" />
-    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumDebugPorts.cs" />
-    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumListDebug.cs" />
     <Compile Include="Debugger\LegacyDebuggerProtocol.cs" />
     <Compile Include="Debugger\BreakpointHitEventArgs.cs" />
     <Compile Include="Debugger\DebugConnectionListener.cs" />

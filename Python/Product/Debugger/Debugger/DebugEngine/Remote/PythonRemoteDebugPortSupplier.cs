@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int EnumPorts(out IEnumDebugPorts2 ppEnum) {
-            ppEnum = new PythonRemoteEnumDebugPorts(_ports);
+            ppEnum = new AD7DebugPortsEnum(_ports.ToArray());
             return VSConstants.S_OK;
         }
 
