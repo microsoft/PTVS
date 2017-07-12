@@ -201,7 +201,7 @@ def main():
 
     if opts.secret and opts.port:
         from ptvsd.debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
-        from ptvsd.attach_server import DEFAULT_PORT, enable_attach, wait_for_attach
+        from ptvsd import DEFAULT_PORT, enable_attach, wait_for_attach
 
         DONT_DEBUG.append(os.path.normcase(__file__))
         DEBUG_ENTRYPOINTS.add(get_code(main))
