@@ -2329,7 +2329,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             var analysis = GetApplicableExpression(entry, span.Start);
             if (analysis == null) {
-                return null;
+                return Task.FromResult<string>(null);
             }
 
             var location = analysis.Location;
