@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
@@ -873,7 +874,13 @@ namespace Microsoft.PythonTools.Language {
                             break;
                         case CommonConstants.StartDebuggingCmdId:
                         case CommonConstants.StartWithoutDebuggingCmdId:
-                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            // Don't enable the command when the file is null or doesn't exist,
+                            // which can happen in the diff window.
+                            if (File.Exists(_textView.GetFilePath())) {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            } else {
+                                prgCmds[i].cmdf = CommandDisabledAndHidden;
+                            }
                             return VSConstants.S_OK;
                         default:
                             lock (PythonToolsPackage.CommandsLock) {
