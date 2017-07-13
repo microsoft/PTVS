@@ -745,6 +745,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
             var sigs = _provider.PythonService.GetSignatures(_textView, targetPt.Value.Snapshot, span);
+            if (sigs == null) {
+                return;
+            }
 
             bool retrigger = false;
             if (sigs.Signatures.Count == sigHelpSession.Signatures.Count) {
