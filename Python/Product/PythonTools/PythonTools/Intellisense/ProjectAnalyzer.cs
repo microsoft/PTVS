@@ -1890,7 +1890,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     column = column,
                     lineCount = lineCount
                 }
-            ).ConfigureAwait(false)).names ?? Array.Empty<string>();
+            ).ConfigureAwait(false))?.names ?? Array.Empty<string>();
         }
 
         internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
