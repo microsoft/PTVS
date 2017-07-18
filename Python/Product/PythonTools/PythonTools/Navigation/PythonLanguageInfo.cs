@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Navigation {
             AnalysisEntry entry;
             if (entryService != null && entryService.TryGetAnalysisEntry(buffer, out entry)) {
                 var names = entry.Analyzer.WaitForRequest(entry.Analyzer.GetProximityExpressionsAsync(entry, buffer, iLine, iCol, cLines), "PythonLanguageInfo.GetProximityExpressions");
-                ppEnum = new EnumBSTR(names);
+                ppEnum = new EnumBSTR(names ?? Enumerable.Empty<string>());
             } else {
                 ppEnum = new EnumBSTR(Enumerable.Empty<string>());
             }
