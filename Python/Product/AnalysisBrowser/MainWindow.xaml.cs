@@ -46,6 +46,8 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             new Version(3, 2),
             new Version(3, 3),
             new Version(3, 4),
+            new Version(3, 5),
+            new Version(3, 6),
         };
 
         public MainWindow() {
