@@ -1817,7 +1817,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 if (info.Task == null) {
                     info.Value = value;
-                    info.Task = new TaskCompletionSource<U>();
+                    info.Task = new TaskCompletionSource<U>(TaskCreationOptions.RunContinuationsAsynchronously);
                 }
                 if (_activeRequests.TryAdd(key, info)) {
                     // We are now the active task, so perform the request
