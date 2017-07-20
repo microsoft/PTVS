@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Execution;
@@ -379,7 +380,11 @@ namespace Microsoft.PythonTools.Project {
                         // If it's not a valid path, then it's not a navigable error item.
                         return;
                     }
-                    PythonToolsPackage.NavigateTo(_serviceProvider, document, Guid.Empty, task.Line, task.Column < 0 ? 0 : task.Column);
+                    try {
+                        PythonToolsPackage.NavigateTo(_serviceProvider, document, Guid.Empty, task.Line, task.Column < 0 ? 0 : task.Column);
+                    } catch (FileNotFoundException ex) {
+                        MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
         }
