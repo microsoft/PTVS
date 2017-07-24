@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor.Core;
@@ -155,9 +156,20 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            var eval = string.IsNullOrEmpty(id) ?
-                null :
-                _providers.Select(p => p.GetEvaluator(id)).FirstOrDefault(e => e != null);
+            IInteractiveEvaluator eval = null;
+            try {
+                eval = string.IsNullOrEmpty(id) ?
+                    null :
+                    _providers.Select(p => p.GetEvaluator(id)).FirstOrDefault(e => e != null);
+            } catch (NoInterpretersException ex) {
+                _window.WriteErrorLine(ex.Message);
+            } catch (MissingInterpreterException ex) {
+                _window.WriteErrorLine(ex.Message);
+            } catch (DirectoryNotFoundException ex) {
+                _window.WriteErrorLine(ex.Message);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                _window.WriteErrorLine(ex.ToUnhandledExceptionMessage(GetType()));
+            }
 
             var oldEval = _evaluator;
             _evaluator = null;
