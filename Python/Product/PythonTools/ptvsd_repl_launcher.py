@@ -34,7 +34,7 @@ except:
     traceback.print_exc()
     print('''
 Internal error detected. Please copy the above traceback and report at
-http://go.microsoft.com/fwlink/?LinkId=293415
+https://go.microsoft.com/fwlink/?LinkId=293415
 
 Press Enter to close. . .''')
     try:

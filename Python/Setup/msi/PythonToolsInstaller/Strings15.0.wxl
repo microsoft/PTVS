@@ -13,7 +13,7 @@
   <String Id="WDInstallPathButNoExe">Your version of !(loc.WDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
   <String Id="VWDInstallPathButNoExe">Your version of !(loc.VWDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
   <String Id="VSPrerelease">A version of !(loc.VSProductName) was detected that is not supported by !(loc.ProductName).  Please install the latest update from http://www.visualstudio.com.</String>
-  <String Id="NetFx45NotInstalled">The Microsoft .NET Framework 4.5 is required. Please install it from http://go.microsoft.com/fwlink/?LinkId=398711</String>
+  <String Id="NetFx45NotInstalled">The Microsoft .NET Framework 4.5 is required. Please install it from https://go.microsoft.com/fwlink/?LinkId=398711</String>
   <String Id="DevEnvSetup">Registering extension in !(loc.VSProductName)...</String>
   <String Id="DevEnvSetup_Rollback">Removing extension from !(loc.VSProductName)...</String>
   <String Id="WDExpresSetup">Registering extension in !(loc.WDProductName)...</String>
