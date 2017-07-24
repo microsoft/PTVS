@@ -383,7 +383,11 @@ namespace Microsoft.PythonTools.Project {
                     try {
                         PythonToolsPackage.NavigateTo(_serviceProvider, document, Guid.Empty, task.Line, task.Column < 0 ? 0 : task.Column);
                     } catch (FileNotFoundException ex) {
+                        // Happens when file was deleted from the project.
                         MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                    } catch (ArgumentException) {
+                        // Happens when file was deleted from disk but not from project.
+                        // A descriptive message was already shown to the user, so don't show another.
                     }
                 }
             }
