@@ -45,7 +45,8 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">x = 42",
                     ">?x",
-                    ((PythonReplWindowProxySettings)interactive.Settings).IPythonIntDocumentation,
+                    ((ReplWindowProxySettings)interactive.Settings).IPythonIntDocumentation,
+                    "",
                     ">"
                 );
             }
@@ -90,7 +91,7 @@ namespace ReplWindowUITests {
                     sh.WaitForSessionDismissed();
                 }
 
-                interactive.WaitForText(">x." + ((PythonReplWindowProxySettings)interactive.Settings).IntFirstMember);
+                interactive.WaitForText(">x." + ((ReplWindowProxySettings)interactive.Settings).IntFirstMember);
 
                 // clear input at repl
                 interactive.ClearInput();
@@ -113,7 +114,15 @@ namespace ReplWindowUITests {
                 Keyboard.Type("f(");
 
                 using (var sh = interactive.WaitForSession<ISignatureHelpSession>()) {
-                    Assert.AreEqual("<no docstring>", sh.Session.SelectedSignature.Documentation);
+                    var parts = new string[] {
+                        "Signature: f()",
+                        "Source:    def f(): pass",
+                        "File:      ",
+                        "Type:      function",
+                    };
+                    foreach (var expected in parts) {
+                        Assert.IsTrue(sh.Session.SelectedSignature.Documentation.Contains(expected));
+                    }
                 }
             }
         }
@@ -125,12 +134,7 @@ namespace ReplWindowUITests {
                 interactive.SubmitCode(@"from pylab import *
 x = linspace(0, 4*pi)
 plot(x, x)");
-                interactive.WaitForTextStart(
-                    ">from pylab import *",
-                    ">x = linspace(0, 4*pi)",
-                    ">plot(x, x)",
-                    "Out["
-                );
+                interactive.WaitForAnyLineContainsText("matplotlib.lines.Line2D");
 
                 Thread.Sleep(2000);
 
@@ -147,7 +151,7 @@ plot(x, x)");
                 var project = interactive.App.OpenProject(@"TestData\InteractiveFile.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd("Program.pyabcdef", ">");
+                interactive.WaitForAnyLineContainsText("Program.pyabcdef");
             }
         }
 
@@ -159,7 +163,7 @@ plot(x, x)");
                 var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd("Program.py']", ">");
+                interactive.WaitForAnyLineContainsText("Program.py']");
             }
         }
 
@@ -171,7 +175,7 @@ plot(x, x)");
                 var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ">");
+                interactive.WaitForAnyLineContainsText(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']");
             }
         }
     }

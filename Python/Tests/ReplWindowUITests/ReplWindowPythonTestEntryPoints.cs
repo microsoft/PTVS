@@ -24,9 +24,9 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython25Tests : ReplWindowPythonSmokeTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python25,
                     IntFirstMember = "__abs__",
                 };
@@ -36,9 +36,9 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython26Tests : ReplWindowPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python26,
                     IntFirstMember = "conjugate",
                 };
@@ -48,9 +48,9 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython27Tests : ReplWindowPythonIPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python27,
                 };
             }
@@ -59,12 +59,12 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowIronPython27Tests : ReplWindowPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.IronPython27,
                     SourceFileName = "string",
-                    ExitHelp = PythonReplWindowProxySettings.IronPython27ExitHelp
+                    ExitHelp = ReplWindowProxySettings.IronPython27ExitHelp
                 };
             }
         }
@@ -72,13 +72,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython30Tests : ReplWindowPythonSmokeTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python30,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -86,13 +86,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython31Tests : ReplWindowPythonSmokeTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python31,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -100,13 +100,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython32Tests : ReplWindowPythonSmokeTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python32,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -114,13 +114,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython33Tests : ReplWindowPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python33,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -129,13 +129,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython34Tests : ReplWindowPythonIPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python34,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python34ExitHelp,
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python34ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -144,13 +144,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython35Tests : ReplWindowPythonIPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python35,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python35ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -158,15 +158,15 @@ namespace ReplWindowUITests {
     }
 
     [TestClass]
-    public class ReplWindowPython36Tests : ReplWindowPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+    public class ReplWindowPython36Tests : ReplWindowPythonIPythonTests {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
-                    Version = PythonPaths.Python36,
+                return new ReplWindowProxySettings {
+                    Version = PythonPaths.Anaconda36 ?? PythonPaths.Python36,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
-                    ImportError = "ImportError: No module named '{0}'"
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python35ExitHelp,
+                    ImportError = "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nModuleNotFoundError: No module named '{0}'"
                 };
             }
         }
@@ -178,9 +178,9 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython27x64Tests : ReplWindowPythonIPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python27_x64,
                 };
             }
@@ -189,12 +189,12 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowIronPython27x64Tests : ReplWindowPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.IronPython27_x64,
                     SourceFileName = "string",
-                    ExitHelp = PythonReplWindowProxySettings.IronPython27ExitHelp
+                    ExitHelp = ReplWindowProxySettings.IronPython27ExitHelp
                 };
             }
         }
@@ -202,13 +202,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython31x64Tests : ReplWindowPythonSmokeTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python31_x64,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -216,13 +216,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython32x64Tests : ReplWindowPythonSmokeTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python32_x64,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
                 };
             }
         }
@@ -230,13 +230,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython33x64Tests : ReplWindowPythonSmokeTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python33_x64,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python3ExitHelp,
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -245,13 +245,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython34x64Tests : ReplWindowPythonIPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python34_x64,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python34ExitHelp,
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python34ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -260,13 +260,13 @@ namespace ReplWindowUITests {
 
     [TestClass]
     public class ReplWindowPython35x64Tests : ReplWindowPythonIPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
+                return new ReplWindowProxySettings {
                     Version = PythonPaths.Python35_x64,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python35ExitHelp,
                     ImportError = "ImportError: No module named '{0}'"
                 };
             }
@@ -274,15 +274,15 @@ namespace ReplWindowUITests {
     }
 
     [TestClass]
-    public class ReplWindowPython36x64Tests : ReplWindowPythonTests {
-        internal override PythonReplWindowProxySettings Settings {
+    public class ReplWindowPython36x64Tests : ReplWindowPythonIPythonTests {
+        internal override ReplWindowProxySettings Settings {
             get {
-                return new PythonReplWindowProxySettings {
-                    Version = PythonPaths.Python36_x64,
+                return new ReplWindowProxySettings {
+                    Version = PythonPaths.Anaconda36_x64 ?? PythonPaths.Python36_x64,
                     RawInput = "input",
-                    IPythonIntDocumentation = PythonReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = PythonReplWindowProxySettings.Python35ExitHelp,
-                    ImportError = "ImportError: No module named '{0}'"
+                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+                    ExitHelp = ReplWindowProxySettings.Python35ExitHelp,
+                    ImportError = "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nModuleNotFoundError: No module named '{0}'"
                 };
             }
         }

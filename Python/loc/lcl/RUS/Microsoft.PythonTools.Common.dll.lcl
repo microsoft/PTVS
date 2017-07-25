@@ -4353,10 +4353,13 @@
       </Item>
       <Item ItemId=";ReplScriptPathIPythonModeTxtContents" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
+          <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   ptvsd.repl.ipython.IPythonBackend]D;]A;#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;ptvsd.repl.ipython.IPythonBackend]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[#]D;]A;# В этом файле указывается внутренняя часть REPL, являющаяся вызываемым объектом, который]D;]A;# может импортироваться интерпретатором.]D;]A;#]D;]A;# Сейчас поддерживаются следующие параметры:]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend.]]></Val>
+            <Val><![CDATA[#]D;]A;# В этом файле указывается внутренняя часть REPL, являющаяся вызываемым объектом, который]D;]A;# может импортироваться интерпретатором.]D;]A;#]D;]A;# Сейчас поддерживаются следующие параметры:]D;]A;#   standard]D;]A;#   ptvsd.repl.ipython.IPythonBackend]D;]A;#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;ptvsd.repl.ipython.IPythonBackend]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5281,7 +5284,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17179.1]]></Val>
+        <Val><![CDATA[3.0.17201.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5317,7 +5320,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17179.1]]></Val>
+        <Val><![CDATA[3.0.17201.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

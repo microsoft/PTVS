@@ -14,20 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
-
 namespace TestUtilities.UI.Python {
-    public sealed class PythonReplWindowProxySettings : ReplWindowProxySettings {
-        public PythonReplWindowProxySettings() {
+    public sealed class ReplWindowProxySettings {
+        public ReplWindowProxySettings() {
             SourceFileName = "stdin";
             IntFirstMember = "bit_length";
             RawInput = "raw_input";
@@ -37,51 +26,12 @@ namespace TestUtilities.UI.Python {
             ImportError = "ImportError: No module named {0}";
         }
 
-        public new PythonReplWindowProxySettings Clone() {
-            return (PythonReplWindowProxySettings)MemberwiseClone();
+        public ReplWindowProxySettings Clone() {
+            return (ReplWindowProxySettings)MemberwiseClone();
         }
 
-        public override void AssertValid() {
+        public void AssertValid() {
             Version.AssertInstalled();
-        }
-
-        public override VisualStudioApp CreateApp() {
-            return new PythonVisualStudioApp();
-        }
-
-        public override ToolWindowPane ActivateInteractiveWindow(VisualStudioApp app, string executionMode) {
-            string description = null;
-            if (Version.IsCPython) {
-                description = string.Format("{0} {1}",
-                    Version.Isx64 ? "Python 64-bit" : "Python 32-bit",
-                    Version.Version.ToVersion()
-                );
-            } else if (Version.IsIronPython) {
-                description = string.Format("{0} {1}",
-                    Version.Isx64 ? "IronPython 64-bit" : "IronPython",
-                    Version.Version.ToVersion()
-                );
-            }
-            Assert.IsNotNull(description, "Unknown interpreter");
-
-            var automation = (IVsPython)app.Dte.GetObject("VsPython");
-            var options = (IPythonOptions)automation;
-            var replOptions = options.Interactive;
-            Assert.IsNotNull(replOptions, "Could not find options for " + description);
-
-            var oldAddNewLineAtEndOfFullyTypedWord = options.Intellisense.AddNewLineAtEndOfFullyTypedWord;
-            app.OnDispose(() => options.Intellisense.AddNewLineAtEndOfFullyTypedWord = oldAddNewLineAtEndOfFullyTypedWord);
-            options.Intellisense.AddNewLineAtEndOfFullyTypedWord = AddNewLineAtEndOfFullyTypedWord;
-
-            var interpreters = app.ComponentModel.GetService<IInterpreterRegistryService>();
-            var replId = PythonReplEvaluatorProvider.GetEvaluatorId(
-                interpreters.FindConfiguration(Version.Id)
-            );
-
-            return app.ServiceProvider.GetUIThread().Invoke(() => {
-                var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
-                return (ToolWindowPane)provider.OpenOrCreate(replId);
-            });
         }
 
         public const string IronPython27ExitHelp = @"Help on Quitter in module site object:

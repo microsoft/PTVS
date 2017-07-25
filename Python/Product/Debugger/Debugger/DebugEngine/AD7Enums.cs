@@ -150,4 +150,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
     }
 
+    class AD7DebugPortsEnum : AD7Enum<IDebugPort2, IEnumDebugPorts2>, IEnumDebugPorts2 {
+        public AD7DebugPortsEnum(IDebugPort2[] ports)
+            : base(ports) {
+
+        }
+
+        public int Next(uint celt, IDebugPort2[] rgelt, ref uint celtFetched) {
+            return Next(celt, rgelt, out celtFetched);
+        }
+    }
 }

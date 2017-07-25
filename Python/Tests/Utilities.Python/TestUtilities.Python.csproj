@@ -87,21 +87,13 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$(BuildRoot)Common\Tests\Utilities\Mocks\MockReplWindow.cs">
-      <Link>MockReplWindow.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Tests\Utilities.UI\UI\InteractiveWindow.cs">
-      <Link>InteractiveWindow.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Tests\Utilities.UI\UI\ReplWindowProxy.cs">
-      <Link>ReplWindowProxy.cs</Link>
-    </Compile>
     <Compile Include="ComparePerfReports.cs" />
     <Compile Include="DefaultInterpreterSetter.cs" />
     <Compile Include="Django\NewAppDialog.cs" />
     <Compile Include="MockInteractiveWindowCommandsFactory.cs" />
     <Compile Include="MockPackageManager.cs" />
     <Compile Include="MockPythonToolsOptionsService.cs" />
+    <Compile Include="MockReplWindow.cs" />
     <Compile Include="MockUIThread.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />
     <Compile Include="FormattingOptionsTreeView.cs" />
@@ -111,10 +103,11 @@
     <Compile Include="PythonPerfTarget.cs" />
     <Compile Include="PythonPerfToolBar.cs" />
     <Compile Include="PythonProjectTest.cs" />
-    <Compile Include="PythonReplWindowProxySettings.cs" />
     <Compile Include="PythonToolsTestUtilities.cs" />
     <Compile Include="EditorWindowExtensions.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />
+    <Compile Include="ReplWindowProxy.cs" />
+    <Compile Include="ReplWindowProxySettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">

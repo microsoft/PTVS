@@ -494,7 +494,7 @@
         <Str Cat="Text">
           <Val><![CDATA[# Not wrapped:]D;]A;# There should be one-- and preferably only one --obvious way to do it.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[# 未換行:]D;]A;# 應該只有一個-- 也最好只有一個 --明確的處理方式。]]></Val>
+            <Val><![CDATA[# 未換行:]D;]A;# 應只有一個-- 也最好只有一個 --明確的處理方式。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

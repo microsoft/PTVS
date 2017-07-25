@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger {
             } else if (dialog.SelectedButton == downloadSymbols) {
                 PythonToolsPackage.OpenWebBrowser(
                     _serviceProvider,
-                    string.Format("http://go.microsoft.com/fwlink/?LinkId=308954&clcid=0x{0:X}", CultureInfo.CurrentCulture.LCID)
+                    string.Format("https://go.microsoft.com/fwlink/?LinkId=308954&clcid=0x{0:X}", CultureInfo.CurrentCulture.LCID)
                 );
             }
         }

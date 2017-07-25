@@ -29,7 +29,7 @@ namespace TestUtilities {
     public class PythonPaths {
         private static readonly List<PythonInterpreterInformation> _foundInRegistry = PythonRegistrySearch
             .PerformDefaultSearch()
-            .Where(pii => pii.Configuration.Id.Contains("PythonCore|"))
+            .Where(pii => pii.Configuration.Id.Contains("PythonCore|") || pii.Configuration.Id.Contains("ContinuumAnalytics|"))
             .ToList();
 
         public static readonly PythonVersion Python25 = GetCPythonVersion(PythonLanguageVersion.V25, InterpreterArchitecture.x86);
@@ -53,6 +53,8 @@ namespace TestUtilities {
         public static readonly PythonVersion Python34_x64 = GetCPythonVersion(PythonLanguageVersion.V34, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Anaconda36_x64 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
 
         public static readonly PythonVersion Jython27 = GetJythonVersion(PythonLanguageVersion.V27);
@@ -99,6 +101,19 @@ namespace TestUtilities {
             if (File.Exists(ver.InterpreterPath)) {
                 return ver;
             }
+            return null;
+        }
+
+        private static PythonVersion GetAnacondaVersion(PythonLanguageVersion version, InterpreterArchitecture arch) {
+            var res = _foundInRegistry.FirstOrDefault(ii =>
+                ii.Configuration.Id.StartsWith("Global|ContinuumAnalytics|") &&
+                ii.Configuration.Architecture == arch &&
+                ii.Configuration.Version == version.ToVersion()
+            );
+            if (res != null) {
+                return new PythonVersion(res.Configuration, cPython: true);
+            }
+
             return null;
         }
 

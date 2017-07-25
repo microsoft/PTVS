@@ -40,8 +40,8 @@ namespace Microsoft.PythonTools.Options {
         private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
         private const string ClearGlobalPythonPathSetting = "ClearGlobalPythonPath";
 
-        private const string DefaultSurveyNewsFeedUrl = "http://go.microsoft.com/fwlink/?LinkId=303967";
-        private const string DefaultSurveyNewsIndexUrl = "http://go.microsoft.com/fwlink/?LinkId=309158";
+        private const string DefaultSurveyNewsFeedUrl = "https://go.microsoft.com/fwlink/?LinkId=303967";
+        private const string DefaultSurveyNewsIndexUrl = "https://go.microsoft.com/fwlink/?LinkId=309158";
 
         internal GeneralOptions(PythonToolsService service) {
             _pyService = service;

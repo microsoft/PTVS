@@ -30,8 +30,9 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using TestUtilities.Mocks;
 
-namespace TestUtilities.Mocks {
+namespace TestUtilities.Python {
 #if !NTVS_FEATURE_INTERACTIVEWINDOW && DEV14_OR_LATER
     using IReplEvaluator = IInteractiveEvaluator;
     using IReplWindow = IInteractiveWindow;
