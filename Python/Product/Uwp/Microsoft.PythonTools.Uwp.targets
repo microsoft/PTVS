@@ -7,7 +7,7 @@
   </PropertyGroup>
   
   <Target Name="PtvsUwpImportCheck">
-    <Error Text="Could not find CPython UWP SDK.  Please download from http://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409 and reload the project after install." Condition="!Exists($(CPythonTargetsFile))" />
+    <Error Text="Could not find CPython UWP SDK.  Please download from https://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409 and reload the project after install." Condition="!Exists($(CPythonTargetsFile))" />
   </Target>
 
   <Target Name="CoreCompile" />

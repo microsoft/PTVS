@@ -341,7 +341,7 @@ namespace Microsoft.PythonTools {
 
         public static string InterpreterHelpUrl {
             get {
-                return string.Format("http://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
+                return string.Format("https://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
                     CultureInfo.CurrentCulture.LCID);
             }
         }

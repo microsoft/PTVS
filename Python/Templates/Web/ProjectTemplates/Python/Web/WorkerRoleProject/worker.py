@@ -5,7 +5,7 @@ from time import sleep
 # The azure library provides access to services made available by the
 # Microsoft Azure platform, such as storage and messaging. 
 #
-# See http://go.microsoft.com/fwlink/?linkid=254360 for documentation and
+# See https://go.microsoft.com/fwlink/?linkid=254360 for documentation and
 # example code.
 #
 from azure.servicebus import ServiceBusService
@@ -15,7 +15,7 @@ from azure.storage import CloudStorageAccount
 # The CloudStorageAccount provides factory methods for the queue, table, and
 # blob services.
 #
-# See http://go.microsoft.com/fwlink/?linkid=246933 for Storage documentation.
+# See https://go.microsoft.com/fwlink/?linkid=246933 for Storage documentation.
 #
 STORAGE_ACCOUNT_NAME = '__paste_your_storage_account_name_here__'
 STORAGE_ACCOUNT_KEY = '__paste_your_storage_key_here__'
@@ -35,7 +35,7 @@ queue_service = storage_account.create_queue_service()
 # components of your applications and enables them to exchange messages in a
 # loosely coupled way for improved scale and resiliency.
 #
-# See http://go.microsoft.com/fwlink/?linkid=246934 for Service Bus documentation.
+# See https://go.microsoft.com/fwlink/?linkid=246934 for Service Bus documentation.
 #
 SERVICE_BUS_NAMESPACE = '__paste_your_service_bus_namespace_here__'
 SERVICE_BUS_KEY = '__paste_your_service_bus_key_here__'

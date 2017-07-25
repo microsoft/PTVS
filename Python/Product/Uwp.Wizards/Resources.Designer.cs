@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Uwp.Wizards {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find CPython UWP SDK.  Please download from &lt;http://go.microsoft.com/fwlink/?LinkID=613495&gt; and restart Visual Studio..
+        ///   Looks up a localized string similar to Could not find CPython UWP SDK.  Please download from &lt;https://go.microsoft.com/fwlink/?LinkID=613495&gt; and restart Visual Studio..
         /// </summary>
         internal static string PythonUwpSdkNotFound {
             get {
