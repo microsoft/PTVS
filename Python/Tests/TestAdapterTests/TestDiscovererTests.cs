@@ -95,7 +95,7 @@ namespace TestAdapterTests {
 
         private static IEnumerable<TestCaseInfo> GetTestCasesFromAst(string code, PythonAnalyzer analyzer) {
             var codeStream = new MemoryStream(Encoding.UTF8.GetBytes(code));
-            var m = AstPythonModule.FromStream(analyzer.Interpreter, codeStream, "<string>", analyzer.LanguageVersion);
+            var m = AstPythonModule.FromStream(analyzer.Interpreter, codeStream, "<string>", analyzer.LanguageVersion, "__main__");
             return TestAnalyzer.GetTestCasesFromAst(m, null);
         }
 
