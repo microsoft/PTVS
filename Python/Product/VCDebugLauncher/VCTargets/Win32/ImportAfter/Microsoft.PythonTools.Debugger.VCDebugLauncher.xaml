@@ -1,16 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- 
-    *** ATTENTION CODE AUTHOR **
-    If your debugger is wrapping another debugger to modify its behavior, you should probably start with the content
-    of the wrapped debugger's XAML file, using the same property names, so that the wrapped debugger can recognize
-    the properties the user sets in their project.
-    But if you're writing your own debugger and thus this file, you SHOULD change all the property names to be unique
-    to your debugger.  For example, change the LocalDebugger- prefix with VendorNameDebugger- or something like that.
-    
-    The value of the Name attribute in <Rule Name="VendorNameCoolDebugger"> must be equal to the debugger name given 
-    in the [DebuggerScope("VendorNameCoolDebugger")] attribute found in the VendorNameCoolDebugger.cs source file
-    so that the Visual C++ project system can match up the debugger property page with the debugger launcher.
--->
 <Rule Name="PythonDebugLaunchProvider"
       DisplayName="Python/Native Debugging"
       PageTemplate="debugger"
@@ -23,11 +11,6 @@
                   Description="The debug command to execute."
                   F1Keyword="VC.Project.IVCLocalDebugPageObject.Command">
     <StringProperty.ValueEditors>
-      <ValueEditor EditorType="DefaultFindFullPathPropertyEditor" DisplayName="&lt;py.exe&gt;">
-        <ValueEditor.Metadata>
-          <NameValuePair Name="Exename" Value="py.exe" />
-        </ValueEditor.Metadata>
-      </ValueEditor>
       <ValueEditor EditorType="DefaultStringPropertyEditor" DisplayName="&lt;Edit...&gt;"/>
       <ValueEditor EditorType="DefaultFilePropertyEditor" DisplayName="&lt;Browse...&gt;"/>
     </StringProperty.ValueEditors>
@@ -42,4 +25,11 @@
                 Description="The application's working directory. By default, the directory containing the project file."
                 Subtype="folder"
                 F1Keyword="VC.Project.IVCLocalDebugPageObject.WorkingDirectory"/>
+  <StringListProperty Name="LocalDebuggerEnvironment" DisplayName="Environment"
+                      Description="Specifies the environment for the debugee, or variables to merge with existing environment."
+                      Separator="&#xA;"
+                      F1Keyword="VC.Project.IVCLocalDebugPageObject.Environment"/>
+  <BoolProperty Name="LocalDebuggerMergeEnvironment" DisplayName="Merge Environment"
+                Description="Merge specified environment variables with existing environment."
+                F1Keyword="VC.Project.IVCLocalDebugPageObject.EnvironmentMerge"/>
 </Rule>
