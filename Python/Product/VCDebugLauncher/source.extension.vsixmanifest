@@ -22,6 +22,5 @@
     <Prerequisites>
         <Prerequisite Id="Microsoft.Component.PythonTools" Version="[15.0,16.0)" DisplayName="Python development workload" />
         <Prerequisite Id="Microsoft.VisualStudio.Component.VC.CoreIde" Version="[15.0,16.0)" DisplayName="Visual Studio C++ core features" />
-        <!-- TODO: Require VCTools -->
     </Prerequisites>
 </PackageManifest>
