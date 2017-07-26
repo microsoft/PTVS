@@ -22,7 +22,7 @@ import sys
 from optparse import OptionParser
 from ptvsd.util import exec_file
 from ptvsd.debugger import DONT_DEBUG
-from ptvsd.attach_server import DEFAULT_PORT, enable_attach, wait_for_attach
+from ptvsd import DEFAULT_PORT, enable_attach, wait_for_attach
 
 parser = OptionParser(prog = 'ptvsd', usage = 'Usage: %prog [<option>]... <file> [- <args>]', version = '%prog ' + __version__)
 parser.add_option('-s', '--secret', metavar = '<secret>', help = 'restrict server to only allow clients that specify <secret> when connecting')
