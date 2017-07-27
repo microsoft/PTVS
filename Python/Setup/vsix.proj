@@ -9,7 +9,7 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ProjectFile Include="..\Product\VCDebugLauncher\VCDebugLauncher.csproj" Condition="'$(VCDebugLauncher)' == 'True'">
+    <ProjectFile Include="..\Product\VCDebugLauncher\VCDebugLauncher.csproj" Condition="'$(IncludeVCDebugLauncher)' == 'True'">
       <OutputName>Microsoft.PythonTools.VCDebugLauncher.vsix</OutputName>
     </ProjectFile>
     <ProjectFile Include="..\Product\Wsl\Wsl.csproj" Condition="'$(IncludeWsl)' == 'True'">
