@@ -44,14 +44,19 @@ try {
             .\nuget.exe sources remove -Name PreBuildSource
         }
     }
-    
+
     $versions = @{}
     ([xml](gc "$vstarget\packages.config")).packages.package | %{ $versions[$_.id] = $_.version }
-    
+
     $need_symlink | ?{ $versions[$_] } | %{
         $existing = gi "$outdir\$_" -EA 0
         if ($existing) {
-            $existing.Delete()
+            if ($existing.LinkType) {
+                $existing.Delete()
+            } else {
+                Write-Host "Deleting directory $existing to create a symlink"
+                del -Recurse -Force $existing
+            }
         }
         Write-Host "Creating symlink for $_.$($versions[$_])"
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
