@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -133,19 +134,55 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-
-
         void AddBuiltInSpecializations() {
-            SpecializeFunction(_builtinName, "range", RangeConstructor);
-            SpecializeFunction(_builtinName, "min", ReturnUnionOfInputs);
-            SpecializeFunction(_builtinName, "max", ReturnUnionOfInputs);
+            SpecializeFunction(_builtinName, "abs", Identity);
+            SpecializeFunction(_builtinName, "all", ReturnsBool);
+            SpecializeFunction(_builtinName, "any", ReturnsBool);
+            SpecializeFunction(_builtinName, "ascii", ReturnsString);
+            SpecializeFunction(_builtinName, "bin", ReturnsString);
+            SpecializeFunction(_builtinName, "callable", ReturnsBool);
+            SpecializeFunction(_builtinName, "chr", ReturnsString);
+            if (LanguageVersion.Is2x()) {
+                SpecializeFunction(_builtinName, "cmp", ReturnsInt);
+            }
+            //SpecializeFunction(_builtinName, "compile", null);
+            SpecializeFunction(_builtinName, "dir", ReturnsListOfString);
+            //SpecializeFunction(_builtinName, "divmod", null);
+            SpecializeFunction(_builtinName, "eval", ReturnsObject);
+            //SpecializeFunction(_builtinName, "exec", null);
+            SpecializeFunction(_builtinName, "format", ReturnsString);
             SpecializeFunction(_builtinName, "getattr", SpecialGetAttr);
-            SpecializeFunction(_builtinName, "setattr", SpecialSetAttr);
-            SpecializeFunction(_builtinName, "next", SpecialNext);
+            SpecializeFunction(_builtinName, "globals", ReturnsStringToObjectDict);
+            SpecializeFunction(_builtinName, "hasattr", ReturnsBool);
+            SpecializeFunction(_builtinName, "hash", ReturnsInt);
+            SpecializeFunction(_builtinName, "hex", ReturnsString);
+            SpecializeFunction(_builtinName, "id", ReturnsInt);
+            if (LanguageVersion.Is3x()) {
+                SpecializeFunction(_builtinName, "input", ReturnsString);
+            } else {
+                SpecializeFunction(_builtinName, "input", ReturnsObject);
+                SpecializeFunction(_builtinName, "raw_input", ReturnsString);
+            }
+            SpecializeFunction(_builtinName, "isinstance", ReturnsBool);
+            SpecializeFunction(_builtinName, "issubclass", ReturnsBool);
             SpecializeFunction(_builtinName, "iter", SpecialIter);
+            SpecializeFunction(_builtinName, "len", ReturnsInt);
+            SpecializeFunction(_builtinName, "locals", ReturnsStringToObjectDict);
+            SpecializeFunction(_builtinName, "max", ReturnUnionOfInputs);
+            SpecializeFunction(_builtinName, "min", ReturnUnionOfInputs);
+            SpecializeFunction(_builtinName, "next", SpecialNext);
+            SpecializeFunction(_builtinName, "oct", ReturnsString);
+            SpecializeFunction(_builtinName, "open", SpecialOpen);
+            SpecializeFunction(_builtinName, "ord", ReturnsInt);
+            SpecializeFunction(_builtinName, "pow", ReturnUnionOfInputs);
+            SpecializeFunction(_builtinName, "range", RangeConstructor);
+            SpecializeFunction(_builtinName, "repr", ReturnsString);
+            SpecializeFunction(_builtinName, "round", SpecialRound);
+            SpecializeFunction(_builtinName, "setattr", SpecialSetAttr);
+            SpecializeFunction(_builtinName, "sorted", ReturnsListOfInputIterable);
+            SpecializeFunction(_builtinName, "sum", ReturnUnionOfInputs);
             SpecializeFunction(_builtinName, "super", SpecialSuper);
             SpecializeFunction(_builtinName, "vars", ReturnsStringToObjectDict);
-            SpecializeFunction(_builtinName, "dir", ReturnsListOfString);
 
             // analyzing the copy module causes an explosion in types (it gets called w/ all sorts of types to be
             // copied, and always returns the same type).  So we specialize these away so they return the type passed
@@ -240,6 +277,18 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Empty;
         }
 
+        IAnalysisSet ReturnsObject(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return unit.ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
+        }
+
+        IAnalysisSet ReturnsBool(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return unit.ProjectState.ClassInfos[BuiltinTypeId.Bool].Instance;
+        }
+
+        IAnalysisSet ReturnsInt(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return unit.ProjectState.ClassInfos[BuiltinTypeId.Int].Instance;
+        }
+
         IAnalysisSet ReturnsBytes(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return unit.ProjectState.ClassInfos[BuiltinTypeId.Bytes].Instance;
         }
@@ -273,6 +322,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return dict;
             });
         }
+
 
         IAnalysisSet SpecialGetAttr(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var res = AnalysisSet.Empty;
@@ -499,10 +549,47 @@ namespace Microsoft.PythonTools.Analysis {
             });
         }
 
+        IAnalysisSet SpecialRound(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length == 0) {
+                return AnalysisSet.Empty;
+            }
+            if (args[0].Any(a => a.TypeId == BuiltinTypeId.Int || a.TypeId == BuiltinTypeId.Float)) {
+                if (args.Length == 2 || unit.ProjectState.LanguageVersion.Is2x()) {
+                    return unit.ProjectState.ClassInfos[BuiltinTypeId.Float].Instance;
+                }
+                return args[0];
+            }
+            return AnalysisSet.Empty;
+        }
+
         IAnalysisSet ReturnUnionOfInputs(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return AnalysisSet.UnionAll(args);
         }
 
+        IAnalysisSet ReturnsListOfInputIterable(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            // TODO: Grab the input iterable and create a list containing them
+            return unit.ProjectState.ClassInfos[BuiltinTypeId.List].Instance;
+        }
+
+        IAnalysisSet SpecialOpen(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            var mode = GetArg(args, keywordArgNames, "mode", 1);
+
+            bool bytes = false;
+            foreach(var m in (mode?.GetConstantValueAsString()).MaybeEnumerate()) {
+                if (m.Contains("b")) {
+                    bytes = true;
+                    break;
+                }
+            }
+
+            ModuleReference modRef;
+            if(!unit.ProjectState.Modules.TryImport("io", out modRef)) {
+                return unit.ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
+            }
+
+            var memb = modRef.Module.GetModuleMember(node, unit, bytes ? "BufferedIOBase" : "TextIOWrapper", addRef: false);
+            return memb?.GetInstanceType() ?? unit.ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
+        }
 
         IAnalysisSet LoadComponent(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 2 && unit.ProjectState.Interpreter is IDotNetPythonInterpreter) {

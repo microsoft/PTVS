@@ -1632,6 +1632,71 @@ v = x[0]
         }
 
         [TestMethod, Priority(0)]
+        public void BuiltinSpecializations() {
+            var entry = CreateAnalyzer(DefaultFactoryV3);
+            entry.AddModule("test-module", @"
+expect_int = abs(1)
+expect_float = abs(2.3)
+expect_object = abs(object())
+expect_str = abs('')
+
+expect_bool = all()
+expect_bool = any()
+expect_str = ascii()
+expect_str = bin()
+expect_bool = callable()
+expect_str = chr()
+expect_list = dir()
+expect_str = dir()[0]
+expect_object = eval()
+expect_str = format()
+expect_dict = globals()
+expect_object = globals()['']
+expect_bool = hasattr()
+expect_int = hash()
+expect_str = hex()
+expect_int = id()
+expect_bool = isinstance()
+expect_bool = issubclass()
+expect_int = len()
+expect_dict = locals()
+expect_object = locals()['']
+expect_str = oct()
+expect_TextIOWrapper = open('')
+expect_BufferedIOBase = open('', 'b')
+expect_int = ord()
+expect_int = pow(1, 1)
+expect_float = pow(1.0, 1.0)
+expect_str = repr()
+expect_int = round(1)
+expect_float = round(1.1)
+expect_float = round(1, 1)
+expect_list = sorted([0, 1, 2])
+expect_int = sum(1, 2)
+expect_float = sum(2.0, 3.0)
+expect_dict = vars()
+expect_object = vars()['']
+");
+            // The open() specialization uses classes from the io module,
+            // so provide them here.
+            entry.AddModule("io", @"
+class TextIOWrapper(object): pass
+class BufferedIOBase(object): pass
+", "io.py");
+            entry.WaitForAnalysis();
+
+            entry.AssertIsInstance("expect_object", BuiltinTypeId.Object);
+            entry.AssertIsInstance("expect_bool", BuiltinTypeId.Bool);
+            entry.AssertIsInstance("expect_int", BuiltinTypeId.Int);
+            entry.AssertIsInstance("expect_float", BuiltinTypeId.Float);
+            entry.AssertIsInstance("expect_str", BuiltinTypeId.Str);
+            entry.AssertIsInstance("expect_list", BuiltinTypeId.List);
+            entry.AssertIsInstance("expect_dict", BuiltinTypeId.Dict);
+            Assert.AreEqual("TextIOWrapper", entry.GetValue<InstanceInfo>("expect_TextIOWrapper")?.ClassInfo?.Name);
+            Assert.AreEqual("BufferedIOBase", entry.GetValue<InstanceInfo>("expect_BufferedIOBase")?.ClassInfo?.Name);
+        }
+
+        [TestMethod, Priority(0)]
         public void ListAppend() {
             var entry = ProcessText(@"
 x = []
