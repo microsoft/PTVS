@@ -16,16 +16,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonInterpreterFactory : IPythonInterpreterFactory {
         private readonly string _databasePath;
         private readonly object _searchPathsLock = new object();
         private PythonLibraryPath[] _searchPaths;
-        private string[] _importableModules;
+        private IReadOnlyDictionary<string, string> _searchPathPackages;
 
         public AstPythonInterpreterFactory(
             InterpreterConfiguration config,
@@ -38,6 +42,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 options = new InterpreterFactoryCreationOptions();
             }
             Configuration = config;
+            LanguageVersion = Configuration.Version.ToLanguageVersion();
 
             _databasePath = options.DatabasePath;
 
@@ -56,35 +61,65 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public InterpreterConfiguration Configuration { get; }
 
+        public PythonLanguageVersion LanguageVersion { get; }
+
         public IPackageManager PackageManager { get; }
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
             _searchPaths = null;
+            _searchPathPackages = null;
+            // TODO: Raise another event
         }
 
         public IPythonInterpreter CreateInterpreter() {
             return new AstPythonInterpreter(this);
         }
 
-        public IList<string> GetImportableModules() {
-            var im = _importableModules;
-            if (im != null) {
-                return im;
+        public IReadOnlyDictionary<string, string> GetImportableModules() {
+            var spp = _searchPathPackages;
+            if (spp != null) {
+                return spp;
             }
             var sp = GetCurrentSearchPaths();
             lock (_searchPathsLock) {
-                im = _importableModules;
-                if (im != null) {
-                    return im;
+                spp = _searchPathPackages;
+                if (spp != null) {
+                    return spp;
                 }
 
-                // TODO: Find all importable modules
-                im = new string[0];
+                var packageDict = new Dictionary<string, string>();
 
-                _importableModules = im;
-                return im;
+                foreach (var searchPath in _searchPaths.MaybeEnumerate()) {
+                    IReadOnlyCollection<string> packages = null;
+                    if (File.Exists(searchPath.Path)) {
+                        packages = GetPackagesFromZipFile(searchPath.Path);
+                    } else if (Directory.Exists(searchPath.Path)) {
+                        packages = GetPackagesFromDirectory(searchPath.Path);
+                    }
+                    foreach (var package in packages.MaybeEnumerate()) {
+                        packageDict[package] = searchPath.Path;
+                    }
+                }
+
+                if (packageDict.Any()) {
+                    _searchPathPackages = packageDict;
+                }
+                return packageDict;
             }
         }
+
+        private IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath) {
+            return ModulePath.GetModulesInPath(
+                searchPath,
+                recurse: false
+            ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).ToList();
+        }
+
+        private IReadOnlyCollection<string> GetPackagesFromZipFile(string searchPath) {
+            // TODO: Search zip files for packages
+            return new string[0];
+        }
+
 
         private IEnumerable<PythonLibraryPath> GetCurrentSearchPaths() {
             try {

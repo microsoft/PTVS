@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -56,7 +57,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IList<string> GetModuleNames() {
-            return _factory.GetImportableModules();
+            return _factory.GetImportableModules().Keys.ToArray();
         }
 
         public IPythonModule ImportModule(string name) {
@@ -65,22 +66,44 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return mod;
             }
 
-            var searchPaths = _factory.GetSearchPaths();
-            foreach (var sp in searchPaths) {
-                ModulePath mp;
-                try {
-                    mp = ModulePath.FromBasePathAndName(sp.Path, name);
-                } catch (ArgumentException) {
-                    continue;
-                }
+            var packages = _factory.GetImportableModules();
+            int i = name.IndexOf('.');
+            var firstBit = i < 0 ? name : name.Remove(i);
+            ModulePath mp = default(ModulePath);
+            string searchPath = null;
 
-                mod = AstPythonModule.FromFile(this, mp.SourceFile, _factory.Configuration.Version.ToLanguageVersion(), mp.FullName);
-                if (!_modules.TryAdd(name, mod)) {
-                    mod = _modules[name];
+            if (packages?.TryGetValue(firstBit, out searchPath) ?? false &&
+                !string.IsNullOrEmpty(searchPath)) {
+                try {
+                    mp = ModulePath.FromBasePathAndName(searchPath, name);
+                } catch (ArgumentException) {
                 }
-                return mod;
             }
-            return null;
+
+            if (string.IsNullOrEmpty(mp.SourceFile)) {
+                foreach (var sp in _factory.GetSearchPaths().MaybeEnumerate()) {
+                    try {
+                        mp = ModulePath.FromBasePathAndName(sp.Path, name);
+                        break;
+                    } catch (ArgumentException) {
+                    }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(mp.SourceFile)) {
+                if (mp.IsCompiled) {
+                    // TODO: Scrape compiled files
+                    mod = null;
+                } else {
+                    mod = AstPythonModule.FromFile(this, mp.SourceFile, _factory.LanguageVersion, mp.FullName);
+                }
+            }
+
+            if (!_modules.TryAdd(name, mod)) {
+                mod = _modules[name];
+            }
+
+            return mod;
         }
 
         public void Initialize(PythonAnalyzer state) {
