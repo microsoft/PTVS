@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="XamlRuleToCode" AssemblyFile="Xaml2Cs.exe" />
+  
+  <!-- ********************* XAML PROPERTY PAGE COMPILATION START **************************** -->
+
+  <ItemGroup Condition="'$(IncludeAllXamlRules)' == 'true' or '@(XamlPropertyRule)' != ''">
+    <!-- This causes a compilation of XAML files as C# files for strong-typing and Intellisense support of XAML properties. -->
+    <CustomReference Include="$(_NTDRIVE)$(_NTROOT)\vsproject\xmake\CPPTasks\TasksXML\property_pages_schemas.nativeproj">
+      <!-- The BuildGenerated target is not necessary, except to avoid a failure due to unloaded projects.
+             The BuildGenerated target can be removed when we switch to the new OM. -->
+      <Targets>GeneratePropertyPagesSchemas;BuildGenerated</Targets>
+      <CustomReferenceOutput>TasksXmlSchemaOutputs</CustomReferenceOutput>
+      <InProject>false</InProject>
+    </CustomReference>
+  </ItemGroup>
+
+  <Target Name="GenerateRulePrep">
+    <ItemGroup>
+      <XamlPropertyRule Condition="'$(IncludeAllXamlRules)' == 'true' and '%(TasksXmlSchemaOutputs.PrimaryRuleFile)' == 'true'" Include="@(TasksXmlSchemaOutputs)">
+        <DataAccess>IRule</DataAccess>
+      </XamlPropertyRule>
+      <_XamlPropertyRuleSource Include="@(XamlPropertyRule->'$(IntermediateOutputPath)%(FileName)$(DefaultLanguageSourceExtension)')"/>
+      <Compile Include="@(_XamlPropertyRuleSource)">
+        <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+      </Compile>
+      <Clean Include="@(_XamlPropertyRuleSource)" />
+    </ItemGroup>
+  </Target>
+
+  <ItemDefinitionGroup>
+    <XamlPropertyRule>
+      <DataAccess>None</DataAccess>
+      <Namespace>$(RootNamespace).Rules</Namespace>
+      <Generator>MSBuild:GenerateRuleSourceFromXaml</Generator>
+      <!--<RuleMissingError>Microsoft.VisualStudio.Project.Utilities.ProjectErrorUtilities.ThrowRuleMissing</RuleMissingError>
+      <PropertyMissingError>Microsoft.VisualStudio.Project.Utilities.ProjectErrorUtilities.ThrowRulePropertyMissing</PropertyMissingError>-->
+      <CreateFallbackRule>true</CreateFallbackRule>
+      <OutputPath>$(IntermediateOutputPath)</OutputPath>
+    </XamlPropertyRule>
+    <XamlPropertyRule Condition=" '$(RuleInjection)' != 'false' ">
+      <DataAccess>IRule</DataAccess>
+      <RuleInjection>ProjectLevel</RuleInjection>
+      <RuleInjectionCatalog>Project</RuleInjectionCatalog>
+      <RuleInjectionClassName>RuleProperties</RuleInjectionClassName>
+    </XamlPropertyRule>
+  </ItemDefinitionGroup>
+
+  <Target Name="GenerateRuleSourceFromXaml"
+          DependsOnTargets="GenerateRulePrep"
+          Condition="'@(XamlPropertyRule)' != ''">
+    <XamlRuleToCode
+       CreateFallbackRule="%(XamlPropertyRule.CreateFallbackRule)"
+       NamespaceName="%(XamlPropertyRule.Namespace)"
+       RuleMissingError="%(XamlPropertyRule.RuleMissingError)"
+       PropertyMissingError="%(XamlPropertyRule.PropertyMissingError)"
+       Inputs="@(XamlPropertyRule)"
+       OutputDirectory="%(XamlPropertyRule.OutputPath)"
+       DataAccess="%(XamlPropertyRule.DataAccess)"
+       RuleBaseTypes="%(XamlPropertyRule.RuleBaseTypes)"
+       RuleNamePrefix="%(XamlPropertyRule.RuleNamePrefix)"
+       RuleInjectionClassName="%(XamlPropertyRule.RuleInjectionClassName)"
+       RuleInjection="%(XamlPropertyRule.RuleInjection)"
+       RuleInjectionContextName="%(XamlPropertyRule.RuleInjectionCatalog)"
+       ProjectPropertiesContext="%(XamlPropertyRule.ProjectPropertiesContext)">
+      <Output TaskParameter="ResourcesToEmbed" ItemName="EmbeddedResource"/>
+    </XamlRuleToCode>
+  </Target>
+
+  <PropertyGroup>
+    <PrepareResourceNamesDependsOn>
+      GenerateRuleSourceFromXaml;
+      $(PrepareResourceNamesDependsOn)
+    </PrepareResourceNamesDependsOn>
+  </PropertyGroup>
+
+  <Target Name="BeforeCompile" DependsOnTargets="GenerateRuleSourceFromXaml"/>
+
+  <!-- ********************* XAML PROPERTY PAGE COMPILATION END  **************************** -->
+</Project>

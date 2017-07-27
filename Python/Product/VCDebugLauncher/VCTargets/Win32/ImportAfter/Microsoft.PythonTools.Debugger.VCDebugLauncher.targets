@@ -1,0 +1,6 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)$(LangID)\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml" Condition="Exists('$(MSBuildThisFileDirectory)$(LangID)\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml')" />
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml" Condition="!Exists('$(MSBuildThisFileDirectory)$(LangID)\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml')" />
+  </ItemGroup>
+</Project>

@@ -59,10 +59,13 @@
         Microsoft.PythonTools.Uwp.dll;
         Microsoft.PythonTools.Uwp.Interpreter.dll;
         Microsoft.PythonTools.Uwp.Wizards.dll;
-    " Condition="$(IncludeUwp)" />
+        " Condition="$(IncludeUwp)" />
+    <ManagedFiles Include="
+        Microsoft.PythonTools.Debugger.VCLauncher.dll;
+        " Condition="$(IncludeVCDebugLauncher)" />
     <ManagedFiles Include="
         Microsoft.PythonTools.Wsl.dll;
-    " Condition="$(IncludeWsl)" />
+        " Condition="$(IncludeWsl)" />
 
     <UnmanagedFiles Include="
         Microsoft.PythonTools.Debugger.Helper.x64.dll;
