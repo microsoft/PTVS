@@ -185,6 +185,7 @@
       <InstallRoot>VCTargets</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="VCTargets\x64\ImportBefore\Microsoft.PythonTools.Debugger.VCDebugLauncher.props">
       <VSIXSubPath>x64\ImportBefore</VSIXSubPath>
@@ -228,13 +229,13 @@
   </ItemGroup>
   <ItemGroup>
     <XamlPropertyRule Include="VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-      <VSIXSubPath>Win32\ImportAfter</VSIXSubPath>
+      <VSIXSubPath>Platforms\Win32\ImportAfter</VSIXSubPath>
       <InstallRoot>VCTargets</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </XamlPropertyRule>
     <Content Include="VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-      <VSIXSubPath>x64\ImportAfter</VSIXSubPath>
+      <VSIXSubPath>Platforms\x64\ImportAfter</VSIXSubPath>
       <InstallRoot>VCTargets</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -262,12 +263,12 @@
         <IncludeInVSIX>true</IncludeInVSIX>
       </LocContent>
       <LocContent Include="$(LocOutputPath)%(VSLanguages.Identity)\VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-        <VSIXSubPath>Win32\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
+        <VSIXSubPath>Platforms\Win32\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
         <InstallRoot>VCTargets</InstallRoot>
         <IncludeInVSIX>true</IncludeInVSIX>
       </LocContent>
       <LocContent Include="$(LocOutputPath)%(VSLanguages.Identity)\VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-        <VSIXSubPath>x64\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
+        <VSIXSubPath>Platforms\x64\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
         <InstallRoot>VCTargets</InstallRoot>
         <IncludeInVSIX>true</IncludeInVSIX>
       </LocContent>
