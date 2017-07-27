@@ -253,4 +253,29 @@
       <Content Include="@(XamlPropertyRule)" />
     </ItemGroup>
   </Target>
+
+  <Import Project="$(TargetsPath)\VSLanguages.props" Condition="$(RebuildVsixOnly)" />
+  <Target Name="_GetLocalizedContent">
+    <ItemGroup>
+      <LocContent Include="$(LocOutputPath)%(VSLanguages.Identity)\$(TargetName).resources$(TargetExt)">
+        <VSIXSubPath>%(VSLanguages.NET)</VSIXSubPath>
+        <IncludeInVSIX>true</IncludeInVSIX>
+      </LocContent>
+      <LocContent Include="$(LocOutputPath)%(VSLanguages.Identity)\VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
+        <VSIXSubPath>Win32\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
+        <InstallRoot>VCTargets</InstallRoot>
+        <IncludeInVSIX>true</IncludeInVSIX>
+      </LocContent>
+      <LocContent Include="$(LocOutputPath)%(VSLanguages.Identity)\VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
+        <VSIXSubPath>x64\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
+        <InstallRoot>VCTargets</InstallRoot>
+        <IncludeInVSIX>true</IncludeInVSIX>
+      </LocContent>
+    </ItemGroup>
+  </Target>
+  <Target Name="_AddLocalizedImportsToVsix" BeforeTargets="GetVSIXSourceItems" Condition="$(RebuildVsixOnly)" DependsOnTargets="_GetLocalizedContent">
+    <ItemGroup>
+      <Content Include="@(LocContent)" Condition="Exists(%(Identity))" />
+    </ItemGroup>
+  </Target>
 </Project>
