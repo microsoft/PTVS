@@ -137,11 +137,9 @@ def enable_attach(secret, address=('0.0.0.0', ptvsd.DEFAULT_PORT), certfile=None
 
     frames = []
     f = sys._getframe()
-    while True:
-        f = f.f_back
-        if f is None:
-            break
+    while f is not None:
         frames.append(f)
+        f = f.f_back
     frames.reverse()
     cur_thread = vspd.new_thread()
     for f in frames:

@@ -43,6 +43,7 @@ import runpy
 import datetime
 from codecs import BOM_UTF8
 
+import ptvsd
 import ptvsd.util as _vspu
 import ptvsd.ipcjson as _vsipc
 import ptvsd.repl as _vspr
@@ -155,7 +156,13 @@ class SynthesizedValue(object):
 
 # Specifies list of files not to debug. Can be extended by other modules
 # (the REPL does this for $attach support and not stepping into the REPL).
-DONT_DEBUG = [path.normcase(__file__), path.normcase(_vspu.__file__)]
+DONT_DEBUG = [
+    path.normcase(__file__),
+    path.normcase(ptvsd.__file__),
+    path.normcase(_vspu.__file__),
+    path.normcase(_vspr.__file__),
+    path.normcase(_vsipc.__file__),
+]
 if sys.version_info >= (3, 3):
     DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap>'))
 if sys.version_info >= (3, 5):
