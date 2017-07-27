@@ -209,6 +209,7 @@ namespace TestAdapterTests {
                 AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+                Assert.IsTrue(actualResult.Duration >= TimeSpan.Zero);
             }
         }
 
@@ -231,6 +232,7 @@ namespace TestAdapterTests {
                 AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+                Assert.IsTrue(actualResult.Duration >= TimeSpan.Zero);
             }
         }
 
