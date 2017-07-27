@@ -24,10 +24,13 @@
       </Item>
       <Item ItemId=";PythonUwpSdkNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Could not find CPython UWP SDK.  Please download from <http://go.microsoft.com/fwlink/?LinkID=613495> and restart Visual Studio.]]></Val>
+          <Val><![CDATA[Could not find CPython UWP SDK.  Please download from <https://go.microsoft.com/fwlink/?LinkID=613495> and restart Visual Studio.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[CPython UWP SDK를 찾을 수 없습니다. <http://go.microsoft.com/fwlink/?LinkID=613495>에서 SDK를 다운로드하고 Visual Studio를 다시 시작하세요.]]></Val>
+            <Val><![CDATA[CPython UWP SDK를 찾을 수 없습니다. <https://go.microsoft.com/fwlink/?LinkID=613495>에서 SDK를 다운로드하고 Visual Studio를 다시 시작하세요.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Could not find CPython UWP SDK.  Please download from <http://go.microsoft.com/fwlink/?LinkID=613495> and restart Visual Studio.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -67,7 +70,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17206.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -103,7 +106,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17068.1]]></Val>
+        <Val><![CDATA[3.0.17206.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
