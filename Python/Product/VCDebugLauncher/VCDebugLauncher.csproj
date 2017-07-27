@@ -172,6 +172,7 @@
       <InstallRoot>VCTargets</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="VCTargets\Win32\ImportBefore\Microsoft.PythonTools.Debugger.VCDebugLauncher.props">
       <VSIXSubPath>Win32\ImportBefore</VSIXSubPath>
@@ -253,7 +254,6 @@
       <Content Include="@(XamlPropertyRule)" />
     </ItemGroup>
   </Target>
-
   <Import Project="$(TargetsPath)\VSLanguages.props" Condition="$(RebuildVsixOnly)" />
   <Target Name="_GetLocalizedContent">
     <ItemGroup>
