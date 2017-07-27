@@ -34,21 +34,23 @@ namespace TestAdapterTests {
         public string SourceCodeFilePath { get; private set; }
         public int SourceCodeLineNumber { get; private set; }
         public TestOutcome Outcome { get; private set; }
+        public TimeSpan MinDuration { get; private set; }
 
         private TestInfo() {
         }
 
-        public static TestInfo FromRelativePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null) {
+        public static TestInfo FromRelativePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, TimeSpan? minDuration = null) {
             return FromAbsolutePaths(className,
                 methodName,
                 TestData.GetPath(projectFilePath),
                 TestData.GetPath(sourceCodeFilePath),
                 sourceCodeLineNumber,
                 outcome,
-                classFilePath != null ? TestData.GetPath(classFilePath) : null);
+                classFilePath != null ? TestData.GetPath(classFilePath) : null,
+                minDuration);
         }
 
-        public static TestInfo FromAbsolutePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null) {
+        public static TestInfo FromAbsolutePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, TimeSpan? minDuration = null) {
             TestInfo ti = new TestInfo();
             ti.ClassName = className;
             ti.MethodName = methodName;
@@ -58,6 +60,7 @@ namespace TestAdapterTests {
             ti.Outcome = outcome;
             ti.ClassFilePath = classFilePath ?? sourceCodeFilePath;
             ti.RelativeClassFilePath = CommonUtils.GetRelativeFilePath(Path.GetDirectoryName(ti.ProjectFilePath), ti.ClassFilePath);
+            ti.MinDuration = minDuration ?? TimeSpan.Zero;
             return ti;
         }
 
@@ -149,5 +152,9 @@ namespace TestAdapterTests {
 
         public static string TestAdapterExtensionReferenceProject = TestData.GetPath(@"TestData\TestAdapterTests\ExtensionReferenceTest.pyproj");
         public static TestInfo ExtensionReferenceTestSuccess = TestInfo.FromRelativePaths("SpamTests", "test_spam", @"TestData\TestAdapterTests\ExtensionReferenceTest.pyproj", @"TestData\TestAdapterTests\ExtensionReferenceTest.py", 5, TestOutcome.Passed);
+
+        public static string TestAdapterDurationProject = TestData.GetPath(@"TestData\TestAdapterTests\DurationTest.pyproj");
+        public static TestInfo DurationSleep01TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_1", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 5, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.1));
+        public static TestInfo DurationSleep05TestFailure = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_5", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 8, TestOutcome.Failed, minDuration: TimeSpan.FromSeconds(0.5));
     }
 }
