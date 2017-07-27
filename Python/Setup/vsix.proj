@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <ProjectFile Include="..\Product\VCDebugLauncher\VCDebugLauncher.csproj" Condition="'$(IncludeVCDebugLauncher)' == 'True'">
-      <OutputName>Microsoft.PythonTools.Debugging.VCLauncher.vsix</OutputName>
+      <OutputName>Microsoft.PythonTools.Debugger.VCLauncher.vsix</OutputName>
     </ProjectFile>
     <ProjectFile Include="..\Product\Wsl\Wsl.csproj" Condition="'$(IncludeWsl)' == 'True'">
       <OutputName>Microsoft.PythonTools.Wsl.vsix</OutputName>
