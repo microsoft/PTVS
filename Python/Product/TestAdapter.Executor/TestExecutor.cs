@@ -742,7 +742,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private static void RecordEnd(IFrameworkHandle frameworkHandle, TestResult result, string stdout, string stderr, TestOutcome outcome, TP.ResultEvent resultInfo) {
             result.EndTime = DateTimeOffset.Now;
-            result.Duration = result.EndTime - result.StartTime;
+            result.Duration = TimeSpan.FromSeconds(resultInfo.durationInSecs);
             result.Outcome = outcome;
             
             // Replace \n with \r\n to be more friendly when copying output...

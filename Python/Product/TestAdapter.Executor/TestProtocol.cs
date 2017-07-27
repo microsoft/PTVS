@@ -66,6 +66,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         public class ResultEvent : Event {
             public const string Name = "result";
             public string test, outcome, traceback, message;
+            public double durationInSecs;
 
             public override string name => Name;
         }

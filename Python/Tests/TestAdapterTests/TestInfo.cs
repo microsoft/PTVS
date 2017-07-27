@@ -155,6 +155,9 @@ namespace TestAdapterTests {
 
         public static string TestAdapterDurationProject = TestData.GetPath(@"TestData\TestAdapterTests\DurationTest.pyproj");
         public static TestInfo DurationSleep01TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_1", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 5, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.1));
-        public static TestInfo DurationSleep05TestFailure = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_5", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 8, TestOutcome.Failed, minDuration: TimeSpan.FromSeconds(0.5));
+        public static TestInfo DurationSleep03TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_3", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 8, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.3));
+        public static TestInfo DurationSleep05TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_5", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 11, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.5));
+        public static TestInfo DurationSleep08TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_8", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 14, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.8));
+        public static TestInfo DurationSleep15TestFailure = TestInfo.FromRelativePaths("DurationTests", "test_sleep_1_5", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 17, TestOutcome.Failed, minDuration: TimeSpan.FromSeconds(1.5));
     }
 }

@@ -420,7 +420,13 @@ namespace TestAdapterTests {
 
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] { TestInfo.DurationSleep01TestSuccess, TestInfo.DurationSleep05TestFailure };
+            var expectedTests = new[] {
+                TestInfo.DurationSleep01TestSuccess,
+                TestInfo.DurationSleep03TestSuccess,
+                TestInfo.DurationSleep05TestSuccess,
+                TestInfo.DurationSleep08TestSuccess,
+                TestInfo.DurationSleep15TestFailure
+            };
             var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
@@ -479,10 +485,11 @@ namespace TestAdapterTests {
                 Console.WriteLine(message);
             }
             foreach (var result in recorder.Results) {
-                Console.WriteLine("Test: " + result.TestCase.FullyQualifiedName);
-                Console.WriteLine("Result: " + result.Outcome);
+                Console.WriteLine("Test: {0}", result.TestCase.FullyQualifiedName);
+                Console.WriteLine("Result: {0}", result.Outcome);
+                Console.WriteLine("Duration: {0}ms", result.Duration.TotalMilliseconds);
                 foreach(var msg in result.Messages) {
-                    Console.WriteLine("Message " + msg.Category + ":");
+                    Console.WriteLine("Message {0}:", msg.Category);
                     Console.WriteLine(msg.Text);
                 }
                 Console.WriteLine("");
