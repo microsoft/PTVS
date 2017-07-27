@@ -3246,10 +3246,13 @@
       </Item>
       <Item ItemId=";NoInterpretersAvailable" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
+          <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See https://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python 환경이 구성되어 있지 않습니다. 환경을 설치하거나 구성하고 다시 시도하세요. Python 환경을 설정하는 방법에 대한 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=299429를 참조하세요.]]></Val>
+            <Val><![CDATA[Python 환경이 구성되어 있지 않습니다. 환경을 설치하거나 구성하고 다시 시도하세요. Python 환경을 설정하는 방법에 대한 자세한 내용은 https://go.microsoft.com/fwlink/?LinkID=299429를 참조하세요.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4353,10 +4356,13 @@
       </Item>
       <Item ItemId=";ReplScriptPathIPythonModeTxtContents" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
+          <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   ptvsd.repl.ipython.IPythonBackend]D;]A;#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;ptvsd.repl.ipython.IPythonBackend]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[#]D;]A;# 이 파일은 인터프리터를 통해 가져올 수 있는 호출 가능 파일인]D;]A;# REPL 백 엔드를 지정합니다.]D;]A;#]D;]A;# 현재 지원되는 옵션은 다음과 같습니다.]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
+            <Val><![CDATA[#]D;]A;# 이 파일은 인터프리터를 통해 가져올 수 있는 호출 가능 파일인]D;]A;# REPL 백 엔드를 지정합니다.]D;]A;#]D;]A;# 현재 지원되는 옵션은 다음과 같습니다.]D;]A;#   standard]D;]A;#   ptvsd.repl.ipython.IPythonBackend]D;]A;#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;ptvsd.repl.ipython.IPythonBackend]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5278,7 +5284,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17179.1]]></Val>
+        <Val><![CDATA[3.0.17206.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5314,7 +5320,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17179.1]]></Val>
+        <Val><![CDATA[3.0.17206.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
