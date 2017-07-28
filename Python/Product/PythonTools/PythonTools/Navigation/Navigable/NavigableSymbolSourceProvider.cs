@@ -14,24 +14,32 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition; 
-using Microsoft.VisualStudio.Language.Intellisense; 
-using Microsoft.VisualStudio.Text; 
+using System;
+using System.ComponentModel.Composition;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.PythonTools.Navigable {
+namespace Microsoft.PythonTools.Navigation.Navigable {
     [Export(typeof(INavigableSymbolSourceProvider))]
     [Name(nameof(NavigableSymbolSourceProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
     class NavigableSymbolSourceProvider : INavigableSymbolSourceProvider {
+        private readonly IServiceProvider _serviceProvider;
         private readonly IClassifierAggregatorService _classifierFactory;
         private readonly ITextStructureNavigatorSelectorService _navigatorService;
 
         [ImportingConstructor]
-        public NavigableSymbolSourceProvider(IClassifierAggregatorService classifierFactory, ITextStructureNavigatorSelectorService navigatorService) {
+        public NavigableSymbolSourceProvider(
+            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
+            IClassifierAggregatorService classifierFactory,
+            ITextStructureNavigatorSelectorService navigatorService
+        ) {
+            _serviceProvider = serviceProvider;
             _classifierFactory = classifierFactory;
             _navigatorService = navigatorService;
         }
@@ -39,6 +47,7 @@ namespace Microsoft.PythonTools.Navigable {
         public INavigableSymbolSource TryCreateNavigableSymbolSource(ITextView textView, ITextBuffer buffer) {
             return buffer.Properties.GetOrCreateSingletonProperty<INavigableSymbolSource>(
                 () => new NavigableSymbolSource(
+                    _serviceProvider,
                     textView,
                     buffer,
                     _classifierFactory.GetClassifier(buffer),

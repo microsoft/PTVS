@@ -283,9 +283,9 @@
     <Compile Include="PythonTools\Intellisense\VersionedResponse.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
-    <Compile Include="PythonTools\Navigable\NavigableSymbol.cs" />
-    <Compile Include="PythonTools\Navigable\NavigableSymbolSourceProvider.cs" />
-    <Compile Include="PythonTools\Navigable\NavigableSymbolSource.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
       <SubType>UserControl</SubType>
