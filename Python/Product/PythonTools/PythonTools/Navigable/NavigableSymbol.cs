@@ -16,11 +16,20 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Language.Intellisense; 
+using System.Diagnostics;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.PythonTools;
 
 namespace Microsoft.PythonTools.Navigable {
     class NavigableSymbol : INavigableSymbol {
+        private readonly static IOleCommandTarget _shellCommandDispatcher =
+            PythonToolsPackage.GetGlobalService(typeof(SUIHostCommandDispatcher)) as IOleCommandTarget;
+
         public NavigableSymbol(SnapshotSpan span) {
             SymbolSpan = span;
         }
@@ -31,8 +40,21 @@ namespace Microsoft.PythonTools.Navigable {
             new List<INavigableRelationship>() { PredefinedNavigableRelationships.Definition };
 
         public void Navigate(INavigableRelationship relationship) {
-            // TODO: implement this
-            throw new NotImplementedException();
+            Debug.Assert(_shellCommandDispatcher != null);
+
+            if (_shellCommandDispatcher != null) {
+                Guid cmdGroup = VSConstants.GUID_VSStandardCommandSet97;
+                uint cmdId = (uint)VSConstants.VSStd97CmdID.GotoDefn;
+
+                ErrorHandler.CallWithCOMConvention(
+                () => {
+                    _shellCommandDispatcher.Exec(
+                        ref cmdGroup, cmdId,
+                        (uint)OLECMDEXECOPT.OLECMDEXECOPT_DODEFAULT,
+                        System.IntPtr.Zero,
+                        System.IntPtr.Zero);
+                });
+            }
         }
     }
 }
