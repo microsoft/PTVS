@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,15 +26,16 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreter : IPythonInterpreter {
+    class AstPythonInterpreter : IPythonInterpreter, IModuleContext {
         private readonly AstPythonInterpreterFactory _factory;
-        private readonly Dictionary<BuiltinTypeId, IPythonType> _builtinModule;
+        private readonly Dictionary<BuiltinTypeId, IPythonType> _builtinTypes;
+        private IBuiltinPythonModule _builtinModule;
         private readonly ConcurrentDictionary<string, IPythonModule> _modules;
 
         public AstPythonInterpreter(AstPythonInterpreterFactory factory) {
             _factory = factory;
-            _builtinModule = new Dictionary<BuiltinTypeId, IPythonType>();
             _modules = new ConcurrentDictionary<string, IPythonModule>();
+            _builtinTypes = new Dictionary<BuiltinTypeId, IPythonType>();
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -42,15 +44,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public event EventHandler ModuleNamesChanged;
 
-        public IModuleContext CreateModuleContext() {
-            return null;
-        }
+        public IModuleContext CreateModuleContext() => this;
+        public IPythonInterpreterFactory Factory => _factory;
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
             IPythonType res;
-            lock (_builtinModule) {
-                if (!_builtinModule.TryGetValue(id, out res)) {
-                    _builtinModule[id] = res = new AstPythonType(id.ToString());
+            lock (_builtinTypes) {
+                if (!_builtinTypes.TryGetValue(id, out res)) {
+                    _builtinTypes[id] = res =
+                        _builtinModule?.GetAnyMember(SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version)) as IPythonType ??
+                        new AstPythonType(id.ToString());
                 }
             }
             return res;
@@ -63,7 +66,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IPythonModule ImportModule(string name) {
             IPythonModule mod;
             if (_modules.TryGetValue(name, out mod) && mod != null) {
+                if (mod is EmptyModule) {
+                    Trace.TraceWarning($"Recursively importing {name}");
+                }
                 return mod;
+            }
+            var sentinalValue = new EmptyModule();
+            if (!_modules.TryAdd(name, sentinalValue)) {
+                return _modules[name];
             }
 
             var packages = _factory.GetImportableModules();
@@ -92,14 +102,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             if (!string.IsNullOrEmpty(mp.SourceFile)) {
                 if (mp.IsCompiled) {
-                    // TODO: Scrape compiled files
-                    mod = null;
+                    mod = new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
                 } else {
                     mod = AstPythonModule.FromFile(this, mp.SourceFile, _factory.LanguageVersion, mp.FullName);
                 }
             }
 
-            if (!_modules.TryAdd(name, mod)) {
+            if (!_modules.TryUpdate(name, mod, sentinalValue)) {
                 mod = _modules[name];
             }
 
@@ -107,6 +116,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void Initialize(PythonAnalyzer state) {
+            _builtinModule = state.BuiltinModule.InterpreterModule as IBuiltinPythonModule;
+            _modules[state.BuiltinModule.Name] = state.BuiltinModule.InterpreterModule;
         }
     }
 }

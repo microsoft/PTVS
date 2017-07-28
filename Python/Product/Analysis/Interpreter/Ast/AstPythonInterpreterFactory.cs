@@ -141,5 +141,35 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
             return sp;
         }
+
+        private ModulePath FindModule(string filePath) {
+            var sp = GetSearchPaths();
+
+            string bestLibraryPath = "";
+
+            foreach (var p in sp) {
+                if (PathUtils.IsSubpathOf(p.Path, filePath)) {
+                    if (p.Path.Length > bestLibraryPath.Length) {
+                        bestLibraryPath = p.Path;
+                    }
+                }
+            }
+
+            var mp = ModulePath.FromFullPath(filePath, bestLibraryPath);
+            return mp;
+        }
+
+        public static ModulePath FindModule(IPythonInterpreterFactory factory, string filePath) {
+            try {
+                var apif = factory as AstPythonInterpreterFactory;
+                if (apif != null) {
+                    return apif.FindModule(filePath);
+                }
+
+                return ModulePath.FromFullPath(filePath);
+            } catch (ArgumentException) {
+                return default(ModulePath);
+            }
+        }
     }
 }

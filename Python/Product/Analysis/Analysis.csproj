@@ -61,6 +61,7 @@
     <Compile Include="Interpreter\Ast\AstAnalysisWalker.cs" />
     <Compile Include="IHasRichDescription.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
+    <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonConstant.cs" />
     <Compile Include="Interpreter\Ast\AstPythonFunction.cs" />
@@ -68,6 +69,8 @@
     <Compile Include="Interpreter\Ast\AstPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonParameterInfo.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreterFactory.cs" />
+    <Compile Include="Interpreter\Ast\AstScrapedPythonModule.cs" />
+    <Compile Include="Interpreter\EmptyModule.cs" />
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
     <Compile Include="Interpreter\IPackageManager.cs" />
@@ -391,6 +394,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="scrape_module.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
