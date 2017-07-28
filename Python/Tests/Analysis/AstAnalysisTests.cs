@@ -40,6 +40,18 @@ namespace AnalysisTests {
             PythonTestData.Deploy(includeTestData: true);
         }
 
+        private static PythonAnalysis CreateAnalysis(PythonVersion version) {
+            version.AssertInstalled();
+            return new PythonAnalysis(() => new AstPythonInterpreterFactory(version.Configuration, null));
+        }
+
+        private static PythonAnalysis CreateAnalysis(PythonLanguageVersion version) {
+            return new PythonAnalysis(() => new AstPythonInterpreterFactory(
+                new InterpreterConfiguration("AstAnalysis|" + version, "Analysis only factory", version: version.ToVersion()),
+                null
+            ));
+        }
+
         #region Test cases
 
         [TestMethod, Priority(0)]
@@ -121,7 +133,7 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void AstValues() {
-            using (var entry = new PythonAnalysis(PythonLanguageVersion.V35)) {
+            using (var entry = CreateAnalysis(PythonLanguageVersion.V35)) {
                 entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
                 entry.AddModule("test-module", "from Values import *");
                 entry.WaitForAnalysis();
@@ -192,28 +204,27 @@ namespace AnalysisTests {
 
         private static void FullStdLibTest(PythonVersion v) {
             v.AssertInstalled();
+            var factory = new AstPythonInterpreterFactory(v.Configuration, null);
             var modules = ModulePath.GetModulesInLib(v.PrefixPath).ToList();
-            var paths = modules.Select(m => m.LibraryPath).Distinct().ToArray();
 
             bool anySuccess = false;
+            bool anyExtensionSuccess = false, anyExtensionSeen = false;
 
-            using (var analyzer = new PythonAnalysis(v.Version)) {
-                analyzer.SetSearchPaths(paths);
-
+            using (var analyzer = new PythonAnalysis(factory)) {
                 foreach (var modName in modules) {
-                    if (modName.IsCompiled || modName.IsNativeExtension) {
-                        continue;
-                    }
+                    anyExtensionSeen |= modName.IsNativeExtension;
                     var mod = analyzer.Analyzer.Interpreter.ImportModule(modName.ModuleName);
                     if (mod == null) {
                         Trace.TraceWarning("failed to import {0} from {1}".FormatInvariant(modName.ModuleName, modName.SourceFile));
                     } else {
                         anySuccess = true;
+                        anyExtensionSuccess |= modName.IsNativeExtension;
                         mod.GetMemberNames(analyzer.ModuleContext).ToList();
                     }
                 }
             }
             Assert.IsTrue(anySuccess, "failed to import any modules at all");
+            Assert.IsTrue(anyExtensionSuccess || !anyExtensionSeen, "failed to import all extension modules");
         }
 
         #endregion
