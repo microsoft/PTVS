@@ -3246,10 +3246,13 @@
       </Item>
       <Item ItemId=";NoInterpretersAvailable" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
+          <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See https://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[未設定任何 Python 環境。請安裝或設定環境，然後再試一次。如需設定 Python 環境的相關資訊，請參閱 http://go.microsoft.com/fwlink/?LinkID=299429。]]></Val>
+            <Val><![CDATA[未設定任何 Python 環境。請安裝或設定環境後再試一次。如需設定 Python 環境的相關資訊，請參閱 https://go.microsoft.com/fwlink/?LinkID=299429。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5281,7 +5284,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17201.1]]></Val>
+        <Val><![CDATA[3.0.17208.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5317,7 +5320,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17201.1]]></Val>
+        <Val><![CDATA[3.0.17208.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
