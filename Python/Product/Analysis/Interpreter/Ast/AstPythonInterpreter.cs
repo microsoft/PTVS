@@ -19,11 +19,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonInterpreter : IPythonInterpreter, IModuleContext {
@@ -33,13 +30,21 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly ConcurrentDictionary<string, IPythonModule> _modules;
 
         public AstPythonInterpreter(AstPythonInterpreterFactory factory) {
+            if (factory == null) {
+                throw new ArgumentNullException(nameof(factory));
+            }
             _factory = factory;
+            _factory.ImportableModulesChanged += Factory_ImportableModulesChanged;
             _modules = new ConcurrentDictionary<string, IPythonModule>();
             _builtinTypes = new Dictionary<BuiltinTypeId, IPythonType>();
-            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void Dispose() {
+            _factory.ImportableModulesChanged -= Factory_ImportableModulesChanged;
+        }
+
+        private void Factory_ImportableModulesChanged(object sender, EventArgs e) {
+            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler ModuleNamesChanged;

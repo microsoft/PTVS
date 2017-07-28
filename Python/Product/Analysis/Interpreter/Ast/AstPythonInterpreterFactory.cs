@@ -65,10 +65,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IPackageManager PackageManager { get; }
 
+        public event EventHandler ImportableModulesChanged;
+
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
-            _searchPaths = null;
-            _searchPathPackages = null;
-            // TODO: Raise another event
+            lock (_searchPathsLock) {
+                _searchPaths = null;
+                _searchPathPackages = null;
+            }
+            ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public IPythonInterpreter CreateInterpreter() {
