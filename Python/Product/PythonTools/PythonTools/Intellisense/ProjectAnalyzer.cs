@@ -2325,7 +2325,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
             if (entryService == null || !entryService.TryGetAnalysisEntry(view, span.Snapshot.TextBuffer, out entry)) {
-                return null;
+                return Task.FromResult<string>(null);
             }
             var analysis = GetApplicableExpression(entry, span.Start);
             if (analysis == null) {
