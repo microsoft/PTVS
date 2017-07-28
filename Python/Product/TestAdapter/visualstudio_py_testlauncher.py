@@ -21,6 +21,7 @@ __version__ = "3.0.0.0"
 
 import sys
 import json
+import time
 import unittest
 import socket
 import traceback
@@ -123,8 +124,11 @@ _channel = None
 
 
 class VsTestResult(unittest.TextTestResult):
+    _start_time = None
+
     def startTest(self, test):
         super(VsTestResult, self).startTest(test)
+        self._start_time = time.time()
         if _channel is not None:
             _channel.send_event(
                 name='start', 
@@ -159,6 +163,7 @@ class VsTestResult(unittest.TextTestResult):
         if _channel is not None:
             tb = None
             message = None
+            duration = time.time() - self._start_time if self._start_time else 0
             if trace is not None:
                 traceback.print_exception(*trace)
                 formatted = traceback.format_exception(*trace)
@@ -171,6 +176,7 @@ class VsTestResult(unittest.TextTestResult):
                 outcome=outcome,
                 traceback = tb,
                 message = message,
+                durationInSecs = duration,
                 test = test.test_id
             )
 
