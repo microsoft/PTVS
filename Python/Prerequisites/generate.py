@@ -30,6 +30,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.Core",
     "Microsoft.CookiecutterTools",
     "Microsoft.PythonTools.Debugger",
+    "Microsoft.PythonTools.Debugger.VCLauncher",
     "Microsoft.PythonTools.Django",
     "Microsoft.PythonTools.Django.Analysis",
     "Microsoft.PythonTools.EnvironmentsList",
