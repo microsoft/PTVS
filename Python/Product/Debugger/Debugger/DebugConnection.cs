@@ -200,6 +200,7 @@ namespace Microsoft.PythonTools.Debugger {
                 if (!paused && _eventsPending.TryDequeue(out eventReceived)) {
                     try {
                         HandleEvent(eventReceived);
+                    } catch (OperationCanceledException) {
                     } catch (Exception e) when (!e.IsCriticalException()) {
                         Debug.Fail(string.Format("Error while handling debugger event '{0}'.\n{1}", eventReceived.Name, e));
                     }
