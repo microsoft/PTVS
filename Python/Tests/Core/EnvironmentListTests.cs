@@ -304,7 +304,7 @@ namespace PythonToolsUITests {
                     null,
                     "",
                     "NOT A REAL PATH",
-                    string.Join("\\", Path.GetInvalidPathChars().Select(c => c.ToString()))
+                    "*\\?\\\"\\^"
                 }) {
                     Console.WriteLine("Path: <{0}>", invalidPath ?? "(null)");
                     provider.RemoveAllFactories();
