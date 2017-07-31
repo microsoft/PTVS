@@ -88,12 +88,21 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
                 // Check with the analyzer, which will give us a precise
                 // result, including the source location.
-                var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, _textView, token.Span.Start);
-                foreach (var variable in result?.Variables.MaybeEnumerate()) {
-                    if (variable.Type == Analysis.VariableType.Definition &&
-                        File.Exists(variable.Location?.FilePath)) {
-                        return new NavigableSymbol(_serviceProvider, variable.Location, token.Span);
-                    }
+                var result = await GetDefinitionLocationAsync(entry, _textView, token.Span);
+                if (result != null) {
+                    return new NavigableSymbol(_serviceProvider, result, token.Span);
+                }
+            }
+
+            return null;
+        }
+
+        internal static async Task<AnalysisLocation> GetDefinitionLocationAsync(AnalysisEntry entry, ITextView textView, SnapshotSpan span) {
+            var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, textView, span.Start).ConfigureAwait(false);
+            foreach (var variable in result?.Variables.MaybeEnumerate()) {
+                if (variable.Type == Analysis.VariableType.Definition &&
+                    !string.IsNullOrEmpty(variable.Location?.FilePath)) {
+                    return variable.Location;
                 }
             }
 

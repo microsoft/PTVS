@@ -25,15 +25,16 @@ using Microsoft.VisualStudio.Text;
 namespace Microsoft.PythonTools.Navigation.Navigable {
     class NavigableSymbol : INavigableSymbol {
         private readonly IServiceProvider _serviceProvider;
-        private readonly AnalysisLocation _location;
 
         public NavigableSymbol(IServiceProvider serviceProvider, AnalysisLocation location, SnapshotSpan span) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _location = location ?? throw new ArgumentNullException(nameof(location));
+            Location = location ?? throw new ArgumentNullException(nameof(location));
             SymbolSpan = span;
         }
 
         public SnapshotSpan SymbolSpan { get; }
+
+        internal AnalysisLocation Location { get; }
 
         // FYI: This is for future extensibility, it's currently ignored (in 15.3)
         public IEnumerable<INavigableRelationship> Relationships =>
@@ -41,7 +42,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
         public void Navigate(INavigableRelationship relationship) {
             try {
-                _location.GotoSource(_serviceProvider);
+                Location.GotoSource(_serviceProvider);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 MessageBox.Show(Strings.CannotGoToDefn_Name.FormatUI(SymbolSpan.GetText()), Strings.ProductTitle);
             }
