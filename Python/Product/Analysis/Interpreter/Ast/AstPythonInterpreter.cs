@@ -50,6 +50,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         private void Factory_ImportableModulesChanged(object sender, EventArgs e) {
+            _modules.Clear();
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -219,9 +220,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     IPythonModule mod;
                     _modules.TryRemove(name, out mod);
                 }
+                _userSearchPathImported = null;
                 _userSearchPathPackages = null;
                 _userSearchPaths = _analyzer.GetSearchPaths();
             }
+            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

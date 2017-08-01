@@ -105,7 +105,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (spp != null) {
                 return spp;
             }
-            var sp = GetCurrentSearchPaths();
+            var sp = GetSearchPaths();
+            if (sp == null) {
+                return null;
+            }
+
             lock (_searchPathsLock) {
                 spp = _searchPathPackages;
                 if (spp != null) {
@@ -114,9 +118,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
                 var packageDict = GetImportableModules(sp.Select(p => p.Path));
 
-                if (packageDict.Any()) {
-                    _searchPathPackages = packageDict;
+                if (!packageDict.Any()) {
+                    return null;
                 }
+
+                _searchPathPackages = packageDict;
                 return packageDict;
             }
         }
@@ -152,7 +158,22 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
 
+        /// <summary>
+        /// For test use only
+        /// </summary>
+        internal void SetCurrentSearchPaths(IEnumerable<PythonLibraryPath> paths) {
+            lock (_searchPathsLock) {
+                _searchPaths = paths.ToArray();
+                _searchPathPackages = null;
+            }
+            ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         private IEnumerable<PythonLibraryPath> GetCurrentSearchPaths() {
+            if (!File.Exists(Configuration?.InterpreterPath)) {
+                return null;
+            }
+
             try {
                 return PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(Configuration.InterpreterPath).WaitAndUnwrapExceptions();
             } catch (InvalidOperationException) {
