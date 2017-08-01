@@ -16,13 +16,10 @@
 
 using System;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation.Navigable;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -38,12 +35,13 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [Ignore] // TODO: Figure out why we don't get any definition, this works in IDE
+        private static PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+
         [TestMethod, Priority(1)]
         public async Task ModuleDefinition() {
             var code = @"import os
 ";
-            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, Version)) {
                 // os
                 await helper.CheckDefinitionLocation(7, 2, ExternalLocation(1, 1, "os.py"));
             }
@@ -55,7 +53,7 @@ namespace PythonToolsMockTests {
 
 sys.version
 ";
-            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, Version)) {
                 // sys
                 await helper.CheckDefinitionLocation(15, 3, Location(1, 8));
 
@@ -75,7 +73,7 @@ class ClassDerived(ClassBase):
 obj = ClassDerived()
 obj
 ";
-            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, Version)) {
                 // ClassBase
                 await helper.CheckDefinitionLocation(57, 9, Location(1, 7));
                 
@@ -102,7 +100,7 @@ obj
 my_func(1)
 my_func(2, param2=False)
 ";
-            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, Version)) {
                 // param1
                 await helper.CheckDefinitionLocation(12, 6, Location(1, 13));
                 await helper.CheckDefinitionLocation(47, 6, Location(1, 13));
@@ -138,7 +136,7 @@ obj = MyClass()
 obj.my_class_func1(param2=False)
 obj.my_class_func2(param3=False)
 ";
-            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, Version)) {
                 // param3 in my_func(param3=False)
                 await helper.CheckDefinitionLocation(197, 6, Location(8, 13));
 
@@ -170,7 +168,7 @@ obj.my_attr = 5
 print(obj.my_attr)
 print(obj._my_attr_val)
 ";
-            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, Version)) {
                 // my_attr
                 await helper.CheckDefinitionLocation(71, 7, Location(9, 9));
                 await helper.CheckDefinitionLocation(128, 7, Location(9, 9));
@@ -205,45 +203,15 @@ print(obj._my_attr_val)
         #region NavigableHelper class
 
         private class NavigableHelper : IDisposable {
-            private readonly PythonClassifierProvider _provider1;
-            private readonly PythonAnalysisClassifierProvider _provider2;
-            private readonly ManualResetEventSlim _classificationsReady1, _classificationsReady2;
             private readonly PythonEditor _view;
 
-            public NavigableHelper(string code, PythonLanguageVersion version) {
-                _view = new PythonEditor("", version);
-
-                var providers = _view.VS.ComponentModel.GetExtensions<IClassifierProvider>().ToArray();
-                _provider1 = providers.OfType<PythonClassifierProvider>().Single();
-                _provider2 = providers.OfType<PythonAnalysisClassifierProvider>().Single();
-
-                _classificationsReady1 = new ManualResetEventSlim();
-                _classificationsReady2 = new ManualResetEventSlim();
-
-                AstClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady1);
-                var startVersion = _view.CurrentSnapshot.Version;
-                AnalysisClassifier.ClassificationChanged += (s, e) => {
-                    var entry = (AnalysisEntry)_view.GetAnalysisEntry();
-                    // make sure we have classifications from the version we analyzed after
-                    // setting the text below.
-                    if (entry.GetAnalysisVersion(_view.CurrentSnapshot.TextBuffer).VersionNumber > startVersion.VersionNumber) {
-                        SafeSetEvent(_classificationsReady2);
-                    }
-                };
-
+            public NavigableHelper(string code, PythonVersion version) {
+                var factory = InterpreterFactoryCreator.CreateInterpreterFactory(version.Configuration, new InterpreterFactoryCreationOptions() { WatchFileSystem = false });
+                _view = new PythonEditor("", version.Version, factory: factory);
                 _view.Text = code;
             }
 
-            private static void SafeSetEvent(ManualResetEventSlim evt) {
-                try {
-                    evt.Set();
-                } catch (ObjectDisposedException) {
-                }
-            }
-
             public void Dispose() {
-                _classificationsReady1.Dispose();
-                _classificationsReady2.Dispose();
                 _view.Dispose();
             }
 
@@ -253,23 +221,10 @@ print(obj._my_attr_val)
                 }
             }
 
-            public IClassifier AstClassifier {
-                get {
-                    return _provider1.GetClassifier(TextBuffer);
-                }
-            }
-
-            public IClassifier AnalysisClassifier {
-                get {
-                    return _provider2.GetClassifier(TextBuffer);
-                }
-            }
-
             public async Task CheckDefinitionLocation(int pos, int length, AnalysisLocation expected) {
-                _classificationsReady1.Wait();
-                _classificationsReady2.Wait();
-
                 var entry = (AnalysisEntry)_view.GetAnalysisEntry();
+                entry.Analyzer.WaitForCompleteAnalysis(_ => true);
+
                 var trackingSpan = _view.CurrentSnapshot.CreateTrackingSpan(pos, length, SpanTrackingMode.EdgeInclusive);
                 var snapshotSpan = trackingSpan.GetSpan(_view.CurrentSnapshot);
                 var result = await NavigableSymbolSource.GetDefinitionLocationAsync(entry, _view.View.TextView, snapshotSpan);
