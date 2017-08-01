@@ -14,14 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -35,6 +31,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private bool _scraped;
 
         public AstScrapedPythonModule(string name, string filePath) {
+            Name = name;
             _documentation = string.Empty;
             _filePath = filePath;
             _members = new Dictionary<string, IMember>();

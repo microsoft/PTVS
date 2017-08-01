@@ -16,20 +16,20 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreterFactory : IPythonInterpreterFactory {
+    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IDisposable {
         private readonly string _databasePath;
         private readonly object _searchPathsLock = new object();
         private PythonLibraryPath[] _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
+
+        private bool _disposed;
 
         public AstPythonInterpreterFactory(
             InterpreterConfiguration config,
@@ -55,6 +55,27 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         PackageManager = pm;
                     }
                 } catch (NotSupportedException) {
+                }
+            }
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~AstPythonInterpreterFactory() {
+            Dispose(false);
+        }
+
+        protected void Dispose(bool disposing) {
+            if (!_disposed) {
+                _disposed = true;
+
+                if (disposing) {
+                    if (PackageManager != null) {
+                        PackageManager.InstalledPackagesChanged -= PackageManager_InstalledFilesChanged;
+                    }
                 }
             }
         }
@@ -91,19 +112,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return spp;
                 }
 
-                var packageDict = new Dictionary<string, string>();
-
-                foreach (var searchPath in _searchPaths.MaybeEnumerate()) {
-                    IReadOnlyCollection<string> packages = null;
-                    if (File.Exists(searchPath.Path)) {
-                        packages = GetPackagesFromZipFile(searchPath.Path);
-                    } else if (Directory.Exists(searchPath.Path)) {
-                        packages = GetPackagesFromDirectory(searchPath.Path);
-                    }
-                    foreach (var package in packages.MaybeEnumerate()) {
-                        packageDict[package] = searchPath.Path;
-                    }
-                }
+                var packageDict = GetImportableModules(sp.Select(p => p.Path));
 
                 if (packageDict.Any()) {
                     _searchPathPackages = packageDict;
@@ -112,14 +121,32 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        private IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath) {
+        public static IReadOnlyDictionary<string, string> GetImportableModules(IEnumerable<string> searchPaths) {
+            var packageDict = new Dictionary<string, string>();
+
+            foreach (var searchPath in searchPaths.MaybeEnumerate()) {
+                IReadOnlyCollection<string> packages = null;
+                if (File.Exists(searchPath)) {
+                    packages = GetPackagesFromZipFile(searchPath);
+                } else if (Directory.Exists(searchPath)) {
+                    packages = GetPackagesFromDirectory(searchPath);
+                }
+                foreach (var package in packages.MaybeEnumerate()) {
+                    packageDict[package] = searchPath;
+                }
+            }
+
+            return packageDict;
+        }
+
+        private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath) {
             return ModulePath.GetModulesInPath(
                 searchPath,
                 recurse: false
             ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).ToList();
         }
 
-        private IReadOnlyCollection<string> GetPackagesFromZipFile(string searchPath) {
+        private static IReadOnlyCollection<string> GetPackagesFromZipFile(string searchPath) {
             // TODO: Search zip files for packages
             return new string[0];
         }
