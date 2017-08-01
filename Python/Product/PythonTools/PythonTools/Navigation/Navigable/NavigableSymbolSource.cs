@@ -86,9 +86,14 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
                     continue;
                 }
 
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // Check with the analyzer, which will give us a precise
                 // result, including the source location.
-                var result = await GetDefinitionLocationAsync(entry, _textView, token.Span);
+                var result = await GetDefinitionLocationAsync(entry, _textView, token.Span).ConfigureAwait(false);
+
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (result != null) {
                     return new NavigableSymbol(_serviceProvider, result, token.Span);
                 }

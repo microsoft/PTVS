@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -27,44 +26,26 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
     [TestClass]
     public class NavigableTests {
-        private MockVs _vs;
-
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestInitialize]
-        public void TestInit() {
-            MockPythonToolsPackage.SuppressTaskProvider = true;
-            VsProjectAnalyzer.SuppressTaskProvider = true;
-            _vs = new MockVs();
-        }
-
-        [TestCleanup]
-        public void TestCleanup() {
-            MockPythonToolsPackage.SuppressTaskProvider = false;
-            VsProjectAnalyzer.SuppressTaskProvider = false;
-            _vs.Dispose();
-        }
-
-        [Ignore] // This works in the IDE, need to figure out why it doesn't here
+        [Ignore] // TODO: Figure out why we don't get any definition, this works in IDE
         [TestMethod, Priority(1)]
         public async Task ModuleDefinition() {
             var code = @"import os
 ";
-            using (var helper = new ClassifierHelper(_vs.ServiceProvider, code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
                 // os
-                await helper.CheckDefinitionLocation(7, 2, new AnalysisLocation("os.py", 1, 1));
+                await helper.CheckDefinitionLocation(7, 2, ExternalLocation(1, 1, "os.py"));
             }
         }
 
@@ -74,9 +55,12 @@ namespace PythonToolsMockTests {
 
 sys.version
 ";
-            using (var helper = new ClassifierHelper(_vs.ServiceProvider, code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
                 // sys
-                await helper.CheckDefinitionLocation(15, 3, new AnalysisLocation("", 1, 8));
+                await helper.CheckDefinitionLocation(15, 3, Location(1, 8));
+
+                // version
+                await helper.CheckDefinitionLocation(18, 7, null);
             }
         }
 
@@ -89,12 +73,23 @@ class ClassDerived(ClassBase):
     pass
 
 obj = ClassDerived()
+obj
 ";
-            using (var helper = new ClassifierHelper(_vs.ServiceProvider, code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
                 // ClassBase
-                await helper.CheckDefinitionLocation(57, 9, new AnalysisLocation("", 1, 7));
+                await helper.CheckDefinitionLocation(57, 9, Location(1, 7));
+                
                 // ClassDerived
-                await helper.CheckDefinitionLocation(88, 12, new AnalysisLocation("", 4, 7));
+                await helper.CheckDefinitionLocation(88, 12, Location(4, 7));
+
+                // object
+                await helper.CheckDefinitionLocation(16, 6, null);
+
+                // obj
+                await helper.CheckDefinitionLocation(82, 3, Location(7, 1));
+
+                // obj
+                await helper.CheckDefinitionLocation(104, 3, Location(7, 1));
             }
         }
 
@@ -105,24 +100,55 @@ obj = ClassDerived()
     print(param2)
 
 my_func(1)
+my_func(2, param2=False)
 ";
-            using (var helper = new ClassifierHelper(_vs.ServiceProvider, code, PythonLanguageVersion.V27)) {
+            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
                 // param1
-                await helper.CheckDefinitionLocation(47, 6, new AnalysisLocation("", 1, 13));
+                await helper.CheckDefinitionLocation(12, 6, Location(1, 13));
+                await helper.CheckDefinitionLocation(47, 6, Location(1, 13));
+                
                 // param2
-                await helper.CheckDefinitionLocation(66, 6, new AnalysisLocation("", 1, 21));
+                await helper.CheckDefinitionLocation(20, 6, Location(1, 21));
+                await helper.CheckDefinitionLocation(66, 6, Location(1, 21));
+                await helper.CheckDefinitionLocation(100, 6, Location(1, 21));
+                
                 // my_func
-                await helper.CheckDefinitionLocation(77, 7, new AnalysisLocation("", 1, 5));
+                await helper.CheckDefinitionLocation(4, 7, Location(1, 5));
+                await helper.CheckDefinitionLocation(77, 7, Location(1, 5));
+                await helper.CheckDefinitionLocation(89, 7, Location(1, 5));
             }
         }
 
+        [Ignore] // https://github.com/Microsoft/PTVS/issues/2869
         [TestMethod, Priority(1)]
-        public async Task ConfusingParameterDefinition() {
-            var code = @"#TODO
+        public async Task NamedArgumentDefinition() {
+            var code = @"class MyClass(object):
+    def my_class_func1(self, param2 = True):
+        pass
+
+    def my_class_func2(self, param3 = True):
+        pass
+
+def my_func(param3 = True):
+    pass
+
+my_func(param3=False)
+
+obj = MyClass()
+obj.my_class_func1(param2=False)
+obj.my_class_func2(param3=False)
 ";
-            using (var helper = new ClassifierHelper(_vs.ServiceProvider, code, PythonLanguageVersion.V27)) {
-                // TODO: goes to wrong parameter when a class method and global function have same parameter name
-                // at call site where keyword parameter is used
+            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
+                // param3 in my_func(param3=False)
+                await helper.CheckDefinitionLocation(197, 6, Location(8, 13));
+
+                // BUG: can't go to definition
+                // param2 in obj.my_class_func1(param2=False)
+                await helper.CheckDefinitionLocation(250, 6, Location(2, 30));
+
+                // BUG: goes to my_func instead of my_class_func2
+                // param3 in obj.my_class_func2(param3=False)
+                await helper.CheckDefinitionLocation(284, 6, Location(5, 30));
             }
         }
 
@@ -144,27 +170,47 @@ obj.my_attr = 5
 print(obj.my_attr)
 print(obj._my_attr_val)
 ";
-            using (var helper = new ClassifierHelper(_vs.ServiceProvider, code, PythonLanguageVersion.V27)) {
-                // my_attr in obj.my_attr = 5
-                await helper.CheckDefinitionLocation(229, 7, new AnalysisLocation("", 13, 5));
-                // my_attr in print(obj.my_attr)
-                await helper.CheckDefinitionLocation(252, 7, new AnalysisLocation("", 13, 5));
-                // _my_attr_val in print(obj._my_attr_val)
-                await helper.CheckDefinitionLocation(272, 12, new AnalysisLocation("", 10, 14));
+            using (var helper = new NavigableHelper(code, PythonLanguageVersion.V27)) {
+                // my_attr
+                await helper.CheckDefinitionLocation(71, 7, Location(9, 9));
+                await helper.CheckDefinitionLocation(128, 7, Location(9, 9));
+                await helper.CheckDefinitionLocation(152, 7, Location(9, 9));
+                await helper.CheckDefinitionLocation(229, 7, Location(13, 5));
+                await helper.CheckDefinitionLocation(252, 7, Location(13, 5));
+
+                // val
+                await helper.CheckDefinitionLocation(166, 3, Location(9, 23));
+                await helper.CheckDefinitionLocation(201, 3, Location(9, 23));
+
+                // _my_attr_val
+                await helper.CheckDefinitionLocation(28, 12, Location(2, 5));
+                await helper.CheckDefinitionLocation(107, 12, Location(10, 14));
+                await helper.CheckDefinitionLocation(186, 12, Location(10, 14));
+                await helper.CheckDefinitionLocation(272, 12, Location(10, 14));
+
+                // self
+                await helper.CheckDefinitionLocation(79, 4, Location(5, 17));
+                await helper.CheckDefinitionLocation(102, 4, Location(5, 17));
+                await helper.CheckDefinitionLocation(160, 4, Location(9, 17));
+                await helper.CheckDefinitionLocation(181, 4, Location(9, 17));
             }
         }
 
-        #region ClassifierHelper class
+        private AnalysisLocation Location(int line, int col) =>
+            new AnalysisLocation("file.py", line, col);
 
-        private class ClassifierHelper : IDisposable {
-            private readonly IServiceProvider _serviceProvider;
+        private AnalysisLocation ExternalLocation(int line, int col, string filename) =>
+            new AnalysisLocation(filename, line, col);
+
+        #region NavigableHelper class
+
+        private class NavigableHelper : IDisposable {
             private readonly PythonClassifierProvider _provider1;
             private readonly PythonAnalysisClassifierProvider _provider2;
             private readonly ManualResetEventSlim _classificationsReady1, _classificationsReady2;
             private readonly PythonEditor _view;
 
-            public ClassifierHelper(IServiceProvider serviceProvider, string code, PythonLanguageVersion version) {
-                _serviceProvider = serviceProvider;
+            public NavigableHelper(string code, PythonLanguageVersion version) {
                 _view = new PythonEditor("", version);
 
                 var providers = _view.VS.ComponentModel.GetExtensions<IClassifierProvider>().ToArray();
@@ -201,12 +247,6 @@ print(obj._my_attr_val)
                 _view.Dispose();
             }
 
-            public ITextView TextView {
-                get {
-                    return _view.View.TextView;
-                }
-            }
-
             public ITextBuffer TextBuffer {
                 get {
                     return _view.View.TextView.TextBuffer;
@@ -219,46 +259,25 @@ print(obj._my_attr_val)
                 }
             }
 
-            public IEnumerable<ClassificationSpan> AstClassifierSpans {
-                get {
-                    _classificationsReady1.Wait();
-                    return AstClassifier.GetClassificationSpans(
-                        new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
-                    ).OrderBy(s => s.Span.Start.Position);
-                }
-            }
-
             public IClassifier AnalysisClassifier {
                 get {
                     return _provider2.GetClassifier(TextBuffer);
                 }
             }
 
-            public IEnumerable<ClassificationSpan> AnalysisClassifierSpans {
-                get {
-                    _classificationsReady2.Wait();
-                    return AnalysisClassifier.GetClassificationSpans(
-                        new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
-                    ).OrderBy(s => s.Span.Start.Position);
-                }
-            }
-
-            public async Task CheckDefinitionLocation(int position, int length, AnalysisLocation expectedLocation) {
+            public async Task CheckDefinitionLocation(int pos, int length, AnalysisLocation expected) {
                 _classificationsReady1.Wait();
                 _classificationsReady2.Wait();
 
                 var entry = (AnalysisEntry)_view.GetAnalysisEntry();
-                var span = _view.CurrentSnapshot.CreateTrackingSpan(position, length, SpanTrackingMode.EdgeInclusive).GetSpan(_view.CurrentSnapshot);
-                var result = await NavigableSymbolSource.GetDefinitionLocationAsync(entry, _view.View.TextView, span);
-                if (expectedLocation != null) {
+                var trackingSpan = _view.CurrentSnapshot.CreateTrackingSpan(pos, length, SpanTrackingMode.EdgeInclusive);
+                var snapshotSpan = trackingSpan.GetSpan(_view.CurrentSnapshot);
+                var result = await NavigableSymbolSource.GetDefinitionLocationAsync(entry, _view.View.TextView, snapshotSpan);
+                if (expected != null) {
                     Assert.IsNotNull(result);
-                    Assert.AreEqual(expectedLocation.Line, result.Line);
-                    Assert.AreEqual(expectedLocation.Column, result.Column);
-                    if (string.IsNullOrEmpty(expectedLocation.FilePath)) {
-                        Assert.AreEqual("file.py", Path.GetFileName(result.FilePath));
-                    } else {
-                        Assert.AreEqual(expectedLocation.FilePath, Path.GetFileName(result.FilePath));
-                    }
+                    Assert.AreEqual(expected.Line, result.Line);
+                    Assert.AreEqual(expected.Column, result.Column);
+                    Assert.AreEqual(expected.FilePath, Path.GetFileName(result.FilePath));
                 } else {
                     Assert.IsNull(result);
                 }
