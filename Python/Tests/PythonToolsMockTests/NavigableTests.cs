@@ -215,12 +215,6 @@ print(obj._my_attr_val)
                 _view.Dispose();
             }
 
-            public ITextBuffer TextBuffer {
-                get {
-                    return _view.View.TextView.TextBuffer;
-                }
-            }
-
             public async Task CheckDefinitionLocation(int pos, int length, AnalysisLocation expected) {
                 var entry = (AnalysisEntry)_view.GetAnalysisEntry();
                 entry.Analyzer.WaitForCompleteAnalysis(_ => true);
