@@ -55,12 +55,18 @@
         Microsoft.PythonTools.Uwp.Wizards.dll;
         " Condition="$(IncludeUwp)" />
     <ManagedFiles Include="
+        Microsoft.PythonTools.Debugger.VCLauncher.dll;
+        " Condition="$(IncludeVCDebugLauncher)" />
+    <ManagedFiles Include="
         Microsoft.PythonTools.Wsl.dll;
         " Condition="$(IncludeWsl)" />
 
     <CodeSnippets Include="
         $(BinariesOutputPath)Snippets\SnippetsIndex.xml;
         $(BinariesOutputPath)Snippets\**\*.snippet" />
+
+    <VCPropertyPages Include="
+        $(BinariesOutputPath)VCTargets\**\*.xaml" />
 
     <FilesToLocalize Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
       <TranslationFile>$(LocDir)lcl\{Lang}\%(Filename)%(Extension).lcl</TranslationFile>
@@ -71,6 +77,11 @@
       <TranslationFile>$(LocDir)lcl\{Lang}\Snippets\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
       <LciCommentFile>$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
       <SettingsFile>$(LSBuildRoot)\locxml_snippets.lss</SettingsFile>
+    </FilesToLocalize>
+    <FilesToLocalize Include="@(VCPropertyPages)">
+      <TranslationFile>$(LocDir)lcl\{Lang}\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
+      <LciCommentFile>$(LocDir)lci\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
+      <SettingsFile>$(LSBuildRoot)\locxml_strpLocTg_vc.lss</SettingsFile>
     </FilesToLocalize>
   </ItemGroup>
   

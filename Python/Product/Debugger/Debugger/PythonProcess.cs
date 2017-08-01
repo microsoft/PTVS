@@ -183,7 +183,13 @@ namespace Microsoft.PythonTools.Debugger {
             DebugConnectionListener.UnregisterProcess(_processGuid);
 
             if (disposing) {
+                DebugConnection connection;
+                Process process;
+
                 lock (_connectionLock) {
+                    connection = _connection;
+                    process = _process;
+
                     if (_connection != null) {
                         _connection.ProcessingMessagesEnded -= OnProcessingMessagesEnded;
                         _connection.LegacyAsyncBreak -= OnLegacyAsyncBreak;
@@ -205,13 +211,16 @@ namespace Microsoft.PythonTools.Debugger {
                         _connection.LegacyThreadExit -= OnLegacyThreadExit;
                         _connection.LegacyThreadFrameList -= OnLegacyThreadFrameList;
                         _connection.LegacyModulesChanged -= OnLegacyModulesChanged;
-                        _connection.Dispose();
                         _connection = null;
                     }
-                    // Avoiding ?. syntax because FxCop doesn't understand it
-                    if (_process != null) {
-                        _process.Dispose();
-                    }
+                }
+
+                if (connection != null) {
+                    connection.Dispose();
+                }
+
+                if (process != null) {
+                    process.Dispose();
                 }
 
                 _connectedEvent.Dispose();

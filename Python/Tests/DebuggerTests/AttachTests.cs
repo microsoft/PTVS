@@ -907,6 +907,76 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        // https://github.com/Microsoft/PTVS/issues/2842
+        [TestMethod, Priority(3)]
+        public async Task AttachPtvsdAndStopDebugging() {
+            var expectedOutput = new[] { "stdout", "stderr" };
+
+            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsdUnitTest.py");
+            var psi = new ProcessStartInfo(Version.InterpreterPath, PtvsdInterpreterArguments + " \"" + script + "\"") {
+                WorkingDirectory = TestData.GetPath(),
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            var p = Process.Start(psi);
+            try {
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    PythonProcess proc = null;
+                    for (int i = 0; ; ++i) {
+                        Thread.Sleep(1000);
+                        try {
+                            proc = await PythonRemoteProcess.AttachAsync(
+                                new Uri("tcp://secret@localhost?opt=" + PythonDebugOptions.RedirectOutput),
+                                false, TimeoutToken());
+                            break;
+                        } catch (SocketException) {
+                            // Failed to connect - the process might have not started yet, so keep trying a few more times.
+                            if (i >= 5 || p.HasExited) {
+                                throw;
+                            }
+                        }
+                    }
+
+                    try {
+                        var attached = new TaskCompletionSource<bool>();
+                        proc.ProcessLoaded += async (sender, e) => {
+                            Console.WriteLine("Process loaded");
+
+                            var bp = proc.AddBreakpoint(script, 12);
+                            await bp.AddAsync(TimeoutToken());
+
+                            await proc.ResumeAsync(TimeoutToken());
+                            attached.SetResult(true);
+                        };
+
+                        var bpHit = new TaskCompletionSource<bool>();
+                        proc.BreakpointHit += async (sender, args) => {
+                            Console.WriteLine("Breakpoint hit");
+                            bpHit.SetResult(true);
+                            await proc.ResumeAsync(TimeoutToken());
+                        };
+
+                        await proc.StartListeningAsync();
+                        await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
+                        await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
+
+                        p.WaitForExit(DefaultWaitForExitTimeout);
+                    } finally {
+                        await DetachProcessAsync(proc);
+                    }
+
+                    dumpWriter.Cancel();
+                }
+            } finally {
+                Console.WriteLine(p.StandardOutput.ReadToEnd());
+                Console.WriteLine(p.StandardError.ReadToEnd());
+                DisposeProcess(p);
+            }
+        }
+
         class TraceRedirector : Redirector {
             private readonly string _prefix;
 

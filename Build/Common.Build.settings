@@ -103,6 +103,8 @@
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(IntermediateOutputRoot)$(IntermediateOutputPathSuffix)</IntermediateOutputPath>
     <IntermediateOutputPath Condition="!HasTrailingSlash($(IntermediateOutputPath))">$(IntermediateOutputPath)\</IntermediateOutputPath>
 
+    <LocOutputPath>$(BinariesOutputPath)localize\</LocOutputPath>
+
     <OutDir>$(OutputPath)</OutDir>
     <IntDir>$(IntermediateOutputPath)</IntDir>
 

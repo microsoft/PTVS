@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <VSLanguages Include="CHT">
+      <LCID>1028</LCID>
+      <NET>zh-Hans</NET>
+    </VSLanguages>
+    <VSLanguages Include="CHS">
+      <LCID>2052</LCID>
+      <NET>zh-Hant</NET>
+    </VSLanguages>
+    <VSLanguages Include="CSY">
+      <LCID>1029</LCID>
+      <NET>cs</NET>
+    </VSLanguages>
+    <VSLanguages Include="DEU">
+      <LCID>1031</LCID>
+      <NET>de</NET>
+    </VSLanguages>
+    <VSLanguages Include="ESN">
+      <LCID>3082</LCID>
+      <NET>es</NET>
+    </VSLanguages>
+    <VSLanguages Include="FRA">
+      <LCID>1036</LCID>
+      <NET>fr</NET>
+    </VSLanguages>
+    <VSLanguages Include="ITA">
+      <LCID>1040</LCID>
+      <NET>it</NET>
+    </VSLanguages>
+    <VSLanguages Include="JPN">
+      <LCID>1041</LCID>
+      <NET>ja</NET>
+    </VSLanguages>
+    <VSLanguages Include="KOR">
+      <LCID>1042</LCID>
+      <NET>ko</NET>
+    </VSLanguages>
+    <VSLanguages Include="PLK">
+      <LCID>1045</LCID>
+      <NET>pl</NET>
+    </VSLanguages>
+    <VSLanguages Include="PTB">
+      <LCID>1046</LCID>
+      <NET>pt-BR</NET>
+    </VSLanguages>
+    <VSLanguages Include="RUS">
+      <LCID>1049</LCID>
+      <NET>ru</NET>
+    </VSLanguages>
+    <VSLanguages Include="TRK">
+      <LCID>1055</LCID>
+      <NET>tr</NET>
+    </VSLanguages>
+
+    <VSLanguagesWithENU Include="@(VSLanguages)" />
+    <VSLanguagesWithENU Include="ENU">
+      <LCID>1033</LCID>
+      <NET>en</NET>
+    </VSLanguagesWithENU>
+  </ItemGroup>
+</Project>

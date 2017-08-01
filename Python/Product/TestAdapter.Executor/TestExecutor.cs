@@ -326,7 +326,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             private Connection _connection;
             private readonly Socket _socket;
             private readonly StringBuilder _stdOut = new StringBuilder(), _stdErr = new StringBuilder();
-            private TestCase _curTest;
+            private TestResult _curTestResult;
             private readonly bool _dryRun, _showConsole;
 
             public TestRunner(
@@ -386,7 +386,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 throw new NotImplementedException();
             }
 
-            private void ConectionReceivedEvent(object sender, EventReceivedEventArgs e) {
+            private void ConnectionReceivedEvent(object sender, EventReceivedEventArgs e) {
                 switch (e.Name) {
                     case TP.ResultEvent.Name:
                         var result = (TP.ResultEvent)e.Event;
@@ -397,11 +397,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                             case "skipped": outcome = TestOutcome.Skipped; break;
                         }
 
-                        var testResult = new TestResult(_curTest);
                         RecordEnd(
                             _frameworkHandle,
-                            _curTest,
-                            testResult,
+                            _curTestResult,
                             _stdOut.ToString(),
                             _stdErr.ToString(),
                             outcome,
@@ -414,16 +412,19 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                     case TP.StartEvent.Name:
                         var start = (TP.StartEvent)e.Event;
-                        _curTest = null;
+
+                        // Create the TestResult object right away, so that
+                        // StartTime is initialized correctly.
+                        _curTestResult = null;
                         foreach (var test in GetTestCases()) {
                             if (test.Key == start.test) {
-                                _curTest = test.Value;
+                                _curTestResult = new TestResult(test.Value);
                                 break;
                             }
                         }
 
-                        if (_curTest != null) {
-                            _frameworkHandle.RecordStart(_curTest);
+                        if (_curTestResult != null) {
+                            _frameworkHandle.RecordStart(_curTestResult.TestCase);
                         } else {
                             Warning(Strings.Test_UnexpectedResult.FormatUI(start.classname, start.method));
                         }
@@ -490,7 +491,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     TP.RegisteredTypes,
                     "TestExecutor"
                 );
-                _connection.EventReceived += ConectionReceivedEvent;
+                _connection.EventReceived += ConnectionReceivedEvent;
                 _connection.StartProcessing();
                 _connected.Set();
             }
@@ -739,9 +740,9 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private static void RecordEnd(IFrameworkHandle frameworkHandle, TestCase test, TestResult result, string stdout, string stderr, TestOutcome outcome, TP.ResultEvent resultInfo) {
+        private static void RecordEnd(IFrameworkHandle frameworkHandle, TestResult result, string stdout, string stderr, TestOutcome outcome, TP.ResultEvent resultInfo) {
             result.EndTime = DateTimeOffset.Now;
-            result.Duration = result.EndTime - result.StartTime;
+            result.Duration = TimeSpan.FromSeconds(resultInfo.durationInSecs);
             result.Outcome = outcome;
             
             // Replace \n with \r\n to be more friendly when copying output...
@@ -760,7 +761,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             frameworkHandle.RecordResult(result);
-            frameworkHandle.RecordEnd(test, outcome);
+            frameworkHandle.RecordEnd(result.TestCase, outcome);
         }
 
         class TestReceiver : ITestCaseDiscoverySink {
