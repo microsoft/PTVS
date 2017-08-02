@@ -487,7 +487,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (relativeModuleName.LastOrDefault() == '.') {
                     // Last part empty means the whole name is dots, so there's
                     // nothing to concatenate.
-                    yield return string.Join(".", prefix.Take(prefix.Length - relativeModuleName.Length));
+                    yield return string.Join(".", prefix.Take(prefix.Length - (relativeModuleName.Length - 1)));
                 } else {
                     var suffix = relativeModuleName.Split('.');
                     var dotCount = suffix.TakeWhile(bit => string.IsNullOrEmpty(bit)).Count();

@@ -254,9 +254,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         if (n != null) {
                             
                             m[n.Name] = new AstNestedPythonModule(
+                                _interpreter,
                                 n.Name,
-                                string.Empty,   // TODO: Get documentation?
-                                new string[0],  // TODO: Find children?
                                 PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, n.Name, true).ToArray()
                             );
                         }
@@ -276,9 +275,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             if (m != null && node.Names != null) {
                 var mod = new AstNestedPythonModule(
+                    _interpreter,
                     modName,
-                    string.Empty,   // TODO: Get documentation?
-                    new string[0],  // TODO: Find children?
                     PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
                 );
                 var ctxt = _interpreter.CreateModuleContext();

@@ -179,22 +179,37 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            var directories = new List<ModulePath>();
+            foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
+                var dirname = PathUtils.GetFileOrDirectoryName(dir);
+                var match = PythonPackageRegex.Match(dirname);
+                var withInitPy = Path.Combine(dir, "__init__.py");
+                bool hasInitPy = File.Exists(withInitPy);
+                if (match.Success && (!requireInitPy || hasInitPy)) {
+                    directories.Add(new ModulePath(
+                        baseModule + match.Groups["name"].Value,
+                        hasInitPy ? withInitPy : dir,
+                        dir
+                    ));
+                }
+            }
+
             if (recurse) {
-                foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
-                    var dirname = PathUtils.GetFileOrDirectoryName(dir);
-                    var match = PythonPackageRegex.Match(dirname);
-                    if (match.Success && (!requireInitPy || File.Exists(Path.Combine(dir, "__init__.py")))) {
-                        foreach (var entry in GetModuleNamesFromPathHelper(
-                            skipFiles ? dir : libPath,
-                            dir,
-                            baseModule + match.Groups["name"].Value + ".",
-                            false,
-                            true,
-                            requireInitPy
-                        )) {
-                            yield return entry;
-                        }
+                foreach (var dir in directories) {
+                    foreach (var entry in GetModuleNamesFromPathHelper(
+                        skipFiles ? dir.LibraryPath : libPath,
+                        dir.LibraryPath,
+                        dir.ModuleName + ".",
+                        false,
+                        true,
+                        requireInitPy
+                    )) {
+                        yield return entry;
                     }
+                }
+            } else {
+                foreach (var dir in directories) {
+                    yield return dir;
                 }
             }
         }
