@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,24 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Microsoft.PythonTools.Interpreter {
-    /// <summary>
-    /// Specifies creation options for an interpreter factory.
-    /// </summary>
-    public sealed class InterpreterFactoryCreationOptions {
-        public InterpreterFactoryCreationOptions() {
-        }
-
-        public InterpreterFactoryCreationOptions Clone() {
-            return (InterpreterFactoryCreationOptions)MemberwiseClone();
-        }
-
-        public bool WatchFileSystem { get; set; }
-
-        public string DatabasePath { get; set; }
-
-        public IPackageManager PackageManager { get; set; }
-
-        public bool NoDatabase { get; set; }
+    class EmptyModule : IPythonModule {
+        public string Name => null;
+        public string Documentation => null;
+        public PythonMemberType MemberType => PythonMemberType.Module;
+        public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
+        public IMember GetMember(IModuleContext context, string name) => null;
+        public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) => Enumerable.Empty<string>();
+        public void Imported(IModuleContext context) { }
     }
 }

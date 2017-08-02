@@ -111,6 +111,16 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// True if the module is a stub file.
+        /// </summary>
+        /// <remarks>New in 3.2</remarks>
+        public bool IsStub {
+            get {
+                return PythonStubRegex.IsMatch(Path.GetFileName(SourceFile));
+            }
+        }
+
+        /// <summary>
         /// Creates a new ModulePath item.
         /// </summary>
         /// <param name="fullname">The full name of the module.</param>
@@ -129,7 +139,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyw?$",
+        private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.py[iw]?$",
+            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex PythonStubRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyi$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?pyd$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);

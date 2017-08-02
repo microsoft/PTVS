@@ -413,7 +413,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of candidate absolute module names for the given
         /// modules.
         /// </summary>
-        /// <param name="projectEntry">
+        /// <param name="importingFrom">
         /// The project entry that is importing the module.
         /// </param>
         /// <param name="relativeModuleName">
@@ -424,14 +424,45 @@ namespace Microsoft.PythonTools.Analysis {
         /// in order of precedence.
         /// </returns>
         internal static IEnumerable<string> ResolvePotentialModuleNames(
-            IPythonProjectEntry projectEntry,
+            IPythonProjectEntry importingFrom,
+            string relativeModuleName,
+            bool absoluteImports
+        ) {
+            return ResolvePotentialModuleNames(
+                importingFrom?.ModuleName,
+                importingFrom?.FilePath,
+                relativeModuleName,
+                absoluteImports
+            );
+        }
+
+        /// <summary>
+        /// Returns a sequence of candidate absolute module names for the given
+        /// modules.
+        /// </summary>
+        /// <param name="importingFromModuleName">
+        /// The module that is importing the module.
+        /// </param>
+        /// <param name="importingFromFilePath">
+        /// The path to the file that is importing the module.
+        /// </param>
+        /// <param name="relativeModuleName">
+        /// A dotted name identifying the path to the module.
+        /// </param>
+        /// <returns>
+        /// A sequence of strings representing the absolute names of the module
+        /// in order of precedence.
+        /// </returns>
+        internal static IEnumerable<string> ResolvePotentialModuleNames(
+            string importingFromModuleName,
+            string importingFromFilePath,
             string relativeModuleName,
             bool absoluteImports
         ) {
             string importingFrom = null;
-            if (projectEntry != null) {
-                importingFrom = projectEntry.ModuleName;
-                if (ModulePath.IsInitPyFile(projectEntry.FilePath)) {
+            if (!string.IsNullOrEmpty(importingFromModuleName)) {
+                importingFrom = importingFromModuleName;
+                if (!string.IsNullOrEmpty(importingFromFilePath) && ModulePath.IsInitPyFile(importingFromFilePath)) {
                     if (string.IsNullOrEmpty(importingFrom)) {
                         importingFrom = "__init__";
                     } else {

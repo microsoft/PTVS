@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstAnalysisWalker : PythonWalker {
         private readonly IPythonInterpreter _interpreter;
+        private readonly IModuleContext _context;
         private readonly PythonAst _ast;
         private readonly IPythonModule _module;
         private readonly string _filePath;
@@ -45,6 +46,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Dictionary<string, IMember> members
         ) {
             _interpreter = interpreter;
+            _context = _interpreter.CreateModuleContext();
             _ast = ast;
             _module = module;
             _filePath = filePath;
@@ -130,7 +132,31 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
-            var type = GetTypeFromExpression(expr);
+            IPythonType type;
+
+            var me = expr as MemberExpression;
+            if (me != null && me.Target != null && !string.IsNullOrEmpty(me.Name)) {
+                var mc = GetValueFromExpression(me.Target, scope) as IMemberContainer;
+                if (mc != null) {
+                    return mc.GetMember(_context, me.Name);
+                }
+                return null;
+            }
+
+            if (expr is CallExpression) {
+                var cae = (CallExpression)expr;
+                var m = GetValueFromExpression(cae.Target, scope);
+                type = m as IPythonType;
+                if (type != null) {
+                    return new AstPythonConstant(type, GetLoc(expr));
+                }
+                var fn = m as IPythonFunction;
+                if (fn != null) {
+                    return new AstPythonConstant(_interpreter.GetBuiltinType(BuiltinTypeId.NoneType), GetLoc(expr));
+                }
+            }
+
+            type = GetTypeFromExpression(expr);
             if (type != null) {
                 return new AstPythonConstant(type, GetLoc(expr));
             }
@@ -226,9 +252,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     for (int i = 0; i < node.Names.Count; ++i) {
                         var n = node.AsNames?[i] ?? node.Names[i].Names[0];
                         if (n != null) {
-                            m[n.Name] = new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Module),
-                                GetLoc(node.AsNames[i])
+                            
+                            m[n.Name] = new AstNestedPythonModule(
+                                n.Name,
+                                string.Empty,   // TODO: Get documentation?
+                                new string[0],  // TODO: Find children?
+                                PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, n.Name, true).ToArray()
                             );
                         }
                     }
@@ -240,16 +269,35 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override bool Walk(FromImportStatement node) {
             var m = _scope.Peek();
-            if (node.Root.MakeString() == "__future__") {
+            var modName = node.Root.MakeString();
+            if (modName == "__future__") {
                 return false;
             }
 
             if (m != null && node.Names != null) {
+                var mod = new AstNestedPythonModule(
+                    modName,
+                    string.Empty,   // TODO: Get documentation?
+                    new string[0],  // TODO: Find children?
+                    PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
+                );
+                var ctxt = _interpreter.CreateModuleContext();
+                mod.Imported(ctxt);
+
                 try {
                     for (int i = 0; i < node.Names.Count; ++i) {
+                        if (node.Names[i].Name == "*") {
+                            foreach (var member in mod.GetMemberNames(ctxt)) {
+                                m[member] = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
+                                    _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                    mod.Locations.ToArray()
+                                );
+                            }
+                            continue;
+                        }
                         var n = node.AsNames?[i] ?? node.Names[i];
                         if (n != null) {
-                            m[n.Name] = new AstPythonConstant(
+                            m[n.Name] = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
                                 _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
                                 GetLoc(n)
                             );
@@ -262,6 +310,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override bool Walk(FunctionDefinition node) {
+            if (node.IsLambda) {
+                return false;
+            }
+
             var existing = GetInScope(node.Name) as AstPythonFunction;
             if (existing == null) {
                 var m = _scope.Peek();
