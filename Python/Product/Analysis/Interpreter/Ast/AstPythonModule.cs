@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -25,8 +26,10 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     public sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
+        private readonly IPythonInterpreter _interpreter;
         private readonly Dictionary<object, object> _properties;
         private readonly List<string> _childModules;
+        private bool _foundChildModules;
         private readonly Dictionary<string, IMember> _members;
 
         public static IPythonModule FromFile(
@@ -86,6 +89,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             FilePath = string.Empty;
             _properties = new Dictionary<object, object>();
             _childModules = new List<string>();
+            _foundChildModules = true;
             _members = new Dictionary<string, IMember>();
         }
 
@@ -94,12 +98,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Documentation = ast.Documentation;
             FilePath = filePath;
             Locations = new[] { new LocationInfo(filePath, 1, 1) };
+            _interpreter = interpreter;
 
             _properties = new Dictionary<object, object>();
             _childModules = new List<string>();
             _members = new Dictionary<string, IMember>();
 
-            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members);
+            // Do not allow children of named modules
+            if (!ModulePath.IsInitPyFile(FilePath)) {
+                _foundChildModules = true;
+            }
+
+            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true);
             ast.Walk(walker);
         }
 
@@ -124,8 +134,34 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public bool IsAnalyzed => true;
         public void Analyze(CancellationToken cancel) { }
 
+        private static IEnumerable<string> GetChildModules(string filePath, string prefix, AstPythonInterpreter interpreter) {
+            if (interpreter == null || string.IsNullOrEmpty(filePath)) {
+                yield break;
+            }
+            var searchPath = PathUtils.GetParent(filePath);
+            if (!Directory.Exists(searchPath)) {
+                yield break;
+            }
+
+            foreach (var n in ModulePath.GetModulesInPath(
+                searchPath,
+                recurse: false
+            ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n))) {
+                yield return n;
+            }
+        }
+
         public IEnumerable<string> GetChildrenModules() {
             lock (_childModules) {
+                if (!_foundChildModules) {
+                    // We've already checked whether this module may have children
+                    // so don't worry about checking again here.
+                    _foundChildModules = true;
+                    foreach (var m in GetChildModules(FilePath, Name, _interpreter as AstPythonInterpreter)) {
+                        _members[m] = new AstNestedPythonModule(_interpreter, m, new[] { Name + "." + m });
+                        _childModules.Add(m);
+                    }
+                }
                 return _childModules.ToArray();
             }
         }

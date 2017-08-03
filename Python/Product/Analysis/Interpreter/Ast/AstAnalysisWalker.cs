@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly IPythonModule _module;
         private readonly string _filePath;
         private readonly Dictionary<string, IMember> _members;
+        private readonly bool _includeLocationInfo;
 
         private readonly Stack<Dictionary<string, IMember>> _scope;
 
@@ -43,7 +44,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             PythonAst ast,
             IPythonModule module,
             string filePath,
-            Dictionary<string, IMember> members
+            Dictionary<string, IMember> members,
+            bool includeLocationInfo
         ) {
             _interpreter = interpreter;
             _context = _interpreter.CreateModuleContext();
@@ -53,6 +55,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _members = members;
             _scope = new Stack<Dictionary<string, IMember>>();
             _noneInst = new AstPythonConstant(_interpreter.GetBuiltinType(BuiltinTypeId.NoneType));
+            _includeLocationInfo = includeLocationInfo;
         }
 
         public override bool Walk(PythonAst node) {
@@ -69,6 +72,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal LocationInfo GetLoc(ClassDefinition node) {
+            if (!_includeLocationInfo) {
+                return null;
+            }
             if (node == null || node.StartIndex >= node.EndIndex) {
                 return null;
             }
@@ -79,6 +85,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal LocationInfo GetLoc(FunctionDefinition node) {
+            if (!_includeLocationInfo) {
+                return null;
+            }
             if (node == null || node.StartIndex >= node.EndIndex) {
                 return null;
             }
@@ -89,6 +98,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal LocationInfo GetLoc(Node node) {
+            if (!_includeLocationInfo) {
+                return null;
+            }
             if (node == null || node.StartIndex >= node.EndIndex) {
                 return null;
             }
@@ -254,9 +266,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         if (n != null) {
                             
                             m[n.Name] = new AstNestedPythonModule(
+                                _interpreter,
                                 n.Name,
-                                string.Empty,   // TODO: Get documentation?
-                                new string[0],  // TODO: Find children?
                                 PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, n.Name, true).ToArray()
                             );
                         }
@@ -275,32 +286,41 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (m != null && node.Names != null) {
+                bool onlyImportModules = modName.EndsWith(".");
+
                 var mod = new AstNestedPythonModule(
+                    _interpreter,
                     modName,
-                    string.Empty,   // TODO: Get documentation?
-                    new string[0],  // TODO: Find children?
                     PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
                 );
                 var ctxt = _interpreter.CreateModuleContext();
                 mod.Imported(ctxt);
+                // Ensure child modules have been loaded
+                mod.GetChildrenModules();
 
                 try {
                     for (int i = 0; i < node.Names.Count; ++i) {
-                        if (node.Names[i].Name == "*") {
-                            foreach (var member in mod.GetMemberNames(ctxt)) {
-                                m[member] = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
-                                    _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                    mod.Locations.ToArray()
-                                );
+                        if (!onlyImportModules) {
+                            if (node.Names[i].Name == "*") {
+                                foreach (var member in mod.GetMemberNames(ctxt)) {
+                                    IMember mem;
+                                    m[member] = mem = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
+                                        _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                        mod.Locations.ToArray()
+                                    );
+                                    (mem as IPythonModule)?.Imported(ctxt);
+                                }
+                                continue;
                             }
-                            continue;
-                        }
-                        var n = node.AsNames?[i] ?? node.Names[i];
-                        if (n != null) {
-                            m[n.Name] = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                GetLoc(n)
-                            );
+                            var n = node.AsNames?[i] ?? node.Names[i];
+                            if (n != null) {
+                                IMember mem;
+                                m[n.Name] = mem = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
+                                    _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                    GetLoc(n)
+                                );
+                                (mem as IPythonModule)?.Imported(ctxt);
+                            }
                         }
                     }
                 } catch (IndexOutOfRangeException) {

@@ -824,8 +824,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public string memberName;
         }
 
-        public sealed class OutlingRegionsRequest : Request<OutliningRegionsResponse> {
-            public const string Command = "outlingRegions";
+        public sealed class OutliningRegionsRequest : Request<OutliningRegionsResponse> {
+            public const string Command = "outliningRegions";
             public int fileId, bufferId;
 
             public override string command => Command;

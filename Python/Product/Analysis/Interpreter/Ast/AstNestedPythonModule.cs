@@ -26,43 +26,38 @@ using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstNestedPythonModule : IPythonModule, ILocatedMember {
-        private string _name, _documentation;
+        private string _name;
         private IPythonModule _module;
+        private readonly IPythonInterpreter _interpreter;
         private readonly IReadOnlyList<string> _importNames;
-        private readonly IReadOnlyList<string> _children;
 
         public AstNestedPythonModule(
+            IPythonInterpreter interpreter,
             string name,
-            string documentation,
-            IReadOnlyList<string> children,
             IReadOnlyList<string> importNames
         ) {
+            _interpreter = interpreter;
             _name = name;
-            _documentation = documentation;
-            _children = children;
             _importNames = importNames;
         }
 
         public string Name => MaybeModule?.Name ?? _name;
-        public string Documentation => MaybeModule?.Documentation ?? _documentation;
+        public string Documentation => MaybeModule?.Documentation ?? string.Empty;
         public PythonMemberType MemberType => PythonMemberType.Module;
         public IEnumerable<LocationInfo> Locations => ((MaybeModule as ILocatedMember)?.Locations).MaybeEnumerate();
 
         private IPythonModule MaybeModule => Volatile.Read(ref _module);
-        private IPythonModule GetModule(IModuleContext context) {
+        private IPythonModule GetModule() {
             var mod = Volatile.Read(ref _module);
             if (mod != null) {
                 return mod;
             }
 
-            var interp = context as AstPythonInterpreter;
-            if (interp != null) {
-                foreach (var n in _importNames) {
-                    mod = interp.ImportModule(n);
-                    if (mod != null) {
-                        Debug.Assert(!(mod is AstNestedPythonModule), "ImportModule should not return nested module");
-                        break;
-                    }
+            foreach (var n in _importNames) {
+                mod = _interpreter.ImportModule(n);
+                if (mod != null) {
+                    Debug.Assert(!(mod is AstNestedPythonModule), "ImportModule should not return nested module");
+                    break;
                 }
             }
             if (mod == null) {
@@ -72,18 +67,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return Interlocked.CompareExchange(ref _module, mod, null) ?? mod;
         }
 
-        public IEnumerable<string> GetChildrenModules() => _children;
+        public IEnumerable<string> GetChildrenModules() => GetModule().GetChildrenModules();
 
         public IMember GetMember(IModuleContext context, string name) {
-            return GetModule(context).GetMember(context, name);
+            return GetModule().GetMember(context, name);
         }
 
         public IEnumerable<string> GetMemberNames(IModuleContext context) {
-            return GetModule(context).GetMemberNames(context);
+            return GetModule().GetMemberNames(context);
         }
 
         public void Imported(IModuleContext context) {
-            GetModule(context).Imported(context);
+            GetModule().Imported(context);
         }
     }
 }
