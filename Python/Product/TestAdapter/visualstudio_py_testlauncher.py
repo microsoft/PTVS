@@ -160,16 +160,33 @@ class VsTestResult(unittest.TextTestResult):
         self.sendResult(test, 'passed')
 
     def sendResult(self, test, outcome, trace = None):
+        def is_framework_frame(f):
+            import os.path
+            for lib_path in unittest.__path__:
+                if os.path.normcase(f[0]).startswith(os.path.normcase(lib_path)):
+                    return True
+            return False
+
+        def get_traceback(trace):
+            frames = []
+            for f in reversed(traceback.extract_tb(trace[2])):
+                if is_framework_frame(f):
+                    break
+                frames.append(f)
+
+            # stack trace parser needs the Python version, it parses the user's
+            # code to create fully qualified function names
+            lang_ver = '{0}.{1}'.format(sys.version_info.major, sys.version_info.minor)
+            tb = ''.join(traceback.format_list(frames))
+            return lang_ver + '\n' + tb
+
         if _channel is not None:
             tb = None
             message = None
             duration = time.time() - self._start_time if self._start_time else 0
             if trace is not None:
                 traceback.print_exception(*trace)
-                formatted = traceback.format_exception(*trace)
-                # Remove the 'Traceback (most recent call last)'
-                formatted = formatted[1:]
-                tb = ''.join(formatted)
+                tb = get_traceback(trace)
                 message = str(trace[1])
             _channel.send_event(
                 name='result', 

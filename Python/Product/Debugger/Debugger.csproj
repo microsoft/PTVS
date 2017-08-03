@@ -105,6 +105,7 @@
       <Link>Debugger\Transports\WebSocketStream.cs</Link>
     </Compile>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="QualifiedFunctionNameWalker.cs" />
     <Compile Include="Debugger\DebugConnection.cs" />
     <Compile Include="Debugger\LegacyDebuggerProtocol.cs" />
     <Compile Include="Debugger\BreakpointHitEventArgs.cs" />

@@ -125,6 +125,9 @@
     <Compile Include="..\..\..\Common\Product\TestAdapter\TestContainer.cs">
       <Link>TestContainer.cs</Link>
     </Compile>
+    <Compile Include="..\Debugger\QualifiedFunctionNameWalker.cs">
+      <Link>QualifiedFunctionNameWalker.cs</Link>
+    </Compile>
     <Compile Include="..\PythonTools\PythonConstants.cs">
       <Link>PythonConstants.cs</Link>
     </Compile>
