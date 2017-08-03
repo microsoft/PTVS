@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             lock (_members) {
-                var walker = new AstAnalysisWalker(interp, ast, this, _filePath, _members);
+                var walker = new AstAnalysisWalker(interp, ast, this, _filePath, _members, false);
                 ast.Walk(walker);
             }
         }

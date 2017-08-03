@@ -69,10 +69,12 @@ namespace Microsoft.VisualStudioTools.Project {
 
             ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
 
-            // Set the cursor at the beginning of the declaration.
-            ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
-            // Make sure that the text is visible.
-            viewAdapter.CenterLines(line, 1);
+            if (viewAdapter != null) {
+                // Set the cursor at the beginning of the declaration.
+                ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
+                // Make sure that the text is visible.
+                viewAdapter.CenterLines(line, 1);
+            }
         }
 
         internal static void NavigateTo(IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int pos) {
