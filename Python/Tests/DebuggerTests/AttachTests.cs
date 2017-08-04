@@ -1011,22 +1011,22 @@ int main(int argc, char* argv[]) {
             AssertUtil.ArrayEquals(expectedOutput, actualOutput);
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdImport() {
             await TestPtvsdImport("secret=None", new Uri("tcp://localhost"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdCommandLine() {
             await TestPtvsdCommandLine("--wait", new Uri("tcp://localhost"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdImportSecret() {
             await TestPtvsdImport("secret='secret'", new Uri("tcp://secret@localhost"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdCommandLineSecret() {
             await TestPtvsdCommandLine("--wait --secret secret", new Uri("tcp://secret@localhost"));
         }
@@ -1047,24 +1047,24 @@ int main(int argc, char* argv[]) {
             return ip;
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdImportAddress() {
             var ip = GetNetworkInterface();
             await TestPtvsdImport("secret=None, address=('" + ip + "', 8765)", new Uri("tcp://" + ip + ":8765"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdCommandLinePort() {
             await TestPtvsdCommandLine("--wait --port 8765", new Uri("tcp://localhost:8765"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdCommandLineInterface() {
             var ip = GetNetworkInterface();
             await TestPtvsdCommandLine("--wait --interface " + ip, new Uri("tcp://" + ip));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdCommandLineWait() {
             if (!HasPtvsdCommandLine) {
                 return;
@@ -1151,7 +1151,7 @@ int main(int argc, char* argv[]) {
         }
 
         // https://github.com/Microsoft/PTVS/issues/2842
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(2)]
         public async Task AttachPtvsdAndStopDebugging() {
             if (!HasPtvsdCommandLine) {
                 return;
