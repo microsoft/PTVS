@@ -17,33 +17,23 @@
 using System;
 
 namespace Microsoft.PythonTools.Debugger {
+    enum OutputChannel {
+        Debug,
+        StdOut, 
+        StdErr,
+    }
+
     sealed class OutputEventArgs : EventArgs {
-        private readonly string _output;
-        private readonly PythonThread _thread;
-        private readonly bool _isStdOut;
-
-        public OutputEventArgs(PythonThread thread, string output, bool isStdOut) {
-            _thread = thread;
-            _output = output;
-            _isStdOut = isStdOut;
+        public OutputEventArgs(PythonThread thread, string output, OutputChannel channel) {
+            Thread = thread;
+            Output = output;
+            Channel = channel;
         }
 
-        public PythonThread Thread {
-            get {
-                return _thread;
-            }
-        }
+        public PythonThread Thread { get; }
 
-        public string Output {
-            get {
-                return _output;
-            }
-        }
+        public string Output { get; }
 
-        public bool IsStdOut {
-            get {
-                return _isStdOut;
-            }
-        }
+        public OutputChannel Channel { get; }
     }
 }

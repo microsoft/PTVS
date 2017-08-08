@@ -17,6 +17,8 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Ipc.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.PythonTools.Debugger {
     // IMPORTANT:
@@ -444,7 +446,34 @@ namespace Microsoft.PythonTools.Debugger {
 
             public long threadId;
             public string output;
-            public bool isStdOut;
+            public OutputChannel channel;
+
+            // Legacy fallback in case channel is not specified. Should only be used for serialization.
+            [Obsolete]
+            public bool? isStdOut {
+                get {
+                    switch (channel) {
+                        case OutputChannel.stdout:
+                            return true;
+                        case OutputChannel.stderr:
+                            return false;
+                        default:
+                            return null;
+                    }
+                }
+                set {
+                    switch (value) {
+                        case true:
+                            channel = OutputChannel.stdout;
+                            break;
+                        case false:
+                            channel = OutputChannel.stderr;
+                            break;
+                        case null:
+                            throw new ArgumentNullException("value");
+                    }
+                }
+            }
         }
 
         public sealed class ExecutionResultEvent : Event {
@@ -532,6 +561,13 @@ namespace Microsoft.PythonTools.Debugger {
             Every = 1,
             WhenEqual = 2,
             WhenEqualOrGreater = 3,
+        }
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        public enum OutputChannel {
+            debug,
+            stdout,
+            stderr,
         }
 
         public sealed class PythonObject {
