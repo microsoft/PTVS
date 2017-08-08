@@ -14,7 +14,7 @@
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
 
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.2.0.0"
@@ -154,19 +154,22 @@ class SynthesizedValue(object):
     def __len__(self):
         return self.len_value
 
+IMPORTLIB_BOOTSTRAP = []
+if sys.version_info >= (3, 3):
+    IMPORTLIB_BOOTSTRAP.append(path.normcase('<frozen importlib._bootstrap>'))
+if sys.version_info >= (3, 5):
+    IMPORTLIB_BOOTSTRAP.append(path.normcase('<frozen importlib._bootstrap_external>'))
+
 # Specifies list of files not to debug. Can be extended by other modules
 # (the REPL does this for $attach support and not stepping into the REPL).
-DONT_DEBUG = [
+DONT_DEBUG = IMPORTLIB_BOOTSTRAP + [
     path.normcase(__file__),
     path.normcase(ptvsd.__file__),
     path.normcase(_vspu.__file__),
     path.normcase(_vspr.__file__),
     path.normcase(_vsipc.__file__),
 ]
-if sys.version_info >= (3, 3):
-    DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap>'))
-if sys.version_info >= (3, 5):
-    DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap_external>'))
+
 
 # Contains information about all breakpoints in the process. Keys are line numbers on which
 # there are breakpoints in any file, and values are dicts. For every line number, the
@@ -553,15 +556,21 @@ if hasattr(sys, 'base_prefix'):
 if hasattr(sys, 'real_prefix'):
     PREFIXES.append(path.normcase(sys.real_prefix))
 
+def is_stdlib(filename):
+    if not DEBUG_STDLIB:
+        if filename in IMPORTLIB_BOOTSTRAP:
+            return True
+        for prefix in PREFIXES:
+            if prefix != '' and filename.startswith(prefix):
+                return True
+
 def should_debug_code(code):
     if not code or not code.co_filename:
         return False
 
     filename = path.normcase(code.co_filename)
-    if not DEBUG_STDLIB:
-        for prefix in PREFIXES:
-            if prefix != '' and filename.startswith(prefix):
-                return False
+    if is_stdlib(filename):
+        return False
 
     for dont_debug_file in DONT_DEBUG:
         if is_same_py_file(filename, dont_debug_file):
@@ -726,6 +735,16 @@ class ModuleExitFrame(object):
 
 class Thread(object):
     def __init__(self, id = None):
+        # Replace some methods with their bound versions, so that bound wrappers aren't recreated on every access.
+        self.trace_func = self.trace_func
+        self.handle_line = self.handle_line
+        self.handle_call = self.handle_call
+        self.push_frame = self.push_frame
+        self.pop_frame = self.pop_frame
+        self.should_block_on_frame = self.should_block_on_frame
+        self.block = self.block
+        self.block_maybe_attach = self.block_maybe_attach
+
         if id is not None:
             self.id = id 
         else:
@@ -748,12 +767,12 @@ class Thread(object):
         self._is_working = False
         self.stopped_on_line = None
         self.detach = False
-        self.trace_func = self.trace_func # replace self.trace_func w/ a bound method so we don't need to re-create these regularly
         self.prev_trace_func = None
         self.trace_func_stack = []
         self.reported_process_loaded = False
         self.django_stepping = None
         self.is_sending = False
+        self.is_importing_stdlib = False
 
         # stackless changes
         if stackless is not None:
@@ -906,8 +925,39 @@ class Thread(object):
         except (StackOverflowException, KeyboardInterrupt):
             # stack overflow, disable tracing
             return self.trace_func
-    
+
     def handle_call(self, frame, arg):
+        # If we're importing stdlib, don't trace nested calls until we return from the import that started it.
+        if self.is_importing_stdlib:
+            return self.prev_trace_func
+
+        f_code = frame.f_code
+        co_name = f_code.co_name
+        co_filename = f_code.co_filename
+
+        if co_name == '<module>' and co_filename not in ['<string>', '<stdin>']:
+            probe_stack()
+
+            module = Module(get_code_filename(f_code))
+            MODULES.append((co_filename, module))
+            if not DETACHED:
+                report_module_load(module)
+
+            # If this is top-level code in some stdlib module, then mark this as start of stdlib import,
+            # and stop local tracing. Tracing will be re-enabled on the next local trace callback:
+            # either line, return, or exception - after we return from this call.
+            if is_stdlib(path.normcase(co_filename)):
+                self.is_importing_stdlib = True
+                return self.prev_trace_func
+
+            if not DETACHED:
+                # see if this module causes new break points to be bound
+                bound = set()
+                for pending_bp in PENDING_BREAKPOINTS:
+                    if try_bind_break_point(co_filename, module, pending_bp):
+                        bound.add(pending_bp)
+                PENDING_BREAKPOINTS.difference_update(bound)
+
         self.push_frame(frame)
 
         if DJANGO_BREAKPOINTS:
@@ -928,21 +978,8 @@ class Thread(object):
                     self.stepping = STEPPING_OVER
                     self.block_maybe_attach()
 
-        if frame.f_code.co_name == '<module>' and frame.f_code.co_filename not in ['<string>', '<stdin>']:
-            probe_stack()
-            code, module = new_module(frame)
-            if not DETACHED:
-                report_module_load(module)
-
-                # see if this module causes new break points to be bound
-                bound = set()
-                for pending_bp in PENDING_BREAKPOINTS:
-                    if try_bind_break_point(code.co_filename, module, pending_bp):
-                        bound.add(pending_bp)
-                PENDING_BREAKPOINTS.difference_update(bound)
-
         stepping = self.stepping
-        if stepping is not STEPPING_NONE and should_debug_code(frame.f_code):
+        if stepping is not STEPPING_NONE and should_debug_code(f_code):
             if stepping == STEPPING_INTO:
                 # block when we hit the 1st line, not when we're on the function def
                 self.stepping = STEPPING_OVER
@@ -955,9 +992,9 @@ class Thread(object):
                 self.stepping -= 1
 
         if (sys.platform == 'cli' and 
-            frame.f_code.co_name == '<module>' and 
-            not IPY_SEEN_MODULES.TryGetValue(frame.f_code)[0]):
-            IPY_SEEN_MODULES.Add(frame.f_code, None)
+            co_name == '<module>' and 
+            not IPY_SEEN_MODULES.TryGetValue(f_code)[0]):
+            IPY_SEEN_MODULES.Add(f_code, None)
             # work around IronPython bug - http://ironpython.codeplex.com/workitem/30127
             self.handle_line(frame, arg)
 
@@ -967,9 +1004,9 @@ class Thread(object):
             self.trace_func_stack.append(old_trace_func)
             self.prev_trace_func = None  # clear first incase old_trace_func stack overflows
             self.prev_trace_func = old_trace_func(frame, 'call', arg)
-
-        return self.trace_func
         
+        return self.trace_func
+
     def should_block_on_frame(self, frame):
         if not should_debug_code(frame.f_code):
             return False
@@ -995,6 +1032,8 @@ class Thread(object):
         return True
 
     def handle_line(self, frame, arg):
+        self.is_importing_stdlib = False
+
         if not DETACHED:
             # resolve whether step_complete and/or handling_breakpoints
             step_complete = False
@@ -1092,6 +1131,7 @@ class Thread(object):
         return self.trace_func
     
     def handle_return(self, frame, arg):
+        self.is_importing_stdlib = False
         self.pop_frame()
 
         if not DETACHED:
@@ -1129,6 +1169,8 @@ class Thread(object):
             self.prev_trace_func = self.trace_func_stack.pop()
         
     def handle_exception(self, frame, arg):
+        self.is_importing_stdlib = False
+
         if self.stepping == STEPPING_ATTACH_BREAK:
             self.block_maybe_attach()
 
@@ -2128,12 +2170,6 @@ def report_exception(frame, exc_info, tid, break_type):
         threadId=tid,
         data=dict((k, str(v)) for k, v in data.items()),
     )
-
-def new_module(frame):
-    mod = Module(get_code_filename(frame.f_code))
-    MODULES.append((frame.f_code.co_filename, mod))
-
-    return frame.f_code, mod
 
 def report_module_load(mod):
     send_debug_event(
