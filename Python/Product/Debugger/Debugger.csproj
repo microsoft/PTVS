@@ -83,6 +83,10 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>DkmDebugger\Microsoft.Dia.Interop.$(VSTarget).dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <Choose>
     <When Condition="$(VSTarget) == '15.0'">

@@ -162,10 +162,13 @@ namespace Microsoft.PythonTools.Repl {
             };
 
             EventHandler<OutputEventArgs> debuggerOutput = (object sender, OutputEventArgs e) => {
-                if (e.IsStdOut) {
-                    WriteOutput(e.Output, addNewline: false);
-                } else {
-                    WriteError(e.Output, addNewline: false);
+                switch (e.Channel) {
+                    case OutputChannel.StdOut:
+                        WriteOutput(e.Output, addNewline: false);
+                        break;
+                    case OutputChannel.StdErr:
+                        WriteError(e.Output, addNewline: false);
+                        break;
                 }
             };
 

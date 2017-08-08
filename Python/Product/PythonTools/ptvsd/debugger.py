@@ -927,13 +927,16 @@ class Thread(object):
             return self.trace_func
 
     def handle_call(self, frame, arg):
-        # If we're importing stdlib, don't trace nested calls until we return from the import that started it.
-        if self.is_importing_stdlib:
-            return self.prev_trace_func
-
         f_code = frame.f_code
         co_name = f_code.co_name
         co_filename = f_code.co_filename
+
+        # If we're importing stdlib, don't trace nested calls until we return from the import that started it,
+        # but notify the user if these nested calls end up in non-stdlib code.
+        if self.is_importing_stdlib:
+            if not is_stdlib(path.normcase(co_filename)):
+                debug_output.write('Standard library module invoked user code during import; breakpoints disabled for invoked code.\n')
+            return self.prev_trace_func
 
         if co_name == '<module>' and co_filename not in ['<string>', '<stdin>']:
             probe_stack()
@@ -2532,15 +2535,16 @@ def do_wait():
         msvcrt.getch()
 
 def enable_output_redirection():
-    sys.stdout = _DebuggerOutput(sys.stdout, is_stdout = True)
-    sys.stderr = _DebuggerOutput(sys.stderr, is_stdout = False)
+    sys.stdout = _DebuggerOutput(sys.stdout, 'stdout')
+    sys.stderr = _DebuggerOutput(sys.stderr, 'stderr')
 
 class _DebuggerOutput(object):
-    """file like object which redirects output to the repl window."""
+    """file like object which redirects output to the debugger."""
     errors = 'strict'
 
-    def __init__(self, old_out, is_stdout):
-        self.is_stdout = is_stdout
+    # Channel is one of: 'debug', 'stdout', 'stderr'
+    def __init__(self, old_out, channel):
+        self.channel = channel
         self.old_out = old_out
         if sys.version >= '3.' and hasattr(old_out, 'buffer'):
             self.buffer = DebuggerBuffer(old_out.buffer)
@@ -2564,7 +2568,7 @@ class _DebuggerOutput(object):
                 name='legacyDebuggerOutput',
                 threadId=thread.get_ident(),
                 output=value,
-                isStdOut=self.is_stdout,
+                channel=self.channel,
             )
         if self.old_out:
             self.old_out.write(value)
@@ -2577,10 +2581,7 @@ class _DebuggerOutput(object):
     
     @property
     def name(self):
-        if self.is_stdout:
-            return "<stdout>"
-        else:
-            return "<stderr>"
+        return '<' + channel + '>'
 
     def __getattr__(self, name):
         return getattr(self.old_out, name)
@@ -2611,6 +2612,8 @@ class DebuggerBuffer(object):
 
     def seek(self, pos, whence = 0):
         return self.buffer.seek(pos, whence)
+
+debug_output = _DebuggerOutput(None, 'debug')
 
 def is_same_py_file(file1, file2):
     """compares 2 filenames accounting for .pyc files"""

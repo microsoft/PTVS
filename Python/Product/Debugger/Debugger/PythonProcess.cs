@@ -591,7 +591,22 @@ namespace Microsoft.PythonTools.Debugger {
                 thread = null;
             }
 
-            DebuggerOutput?.Invoke(this, new OutputEventArgs(thread, e.output, e.isStdOut));
+            OutputChannel channel;
+            switch (e.channel) {
+                case LDP.OutputChannel.debug:
+                    channel = OutputChannel.Debug;
+                    break;
+                case LDP.OutputChannel.stdout:
+                    channel = OutputChannel.StdOut;
+                    break;
+                case LDP.OutputChannel.stderr:
+                    channel = OutputChannel.StdErr;
+                    break;
+                default:
+                    throw new ArgumentException("Invalid channel", "e");
+            }
+
+            DebuggerOutput?.Invoke(this, new OutputEventArgs(thread, e.output, channel));
         }
 
         private void OnLegacyAsyncBreak(object sender, LDP.AsyncBreakEvent e) {
