@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -255,6 +256,10 @@ namespace Microsoft.PythonTools {
 
         internal static AnalysisEntryService GetEntryService(this IServiceProvider serviceProvider) {
             return serviceProvider.GetComponentModel()?.GetService<AnalysisEntryService>();
+        }
+
+        internal static PythonEditorServices GetEditorServices(this IServiceProvider serviceProvider) {
+            return serviceProvider.GetComponentModel()?.GetService<PythonEditorServices>();
         }
 
         internal static PythonLanguageVersion GetLanguageVersion(this ITextView textView, IServiceProvider serviceProvider) {

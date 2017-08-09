@@ -15,8 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
+using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
+using System.Reflection;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
@@ -78,7 +81,10 @@ namespace TestUtilities.Python {
             serviceProvider.ComponentModel.AddExtension<IInterpreterRegistryService>(() => optService.Value);
             serviceProvider.ComponentModel.AddExtension<IInterpreterOptionsService>(() => optService.Value);
 
-            var analysisEntryServiceCreator = new Lazy<AnalysisEntryService>(() => new AnalysisEntryService(serviceProvider));
+            var editorServices = CreatePythonEditorServices(serviceProvider);
+            serviceProvider.ComponentModel.AddExtension(() => editorServices);
+
+            var analysisEntryServiceCreator = new Lazy<AnalysisEntryService>(() => new AnalysisEntryService(editorServices));
             serviceProvider.ComponentModel.AddExtension<IAnalysisEntryService>(() => analysisEntryServiceCreator.Value);
             serviceProvider.ComponentModel.AddExtension(() => analysisEntryServiceCreator.Value);
 
@@ -96,6 +102,12 @@ namespace TestUtilities.Python {
             var ptvsService = new PythonToolsService(serviceProvider);
             serviceProvider.AddService(typeof(PythonToolsService), ptvsService);
             return serviceProvider;
+        }
+
+        private static PythonEditorServices CreatePythonEditorServices(IServiceContainer site) {
+            var services = new PythonEditorServices(site);
+            services.ComponentModel.DefaultCompositionService.SatisfyImportsOnce(services);
+            return services;
         }
 
         private static object CreateTaskProviderService(IServiceContainer container, Type type) {

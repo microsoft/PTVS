@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -69,7 +70,7 @@ namespace PythonToolsMockTests {
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
                     vs.InvokeSync(() => {
-                        analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory);
+                        analyzer = new VsProjectAnalyzer(EditorServices, factory);
                     });
                     var task = analyzer.ReloadTask;
                     if (task != null) {
@@ -136,9 +137,9 @@ namespace PythonToolsMockTests {
 
                     var buffer = View.TextView.TextBuffer;
                     var oldVersion = buffer.CurrentSnapshot;
-                    buffer.GetPythonAnalysisClassifier().ClassificationChanged += (s, e) => {
+                    BufferInfo.AnalysisClassifier.ClassificationChanged += (s, e) => {
                         var en = (AnalysisEntry)GetAnalysisEntry();
-                        if (en.TryGetBufferParser()?.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
+                        if (BufferInfo.LastAnalysisReceivedVersion.VersionNumber > oldVersion.Version.VersionNumber) {
                             mre.SetIfNotDisposed();
                         }
                     };
@@ -162,6 +163,10 @@ namespace PythonToolsMockTests {
         public ITextSnapshot CurrentSnapshot {
             get { return View.TextView.TextSnapshot; }
         }
+
+        internal PythonEditorServices EditorServices => VS.ComponentModel.GetService<PythonEditorServices>();
+
+        internal PythonTextBufferInfo BufferInfo => EditorServices.GetBufferInfo(View.TextView.TextBuffer);
 
         public List<Completion> GetCompletionListAfter(string substring, bool assertIfNoCompletions = true) {
             var snapshot = CurrentSnapshot;

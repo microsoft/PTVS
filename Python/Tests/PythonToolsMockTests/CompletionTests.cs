@@ -1115,12 +1115,13 @@ async def g():
                 var snapshot = view.CurrentSnapshot;
                 ITextVersion afterEditVersion = null;
                 ManualResetEvent mre = new ManualResetEvent(false);
-                view.View.TextView.TextBuffer.RegisterForNewAnalysis(entry => {
+                
+                view.BufferInfo.OnNewAnalysis += (s, e) => {
                     if (afterEditVersion != null &&
-                    entry.TryGetBufferParser().GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
+                        view.BufferInfo.LastAnalysisReceivedVersion.VersionNumber >= afterEditVersion.VersionNumber) {
                         mre.Set();
                     }
-                });
+                };
                 view.View.MoveCaret(new SnapshotPoint(snapshot, editInsert));
                 view.Type(editText);
                 afterEditVersion = view.CurrentSnapshot.Version;
