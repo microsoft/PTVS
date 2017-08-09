@@ -1699,8 +1699,8 @@ async def f():
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
-            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider(suppressTaskProvider: true);
-            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact)) {
+            var services = PythonToolsTestUtilities.CreateMockServiceProvider(suppressTaskProvider: true).GetEditorServices();
+            using (var analyzer = new VsProjectAnalyzer(services, fact)) {
                 var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
                 buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
@@ -1712,7 +1712,7 @@ async def f():
                     false
                 );
 
-                new MethodExtractor(serviceProvider, view).ExtractMethod(extractInput).Wait();
+                new MethodExtractor(services.Site, view).ExtractMethod(extractInput).Wait();
 
                 if (expected.IsError) {
                     Assert.AreEqual(expected.Text, extractInput.FailureReason);
