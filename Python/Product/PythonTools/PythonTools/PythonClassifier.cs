@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -32,27 +33,27 @@ namespace Microsoft.PythonTools {
     internal sealed class PythonClassifier : IClassifier {
         private readonly TokenCache _tokenCache;
         private readonly PythonClassifierProvider _provider;
-        private readonly ITextBuffer _buffer;
+        private readonly PythonTextBufferInfo _buffer;
         private PythonLanguageVersion _version;
 
         [ThreadStatic]
         private static Dictionary<PythonLanguageVersion, Tokenizer> _tokenizers;    // tokenizer for each version, shared between all buffers
 
-        internal PythonClassifier(PythonClassifierProvider provider, ITextBuffer buffer) {
-            buffer.Changed += BufferChanged;
-            buffer.ContentTypeChanged += BufferContentTypeChanged;
+        internal PythonClassifier(PythonClassifierProvider provider, PythonTextBufferInfo buffer) {
+            buffer.OnChanged += BufferChanged;
+            buffer.OnContentTypeChanged += BufferContentTypeChanged;
 
             _tokenCache = new TokenCache();
             _provider = provider;
             _buffer = buffer;
 
-            _buffer.RegisterForNewAnalysisEntry(NewAnalysisEntry);
+            _buffer.OnNewAnalysisEntry += NewAnalysisEntry;
 
-            _version = _buffer.GetLanguageVersion(_provider._serviceProvider);
+            _version = _buffer.LanguageVersion;
         }
 
-        private void NewAnalysisEntry(AnalysisEntry entry) {
-            var analyzer = entry.Analyzer;
+        private void NewAnalysisEntry(object sender, EventArgs e) {
+            var analyzer = _buffer.AnalysisEntry?.Analyzer;
             var newVersion = _version;
             if (newVersion != _version) {
                 _tokenCache.Clear();
@@ -62,7 +63,7 @@ namespace Microsoft.PythonTools {
 
                 var changed = ClassificationChanged;
                 if (changed != null) {
-                    var snapshot = _buffer.CurrentSnapshot;
+                    var snapshot = _buffer.Buffer.CurrentSnapshot;
 
                     changed(this, new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
                 }
@@ -120,10 +121,9 @@ namespace Microsoft.PythonTools {
 
         private void BufferContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
             _tokenCache.Clear();
-            _buffer.Changed -= BufferChanged;
-            _buffer.ContentTypeChanged -= BufferContentTypeChanged;
-            _buffer.Properties.RemoveProperty(typeof(PythonClassifier));
-            _buffer.UnregisterForNewAnalysisEntry(NewAnalysisEntry);
+            _buffer.OnChanged -= BufferChanged;
+            _buffer.OnContentTypeChanged -= BufferContentTypeChanged;
+            _buffer.OnNewAnalysisEntry -= NewAnalysisEntry;
         }
 
         private void BufferChanged(object sender, TextContentChangedEventArgs e) {
@@ -385,11 +385,7 @@ namespace Microsoft.PythonTools {
 
     internal static partial class ClassifierExtensions {
         public static PythonClassifier GetPythonClassifier(this ITextBuffer buffer) {
-            PythonClassifier res;
-            if (buffer.Properties.TryGetProperty<PythonClassifier>(typeof(PythonClassifier), out res)) {
-                return res;
-            }
-            return null;
+            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.Classifier;
         }
     }
 }

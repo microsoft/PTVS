@@ -14,10 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.ComponentModel.Composition;
+using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -29,8 +28,8 @@ namespace Microsoft.PythonTools.Intellisense {
     [TextViewRole(PredefinedTextViewRoles.Analyzable)]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     class PythonSuggestedActionsSourceProvider : ISuggestedActionsSourceProvider {
-        [Import(typeof(SVsServiceProvider))]
-        internal IServiceProvider _provider = null;
+        [Import]
+        internal PythonEditorServices _services = null;
 
         public ISuggestedActionsSource CreateSuggestedActionsSource(
             ITextView textView,
@@ -39,7 +38,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (textView == null && textBuffer == null) {
                 return null;
             }
-            return new PythonSuggestedActionsSource(_provider, textView, textBuffer);
+            return new PythonSuggestedActionsSource(_services, textView, textBuffer);
         }
     }
 }

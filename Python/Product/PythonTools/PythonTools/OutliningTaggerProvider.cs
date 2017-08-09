@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -37,17 +38,17 @@ namespace Microsoft.PythonTools {
     [Export(typeof(ITaggerProvider)), ContentType(PythonCoreConstants.ContentType)]
     [TagType(typeof(IOutliningRegionTag))]
     class OutliningTaggerProvider : ITaggerProvider {
-        private readonly PythonToolsService _pyService;
+        private readonly PythonEditorServices _services;
 
         [ImportingConstructor]
-        public OutliningTaggerProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
-            _pyService = serviceProvider.GetPythonToolsService();
+        public OutliningTaggerProvider([Import] PythonEditorServices services) {
+            _services = services;
         }
 
         #region ITaggerProvider Members
 
         public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag {
-            return (ITagger<T>)(buffer.GetOutliningTagger() ?? new OutliningTagger(_pyService, buffer));
+            return (ITagger<T>)_services.GetBufferInfo(buffer).GetOrCreateOutliningTagger(b => new OutliningTagger(_services, b));
         }
 
         #endregion
@@ -55,30 +56,24 @@ namespace Microsoft.PythonTools {
         [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
             Justification = "Object is owned by VS and cannot be disposed")]
         internal class OutliningTagger : ITagger<IOutliningRegionTag> {
-            private readonly ITextBuffer _buffer;
-            private readonly PythonToolsService _pyService;
+            private readonly PythonTextBufferInfo _buffer;
+            private readonly PythonEditorServices _services;
             private TagSpan[] _tags = Array.Empty<TagSpan>();
             private CancellationTokenSource _processing;
-            private bool _enabled;
             private static readonly Regex _openingRegionRegex = new Regex(@"^\s*#\s*region($|\s+.*$)");
             private static readonly Regex _closingRegionRegex = new Regex(@"^\s*#\s*endregion($|\s+.*$)");
 
-            public OutliningTagger(PythonToolsService pyService, ITextBuffer buffer) {
-                _pyService = pyService;
+            public OutliningTagger(PythonEditorServices services, PythonTextBufferInfo buffer) {
+                _services = services;
                 _buffer = buffer;
-                _buffer.Properties[typeof(OutliningTagger)] = this;
-                _buffer.RegisterForParseTree(OnNewParseTree);
-                _enabled = _pyService.AdvancedOptions.EnterOutliningModeOnOpen;
+                _buffer.OnNewParseTree += OnNewParseTree;
+                Enabled = _services.Python?.AdvancedOptions.EnterOutliningModeOnOpen ?? true;
             }
 
-            public bool Enabled {
-                get {
-                    return _enabled;
-                }
-            }
+            public bool Enabled { get; private set; }
 
             public void Enable() {
-                _enabled = true;
+                Enabled = true;
                 var snapshot = _buffer.CurrentSnapshot;
                 var tagsChanged = TagsChanged;
                 if (tagsChanged != null) {
@@ -87,7 +82,7 @@ namespace Microsoft.PythonTools {
             }
 
             public void Disable() {
-                _enabled = false;
+                Enabled = false;
                 var snapshot = _buffer.CurrentSnapshot;
                 var tagsChanged = TagsChanged;
                 if (tagsChanged != null) {
@@ -101,9 +96,9 @@ namespace Microsoft.PythonTools {
                 return _tags;
             }
 
-            private void OnNewParseTree(AnalysisEntry entry) {
-                _pyService.Site.GetUIThread().InvokeTask(() => UpdateTagsAsync(entry))
-                    .HandleAllExceptions(_pyService.Site, GetType())
+            private void OnNewParseTree(object sender, EventArgs e) {
+                _services.Site.GetUIThread().InvokeTask(() => UpdateTagsAsync(_buffer.AnalysisEntry))
+                    .HandleAllExceptions(_services.Site, GetType())
                     .DoNotWait();
             }
 
@@ -331,15 +326,7 @@ namespace Microsoft.PythonTools {
 
     static class OutliningTaggerProviderExtensions {
         public static OutliningTaggerProvider.OutliningTagger GetOutliningTagger(this ITextView self) {
-            return self.TextBuffer.GetOutliningTagger();
-        }
-
-        public static OutliningTaggerProvider.OutliningTagger GetOutliningTagger(this ITextBuffer self) {
-            OutliningTaggerProvider.OutliningTagger res;
-            if (self.Properties.TryGetProperty<OutliningTaggerProvider.OutliningTagger>(typeof(OutliningTaggerProvider.OutliningTagger), out res)) {
-                return res;
-            }
-            return null;
+            return PythonTextBufferInfo.TryGetForBuffer(self.TextBuffer)?.OutliningTagger;
         }
     }
 }

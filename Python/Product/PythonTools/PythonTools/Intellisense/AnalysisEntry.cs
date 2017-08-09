@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -38,6 +39,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private BufferParser _bufferParser;
         private TaskCompletionSource<BufferParser> _bufferParserTask, _createBufferParserTask;
 
+        public event EventHandler ParseComplete;
         /// <summary>
         /// Raised when a new analysis is available for this AnalyisEntry
         /// </summary>
@@ -57,32 +59,13 @@ namespace Microsoft.PythonTools.Intellisense {
             _bufferParser?.Dispose();
         }
 
-        internal async void OnAnalysisComplete() {
+        internal void OnAnalysisComplete() {
             IsAnalyzed = true;
             AnalysisComplete?.Invoke(this, EventArgs.Empty);
-
-            BufferParser bufferParser;
-            try {
-                bufferParser = await GetBufferParserAsync();
-            } catch (OperationCanceledException) {
-                return;
-            }
-
-            foreach (var notify in bufferParser.Buffers.SelectMany(b => b.GetNewAnalysisRegistrations())) {
-                notify(this);
-            }
         }
 
-        private void NotifyAllRegistrations(BufferParser bufferParser) {
-            foreach (var notify in bufferParser.Buffers.SelectMany(b => b.GetNewAnalysisEntryRegistrations())) {
-                notify(this);
-            }
-            foreach (var notify in bufferParser.Buffers.SelectMany(b => b.GetParseTreeRegistrations())) {
-                notify(this);
-            }
-            foreach (var notify in bufferParser.Buffers.SelectMany(b => b.GetNewAnalysisRegistrations())) {
-                notify(this);
-            }
+        internal void OnParseComplete() {
+            ParseComplete?.Invoke(this, EventArgs.Empty);
         }
 
         internal BufferParser TryGetBufferParser() {
@@ -157,7 +140,9 @@ namespace Microsoft.PythonTools.Intellisense {
             tcs.TrySetResult(bp);
             bpt?.TrySetResult(bp);
 
-            NotifyAllRegistrations(bp);
+            if (bp.AnalysisEntry.IsAnalyzed) {
+                bp.AnalysisEntry.OnAnalysisComplete();
+            }
 
             return bp;
         }
@@ -181,70 +166,21 @@ namespace Microsoft.PythonTools.Intellisense {
             return AnalysisCookie?.GetLine(line);
         }
 
-        internal async void OnParseComplete() {
-            BufferParser bufferParser;
-            try {
-                bufferParser = await GetBufferParserAsync();
-            } catch (OperationCanceledException) {
-                return;
-            }
-            foreach (var buffer in bufferParser.Buffers) {
-                var events = buffer.GetParseTreeRegistrations();
-                foreach (var notify in events) {
-                    notify(this);
-                }
-            }
-        }
-
-        internal async void OnNewAnalysisEntry() {
-            BufferParser bufferParser;
-            try {
-                bufferParser = await GetBufferParserAsync();
-            } catch (OperationCanceledException) {
-                return;
-            }
-            foreach (var buffer in bufferParser.Buffers) {
-                var events = buffer.GetNewAnalysisEntryRegistrations();
-                foreach (var notify in events) {
-                    notify(this);
-                }
-            }
-        }
-
         public int GetBufferId(ITextBuffer buffer) {
-            var bufferParser = _bufferParser;
-            if (bufferParser != null) {
-                var res = bufferParser.GetBufferId(buffer);
-                if (res != null) {
-                    return res.Value;
-                }
-                // Race with the buffer closing...
-            }
+            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisEntryId ?? 0;
 
-            // No buffer parser associated with the file yet.  This can happen when
-            // you have a document that is open but hasn't had focus causing the full
-            // load of our intellisense controller.  In that case there is only a single
-            // buffer which is buffer 0.  An easy repro for this is to open a IronPython WPF
-            // project and close it with the XAML file focused and the .py file still open.
-            // Re-open the project, and double click on a button on the XAML page.  The python
-            // file isn't loaded and weh ave no BufferParser associated with it.
-            return 0;
+            // May get null if there is no analysis entry associated with the file yet.
+            // This can happen when you have a document that is open but hasn't had focus
+            // causing the full load of our intellisense controller.  In that case there
+            // is only a single buffer which is buffer 0.  An easy repro for this is to
+            // open a IronPython WPF project and close it with the XAML file focused and
+            // the .py file still open. Re-open the project, and double click on a button
+            // on the XAML page.  The python file isn't loaded and we have no 
+            // PythonTextBufferInfo associated with it.
         }
 
         public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
-            var bufferParser = _bufferParser;
-            if (bufferParser != null) {
-                var res = bufferParser.GetAnalysisVersion(buffer);
-                if (res != null) {
-                    // Analysis version has gone away, this can happen
-                    // if the text view is getting closed while we're
-                    // trying to perform an operation.
-                    return res;
-                }
-            }
-
-            // See GetBufferId above, this is really just defense in depth...
-            return buffer.CurrentSnapshot.Version;
+            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.LastAnalysisReceivedVersion ?? buffer.CurrentSnapshot.Version;
         }
 
         public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {

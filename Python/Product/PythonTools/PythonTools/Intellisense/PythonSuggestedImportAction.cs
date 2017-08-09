@@ -112,9 +112,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public async void Invoke(CancellationToken cancellationToken) {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
-            var entryService = _source._provider.GetEntryService();
             AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(_source._view, _buffer, out entry)) {
+            if (!_source._services.AnalysisEntryService.TryGetAnalysisEntry(_source._view, _buffer, out entry)) {
                 return;
             }
 

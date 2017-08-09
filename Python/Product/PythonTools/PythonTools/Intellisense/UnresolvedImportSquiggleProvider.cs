@@ -15,7 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
@@ -25,7 +27,7 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class UnresolvedImportSquiggleProvider {
         // Allows test cases to skip checking user options
         internal static bool _alwaysCreateSquiggle;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly PythonEditorServices _services;
         private readonly TaskProvider _taskProvider;
         private bool _enabled;
 
@@ -33,9 +35,9 @@ namespace Microsoft.PythonTools.Intellisense {
             if (taskProvider == null) {
                 throw new ArgumentNullException(nameof(taskProvider));
             }
-            _serviceProvider = serviceProvider;
+            _services = serviceProvider.GetComponentModel().GetService<PythonEditorServices>();
             _taskProvider = taskProvider;
-            var options = _serviceProvider.GetPythonToolsService()?.GeneralOptions;
+            var options = _services.Python?.GeneralOptions;
             if (options != null) {
                 _enabled = options.UnresolvedImportWarning;
                 options.Changed += GeneralOptions_Changed;
@@ -49,22 +51,27 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void ListenForNextNewAnalysis(AnalysisEntry entry, ITextBuffer buffer) {
-            if (entry != null && !string.IsNullOrEmpty(entry.Path)) {
-                buffer.RegisterForNewAnalysis(newEntry => OnNewAnalysis(newEntry, buffer));
-                if (entry.IsAnalyzed) {
-                    OnNewAnalysis(entry, buffer);
-                }
+        public void ListenForNextNewAnalysis(ITextBuffer buffer) {
+            var bi = _services.GetBufferInfo(buffer);
+            bi.OnNewAnalysis += OnNewAnalysis;
+            if (bi.AnalysisEntry != null && bi.AnalysisEntry.IsAnalyzed) {
+                OnNewAnalysis(bi, EventArgs.Empty);
             }
         }
 
-        private async void OnNewAnalysis(AnalysisEntry entry, ITextBuffer buffer) {
+        private async void OnNewAnalysis(object sender, EventArgs e) {
+            var bi = sender as PythonTextBufferInfo;
+            if (bi == null) {
+                Debug.Fail("Unexpected Sender type " + sender?.GetType() ?? "(null)");
+                return;
+            }
             if (!_enabled && !_alwaysCreateSquiggle) {
-                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                _taskProvider.Clear(bi.AnalysisEntry, VsProjectAnalyzer.UnresolvedImportMoniker);
                 return;
             }
 
-            var missingImports = await entry.Analyzer.GetMissingImportsAsync(entry, buffer);
+            var entry = bi.AnalysisEntry;
+            var missingImports = await entry.Analyzer.GetMissingImportsAsync(entry, bi.Buffer);
             if (missingImports != null) {
                 var missing = missingImports.Data;
 
@@ -77,7 +84,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             entry,
                             VsProjectAnalyzer.UnresolvedImportMoniker,
                             missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
-                                _serviceProvider,
+                                _services.Site,
                                 entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
                                 t.name,
                                 new SourceSpan(

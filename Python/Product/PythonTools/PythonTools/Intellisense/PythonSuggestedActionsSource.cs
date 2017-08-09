@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
@@ -27,9 +28,9 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     class PythonSuggestedActionsSource : ISuggestedActionsSource {
-        internal readonly IServiceProvider _provider;
+        internal readonly PythonEditorServices _services;
         internal readonly ITextView _view;
-        private readonly ITextBuffer _textBuffer;
+        private readonly PythonTextBufferInfo _textBuffer;
 
         private readonly object _currentLock = new object();
         private IEnumerable<SuggestedActionSet> _current;
@@ -39,18 +40,18 @@ namespace Microsoft.PythonTools.Intellisense {
         private static readonly Guid _telemetryId = new Guid("{9D2182D9-27BC-4143-9A93-B7D9C015D01B}");
 
         public PythonSuggestedActionsSource(
-            IServiceProvider provider,
+            PythonEditorServices services,
             ITextView textView,
             ITextBuffer textBuffer
         ) {
-            _provider = provider;
+            _services = services;
             _view = textView;
-            _textBuffer = textBuffer;
-            _textBuffer.RegisterForNewAnalysis(OnNewAnalysisEntry);
-            _uiThread = provider.GetUIThread();
+            _textBuffer = _services.GetBufferInfo(textBuffer);
+            _textBuffer.OnNewAnalysisEntry += OnNewAnalysisEntry;
+            _uiThread = _services.Site.GetUIThread();
         }
 
-        private void OnNewAnalysisEntry(AnalysisEntry obj) {
+        private void OnNewAnalysisEntry(object sender, EventArgs e) {
             SuggestedActionsChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -85,7 +86,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 SpanTrackingMode.EdgePositive,
                 TrackingFidelityMode.Forward
             );
-            var imports = await _uiThread.InvokeTask(() => VsProjectAnalyzer.GetMissingImportsAsync(_provider, _view, textBuffer.CurrentSnapshot, span));
+            var imports = await _uiThread.InvokeTask(() => VsProjectAnalyzer.GetMissingImportsAsync(_services.Site, _view, textBuffer.CurrentSnapshot, span));
 
             if (imports == MissingImportAnalysis.Empty) {
                 return false;

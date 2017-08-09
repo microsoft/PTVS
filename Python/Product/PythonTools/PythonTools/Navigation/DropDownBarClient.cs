@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -54,6 +55,7 @@ namespace Microsoft.PythonTools.Navigation {
     class DropDownBarClient : IVsDropdownBarClient {
         private readonly AnalysisEntry _analysisEntry;                           // analysis entry which gets updated with new ASTs for us to inspect.
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
+        private readonly PythonEditorServices _services;
         private IWpfTextView _textView;                                 // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
         private NavigationInfo _navigations;
@@ -72,9 +74,10 @@ namespace Microsoft.PythonTools.Navigation {
 
             _serviceProvider = serviceProvider;
             _uiThread = _serviceProvider.GetUIThread();
+            _services = _serviceProvider.GetComponentModel().GetService<PythonEditorServices>();
             _analysisEntry = analysisEntry;
-            textView.TextBuffer.RegisterForParseTree(ParserOnNewParseTree);
             _textView = textView;
+            _services.GetBufferInfo(_textView.TextBuffer).OnNewParseTree += ParserOnNewParseTree;
             _dispatcher = Dispatcher.CurrentDispatcher;
             _textView.Caret.PositionChanged += CaretPositionChanged;
             for (int i = 0; i < NavigationLevels; i++) {
@@ -119,7 +122,7 @@ namespace Microsoft.PythonTools.Navigation {
                     _textView.Properties.RemoveProperty(typeof(DropDownBarClient));
                 }
             }
-            _textView.TextBuffer.UnregisterForParseTree(ParserOnNewParseTree);
+            _services.GetBufferInfo(_textView.TextBuffer).OnNewParseTree -= ParserOnNewParseTree;
 #if DEBUG
             IVsDropdownBar existing;
             IVsDropdownBarClient existingClient;
@@ -468,7 +471,7 @@ namespace Microsoft.PythonTools.Navigation {
         /// Wired to parser event for when the parser has completed parsing a new tree and we need
         /// to update the navigation bar with the new data.
         /// </summary>
-        private async void ParserOnNewParseTree(AnalysisEntry entry) {
+        private async void ParserOnNewParseTree(object sender, EventArgs e) {
             var dropDownBar = _dropDownBar;
             if (dropDownBar == null) {
                 return;

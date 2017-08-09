@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
@@ -99,11 +100,17 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private async void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
+        private void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
             if (_quickInfoSession != null && !_quickInfoSession.IsDismissed) {
                 _quickInfoSession.Dismiss();
             }
 
+            TextViewMouseHoverWorker(e)
+                .HandleAllExceptions(_serviceProvider, GetType())
+                .DoNotWait();
+        }
+
+        private async Task TextViewMouseHoverWorker(MouseHoverEventArgs e) {
             var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
                 if (_textView.TextBuffer.GetInteractiveWindow() != null &&
@@ -152,7 +159,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private static object _intellisenseAnalysisEntry = new object();
 
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            _subjectBuffers.Add(subjectBuffer);
+            if (!_subjectBuffers.Add(subjectBuffer)) {
+                return;
+            }
 
             ProjectAnalyzer analyzer;
             string filename;
@@ -172,30 +181,15 @@ namespace Microsoft.PythonTools.Intellisense {
             if (vsAnalyzer != null) {
                 bool suppressErrorList = _textView.Properties.ContainsProperty(SuppressErrorLists);
 
-                vsAnalyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile, suppressErrorList).ContinueWith(task => {
-                    var newParser = task.Result;
-
-                    if (newParser != null) {
-                        // store the analysis entry so that we can detach it (the file path is lost
-                        // when we close the view)
-                        subjectBuffer.Properties[_intellisenseAnalysisEntry] = newParser.AnalysisEntry;
-
-                        lock(newParser) {
-                            newParser.AttachedViews++;
-                        }
-                    }
-                });
+                vsAnalyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile, suppressErrorList)
+                    .HandleAllExceptions(_serviceProvider, GetType())
+                    .DoNotWait();
             }
         }
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            if (_subjectBuffers.Remove(subjectBuffer)) {
-                AnalysisEntry analysis;
-                if (subjectBuffer.Properties.TryGetProperty(_intellisenseAnalysisEntry, out analysis)) {
-                    analysis.Analyzer.BufferDetached(analysis, subjectBuffer);
-                    subjectBuffer.Properties.RemoveProperty(_intellisenseAnalysisEntry);
-                }
-            }
+            PythonTextBufferInfo.TryDispose(subjectBuffer);
+            _subjectBuffers.Remove(subjectBuffer);
         }
 
         /// <summary>

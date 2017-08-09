@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -43,19 +44,20 @@ namespace Microsoft.PythonTools {
         private AP.AnalysisClassification[] _spanCache;
         private readonly object _spanCacheLock = new object();
         private readonly PythonAnalysisClassifierProvider _provider;
-        private readonly ITextBuffer _buffer;
+        private readonly PythonTextBufferInfo _buffer;
         private LocationTracker _spanTranslator;
 
-        internal PythonAnalysisClassifier(PythonAnalysisClassifierProvider provider, ITextBuffer buffer) {
-            buffer.ContentTypeChanged += BufferContentTypeChanged;
-
+        internal PythonAnalysisClassifier(PythonAnalysisClassifierProvider provider, PythonTextBufferInfo buffer) {
             _provider = provider;
             _buffer = buffer;
-            _buffer.RegisterForNewAnalysis(OnNewAnalysis);
+            _buffer.OnNewAnalysis += OnNewAnalysis;
+            _buffer.OnContentTypeChanged += BufferContentTypeChanged;
         }
 
-        private async void OnNewAnalysis(AnalysisEntry entry) {
-            if (!_provider._colorNames) {
+        private async void OnNewAnalysis(object sender, EventArgs e) {
+            var entry = _buffer.AnalysisEntry;
+
+            if (!_provider._colorNames || entry == null) {
                 bool raise = false;
                 lock (_spanCacheLock) {
                     if (_spanCache != null) {
@@ -65,14 +67,15 @@ namespace Microsoft.PythonTools {
                 }
 
                 if (raise) {
-                    OnNewClassifications(_buffer.CurrentSnapshot);
+                    OnNewClassifications(_buffer.Buffer.CurrentSnapshot);
                 }
                 return;
             }
 
+
             var classifications = await entry.Analyzer.GetAnalysisClassificationsAsync(
                 entry,
-                _buffer,
+                _buffer.Buffer,
                 _provider._colorNamesWithAnalysis
             );
 
@@ -90,7 +93,7 @@ namespace Microsoft.PythonTools {
                 }
 
                 if (_spanTranslator != null) {
-                    OnNewClassifications(_buffer.CurrentSnapshot);
+                    OnNewClassifications(_buffer.Buffer.CurrentSnapshot);
                 }
             }
         }
@@ -202,22 +205,12 @@ namespace Microsoft.PythonTools {
         #region Private Members
 
         private void BufferContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
+            // TODO: Should we be detaching here?
             _spanCache = null;
-            _buffer.ContentTypeChanged -= BufferContentTypeChanged;
-            _buffer.Properties.RemoveProperty(typeof(PythonAnalysisClassifier));
-            _buffer.UnregisterForNewAnalysis(OnNewAnalysis);
+            _buffer.OnContentTypeChanged -= BufferContentTypeChanged;
+            _buffer.OnNewAnalysis -= OnNewAnalysis;
         }
 
         #endregion
-    }
-
-    internal static partial class ClassifierExtensions {
-        public static PythonAnalysisClassifier GetPythonAnalysisClassifier(this ITextBuffer buffer) {
-            PythonAnalysisClassifier res;
-            if (buffer.Properties.TryGetProperty(typeof(PythonAnalysisClassifier), out res)) {
-                return res;
-            }
-            return null;
-        }
     }
 }

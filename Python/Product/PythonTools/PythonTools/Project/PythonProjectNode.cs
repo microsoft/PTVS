@@ -30,6 +30,7 @@ using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -1124,7 +1125,7 @@ namespace Microsoft.PythonTools.Project {
             var interpreterService = model.GetService<IInterpreterRegistryService>();
             var factory = GetInterpreterFactory();
             var res = new VsProjectAnalyzer(
-                Site,
+                Site.GetPythonToolsService().EditorServices,
                 factory,
                 false,
                 BuildProject
@@ -1462,6 +1463,10 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
+            // TODO: Disconnect/reconnect loses information
+            // We need to replace the contents within the PythonTextBufferInfo and
+            // raise events within that to let all the listeners know that the
+            // analysis has restarted.
             foreach (var buffer in wpfTextView.BufferGraph.GetTextBuffers(EditorExtensions.IsPythonContent)) {
                 controller.DisconnectSubjectBuffer(buffer);
                 entryService.SetAnalyzer(buffer, analyzer);

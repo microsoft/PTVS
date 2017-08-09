@@ -191,6 +191,8 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        internal PythonEditorServices EditorServices => ComponentModel.GetService<PythonEditorServices>();
+
         internal string GetDiagnosticsLog(bool includeAnalysisLogs) {
             return _diagnosticsProvider.GetLog(includeAnalysisLogs);
         }
@@ -209,12 +211,12 @@ namespace Microsoft.PythonTools {
 
             // may not available in some test cases
             if (interpreters == null) {
-                return new VsProjectAnalyzer(_container, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+                return new VsProjectAnalyzer(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
             }
 
             var defaultFactory = interpreters.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
-            return new VsProjectAnalyzer(_container, defaultFactory);
+            return new VsProjectAnalyzer(EditorServices, defaultFactory);
         }
 
         internal PythonToolsLogger Logger => _logger;

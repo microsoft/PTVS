@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IServiceProvider _serviceProvider;
 
         internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
-            : base(analyzer._serviceProvider, session, view, span, textBuffer, options) {
+            : base(analyzer.Site, session, view, span, textBuffer, options) {
             _snapshot = snapshot;
             _analyzer = analyzer;
             _serviceProvider = serviceProvider;
