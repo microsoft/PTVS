@@ -11,14 +11,20 @@
     <Item ItemId="0;localdebuggermergeenvironment@BoolProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Merge specified environment variables with existing environment.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Zadané proměnné prostředí se sloučí se stávajícím prostředím.]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="27" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;localdebuggermergeenvironment@BoolProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Merge Environment]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Sloučit prostředí]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="25" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;Rule&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -27,13 +33,13 @@
       <Str Cat="AppData">
         <Val><![CDATA[Python/Native debugging options]]></Val>
       </Str>
-      <Disp Icon="Str" Order="3" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;pythondebuglaunchprovider@Rule@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Python/Native Debugging]]></Val>
       </Str>
-      <Disp Icon="Str" Order="1" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;StringListProperty&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -41,14 +47,20 @@
     <Item ItemId="0;localdebuggerenvironment@StringListProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Specifies the environment for the debugee, or variables to merge with existing environment.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Určuje prostředí laděného objektu nebo proměnné, které se mají sloučit se stávajícím prostředím.]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="23" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;localdebuggerenvironment@StringListProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Environment]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Prostředí]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="21" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;StringProperty&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -56,38 +68,56 @@
     <Item ItemId="0;localdebuggercommand@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The debug command to execute.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Příkaz ladění, který se má provést]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="7" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;localdebuggercommandarguments@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The command line arguments to pass to the application.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Argumenty příkazového řádku, které se mají předat aplikaci]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="15" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;localdebuggerworkingdirectory@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[The application's working directory. By default, the directory containing the project file.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Pracovní adresář aplikace. Ve výchozím nastavení se jedná o adresář obsahující soubor projektu.]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="19" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;localdebuggercommand@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Command]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Příkaz]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="5" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;localdebuggercommandarguments@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Command Arguments]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Argumenty příkazu]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="13" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;localdebuggerworkingdirectory@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Working Directory]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Pracovní adresář]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="17" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;ValueEditor&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -95,14 +125,20 @@
     <Item ItemId="0;5a88dad82b4127d481f86820c9fcbf98" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[<Edit...>]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[<Upravit...>]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="9" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;b66ab1d4354799e0066c0af0ab39211f" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[<Browse...>]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[<Procházet...>]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="11" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
 </LCX>
