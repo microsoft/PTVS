@@ -32,12 +32,18 @@
     <Item ItemId="0;pythondebuglaunchprovider@Rule@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Python/Native debugging options]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Opciones de depuración nativa/Python]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;pythondebuglaunchprovider@Rule@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Python/Native Debugging]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Depuración nativa/Python]]></Val>
+        </Tgt>
       </Str>
       <Disp Icon="Str" />
     </Item>
