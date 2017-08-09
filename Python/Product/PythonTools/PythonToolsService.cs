@@ -105,6 +105,8 @@ namespace Microsoft.PythonTools {
             _diagnosticsProvider = new DiagnosticsProvider(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
+
+            EditorServices.SetPythonToolsService(this);
         }
 
         private void OnIdleInitialization(object sender, ComponentManagerEventArgs e) {

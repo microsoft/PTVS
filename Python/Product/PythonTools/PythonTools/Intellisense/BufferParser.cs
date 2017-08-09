@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly PythonEditorServices _services;
         internal readonly AnalysisEntry AnalysisEntry;
 
-        private readonly VsProjectAnalyzer _parser;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
         private ITextDocument _document;
@@ -48,31 +47,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public static readonly object DoNotParse = new object();
 
-        internal static async Task<BufferParser> CreateAsync(
-            AnalysisEntry analysis,
-            VsProjectAnalyzer parser,
-            ITextBuffer buffer
-        ) {
-            var res = new BufferParser(analysis, parser, buffer);
+        public BufferParser(AnalysisEntry entry) {
+            Debug.Assert(entry != null);
 
-            using (new DebugTimer("BufferParser.ParseBuffers", 100)) {
-                // lock not necessary for _bufferInfo, no one has access to us yet...
-                await res.ParseBuffers(new[] { buffer.CurrentSnapshot }, new[] { res._services.GetBufferInfo(buffer) });
-            }
-
-            return res;
-        }
-
-        private BufferParser(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
-            Debug.Assert(analysis != null);
-
-            _services = parser._services;
-            _parser = parser;
+            _services = entry.Analyzer._services;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
-            _buffers = new[] { buffer };
-            AnalysisEntry = analysis;
-
-            InitBuffer(buffer, 0);
+            _buffers = Array.Empty<ITextBuffer>();
+            AnalysisEntry = entry;
         }
 
         public PythonTextBufferInfo GetBuffer(ITextBuffer buffer) {
@@ -129,6 +110,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void AddBuffer(ITextBuffer textBuffer) {
+            int newId;
             lock (this) {
                 if (_buffers.Contains(textBuffer)) {
                     return;
@@ -136,26 +118,36 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 EnsureMutableBuffers();
                 _buffers.Add(textBuffer);
-                InitBuffer(textBuffer, _buffers.Count - 1);
-
-                _parser.ConnectErrorList(AnalysisEntry, textBuffer);
+                newId = _buffers.Count - 1;
             }
+
+            InitBuffer(textBuffer, newId);
         }
 
         internal int RemoveBuffer(ITextBuffer subjectBuffer) {
+            int result;
             lock (this) {
                 EnsureMutableBuffers();
-                UninitBuffer(subjectBuffer);
                 _buffers.Remove(subjectBuffer);
-
-                _parser.DisconnectErrorList(AnalysisEntry, subjectBuffer);
-
-                return _buffers.Count;
+                result = _buffers.Count;
             }
+
+            UninitBuffer(subjectBuffer);
+
+            return result;
         }
 
-        internal void UninitBuffer(ITextBuffer subjectBuffer) {
-            PythonTextBufferInfo.TryDispose(subjectBuffer);
+        private void UninitBuffer(ITextBuffer subjectBuffer) {
+            var bi = PythonTextBufferInfo.TryGetForBuffer(subjectBuffer);
+            if (bi != null) {
+                bi.OnChangedLowPriority -= BufferChangedLowPriority;
+                VsProjectAnalyzer.DisconnectErrorList(bi);
+                lock (this) {
+                    _bufferIdMapping.Remove(bi.AnalysisEntryId);
+                    bi.SetAnalysisEntryId(-1);
+                }
+            }
+
 
             if (_document != null) {
                 _document.EncodingChanged -= EncodingChanged;
@@ -171,6 +163,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             bi.OnChangedLowPriority += BufferChangedLowPriority;
+            VsProjectAnalyzer.ConnectErrorList(bi);
 
             lock (this) {
                 _bufferIdMapping[id] = bi;
@@ -296,10 +289,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (updates.Count != 0) {
-                _parser._analysisComplete = false;
-                Interlocked.Increment(ref _parser._parsePending);
+                entry.Analyzer._analysisComplete = false;
+                Interlocked.Increment(ref entry.Analyzer._parsePending);
 
-                var res = await _parser.SendRequestAsync(
+                var res = await entry.Analyzer.SendRequestAsync(
                     new AP.FileUpdateRequest() {
                         fileId = entry.FileId,
                         updates = updates.ToArray()
@@ -308,7 +301,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 if (res != null) {
                     Debug.Assert(res.failed != true);
-                    _parser.OnAnalysisStarted();
+                    entry.Analyzer.OnAnalysisStarted();
 #if DEBUG
                     for (int i = 0; i < bufferInfos.Length; i++) {
                         var snapshot = snapshots[i];
@@ -321,7 +314,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 #endif
                 } else {
-                    Interlocked.Decrement(ref _parser._parsePending);
+                    Interlocked.Decrement(ref entry.Analyzer._parsePending);
                 }
             }
         }

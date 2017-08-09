@@ -51,12 +51,15 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void ListenForNextNewAnalysis(ITextBuffer buffer) {
-            var bi = _services.GetBufferInfo(buffer);
-            bi.OnNewAnalysis += OnNewAnalysis;
-            if (bi.AnalysisEntry != null && bi.AnalysisEntry.IsAnalyzed) {
-                OnNewAnalysis(bi, EventArgs.Empty);
+        public void AddBuffer(PythonTextBufferInfo buffer) {
+            buffer.OnNewAnalysis += OnNewAnalysis;
+            if (buffer.AnalysisEntry?.IsAnalyzed == true) {
+                OnNewAnalysis(buffer, EventArgs.Empty);
             }
+        }
+
+        public void RemoveBuffer(PythonTextBufferInfo buffer) {
+            buffer.OnNewAnalysis -= OnNewAnalysis;
         }
 
         private async void OnNewAnalysis(object sender, EventArgs e) {

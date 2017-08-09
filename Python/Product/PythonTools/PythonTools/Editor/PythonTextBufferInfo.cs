@@ -23,6 +23,9 @@ namespace Microsoft.PythonTools.Editor {
 
         public static PythonTextBufferInfo TryGetForBuffer(ITextBuffer buffer) {
             PythonTextBufferInfo bi;
+            if (buffer == null) {
+                return null;
+            }
             return buffer.Properties.TryGetProperty(typeof(PythonTextBufferInfo), out bi) ? bi : null;
         }
 
@@ -49,6 +52,7 @@ namespace Microsoft.PythonTools.Editor {
             Services = services;
             Buffer = buffer;
             _filename = new Lazy<string>(GetOrCreateFilename);
+            _analysisEntryId = -1;
             Buffer.ContentTypeChanged += Buffer_ContentTypeChanged;
             Buffer.Changed += Buffer_Changed;
             Buffer.ChangedLowPriority += Buffer_ChangedLowPriority;
@@ -107,8 +111,12 @@ namespace Microsoft.PythonTools.Editor {
 
         #region Events
 
+        private event EventHandler _onNewAnalysisEntry;
         public event EventHandler OnNewAnalysis;
-        public event EventHandler OnNewAnalysisEntry;
+        public event EventHandler OnNewAnalysisEntry {
+            add { lock (_lock) _onNewAnalysisEntry += value; }
+            remove { lock (_lock) _onNewAnalysisEntry -= value; }
+        }
         public event EventHandler OnNewParseTree;
 
         public event EventHandler<TextContentChangedEventArgs> OnChanged;
@@ -146,6 +154,7 @@ namespace Microsoft.PythonTools.Editor {
         public OutliningTaggerProvider.OutliningTagger OutliningTagger => _outliningTagger;
         public OutliningTaggerProvider.OutliningTagger GetOrCreateOutliningTagger(Func<PythonTextBufferInfo, OutliningTaggerProvider.OutliningTagger> creator) => GetOrCreate(ref _outliningTagger, creator);
 
+
         #endregion
 
         #region Analysis Info
@@ -175,7 +184,7 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             if (!_isDisposed) {
-                OnNewAnalysisEntry?.Invoke(this, EventArgs.Empty);
+                _onNewAnalysisEntry?.Invoke(this, EventArgs.Empty);
             }
             return true;
         }
@@ -190,11 +199,11 @@ namespace Microsoft.PythonTools.Editor {
 
         public int AnalysisEntryId => Volatile.Read(ref _analysisEntryId);
         public bool SetAnalysisEntryId(int id) {
-            if (id == 0) {
-                Volatile.Write(ref _analysisEntryId, 0);
+            if (id < 0) {
+                Volatile.Write(ref _analysisEntryId, -1);
                 return true;
             }
-            return Interlocked.CompareExchange(ref _analysisEntryId, id, 0) == 0;
+            return Interlocked.CompareExchange(ref _analysisEntryId, id, -1) == -1;
         }
 
         public ITextSnapshot LastSentSnapshot { get; set; }
@@ -225,6 +234,32 @@ namespace Microsoft.PythonTools.Editor {
             }
             LastAnalysisReceivedVersion = ver;
             return true;
+        }
+
+        public Task<AnalysisEntry> WaitForAnalysisEntryAsync(CancellationToken cancellationToken) {
+            // Return our current entry if we have one
+            var entry = AnalysisEntry;
+            if (entry != null) {
+                return Task.FromResult(entry);
+            }
+
+            var tcs = new TaskCompletionSource<AnalysisEntry>();
+            if (cancellationToken.CanBeCanceled) {
+                cancellationToken.Register(() => tcs.TrySetCanceled());
+            }
+
+            EventHandler handler = null;
+            handler = (s, e) => {
+                cancellationToken.ThrowIfCancellationRequested();
+                var bi = (PythonTextBufferInfo)s;
+                var result = bi.AnalysisEntry;
+                if (result != null) {
+                    bi.OnNewAnalysisEntry -= handler;
+                    tcs.TrySetResult(result);
+                }
+            };
+
+            return tcs.Task;
         }
 
 

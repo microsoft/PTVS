@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools {
         public PythonAnalysisClassifierProvider(PythonEditorServices services) {
             _services = services;
             _type = _services.ContentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
-            var options = _services.Python.AdvancedOptions;
+            var options = _services.Python?.AdvancedOptions;
             if (options != null) {
                 options.Changed += AdvancedOptions_Changed;
                 _colorNames = options.ColorNames;
