@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools {
         private readonly IContentType _type;
 
         [ImportingConstructor]
-        public PythonClassifierProvider([Import] PythonEditorServices services) {
+        public PythonClassifierProvider(PythonEditorServices services) {
             _services = services;
             _type = _services.ContentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
         }

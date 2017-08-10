@@ -47,7 +47,6 @@ namespace Microsoft.PythonTools.Editor {
             _errorTaskProvider = new Lazy<ErrorTaskProvider>(CreateTaskProvider<ErrorTaskProvider>);
             _commentTaskProvider = new Lazy<CommentTaskProvider>(CreateTaskProvider<CommentTaskProvider>);
             _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateImportSquiggleProvider);
-            _analysisEntryService = new Lazy<AnalysisEntryService>(() => ComponentModel.GetService<AnalysisEntryService>());
         }
 
         public readonly IServiceProvider Site;
@@ -64,8 +63,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         internal PythonToolsService TryGetPythonToolsService() {
-            _python = Site.GetUIThread().Invoke(() => Site.GetPythonToolsService());
-            return _python;
+            return _python = Site.GetUIThread().Invoke(() => Site.GetPythonToolsService());
         }
 
         public PythonToolsService Python => _python ?? TryGetPythonToolsService();
@@ -77,12 +75,14 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         public IComponentModel ComponentModel { get; }
+
         [Import]
         public IClassificationTypeRegistryService ClassificationTypeRegistryService;
         [Import]
         public IContentTypeRegistryService ContentTypeRegistryService;
 
-        private readonly Lazy<AnalysisEntryService> _analysisEntryService;
+        [Import]
+        private Lazy<AnalysisEntryService> _analysisEntryService = null;
         public AnalysisEntryService AnalysisEntryService => _analysisEntryService.Value;
 
         #region Task Providers

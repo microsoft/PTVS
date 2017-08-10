@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Interpreter {
             bool anyChanged = false;
 
             PythonRegistrySearch search = null;
-            Dictionary<string, PythonInterpreterInformation> machineFactories = null; ;
+            Dictionary<string, PythonInterpreterInformation> machineFactories = null;
 
             try {
                 search = new PythonRegistrySearch();

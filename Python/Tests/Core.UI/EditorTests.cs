@@ -189,6 +189,7 @@ namespace PythonToolsUITests {
 
                     var doc = app.GetDocument(item.Document.FullName);
 
+                    doc.WaitForAnalysisAtCaret();
                     var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
                     var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
 
@@ -365,17 +366,17 @@ namespace PythonToolsUITests {
                 var doc = app.GetDocument(item.Document.FullName);
                 System.Threading.Thread.Sleep(1000);
 
-                Keyboard.Type("from fob import ba");
+                doc.Type("from fob import ba");
                 using (doc.WaitForSession<ICompletionSession>()) {
-                    Keyboard.Type("\r");
+                    doc.Type("\r");
                 }
 
                 doc.WaitForText("from fob import baz");
-                Keyboard.Type("\r");
+                doc.Type("\r");
 
-                Keyboard.Type("from fob import Ba");
+                doc.Type("from fob import Ba");
                 using (doc.WaitForSession<ICompletionSession>()) {
-                    Keyboard.Type("\r");
+                    doc.Type("\r");
                 }
                 doc.WaitForText("from fob import baz\r\nfrom fob import Baz");
             }
@@ -755,7 +756,9 @@ x\
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyWarning() {
+            var oldSuppress = VsProjectAnalyzer.SuppressTaskProvider;
             using (var app = new PythonVisualStudioApp()) {
+                app.OnDispose(() => VsProjectAnalyzer.SuppressTaskProvider = oldSuppress);
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Warning;
@@ -775,7 +778,9 @@ x\
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyError() {
+            var oldSuppress = VsProjectAnalyzer.SuppressTaskProvider;
             using (var app = new PythonVisualStudioApp()) {
+                app.OnDispose(() => VsProjectAnalyzer.SuppressTaskProvider = oldSuppress);
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Error;
@@ -795,7 +800,9 @@ x\
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyIgnore() {
+            var oldSuppress = VsProjectAnalyzer.SuppressTaskProvider;
             using (var app = new PythonVisualStudioApp()) {
+                app.OnDispose(() => VsProjectAnalyzer.SuppressTaskProvider = oldSuppress);
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Ignore;
