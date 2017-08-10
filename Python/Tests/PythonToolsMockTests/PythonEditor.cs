@@ -70,7 +70,7 @@ namespace PythonToolsMockTests {
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
                     vs.InvokeSync(() => {
-                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory);
+                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory, outOfProcAnalyzer: false);
                     });
                     var task = analyzer.ReloadTask;
                     if (task != null) {
@@ -84,6 +84,7 @@ namespace PythonToolsMockTests {
                     analyzer.AnalysisStarted += evt;
                     view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", 
                         v => {
+                            v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
                             v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
                             v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
                         },
@@ -203,6 +204,27 @@ namespace PythonToolsMockTests {
         public void ParamInfo() => VS.InvokeSync(() => View.ParamInfo());
         public void Type(string text) => VS.InvokeSync(() => View.Type(text));
 
+        public void TypeAndWaitForAnalysis(string text) {
+            using (var mre = new ManualResetEventSlim()) {
+                EventHandler evt = (s, e) => mre.SetIfNotDisposed();
+                Analyzer.AnalysisStarted += evt;
+
+                Type(text);
+
+                var cts = CancellationTokens.After60s;
+                try {
+                    while (!mre.Wait(500, cts) && !VS.HasPendingException) { }
+                    Analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested && !VS.HasPendingException);
+                } catch (OperationCanceledException) {
+                } finally {
+                    Analyzer.AnalysisStarted -= evt;
+                }
+                if (cts.IsCancellationRequested) {
+                    Assert.Fail("Timed out waiting for code analysis");
+                }
+                VS.ThrowPendingException();
+            }
+        }
 
         public IEnumerable<string> GetCompletions(int index) {
             return GetCompletionList(index, false).Select(c => c.DisplayText);

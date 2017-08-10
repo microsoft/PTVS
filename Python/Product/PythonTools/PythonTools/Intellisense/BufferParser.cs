@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly AnalysisEntry AnalysisEntry;
 
         private IList<ITextBuffer> _buffers;
-        private bool _parsing, _requeue, _textChange;
+        private bool _parsing, _requeue, _textChange, _parseImmediately;
         private ITextDocument _document;
 
         /// <summary>
@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
         public static readonly object DoNotParse = new object();
+        public static readonly object ParseImmediately = new object();
 
         public BufferParser(AnalysisEntry entry) {
             Debug.Assert(entry != null);
@@ -119,6 +120,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 EnsureMutableBuffers();
                 _buffers.Add(textBuffer);
                 newId = _buffers.Count - 1;
+                if (textBuffer.Properties.ContainsProperty(ParseImmediately)) {
+                    _parseImmediately = true;
+                }
             }
 
             InitBuffer(textBuffer, newId);
@@ -358,8 +362,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     // we are currently parsing, just reque when we complete
                     _requeue = true;
                     _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                } else if (_parseImmediately) {
+                    // we are a test buffer, we should requeue immediately
+                    Requeue();
                 } else if (LineAndTextChanges(e)) {
-                    // user pressed enter, we should reque immediately
+                    // user pressed enter, we should requeue immediately
                     Requeue();
                 } else {
                     // parse if the user doesn't do anything for a while.

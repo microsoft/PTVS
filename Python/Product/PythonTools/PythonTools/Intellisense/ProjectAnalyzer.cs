@@ -20,13 +20,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Logging;
@@ -34,6 +35,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -42,13 +44,12 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
-using Microsoft.PythonTools.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
-        internal readonly Process _analysisProcess;
+        internal readonly AnalysisProcessInfo _analysisProcess;
         private Connection _conn;
 
         // Enables analyzers to be put directly into ITextBuffer.Properties for the purposes of testing
@@ -172,7 +173,8 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInterpreterFactory factory,
             bool implicitProject = true,
             MSBuild.Project projectFile = null,
-            string comment = null
+            string comment = null,
+            bool outOfProcAnalyzer = true
         ) {
             if (services == null) {
                 throw new ArgumentNullException(nameof(services));
@@ -199,10 +201,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 _services.CommentTaskProvider.TokensChanged += CommentTaskTokensChanged;
             }
 
-            _conn = StartConnection(
-                comment.IfNullOrEmpty(projectFile?.FullPath).IfNullOrEmpty(implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
-                out _analysisProcess
-            );
+            if (outOfProcAnalyzer) {
+                _conn = StartSubprocessConnection(
+                    comment.IfNullOrEmpty(projectFile?.FullPath).IfNullOrEmpty(implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
+                    out _analysisProcess
+                );
+            } else {
+                _conn = StartThreadConnection(
+                    comment.IfNullOrEmpty(projectFile?.FullPath).IfNullOrEmpty(implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
+                    out _analysisProcess
+                );
+            }
             _userCount = 1;
 
             Task.Run(() => _conn.ProcessMessages());
@@ -355,7 +364,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _services.CommentTaskProvider?.Clear(entry, ParserTaskMoniker);
             }
 
-            Debug.WriteLine(String.Format("Disposing of parser {0}", _analysisProcess.Id));
+            Debug.WriteLine(String.Format("Disposing of parser {0}", _analysisProcess));
             if (_services.CommentTaskProvider != null) {
                 _services.CommentTaskProvider.TokensChanged -= CommentTaskTokensChanged;
             }
@@ -393,7 +402,78 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        private Connection StartConnection(string comment, out Process proc) {
+        internal abstract class AnalysisProcessInfo : IDisposable {
+            public abstract bool HasExited { get; }
+            public abstract int ExitCode { get; }
+            public abstract bool WaitForExit(int millisecondsTimeout);
+            public abstract void Kill();
+            public abstract void Dispose();
+        }
+
+        class AnalysisProcessSubprocessInfo : AnalysisProcessInfo {
+            private readonly Process _proc;
+
+            public AnalysisProcessSubprocessInfo(Process process) {
+                _proc = process;
+            }
+
+            public override bool HasExited => _proc.HasExited;
+            public override int ExitCode => _proc.ExitCode;
+            public override bool WaitForExit(int millisecondsTimeout) => _proc.WaitForExit(millisecondsTimeout);
+            public override void Dispose() => _proc.Dispose();
+            public override void Kill() => _proc.Kill();
+            public override string ToString() => $"<Process {_proc.Id}>";
+        }
+
+        class AnalysisProcessThreadInfo : AnalysisProcessInfo {
+            private readonly Thread _thread;
+            private readonly CancellationTokenSource _onKill;
+            private int _exitCode;
+
+            public AnalysisProcessThreadInfo(
+                VsProjectAnalyzer vsAnalyzer,
+                Thread thread,
+                CancellationTokenSource onKill,
+                string stdOutClientHandle,
+                string stdInClientHandle
+            ) {
+                VsAnalyzer = vsAnalyzer;
+                _thread = thread;
+                _onKill = onKill;
+                StandardOutput = new AnonymousPipeClientStream(PipeDirection.Out, stdOutClientHandle);
+                StandardInput = new AnonymousPipeClientStream(PipeDirection.In, stdInClientHandle);
+            }
+
+            public void SetExitCode(int exitCode) {
+                _exitCode = exitCode;
+            }
+
+            public CancellationToken CancellationToken => _onKill.Token;
+
+            public VsProjectAnalyzer VsAnalyzer { get; }
+            public Stream StandardOutput { get; }
+            public Stream StandardInput { get; }
+
+            public override bool HasExited => !_thread.IsAlive;
+
+            public override int ExitCode => _exitCode;
+
+            public override void Dispose() {
+                Kill();
+                _onKill.Dispose();
+            }
+
+            public override void Kill() {
+                try {
+                    _onKill.Cancel();
+                } catch (ObjectDisposedException) {
+                }
+            }
+
+            public override bool WaitForExit(int millisecondsTimeout) => _thread.Join(millisecondsTimeout);
+        }
+
+        private Connection StartSubprocessConnection(string comment, out AnalysisProcessInfo proc) {
             var libAnalyzer = typeof(AP.FileChangedResponse).Assembly.Location;
             var psi = new ProcessStartInfo(libAnalyzer, "/interactive /comment \"" + comment + "\"");
             psi.RedirectStandardInput = true;
@@ -435,7 +515,59 @@ namespace Microsoft.PythonTools.Intellisense {
                 });
             }
             conn.EventReceived += ConnectionEventReceived;
-            proc = process;
+            proc = new AnalysisProcessSubprocessInfo(process);
+            return conn;
+        }
+
+        private static void ThreadConnectionWorker(object o) {
+            var info = (AnalysisProcessThreadInfo)o;
+            OutOfProcProjectAnalyzer analyzer;
+            int exitCode = 0;
+            try {
+                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput);
+                info.CancellationToken.Register(() => {
+                    analyzer.Cancel();
+                    analyzer.Dispose();
+                });
+                using (analyzer) {
+                    analyzer.ProcessMessages().WaitAndUnwrapExceptions();
+                }
+            } catch (Exception ex) {
+                Console.WriteLine(ex.ToUnhandledExceptionMessage(typeof(VsProjectAnalyzer)));
+                try {
+                    using (var sw = new StreamWriter(info.StandardOutput, new UTF8Encoding(false), 4096, true)) {
+                        sw.WriteLine(ex.ToString());
+                        sw.Flush();
+                    }
+                } catch (Exception ex2) {
+                    Console.WriteLine(ex2.ToUnhandledExceptionMessage(typeof(VsProjectAnalyzer)));
+                }
+                exitCode = 1;
+            } finally {
+                info.SetExitCode(exitCode);
+            }
+        }
+
+        private Connection StartThreadConnection(string comment, out AnalysisProcessInfo info) {
+            var writer = new AnonymousPipeServerStream(PipeDirection.Out);
+            var reader = new AnonymousPipeServerStream(PipeDirection.In);
+
+            var thread = new Thread(ThreadConnectionWorker);
+            var cts = new CancellationTokenSource();
+            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.GetClientHandleAsString(), writer.GetClientHandleAsString());
+            thread.Start(info);
+
+            var conn = new Connection(
+                writer,
+                true,
+                reader,
+                true,
+                null,
+                AP.RegisteredTypes,
+                "ProjectAnalyzer"
+            );
+
+            conn.EventReceived += ConnectionEventReceived;
             return conn;
         }
 
@@ -1155,7 +1287,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 while (IsAnalyzing) {
                     var res = SendRequestAsync(new AP.AnalysisStatusRequest()).Result;
 
-                    if (res == null) {
+                    if (res == null || res.itemsLeft == 0) {
                         itemsLeftUpdated(0);
                         return;
                     }
@@ -1163,6 +1295,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (!itemsLeftUpdated(res.itemsLeft)) {
                         break;
                     }
+
+                    Thread.Sleep(10);
                 }
             } else {
                 itemsLeftUpdated(0);
