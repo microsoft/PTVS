@@ -263,10 +263,23 @@ namespace PythonToolsMockTests {
                     int expected = _i > 0 ? _i : -_i;
 
                     text = code.Substring(lastStart, expected - lastStart);
-                    Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, expected);
-                    view.Type(text);
+                    if (!string.IsNullOrEmpty(text)) {
+                        Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, expected);
+                        view.Type(text);
 
-                    view.View.AssertNoIntellisenseSession();
+                        using (var sh = view.View.WaitForSession<ICompletionSession>(false)) {
+                            // Having a session here is okay as long as nothing is selected
+                            var hasCommittableCompletion = sh?.Session?.SelectedCompletionSet?.SelectionStatus?.IsSelected ?? false;
+                            if (hasCommittableCompletion) {
+                                sh.Session.Dismiss();
+                                Assert.Fail($"Completion for {text} should not have any item selected");
+                            } else if (sh != null) {
+
+                                sh.Session.Dismiss();
+                            }
+                        }
+                    }
+
                     lastStart = expected;
 
                     if (expectCompletions) {
@@ -338,9 +351,9 @@ namespace PythonToolsMockTests {
 
         [TestMethod, Priority(1)]
         public void AutoListInStatements() {
-            AutoListTest("assert a", 0, 6, -6, 7);
+            AutoListTest("assert a", 0, -6, 7);
             AutoListTest("a += b", 0, 5);
-            AutoListTest("del a", 0, 3, -3, 4);
+            AutoListTest("del a", 0, -3, 4);
             AutoListTest("exec a", PythonLanguageVersion.V27, -4, 5);
             AutoListTest("for a in b", -3, -5, 9);
             AutoListTest("if a", -2, 3);

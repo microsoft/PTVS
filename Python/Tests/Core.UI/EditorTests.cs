@@ -618,10 +618,10 @@ pass");
 
             expectedText = Regex.Replace(expectedText, "^\\s+$", "", RegexOptions.Multiline);
 
-            Keyboard.Type(typedText);
-
             var doc = app.GetDocument(item.Document.FullName);
             doc.WaitForAnalysisAtCaret();
+
+            Keyboard.Type(typedText);
 
             string actual = null;
             for (int i = 0; i < 100; i++) {
