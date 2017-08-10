@@ -24,6 +24,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
@@ -606,7 +608,7 @@ pass");
                 }
                 System.Threading.Thread.Sleep(100);
             }
-            Assert.AreEqual(actual, expectedText);
+            Assert.AreEqual(expectedText, actual);
         }
 
         private static void AutoIndentTest(VisualStudioApp app, Project project, string typedText, string expectedText) {
@@ -619,6 +621,7 @@ pass");
             Keyboard.Type(typedText);
 
             var doc = app.GetDocument(item.Document.FullName);
+            doc.WaitForAnalysisAtCaret();
 
             string actual = null;
             for (int i = 0; i < 100; i++) {
@@ -711,6 +714,8 @@ x\
                     Debug.Fail("Bad position for moving caret");
                 }
             }));
+
+            doc.WaitForAnalysisAtCaret();
 
             typing();
 

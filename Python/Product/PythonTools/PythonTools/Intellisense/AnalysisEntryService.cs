@@ -192,6 +192,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 throw new ArgumentNullException(nameof(textBuffer));
             }
 
+            // If we have an analyzer in Properties, we will use that
+            // NOTE: This should only be used for tests.
+            if (textBuffer.Properties.TryGetProperty(VsProjectAnalyzer._testAnalyzer, out analyzer)) {
+                if (!textBuffer.Properties.TryGetProperty(VsProjectAnalyzer._testFilename, out filename)) {
+                    filename = textBuffer.GetFilePath();
+                }
+                return true;
+            }
+
             // If we have a REPL evaluator we'll use its analyzer
             IPythonInteractiveIntellisense evaluator;
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {

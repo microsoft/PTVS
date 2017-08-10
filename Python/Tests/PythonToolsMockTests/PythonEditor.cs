@@ -70,7 +70,7 @@ namespace PythonToolsMockTests {
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
                     vs.InvokeSync(() => {
-                        analyzer = new VsProjectAnalyzer(EditorServices, factory);
+                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory);
                     });
                     var task = analyzer.ReloadTask;
                     if (task != null) {
@@ -82,9 +82,12 @@ namespace PythonToolsMockTests {
                 using (var mre = new ManualResetEventSlim()) {
                     EventHandler evt = (s, e) => mre.SetIfNotDisposed();
                     analyzer.AnalysisStarted += evt;
-                    view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", v => {
-                        v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                    }, filename);
+                    view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", 
+                        v => {
+                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
+                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
+                        },
+                        filename);
 
                     try {
                         while (!mre.Wait(500, cts.Token) && !vs.HasPendingException) { }

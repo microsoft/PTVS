@@ -553,7 +553,7 @@ namespace Microsoft.PythonTools {
         #region Intellisense
 
         public CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(_container, session, view, snapshot, span, point, options);
+            return VsProjectAnalyzer.GetCompletions(EditorServices, session, view, snapshot, span, point, options);
         }
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {

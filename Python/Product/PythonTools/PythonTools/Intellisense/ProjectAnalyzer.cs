@@ -50,6 +50,11 @@ namespace Microsoft.PythonTools.Intellisense {
     public sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
         internal readonly Process _analysisProcess;
         private Connection _conn;
+
+        // Enables analyzers to be put directly into ITextBuffer.Properties for the purposes of testing
+        internal static readonly object _testAnalyzer = new { Name = "TestAnalyzer" };
+        internal static readonly object _testFilename = new { Name = "TestFilename" };
+
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
         private static readonly object _zipFileName = new { Name = "ZipFileName" };
 
@@ -913,9 +918,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
-        internal static CompletionAnalysis GetCompletions(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return TrySpecialCompletions(serviceProvider, session, view, snapshot, span, point, options) ??
-                   GetNormalCompletionContext(serviceProvider, session, view, snapshot, span, point, options);
+        internal static CompletionAnalysis GetCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+            return TrySpecialCompletions(services, session, view, snapshot, span, point, options) ??
+                   GetNormalCompletionContext(services, session, view, snapshot, span, point, options);
         }
 
         /// <summary>
@@ -1373,7 +1378,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static CompletionAnalysis TrySpecialCompletions(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+        private static CompletionAnalysis TrySpecialCompletions(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
             var snapSpan = span.GetSpan(snapshot);
             var buffer = snapshot.TextBuffer;
             var classifier = buffer.GetPythonClassifier();
@@ -1398,7 +1403,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (tokens.LastOrDefault()?.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) ?? false) {
                 // String completion
                 if (span.GetStartPoint(snapshot).GetContainingLine().LineNumber == span.GetEndPoint(snapshot).GetContainingLine().LineNumber) {
-                    return new StringLiteralCompletionList(serviceProvider, session, view, span, buffer, options);
+                    return new StringLiteralCompletionList(services, session, view, span, buffer, options);
                 }
             }
 
@@ -1414,25 +1419,25 @@ namespace Microsoft.PythonTools.Intellisense {
                     lastClass.Span.GetText() == "@") {
 
                     if (tokens.Count == 1) {
-                        return new DecoratorCompletionAnalysis(serviceProvider, session, view, span, buffer, options);
+                        return new DecoratorCompletionAnalysis(services, session, view, span, buffer, options);
                     }
                     // TODO: Handle completions automatically popping up
                     // after '@' when it is used as a binary operator.
                 } else if (CompletionAnalysis.IsKeyword(lastClass, "def")) {
-                    return new OverrideCompletionAnalysis(serviceProvider, session, view, span, buffer, options);
+                    return new OverrideCompletionAnalysis(services, session, view, span, buffer, options);
                 }
 
                 // Import completions
                 var first = tokens[0];
                 if (CompletionAnalysis.IsKeyword(first, "import")) {
-                    return ImportCompletionAnalysis.Make(tokens, serviceProvider, session, view, span, buffer, options);
+                    return ImportCompletionAnalysis.Make(services, tokens, session, view, span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(first, "from")) {
-                    return FromImportCompletionAnalysis.Make(tokens, serviceProvider, session, view, span, buffer, options);
+                    return FromImportCompletionAnalysis.Make(services, tokens, session, view, span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(first, "raise") || CompletionAnalysis.IsKeyword(first, "except")) {
                     if (tokens.Count == 1 ||
                         lastClass.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma) ||
                         (lastClass.IsOpenGrouping() && tokens.Count < 3)) {
-                        return new ExceptionCompletionAnalysis(serviceProvider, session, view, span, buffer, options);
+                        return new ExceptionCompletionAnalysis(services, session, view, span, buffer, options);
                     }
                 }
             }
@@ -1440,7 +1445,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private static CompletionAnalysis GetNormalCompletionContext(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
+        private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
             var span = applicableSpan.GetSpan(snapshot);
 
             if (IsSpaceCompletion(snapshot, point) && !IntellisenseController.ForceCompletions) {
@@ -1454,17 +1459,15 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             AnalysisEntry entry;
-            var entryService = serviceProvider.GetEntryService();
-            if (entryService != null && entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (services.AnalysisEntryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
                 return new NormalCompletionAnalysis(
-                    entry.Analyzer,
+                    services,
                     session,
                     view,
                     snapshot,
                     applicableSpan,
                     snapshot.TextBuffer,
-                    options,
-                    serviceProvider
+                    options
                 );
             }
 
@@ -2010,9 +2013,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void CommentTaskTokensChanged(object sender, EventArgs e) {
             var provider = (CommentTaskProvider)sender;
+            var priorities = new Dictionary<string, AP.TaskPriority>();
 
-            Dictionary<string, AP.TaskPriority> priorities = new Dictionary<string, AP.TaskPriority>();
-            foreach (var keyValue in provider.Tokens) {
+            foreach (var keyValue in (provider?.Tokens).MaybeEnumerate()) {
                 priorities[keyValue.Key] = GetPriority(keyValue.Value);
             }
             SendEvent(
