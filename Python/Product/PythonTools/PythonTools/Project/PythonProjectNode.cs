@@ -1372,11 +1372,22 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
+                var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
+
+                var defAnalyzer = Site.GetPythonToolsService().MaybeDefaultAnalyzer;
+                if (defAnalyzer != null) {
+                    foreach (var entry in files
+                        .Select(p => defAnalyzer.GetAnalysisEntryFromPath(p))
+                        .Where(e => e != null)) {
+
+                        await defAnalyzer.UnloadFileAsync(entry);
+                    }
+                }
+
                 if (analyzer != null) {
                     // Set search paths first, as it will save full reanalysis later
                     await analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths());
                     // Add all our files into our analyzer
-                    var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
                     await analyzer.AnalyzeFileAsync(files);
                 }
 

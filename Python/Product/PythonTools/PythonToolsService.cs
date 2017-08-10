@@ -235,6 +235,8 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        public VsProjectAnalyzer MaybeDefaultAnalyzer => _analyzer;
+
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
         public DiagnosticsOptions DiagnosticsOptions => _diagnosticsOptions.Value;
