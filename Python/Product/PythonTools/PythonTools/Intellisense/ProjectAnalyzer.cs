@@ -428,6 +428,7 @@ namespace Microsoft.PythonTools.Intellisense {
         class AnalysisProcessThreadInfo : AnalysisProcessInfo {
             private readonly Thread _thread;
             private readonly CancellationTokenSource _onKill;
+            private readonly AnonymousPipeClientStream _stdOut, _stdIn;
             private int _exitCode;
 
             public AnalysisProcessThreadInfo(
@@ -440,8 +441,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 VsAnalyzer = vsAnalyzer;
                 _thread = thread;
                 _onKill = onKill;
-                StandardOutput = new AnonymousPipeClientStream(PipeDirection.Out, stdOutClientHandle);
-                StandardInput = new AnonymousPipeClientStream(PipeDirection.In, stdInClientHandle);
+                _stdOut = new AnonymousPipeClientStream(PipeDirection.Out, stdOutClientHandle);
+                _stdIn = new AnonymousPipeClientStream(PipeDirection.In, stdInClientHandle);
             }
 
             public void SetExitCode(int exitCode) {
@@ -451,8 +452,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public CancellationToken CancellationToken => _onKill.Token;
 
             public VsProjectAnalyzer VsAnalyzer { get; }
-            public Stream StandardOutput { get; }
-            public Stream StandardInput { get; }
+            public Stream StandardOutput => _stdOut;
+            public Stream StandardInput => _stdIn;
 
             public override bool HasExited => !_thread.IsAlive;
 
@@ -460,8 +461,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override void Dispose() {
                 Kill();
-                StandardOutput.Dispose();
-                StandardInput.Dispose();
+                _stdOut.Dispose();
+                _stdIn.Dispose();
                 _onKill.Dispose();
             }
 
