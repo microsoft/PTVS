@@ -460,6 +460,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override void Dispose() {
                 Kill();
+                StandardOutput.Dispose();
+                StandardInput.Dispose();
                 _onKill.Dispose();
             }
 
