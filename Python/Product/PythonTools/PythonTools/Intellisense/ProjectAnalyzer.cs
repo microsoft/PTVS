@@ -784,9 +784,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            if (!bi.TrySetAnalysisEntry(entry, existingEntry)) {
-                // Raced with another monitor
-                Debug.Fail("MonitorTextBufferAsync race occurred");
+            try {
+                if (!bi.TrySetAnalysisEntry(entry, existingEntry)) {
+                    // Raced with another monitor
+                    Debug.Fail("MonitorTextBufferAsync race occurred");
+                    return null;
+                }
+            } catch (ObjectDisposedException) {
+                // Buffer has gone away already
                 return null;
             }
 
