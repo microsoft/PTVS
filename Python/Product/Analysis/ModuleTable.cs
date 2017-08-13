@@ -334,6 +334,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             internal override bool ModuleContainsMember(IModuleContext context, string name) {
+                // UNDONE: Causes too many module scrapes right now
+                if (context is Interpreter.Ast.AstPythonInterpreter) {
+                    return false;
+                }
+
                 var mod = _moduleTable._interpreter.ImportModule(_name);
                 if (mod != null) {
                     return BuiltinModuleContainsMember(context, name, mod);

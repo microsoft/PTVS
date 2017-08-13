@@ -120,6 +120,7 @@
     <Compile Include="EditorTests.cs" />
     <Compile Include="MockClipboardService.cs" />
     <Compile Include="MockPythonToolsPackage.cs" />
+    <Compile Include="NavigableTests.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="PythonEditor.cs" />
     <Compile Include="RefactorRenameTests.cs" />
@@ -176,6 +177,9 @@
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
       <Name>VSCommon</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

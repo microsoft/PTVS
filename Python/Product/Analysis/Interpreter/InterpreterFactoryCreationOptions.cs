@@ -31,5 +31,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public string DatabasePath { get; set; }
 
         public IPackageManager PackageManager { get; set; }
+
+        public bool NoDatabase { get; set; }
     }
 }

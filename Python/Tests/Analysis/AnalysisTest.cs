@@ -6326,18 +6326,16 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
 
             // Without absolute_import, we should see these two possibilities
             // for a regular import.
-            AssertUtil.ContainsExactly(
-                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", false),
-                "package.subpackage1.moduleY",
-                "moduleY"
+            AssertUtil.ArrayEquals(
+                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", false).ToArray(),
+                new[] { "package.subpackage1.moduleY", "moduleY" }
             );
 
             // With absolute_import, we should see the two possibilities for a
             // regular import, but in the opposite order.
-            AssertUtil.ContainsExactly(
-                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", true),
-                "moduleY",
-                "package.subpackage1.moduleY"
+            AssertUtil.ArrayEquals(
+                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", true).ToArray(),
+                new[] { "moduleY", "package.subpackage1.moduleY" }
             );
 
             // Regardless of absolute import, we should see these results for

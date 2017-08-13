@@ -2186,7 +2186,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var lastVersion = entry.GetAnalysisVersion(snapshot.TextBuffer);
 
             var outliningTags = await SendRequestAsync(
-                new AP.OutlingRegionsRequest() {
+                new AP.OutliningRegionsRequest() {
                     fileId = entry.FileId,
                     bufferId = entry.GetBufferId(snapshot.TextBuffer)
                 }

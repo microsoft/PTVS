@@ -111,6 +111,16 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// True if the module is a stub file.
+        /// </summary>
+        /// <remarks>New in 3.2</remarks>
+        public bool IsStub {
+            get {
+                return PythonStubRegex.IsMatch(Path.GetFileName(SourceFile));
+            }
+        }
+
+        /// <summary>
         /// Creates a new ModulePath item.
         /// </summary>
         /// <param name="fullname">The full name of the module.</param>
@@ -129,7 +139,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyw?$",
+        private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.py[iw]?$",
+            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex PythonStubRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyi$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?pyd$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
@@ -167,22 +179,37 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            var directories = new List<ModulePath>();
+            foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
+                var dirname = PathUtils.GetFileOrDirectoryName(dir);
+                var match = PythonPackageRegex.Match(dirname);
+                var withInitPy = Path.Combine(dir, "__init__.py");
+                bool hasInitPy = File.Exists(withInitPy);
+                if (match.Success && (!requireInitPy || hasInitPy)) {
+                    directories.Add(new ModulePath(
+                        baseModule + match.Groups["name"].Value,
+                        hasInitPy ? withInitPy : dir,
+                        dir
+                    ));
+                }
+            }
+
             if (recurse) {
-                foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
-                    var dirname = PathUtils.GetFileOrDirectoryName(dir);
-                    var match = PythonPackageRegex.Match(dirname);
-                    if (match.Success && (!requireInitPy || File.Exists(Path.Combine(dir, "__init__.py")))) {
-                        foreach (var entry in GetModuleNamesFromPathHelper(
-                            skipFiles ? dir : libPath,
-                            dir,
-                            baseModule + match.Groups["name"].Value + ".",
-                            false,
-                            true,
-                            requireInitPy
-                        )) {
-                            yield return entry;
-                        }
+                foreach (var dir in directories) {
+                    foreach (var entry in GetModuleNamesFromPathHelper(
+                        skipFiles ? dir.LibraryPath : libPath,
+                        dir.LibraryPath,
+                        dir.ModuleName + ".",
+                        false,
+                        true,
+                        requireInitPy
+                    )) {
+                        yield return entry;
                     }
+                }
+            } else {
+                foreach (var dir in directories) {
+                    yield return dir;
                 }
             }
         }

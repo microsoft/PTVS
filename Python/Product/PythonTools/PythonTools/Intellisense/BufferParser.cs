@@ -388,7 +388,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         string newCode;
                         if (res.newCode.TryGetValue(buffer.Id, out newCode)) {
-                            Debug.Assert(newCode == snapshot.GetText());
+                            Debug.Assert(newCode == snapshot.GetText(), "Buffer content mismatch - safe to ignore");
                         }
                     }
 #endif

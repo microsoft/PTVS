@@ -335,7 +335,10 @@ namespace PythonToolsTests {
             var path = PythonPaths.Versions.LastOrDefault(p => p != null && p.IsCPython);
             path.AssertInstalled();
 
-            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(path.Configuration);
+            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(path.Configuration) as PythonInterpreterFactoryWithDatabase;
+            if (factory == null) {
+                Assert.Inconclusive("Test requires PythonInterpreterFactoryWithDatabase");
+            }
 
             var tcs = new TaskCompletionSource<int>();
             var beforeProc = Process.GetProcessesByName("Microsoft.PythonTools.Analyzer");
