@@ -85,7 +85,7 @@ namespace TestUtilities.Python {
 
             Trace.TraceInformation("Copying binaries from {0}", binSource);
 
-            FileUtils.CopyDirectory(binSource, TestData.GetPath());
+            FileUtils.CopyDirectory(binSource, TestData.GetPath(), true);
 
             if (includeTestData) {
                 Debug.Assert(Directory.Exists(testDataSource), "Unable to find test data at " + (testDataSource ?? "(null)"));
