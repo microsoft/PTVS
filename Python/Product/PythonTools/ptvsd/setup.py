@@ -15,7 +15,7 @@
 # limitations under the License.
 #--------------------------------------------------------------------------
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='ptvsd',
       version='3.2.0',
