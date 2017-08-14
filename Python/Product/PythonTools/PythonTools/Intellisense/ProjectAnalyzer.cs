@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -124,7 +125,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             } catch (AggregateException ae) {
                 if (ae.InnerException != null) {
-                    throw ae.InnerException;
+                    ExceptionDispatchInfo.Capture(ae.InnerException).Throw();
                 }
                 throw;
             }
@@ -271,7 +272,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
 
-            CommentTaskTokensChanged(null, EventArgs.Empty);
+            if (_services.CommentTaskProvider != null) {
+                CommentTaskTokensChanged(_services.CommentTaskProvider, EventArgs.Empty);
+            }
         }
 
         public event EventHandler AnalyzerNeedsRestart;
@@ -617,7 +620,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     var parsed = (AP.FileParsedEvent)e.Event;
                     if (_projectFilesById.TryGetValue(parsed.fileId, out entry)) {
-                        UpdateErrorsAndWarnings(entry, parsed);
+                        OnParseComplete(entry, parsed);
                     } else {
                         Debug.WriteLine("Unknown file id for fileParsed event: {0}", parsed.fileId);
                     }
@@ -1334,56 +1337,54 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void UpdateErrorsAndWarnings(AnalysisEntry entry, AP.FileParsedEvent parsedEvent) {
+        private void OnParseComplete(AnalysisEntry entry, AP.FileParsedEvent parsedEvent) {
             bool hasErrors = false;
 
             var bufferParser = entry.TryGetBufferParser();
-            if (bufferParser == null) {
-                return;
-            }
 
             // Update the warn-on-launch state for this entry
-
             foreach (var buffer in parsedEvent.buffers) {
                 hasErrors |= buffer.errors.Any();
 
                 Debug.WriteLine("Received updated parse {0} {1}", parsedEvent.fileId, buffer.version);
 
                 LocationTracker translator = null;
-                if (!bufferParser.Parsed(buffer.bufferId, buffer.version)) {
-                    // ignore receiving responses out of order...
-                    Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
-                    continue;
-                }
+                if (bufferParser != null) {
+                    if (!bufferParser.Parsed(buffer.bufferId, buffer.version)) {
+                        // ignore receiving responses out of order...
+                        Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
+                        continue;
+                    }
 
-                var textBuffer = bufferParser.GetBuffer(buffer.bufferId);
-                if (textBuffer == null) {
-                    // ignore unexpected buffer ID
-                    continue;
-                }
+                    var textBuffer = bufferParser.GetBuffer(buffer.bufferId);
+                    if (textBuffer == null) {
+                        // ignore unexpected buffer ID
+                        continue;
+                    }
 
-                translator = new LocationTracker(
-                    textBuffer.LastAnalysisReceivedVersion,
-                    textBuffer.Buffer,
-                    buffer.version
-                );
+                    translator = new LocationTracker(
+                        textBuffer.LastAnalysisReceivedVersion,
+                        textBuffer.Buffer,
+                        buffer.version
+                    );
+                }
 
                 // Update the parser warnings/errors.
-                var factory = new TaskProviderItemFactory(translator);
                 if (!entry.SuppressErrorList && _services.ErrorTaskProvider != null) {
                     if (buffer.errors.Any() || buffer.warnings.Any()) {
+                        var factory = new TaskProviderItemFactory(translator);
                         var warningItems = buffer.warnings.Select(er => factory.FromErrorResult(
                             _services.Site,
                             er,
                             VSTASKPRIORITY.TP_NORMAL,
-                            VSTASKCATEGORY.CAT_BUILDCOMPILE)
-                        );
+                            VSTASKCATEGORY.CAT_BUILDCOMPILE
+                        ));
                         var errorItems = buffer.errors.Select(er => factory.FromErrorResult(
                             _services.Site,
                             er,
                             VSTASKPRIORITY.TP_HIGH,
-                            VSTASKCATEGORY.CAT_BUILDCOMPILE)
-                        );
+                            VSTASKCATEGORY.CAT_BUILDCOMPILE
+                        ));
 
 
                         _services.ErrorTaskProvider.ReplaceItems(
@@ -1399,15 +1400,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (!entry.SuppressErrorList && _services.CommentTaskProvider != null) {
                     if (buffer.tasks.Any()) {
                         var taskItems = buffer.tasks.Select(x => new TaskProviderItem(
-                               _services.Site,
-                               x.message,
-                               TaskProviderItemFactory.GetSpan(x),
-                               GetPriority(x.priority),
-                               GetCategory(x.category),
-                               x.squiggle,
-                               translator
-                           )
-                       );
+                            _services.Site,
+                            x.message,
+                            TaskProviderItemFactory.GetSpan(x),
+                            GetPriority(x.priority),
+                            GetCategory(x.category),
+                            x.squiggle,
+                            translator
+                        ));
 
                         _services.CommentTaskProvider.ReplaceItems(
                             entry,

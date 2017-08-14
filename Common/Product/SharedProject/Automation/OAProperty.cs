@@ -22,9 +22,6 @@ using System.Runtime.InteropServices;
 namespace Microsoft.VisualStudioTools.Project.Automation {
     [ComVisible(true)]
     public class OAProperty : EnvDTE.Property {
-        private const string WrappedStacktraceKey =
-            "$$Microsoft.VisualStudioTools.Project.Automation.WrappedStacktraceKey$$";
-
         #region fields
         private OAProperties parent;
         private PropertyInfo pi;
@@ -152,8 +149,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                             // If the property raised an exception, we want to
                             // rethrow that exception and not the outer one.
                             if (ex.InnerException != null) {
-                                ex.InnerException.Data[WrappedStacktraceKey] = ex.InnerException.StackTrace;
-                                throw ex.InnerException;
+                                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
                             }
                             throw;
                         }
@@ -169,8 +165,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                             // If the property raised an exception, we want to
                             // rethrow that exception and not the outer one.
                             if (ex.InnerException != null) {
-                                ex.InnerException.Data[WrappedStacktraceKey] = ex.InnerException.StackTrace;
-                                throw ex.InnerException;
+                                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
                             }
                             throw;
                         }

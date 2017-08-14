@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -752,7 +753,7 @@ namespace PythonToolsUITests {
             try {
                 Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(2.0)), "Timed out waiting for venv");
             } catch (AggregateException ex) {
-                throw ex.InnerException;
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
             }
             var factory = task.Result;
             Assert.IsTrue(uiThread.Invoke(() => factory.Configuration.Id == pyProj.GetInterpreterFactory().Configuration.Id));
@@ -784,7 +785,7 @@ namespace PythonToolsUITests {
             try {
                 Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(3.0)), "Timed out waiting for install " + packageName);
             } catch (AggregateException ex) {
-                throw ex.InnerException;
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
             }
             Assert.AreEqual(1, factory.FindModules(moduleName).Count);
         }

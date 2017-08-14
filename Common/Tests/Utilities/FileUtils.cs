@@ -192,6 +192,19 @@ namespace TestUtilities {
             NativeMethods.RecursivelyDeleteDirectory(path, silent: true);
         }
 
+        public static void Delete(string path) {
+            for (int retries = 10; retries > 0 && File.Exists(path); --retries) {
+                try {
+                    File.SetAttributes(path, FileAttributes.Normal);
+                    File.Delete(path);
+                    return;
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+                Thread.Sleep(100);
+            }
+        }
+
         public static IDisposable Backup(string path) {
             var backup = Path.GetTempFileName();
             File.Delete(backup);

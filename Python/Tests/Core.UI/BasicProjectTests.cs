@@ -1326,7 +1326,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(4, project.ProjectItems.Count);
 
                 try {
-                    File.Delete(TestData.GetPath(@"TestData\HelloWorld\LocalsTest.py"));
+                    FileUtils.Delete(TestData.GetPath(@"TestData\HelloWorld\LocalsTest.py"));
                 } catch {
                 }
                 var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));

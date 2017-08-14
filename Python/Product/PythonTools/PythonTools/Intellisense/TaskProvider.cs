@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -80,18 +81,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #region Conversion Functions
-        
-        public bool IsValid {
-            get {
-                if (!_squiggle || _spanTranslator == null || string.IsNullOrEmpty(ErrorType)) {
-                    return false;
-                }
-                return true;
-            }
-        }
+
+        public bool IsValid => _squiggle && !string.IsNullOrEmpty(ErrorType);
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
-            if (_rawSpan.Length <= 0) {
+            if (_rawSpan.Length <= 0 || _spanTranslator == null) {
                 return;
             }
 
@@ -112,14 +106,7 @@ namespace Microsoft.PythonTools.Intellisense {
             tagger.CreateTagSpan(tagSpan, new ErrorTag(ErrorType, _message));
         }
 
-        public ITextBuffer TextBuffer {
-            get {
-                if (_spanTranslator != null) {
-                    return _spanTranslator.TextBuffer;
-                }
-                return null;
-            }
-        }
+        public ITextBuffer TextBuffer => _spanTranslator?.TextBuffer;
 
         public ErrorTaskItem ToErrorTaskItem(EntryKey key) {
             return new ErrorTaskItem(
@@ -633,7 +620,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     RefreshAsync(cts.Token).Wait(cts.Token);
                 } catch (AggregateException ex) {
                     if (ex.InnerExceptions.Count == 1) {
-                        throw ex.InnerException;
+                        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
                     }
                     throw;
                 }
@@ -664,7 +651,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
 
                             foreach (var item in items) {
-                                if (item.IsValid) {
+                                if (item.IsValid && item.TextBuffer != null) {
                                     List<TaskProviderItem> itemList;
                                     if (!bufferToErrorList.TryGetValue(item.TextBuffer, out itemList)) {
                                         bufferToErrorList[item.TextBuffer] = itemList = new List<TaskProviderItem>();

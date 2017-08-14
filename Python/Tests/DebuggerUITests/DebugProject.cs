@@ -168,7 +168,7 @@ namespace DebuggerUITests {
                     app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
                     Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
                 } finally {
-                    File.Delete(TestData.GetPath(@"TestData\Interpreter.exe"));
+                    FileUtils.Delete(TestData.GetPath(@"TestData\Interpreter.exe"));
                 }
             }
         }
