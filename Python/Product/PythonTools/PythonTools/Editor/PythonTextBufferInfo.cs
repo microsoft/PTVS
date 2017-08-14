@@ -275,6 +275,28 @@ namespace Microsoft.PythonTools.Editor {
             return tcs.Task;
         }
 
+        public bool DoNotParse {
+            get => Buffer.Properties.ContainsProperty(BufferParser.DoNotParse);
+            set {
+                if (value) {
+                    Buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
+                } else {
+                    Buffer.Properties.RemoveProperty(BufferParser.DoNotParse);
+                }
+            }
+        }
+
+        public bool ParseImmediately {
+            get => Buffer.Properties.ContainsProperty(BufferParser.ParseImmediately);
+            set {
+                if (value) {
+                    Buffer.Properties[BufferParser.ParseImmediately] = BufferParser.ParseImmediately;
+                } else {
+                    Buffer.Properties.RemoveProperty(BufferParser.ParseImmediately);
+                }
+            }
+        }
+
 
         #endregion
     }

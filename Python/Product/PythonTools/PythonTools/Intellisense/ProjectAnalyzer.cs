@@ -798,6 +798,13 @@ namespace Microsoft.PythonTools.Intellisense {
             var bufferParser = new BufferParser(entry);
             bufferParser.AddBuffer(textBuffer);
 
+            var snapshot = (entry.AnalysisCookie as SnapshotCookie)?.Snapshot;
+            // File cannot be parsed from disk, so sync the code from the current buffer
+            // This should be rare in normal use, but very frequent in tests
+            if (snapshot != null && (isTemporaryFile || !File.Exists(entry.Path))) {
+                await BufferParser.ParseBuffersAsync(_services, entry, Enumerable.Repeat(snapshot, 1));
+            }
+
             return bufferParser;
         }
 

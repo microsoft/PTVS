@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -283,7 +284,10 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType))) {
-                buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
+                var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
+                if (tb != null) {
+                    tb.DoNotParse = true;
+                }
             }
 
             if (!quiet) {
