@@ -173,7 +173,6 @@ namespace TestUtilities {
 
                 if (tryHardLinkFirst) {
                     if (NativeMethods.CreateHardLink(copyTo, copyFrom, IntPtr.Zero)) {
-                        File.SetAttributes(copyTo, FileAttributes.ReadOnly);
                         continue;
                     }
                     Debug.WriteLine("Failed to hard link " + copyFrom + " to " + copyTo + ". Trying copy");
