@@ -17,7 +17,7 @@
 """Implements REPL support over IPython/ZMQ for VisualStudio"""
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.1.0.0"
+__version__ = "3.2.1.0"
 
 import re
 import sys

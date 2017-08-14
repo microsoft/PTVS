@@ -15,10 +15,10 @@
 # limitations under the License.
 #--------------------------------------------------------------------------
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='ptvsd',
-      version='3.2.0',
+      version='3.2.1',
       description='Visual Studio remote debugging server for Python',
       license='Apache License 2.0',
       author='Microsoft Corporation',
