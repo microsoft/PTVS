@@ -145,7 +145,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             foreach (var n in ModulePath.GetModulesInPath(
                 searchPath,
-                recurse: false
+                recurse: false,
+                includePackages: true
             ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n))) {
                 yield return n;
             }

@@ -154,7 +154,8 @@ namespace Microsoft.PythonTools.Analysis {
             string baseModule,
             bool skipFiles,
             bool recurse,
-            bool requireInitPy
+            bool requireInitPy,
+            bool includePackages
         ) {
             Debug.Assert(baseModule == "" || baseModule.EndsWith("."));
 
@@ -202,12 +203,13 @@ namespace Microsoft.PythonTools.Analysis {
                         dir.ModuleName + ".",
                         false,
                         true,
-                        requireInitPy
+                        requireInitPy,
+                        includePackages
                     )) {
                         yield return entry;
                     }
                 }
-            } else {
+            } else if (includePackages) {
                 foreach (var dir in directories) {
                     yield return dir;
                 }
@@ -223,7 +225,8 @@ namespace Microsoft.PythonTools.Analysis {
             bool includeTopLevelFiles = true,
             bool recurse = true,
             string basePackage = null,
-            bool requireInitPy = true
+            bool requireInitPy = true,
+            bool includePackages = false
         ) {
             return GetModuleNamesFromPathHelper(
                 path,
@@ -231,7 +234,8 @@ namespace Microsoft.PythonTools.Analysis {
                 basePackage ?? string.Empty,
                 !includeTopLevelFiles,
                 recurse,
-                requireInitPy
+                requireInitPy,
+                includePackages
             ).Where(mp => !string.IsNullOrEmpty(mp.ModuleName));
         }
 
@@ -244,7 +248,8 @@ namespace Microsoft.PythonTools.Analysis {
             bool includeTopLevelFiles = true,
             bool recurse = true,
             string baseModule = null,
-            bool requireInitPy = true
+            bool requireInitPy = true,
+            bool includePackages = false
         ) {
             return paths.SelectMany(p => GetModuleNamesFromPathHelper(
                 p,
@@ -252,7 +257,8 @@ namespace Microsoft.PythonTools.Analysis {
                 baseModule ?? string.Empty,
                 !includeTopLevelFiles,
                 recurse,
-                requireInitPy
+                requireInitPy,
+                includePackages
             )).Where(mp => !string.IsNullOrEmpty(mp.ModuleName));
         }
 

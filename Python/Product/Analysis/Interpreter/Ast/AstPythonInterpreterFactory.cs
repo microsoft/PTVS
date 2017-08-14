@@ -147,8 +147,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath) {
             return ModulePath.GetModulesInPath(
-                searchPath,
-                recurse: false
+                searchPath.Once(),
+                recurse: false,
+                includePackages: true
             ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).ToList();
         }
 
