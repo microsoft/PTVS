@@ -54,12 +54,15 @@ namespace Microsoft.PythonTools {
 
         private void NewAnalysisEntry(object sender, EventArgs e) {
             var analyzer = _buffer.AnalysisEntry?.Analyzer;
-            var newVersion = _version;
+            if (analyzer == null) {
+                Debug.Fail("Should not have new analysis entry without an analyzer");
+                return;
+            }
+            var newVersion = analyzer.LanguageVersion;
             if (newVersion != _version) {
                 _tokenCache.Clear();
 
-                Debug.Assert(analyzer != null);
-                _version = analyzer.InterpreterFactory.GetLanguageVersion();
+                _version = newVersion;
 
                 var changed = ClassificationChanged;
                 if (changed != null) {

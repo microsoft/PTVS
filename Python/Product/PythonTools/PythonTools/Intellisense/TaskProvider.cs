@@ -610,7 +610,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_taskList == null && _errorProvider == null) {
                 return true;
             }
-            _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
+            _serviceProvider.MustNotBeCalledFromUIThread("TaskProvider.Refresh() called on UI thread");
 
             // Allow 1 second to get onto the UI thread for the update
             // Otherwise abort and we'll try again later

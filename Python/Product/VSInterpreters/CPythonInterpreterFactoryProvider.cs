@@ -36,7 +36,10 @@ namespace Microsoft.PythonTools.Interpreter {
         private int _ignoreNotifications;
         private bool _initialized;
 
-        public CPythonInterpreterFactoryProvider() : this(true) { }
+        [ImportingConstructor]
+        public CPythonInterpreterFactoryProvider(
+            [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
+        ) : this(isMockVs == null) { }
 
         public CPythonInterpreterFactoryProvider(bool watchRegistry) {
             _watchRegistry = watchRegistry;

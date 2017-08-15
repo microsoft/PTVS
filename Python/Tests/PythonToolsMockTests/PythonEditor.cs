@@ -155,6 +155,10 @@ namespace PythonToolsMockTests {
                     edit.Apply();
                 }
 
+                if (string.IsNullOrEmpty(value)) {
+                    return;
+                }
+
                 using (ManualResetEventSlim mre1 = new ManualResetEventSlim(), mre2 = new ManualResetEventSlim()) {
                     EventHandler evt1 = (s, e) => mre1.SetIfNotDisposed();
                     EventHandler evt2 = (s, e) => mre2.SetIfNotDisposed();

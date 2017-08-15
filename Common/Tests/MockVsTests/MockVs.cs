@@ -550,7 +550,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return asm;
         }
 
-#endregion
+        #endregion
 
         public ITreeNode WaitForItemRemoved(params string[] path) {
             ITreeNode item = null;
