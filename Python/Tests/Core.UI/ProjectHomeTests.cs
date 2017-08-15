@@ -22,6 +22,7 @@ using System.Text;
 using System.Windows.Input;
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project.Automation;
@@ -190,8 +191,10 @@ namespace PythonToolsUITests {
 
                     project.SaveAs(TestData.GetPath(@"TestData\ProjectHomeProjects\TempFile.pyproj"));
 
-                    Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\"),
-                        ((OAProject)project).ProjectNode.ProjectHome);
+                    Assert.AreEqual(
+                        PathUtils.TrimEndSeparator(TestData.GetPath(@"TestData\HelloWorld\")),
+                        PathUtils.TrimEndSeparator(((OAProject)project).ProjectNode.ProjectHome)
+                    );
 
                     app.Dte.Solution.SaveAs("HelloWorldRelocated.sln");
                 } finally {
@@ -228,7 +231,10 @@ namespace PythonToolsUITests {
                 Mouse.MoveTo(point);
                 Mouse.Up(MouseButton.Left);
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest", "SubItem.py"));
+                using (var dlg = AutomationDialog.WaitForDialog(app)) {
+                    dlg.OK();
+                }
+                Assert.IsNotNull(window.WaitForItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest", "SubItem.py"));
 
                 app.Dte.Solution.Close(true);
                 // Ensure file was moved and the path was updated correctly.
