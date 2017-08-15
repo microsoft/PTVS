@@ -1420,6 +1420,7 @@ namespace Microsoft.PythonTools.Parsing {
                 AddPreceedingWhiteSpace(ret, execWhiteSpace);
                 AddSecondPreceedingWhiteSpace(ret, inWhiteSpace);
                 AddThirdPreceedingWhiteSpace(ret, commaWhiteSpace);
+                ret.CodeTuple = codeTuple;
             }
             ret.SetLoc(start, GetEnd());
             return ret;
