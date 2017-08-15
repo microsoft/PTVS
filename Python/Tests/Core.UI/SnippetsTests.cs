@@ -97,12 +97,12 @@ namespace PythonToolsUITests {
             ),
             new Snippet(
                 "try",
-                "try:\r\n    $body$\r\nexcept  :\r\n    pass",
+                "try:\r\n    $body$\r\nexcept :\r\n    pass",
                 new Declaration("Exception", "try:\r\n    $body$\r\nexcept Exception:\r\n    pass")
             ),
             new Snippet(
                 "except",
-                "try:\r\n    pass\r\nexcept  :\r\n    $body$",
+                "try:\r\n    pass\r\nexcept :\r\n    $body$",
                 new Declaration("Exception", "try:\r\n    pass\r\nexcept Exception:\r\n    $body$")
             )
         };
@@ -124,7 +124,6 @@ namespace PythonToolsUITests {
             var app = solution.OpenItem("SnippetsTest", "app.py");
             app.MoveCaret(1, 1);
             app.Invoke(() => app.TextView.Caret.EnsureVisible());
-            app.SetFocus();
 
             return VerifySnippet(snippet, "pass", app);
         }
@@ -134,7 +133,6 @@ namespace PythonToolsUITests {
             var app = solution.OpenItem("SnippetsTest", file);
             app.Select(1, 1, app.Text.Length);
             app.Invoke(() => app.TextView.Caret.EnsureVisible());
-            app.SetFocus();
 
             solution.ExecuteCommand("Edit.SurroundWith");
             return VerifySnippet(snippet, body, app);
@@ -145,7 +143,6 @@ namespace PythonToolsUITests {
             var app = solution.OpenItem("SnippetsTest", file);
             app.Select(1, 1, app.Text.Length);
             app.Invoke(() => app.TextView.Caret.EnsureVisible());
-            app.SetFocus();
 
             solution.ExecuteCommand("Edit.InsertSnippet");
             Keyboard.Type(category + "\t");
@@ -158,7 +155,6 @@ namespace PythonToolsUITests {
             var app = solution.OpenItem("SnippetsTest", file);
             app.MoveCaret(line, 1);
             app.Invoke(() => app.TextView.Caret.EnsureVisible());
-            app.SetFocus();
 
             solution.ExecuteCommand("Edit.InsertSnippet");
             Keyboard.Type(category + "\t");

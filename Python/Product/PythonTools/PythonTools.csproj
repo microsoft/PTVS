@@ -742,6 +742,7 @@
     </Content>
     <None Include="ptvsd\setup.py" />
     <Content Include="Snippets\Python\for.snippet">
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -752,46 +753,55 @@
     </Content>
     <Content Include="Snippets\Test\testclass.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Test</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\while.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\def.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\class.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\if.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\with.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\try.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\except.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\main.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
