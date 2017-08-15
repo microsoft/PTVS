@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Intellisense {
             get { return false; }
         }
 
-        public async void Invoke(CancellationToken cancellationToken) {
+        public void Invoke(CancellationToken cancellationToken) {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
             AnalysisEntry entry;
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            await VsProjectAnalyzer.AddImportAsync(
+            VsProjectAnalyzer.AddImport(
                 entry,
                 _fromModule,
                 _name,

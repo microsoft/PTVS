@@ -1213,16 +1213,16 @@ namespace Microsoft.PythonTools.Intellisense {
             return MissingImportAnalysis.Empty;
         }
 
-        internal static async Task AddImportAsync(AnalysisEntry entry, string fromModule, string name, ITextView view, ITextBuffer textBuffer) {
+        internal static void AddImport(AnalysisEntry entry, string fromModule, string name, ITextView view, ITextBuffer textBuffer) {
             var lastVersion = entry.GetAnalysisVersion(textBuffer);
 
-            var changes = await entry.Analyzer.AddImportAsync(
+            var changes = entry.Analyzer.WaitForRequest(entry.Analyzer.AddImportAsync(
                 entry,
                 textBuffer,
                 fromModule,
                 name,
                 view.Options.GetNewLineCharacter()
-            );
+            ), "ProjectAnalyzer.AddImport");
 
             if (changes != null) {
                 ApplyChanges(

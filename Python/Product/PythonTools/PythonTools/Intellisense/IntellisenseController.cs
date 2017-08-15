@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _serviceProvider = serviceProvider;
             if (textView.TextBuffer.IsPythonContent()) {
                 try {
-                    _expansionClient = new ExpansionClient(textView, provider._adaptersFactory, provider._ServiceProvider);
+                    _expansionClient = new ExpansionClient(textView, provider.PythonService.EditorServices);
                     var textMgr = (IVsTextManager2)_serviceProvider.GetService(typeof(SVsTextManager));
                     textMgr.GetExpansionManager(out _expansionMgr);
                 } catch (ArgumentException) {

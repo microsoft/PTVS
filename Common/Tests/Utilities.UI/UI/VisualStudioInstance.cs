@@ -37,13 +37,18 @@ namespace TestUtilities.UI {
     public class VisualStudioInstance : IDisposable, IVisualStudioInstance {
         private readonly SolutionFile _solution;
         private readonly VisualStudioApp _app;
+        private readonly bool _disposeApp;
         public readonly EnvDTE.Project Project;
         private SolutionExplorerTree _solutionExplorer;
         private bool _disposed;
 
-        public VisualStudioInstance(SolutionFile solution) {
+        public VisualStudioInstance(SolutionFile solution) : this(solution, new VisualStudioApp(), true) {
+        }
+
+        public VisualStudioInstance(SolutionFile solution, VisualStudioApp app, bool disposeApp) {
             _solution = solution;
-            _app = new VisualStudioApp();
+            _app = app;
+            _disposeApp = true;
             Project = _app.OpenProject(solution.Filename);
 
             ThreadHelper.JoinableTaskFactory.Run(async () => {
@@ -207,7 +212,9 @@ namespace TestUtilities.UI {
         protected virtual void Dispose(bool disposing) {
             if (!_disposed) {
                 if (disposing) {
-                    _app.Dispose();
+                    if (_disposeApp) {
+                        _app.Dispose();
+                    }
                     _solution.Dispose();
                 }
 

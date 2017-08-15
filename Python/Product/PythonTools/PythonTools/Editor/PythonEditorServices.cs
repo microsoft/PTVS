@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -84,6 +85,10 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         private Lazy<AnalysisEntryService> _analysisEntryService = null;
         public AnalysisEntryService AnalysisEntryService => _analysisEntryService.Value;
+
+        [Import]
+        private Lazy<IVsEditorAdaptersFactoryService> _editorAdaptersFactoryService = null;
+        public IVsEditorAdaptersFactoryService EditorAdaptersFactoryService => _editorAdaptersFactoryService.Value;
 
         #region Task Providers
 
