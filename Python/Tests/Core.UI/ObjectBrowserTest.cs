@@ -25,7 +25,8 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    // Object browser is currently disabled
+    //[TestClass]
     public class ObjectBrowserTest {
 
         private class NodeInfo {

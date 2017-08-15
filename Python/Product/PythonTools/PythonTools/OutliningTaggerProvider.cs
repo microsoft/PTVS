@@ -103,6 +103,10 @@ namespace Microsoft.PythonTools {
             }
 
             private async System.Threading.Tasks.Task UpdateTagsAsync(AnalysisEntry entry) {
+                if (entry == null) {
+                    return;
+                }
+
                 var snapshot = _buffer.CurrentSnapshot;
                 Interlocked.Exchange(ref _processing, null)?.Cancel();
 

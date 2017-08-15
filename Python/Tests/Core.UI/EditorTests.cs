@@ -568,10 +568,23 @@ pass");
     def oar(self):
         pass");
 
-                // http://pytools.codeplex.com/workitem/299
+                // Previously http://pytools.codeplex.com/workitem/299
+                // New expected behaviors are:
+                //      def f():                def f():
+                //      |   pass                   |pass
+                //
+                //                    become
+                //      def f():                def f():
+                //      
+                //      pass                        pass
                 AutoIndentExistingTest(app, project, "ClassAndFunc.py", 2, 4, @"class C:
     def f(self):
     
+    pass");
+
+                AutoIndentExistingTest(app, project, "ClassAndFunc.py", 2, 8, @"class C:
+    def f(self):
+        
         pass");
             }
         }
@@ -586,6 +599,9 @@ pass");
         /// <param name="expectedText"></param>
         private static void AutoIndentExistingTest(VisualStudioApp app, Project project, string filename, int line, int column, string expectedText) {
             var item = project.ProjectItems.Item(filename);
+            if (item.IsOpen) {
+                item.Document.ActiveWindow?.Close();
+            }
             var window = item.Open();
             window.Activate();
 
