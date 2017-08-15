@@ -62,16 +62,16 @@ namespace Microsoft.PythonTools.Repl {
             return b;
         }
 
-        private Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
+        private async Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThreadOrThrow();
 
             var interpreterPath = Configuration?.GetInterpreterPath();
             if (string.IsNullOrWhiteSpace(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(DisplayName));
-                return Task.FromResult<CommandProcessorThread>(null);
+                return null;
             } else if (!File.Exists(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotFound);
-                return Task.FromResult<CommandProcessorThread>(null);
+                return null;
             }
 
             var processInfo = new ProcessStartInfo(interpreterPath);
@@ -148,10 +148,11 @@ namespace Microsoft.PythonTools.Repl {
                 }
                 return null;
             } catch (Exception e) when(!e.IsCriticalException()) {
+                Debug.Fail(e.ToUnhandledExceptionMessage(GetType()));
                 return null;
             }
 
-            return Task.FromResult(CommandProcessorThread.Create(this, conn, process));
+            return CommandProcessorThread.Create(this, conn, process);
         }
 
 
