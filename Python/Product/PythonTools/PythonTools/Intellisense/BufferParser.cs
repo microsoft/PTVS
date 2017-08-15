@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     continue;
                 }
 
-                Debug.Assert(newCode == snapshot.GetText(), "Buffer content mismatch");
+                Debug.Assert(newCode.TrimEnd() == snapshot.GetText().TrimEnd(), "Buffer content mismatch");
             }
         }
 
