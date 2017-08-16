@@ -801,6 +801,7 @@ class Thread(object):
     def _stackless_attach(self):
         try:
             stackless.tasklet.trace_function
+            stackless.set_schedule_callback(self._stackless_schedule_cb)
         except AttributeError:
             # the tasklets need to be traced on a case by case basis
             # sys.trace needs to be called within their calling context
