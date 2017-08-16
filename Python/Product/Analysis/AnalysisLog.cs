@@ -44,6 +44,21 @@ namespace Microsoft.PythonTools.Analysis {
             Dump();
         }
 
+        private static readonly char[] _badChars = Enumerable.Range(0, 32).Select(c => (char)c).ToArray();
+
+        private static string Sanitize(string s) {
+            // Last chance attempt at producing output that can be embedded in
+            // test results file.
+            if (s.IndexOfAny(_badChars) < 0) {
+                return s;
+            }
+
+            for (char c = '\0'; c < ' '; ++c) {
+                s = s.Replace(c.ToString(), string.Format("\\x{0:X2}", (int)c));
+            }
+            return s;
+        }
+
         private static void Dump() {
             var items = LogItems;
             LogItems = null;
@@ -56,9 +71,9 @@ namespace Microsoft.PythonTools.Analysis {
 
                     try {
                         if (AsCSV) {
-                            Output.WriteLine("{0}, {1}", item.Event, string.Join(", ", AsCsvStrings(item.Args)));
+                            Output.WriteLine("{0}, {1}", item.Event, Sanitize(string.Join(", ", AsCsvStrings(item.Args))));
                         } else {
-                            Output.WriteLine("[{0}] {1}", item.Event, string.Join(", ", item.Args));
+                            Output.WriteLine("[{0}] {1}", item.Event, Sanitize(string.Join(", ", item.Args)));
                         }
                     } catch { }
                 }

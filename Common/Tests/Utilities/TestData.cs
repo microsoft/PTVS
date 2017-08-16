@@ -51,6 +51,10 @@ namespace TestUtilities {
             FileUtils.CopyDirectory(sourceDir, destDir);
         }
 
+        public static void HardLinkFiles(string sourceDir, string destDir) {
+            FileUtils.CopyDirectory(sourceDir, destDir, true);
+        }
+
         public static string BinarySourceLocation {
             get {
                 var sourceRoot = GetSolutionDir();
@@ -85,7 +89,7 @@ namespace TestUtilities {
                 }
             }
 
-            CopyFiles(binSource, binDest);
+            HardLinkFiles(binSource, binDest);
 
             if (includeTestData) {
                 var dataSource = Path.Combine(sourceRoot, dataSourcePath);

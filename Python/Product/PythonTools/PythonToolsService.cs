@@ -105,6 +105,8 @@ namespace Microsoft.PythonTools {
             _diagnosticsProvider = new DiagnosticsProvider(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
+
+            EditorServices.SetPythonToolsService(this);
         }
 
         private void OnIdleInitialization(object sender, ComponentManagerEventArgs e) {
@@ -191,6 +193,8 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        internal PythonEditorServices EditorServices => ComponentModel.GetService<PythonEditorServices>();
+
         internal string GetDiagnosticsLog(bool includeAnalysisLogs) {
             return _diagnosticsProvider.GetLog(includeAnalysisLogs);
         }
@@ -209,12 +213,12 @@ namespace Microsoft.PythonTools {
 
             // may not available in some test cases
             if (interpreters == null) {
-                return new VsProjectAnalyzer(_container, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+                return new VsProjectAnalyzer(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
             }
 
             var defaultFactory = interpreters.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
-            return new VsProjectAnalyzer(_container, defaultFactory);
+            return new VsProjectAnalyzer(EditorServices, defaultFactory);
         }
 
         internal PythonToolsLogger Logger => _logger;
@@ -230,6 +234,8 @@ namespace Microsoft.PythonTools {
                 return _analyzer;
             }
         }
+
+        public VsProjectAnalyzer MaybeDefaultAnalyzer => _analyzer;
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
@@ -549,7 +555,7 @@ namespace Microsoft.PythonTools {
         #region Intellisense
 
         public CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(_container, session, view, snapshot, span, point, options);
+            return VsProjectAnalyzer.GetCompletions(EditorServices, session, view, snapshot, span, point, options);
         }
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {

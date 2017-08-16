@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -26,8 +27,8 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class ImportKeywordCompletionAnalysis : CompletionAnalysis {
-        public ImportKeywordCompletionAnalysis(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
-            : base(serviceProvider, session, view, span, buffer, options) { }
+        public ImportKeywordCompletionAnalysis(PythonEditorServices services, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
+            : base(services, session, view, span, buffer, options) { }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var completion = new[] { PythonCompletion(glyphService, "import", null, StandardGlyphGroup.GlyphKeyword) };
@@ -42,14 +43,14 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string[] _namespace;
         private readonly bool _includeStar;
 
-        private FromImportCompletionAnalysis(string[] ns, bool includeStar, IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(serviceProvider, session, view, span, textBuffer, options) {
+        private FromImportCompletionAnalysis(PythonEditorServices services, string[] ns, bool includeStar, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(services, session, view, span, textBuffer, options) {
 
             _namespace = ns;
             _includeStar = includeStar;
         }
 
-        public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        public static CompletionAnalysis Make(PythonEditorServices services, IList<ClassificationSpan> tokens, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             Debug.Assert(tokens[0].Span.GetText() == "from");
 
             var ns = new List<string>();
@@ -98,9 +99,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             if (!seenImport) {
                 if (nsComplete) {
-                    return new ImportKeywordCompletionAnalysis(serviceProvider, session, view, span, textBuffer, options);
+                    return new ImportKeywordCompletionAnalysis(services, session, view, span, textBuffer, options);
                 } else {
-                    return ImportCompletionAnalysis.Make(tokens, serviceProvider, session, view, span, textBuffer, options);
+                    return ImportCompletionAnalysis.Make(services, tokens, session, view, span, textBuffer, options);
                 }
             }
 
@@ -109,10 +110,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (seenName) {
-                return new AsKeywordCompletionAnalysis(serviceProvider, session, view, span, textBuffer, options);
+                return new AsKeywordCompletionAnalysis(services, session, view, span, textBuffer, options);
             }
 
-            return new FromImportCompletionAnalysis(ns.ToArray(), includeStar, serviceProvider, session, view, span, textBuffer, options);
+            return new FromImportCompletionAnalysis(services, ns.ToArray(), includeStar, session, view, span, textBuffer, options);
         }
 
         private static string GetText(ITextSnapshot snapshot, ClassificationSpan start, ClassificationSpan target, bool includeEnd) {

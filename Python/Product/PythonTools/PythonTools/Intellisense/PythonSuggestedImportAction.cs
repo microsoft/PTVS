@@ -109,16 +109,15 @@ namespace Microsoft.PythonTools.Intellisense {
             get { return false; }
         }
 
-        public async void Invoke(CancellationToken cancellationToken) {
+        public void Invoke(CancellationToken cancellationToken) {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
-            var entryService = _source._provider.GetEntryService();
             AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(_source._view, _buffer, out entry)) {
+            if (!_source._services.AnalysisEntryService.TryGetAnalysisEntry(_source._view, _buffer, out entry)) {
                 return;
             }
 
-            await VsProjectAnalyzer.AddImportAsync(
+            VsProjectAnalyzer.AddImport(
                 entry,
                 _fromModule,
                 _name,

@@ -58,9 +58,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         .ContinueWith(
                             task => {
                                 textView.Closed += TextView_Closed;
-                                lock(task.Result) {
-                                    task.Result.AttachedViews++;
-                                }
                             }
                         );
                 }

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -30,16 +31,16 @@ using Microsoft.VisualStudio.Utilities;
 namespace Microsoft.PythonTools {
     [Export(typeof(IClassifierProvider)), ContentType(PythonCoreConstants.ContentType)]
     internal class PythonAnalysisClassifierProvider : IClassifierProvider {
+        private readonly PythonEditorServices _services;
         private Dictionary<string, IClassificationType> _categoryMap;
         private readonly IContentType _type;
-        internal readonly IServiceProvider _serviceProvider;
         internal bool _colorNames, _colorNamesWithAnalysis;
 
         [ImportingConstructor]
-        public PythonAnalysisClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
-            _type = contentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
-            _serviceProvider = serviceProvider;
-            var options = serviceProvider.GetPythonToolsService()?.AdvancedOptions;
+        public PythonAnalysisClassifierProvider(PythonEditorServices services) {
+            _services = services;
+            _type = _services.ContentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
+            var options = _services.Python?.AdvancedOptions;
             if (options != null) {
                 options.Changed += AdvancedOptions_Changed;
                 _colorNames = options.ColorNames;
@@ -97,14 +98,7 @@ namespace Microsoft.PythonTools {
                 _categoryMap = FillCategoryMap(_classificationRegistry);
             }
 
-            PythonAnalysisClassifier res;
-            if (!buffer.Properties.TryGetProperty<PythonAnalysisClassifier>(typeof(PythonAnalysisClassifier), out res) &&
-                buffer.ContentType.IsOfType(ContentType.TypeName)) {
-                res = new PythonAnalysisClassifier(this, buffer);
-                buffer.Properties.AddProperty(typeof(PythonAnalysisClassifier), res);
-            }
-
-            return res;
+            return _services.GetBufferInfo(buffer).GetOrCreateAnalysisClassifier(b => new PythonAnalysisClassifier(this, b));
         }
 
         public virtual IContentType ContentType {

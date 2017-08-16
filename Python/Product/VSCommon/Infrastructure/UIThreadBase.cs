@@ -154,32 +154,38 @@ namespace Microsoft.VisualStudioTools {
 
         [Conditional("DEBUG")]
         // Available on serviceProvider so we can avoid the GetUIThread call on release builds
-        public static void MustBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = "Invalid cross-thread call") {
+        public static void MustBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = null) {
             serviceProvider.GetUIThread().MustBeCalledFromUIThread(message);
         }
 
         [Conditional("DEBUG")]
         // Available on serviceProvider so we can avoid the GetUIThread call on release builds
-        public static void MustNotBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = "Invalid cross-thread call") {
+        public static void MustNotBeCalledFromUIThread(this IServiceProvider serviceProvider, string message = null) {
             serviceProvider.GetUIThread().MustNotBeCalledFromUIThread(message);
         }
 
         [Conditional("DEBUG")]
-        public static void MustBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
+        public static void MustBeCalledFromUIThread(this UIThreadBase self, string message = null) {
             if (self is MockUIThreadBase || !self.InvokeRequired) {
                 return;
             }
 
-            Debug.Fail(message, new StackTrace().ToString());
+            Debug.Fail(
+                message ?? string.Format("Invalid cross-thread call from thread {0}", Thread.CurrentThread.ManagedThreadId),
+                new StackTrace().ToString()
+            );
         }
 
         [Conditional("DEBUG")]
-        public static void MustNotBeCalledFromUIThread(this UIThreadBase self, string message = "Invalid cross-thread call") {
+        public static void MustNotBeCalledFromUIThread(this UIThreadBase self, string message = null) {
             if (self is MockUIThreadBase || self.InvokeRequired) {
                 return;
             }
             
-            Debug.Fail(message, new StackTrace().ToString());
+            Debug.Fail(
+                message ?? string.Format("Invalid cross-thread call from thread {0}", Thread.CurrentThread.ManagedThreadId),
+                new StackTrace().ToString()
+            );
         }
 
     }

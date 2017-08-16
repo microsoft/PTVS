@@ -64,6 +64,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly CompositionContainer _container;
         internal int _analysisPending;
 
+        private bool _isDisposed;
+
         // Moniker strings allow the task provider to distinguish between
         // different sources of items for the same file.
         private const string ParserTaskMoniker = "Parser";
@@ -2379,6 +2381,11 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IDisposable Members
 
         public void Dispose() {
+            if (_isDisposed) {
+                return;
+            }
+
+            _isDisposed = true;
             _analysisQueue.AnalysisComplete -= AnalysisQueue_Complete;
             _analysisQueue.Dispose();
             if (_pyAnalyzer != null) {

@@ -19,9 +19,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -33,8 +34,8 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class StringLiteralCompletionList : CompletionAnalysis {
         private const int MaxItems = 10000;
 
-        internal StringLiteralCompletionList(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(serviceProvider, session, view, span, textBuffer, options) {
+        internal StringLiteralCompletionList(PythonEditorServices services, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(services, session, view, span, textBuffer, options) {
         }
 
         internal static readonly char[] QuoteChars = new[] { '"', '\'' };

@@ -291,7 +291,17 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void Type(string text) {
-            _commandTarget.Type(text);
+            if (string.IsNullOrEmpty(text)) {
+                return;
+            }
+
+            using (var mre = new ManualResetEventSlim()) {
+                EventHandler<TextContentChangedEventArgs> evt = (s, e) => mre.SetIfNotDisposed();
+                _view.TextBuffer.ChangedLowPriority += evt;
+                _commandTarget.Type(text);
+                Assert.IsTrue(mre.Wait(1000), "No change event seen");
+                _view.TextBuffer.ChangedLowPriority -= evt;
+            }
         }
 
         int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {

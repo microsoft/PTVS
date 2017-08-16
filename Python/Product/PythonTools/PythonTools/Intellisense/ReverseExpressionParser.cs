@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -47,7 +48,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var targetSpan = new Span(line.Start.Position, span.GetEndPoint(snapshot).Position - line.Start.Position);
 
-            if (!_buffer.Properties.TryGetProperty(typeof(PythonClassifier), out _classifier) || _classifier == null) {
+            _classifier = PythonTextBufferInfo.TryGetForBuffer(_buffer)?.Classifier;
+            if (_classifier == null) {
                 throw new ArgumentException(Strings.ReverseExpressionParserFailedToGetClassifierFromBufferException);
             }
         }

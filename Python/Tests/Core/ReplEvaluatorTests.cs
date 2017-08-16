@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
@@ -308,7 +309,7 @@ f()",
                 task.Wait(timeout);
             } catch (AggregateException ex) {
                 if (ex.InnerException != null) {
-                    throw ex.InnerException;
+                    ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
                 }
                 throw;
             }

@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
@@ -78,42 +79,40 @@ namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IAnalysisEntryService))]
     [Export(typeof(AnalysisEntryService))]
     class AnalysisEntryService : IAnalysisEntryService {
-        private readonly IServiceProvider _site;
-        private readonly IComponentModel _model;
+        private readonly PythonEditorServices _services;
         private readonly IWpfDifferenceViewerFactoryService _diffService;
 
         private static readonly object _waitForAnalyzerKey = new object();
 
         [ImportingConstructor]
-        public AnalysisEntryService([Import(typeof(SVsServiceProvider))] IServiceProvider site) {
-            _site = site;
-            _model = _site.GetComponentModel();
+        public AnalysisEntryService([Import] PythonEditorServices services) {
+            _services = services;
 
             try {
-                _diffService = _model.GetService<IWpfDifferenceViewerFactoryService>();
+                _diffService = _services.ComponentModel.GetService<IWpfDifferenceViewerFactoryService>();
             } catch (CompositionException) {
             } catch (ImportCardinalityMismatchException) {
             }
         }
 
-        public void SetAnalyzer(ITextBuffer textBuffer, VsProjectAnalyzer analyzer) {
-            if (textBuffer == null) {
-                throw new ArgumentNullException(nameof(textBuffer));
-            }
-
-            if (analyzer == null) {
-                textBuffer.Properties.RemoveProperty(typeof(VsProjectAnalyzer));
-                return;
-            }
-
-            textBuffer.Properties[typeof(VsProjectAnalyzer)] = analyzer;
-
-            TaskCompletionSource<object> tcs;
-            if (textBuffer.Properties.TryGetProperty(_waitForAnalyzerKey, out tcs)) {
-                tcs.TrySetResult(null);
-                textBuffer.Properties.RemoveProperty(_waitForAnalyzerKey);
-            }
-        }
+        //public void SetAnalyzer(ITextBuffer textBuffer, VsProjectAnalyzer analyzer) {
+        //    if (textBuffer == null) {
+        //        throw new ArgumentNullException(nameof(textBuffer));
+        //    }
+        //
+        //    if (analyzer == null) {
+        //        textBuffer.Properties.RemoveProperty(typeof(VsProjectAnalyzer));
+        //        return;
+        //    }
+        //
+        //    textBuffer.Properties[typeof(VsProjectAnalyzer)] = analyzer;
+        //
+        //    TaskCompletionSource<object> tcs;
+        //    if (textBuffer.Properties.TryGetProperty(_waitForAnalyzerKey, out tcs)) {
+        //        tcs.TrySetResult(null);
+        //        textBuffer.Properties.RemoveProperty(_waitForAnalyzerKey);
+        //    }
+        //}
 
         /// <summary>
         /// Gets the analysis entry for the given view and buffer.
@@ -128,22 +127,23 @@ namespace Microsoft.PythonTools.Intellisense {
         /// For interactive windows we will use the analyzer that's configured for the window.
         /// </summary>
         public bool TryGetAnalysisEntry(ITextView textView, ITextBuffer textBuffer, out AnalysisEntry entry) {
-            ProjectAnalyzer analyzer;
-            string filename;
-            if ((textView == null || !TryGetAnalyzer(textView, out analyzer, out filename)) &&
-                !TryGetAnalyzer(textBuffer, out analyzer, out filename)) {
-                entry = null;
-                return false;
+            var bi = PythonTextBufferInfo.TryGetForBuffer(textBuffer ?? textView?.TextBuffer);
+
+            if (bi == null && textView != null) {
+                // If we have a difference viewer we'll match the LHS w/ the RHS
+                var viewer = _diffService?.TryGetViewerForTextView(textView);
+                if (viewer != null) {
+                    if (TryGetAnalysisEntry(viewer.DifferenceBuffer.RightBuffer, out entry)) {
+                        return true;
+                    }
+                    if (TryGetAnalysisEntry(viewer.DifferenceBuffer.LeftBuffer, out entry)) {
+                        return true;
+                    }
+                }
             }
 
-            var vsAnalyzer = analyzer as VsProjectAnalyzer;
-            if (vsAnalyzer != null) {
-                entry = vsAnalyzer.GetAnalysisEntryFromPath(filename);
-                return entry != null;
-            }
-
-            entry = null;
-            return false;
+            entry = bi?.AnalysisEntry;
+            return entry != null;
         }
 
         /// <summary>
@@ -163,37 +163,20 @@ namespace Microsoft.PythonTools.Intellisense {
         /// are optional, and <c>null</c> may be passed.
         /// </summary>
         public VsProjectAnalyzer GetVsAnalyzer(ITextView view, ITextBuffer buffer) {
-            VsProjectAnalyzer vsAnalyzer;
-            ProjectAnalyzer analyzer;
-            string filename;
-            if (buffer != null && TryGetAnalyzer(buffer, out analyzer, out filename) &&
-                (vsAnalyzer = analyzer as VsProjectAnalyzer) != null) {
-                return vsAnalyzer;
-            }
-            if (view != null && TryGetAnalyzer(view, out analyzer, out filename) &&
-                (vsAnalyzer = analyzer as VsProjectAnalyzer) != null) {
-                return vsAnalyzer;
-            }
-            return null;
+            AnalysisEntry entry;
+            return TryGetAnalysisEntry(view, buffer, out entry) ? entry.Analyzer : null;
         }
 
         #region IAnalysisEntryService members
 
-        public ProjectAnalyzer DefaultAnalyzer => _site.GetPythonToolsService().DefaultAnalyzer;
+        public ProjectAnalyzer DefaultAnalyzer => _services.Python?.DefaultAnalyzer;
 
         public Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken) {
             if (textBuffer == null) {
                 throw new ArgumentNullException(nameof(textBuffer));
             }
 
-            if (textBuffer.Properties.ContainsProperty(typeof(VsProjectAnalyzer))) {
-                return Task.FromResult<object>(null);
-            }
-
-            return textBuffer.Properties.GetOrCreateSingletonProperty(
-                _waitForAnalyzerKey,
-                () => new TaskCompletionSource<object>()
-            ).Task;
+            return _services.GetBufferInfo(textBuffer).WaitForAnalysisEntryAsync(cancellationToken);
         }
 
         public Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken) {
@@ -208,12 +191,14 @@ namespace Microsoft.PythonTools.Intellisense {
             if (textBuffer == null) {
                 throw new ArgumentNullException(nameof(textBuffer));
             }
-            
-            // If we have set an analyzer explicitly, return that
-            analyzer = null;
-            if (textBuffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer)) {
-                filename = textBuffer.GetFilePath();
-                return analyzer != null;
+
+            // If we have an analyzer in Properties, we will use that
+            // NOTE: This should only be used for tests.
+            if (textBuffer.Properties.TryGetProperty(VsProjectAnalyzer._testAnalyzer, out analyzer)) {
+                if (!textBuffer.Properties.TryGetProperty(VsProjectAnalyzer._testFilename, out filename)) {
+                    filename = textBuffer.GetFilePath();
+                }
+                return true;
             }
 
             // If we have a REPL evaluator we'll use its analyzer
@@ -224,11 +209,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 return analyzer != null;
             }
 
+            AnalysisEntry entry;
+            if (TryGetAnalysisEntry(textBuffer, out entry)) {
+                analyzer = entry.Analyzer;
+                filename = entry.Path;
+                return true;
+            }
+
             // If we find an associated project, use its analyzer
             // This should only happen while racing with text view creation
             var path = textBuffer.GetFilePath();
             if (path != null) {
-                analyzer = _site.GetProjectFromFile(path)?.GetAnalyzer();
+                analyzer = _services.Site.GetProjectFromFile(path)?.GetAnalyzer();
                 if (analyzer != null) {
                     Debug.WriteLine("Found an analyzer on " + path + " that wasn't in the property bag");
                     filename = path;
@@ -251,16 +243,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 return true;
             }
 
-            // If we have a difference viewer we'll match the LHS w/ the RHS
-            var viewer = _diffService?.TryGetViewerForTextView(textView);
-            if (viewer != null) {
-                if (TryGetAnalyzer(viewer.DifferenceBuffer.RightBuffer, out analyzer, out filename)) {
-                    return true;
-                }
-                if (TryGetAnalyzer(viewer.DifferenceBuffer.LeftBuffer, out analyzer, out filename)) {
-                    return true;
-                }
-            }
 
             return false;
         }
@@ -273,7 +255,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var seen = new HashSet<VsProjectAnalyzer>();
 
             // If we have an open document, return that
-            var buffer = _site.GetTextBufferFromOpenFile(filename);
+            var buffer = _services.Site.GetTextBufferFromOpenFile(filename);
             if (buffer != null) {
                 var analyzer = GetVsAnalyzer(null, buffer);
                 if (analyzer != null && seen.Add(analyzer)) {
@@ -282,7 +264,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             // Yield all loaded projects containing the file
-            var sln = (IVsSolution)_site.GetService(typeof(SVsSolution));
+            var sln = (IVsSolution)_services.Site.GetService(typeof(SVsSolution));
             if (sln != null) {
                 if (Path.IsPathRooted(filename)) {
                     foreach (var project in sln.EnumerateLoadedPythonProjects()) {

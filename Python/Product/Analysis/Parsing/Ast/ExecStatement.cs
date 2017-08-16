@@ -39,6 +39,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _globals; }
         }
 
+        /// <summary>
+        /// Specifies the original tuple for round-tripping
+        /// </summary>
+        public TupleExpression CodeTuple { get; set; }
+
         public bool NeedsLocalsDictionary() {
             return _globals == null && _locals == null;
         }
@@ -61,6 +66,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("exec");
+            if (CodeTuple != null) {
+                CodeTuple.AppendCodeString(res, ast, format);
+                return;
+            }
+
             _code.AppendCodeString(res, ast, format);
             if (_globals != null) {
                 res.Append(this.GetSecondWhiteSpace(ast));

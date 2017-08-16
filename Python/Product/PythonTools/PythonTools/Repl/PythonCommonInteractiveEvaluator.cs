@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Repl {
                 } else {
                     var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
                     _analyzer = new VsProjectAnalyzer(
-                        _serviceProvider,
+                        _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
                         factory,
                         projectFile: projectFile,
                         comment: "{0} Interactive".FormatInvariant(DisplayName.IfNullOrEmpty("Unnamed"))

@@ -25,7 +25,8 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    // Object browser is currently disabled
+    //[TestClass]
     public class ObjectBrowserTest {
 
         private class NodeInfo {
@@ -101,8 +102,8 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserBasicTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Outlining.sln");
@@ -129,8 +130,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserSearchTextTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ObjectBrowser.sln");
@@ -182,8 +183,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserExpandTypeBrowserTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -220,8 +221,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserCommentsTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -283,8 +284,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserInheritanceRelationshipTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -336,8 +337,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserNavigationTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -399,8 +400,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserContextMenuBasicTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -476,8 +477,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserTypeBrowserViewTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -534,8 +535,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserTypeBrowserSortTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -624,8 +625,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserNavigateVarContextMenuTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -691,8 +692,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserFindAllReferencesTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -755,8 +756,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void NavigateTo() {
             using (var app = new VisualStudioApp()) {
                 app.OpenProject(@"TestData\Navigation.sln");
@@ -783,8 +784,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ResourceViewIsDisabledTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Outlining.sln");

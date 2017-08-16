@@ -20,245 +20,177 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     sealed class BufferParser : IDisposable {
         private readonly Timer _timer;
+        internal readonly PythonEditorServices _services;
         internal readonly AnalysisEntry AnalysisEntry;
 
-        private readonly VsProjectAnalyzer _parser;
-        private IList<ITextBuffer> _buffers;
-        private bool _parsing, _requeue, _textChange;
+        private IList<PythonTextBufferInfo> _buffers;
+        private bool _parsing, _requeue, _textChange, _parseImmediately;
         private ITextDocument _document;
-        public int AttachedViews;
+
         /// <summary>
-        /// Maps from a text buffer to a buffer info... Buffer info is used for tracking our state
-        /// of requests sent to/from the remote analysis process.
-        /// 
-        /// Buffers have unique ids so that we can send multiple buffers to the remote analyzer for
-        /// REPL scenarios.
+        /// Maps between buffer ID and buffer info.
         /// </summary>
-        private Dictionary<ITextBuffer, BufferInfo> _bufferInfo = new Dictionary<ITextBuffer, BufferInfo>();
-        /// <summary>
-        /// Maps from a buffer ID back toa buffer info.
-        /// </summary>
-        private Dictionary<int, BufferInfo> _bufferIdMapping = new Dictionary<int, BufferInfo>();
+        private Dictionary<int, PythonTextBufferInfo> _bufferIdMapping = new Dictionary<int, PythonTextBufferInfo>();
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
         public static readonly object DoNotParse = new object();
+        public static readonly object ParseImmediately = new object();
 
-        internal static async Task<BufferParser> CreateAsync(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
-            var res = new BufferParser(analysis, parser, buffer);
+        public BufferParser(AnalysisEntry entry) {
+            Debug.Assert(entry != null);
 
-            using (new DebugTimer("BufferParser.ParseBuffers", 100)) {
-                // lock not necessary for _bufferInfo, no one has access to us yet...
-                await res.ParseBuffers(new[] { buffer.CurrentSnapshot }, new[] { res._bufferInfo[buffer] });
-            }
-
-            return res;
-        }
-
-        private BufferParser(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
-            Debug.Assert(analysis != null);
-
-            _parser = parser;
+            _services = entry.Analyzer._services;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
-            _buffers = new[] { buffer };
-            AnalysisEntry = analysis;
-
-            InitBuffer(buffer, 0);
+            _buffers = Array.Empty<PythonTextBufferInfo>();
+            AnalysisEntry = entry;
         }
 
-        class BufferInfo {
-            public readonly ITextBuffer Buffer;
-            public readonly int Id;
-            /// <summary>
-            /// The last version analyzed.  This is the oldest version we expect to receive
-            /// spans relative to.  We'll roll this forward whenever we receive a new analysis
-            /// event.
-            /// </summary>
-            internal ITextVersion _analysisVersion;
-            public ITextSnapshot LastSentSnapshot;
-            internal int LastParsedVersion;
-
-            public BufferInfo(ITextBuffer buffer, int id) {
-                Buffer = buffer;
-                Id = id;
-                _analysisVersion = buffer.CurrentSnapshot.Version;
-                LastParsedVersion = _analysisVersion.VersionNumber - 1;
-            }
+        public PythonTextBufferInfo GetBuffer(ITextBuffer buffer) {
+            return buffer == null ? null : _services.GetBufferInfo(buffer);
         }
 
-        /// <summary>
-        /// Gets the last version ID for which we've received an analysis
-        /// for this buffer.
-        /// </summary>
-        public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
+        public PythonTextBufferInfo GetBuffer(int bufferId) {
             lock (this) {
-                BufferInfo info;
-                if (_bufferInfo.TryGetValue(buffer, out info)) {
-                    return info._analysisVersion;
-                }
-
-                return null;
+                PythonTextBufferInfo res;
+                _bufferIdMapping.TryGetValue(bufferId, out res);
+                return res;
             }
         }
 
         /// <summary>
         /// Indicates that the specified buffer ID has been analyzed with this version.
         /// </summary>
-        public void Analyzed(int bufferId, int version) {
-            lock (this) {
-                var bufferInfo = _bufferIdMapping[bufferId];
-
-                while (bufferInfo._analysisVersion.Next != null &&
-                    bufferInfo._analysisVersion.VersionNumber < version) {
-
-                    bufferInfo._analysisVersion = bufferInfo._analysisVersion.Next;
-                }
-            }
+        /// <returns>
+        /// True if the specified version is newer than the last one we had received.
+        /// </returns>
+        public bool Analyzed(int bufferId, int version) {
+            return GetBuffer(bufferId)?.UpdateLastReceivedAnalysis(version) ?? false;
         }
 
-        internal bool IsOldSnapshot(int bufferId, int version) {
-            lock(this) {
-                var bufferInfo = _bufferIdMapping[bufferId];
-
-                var oldVersion = bufferInfo.LastParsedVersion;
-
-                if (oldVersion < version) {
-                    bufferInfo.LastParsedVersion = version;
-                    return false;
-                }
-                return true;
-            }
+        /// <summary>
+        /// Indicates that the specified buffer ID has been parsed with this version.
+        /// </summary>
+        /// <returns>
+        /// True if the specified version is newer than the last one we had received.
+        /// </returns>
+        public bool Parsed(int bufferId, int version) {
+            return GetBuffer(bufferId)?.UpdateLastReceivedParse(version) ?? false;
         }
 
         internal ITextSnapshot GetLastSentSnapshot(ITextBuffer buffer) {
-            lock (this) {
-                BufferInfo bi;
-                if (buffer != null && _bufferInfo.TryGetValue(buffer, out bi) && bi != null) {
-                    return bi.LastSentSnapshot;
-                }
-                return null;
-            }
+            return GetBuffer(buffer)?.LastSentSnapshot;
         }
 
         internal void SetLastSentSnapshot(ITextSnapshot snapshot) {
-            lock (this) {
-                BufferInfo bi;
-                if (snapshot != null && _bufferInfo.TryGetValue(snapshot.TextBuffer, out bi) && bi != null) {
-                    bi.LastSentSnapshot = snapshot;
-                } else {
-                    Debug.Fail("Unknown snapshot");
-                }
+            if (snapshot == null) {
+                Debug.Fail("null snapshot");
+                return;
             }
-        }
 
-        internal int? GetBufferId(ITextBuffer buffer) { 
-            lock (this) {
-                BufferInfo info;
-                if (_bufferInfo.TryGetValue(buffer, out info)) {
-                    return info.Id;
-                }
-                return null;
-            }
-        }
-
-        internal ITextBuffer GetBuffer(int bufferId) {
-            lock (this) {
-                return _bufferIdMapping[bufferId].Buffer;
-            }
-        }
-
-        private BufferInfo GetBufferInfo(ITextBuffer buffer) {
-            lock (this) {
-                return _bufferInfo[buffer];
-            }
-        }
-
-        private Severity IndentationInconsistencySeverity {
-            get {
-                return _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
-            }
-        }
-
-        public void StopMonitoring() {
-            foreach (var buffer in _buffers) {
-                UninitBuffer(buffer);
-            }
-            _timer.Dispose();
-            AnalysisEntry.ClearBufferParser(this);
+            GetBuffer(snapshot.TextBuffer).LastSentSnapshot = snapshot;
         }
 
         public ITextBuffer[] Buffers {
             get {
-                return _buffers.Where(
-                    x => !x.Properties.ContainsProperty(DoNotParse)
-                ).ToArray();
+                return _buffers.Where(x => !x.DoNotParse).Select(x => x.Buffer).ToArray();
             }
         }
 
         internal void AddBuffer(ITextBuffer textBuffer) {
+            int newId;
             lock (this) {
+                var bi = _services.GetBufferInfo(textBuffer);
+                if (_buffers.Contains(bi)) {
+                    return;
+                }
+
                 EnsureMutableBuffers();
-
-                _buffers.Add(textBuffer);
-
-                InitBuffer(textBuffer, _buffers.Count - 1);
-
-                _parser.ConnectErrorList(AnalysisEntry, textBuffer);
+                _buffers.Add(bi);
+                newId = _buffers.Count - 1;
+                if (bi.ParseImmediately) {
+                    _parseImmediately = true;
+                }
             }
+
+            InitBuffer(textBuffer, newId);
         }
 
-        internal void RemoveBuffer(ITextBuffer subjectBuffer) {
+        internal int RemoveBuffer(ITextBuffer subjectBuffer) {
+            int result;
+            var bi = PythonTextBufferInfo.TryGetForBuffer(subjectBuffer);
+
             lock (this) {
-                EnsureMutableBuffers();
-
-                UninitBuffer(subjectBuffer);
-
-                _buffers.Remove(subjectBuffer);
-
-                _parser.DisconnectErrorList(AnalysisEntry, subjectBuffer);
+                if (bi != null) {
+                    EnsureMutableBuffers();
+                    _buffers.Remove(bi);
+                }
+                result = _buffers.Count;
             }
+
+            if (bi != null) {
+                UninitBuffer(bi);
+            }
+
+            return result;
         }
 
-        internal void UninitBuffer(ITextBuffer subjectBuffer) {
-            subjectBuffer.UnregisterAllHandlers();
+        private void UninitBuffer(PythonTextBufferInfo subjectBuffer) {
+            if (subjectBuffer == null) {
+                throw new ArgumentNullException(nameof(subjectBuffer));
+            }
+            subjectBuffer.OnChangedLowPriority -= BufferChangedLowPriority;
+            VsProjectAnalyzer.DisconnectErrorList(subjectBuffer);
+            lock (this) {
+                _bufferIdMapping.Remove(subjectBuffer.AnalysisEntryId);
+                subjectBuffer.SetAnalysisEntryId(-1);
+            }
+
+
             if (_document != null) {
                 _document.EncodingChanged -= EncodingChanged;
                 _document = null;
             }
-            subjectBuffer.ChangedLowPriority -= BufferChangedLowPriority;
         }
 
         private void InitBuffer(ITextBuffer buffer, int id = 0) {
-            buffer.ChangedLowPriority += BufferChangedLowPriority;
+            var bi = _services.GetBufferInfo(buffer);
+            if (!bi.SetAnalysisEntryId(id)) {
+                Debug.Fail("Buffer is already initialized");
+                return;
+            }
+
+            bi.OnChangedLowPriority += BufferChangedLowPriority;
+            VsProjectAnalyzer.ConnectErrorList(bi);
 
             lock (this) {
-                var bufferInfo = new BufferInfo(buffer, id);
-                _bufferInfo[buffer] = bufferInfo;
-                _bufferIdMapping[id] = bufferInfo;
+                _bufferIdMapping[id] = bi;
             }
 
-            if (_document != null) {
-                _document.EncodingChanged -= EncodingChanged;
-                _document = null;
-            }
-            if (buffer.Properties.TryGetProperty(typeof(ITextDocument), out _document) && _document != null) {
-                _document.EncodingChanged += EncodingChanged;
+            ITextDocument doc;
+            if (buffer.Properties.TryGetProperty(typeof(ITextDocument), out doc) && doc != _document) {
+                if (_document != null) {
+                    _document.EncodingChanged -= EncodingChanged;
+                }
+                _document = doc;
+                if (_document != null) {
+                    _document.EncodingChanged += EncodingChanged;
+                }
             }
         }
 
         private void EnsureMutableBuffers() {
             if (_buffers.IsReadOnly) {
-                _buffers = new List<ITextBuffer>(_buffers);
+                _buffers = new List<PythonTextBufferInfo>(_buffers);
             }
         }
 
@@ -268,23 +200,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void ReparseWorker(object unused) {
             ITextSnapshot[] snapshots;
-            BufferInfo[] bufferInfos;
             lock (this) {
                 if (_parsing) {
                     return;
                 }
 
                 _parsing = true;
-                var buffers = Buffers;
-                snapshots = new ITextSnapshot[buffers.Length];
-                bufferInfos = new BufferInfo[buffers.Length];
-                for (int i = 0; i < buffers.Length; i++) {
-                    snapshots[i] = buffers[i].CurrentSnapshot;
-                    bufferInfos[i] = _bufferInfo[buffers[i]];
-                }
+                snapshots = _buffers.Where(b => !b.DoNotParse).Select(b => b.CurrentSnapshot).ToArray();
             }
 
-            ParseBuffers(snapshots, bufferInfos).WaitAndHandleAllExceptions(_parser._serviceProvider);
+            ParseBuffers(snapshots).WaitAndHandleAllExceptions(_services.Site);
 
             lock (this) {
                 _parsing = false;
@@ -297,104 +222,112 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
             var lastSent = GetLastSentSnapshot(buffer);
+            var snapshot = buffer.CurrentSnapshot;
             if (lastSent != buffer.CurrentSnapshot) {
-                await ParseBuffers(
-                    new[] { buffer.CurrentSnapshot },
-                    new[] { GetBufferInfo(buffer) }
-                );
+                await ParseBuffers(Enumerable.Repeat(snapshot, 1));
             }
         }
 
-        private async Task ParseBuffers(ITextSnapshot[] snapshots, BufferInfo[] bufferInfos) {
-            var indentationSeverity = _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
-            AnalysisEntry entry = AnalysisEntry;
+        private Task ParseBuffers(IEnumerable<ITextSnapshot> snapshots) {
+            return ParseBuffersAsync(_services, AnalysisEntry, snapshots);
+        }
 
-            List<AP.FileUpdate> updates = new List<AP.FileUpdate>();
-            lock (this) {
-                for (int i = 0; i < snapshots.Length; i++) {
-                    var snapshot = snapshots[i];
-                    var bufferInfo = bufferInfos[i];
+        private static IEnumerable<ITextVersion> GetVersions(ITextVersion from, ITextVersion to) {
+            for (var v = from; v != null && v != to; v = v.Next) {
+                yield return v;
+            }
+        }
 
-                    if (snapshot.TextBuffer.Properties.ContainsProperty(DoNotParse) ||
-                        snapshot.IsReplBufferWithCommand()) {
-                        continue;
-                    }
-
-                    var lastSent = GetLastSentSnapshot(bufferInfo.Buffer);
-                    if (lastSent == null || lastSent.TextBuffer != snapshot.TextBuffer) {
-                        // First time parsing from a live buffer, send the entire
-                        // file and set our initial snapshot.  We'll roll forward
-                        // to new snapshots when we receive the errors event.  This
-                        // just makes sure that the content is in sync.
-                        updates.Add(
-                            new AP.FileUpdate() {
-                                content = snapshot.GetText(),
-                                version = snapshot.Version.VersionNumber,
-                                bufferId = bufferInfo.Id,
-                                kind = AP.FileUpdateKind.reset
-                            }
-                        );
-                    } else {
-                        if (lastSent.Version == snapshot.Version) {
-                            // this snapshot is up to date...
-                            continue;
-                        }
-
-                        List<AP.VersionChanges> versions = new List<AnalysisProtocol.VersionChanges>();
-                        for (var curVersion = lastSent.Version;
-                            curVersion != snapshot.Version;
-                            curVersion = curVersion.Next) {
-                            versions.Add(
-                                new AP.VersionChanges() {
-                                    changes = GetChanges(curVersion)
-                                }
-                            );
-                        }
-
-                        updates.Add(
-                            new AP.FileUpdate() {
-                                versions = versions.ToArray(),
-                                version = snapshot.Version.VersionNumber,
-                                bufferId = bufferInfo.Id,
-                                kind = AP.FileUpdateKind.changes
-                            }
-                        );
-                    }
-
-                    Debug.WriteLine("Added parse request {0}", snapshot.Version.VersionNumber);
-                    entry.AnalysisCookie = new SnapshotCookie(snapshot);  // TODO: What about multiple snapshots?
-                    SetLastSentSnapshot(snapshot);
-                }
+        private static AP.FileUpdate GetUpdateForSnapshot(PythonEditorServices services, ITextSnapshot snapshot) {
+            var buffer = services.GetBufferInfo(snapshot.TextBuffer);
+            if (buffer.DoNotParse || snapshot.IsReplBufferWithCommand() || buffer.AnalysisEntryId < 0) {
+                return null;
             }
 
-            if (updates.Count != 0) {
-                _parser._analysisComplete = false;
-                Interlocked.Increment(ref _parser._parsePending);
+            var lastSent = buffer.LastSentSnapshot;
 
-                var res = await _parser.SendRequestAsync(
-                    new AP.FileUpdateRequest() {
-                        fileId = entry.FileId,
-                        updates = updates.ToArray()
-                    }
-                );
+            if (lastSent?.Version == snapshot.Version) {
+                // this snapshot is up to date...
+                return null;
+            }
 
-                if (res != null) {
-                    Debug.Assert(res.failed != true);
-                    _parser.OnAnalysisStarted();
-#if DEBUG
-                    for (int i = 0; i < bufferInfos.Length; i++) {
-                        var snapshot = snapshots[i];
-                        var buffer = bufferInfos[i];
+            // Update last sent snapshot and the analysis cookie to our
+            // current snapshot.
+            buffer.LastSentSnapshot = snapshot;
+            var entry = buffer.AnalysisEntry;
+            if (entry != null) {
+                entry.AnalysisCookie = new SnapshotCookie(snapshot);
+            }
 
-                        string newCode;
-                        if (res.newCode.TryGetValue(buffer.Id, out newCode)) {
-                            Debug.Assert(newCode == snapshot.GetText(), "Buffer content mismatch - safe to ignore");
-                        }
-                    }
-#endif
-                } else {
-                    Interlocked.Decrement(ref _parser._parsePending);
+            if (lastSent == null || lastSent.TextBuffer != buffer.Buffer) {
+                // First time parsing from a live buffer, send the entire
+                // file and set our initial snapshot.  We'll roll forward
+                // to new snapshots when we receive the errors event.  This
+                // just makes sure that the content is in sync.
+                return new AP.FileUpdate {
+                    content = snapshot.GetText(),
+                    version = snapshot.Version.VersionNumber,
+                    bufferId = buffer.AnalysisEntryId,
+                    kind = AP.FileUpdateKind.reset
+                };
+            }
+
+            var versions = GetVersions(lastSent.Version, snapshot.Version).Select(v => new AP.VersionChanges{
+                changes = GetChanges(v)
+            }).ToArray();
+
+            return new AP.FileUpdate() {
+                versions = versions,
+                version = snapshot.Version.VersionNumber,
+                bufferId = buffer.AnalysisEntryId,
+                kind = AP.FileUpdateKind.changes
+            };
+        }
+
+        [Conditional("DEBUG")]
+        private static void ValidateBufferContents(IEnumerable<ITextSnapshot> snapshots, Dictionary<int, string> code) {
+            foreach (var snapshot in snapshots) {
+                var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
+                if (bi == null) {
+                    continue;
                 }
+
+                string newCode;
+                if (!code.TryGetValue(bi.AnalysisEntryId, out newCode)) {
+                    continue;
+                }
+
+                Debug.Assert(newCode.TrimEnd() == snapshot.GetText().TrimEnd(), "Buffer content mismatch");
+            }
+        }
+
+        internal static async Task ParseBuffersAsync(
+            PythonEditorServices services,
+            AnalysisEntry entry,
+            IEnumerable<ITextSnapshot> snapshots
+        ) {
+            var updates = snapshots.Select(s => GetUpdateForSnapshot(services, s)).Where(u => u != null).ToList();
+
+            if (!updates.Any()) {
+                return;
+            }
+
+            entry.Analyzer._analysisComplete = false;
+            Interlocked.Increment(ref entry.Analyzer._parsePending);
+
+            var res = await entry.Analyzer.SendRequestAsync(
+                new AP.FileUpdateRequest() {
+                    fileId = entry.FileId,
+                    updates = updates.ToArray()
+                }
+            );
+
+            if (res != null) {
+                Debug.Assert(res.failed != true);
+                entry.Analyzer.OnAnalysisStarted();
+                ValidateBufferContents(snapshots, res.newCode);
+            } else {
+                Interlocked.Decrement(ref entry.Analyzer._parsePending);
             }
         }
 
@@ -437,8 +370,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     // we are currently parsing, just reque when we complete
                     _requeue = true;
                     _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                } else if (_parseImmediately) {
+                    // we are a test buffer, we should requeue immediately
+                    Requeue();
                 } else if (LineAndTextChanges(e)) {
-                    // user pressed enter, we should reque immediately
+                    // user pressed enter, we should requeue immediately
                     Requeue();
                 } else {
                     // parse if the user doesn't do anything for a while.
@@ -494,119 +430,17 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void Dispose() {
-            StopMonitoring();
+            foreach (var buffer in _buffers) {
+                UninitBuffer(buffer);
+            }
+            _timer.Dispose();
+            AnalysisEntry.ClearBufferParser(this);
         }
 
         internal ITextDocument Document {
             get {
                 return _document;
             }
-        }
-    }
-
-    static class BufferParserExtensions {
-#if DEBUG
-        private static object _newAnalysisKey = new { Name = "OnNewAnalysis" };
-        private static object _newAnalysisEntryKey = new { Name = "OnNewAnalysisEntry" };
-        private static object _newParseTreeKey = new { Name = "OnNewParseTree" };
-#else
-        private static object _newAnalysisKey = new object();
-        private static object _newAnalysisEntryKey = new object();
-        private static object _newParseTreeKey = new object();
-#endif
-
-
-        /// <summary>
-        /// Registers for when a new analysis is available for the text buffer.  This mechanism
-        /// is suitable for handlers which have no clear cut way to disconnect from the text
-        /// buffer (e.g. classifiers).  This attachs the event to the active buffer so that the 
-        /// classifier and buffer go away when the buffer is closed.  Hooking to the project
-        /// entry would result in keeping the classifier alive, which will keep the buffer alive,
-        /// and the classifier would continue to receive new analysis events.
-        /// </summary>
-        public static void RegisterForNewAnalysis(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
-            buffer.RegisterFor(_newAnalysisKey, handler);
-        }
-
-        public static void UnregisterForNewAnalysis(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
-            buffer.UnregisterFor(_newAnalysisKey, handler);
-        }
-
-        public static IEnumerable<Action<AnalysisEntry>> GetNewAnalysisRegistrations(this ITextBuffer buffer) {
-            return buffer.GetRegistrations(_newAnalysisKey);
-        }
-
-        /// <summary>
-        /// Registers for when a new analysis entry is available for the text buffer.  This mechanism
-        /// is suitable for handlers which have no clear cut way to disconnect from the text
-        /// buffer (e.g. classifiers).  This attachs the event to the active buffer so that the 
-        /// classifier and buffer go away when the buffer is closed.  Hooking to the project
-        /// entry would result in keeping the classifier alive, which will keep the buffer alive,
-        /// and the classifier would continue to receive new analysis events.
-        /// </summary>
-        public static void RegisterForNewAnalysisEntry(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
-            buffer.RegisterFor(_newAnalysisEntryKey, handler);
-        }
-
-        public static void UnregisterForNewAnalysisEntry(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
-            buffer.UnregisterFor(_newAnalysisEntryKey, handler);
-        }
-
-        public static IEnumerable<Action<AnalysisEntry>> GetNewAnalysisEntryRegistrations(this ITextBuffer buffer) {
-            return buffer.GetRegistrations(_newAnalysisEntryKey);
-        }
-
-        /// <summary>
-        /// Registers for when a new parse tree is available for the text buffer.  This mechanism
-        /// is suitable for handlers which have no clear cut way to disconnect from the text
-        /// buffer (e.g. classifiers).  This attachs the event to the active buffer so that the 
-        /// classifier and buffer go away when the buffer is closed.  Hooking to the project
-        /// entry would result in keeping the classifier alive, which will keep the buffer alive,
-        /// and the classifier would continue to receive new analysis events.
-        /// </summary>
-        public static void RegisterForParseTree(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
-            buffer.RegisterFor(_newParseTreeKey, handler);
-        }
-
-        public static void UnregisterForParseTree(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
-            buffer.UnregisterFor(_newParseTreeKey, handler);
-        }
-
-        public static IEnumerable<Action<AnalysisEntry>> GetParseTreeRegistrations(this ITextBuffer buffer) {
-            return buffer.GetRegistrations(_newParseTreeKey);
-        }
-
-        private static void RegisterFor(this ITextBuffer buffer, object key, Action<AnalysisEntry> handler) {
-            HashSet<Action<AnalysisEntry>> actions;
-            if (!buffer.Properties.TryGetProperty(key, out actions)) {
-                buffer.Properties[key] = actions = new HashSet<Action<AnalysisEntry>>();
-            }
-            actions.Add(handler);
-        }
-
-        private static void UnregisterFor(this ITextBuffer buffer, object key, Action<AnalysisEntry> handler) {
-            HashSet<Action<AnalysisEntry>> actions;
-            if (buffer.Properties.TryGetProperty(key, out actions)) {
-                actions.Remove(handler);
-            }
-        }
-
-        private static IEnumerable<Action<AnalysisEntry>> GetRegistrations(this ITextBuffer buffer, object key) {
-            HashSet<Action<AnalysisEntry>> actions;
-            if (buffer.Properties.TryGetProperty(key, out actions)) {
-                return actions.ToArray();
-            }
-            return Array.Empty<Action<AnalysisEntry>>();
-        }
-
-        public static void UnregisterAllHandlers(this ITextBuffer buffer) {
-            buffer.UnregisterAll(_newAnalysisKey);
-            buffer.UnregisterAll(_newAnalysisEntryKey);
-            buffer.UnregisterAll(_newParseTreeKey);
-        }
-
-        private static void UnregisterAll(this ITextBuffer buffer, object key) {
-            buffer.Properties.RemoveProperty(key);
         }
     }
 }

@@ -18,10 +18,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -30,14 +31,10 @@ using Microsoft.VisualStudio.Text.Editor;
 namespace Microsoft.PythonTools.Intellisense {
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly ITextSnapshot _snapshot;
-        private readonly VsProjectAnalyzer _analyzer;
-        private readonly IServiceProvider _serviceProvider;
 
-        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
-            : base(analyzer._serviceProvider, session, view, span, textBuffer, options) {
+        internal NormalCompletionAnalysis(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(services, session, view, span, textBuffer, options) {
             _snapshot = snapshot;
-            _analyzer = analyzer;
-            _serviceProvider = serviceProvider;
         }
 
         internal bool GetPrecedingExpression(out string text, out SnapshotSpan expressionExtent) {
@@ -96,15 +93,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             } else if (string.IsNullOrEmpty(text)) {
                 if (analysis != null) {
-                    Debug.Assert(analysis.Analyzer == _analyzer);
-                    lock (_analyzer) {
+                    var analyzer = analysis.Analyzer;
+                    lock (analyzer) {
                         var location = VsProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
                             statementRange.Snapshot,
                             analysis
                         );
                         var parameters = Enumerable.Empty<CompletionResult>();
-                        var sigs = _analyzer.WaitForRequest(_analyzer.GetSignaturesAsync(analysis, View, _snapshot, Span), "GetCompletions.GetSignatures");
+                        var sigs = analyzer.WaitForRequest(analyzer.GetSignaturesAsync(analysis, View, _snapshot, Span), "GetCompletions.GetSignatures");
                         if (sigs != null && sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
@@ -112,21 +109,21 @@ namespace Microsoft.PythonTools.Intellisense {
                                 .Distinct()
                                 .Select(n => new CompletionResult(n, PythonMemberType.Field));
                         }
-                        members = _analyzer.WaitForRequest(_analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions), "GetCompletions.GetAllAvailableMembers")
+                        members = analyzer.WaitForRequest(analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions), "GetCompletions.GetAllAvailableMembers")
                             .MaybeEnumerate()
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
-                }
 
-                if (pyReplEval == null) {
-                    var expansions = _analyzer.WaitForRequest(_serviceProvider.GetPythonToolsService().GetExpansionCompletionsAsync(), "GetCompletions.GetExpansionCompletions");
-                    if (expansions != null) {
-                        // Expansions should come first, so that they replace our keyword
-                        // completions with the more detailed snippets.
-                        if (members != null) {
-                            members = expansions.Union(members, CompletionComparer.MemberEquality);
-                        } else {
-                            members = expansions;
+                    if (pyReplEval == null) {
+                        var expansions = analyzer.WaitForRequest(EditorServices.Python?.GetExpansionCompletionsAsync(), "GetCompletions.GetExpansionCompletions");
+                        if (expansions != null) {
+                            // Expansions should come first, so that they replace our keyword
+                            // completions with the more detailed snippets.
+                            if (members != null) {
+                                members = expansions.Union(members, CompletionComparer.MemberEquality);
+                            } else {
+                                members = expansions;
+                            }
                         }
                     }
                 }
@@ -135,21 +132,20 @@ namespace Microsoft.PythonTools.Intellisense {
                     replMembers = pyReplEval.GetMemberNames(string.Empty);
                 }
             } else {
+                var analyzer = analysis.Analyzer;
                 if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                    Debug.Assert(analysis.Analyzer == _analyzer);
-                    lock (_analyzer) {
+                    lock (analyzer) {
                         var location = VsProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
                             statementRange.Snapshot,
                             analysis
                         );
 
-                        members = _analyzer.WaitForRequest(_analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions), "GetCompletions.GetMembers");
+                        members = analyzer.WaitForRequest(analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions), "GetCompletions.GetMembers");
                     }
                 }
 
-                if (pyReplEval != null && _analyzer.ShouldEvaluateForCompletion(text)) {
-                    Debug.Assert(pyReplEval.Analyzer == _analyzer);
+                if (pyReplEval != null && pyReplEval.Analyzer.ShouldEvaluateForCompletion(text)) {
                     replMembers = pyReplEval.GetMemberNames(text);
                 }
             }

@@ -31,5 +31,17 @@ namespace TestUtilities.UI.Python {
 
             Assert.Fail("Timed out waiting for analyzer");
         }
+
+        public static void WaitForAnalysisAtCaret(this EditorWindow doc) {
+            for (int i = 0; i < 100; i++) {
+                var analysis = doc.TextView.GetAnalysisAtCaret(VSTestContext.ServiceProvider);
+                if (analysis != null && analysis.IsAnalyzed) {
+                    return;
+                }
+                System.Threading.Thread.Sleep(100);
+            }
+
+            Assert.Fail("Timed out waiting for analyzer");
+        }
     }
 }

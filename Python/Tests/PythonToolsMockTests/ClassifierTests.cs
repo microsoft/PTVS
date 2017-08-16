@@ -21,11 +21,13 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -186,7 +188,7 @@ def f(a = A, b : B):
                 helper.CheckAstClassifierSpans("b<True> b<False>");
             }
 
-            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V33)) {
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
                 helper.CheckAstClassifierSpans("k<True> k<False>");
             }
         }
@@ -238,6 +240,7 @@ def f() -> int:
             private readonly PythonAnalysisClassifierProvider _provider2;
             private readonly ManualResetEventSlim _classificationsReady1, _classificationsReady2;
             private readonly PythonEditor _view;
+            private ExceptionDispatchInfo _excInfo;
 
             public ClassifierHelper(string code, PythonLanguageVersion version) {
                 _view = new PythonEditor("", version);
@@ -249,31 +252,33 @@ def f() -> int:
                 _classificationsReady1 = new ManualResetEventSlim();
                 _classificationsReady2 = new ManualResetEventSlim();
 
-                AstClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady1);
+                AstClassifier.ClassificationChanged += (s, e) => _classificationsReady1.SetIfNotDisposed();
                 var startVersion = _view.CurrentSnapshot.Version;
                 AnalysisClassifier.ClassificationChanged += (s, e) => {
-                    var entry = (AnalysisEntry)_view.GetAnalysisEntry();
-                    // make sure we have classifications from the version we analyzed after
-                    // setting the text below.
-                    if (entry.GetAnalysisVersion(_view.CurrentSnapshot.TextBuffer).VersionNumber > startVersion.VersionNumber) {
-                        SafeSetEvent(_classificationsReady2);
+                    try {
+                        var bi = PythonTextBufferInfo.TryGetForBuffer(_view.View.TextView.TextBuffer);
+                        Assert.IsNotNull(bi, "Expected non-null buffer info");
+                        if (bi.LastAnalysisReceivedVersion == null) {
+                            return;
+                        }
+                        // make sure we have classifications from the version we analyzed after
+                        // setting the text below.
+                        if (bi.LastAnalysisReceivedVersion.VersionNumber > startVersion.VersionNumber) {
+                            _classificationsReady2.SetIfNotDisposed();
+                        }
+                    } catch (Exception ex) {
+                        _excInfo = ExceptionDispatchInfo.Capture(ex);
                     }
                 };
 
                 _view.Text = code;
             }
 
-            private static void SafeSetEvent(ManualResetEventSlim evt) {
-                try {
-                    evt.Set();
-                } catch (ObjectDisposedException) {
-                }
-            }
-
             public void Dispose() {
                 _classificationsReady1.Dispose();
                 _classificationsReady2.Dispose();
                 _view.Dispose();
+                _excInfo?.Throw();
             }
 
             public ITextView TextView {

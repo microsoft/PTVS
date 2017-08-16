@@ -168,7 +168,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return ModulePath.GetModulesInPath(
                 searchPath,
                 recurse: false,
-                requireInitPy: ModulePath.PythonVersionRequiresInitPyFiles(_langVersion)
+                requireInitPy: ModulePath.PythonVersionRequiresInitPyFiles(_langVersion),
+                includePackages: true
             ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).ToList();
         }
 

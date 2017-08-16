@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
@@ -34,9 +35,9 @@ namespace Microsoft.PythonTools.Intellisense {
     /// processed. The completion services are specific to the current context
     /// </summary>
     public class CompletionAnalysis {
+        private readonly PythonEditorServices _services;
         private readonly ICompletionSession _session;
         private readonly ITextView _view;
-        private readonly IServiceProvider _serviceProvider;
         private readonly ITrackingSpan _span;
         private readonly ITextBuffer _textBuffer;
         protected readonly CompletionOptions _options;
@@ -45,15 +46,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null, null, null, null);
 
-        internal CompletionAnalysis(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        internal CompletionAnalysis(PythonEditorServices services, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             _session = session;
             _view = view;
             _span = span;
-            _serviceProvider = serviceProvider;
+            _services = services;
             _textBuffer = textBuffer;
             _options = (options == null) ? new CompletionOptions() : options.Clone();
         }
 
+        internal PythonEditorServices EditorServices => _services;
         public ICompletionSession Session => _session;
         public ITextBuffer TextBuffer => _textBuffer;
         public ITrackingSpan Span => _span;
@@ -101,17 +103,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal AnalysisEntry GetAnalysisEntry() {
-            AnalysisEntry entry;
-            var entryService = _serviceProvider.GetEntryService();
-            if (entryService != null && entryService.TryGetAnalysisEntry(_view, TextBuffer, out entry) && entry != null) {
-                //Debug.Assert(
-                //    entry.Analysis != null,
-                //    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)
-                //);
-                return entry;
-            }
-            Debug.Fail("Failed to get project entry for buffer " + TextBuffer.ToString());
-            return null;
+            var bi = _services.GetBufferInfo(TextBuffer);
+            Debug.Assert(bi?.AnalysisEntry != null, "Failed to get project entry for buffer " + TextBuffer.ToString());
+            return bi?.AnalysisEntry;
         }
 
         private static Stopwatch MakeStopWatch() {

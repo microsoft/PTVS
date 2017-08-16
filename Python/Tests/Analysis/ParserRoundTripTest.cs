@@ -1215,6 +1215,8 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "exec  'abc'");
             TestOneString(PythonLanguageVersion.V27, "exec  'abc'   in    l");
             TestOneString(PythonLanguageVersion.V27, "exec  'abc'   in    l     ,      g");
+            TestOneString(PythonLanguageVersion.V27, "exec(a, b, c)");
+            TestOneString(PythonLanguageVersion.V27, "exec  ( a, b, c )");
 
             // Print Statement
             TestOneString(PythonLanguageVersion.V27, "print fob");

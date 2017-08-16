@@ -97,6 +97,7 @@
     </Compile>
     <Compile Include="CachedVsInfo.cs" />
     <Compile Include="CommandTargetExtensions.cs" />
+    <Compile Include="IsMockVs.cs" />
     <Compile Include="MockClassifierAggregatorService.cs" />
     <Compile Include="MockDTEProperties.cs" />
     <Compile Include="MockDTEProperty.cs" />

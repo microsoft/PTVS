@@ -36,7 +36,10 @@ namespace Microsoft.PythonTools.Interpreter {
         private int _ignoreNotifications;
         private bool _initialized;
 
-        public CPythonInterpreterFactoryProvider() : this(true) { }
+        [ImportingConstructor]
+        public CPythonInterpreterFactoryProvider(
+            [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
+        ) : this(isMockVs == null) { }
 
         public CPythonInterpreterFactoryProvider(bool watchRegistry) {
             _watchRegistry = watchRegistry;
@@ -125,33 +128,41 @@ namespace Microsoft.PythonTools.Interpreter {
             // Discover the available interpreters...
             bool anyChanged = false;
 
-            var search = new PythonRegistrySearch();
+            PythonRegistrySearch search = null;
+            Dictionary<string, PythonInterpreterInformation> machineFactories = null;
 
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
-            using (var root = baseKey.OpenSubKey(PythonPath)) {
-                search.Search(
-                    root,
-                    Environment.Is64BitOperatingSystem ? InterpreterArchitecture.Unknown : InterpreterArchitecture.x86
-                );
-            }
+            try {
+                search = new PythonRegistrySearch();
 
-            Dictionary<string, PythonInterpreterInformation> machineFactories = new Dictionary<string, PythonInterpreterInformation>();
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            using (var root = baseKey.OpenSubKey(PythonPath)) {
-                search.Search(
-                    root,
-                    InterpreterArchitecture.x86
-                );
-            }
-
-            if (Environment.Is64BitOperatingSystem) {
-                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
                 using (var root = baseKey.OpenSubKey(PythonPath)) {
                     search.Search(
                         root,
-                        InterpreterArchitecture.x64
+                        Environment.Is64BitOperatingSystem ? InterpreterArchitecture.Unknown : InterpreterArchitecture.x86
                     );
                 }
+
+                machineFactories = new Dictionary<string, PythonInterpreterInformation>();
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+                using (var root = baseKey.OpenSubKey(PythonPath)) {
+                    search.Search(
+                        root,
+                        InterpreterArchitecture.x86
+                    );
+                }
+
+                if (Environment.Is64BitOperatingSystem) {
+                    using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                    using (var root = baseKey.OpenSubKey(PythonPath)) {
+                        search.Search(
+                            root,
+                            InterpreterArchitecture.x64
+                        );
+                    }
+                }
+            } catch (ObjectDisposedException) {
+                // We are aborting, so silently return with no results.
+                return;
             }
 
             var found = search.Interpreters.ToList();

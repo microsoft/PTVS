@@ -673,7 +673,6 @@ namespace Microsoft.PythonTools.Language {
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 SnapshotPoint? pyPoint;
-                OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.RETURN:
                         pyPoint = _textView.GetPythonCaret();
@@ -752,18 +751,12 @@ namespace Microsoft.PythonTools.Language {
                         }
                         break;
                     case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                        tagger = _textView.GetOutliningTagger();
-                        if (tagger != null) {
-                            tagger.Disable();
-                        }
+                        _textView.GetOutliningTagger()?.Disable();
                         // let VS get the event as well
                         break;
 
                     case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                        tagger = _textView.GetOutliningTagger();
-                        if (tagger != null) {
-                            tagger.Enable();
-                        }
+                        _textView.GetOutliningTagger()?.Enable();
                         // let VS get the event as well
                         break;
                     case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
@@ -897,7 +890,6 @@ namespace Microsoft.PythonTools.Language {
                     }
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
-                OutliningTaggerProvider.OutliningTagger tagger;
                 for (int i = 0; i < cCmds; i++) {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
@@ -911,15 +903,13 @@ namespace Microsoft.PythonTools.Language {
                             break;
 
                         case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                            tagger = _textView.GetOutliningTagger();
-                            if (tagger != null && tagger.Enabled) {
+                            if (_textView.GetOutliningTagger()?.Enabled == true) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             }
                             break;
 
                         case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                            tagger = _textView.GetOutliningTagger();
-                            if (tagger != null && !tagger.Enabled) {
+                            if (_textView.GetOutliningTagger()?.Enabled == false) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             }
                             break;
