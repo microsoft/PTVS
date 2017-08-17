@@ -717,14 +717,16 @@ public:
     }
 };
 
-long GetPythonThreadId(PythonVersion version, PyThreadState* curThread) {
-    long threadId = 0;
+DWORD GetPythonThreadId(PythonVersion version, PyThreadState* curThread) {
+    DWORD threadId = 0;
     if (PyThreadState_25_27::IsFor(version)) {
-        threadId = ((PyThreadState_25_27*)curThread)->thread_id;
+        threadId = (DWORD)((PyThreadState_25_27*)curThread)->thread_id;
     } else if (PyThreadState_30_33::IsFor(version)) {
-        threadId = ((PyThreadState_30_33*)curThread)->thread_id;
+        threadId = (DWORD)((PyThreadState_30_33*)curThread)->thread_id;
     } else if (PyThreadState_34_36::IsFor(version)) {
-        threadId = ((PyThreadState_34_36*)curThread)->thread_id;
+        threadId = (DWORD)((PyThreadState_34_36*)curThread)->thread_id;
+    } else if (PyThreadState_37::IsFor(version)) {
+        threadId = (DWORD)((PyThreadState_37*)curThread)->thread_id;
     }
     return threadId;
 }
@@ -1135,7 +1137,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                     foundThread = true;
                     processedThreads++;
 
-                    long threadId = GetPythonThreadId(version, curThread);
+                    DWORD threadId = GetPythonThreadId(version, curThread);
                     // skip this thread - it doesn't really have any Python code on it...
                     if (threadId != GetCurrentThreadId()) {
                         // create new debugger Thread object on our injected thread
@@ -1148,6 +1150,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             frame = ((PyThreadState_30_33*)curThread)->frame;
                         } else if (PyThreadState_34_36::IsFor(version)) {
                             frame = ((PyThreadState_34_36*)curThread)->frame;
+                        } else if (PyThreadState_37::IsFor(version)) {
+                            frame = ((PyThreadState_37*)curThread)->frame;
                         }
 
                         auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), pyTrue, frame, NULL));
@@ -1338,6 +1342,8 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
             ((PyThreadState_30_33*)curThread)->c_tracefunc(((PyThreadState_30_33*)curThread)->c_traceobj, frame, what, arg);
         } else if (PyThreadState_34_36::IsFor(version)) {
             ((PyThreadState_34_36*)curThread)->c_tracefunc(((PyThreadState_34_36*)curThread)->c_traceobj, frame, what, arg);
+        } else if (PyThreadState_37::IsFor(version)) {
+            ((PyThreadState_37*)curThread)->c_tracefunc(((PyThreadState_37*)curThread)->c_traceobj, frame, what, arg);
         }
     }
     return 0;
@@ -1383,6 +1389,8 @@ void SetInitialTraceFunc(DWORD interpreterId, PyThreadState *thread) {
         gilstate_counter = ((PyThreadState_30_33*)thread)->gilstate_counter;
     } else if (PyThreadState_34_36::IsFor(version)) {
         gilstate_counter = ((PyThreadState_34_36*)thread)->gilstate_counter;
+    } else if (PyThreadState_37::IsFor(version)) {
+        gilstate_counter = ((PyThreadState_37*)thread)->gilstate_counter;
     }
 
     if (gilstate_counter == 1) {

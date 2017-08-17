@@ -136,6 +136,8 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
             filename = ((PyCodeObject33_35*)codeObj)->co_filename;
         } else if (PyCodeObject36::IsFor(MajorVersion, MinorVersion)) {
             filename = ((PyCodeObject36*)codeObj)->co_filename;
+        } else if (PyCodeObject37::IsFor(MajorVersion, MinorVersion)) {
+            filename = ((PyCodeObject37*)codeObj)->co_filename;
         }
         module = (DWORD_PTR)filename;
 
@@ -250,6 +252,9 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
         } else if (PyCodeObject36::IsFor(MajorVersion, MinorVersion)) {
             argCount = ((PyCodeObject36*)codeObj)->co_argcount;
             argNames = (PyTupleObject*)((PyCodeObject36*)codeObj)->co_varnames;
+        } else if (PyCodeObject37::IsFor(MajorVersion, MinorVersion)) {
+            argCount = ((PyCodeObject37*)codeObj)->co_argcount;
+            argNames = (PyTupleObject*)((PyCodeObject37*)codeObj)->co_varnames;
         }
 
         if (argCount != 0 && argNames && argNames->ob_type == PyTuple_Type) {
@@ -260,8 +265,8 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
                 PyObject* self = nullptr;
                 if (PyFrameObject25_33::IsFor(MajorVersion, MinorVersion)) {
                     self = ((PyFrameObject25_33*)frameObj)->f_localsplus[0];
-                } else if (PyFrameObject34_36::IsFor(MajorVersion, MinorVersion)) {
-                    self = ((PyFrameObject34_36*)frameObj)->f_localsplus[0];
+                } else if (PyFrameObject34_37::IsFor(MajorVersion, MinorVersion)) {
+                    self = ((PyFrameObject34_37*)frameObj)->f_localsplus[0];
                 }
                 return GetClassNameFromSelf(self, codeObj);
             }
