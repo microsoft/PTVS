@@ -168,12 +168,12 @@
                                             Margin="0 0 0 2"
                                             Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplateWarning}">
                         </imaging:CrispImage>
-                        <ccv:LiveTextBlock Margin="3 3"
+                        <TextBlock Margin="3 3"
                                    Text="{Binding Path=ErrorDescription}">
-                            <ccv:LiveTextBlock.ToolTip>
+                            <TextBlock.ToolTip>
                                 <TextBlock TextWrapping="Wrap" Text="{Binding Path=ErrorDetails}"/>
-                            </ccv:LiveTextBlock.ToolTip>
-                        </ccv:LiveTextBlock>
+                            </TextBlock.ToolTip>
+                        </TextBlock>
                     </StackPanel>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vm:LoadingViewModel}">
@@ -239,11 +239,33 @@
                     <imaging:CrispImage Width="16" Height="16"
                                         Moniker="{Binding StatusImage}"
                                         AutomationProperties.HelpText="{Binding StatusMessage}"
-                                        Visibility="{Binding StatusImageVisibility}"/>
-                    <ccv:LiveTextBlock Margin="4 0 0 0"
-                                       Text="{Binding StatusMessage}"
-                                       TextWrapping="Wrap"
-                                       ToolTip="{Binding StatusHelp}" />
+                                        Visibility="{Binding StatusImageVisibility}" />
+                    <imaging:CrispImage Width="16" Height="16"
+                                        Moniker="{Binding StatusImage}"
+                                        AutomationProperties.HelpText="{Binding StatusMessage}"
+                                        Visibility="{Binding SpinningStatusImageVisibility}"
+                                        RenderTransformOrigin="0.5, 0.5">
+                        <imaging:CrispImage.RenderTransform>
+                            <RotateTransform x:Name="Rotation" />
+                        </imaging:CrispImage.RenderTransform>
+                        <imaging:CrispImage.Triggers>
+                            <EventTrigger RoutedEvent="Image.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Rotation"
+                                                         Storyboard.TargetProperty="Angle"
+                                                         By="360.0"
+                                                         Duration="0:0:2.0"
+                                                         RepeatBehavior="Forever" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </imaging:CrispImage.Triggers>
+                    </imaging:CrispImage>
+                    <TextBlock Margin="4 0 0 0"
+                               Text="{Binding StatusMessage}"
+                               TextWrapping="Wrap"
+                               ToolTip="{Binding StatusHelp}" />
                 </StackPanel>
                 <ProgressBar Margin="4" IsIndeterminate="True"
                              Visibility="{Binding StatusProgressVisibility}"/>
