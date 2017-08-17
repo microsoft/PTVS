@@ -1530,6 +1530,26 @@ namespace ProfilingUITests {
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
+        public void BuiltinsProfilePython37() {
+            BuiltinsProfile(
+                PythonPaths.Python37,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void BuiltinsProfilePython37x64() {
+            BuiltinsProfile(
+                PythonPaths.Python37_x64,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchExecutableUsingInterpreterGuid() {
             PythonPaths.Python27.AssertInstalled();
 

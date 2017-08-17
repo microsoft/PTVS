@@ -42,6 +42,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python34 = GetCPythonVersion(PythonLanguageVersion.V34, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python35 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python36 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python37 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x86);
         public static readonly PythonVersion IronPython27 = GetIronPythonVersion(false);
         public static readonly PythonVersion Python25_x64 = GetCPythonVersion(PythonLanguageVersion.V25, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python26_x64 = GetCPythonVersion(PythonLanguageVersion.V26, InterpreterArchitecture.x64);
@@ -53,6 +54,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python34_x64 = GetCPythonVersion(PythonLanguageVersion.V34, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python37_x64 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
         public static readonly PythonVersion Anaconda36_x64 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
@@ -208,6 +210,7 @@ namespace TestUtilities {
                 if (Python34 != null) yield return Python34;
                 if (Python35 != null) yield return Python35;
                 if (Python36 != null) yield return Python36;
+                if (Python37 != null) yield return Python37;
                 if (IronPython27 != null) yield return IronPython27;
                 if (Python25_x64 != null) yield return Python25_x64;
                 if (Python26_x64 != null) yield return Python26_x64;
@@ -219,6 +222,7 @@ namespace TestUtilities {
                 if (Python34_x64 != null) yield return Python34_x64;
                 if (Python35_x64 != null) yield return Python35_x64;
                 if (Python36_x64 != null) yield return Python36_x64;
+                if (Python37_x64 != null) yield return Python37_x64;
                 if (IronPython27_x64 != null) yield return IronPython27_x64;
                 if (Jython27 != null) yield return Jython27;
             }

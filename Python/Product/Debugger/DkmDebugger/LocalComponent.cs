@@ -74,18 +74,16 @@ namespace Microsoft.PythonTools.DkmDebugger {
             public DkmThread SuspendedThread { get; set; }
         }
 
-        private static string GetPyInitializeObjectFile(PythonLanguageVersion version) {
-            switch (version) {
-                case PythonLanguageVersion.V27:
-                case PythonLanguageVersion.V33:
-                case PythonLanguageVersion.V34:
-                    return "pythonrun.obj";
-                case PythonLanguageVersion.V35:
-                case PythonLanguageVersion.V36:
-                    return "pylifecycle.obj";
-                default:
-                    Debug.Fail("Unsupported Python version");
-                    return string.Empty;
+        private static bool Py_IsInitialized(PythonRuntimeInfo pyrtInfo) {
+            var ver = pyrtInfo.LanguageVersion;
+            var objName = ver < PythonLanguageVersion.V35 ? "pythonrun.obj" :
+                ver < PythonLanguageVersion.V37 ? "pylifecycle.obj" :
+                null;
+            var varName = ver < PythonLanguageVersion.V37 ? "initialized" : "_Py_Initialized";
+            try {
+                return pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>(varName, objName).Read() != 0;
+            } catch (ArgumentException) {
+                return false;
             }
         }
 
@@ -117,11 +115,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             // asynchronous, and so there's no user expectation that breakpoints light up instantly.
 
             // If Python is already initialized, this is attach-to-running-process - don't block.
-            var initialized = pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>(
-                "initialized",
-                GetPyInitializeObjectFile(pyrtInfo.LanguageVersion)
-            );
-            if (initialized.Read() == 0) {
+            if (!Py_IsInitialized(pyrtInfo)) {
                 // When Py_InitializeEx is hit, suspend the thread.
                 DkmRuntimeBreakpoint makePendingCallsBP = null;
                 makePendingCallsBP = CreateRuntimeDllExportedFunctionBreakpoint(pyrtInfo.DLLs.Python, "Py_InitializeEx", (thread, frameBase, vFrame, retAddr) => {
