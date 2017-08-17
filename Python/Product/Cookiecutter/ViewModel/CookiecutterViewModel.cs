@@ -78,6 +78,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private ImageMoniker _statusImage;
         private Visibility _statusVisibility = Visibility.Collapsed;
         private Visibility _statusImageVisibility = Visibility.Collapsed;
+        private Visibility _spinningStatusImageVisibility = Visibility.Collapsed;
         private Visibility _statusProgressVisibility = Visibility.Collapsed;
         private Visibility _statusUpdateProgressVisibility = Visibility.Collapsed;
 
@@ -225,6 +226,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public ImageMoniker StatusImage => _statusImage;
         public Visibility StatusVisibility => _statusVisibility;
         public Visibility StatusImageVisibility => _statusImageVisibility;
+        public Visibility SpinningStatusImageVisibility => _spinningStatusImageVisibility;
         public Visibility StatusProgressVisibility => _statusProgressVisibility;
         public Visibility StatusUpdateProgressVisibility => _statusUpdateProgressVisibility;
 
@@ -239,7 +241,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _statusMessage = message ?? string.Empty;
             _statusHelp = help ?? string.Empty;
             _statusImage = image ?? default(ImageMoniker);
-            _statusImageVisibility = image.HasValue ? Visibility.Visible : Visibility.Collapsed;
+            _statusImageVisibility = image.HasValue && !progressVisible ? Visibility.Visible : Visibility.Collapsed;
+            _spinningStatusImageVisibility = image.HasValue && progressVisible ? Visibility.Visible : Visibility.Collapsed;
             bool v = (visible ?? !string.IsNullOrEmpty(message));
             _statusVisibility = v ? Visibility.Visible : Visibility.Collapsed;
             _statusProgressVisibility = progressVisible ? Visibility.Visible : Visibility.Collapsed;
@@ -252,6 +255,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             OnPropertyChange(nameof(StatusHelp));
             OnPropertyChange(nameof(StatusImage));
             OnPropertyChange(nameof(StatusImageVisibility));
+            OnPropertyChange(nameof(SpinningStatusImageVisibility));
             OnPropertyChange(nameof(StatusProgressVisibility));
             OnPropertyChange(nameof(StatusUpdateProgressVisibility));
             if (v) {
