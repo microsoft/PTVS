@@ -39,16 +39,16 @@ namespace Microsoft.PythonTools.Analysis {
         public readonly object Location;
 
         public EncodedLocation(ILocationResolver resolver, object location) {
+            if (resolver == null && !(location is LocationInfo)) {
+                throw new ArgumentNullException(nameof(resolver));
+            }
+
             Resolver = resolver;
             Location = location;
         }
 
         public override int GetHashCode() {
-            if (Location != null) {
-                return Resolver.GetHashCode() ^ Location.GetHashCode();
-            }
-
-            return Resolver.GetHashCode();
+            return (Resolver?.GetHashCode() ?? 0) ^ (Location?.GetHashCode() ?? 0);
         }
 
         public override bool Equals(object obj) {
@@ -68,6 +68,12 @@ namespace Microsoft.PythonTools.Analysis {
         #endregion
 
         public LocationInfo GetLocationInfo() {
+            if (Location == null) {
+                return null;
+            }
+            if (Resolver == null) {
+                return Location as LocationInfo;
+            }
             return Resolver.ResolveLocation(Location);
         }
     }

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -27,7 +28,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly AstPythonInterpreterFactory _factory;
         private readonly Dictionary<BuiltinTypeId, IPythonType> _builtinTypes;
         private PythonAnalyzer _analyzer;
-        private IBuiltinPythonModule _builtinModule;
+        private AstScrapedPythonModule _builtinModule;
         private readonly ConcurrentDictionary<string, IPythonModule> _modules;
 
         private readonly object _userSearchPathsLock = new object();
@@ -63,9 +64,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IPythonType res;
             lock (_builtinTypes) {
                 if (!_builtinTypes.TryGetValue(id, out res)) {
+                    if (_builtinModule == null) {
+                        _builtinModule = AstScrapedPythonModule.CreateBuiltins(_factory.LanguageVersion);
+                        _builtinModule.Imported(this);
+                    }
                     _builtinTypes[id] = res =
-                        _builtinModule?.GetAnyMember(SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version)) as IPythonType ??
-                        new AstPythonType(id.ToString());
+                        _builtinModule?.GetMember(null, id.ToString()) as IPythonType ??
+                        new AstPythonType(SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version));
                 }
             }
             return res;
@@ -123,17 +128,37 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var firstBit = i < 0 ? name : name.Remove(i);
             string searchPath;
 
+            ModulePath mp;
+            bool isInvalid, isMissing;
+            string errorParam;
+
             if (packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
-                try {
-                    return ModulePath.FromBasePathAndName(searchPath, name);
-                } catch (ArgumentException) {
+                if (ModulePath.FromBasePathAndName_NoThrow(
+                    searchPath,
+                    name,
+                    null,
+                    null,
+                    out mp,
+                    out isInvalid,
+                    out isMissing,
+                    out errorParam
+                )) {
+                    return mp;
                 }
             }
 
             foreach (var sp in searchPaths.MaybeEnumerate()) {
-                try {
-                    return ModulePath.FromBasePathAndName(sp.Path, name);
-                } catch (ArgumentException) {
+                if (ModulePath.FromBasePathAndName_NoThrow(
+                    sp.Path,
+                    name,
+                    null,
+                    null,
+                    out mp,
+                    out isInvalid,
+                    out isMissing,
+                    out errorParam
+                )) {
+                    return mp;
                 }
             }
 
@@ -206,7 +231,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 state.SearchPathsChanged += Analyzer_SearchPathsChanged;
                 var bm = state.BuiltinModule;
                 if (!string.IsNullOrEmpty(bm?.Name)) {
-                    _builtinModule = state.BuiltinModule.InterpreterModule as IBuiltinPythonModule;
                     _modules[state.BuiltinModule.Name] = state.BuiltinModule.InterpreterModule;
                 }
             }

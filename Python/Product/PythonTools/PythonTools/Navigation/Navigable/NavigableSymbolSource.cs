@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
         internal static async Task<AnalysisLocation> GetDefinitionLocationAsync(AnalysisEntry entry, ITextView textView, SnapshotSpan span) {
             var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, textView, span.Start).ConfigureAwait(false);
-            foreach (var variable in result?.Variables.MaybeEnumerate()) {
+            foreach (var variable in (result?.Variables).MaybeEnumerate()) {
                 if (variable.Type == Analysis.VariableType.Definition &&
                     !string.IsNullOrEmpty(variable.Location?.FilePath)) {
                     return variable.Location;

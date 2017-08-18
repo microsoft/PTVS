@@ -40,34 +40,44 @@ DIRECT_MAP = {
     type(complex.real): "Property",
 }
 
-T = "type(self)()"
+# These two dictionaries start with Python 3 values.
+# There is an update below for Python 2 differences.
+
+T = "Type(self)()"
 N = "None"
 KNOWN_RESTYPES = {
     "__abs__": T,
     "__add__": T,
     "__and__": T,
+    "__annotations__": "{}",
     "__base__": "Type()",
     "__bases__": "(Type(),)",
     "__bool__": "Bool()",
+    "__call__": "Unknown()",
     "Type.__call__": "cls()",
     "__ceil__": T,
+    "__code__": "Object()",
     "__contains__": "Bool()",
+    "__del__": N,
     "__delattr__": N,
+    "Property.__delete__": N,
     "__delitem__": N,
-    "__dict__": "{Str(): Unknown()}",
-    "__dir__": "[Str()]",
+    "__dict__": "{'': Unknown()}",
+    "__dir__": "['']",
     "__divmod__": "(Int(), Int())",
     "__eq__": "Bool()",
-    "__format__": "Str()",
+    "__format__": "''",
     "__float__": "Float()",
     "__floor__": T,
     "__floordiv__": "Int()",
     "__ge__": "Bool()",
+    "__get__": T,
     "__getattribute__": "Unknown()",
-    "Float.__getformat__": "Str()",
+    "Float.__getformat__": "''",
     "__getitem__": "Unknown()",
     "__getnewargs__": "()",
-    "__getnewargs_ex__": "((), Dict())",
+    "__getnewargs_ex__": "((), {})",
+    "__globals__": "{}",
     "__gt__": "Bool()",
     "__hash__": "Int()",
     "__iadd__": N,
@@ -81,6 +91,7 @@ KNOWN_RESTYPES = {
     "__invert__": T,
     "__ior__": N,
     "__isub__": N,
+    "__iter__": T,
     "Tuple.__iter__": "TupleIterator()",
     "List.__iter__": "ListIterator()",
     "Dict.__iter__": "DictKeys()",
@@ -91,6 +102,7 @@ KNOWN_RESTYPES = {
     "__ixor__": N,
     "__le__": "Bool()",
     "__len__": "Int()",
+    "__length_hint__": "Int()",
     "__lshift__": T,
     "__lt__": "Bool()",
     "__mod__": T,
@@ -98,6 +110,9 @@ KNOWN_RESTYPES = {
     "__ne__": "Bool()",
     "__neg__": T,
     "__new__": "cls()",
+    "__next__": "Unknown()",
+    "BytesIterator.__next__": "Int()",
+    "UnicodeIterator.__next__": "Unicode()",
     "Type.__prepare__": N,
     "__pos__": T,
     "__pow__": T,
@@ -121,9 +136,11 @@ KNOWN_RESTYPES = {
     "__reduce__": ["''", "()"],
     "__reduce_ex__": ["''", "()"],
     "__repr__": "''",
+    "__set__": N,
     "__setattr__": N,
     "Float.__setformat__": N,
     "__setitem__": N,
+    "__setstate__": N,
     "__sizeof__": "Int()",
     "__str__": "''",
     "Type.__subclasses__": "(cls,)",
@@ -133,6 +150,7 @@ KNOWN_RESTYPES = {
     "__xor__": T,
     "Type.__subclasscheck__": "Bool()",
     "__subclasshook__": "Bool()",
+    "__text_signature__": "''",
     "Set.add": N,
     "List.append": N,
     "Float.as_integer_ratio": "(Int(), Int())",
@@ -141,16 +159,18 @@ KNOWN_RESTYPES = {
     "casefold": T,
     "center": T,
     "clear": N,
+    "Generator.close": N,
     "conjugate": "Complex()",
     "copy": T,
     "count": "Int()",
     "Bytes.decode": "''",
-    "Bytes.encode": "b''",
-    "Unicode.encode": "b''",
+    "Property.deleter": "func",
     "Set.difference": T,
     "FrozenSet.difference": T,
     "Set.difference_update": N,
     "Set.discard": N,
+    "Bytes.encode": "b''",
+    "Unicode.encode": "b''",
     "endswith": "Bool()",
     "expandtabs": T,
     "List.extend": N,
@@ -164,6 +184,7 @@ KNOWN_RESTYPES = {
     "Bytes.fromhex": "b''",
     "Dict.fromkeys": "{}",
     "Dict.get": "self.__getitem__()",
+    "Property.getter": "func",
     "hex": "''",
     "index": "Int()",
     "List.insert": N,
@@ -184,6 +205,8 @@ KNOWN_RESTYPES = {
     "Float.is_integer": "Bool()",
     "Set.isdisjoint": "Bool()",
     "FrozenSet.isdisjoint": "Bool()",
+    "DictKeys.isdisjoint": "Bool()",
+    "DictItems.isdisjoint": "Bool()",
     "Set.issubset": "Bool()",
     "FrozenSet.issubset": "Bool()",
     "Set.issuperset": "Bool()",
@@ -198,7 +221,7 @@ KNOWN_RESTYPES = {
     "Bytes.maketrans": "b''",
     "Unicode.maketrans": "{}",
     "Type.mro": "[Type()]",
-    "partition": "(type(self)(), type(self)(), type(self)())",
+    "partition": "(Type(self)(), Type(self)(), Type(self)())",
     "List.pop": "self.__getitem__()",
     "Dict.pop": "self.keys().__getitem__()",
     "Set.pop": "Unknown()",
@@ -209,12 +232,14 @@ KNOWN_RESTYPES = {
     "List.reverse": N,
     "rindex": "Int()",
     "rjust": T,
-    "rpartition": "(type(self)(), type(self)(), type(self)())",
-    "rsplit": "[type(self)()]",
+    "rpartition": "(Type(self)(), Type(self)(), Type(self)())",
+    "rsplit": "[Type(self)()]",
     "rstrip": T,
+    "Generator.send": "self.__next__()",
     "Dict.setdefault": "self.__getitem__()",
+    "Property.setter": "func",
     "List.sort": N,
-    "split": "[type(self)()]",
+    "split": "[Type(self)()]",
     "splitlines": "[self()]",
     "startswith": "Bool()",
     "strip": T,
@@ -224,6 +249,7 @@ KNOWN_RESTYPES = {
     "Set.symmetric_difference_update": N,
     "Bytes.translate": T,
     "Unicode.translate": T,
+    "Generator.throw": N,
     "title": T,
     "to_bytes": "b''",
     "Set.union": T,
@@ -240,6 +266,7 @@ KNOWN_ARGSPECS = {
     "Type.__call__": "(cls, *args, **kwargs)",
     "Int.__ceil__": SELF,
     "__contains__": "(self, value)",
+    "__del__": SELF,
     "__dir__": SELF,
     "Int.__floor__": SELF,
     "__format__": "(self, format_spec)",
@@ -252,6 +279,7 @@ KNOWN_ARGSPECS = {
     "Type.__instancecheck__": "(self, instance)",
     "Bool.__init__": "(self, x)",
     "Int.__init__": "(self, x=0)",
+    "__length_hint__": SELF,
     "__new__": "(cls, *args, **kwargs)",
     "Type.__prepare__": "(cls, name, bases, **kwds)",
     "Int.__round__": "(self, ndigits=0)",
@@ -262,6 +290,7 @@ KNOWN_ARGSPECS = {
     "Float.__setformat__": "(typestr, fmt)",
     "List.__setitem__": "(self, index, value)",
     "Dict.__setitem__": "(self, key, value)",
+    "__setstate__": "(self, state)",
     "__sizeof__": SELF,
     "Type.__subclasses__": "(cls)",
     "Type.__subclasscheck__": "(cls, subclass)",
@@ -276,17 +305,19 @@ KNOWN_ARGSPECS = {
     "Bytes.center": ["(self, width)", "(self, width, fillbyte)"],
     "Unicode.center": ["(self, width)", "(self, width, fillchar)"],
     "clear": SELF,
+    "Generator.close": SELF,
     "conjugate": SELF,
     "copy": SELF,
     "count": "(self, x)",
     "Bytes.count": ["(self, sub)", "(self, sub, start)", "(self, sub, start, end)"],
     "Unicode.count": ["(self, sub)", "(self, sub, start)", "(self, sub, start, end)"],
     "Bytes.decode": "(self, encoding='utf-8', errors='strict')",
-    "Unicode.encode": "(self, encoding='utf-8', errors='strict')",
+    "Property.deleter": "(self, func)",
     "Set.difference": "(self, other)",
     "FrozenSet.difference": "(self, other)",
     "Set.difference_update": "(self, *others)",
     "Set.discard": "(self, elem)",
+    "Unicode.encode": "(self, encoding='utf-8', errors='strict')",
     "endswith": ["(self, suffix)", "(self, suffix, start)", "(self, suffix, start, end)"],
     "expandtabs": "(self, tabsize=8)",
     "List.extend": "(self, iterable)",
@@ -297,6 +328,7 @@ KNOWN_ARGSPECS = {
     "Int.from_bytes": "(bytes, byteorder, *, signed=False)",
     "Float.fromhex": "(string)",
     "Dict.get": "(self, key, d=Unknown())",
+    "Property.getter": "(self, func)",
     "hex": SELF,
     "List.insert": "(self, index, value)",
     "index": "(self, v)",
@@ -319,6 +351,8 @@ KNOWN_ARGSPECS = {
     "Float.is_integer": SELF,
     "Set.isdisjoint": "(self, other)",
     "FrozenSet.isdisjoint": "(self, other)",
+    "DictKeys.isdisjoint": "(self, other)",
+    "DictItems.isdisjoint": "(self, other)",
     "Set.issubset": "(self, other)",
     "FrozenSet.issubset": "(self, other)",
     "Set.issuperset": "(self, other)",
@@ -352,7 +386,9 @@ KNOWN_ARGSPECS = {
     "Unicode.rpartition": "(self, sep)",
     "rsplit": "(self, sep=None, maxsplit=-1)",
     "rstrip": ["(self)", "(self, chars)"],
+    "Generator.send": "(self, value)",
     "Dict.setdefault": "(self, k, d)",
+    "Property.setter": "(self, func)",
     "List.sort": SELF,
     "split": "(self, sep=None, maxsplit=-1)",
     "splitlines": "(self, keepends=False)",
@@ -362,6 +398,7 @@ KNOWN_ARGSPECS = {
     "Set.symmetric_difference": "(self, other)",
     "FrozenSet.symmetric_difference": "(self, other)",
     "Set.symmetric_difference_update": "(self, *others)",
+    "Generator.throw": ["(self, type)", "(self, type, value)", "(self, type, value, traceback)"],
     "title": SELF,
     "Int.to_bytes": "(bytes, byteorder, *, signed=False)",
     "Bytes.translate": "(self, table, delete=b'')",
@@ -374,6 +411,19 @@ KNOWN_ARGSPECS = {
     "Dict.values": SELF,
     "zfill": "(self, width)",
 }
+
+if sys.version[0] == '2':
+    KNOWN_RESTYPES.update({
+        "BytesIterator.__next__": None,
+        "BytesIterator.next": "Bytes()",
+        "UnicodeIterator.__next__": None,
+        "UnicodeIterator.next": "Unicode()",
+        "Generator.send": "self.next()",
+    })
+
+    KNOWN_ARGSPECS.update({
+    })
+
 
 class InspectWarning(UserWarning): pass
 
@@ -407,8 +457,6 @@ def _triple_quote(s):
         return '"""' + s.replace('"""', '\\"\\"\\"') + ' """'
     return "''' " + s.replace("'''", "\\'\\'\\'") + " '''"
 
-_SKIP_MEMBERS = ["__doc__"]
-
 def _each(s, name):
     if s == "T":
         return [name]
@@ -423,8 +471,28 @@ def _each(s, name):
         return res
     return [s]
 
-def _print_type(name, obj, basename=None, base=None):
+_SKIP_MEMBERS = frozenset(["__class__"])
+
+_ALREADY_WRITTEN = set()
+
+def _print_type(alias, objtype, basename=None, base=None):
+    name = objtype.__name__
+    
+    if name in _ALREADY_WRITTEN:
+        if alias != name:
+            print(alias + " = " + name)
+            print("")
+        return
+    _ALREADY_WRITTEN.add(name)
+
+    if getattr(objtype, '__bases__', None) == (object,):
+        basename = "Object"
+        base = object
+
     if base:
+        if base not in objtype.__bases__:
+            warnings.warn(basename + " not in " + name + ".__bases__ = " + repr(objtype.__bases__), InspectWarning)
+
         base_members = list(dir(base))
         base_members.extend(getattr(base, "__dict__", {}).keys())
         base_members.sort()
@@ -435,14 +503,15 @@ def _print_type(name, obj, basename=None, base=None):
 
         print("class " + name + ":")
 
-    members = list(dir(obj))
-    members.extend(getattr(obj, "__dict__", {}).keys())
+    members = list(dir(objtype))
+    members.extend(getattr(objtype, "__dict__", {}).keys())
     members.sort()
 
     if INCLUDE_DOCS:
-        docstring = getattr(obj, "__doc__", None)
-        if docstring:
+        docstring = getattr(objtype, "__doc__", None)
+        if isinstance(docstring, str):
             print("    " + _triple_quote(docstring))
+            members = [m for m in members if m != '__doc__']
 
     last_member = None
     while members:
@@ -451,12 +520,8 @@ def _print_type(name, obj, basename=None, base=None):
             continue
         last_member = member
 
-        if member == "__class__":
-            print("    __class__ = " + name)
-            continue
-
         try:
-            value = getattr(obj, member)
+            value = getattr(objtype, member)
         except AttributeError:
             continue
         except:
@@ -491,8 +556,8 @@ def _print_type(name, obj, basename=None, base=None):
 
         # Builtins do not have nested types
         if hasattr(value, "__call__") and not isinstance(value, type):
-            args = _render_args(value, name, member)
-            restype = _get_restype(name, member) or ""
+            args = _render_args(value, alias, member)
+            restype = _get_restype(alias, member) or ""
             if restype == "T":
                 restype = name
             if not restype:
@@ -512,7 +577,7 @@ def _print_type(name, obj, basename=None, base=None):
                     print("        return " + r)
             continue
 
-        value_type = _get_restype(name, member)
+        value_type = _get_restype(alias, member)
         if not value_type:
             warnings.warn("unknown value for " + name + "." + member + " = " +type(value).__name__, InspectWarning)
             value_type = "Unknown()"
@@ -520,6 +585,8 @@ def _print_type(name, obj, basename=None, base=None):
         for r in _each(value_type, name):
             print("    " + member + " = " + r)
 
+    if alias != name:
+        print(alias + " = " + name)
     print("")
 
 # Unknown
@@ -590,39 +657,114 @@ if bytes is not str:
     # Bytes
     _print_type("Bytes", bytes)
 
+    # BytesIterator
+    _print_type("BytesIterator", type(iter(bytes())))
+
     # Unicode
     _print_type("Unicode", str)
+
+    # UnicodeIterator
+    _print_type("UnicodeIterator", type(iter(str())))
 
     # Str
     print("Str = Unicode")
     print("")
+
+    # StrIterator
+    print("StrIterator = UnicodeIterator")
+    print("")
+
 else:
     # Bytes
     _print_type("Bytes", str)
 
+    # BytesIterator
+    _print_type("BytesIterator", type(iter(str())))
+
     # Unicode
     _print_type("Unicode", unicode)
+
+    # UnicodeIterator
+    _print_type("UnicodeIterator", type(iter(unicode())))
 
     # Str
     print("Str = Bytes")
     print("")
 
-# StrIterator
-# BytesIterator
-# UnicodeIterator
+    # StrIterator
+    print("StrIterator = BytesIterator")
+    print("")
+
 # Module
+_print_type("Module", type(inspect))
+
 # Function
+
+# These functions will be exec'd in order until one succeeds.
+# This ensures the maximum number of attributes will be initialized.
+
+_FUNCTIONS = [
+"""
+def _in_closure():
+    x = 1
+    def Function(a:'a', b=None, *args, **kwds) -> 'rv': x
+    return Function
+Function = _in_closure()
+del _in_closure""",
+"def Function(a, b=None, *args, **kwds): pass",
+"def Function(): pass"
+]
+
+for f in _FUNCTIONS:
+    try:
+        exec(f)
+        break
+    except SyntaxError:
+        pass
+else:
+    raise RuntimeError("no valid function could be defined")
+
+_print_type("Function", Function)
+
 # BuiltinMethodDescriptor
+_print_type("BuiltinMethodDescriptor", type(object.__hash__))
+
 # BuiltinFunction
+_print_type("BuiltinFunction", type(abs))
+
 # Generator
+_print_type("Generator", type((_ for _ in [])))
+
 # Property
+_print_type("Property", property)
+
 # ClassMethod
+_print_type("ClassMethod", classmethod)
+
 # StaticMethod
+_print_type("StaticMethod", staticmethod)
+
 # Ellipsis
+_print_type("Ellipsis", type(...))
+
 # TupleIterator
+_print_type("TupleIterator", type(iter(())))
+
 # ListIterator
+_print_type("ListIterator", type(iter([])))
+
 # DictKeys
+_print_type("DictKeys", type({}.keys()))
+
 # DictValues
+_print_type("DictValues", type({}.values()))
+
 # DictItems
+_print_type("DictItems", type({}.items()))
+
 # SetIterator
+_print_type("SetIterator", type(iter(set())))
+
 # CallableIterator
+_print_type("CallableIterator", type(iter((lambda: None), None)))
+

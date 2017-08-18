@@ -40,15 +40,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IPythonModule declModule,
             ClassDefinition def,
             string doc,
-            LocationInfo loc,
-            IEnumerable<IPythonType> mro
+            LocationInfo loc
         ) {
             _members = new Dictionary<string, IMember>();
 
             Name = def.Name;
             Documentation = doc;
             DeclaringModule = declModule;
-            Mro = mro.MaybeEnumerate().ToArray();
             Locations = new[] { loc };
         }
 
@@ -66,10 +64,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
+        internal void SetMro(IEnumerable<IPythonType> mro) {
+            if (Mro != null) {
+                throw new InvalidOperationException("cannot set Mro multiple times");
+            }
+            Mro = mro.MaybeEnumerate().ToArray();
+        }
+
         public string Name { get; }
         public string Documentation { get; }
         public IPythonModule DeclaringModule {get;}
-        public IList<IPythonType> Mro { get; }
+        public IList<IPythonType> Mro { get; private set; }
         public bool IsBuiltin => true;
         public PythonMemberType MemberType => PythonMemberType.Class;
         public BuiltinTypeId TypeId => BuiltinTypeId.Type;

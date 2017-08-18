@@ -1,5 +1,4 @@
-﻿extern alias analysis;
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -15,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -169,6 +169,40 @@ namespace AnalysisTests {
             AssertUtil.ContainsExactly(mod.GetMemberNames(null),
                 "version_info", "a_made_up_module"
             );
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstReturnTypes() {
+            using (var entry = CreateAnalysis(PythonLanguageVersion.V35)) {
+                entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                entry.AddModule("test-module", @"from ReturnValues import *
+R_str = r_str()
+R_object = r_object()
+R_A = A.r_A()");
+                entry.WaitForAnalysis();
+
+                entry.AssertHasAttr("",
+                    "r_a", "r_b", "r_str", "r_object", "A",
+                    "R_str", "R_object", "R_A"
+                );
+
+                entry.AssertIsInstance("R_str", BuiltinTypeId.Str);
+                entry.AssertIsInstance("R_object", BuiltinTypeId.Object);
+                entry.AssertDescription("R_A", "class A");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrape() {
+            using (var analysis = CreateAnalysis(PythonPaths.Python36_x64)) {
+                var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
+                var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
+
+                foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
+                    var type = interp.GetBuiltinType(v);
+                    Assert.IsNotNull(type, v.ToString());
+                }
+            }
         }
 
         [TestMethod, Priority(0)]

@@ -25,19 +25,27 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstScrapedPythonModule : IPythonModule {
-        private readonly string _filePath;
+        private readonly string _name, _filePath;
+        private readonly bool _isBuiltins;
         private string _documentation;
         private readonly Dictionary<string, IMember> _members;
         private bool _scraped;
 
-        public AstScrapedPythonModule(string name, string filePath) {
-            Name = name;
+        public static AstScrapedPythonModule CreateBuiltins(PythonLanguageVersion version) {
+            return new AstScrapedPythonModule(null, null, true);
+        }
+
+        public AstScrapedPythonModule(string name, string filePath) : this(name, filePath, false) { }
+
+        public AstScrapedPythonModule(string name, string filePath, bool isBuiltins) {
+            _name = name;
             _documentation = string.Empty;
             _filePath = filePath;
             _members = new Dictionary<string, IMember>();
+            _isBuiltins = isBuiltins;
         }
 
-        public string Name { get; }
+        public string Name => _isBuiltins ? "builtins" : _name;
 
         public string Documentation => _documentation;
 
@@ -71,21 +79,36 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return;
             }
 
-            ModulePath mp = AstPythonInterpreterFactory.FindModule(fact, _filePath);
-            if (string.IsNullOrEmpty(mp.FullName)) {
-                return;
-            }
+            var args = new List<string> { "-B", "-E" };
 
-            var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
-            if (!File.Exists(sm)) {
-                return;
+            if (_isBuiltins) {
+                args.Add("-S");
+
+                var sb = PythonToolsInstallPath.TryGetFile("scrape_builtins.py", GetType().Assembly);
+                if (!File.Exists(sb)) {
+                    return;
+                }
+
+                args.Add(sb);
+            } else {
+                ModulePath mp = AstPythonInterpreterFactory.FindModule(fact, _filePath);
+                if (string.IsNullOrEmpty(mp.FullName)) {
+                    return;
+                }
+
+                var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
+                if (!File.Exists(sm)) {
+                    return;
+                }
+
+                args.Add(sm);
+                args.Add(mp.LibraryPath);
+                args.Add(mp.ModuleName);
             }
 
             Stream code = null;
 
-            using (var p = ProcessOutput.RunHiddenAndCapture(
-                fact.Configuration.InterpreterPath, "-E", sm, mp.LibraryPath, mp.ModuleName
-            )) {
+            using (var p = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, args.ToArray())) {
                 p.Wait();
                 if (p.ExitCode == 0) {
                     var ms = new MemoryStream();
