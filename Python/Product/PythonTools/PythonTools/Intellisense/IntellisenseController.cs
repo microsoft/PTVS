@@ -188,7 +188,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            PythonTextBufferInfo.TryDispose(subjectBuffer);
+            // There may be more than one IntellisenseController per text buffer,
+            // so don't dispose of PythonTextBufferInfo when disconnecting from text buffer.
+            //PythonTextBufferInfo.TryDispose(subjectBuffer);
             _subjectBuffers.Remove(subjectBuffer);
         }
 

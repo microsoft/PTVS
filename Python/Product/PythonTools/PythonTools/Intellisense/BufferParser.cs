@@ -165,7 +165,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private void InitBuffer(ITextBuffer buffer, int id = 0) {
             var bi = _services.GetBufferInfo(buffer);
             if (!bi.SetAnalysisEntryId(id)) {
-                Debug.Fail("Buffer is already initialized");
+                // TODO: this can occur when a buffer has multiple views (new window, peek window)
+                //Debug.Fail("Buffer is already initialized");
                 return;
             }
 

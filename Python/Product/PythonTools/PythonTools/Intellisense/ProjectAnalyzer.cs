@@ -1031,7 +1031,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, ITextView view, SnapshotPoint point) {
+        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point) {
             Debug.Assert(entry.Analyzer == this);
 
             var analysis = GetApplicableExpression(entry, point);
@@ -2402,7 +2402,11 @@ namespace Microsoft.PythonTools.Intellisense {
             var location = new AnalysisLocation(
                 arg.file,
                 arg.line,
-                arg.column
+                arg.column,
+                arg.definitionStartLine,
+                arg.definitionStartColumn,
+                arg.definitionEndLine,
+                arg.definitionEndColumn
             );
             return new AnalysisVariable(type, location);
         }

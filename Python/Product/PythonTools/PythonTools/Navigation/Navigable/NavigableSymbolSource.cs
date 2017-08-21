@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
                 // Check with the analyzer, which will give us a precise
                 // result, including the source location.
-                var result = await GetDefinitionLocationAsync(entry, _textView, token.Span).ConfigureAwait(false);
+                var result = await GetDefinitionLocationAsync(entry, token.Span.Start).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -102,8 +102,8 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             return null;
         }
 
-        internal static async Task<AnalysisLocation> GetDefinitionLocationAsync(AnalysisEntry entry, ITextView textView, SnapshotSpan span) {
-            var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, textView, span.Start).ConfigureAwait(false);
+        internal static async Task<AnalysisLocation> GetDefinitionLocationAsync(AnalysisEntry entry, SnapshotPoint pt) {
+            var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt).ConfigureAwait(false);
             foreach (var variable in result?.Variables.MaybeEnumerate()) {
                 if (variable.Type == Analysis.VariableType.Definition &&
                     !string.IsNullOrEmpty(variable.Location?.FilePath)) {

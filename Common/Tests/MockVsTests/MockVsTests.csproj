@@ -128,6 +128,7 @@
     <Compile Include="MockOleComponentManager.cs" />
     <Compile Include="MockOutputWindow.cs" />
     <Compile Include="MockOutputWindowPane.cs" />
+    <Compile Include="MockPeekBroker.cs" />
     <Compile Include="MockQuickInfoBroker.cs" />
     <Compile Include="MockSignatureHelpBroker.cs" />
     <Compile Include="MockSignatureHelpSession.cs" />

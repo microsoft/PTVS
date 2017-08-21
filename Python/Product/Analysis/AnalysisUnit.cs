@@ -354,7 +354,7 @@ namespace Microsoft.PythonTools.Analysis {
                 span = node.GetSpan(Tree);
             }
 
-            return new LocationInfo(ProjectEntry.FilePath, span.Start.Line, span.Start.Column);
+            return new LocationInfo(ProjectEntry.FilePath, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
         }
     }
 

@@ -105,8 +105,40 @@ namespace Microsoft.PythonTools.Analysis {
             if (locatedDef != null &&
                 locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
                 locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
-                var start = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
-                yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry.FilePath, start.Line, start.Column));
+                var identifierStart = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
+
+                // For classes and functions, find the ClassDefinition or
+                // FunctionDefinition to get the full span of the definition.
+                var walker = new DefinitionWalker(locatedDef.Node.StartIndex);
+                locatedDef.Entry.Tree.Walk(walker);
+
+                SourceLocation definitionStart;
+                SourceLocation definitionEnd;
+                if (walker.Definition != null) {
+                    definitionStart = walker.Definition.GetStart(locatedDef.Entry.Tree);
+                    definitionEnd = walker.Definition.GetEnd(locatedDef.Entry.Tree);
+                } else {
+                    definitionStart = identifierStart;
+                    definitionEnd = locatedDef.Node.GetEnd(locatedDef.Entry.Tree);
+                }
+
+                yield return new AnalysisVariable(
+                    VariableType.Definition,
+                    // Location of the identifier only
+                    new LocationInfo(
+                        locatedDef.Entry.FilePath,
+                        identifierStart.Line,
+                        identifierStart.Column
+                    ),
+                    // Location of the full definition
+                    new LocationInfo(
+                        locatedDef.Entry.FilePath,
+                        definitionStart.Line,
+                        definitionStart.Column,
+                        definitionEnd.Line,
+                        definitionEnd.Column
+                    )
+                );
             }
 
             VariableDef def = referenceable as VariableDef;
@@ -128,6 +160,27 @@ namespace Microsoft.PythonTools.Analysis {
                     VariableType.Reference, 
                     reference.GetLocationInfo()
                 );
+            }
+        }
+
+        private class DefinitionWalker : PythonWalkerWithLocation {
+            public ScopeStatement Definition;
+
+            public DefinitionWalker(int location) : base(location) {
+            }
+
+            public override void PostWalk(FunctionDefinition node) {
+                if (Location >= node.NameExpression.StartIndex && Location <= node.NameExpression.EndIndex) {
+                    Definition = node;
+                }
+                base.PostWalk(node);
+            }
+
+            public override void PostWalk(ClassDefinition node) {
+                if (Location >= node.NameExpression.StartIndex && Location <= node.NameExpression.EndIndex) {
+                    Definition = node;
+                }
+                base.PostWalk(node);
             }
         }
 

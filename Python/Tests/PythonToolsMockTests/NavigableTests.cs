@@ -195,7 +195,7 @@ print(obj._my_attr_val)
         }
 
         private AnalysisLocation Location(int line, int col) =>
-            new AnalysisLocation("file.py", line, col);
+            new AnalysisLocation(null, line, col);
 
         private AnalysisLocation ExternalLocation(int line, int col, string filename) =>
             new AnalysisLocation(filename, line, col);
@@ -221,12 +221,14 @@ print(obj._my_attr_val)
 
                 var trackingSpan = _view.CurrentSnapshot.CreateTrackingSpan(pos, length, SpanTrackingMode.EdgeInclusive);
                 var snapshotSpan = trackingSpan.GetSpan(_view.CurrentSnapshot);
-                var result = await NavigableSymbolSource.GetDefinitionLocationAsync(entry, _view.View.TextView, snapshotSpan);
+                var result = await NavigableSymbolSource.GetDefinitionLocationAsync(entry, snapshotSpan.Start);
                 if (expected != null) {
                     Assert.IsNotNull(result);
                     Assert.AreEqual(expected.Line, result.Line);
                     Assert.AreEqual(expected.Column, result.Column);
-                    Assert.AreEqual(expected.FilePath, Path.GetFileName(result.FilePath));
+                    if (expected.FilePath != null) {
+                        Assert.AreEqual(expected.FilePath, Path.GetFileName(result.FilePath));
+                    }
                 } else {
                     Assert.IsNull(result);
                 }

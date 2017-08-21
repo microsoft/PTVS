@@ -1253,7 +1253,20 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private AP.AnalysisReference MakeReference(IAnalysisVariable arg) {
-            return MakeReference(arg.Location, arg.Type);
+            var reference = MakeReference(arg.Location, arg.Type);
+            reference.definitionStartLine = arg.DefinitionLocation.StartLine;
+            reference.definitionStartColumn = arg.DefinitionLocation.StartColumn;
+            if (arg.DefinitionLocation.EndLine.HasValue) {
+                reference.definitionEndLine = arg.DefinitionLocation.EndLine.Value;
+            } else {
+                reference.definitionEndLine = arg.DefinitionLocation.StartLine;
+            }
+            if (arg.DefinitionLocation.EndColumn.HasValue) {
+                reference.definitionEndColumn = arg.DefinitionLocation.EndColumn.Value;
+            } else {
+                reference.definitionEndColumn = arg.DefinitionLocation.StartColumn;
+            }
+            return reference;
         }
 
         private AP.AnalysisReference MakeReference(LocationInfo location, VariableType type) {
