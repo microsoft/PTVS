@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonType : IPythonType, IMemberContainer, ILocatedMember {
-        private readonly Dictionary<string, IMember> _members;
+        protected readonly Dictionary<string, IMember> _members;
 
         private static readonly IPythonModule NoDeclModule = new AstPythonModule();
 

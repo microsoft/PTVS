@@ -23,6 +23,11 @@ import inspect
 import sys
 import warnings
 
+try:
+    import builtins
+except ImportError:
+    import __builtin__ as builtins
+
 INCLUDE_DOCS = 1
 
 # For scraping builtins, we use standardized names that come from
@@ -479,7 +484,7 @@ _ALREADY_WRITTEN = set()
 
 def _print_type(alias, objtype, basename=None, base=None):
     name = objtype.__name__
-    
+
     if name in _ALREADY_WRITTEN:
         if alias != name:
             print(alias + " = " + name)
@@ -514,6 +519,9 @@ def _print_type(alias, objtype, basename=None, base=None):
         if isinstance(docstring, str):
             print("    " + _triple_quote(docstring))
             members = [m for m in members if m != '__doc__']
+
+    if not hasattr(builtins, name):
+        print("    __hidden = 1")
 
     last_member = None
     while members:

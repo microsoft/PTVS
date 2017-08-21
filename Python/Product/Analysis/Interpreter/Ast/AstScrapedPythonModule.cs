@@ -27,27 +27,19 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstScrapedPythonModule : IPythonModule {
-        private readonly string _name, _filePath;
-        private readonly bool _isBuiltins;
+        private readonly string _filePath;
         private string _documentation;
-        private readonly Dictionary<string, IMember> _members;
+        protected readonly Dictionary<string, IMember> _members;
         private bool _scraped;
 
-        public static AstScrapedPythonModule CreateBuiltins(PythonLanguageVersion version) {
-            return new AstScrapedPythonModule(null, null, true);
-        }
-
-        public AstScrapedPythonModule(string name, string filePath) : this(name, filePath, false) { }
-
-        public AstScrapedPythonModule(string name, string filePath, bool isBuiltins) {
-            _name = name;
+        public AstScrapedPythonModule(string name, string filePath) {
+            Name = name;
             _documentation = string.Empty;
             _filePath = filePath;
             _members = new Dictionary<string, IMember>();
-            _isBuiltins = isBuiltins;
         }
 
-        public string Name => _isBuiltins ? "builtins" : _name;
+        public string Name { get; }
 
         public string Documentation => _documentation;
 
@@ -55,11 +47,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
 
-        public IMember GetMember(IModuleContext context, string name) {
-            if (_isBuiltins && name.StartsWith("__")) {
-                return null;
-            }
-
+        public virtual IMember GetMember(IModuleContext context, string name) {
             lock (_members) {
                 IMember m;
                 _members.TryGetValue(name, out m);
@@ -67,36 +55,37 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        public IMember GetBuiltinMember(IModuleContext context, BuiltinTypeId typeId) {
+        public virtual IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
             lock (_members) {
-                IMember m;
-                _members.TryGetValue($"__{typeId}", out m);
-                return m;
-            }
-        }
-
-        public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            lock (_members) {
-                if (_isBuiltins) {
-                    return _members.Keys.Where(k => !k.StartsWith("__")).ToArray();
-                }
                 return _members.Keys.ToArray();
             }
         }
 
-        private void SetBuiltinTypeIds() {
-            lock (_members) {
-                foreach (BuiltinTypeId typeId in Enum.GetValues(typeof(BuiltinTypeId))) {
-                    IMember m;
-                    AstPythonBuiltinType biType;
-                    if (_members.TryGetValue(@"__{typeId}", out m) && (biType = m as AstPythonBuiltinType) != null) {
-                        if (typeId != BuiltinTypeId.Str &&
-                            typeId != BuiltinTypeId.StrIterator) {
-                            biType.TrySetTypeId(typeId);
-                        }
-                    }
-                }
+        protected virtual List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
+            var args = new List<string> { "-B", "-E" };
+
+            ModulePath mp = AstPythonInterpreterFactory.FindModule(factory, _filePath);
+            if (string.IsNullOrEmpty(mp.FullName)) {
+                return null;
             }
+
+            var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
+            if (!File.Exists(sm)) {
+                return null;
+            }
+
+            args.Add(sm);
+            args.Add(mp.LibraryPath);
+            args.Add(mp.ModuleName);
+
+            return args;
+        }
+
+        protected virtual PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
+            return new AstAnalysisWalker(interpreter, ast, this, _filePath, _members, false);
+        }
+
+        protected virtual void PostWalk(PythonWalker walker) {
         }
 
         public void Imported(IModuleContext context) {
@@ -111,31 +100,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return;
             }
 
-            var args = new List<string> { "-B", "-E" };
-
-            if (_isBuiltins) {
-                args.Add("-S");
-
-                var sb = PythonToolsInstallPath.TryGetFile("scrape_builtins.py", GetType().Assembly);
-                if (!File.Exists(sb)) {
-                    return;
-                }
-
-                args.Add(sb);
-            } else {
-                ModulePath mp = AstPythonInterpreterFactory.FindModule(fact, _filePath);
-                if (string.IsNullOrEmpty(mp.FullName)) {
-                    return;
-                }
-
-                var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
-                if (!File.Exists(sm)) {
-                    return;
-                }
-
-                args.Add(sm);
-                args.Add(mp.LibraryPath);
-                args.Add(mp.ModuleName);
+            var args = GetScrapeArguments(fact);
+            if (args == null) {
+                return;
             }
 
             Stream code = null;
@@ -164,16 +131,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 ast = parser.ParseFile();
             }
 
+            var walker = PrepareWalker(interp, ast);
             lock (_members) {
-                var walker = new AstAnalysisWalker(interp, ast, this, _filePath, _members, false);
-                walker.Scope.SuppressBuiltinLookup = _isBuiltins;
-                walker.CreateBuiltinTypes = _isBuiltins;
-                
                 ast.Walk(walker);
-            }
-
-            if (_isBuiltins) {
-                SetBuiltinTypeIds();
+                PostWalk(walker);
             }
         }
     }

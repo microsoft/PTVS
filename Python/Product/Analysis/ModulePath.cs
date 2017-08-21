@@ -659,6 +659,14 @@ namespace Microsoft.PythonTools.Analysis {
         internal static bool FromBasePathAndName_NoThrow(
             string basePath,
             string moduleName,
+            out ModulePath modulePath
+        ) {
+            return FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
+        }
+
+        internal static bool FromBasePathAndName_NoThrow(
+            string basePath,
+            string moduleName,
             Func<string, bool> isPackage,
             Func<string, string, string> getModule,
             out ModulePath modulePath,

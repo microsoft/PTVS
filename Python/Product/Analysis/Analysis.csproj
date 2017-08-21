@@ -61,6 +61,7 @@
     <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisWalker.cs" />
     <Compile Include="IHasRichDescription.cs" />
+    <Compile Include="Interpreter\Ast\AstBuiltinsPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonBuiltinType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
     <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />

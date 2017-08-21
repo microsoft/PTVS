@@ -70,10 +70,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IPythonType res;
             lock (_builtinTypes) {
                 if (!_builtinTypes.TryGetValue(id, out res)) {
-                    var bm = ImportModule(BuiltinModuleName) as AstScrapedPythonModule;
-                    _builtinTypes[id] = res =
-                        bm?.GetBuiltinMember(this, id) as IPythonType ??
+                    var bm = ImportModule(BuiltinModuleName) as AstBuiltinsPythonModule;
+                    res = bm?.GetAnyMember($"__{id}") as IPythonType ??
                         new AstPythonType(SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version));
+                    _builtinTypes[id] = res;
                 }
             }
             return res;
@@ -132,35 +132,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             string searchPath;
 
             ModulePath mp;
-            bool isInvalid, isMissing;
-            string errorParam;
 
             if (packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
-                if (ModulePath.FromBasePathAndName_NoThrow(
-                    searchPath,
-                    name,
-                    null,
-                    null,
-                    out mp,
-                    out isInvalid,
-                    out isMissing,
-                    out errorParam
-                )) {
+                if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, out mp)) {
                     return mp;
                 }
             }
 
             foreach (var sp in searchPaths.MaybeEnumerate()) {
-                if (ModulePath.FromBasePathAndName_NoThrow(
-                    sp.Path,
-                    name,
-                    null,
-                    null,
-                    out mp,
-                    out isInvalid,
-                    out isMissing,
-                    out errorParam
-                )) {
+                if (ModulePath.FromBasePathAndName_NoThrow(sp.Path, name, out mp)) {
                     return mp;
                 }
             }
@@ -175,8 +155,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             if (name == BuiltinModuleName) {
                 if (_builtinModule == null) {
-                    _builtinModule = AstScrapedPythonModule.CreateBuiltins(_factory.LanguageVersion);
-                    _modules[BuiltinModuleName] = _builtinModule;
+                    _modules[BuiltinModuleName] = _builtinModule = new AstBuiltinsPythonModule(_factory.LanguageVersion);
                     _builtinModule.Imported(this);
                 }
                 return _builtinModule;
