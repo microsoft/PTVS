@@ -16,7 +16,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -24,6 +26,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly FunctionDefinition _target;
         private readonly NameLookupContext _scope;
         private readonly List<IPythonType> _returnTypes;
+        private readonly AstPythonFunctionOverload _overload;
 
         public AstAnalysisFunctionWalker(
             NameLookupContext scope,
@@ -32,10 +35,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _scope = scope;
             _target = targetFunction;
             _returnTypes = new List<IPythonType>();
+            _overload = new AstPythonFunctionOverload(
+                AstPythonFunction.MakeParameters(_scope.Ast, _target),
+                _scope.GetLocOfName(_target, _target.NameExpression),
+                _returnTypes
+            );
         }
 
-        public string Documentation { get; private set; }
         public IList<IPythonType> ReturnTypes => _returnTypes;
+        public IPythonFunctionOverload Overload => _overload;
 
         private void GetMethodType(FunctionDefinition node, out bool classmethod, out bool staticmethod) {
             classmethod = false;
@@ -49,7 +57,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var classmethodObj = _scope.Interpreter.GetBuiltinType(BuiltinTypeId.ClassMethod);
             var staticmethodObj = _scope.Interpreter.GetBuiltinType(BuiltinTypeId.StaticMethod);
             foreach (var d in (_target.Decorators?.Decorators).MaybeEnumerate()) {
-                var m = _scope.GetValueFromExpression(d, NameLookupContext.LookupOptions.Global);
+                var m = _scope.GetValueFromExpression(d);
                 if (m == classmethodObj) {
                     classmethod = true;
                 } else if (m == staticmethodObj) {
@@ -63,7 +71,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             bool classmethod, staticmethod;
             GetMethodType(_target, out classmethod, out staticmethod);
             if (!staticmethod) {
-                self = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.LocalOnly);
+                self = _scope.LookupNameInScopes("__class__", NameLookupContext.LookupOptions.Local);
                 if (!classmethod) {
                     var cls = self as IPythonType;
                     if (cls == null) {
@@ -91,10 +99,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
-            if (Documentation == null) {
+            if (_overload.Documentation == null) {
                 var docNode = (node.Body as SuiteStatement)?.Statements.FirstOrDefault();
                 var ce = (docNode as ExpressionStatement)?.Expression as ConstantExpression;
-                Documentation = ce?.Value as string;
+                var doc = ce?.Value as string;
+                if (doc != null) {
+                    _overload.SetDocumentation(doc);
+                }
             }
 
             return true;

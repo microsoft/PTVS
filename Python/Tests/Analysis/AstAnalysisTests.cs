@@ -46,11 +46,8 @@ namespace AnalysisTests {
             return new PythonAnalysis(() => new AstPythonInterpreterFactory(version.Configuration, null));
         }
 
-        private static PythonAnalysis CreateAnalysis(PythonLanguageVersion version) {
-            return new PythonAnalysis(() => new AstPythonInterpreterFactory(
-                new InterpreterConfiguration("AstAnalysis|" + version, "Analysis only factory", version: version.ToVersion()),
-                null
-            ));
+        private static PythonAnalysis CreateAnalysis() {
+            return CreateAnalysis(PythonPaths.Versions.OrderByDescending(p => p.Version).FirstOrDefault());
         }
 
         #region Test cases
@@ -134,7 +131,7 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void AstValues() {
-            using (var entry = CreateAnalysis(PythonLanguageVersion.V35)) {
+            using (var entry = CreateAnalysis()) {
                 entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
                 entry.AddModule("test-module", "from Values import *");
                 entry.WaitForAnalysis();
@@ -173,34 +170,57 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void AstReturnTypes() {
-            using (var entry = CreateAnalysis(PythonLanguageVersion.V35)) {
+            using (var entry = CreateAnalysis()) {
                 entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
                 entry.AddModule("test-module", @"from ReturnValues import *
 R_str = r_str()
 R_object = r_object()
-R_A = A.r_A()");
+R_A1 = A()
+R_A2 = A.r_A()
+R_A3 = R_A1.r_A()");
                 entry.WaitForAnalysis();
 
                 entry.AssertHasAttr("",
                     "r_a", "r_b", "r_str", "r_object", "A",
-                    "R_str", "R_object", "R_A"
+                    "R_str", "R_object", "R_A1", "R_A2", "R_A3"
                 );
 
                 entry.AssertIsInstance("R_str", BuiltinTypeId.Str);
                 entry.AssertIsInstance("R_object", BuiltinTypeId.Object);
-                entry.AssertDescription("R_A", "class A");
+                entry.AssertIsInstance("R_A1", BuiltinTypeId.Type);
+                entry.AssertIsInstance("R_A2", BuiltinTypeId.Type);
+                entry.AssertIsInstance("R_A3", BuiltinTypeId.Type);
+                entry.AssertDescription("R_A1", "A");
+                entry.AssertDescription("R_A2", "A");
+                entry.AssertDescription("R_A3", "A");
             }
         }
 
         [TestMethod, Priority(0)]
         public void AstBuiltinScrape() {
-            using (var analysis = CreateAnalysis(PythonPaths.Python36_x64)) {
+            using (var analysis = CreateAnalysis()) {
                 var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                 var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
+                // Builtin module must be a scraped Python module
+                var mod = interp.ImportModule(interp.BuiltinModuleName);
+                Assert.IsInstanceOfType(mod, typeof(AstScrapedPythonModule));
+
+                // Ensure we can get all the builtin types
                 foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
                     var type = interp.GetBuiltinType(v);
                     Assert.IsNotNull(type, v.ToString());
+                    Assert.IsInstanceOfType(type, typeof(AstPythonBuiltinType), v.ToString());
+                }
+
+                // Ensure we cannot see or get builtin types directly
+                AssertUtil.DoesntContain(
+                    mod.GetMemberNames(null),
+                    Enum.GetNames(typeof(BuiltinTypeId)).Select(n => $"__{n}")
+                );
+
+                foreach (var id in Enum.GetNames(typeof(BuiltinTypeId))) {
+                    Assert.IsNull(mod.GetMember(null, $"__{id}"), id);
                 }
             }
         }
@@ -208,7 +228,7 @@ R_A = A.r_A()");
         [TestMethod, Priority(0)]
         public void AstSearchPathsThroughFactory() {
             using (var evt = new ManualResetEvent(false))
-            using (var analysis = CreateAnalysis(PythonLanguageVersion.V35)) {
+            using (var analysis = CreateAnalysis()) {
                 var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                 var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
@@ -230,7 +250,7 @@ R_A = A.r_A()");
         [TestMethod, Priority(0)]
         public void AstSearchPathsThroughAnalyzer() {
             using (var evt = new ManualResetEvent(false))
-            using (var analysis = CreateAnalysis(PythonLanguageVersion.V35)) {
+            using (var analysis = CreateAnalysis()) {
                 var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                 var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 

@@ -1,4 +1,20 @@
-﻿using System;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,6 +29,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class NameLookupContext {
         private readonly Stack<Dictionary<string, IMember>> _scopes;
+        private readonly Lazy<IPythonModule> _builtinModule;
 
         public NameLookupContext(
             IPythonInterpreter interpreter,
@@ -27,7 +44,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             FilePath = filePath;
             IncludeLocationInfo = includeLocationInfo;
 
+            DefaultLookupOptions = LookupOptions.Normal;
+
             _scopes = new Stack<Dictionary<string, IMember>>();
+            _builtinModule = new Lazy<IPythonModule>(ImportBuiltinModule);
         }
 
         public IPythonInterpreter Interpreter { get; }
@@ -35,6 +55,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public PythonAst Ast { get; }
         public string FilePath { get; }
         public bool IncludeLocationInfo { get; }
+
+        public LookupOptions DefaultLookupOptions { get; set; }
+        public bool SuppressBuiltinLookup { get; set; }
 
         public NameLookupContext Clone(bool copyScopeContents = false) {
             var ctxt = new NameLookupContext(
@@ -45,6 +68,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 IncludeLocationInfo
             );
 
+            ctxt.DefaultLookupOptions = DefaultLookupOptions;
+            ctxt.SuppressBuiltinLookup = SuppressBuiltinLookup;
+
             foreach (var scope in _scopes.Reverse()) {
                 if (copyScopeContents) {
                     ctxt._scopes.Push(new Dictionary<string, IMember>(scope));
@@ -54,6 +80,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             return ctxt;
+        }
+
+        private IPythonModule ImportBuiltinModule() {
+            var modname = Ast.LanguageVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
+            var mod = Interpreter.ImportModule(modname);
+            Debug.Assert(mod != null, "Failed to import " + modname);
+            mod?.Imported(Context);
+            return mod;
         }
 
         public Dictionary<string, IMember> PushScope(Dictionary<string, IMember> scope = null) {
@@ -79,6 +113,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return new LocationInfo(FilePath, start.Line, start.Column, end.Line, end.Column);
         }
 
+        internal LocationInfo GetLocOfName(Node node, NameExpression header) {
+            var loc = GetLoc(node);
+            if (loc == null || header == null) {
+                return null;
+            }
+
+            var nameStart = header.GetStart(Ast);
+            if (!nameStart.IsValid) {
+                return loc;
+            }
+
+            if (nameStart.Line > loc.StartLine || (nameStart.Line == loc.StartLine && nameStart.Column > loc.StartColumn)) {
+                return new LocationInfo(loc.FilePath, nameStart.Line, nameStart.Column, loc.EndLine, loc.EndColumn);
+            }
+
+            return loc;
+        }
+
         private string GetNameFromExpressionWorker(Expression expr) {
             var ne = expr as NameExpression;
             if (ne != null) {
@@ -101,7 +153,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        public IMember GetValueFromExpression(Expression expr, LookupOptions options = LookupOptions.Normal) {
+        public IMember GetValueFromExpression(Expression expr) {
+            return GetValueFromExpression(expr, DefaultLookupOptions);
+        }
+
+        public IMember GetValueFromExpression(Expression expr, LookupOptions options) {
             var ne = expr as NameExpression;
             if (ne != null) {
                 IMember existing = LookupNameInScopes(ne.Name, options);
@@ -132,7 +188,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                             return aType;
                         }
                     }
-                    return type;
+                    return new AstPythonConstant(type, GetLoc(expr));
                 }
 
                 var fn = m as IPythonFunction;
@@ -169,6 +225,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             if (value is IPythonFunction) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
+            }
+
+            if (value is IPythonModule) {
+                return Interpreter.GetBuiltinType(BuiltinTypeId.Module);
             }
 
             Debug.Fail("Unhandled type() value: " + value.GetType().FullName);
@@ -236,36 +296,54 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _scopes.Peek()[name] = value;
         }
 
+        [Flags]
         public enum LookupOptions {
-            Normal = 0,
-            LocalOnly = 1,
-            Nonlocal = 2,
-            Global = 3
+            None = 0,
+            Local,
+            Nonlocal,
+            Global,
+            Builtins,
+            Normal = Local | Nonlocal | Global | Builtins
+        }
+
+        public IMember LookupNameInScopes(string name) {
+            return LookupNameInScopes(name, DefaultLookupOptions);
         }
 
         public IMember LookupNameInScopes(string name, LookupOptions options) {
             IMember value;
-            if (options == LookupOptions.Global) {
-                if (_scopes.Last().TryGetValue(name, out value) && value != null) {
-                    return value;
+
+            var scopes = _scopes.ToList();
+            if (scopes.Count == 1) {
+                if (!options.HasFlag(LookupOptions.Local) && !options.HasFlag(LookupOptions.Global)) {
+                    scopes = null;
                 }
-                return null;
+            } else if (scopes.Count >= 2) {
+                if (!options.HasFlag(LookupOptions.Nonlocal)) {
+                    while (scopes.Count > 2) {
+                        scopes.RemoveAt(1);
+                    }
+                }
+                if (!options.HasFlag(LookupOptions.Local)) {
+                    scopes.RemoveAt(0);
+                }
+                if (!options.HasFlag(LookupOptions.Global)) {
+                    scopes.RemoveAt(scopes.Count - 1);
+                }
             }
 
-            foreach (var scope in _scopes) {
-                if (options == LookupOptions.Nonlocal) {
-                    options = LookupOptions.Normal;
-                    continue;
-                }
-
-                if (scope.TryGetValue(name, out value) && value != null) {
-                    return value;
-                }
-
-                if (options == LookupOptions.LocalOnly) {
-                    return null;
+            if (scopes != null) {
+                foreach (var scope in scopes) {
+                    if (scope.TryGetValue(name, out value) && value != null) {
+                        return value;
+                    }
                 }
             }
+
+            if (!SuppressBuiltinLookup && options.HasFlag(LookupOptions.Builtins)) {
+                return _builtinModule.Value.GetMember(Context, name);
+            }
+
             return null;
         }
     }

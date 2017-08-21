@@ -75,9 +75,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public string Documentation { get; }
         public IPythonModule DeclaringModule {get;}
         public IList<IPythonType> Mro { get; private set; }
-        public bool IsBuiltin => true;
+        public virtual bool IsBuiltin => false;
         public PythonMemberType MemberType => PythonMemberType.Class;
-        public BuiltinTypeId TypeId => BuiltinTypeId.Type;
+        public virtual BuiltinTypeId TypeId => BuiltinTypeId.Type;
 
         public IEnumerable<LocationInfo> Locations { get; }
 

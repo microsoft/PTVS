@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonInterpreter : IPythonInterpreter, IModuleContext {
@@ -30,6 +31,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private PythonAnalyzer _analyzer;
         private AstScrapedPythonModule _builtinModule;
         private readonly ConcurrentDictionary<string, IPythonModule> _modules;
+        private readonly AstPythonBuiltinType _noneType;
 
         private readonly object _userSearchPathsLock = new object();
         private IReadOnlyList<string> _userSearchPaths;
@@ -44,6 +46,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _factory.ImportableModulesChanged += Factory_ImportableModulesChanged;
             _modules = new ConcurrentDictionary<string, IPythonModule>();
             _builtinTypes = new Dictionary<BuiltinTypeId, IPythonType>();
+            BuiltinModuleName = _factory.LanguageVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
+            _noneType = new AstPythonBuiltinType("NoneType", BuiltinTypeId.NoneType);
+            _builtinTypes[BuiltinTypeId.NoneType] = _noneType;
         }
 
         public void Dispose() {
@@ -59,17 +64,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IModuleContext CreateModuleContext() => this;
         public IPythonInterpreterFactory Factory => _factory;
+        public string BuiltinModuleName { get; }
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
             IPythonType res;
             lock (_builtinTypes) {
                 if (!_builtinTypes.TryGetValue(id, out res)) {
-                    if (_builtinModule == null) {
-                        _builtinModule = AstScrapedPythonModule.CreateBuiltins(_factory.LanguageVersion);
-                        _builtinModule.Imported(this);
-                    }
+                    var bm = ImportModule(BuiltinModuleName) as AstScrapedPythonModule;
                     _builtinTypes[id] = res =
-                        _builtinModule?.GetMember(null, id.ToString()) as IPythonType ??
+                        bm?.GetBuiltinMember(this, id) as IPythonType ??
                         new AstPythonType(SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version));
                 }
             }
@@ -168,6 +171,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IPythonModule ImportModule(string name) {
             if (string.IsNullOrEmpty(name)) {
                 return null;
+            }
+
+            if (name == BuiltinModuleName) {
+                if (_builtinModule == null) {
+                    _builtinModule = AstScrapedPythonModule.CreateBuiltins(_factory.LanguageVersion);
+                    _modules[BuiltinModuleName] = _builtinModule;
+                    _builtinModule.Imported(this);
+                }
+                return _builtinModule;
             }
 
             IPythonModule mod;

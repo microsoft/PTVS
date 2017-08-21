@@ -14,7 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,6 +56,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
 
         public IMember GetMember(IModuleContext context, string name) {
+            if (_isBuiltins && name.StartsWith("__")) {
+                return null;
+            }
+
             lock (_members) {
                 IMember m;
                 _members.TryGetValue(name, out m);
@@ -61,9 +67,35 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
+        public IMember GetBuiltinMember(IModuleContext context, BuiltinTypeId typeId) {
+            lock (_members) {
+                IMember m;
+                _members.TryGetValue($"__{typeId}", out m);
+                return m;
+            }
+        }
+
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
             lock (_members) {
+                if (_isBuiltins) {
+                    return _members.Keys.Where(k => !k.StartsWith("__")).ToArray();
+                }
                 return _members.Keys.ToArray();
+            }
+        }
+
+        private void SetBuiltinTypeIds() {
+            lock (_members) {
+                foreach (BuiltinTypeId typeId in Enum.GetValues(typeof(BuiltinTypeId))) {
+                    IMember m;
+                    AstPythonBuiltinType biType;
+                    if (_members.TryGetValue(@"__{typeId}", out m) && (biType = m as AstPythonBuiltinType) != null) {
+                        if (typeId != BuiltinTypeId.Str &&
+                            typeId != BuiltinTypeId.StrIterator) {
+                            biType.TrySetTypeId(typeId);
+                        }
+                    }
+                }
             }
         }
 
@@ -134,7 +166,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             lock (_members) {
                 var walker = new AstAnalysisWalker(interp, ast, this, _filePath, _members, false);
+                walker.Scope.SuppressBuiltinLookup = _isBuiltins;
+                walker.CreateBuiltinTypes = _isBuiltins;
+                
                 ast.Walk(walker);
+            }
+
+            if (_isBuiltins) {
+                SetBuiltinTypeIds();
             }
         }
     }
