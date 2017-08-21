@@ -202,9 +202,8 @@ R_A3 = R_A1.r_A()");
                 var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                 var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
-                // Builtin module must be a scraped Python module
                 var mod = interp.ImportModule(interp.BuiltinModuleName);
-                Assert.IsInstanceOfType(mod, typeof(AstScrapedPythonModule));
+                Assert.IsInstanceOfType(mod, typeof(AstBuiltinsPythonModule));
 
                 // Ensure we can get all the builtin types
                 foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
