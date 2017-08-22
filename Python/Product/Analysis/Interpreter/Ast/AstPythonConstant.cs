@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
@@ -21,7 +22,7 @@ using Microsoft.PythonTools.Analysis;
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonConstant : IPythonConstant, ILocatedMember {
         public AstPythonConstant(IPythonType type, params LocationInfo[] locations) {
-            Type = type;
+            Type = type ?? throw new ArgumentNullException(nameof(type));
             Locations = locations.ToArray();
         }
 

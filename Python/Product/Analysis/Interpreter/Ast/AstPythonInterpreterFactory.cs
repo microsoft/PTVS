@@ -35,15 +35,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             InterpreterConfiguration config,
             InterpreterFactoryCreationOptions options
         ) {
-            if (config == null) {
-                throw new ArgumentNullException(nameof(config));
-            }
-            if (options == null) {
-                options = new InterpreterFactoryCreationOptions();
-            }
-            Configuration = config;
+            Configuration = config ?? throw new ArgumentNullException(nameof(config));
             LanguageVersion = Configuration.Version.ToLanguageVersion();
 
+            options = options ?? new InterpreterFactoryCreationOptions();
             _databasePath = options.DatabasePath;
 
             if (!GlobalInterpreterOptions.SuppressPackageManagers) {

@@ -23,13 +23,13 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonType : IPythonType, IMemberContainer, ILocatedMember {
-        private readonly Dictionary<string, IMember> _members;
+        protected readonly Dictionary<string, IMember> _members;
 
         private static readonly IPythonModule NoDeclModule = new AstPythonModule();
 
         public AstPythonType(string name) {
             _members = new Dictionary<string, IMember>();
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             DeclaringModule = NoDeclModule;
             Mro = Array.Empty<IPythonType>();
             Locations = Array.Empty<LocationInfo>();
@@ -40,16 +40,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IPythonModule declModule,
             ClassDefinition def,
             string doc,
-            LocationInfo loc,
-            IEnumerable<IPythonType> mro
+            LocationInfo loc
         ) {
             _members = new Dictionary<string, IMember>();
 
-            Name = def.Name;
+            Name = def?.Name ?? throw new ArgumentNullException(nameof(def));
             Documentation = doc;
-            DeclaringModule = declModule;
-            Mro = mro.MaybeEnumerate().ToArray();
-            Locations = new[] { loc };
+            DeclaringModule = declModule ?? throw new ArgumentNullException(nameof(declModule));
+            Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
         }
 
         internal void AddMembers(IEnumerable<KeyValuePair<string, IMember>> members, bool overwrite) {
@@ -66,13 +64,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
+        internal void SetMro(IEnumerable<IPythonType> mro) {
+            if (Mro != null) {
+                throw new InvalidOperationException("cannot set Mro multiple times");
+            }
+            Mro = mro.MaybeEnumerate().ToArray();
+        }
+
         public string Name { get; }
         public string Documentation { get; }
         public IPythonModule DeclaringModule {get;}
-        public IList<IPythonType> Mro { get; }
-        public bool IsBuiltin => true;
+        public IList<IPythonType> Mro { get; private set; }
+        public virtual bool IsBuiltin => false;
         public PythonMemberType MemberType => PythonMemberType.Class;
-        public BuiltinTypeId TypeId => BuiltinTypeId.Type;
+        public virtual BuiltinTypeId TypeId => BuiltinTypeId.Type;
 
         public IEnumerable<LocationInfo> Locations { get; }
 

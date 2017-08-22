@@ -139,13 +139,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="_settingsModuleLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 6</value>
+    <value>11, 8</value>
   </data>
   <data name="_settingsModuleLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
+    <value>11, 0, 11, 0</value>
   </data>
   <data name="_settingsModuleLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>86, 13</value>
+    <value>160, 28</value>
   </data>
   <data name="_settingsModuleLabel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -172,16 +172,16 @@
     <value>Left, Right</value>
   </data>
   <data name="_settingsModule.Location" type="System.Drawing.Point, System.Drawing">
-    <value>114, 3</value>
+    <value>200, 6</value>
   </data>
   <data name="_settingsModule.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_settingsModule.MinimumSize" type="System.Drawing.Size, System.Drawing">
-    <value>50, 4</value>
+    <value>88, 4</value>
   </data>
   <data name="_settingsModule.Size" type="System.Drawing.Size, System.Drawing">
-    <value>492, 20</value>
+    <value>916, 33</value>
   </data>
   <data name="_settingsModule.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -205,13 +205,13 @@
     <value>True</value>
   </data>
   <data name="_staticUriLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 32</value>
+    <value>11, 53</value>
   </data>
   <data name="_staticUriLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
+    <value>11, 0, 11, 0</value>
   </data>
   <data name="_staticUriLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 13</value>
+    <value>167, 28</value>
   </data>
   <data name="_staticUriLabel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -238,16 +238,16 @@
     <value>Left, Right</value>
   </data>
   <data name="_staticUri.Location" type="System.Drawing.Point, System.Drawing">
-    <value>114, 29</value>
+    <value>200, 51</value>
   </data>
   <data name="_staticUri.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_staticUri.MinimumSize" type="System.Drawing.Size, System.Drawing">
-    <value>50, 4</value>
+    <value>88, 4</value>
   </data>
   <data name="_staticUri.Size" type="System.Drawing.Size, System.Drawing">
-    <value>492, 20</value>
+    <value>916, 33</value>
   </data>
   <data name="_staticUri.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -268,13 +268,16 @@
     <value>Fill</value>
   </data>
   <data name="tableLayoutPanel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 21</value>
+    <value>11, 42</value>
+  </data>
+  <data name="tableLayoutPanel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>612, 52</value>
+    <value>1127, 90</value>
   </data>
   <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -292,7 +295,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_settingsModuleLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_settingsModule" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_staticUriLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_staticUri" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,Absolute,26,Absolute,26,Absolute,26,Absolute,26,Absolute,26,Absolute,26" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_settingsModuleLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_settingsModule" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_staticUriLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_staticUri" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,Absolute,50,Absolute,50,Absolute,50,Absolute,50,Absolute,50,Absolute,50" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="tableLayoutPanel1.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -316,16 +319,16 @@
     <value>Fill</value>
   </data>
   <data name="_djangoGroup.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 8</value>
+    <value>11, 16</value>
   </data>
   <data name="_djangoGroup.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 8, 6, 8</value>
+    <value>11, 16, 11, 16</value>
   </data>
   <data name="_djangoGroup.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 8, 6, 8</value>
+    <value>11, 16, 11, 16</value>
   </data>
   <data name="_djangoGroup.Size" type="System.Drawing.Size, System.Drawing">
-    <value>624, 81</value>
+    <value>1149, 148</value>
   </data>
   <data name="_djangoGroup.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -355,7 +358,7 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>11, 25</value>
   </data>
   <data name="$this.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -363,11 +366,14 @@
   <data name="$this.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
     <value>GrowAndShrink</value>
   </data>
+  <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Segoe UI, 8.25pt</value>
+  </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 8, 6, 8</value>
+    <value>11, 16, 11, 16</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>636, 142</value>
+    <value>1171, 269</value>
   </data>
   <data name="&gt;&gt;_toolTip.Name" xml:space="preserve">
     <value>_toolTip</value>
@@ -1687,13 +1693,13 @@
     <value>MiddleLeft</value>
   </data>
   <data name="_deprecatedLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 103</value>
+    <value>44, 191</value>
   </data>
   <data name="_deprecatedLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>24, 6, 3, 6</value>
+    <value>44, 11, 6, 11</value>
   </data>
   <data name="_deprecatedLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>609, 13</value>
+    <value>1121, 28</value>
   </data>
   <data name="_deprecatedLabel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1720,13 +1726,13 @@
     <value>0, 0</value>
   </data>
   <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>6, 7, 6, 7</value>
   </data>
   <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>636, 142</value>
+    <value>1171, 269</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1744,7 +1750,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_djangoGroup" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_deprecatedLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,Absolute,20,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_djangoGroup" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_deprecatedLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,Absolute,39,Absolute,39" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="_toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>

@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             var list = new List<AnalysisLocation>();
 
             var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt).ConfigureAwait(false);
-            foreach (var variable in result?.Variables.MaybeEnumerate()) {
+            foreach (var variable in (result?.Variables).MaybeEnumerate()) {
                 if (variable.Type == Analysis.VariableType.Definition &&
                     !string.IsNullOrEmpty(variable.Location?.FilePath)) {
                     list.Add(variable.Location);
