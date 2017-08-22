@@ -38,7 +38,6 @@ except ImportError:
 
 import ptvsd
 import ptvsd.debugger as vspd
-import ptvsd.repl as vspr
 import ptvsd.ipcjson as vsipc
 
 
