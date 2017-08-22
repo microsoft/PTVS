@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -33,7 +32,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private bool _scraped;
 
         public AstScrapedPythonModule(string name, string filePath) {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             _documentation = string.Empty;
             _filePath = filePath;
             _members = new Dictionary<string, IMember>();

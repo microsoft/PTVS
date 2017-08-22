@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public AstPythonType(string name) {
             _members = new Dictionary<string, IMember>();
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             DeclaringModule = NoDeclModule;
             Mro = Array.Empty<IPythonType>();
             Locations = Array.Empty<LocationInfo>();
@@ -44,10 +44,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         ) {
             _members = new Dictionary<string, IMember>();
 
-            Name = def.Name;
+            Name = def?.Name ?? throw new ArgumentNullException(nameof(def));
             Documentation = doc;
-            DeclaringModule = declModule;
-            Locations = new[] { loc };
+            DeclaringModule = declModule ?? throw new ArgumentNullException(nameof(declModule));
+            Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
         }
 
         internal void AddMembers(IEnumerable<KeyValuePair<string, IMember>> members, bool overwrite) {

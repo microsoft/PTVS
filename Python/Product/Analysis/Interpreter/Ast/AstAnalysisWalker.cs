@@ -16,14 +16,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -45,9 +40,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Dictionary<string, IMember> members,
             bool includeLocationInfo
         ) {
-            _scope = new NameLookupContext(interpreter, interpreter.CreateModuleContext(), ast, filePath, includeLocationInfo);
-            _module = module;
-            _members = members;
+            _scope = new NameLookupContext(
+                interpreter ?? throw new ArgumentNullException(nameof(interpreter)),
+                interpreter.CreateModuleContext(),
+                ast ?? throw new ArgumentNullException(nameof(ast)),
+                filePath,
+                includeLocationInfo
+            );
+            _module = module ?? throw new ArgumentNullException(nameof(module));
+            _members = members ?? throw new ArgumentNullException(nameof(members));
             _noneInst = new AstPythonConstant(_interpreter.GetBuiltinType(BuiltinTypeId.NoneType));
             _postWalkers = new List<AstAnalysisFunctionWalker>();
         }

@@ -14,11 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -32,8 +31,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             NameLookupContext scope,
             FunctionDefinition targetFunction
         ) {
-            _scope = scope;
-            _target = targetFunction;
+            _scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            _target = targetFunction ?? throw new ArgumentNullException(nameof(targetFunction));
             _returnTypes = new List<IPythonType>();
             _overload = new AstPythonFunctionOverload(
                 AstPythonFunction.MakeParameters(_scope.Ast, _target),

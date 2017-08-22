@@ -18,7 +18,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -39,10 +38,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private HashSet<string> _userSearchPathImported;
 
         public AstPythonInterpreter(AstPythonInterpreterFactory factory) {
-            if (factory == null) {
-                throw new ArgumentNullException(nameof(factory));
-            }
-            _factory = factory;
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
             _factory.ImportableModulesChanged += Factory_ImportableModulesChanged;
             _modules = new ConcurrentDictionary<string, IPythonModule>();
             _builtinTypes = new Dictionary<BuiltinTypeId, IPythonType>();

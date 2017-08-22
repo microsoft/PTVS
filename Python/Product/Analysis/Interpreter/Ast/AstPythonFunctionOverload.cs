@@ -29,9 +29,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             LocationInfo loc, 
             IList<IPythonType> returnType
         ) {
-            _parameters = parameters.ToArray();
-            Locations = new[] { loc };
-            ReturnType = returnType;
+            _parameters = parameters?.ToArray() ?? throw new ArgumentNullException(nameof(parameters));
+            Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
+            ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
         }
 
         internal void SetDocumentation(string doc) {

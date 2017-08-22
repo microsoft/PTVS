@@ -19,8 +19,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -38,9 +36,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             string filePath,
             bool includeLocationInfo
         ) {
-            Interpreter = interpreter;
+            Interpreter = interpreter ?? throw new ArgumentNullException(nameof(interpreter));
             Context = context;
-            Ast = ast;
+            Ast = ast ?? throw new ArgumentNullException(nameof(ast));
             FilePath = filePath;
             IncludeLocationInfo = includeLocationInfo;
 
@@ -132,13 +130,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         private string GetNameFromExpressionWorker(Expression expr) {
-            var ne = expr as NameExpression;
-            if (ne != null) {
+            if (expr is NameExpression ne) {
                 return ne.Name;
             }
 
-            var me = expr as MemberExpression;
-            if (me != null) {
+            if (expr is MemberExpression me) {
                 return "{0}.{1}".FormatInvariant(GetNameFromExpressionWorker(me.Target), me.Name);
             }
 
@@ -158,18 +154,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IMember GetValueFromExpression(Expression expr, LookupOptions options) {
-            var ne = expr as NameExpression;
-            if (ne != null) {
+            if (expr is NameExpression ne) {
                 IMember existing = LookupNameInScopes(ne.Name, options);
                 if (existing != null) {
                     return existing;
                 }
             }
 
-            IPythonType type;
-
-            var me = expr as MemberExpression;
-            if (me != null && me.Target != null && !string.IsNullOrEmpty(me.Name)) {
+            if (expr is MemberExpression me && me.Target != null && !string.IsNullOrEmpty(me.Name)) {
                 var mc = GetValueFromExpression(me.Target) as IMemberContainer;
                 if (mc != null) {
                     return mc.GetMember(Context, me.Name);
@@ -177,8 +169,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            if (expr is CallExpression) {
-                var cae = (CallExpression)expr;
+            IPythonType type;
+
+            if (expr is CallExpression cae) {
                 var m = GetValueFromExpression(cae.Target);
                 type = m as IPythonType;
                 if (type != null) {
@@ -191,8 +184,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return new AstPythonConstant(type, GetLoc(expr));
                 }
 
-                var fn = m as IPythonFunction;
-                if (fn != null) {
+                if (m is IPythonFunction fn) {
                     // TODO: Select correct overload and handle multiple return types
                     if (fn.Overloads.Count > 0 && fn.Overloads[0].ReturnType.Count > 0) {
                         return new AstPythonConstant(fn.Overloads[0].ReturnType[0]);
@@ -236,8 +228,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IPythonType GetTypeFromLiteral(Expression expr) {
-            var ce = expr as ConstantExpression;
-            if (ce != null) {
+            if (expr is ConstantExpression ce) {
                 if (ce.Value == null) {
                     return Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
                 }

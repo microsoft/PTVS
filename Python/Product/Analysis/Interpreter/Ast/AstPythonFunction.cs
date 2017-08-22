@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             FunctionDefinition def,
             LocationInfo loc
         ) {
-            DeclaringModule = declModule;
+            DeclaringModule = declModule ?? throw new ArgumentNullException(nameof(declModule));
             DeclaringType = declType;
 
             Name = def.Name;
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             _overloads = new List<IPythonFunctionOverload>();
 
-            Locations = new[] { loc };
+            Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
         }
 
         internal void AddOverload(IPythonFunctionOverload overload) {

@@ -14,13 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonParameterInfo : IParameterInfo {
         public AstPythonParameterInfo(PythonAst ast, Parameter p) {
-            Name = p.Name;
+            Name = p?.Name ?? throw new ArgumentNullException(nameof(p));
             Documentation = "";
             DefaultValue = p.DefaultValue?.ToCodeString(ast);
             IsParamArray = p.Kind == ParameterKind.List;
