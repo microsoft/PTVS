@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,11 +28,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstScrapedPythonModule : IPythonModule {
         private readonly string _filePath;
         private string _documentation;
-        private readonly Dictionary<string, IMember> _members;
+        protected readonly Dictionary<string, IMember> _members;
         private bool _scraped;
 
         public AstScrapedPythonModule(string name, string filePath) {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             _documentation = string.Empty;
             _filePath = filePath;
             _members = new Dictionary<string, IMember>();
@@ -45,7 +46,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
 
-        public IMember GetMember(IModuleContext context, string name) {
+        public virtual IMember GetMember(IModuleContext context, string name) {
             lock (_members) {
                 IMember m;
                 _members.TryGetValue(name, out m);
@@ -53,10 +54,37 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
+        public virtual IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
             lock (_members) {
                 return _members.Keys.ToArray();
             }
+        }
+
+        protected virtual List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
+            var args = new List<string> { "-B", "-E" };
+
+            ModulePath mp = AstPythonInterpreterFactory.FindModule(factory, _filePath);
+            if (string.IsNullOrEmpty(mp.FullName)) {
+                return null;
+            }
+
+            var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
+            if (!File.Exists(sm)) {
+                return null;
+            }
+
+            args.Add(sm);
+            args.Add(mp.LibraryPath);
+            args.Add(mp.ModuleName);
+
+            return args;
+        }
+
+        protected virtual PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
+            return new AstAnalysisWalker(interpreter, ast, this, _filePath, _members, false);
+        }
+
+        protected virtual void PostWalk(PythonWalker walker) {
         }
 
         public void Imported(IModuleContext context) {
@@ -71,21 +99,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return;
             }
 
-            ModulePath mp = AstPythonInterpreterFactory.FindModule(fact, _filePath);
-            if (string.IsNullOrEmpty(mp.FullName)) {
-                return;
-            }
-
-            var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
-            if (!File.Exists(sm)) {
+            var args = GetScrapeArguments(fact);
+            if (args == null) {
                 return;
             }
 
             Stream code = null;
 
-            using (var p = ProcessOutput.RunHiddenAndCapture(
-                fact.Configuration.InterpreterPath, "-E", sm, mp.LibraryPath, mp.ModuleName
-            )) {
+            using (var p = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, args.ToArray())) {
                 p.Wait();
                 if (p.ExitCode == 0) {
                     var ms = new MemoryStream();
@@ -109,9 +130,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 ast = parser.ParseFile();
             }
 
+            var walker = PrepareWalker(interp, ast);
             lock (_members) {
-                var walker = new AstAnalysisWalker(interp, ast, this, _filePath, _members, false);
                 ast.Walk(walker);
+                PostWalk(walker);
             }
         }
     }

@@ -58,8 +58,11 @@
   <ItemGroup>
     <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
+    <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisWalker.cs" />
     <Compile Include="IHasRichDescription.cs" />
+    <Compile Include="Interpreter\Ast\AstBuiltinsPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonBuiltinType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
     <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonType.cs" />
@@ -70,6 +73,7 @@
     <Compile Include="Interpreter\Ast\AstPythonParameterInfo.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstScrapedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\NameLookupContext.cs" />
     <Compile Include="Interpreter\EmptyModule.cs" />
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
@@ -394,6 +398,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="scrape_builtins.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="scrape_module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

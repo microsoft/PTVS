@@ -1124,11 +1124,21 @@ namespace Microsoft.PythonTools.Project {
             var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterRegistryService>();
             var factory = GetInterpreterFactory();
+
+            bool inProc = false;
+            var ipp = BuildProject.GetProperty("_InProcessPythonAnalyzer");
+            if (ipp != null) {
+                if (ipp.EvaluatedValue?.IsTrue() ?? false) {
+                    inProc = true;
+                }
+            }
+
             var res = new VsProjectAnalyzer(
                 model.GetService<PythonEditorServices>(),
                 factory,
                 false,
-                BuildProject
+                BuildProject,
+                outOfProcAnalyzer: !inProc
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
             res.AnalyzerNeedsRestart += OnActiveInterpreterChanged;

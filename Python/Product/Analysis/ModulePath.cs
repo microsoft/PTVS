@@ -631,6 +631,54 @@ namespace Microsoft.PythonTools.Analysis {
             Func<string, bool> isPackage = null,
             Func<string, string, string> getModule = null
         ) {
+            ModulePath module;
+            string errorParameter;
+            bool isInvalid, isMissing;
+            if (FromBasePathAndName_NoThrow(
+                basePath,
+                moduleName,
+                isPackage,
+                getModule,
+                out module,
+                out isInvalid,
+                out isMissing,
+                out errorParameter
+            )) {
+                return module;
+            }
+
+            if (isInvalid) {
+                throw new ArgumentException("Not a valid Python package: " + errorParameter);
+            }
+            if (isMissing) {
+                throw new ArgumentException("Python package not found: " + errorParameter);
+            }
+            throw new ArgumentException("Unknown error finding module");
+        }
+
+        internal static bool FromBasePathAndName_NoThrow(
+            string basePath,
+            string moduleName,
+            out ModulePath modulePath
+        ) {
+            return FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
+        }
+
+        internal static bool FromBasePathAndName_NoThrow(
+            string basePath,
+            string moduleName,
+            Func<string, bool> isPackage,
+            Func<string, string, string> getModule,
+            out ModulePath modulePath,
+            out bool isInvalid,
+            out bool isMissing,
+            out string errorParameter
+        ) {
+            modulePath = default(ModulePath);
+            isInvalid = false;
+            isMissing = false;
+            errorParameter = null;
+
             var bits = moduleName.Split('.');
             var lastBit = bits.Last();
 
@@ -653,7 +701,9 @@ namespace Microsoft.PythonTools.Analysis {
 
             foreach (var bit in bits.Take(bits.Length - 1)) {
                 if (!PythonPackageRegex.IsMatch(bit)) {
-                    throw new ArgumentException("Not a valid Python package: " + bit);
+                    isInvalid = true;
+                    errorParameter = bit;
+                    return false;
                 }
                 if (string.IsNullOrEmpty(path)) {
                     path = bit;
@@ -661,18 +711,26 @@ namespace Microsoft.PythonTools.Analysis {
                     path = PathUtils.GetAbsoluteFilePath(path, bit);
                 }
                 if (!isPackage(path)) {
-                    throw new ArgumentException("Python package not found: " + path);
+                    isMissing = true;
+                    errorParameter = path;
+                    return false;
                 }
             }
 
             if (!PythonPackageRegex.IsMatch(lastBit)) {
-                throw new ArgumentException("Not a valid Python module: " + moduleName);
+                isInvalid = true;
+                errorParameter = moduleName;
+                return false;
             }
             path = getModule(path, lastBit);
             if (string.IsNullOrEmpty(path)) {
-                throw new ArgumentException("Python module not found: " + moduleName);
+                isMissing = true;
+                errorParameter = moduleName;
+                return false;
             }
-            return new ModulePath(moduleName, path, basePath);
+
+            modulePath = new ModulePath(moduleName, path, basePath);
+            return true;
         }
 
         internal static IEnumerable<string> GetParents(string name, bool includeFullName = true) {
