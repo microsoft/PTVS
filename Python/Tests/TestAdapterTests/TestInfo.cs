@@ -159,5 +159,8 @@ namespace TestAdapterTests {
         public static TestInfo DurationSleep05TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_5", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 11, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.5));
         public static TestInfo DurationSleep08TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_8", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 14, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.8));
         public static TestInfo DurationSleep15TestFailure = TestInfo.FromRelativePaths("DurationTests", "test_sleep_1_5", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 17, TestOutcome.Failed, minDuration: TimeSpan.FromSeconds(1.5));
+
+        public static string TestAdapterStackTraceProject = TestData.GetPath(@"TestData\TestAdapterTests\StackTraceTest.pyproj");
+        public static TestInfo StackTraceTestFailure = TestInfo.FromRelativePaths("StackTraceTests", "test_bad_import", @"TestData\TestAdapterTests\StackTraceTest.pyproj", @"TestData\TestAdapterTests\StackTraceTest.py", 4, TestOutcome.Failed);
     }
 }

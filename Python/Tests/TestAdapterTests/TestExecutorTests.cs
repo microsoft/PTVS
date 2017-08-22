@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,9 +24,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudio.TestWindow.Extensibility;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -345,6 +345,79 @@ namespace TestAdapterTests {
             PythonPaths.Python35_x64.AssertInstalled();
 
             TestLoadError("LoadErrorTest35");
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void TestStackTrace() {
+            PythonPaths.Python27.AssertInstalled();
+
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = new[] {
+                TestInfo.StackTraceTestFailure
+            };
+            var runContext = CreateRunContext(expectedTests);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+
+            var stackTrace = recorder.Results[0].ErrorStackTrace;
+            var parser = new PythonStackTraceParser();
+            var frames = parser.GetStackFrames(stackTrace).ToArray();
+
+            Console.WriteLine("Actual frames:");
+            foreach (var f in frames) {
+                Console.WriteLine("\"{0}\",\"{1}\",\"{2}\"", f.MethodDisplayName, f.FileName, f.LineNumber);
+            }
+
+            var expectedFile = TestInfo.StackTraceTestFailure.SourceCodeFilePath;
+            var expectedFrames = new StackFrame[] {
+                new StackFrame("local_func in global_func", expectedFile, 10),
+                new StackFrame("global_func", expectedFile, 11),
+                new StackFrame("Utility.class_static", expectedFile, 16),
+                new StackFrame("Utility.instance_method_b", expectedFile, 19),
+                new StackFrame("Utility.instance_method_a", expectedFile, 22),
+                new StackFrame("StackTraceTests.test_bad_import", expectedFile, 6),
+            };
+
+            CollectionAssert.AreEqual(expectedFrames, frames, new StackFrameComparer());
+        }
+
+        class StackFrameComparer : IComparer {
+            public int Compare(object x, object y) {
+                if (x == y) {
+                    return 0;
+                }
+
+                var a = x as StackFrame;
+                var b = y as StackFrame;
+
+                if (a == null) {
+                    return -1;
+                }
+
+                if (b == null) {
+                    return 1;
+                }
+
+                int res = a.FileName.CompareTo(b.FileName);
+                if (res != 0) {
+                    return res;
+                }
+
+                res = a.LineNumber.CompareTo(b.LineNumber);
+                if (res != 0) {
+                    return res;
+                }
+
+                res = a.MethodDisplayName.CompareTo(b.MethodDisplayName);
+                if (res != 0) {
+                    return res;
+                }
+
+                return 0;
+            }
         }
 
         private static void TestLoadError(string projectName) {
