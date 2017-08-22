@@ -30,5 +30,5 @@ setup(name='ptvsd',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: Apache Software License'],
-      packages=['ptvsd']
+      packages=['ptvsd', 'ptvsd.repl']
      )
