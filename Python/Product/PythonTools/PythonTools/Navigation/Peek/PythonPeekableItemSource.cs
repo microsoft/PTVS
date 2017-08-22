@@ -71,8 +71,8 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 return null;
             }
 
-            var result = await NavigableSymbolSource.GetDefinitionLocationAsync(entry, pt).ConfigureAwait(false);
-            if (result != null) {
+            var result = await NavigableSymbolSource.GetDefinitionLocationsAsync(entry, pt).ConfigureAwait(false);
+            if (result.Length > 0) {
                 return new PythonPeekableItem(peekResultFactory, result);
             }
 

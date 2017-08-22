@@ -221,16 +221,16 @@ print(obj._my_attr_val)
 
                 var trackingSpan = _view.CurrentSnapshot.CreateTrackingSpan(pos, length, SpanTrackingMode.EdgeInclusive);
                 var snapshotSpan = trackingSpan.GetSpan(_view.CurrentSnapshot);
-                var result = await NavigableSymbolSource.GetDefinitionLocationAsync(entry, snapshotSpan.Start);
+                var results = await NavigableSymbolSource.GetDefinitionLocationsAsync(entry, snapshotSpan.Start);
                 if (expected != null) {
-                    Assert.IsNotNull(result);
-                    Assert.AreEqual(expected.Line, result.Line);
-                    Assert.AreEqual(expected.Column, result.Column);
+                    Assert.IsNotNull(results);
+                    Assert.AreEqual(expected.Line, results[0].Line);
+                    Assert.AreEqual(expected.Column, results[0].Column);
                     if (expected.FilePath != null) {
-                        Assert.AreEqual(expected.FilePath, Path.GetFileName(result.FilePath));
+                        Assert.AreEqual(expected.FilePath, Path.GetFileName(results[0].FilePath));
                     }
                 } else {
-                    Assert.IsNull(result);
+                    Assert.AreEqual(0, results.Length);
                 }
             }
         }

@@ -22,11 +22,11 @@ using Microsoft.VisualStudio.Language.Intellisense;
 namespace Microsoft.PythonTools.Navigation.Peek {
     internal sealed class PythonPeekableItem : IPeekableItem {
         private readonly IPeekResultFactory _peekResultFactory;
-        private readonly AnalysisLocation _location;
+        private readonly AnalysisLocation[] _locations;
 
-        public PythonPeekableItem(IPeekResultFactory peekResultFactory, AnalysisLocation location) {
+        public PythonPeekableItem(IPeekResultFactory peekResultFactory, AnalysisLocation[] locations) {
             _peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
-            _location = location ?? throw new ArgumentNullException(nameof(location));
+            _locations = locations ?? throw new ArgumentNullException(nameof(locations));
         }
 
         public string DisplayName => null; // Unused
@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Navigation.Peek {
             new List<IPeekRelationship>() { PredefinedPeekRelationships.Definitions };
 
         public IPeekResultSource GetOrCreateResultSource(string relationshipName) {
-            return new PythonPeekResultSource(_peekResultFactory, _location);
+            return new PythonPeekResultSource(_peekResultFactory, _locations);
         }
     }
 }

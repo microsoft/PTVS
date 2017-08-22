@@ -18,16 +18,17 @@ using System;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Navigation.Peek {
     internal sealed class PythonPeekResultSource : IPeekResultSource {
         private readonly IPeekResultFactory _peekResultFactory;
-        private readonly AnalysisLocation _location;
+        private readonly AnalysisLocation[] _locations;
 
-        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, AnalysisLocation location) {
+        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, AnalysisLocation[] locations) {
             _peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
-            _location = location ?? throw new ArgumentNullException(nameof(location));
+            _locations = locations ?? throw new ArgumentNullException(nameof(locations));
         }
 
         public void FindResults(string relationshipName, IPeekResultCollection resultCollection, CancellationToken cancellationToken, IFindPeekResultsCallback callback) {
@@ -39,44 +40,55 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 return;
             }
 
-            var fileName = PathUtils.GetFileOrDirectoryName(_location.FilePath);
+            foreach (var location in _locations) {
+                resultCollection.Add(CreateResult(location));
+            }
+        }
 
-            var displayInfo = new PeekResultDisplayInfo(
-                label: string.Format("{0} - ({1}, {2})", fileName, _location.Line, _location.Column),
-                labelTooltip: _location.FilePath,
+        private IDocumentPeekResult CreateResult(AnalysisLocation location) {
+            var fileName = PathUtils.GetFileOrDirectoryName(location.FilePath);
+
+            var displayInfo = new PeekResultDisplayInfo2(
+                label: string.Format("{0} - ({1}, {2})", fileName, location.Line, location.Column),
+                labelTooltip: location.FilePath,
                 title: fileName,
-                titleTooltip: _location.FilePath
+                titleTooltip: location.FilePath,
+                startIndexOfTokenInLabel: 0,
+                lengthOfTokenInLabel: 0
             );
 
-            int startLine = _location.Line - 1;
-            int startColumn = _location.Column - 1;
+            int startLine = location.Line - 1;
+            int startColumn = location.Column - 1;
             int endLine = startLine;
             int endColumn = startColumn;
-            if (_location.DefinitionStartLine.HasValue) {
-                startLine = _location.DefinitionStartLine.Value - 1;
+            if (location.DefinitionStartLine.HasValue) {
+                startLine = location.DefinitionStartLine.Value - 1;
             }
-            if (_location.DefinitionStartColumn.HasValue) {
-                startColumn = _location.DefinitionStartColumn.Value - 1;
+            if (location.DefinitionStartColumn.HasValue) {
+                startColumn = location.DefinitionStartColumn.Value - 1;
             }
-            if (_location.DefinitionEndLine.HasValue) {
-                endLine = _location.DefinitionEndLine.Value - 1;
+            if (location.DefinitionEndLine.HasValue) {
+                endLine = location.DefinitionEndLine.Value - 1;
             }
-            if (_location.DefinitionEndColumn.HasValue) {
-                endColumn = _location.DefinitionEndColumn.Value - 1;
+            if (location.DefinitionEndColumn.HasValue) {
+                endColumn = location.DefinitionEndColumn.Value - 1;
             }
 
-            var result = _peekResultFactory.Create(
+            return _peekResultFactory.Create(
                 displayInfo,
-                _location.FilePath,
+                default(ImageMoniker),
+                location.FilePath,
                 startLine,
                 startColumn,
                 endLine,
                 endColumn,
-                _location.Line - 1,
-                _location.Column - 1,
-                isReadOnly: false);
-
-            resultCollection.Add(result);
+                location.Line - 1,
+                location.Column - 1,
+                location.Line - 1,
+                location.Column - 1,
+                isReadOnly: false,
+                editorDestination: new Guid(PythonConstants.EditorFactoryGuid)
+            );
         }
     }
 }
