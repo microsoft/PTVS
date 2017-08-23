@@ -20,20 +20,15 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Intellisense {
     public interface IAnalysisEntryService {
@@ -57,17 +52,6 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="filename"/> is null or empty.</exception>
         IEnumerable<ProjectAnalyzer> GetAnalyzersForFile(string filename);
-
-        /// <summary>
-        /// Returns a task that will be completed when an analyzer is assigned to the text buffer.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
-        //Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken);
-        /// <summary>
-        /// Returns a task that will be completed when an analyzer is assigned to the text view.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
-        //Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns the default analyzer for the Visual Studio session. Must be accessed from
@@ -94,25 +78,6 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (ImportCardinalityMismatchException) {
             }
         }
-
-        //public void SetAnalyzer(ITextBuffer textBuffer, VsProjectAnalyzer analyzer) {
-        //    if (textBuffer == null) {
-        //        throw new ArgumentNullException(nameof(textBuffer));
-        //    }
-        //
-        //    if (analyzer == null) {
-        //        textBuffer.Properties.RemoveProperty(typeof(VsProjectAnalyzer));
-        //        return;
-        //    }
-        //
-        //    textBuffer.Properties[typeof(VsProjectAnalyzer)] = analyzer;
-        //
-        //    TaskCompletionSource<object> tcs;
-        //    if (textBuffer.Properties.TryGetProperty(_waitForAnalyzerKey, out tcs)) {
-        //        tcs.TrySetResult(null);
-        //        textBuffer.Properties.RemoveProperty(_waitForAnalyzerKey);
-        //    }
-        //}
 
         /// <summary>
         /// Gets the analysis entry for the given view and buffer.
@@ -170,22 +135,6 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IAnalysisEntryService members
 
         public ProjectAnalyzer DefaultAnalyzer => _services.Python?.DefaultAnalyzer;
-
-        //public Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken) {
-        //    if (textBuffer == null) {
-        //        throw new ArgumentNullException(nameof(textBuffer));
-        //    }
-
-        //    return _services.GetBufferInfo(textBuffer).WaitForAnalysisEntryAsync(cancellationToken);
-        //}
-
-        //public Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken) {
-        //    if (textView == null) {
-        //        throw new ArgumentNullException(nameof(textView));
-        //    }
-
-        //    return WaitForAnalyzerAsync(textView.TextBuffer, cancellationToken);
-        //}
 
         public bool TryGetAnalyzer(ITextBuffer textBuffer, out ProjectAnalyzer analyzer, out string filename) {
             if (textBuffer == null) {

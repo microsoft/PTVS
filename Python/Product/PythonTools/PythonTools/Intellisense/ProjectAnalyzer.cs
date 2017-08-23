@@ -746,6 +746,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             foreach (var e in entries) {
+                if (e == null) {
+                    continue;
+                }
+
                 ITextBuffer[] buffers;
                 if (oldBuffers.TryGetValue(e.Path, out buffers)) {
                     foreach (var b in buffers) {
