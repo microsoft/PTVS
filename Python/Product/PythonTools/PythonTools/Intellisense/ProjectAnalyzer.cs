@@ -361,10 +361,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 withDb.NewDatabaseAvailable -= Factory_NewDatabaseAvailable;
             }
 
-            foreach (var entry in _projectFiles.Values) {
-                _services.ErrorTaskProvider?.Clear(entry, ParserTaskMoniker);
-                _services.ErrorTaskProvider?.Clear(entry, UnresolvedImportMoniker);
-                _services.CommentTaskProvider?.Clear(entry, ParserTaskMoniker);
+            foreach (var path in _projectFiles.Keys) {
+                _services.ErrorTaskProvider?.Clear(path, ParserTaskMoniker);
+                _services.ErrorTaskProvider?.Clear(path, UnresolvedImportMoniker);
+                _services.CommentTaskProvider?.Clear(path, ParserTaskMoniker);
             }
 
             Debug.WriteLine(String.Format("Disposing of parser {0}", _analysisProcess));
@@ -706,28 +706,84 @@ namespace Microsoft.PythonTools.Intellisense {
             SendEvent(new AP.ModulesChangedEvent());
         }
 
-        /// <summary>
-        /// Creates a new ProjectEntry for the collection of buffers.
-        /// </summary>
-        internal async void ReAnalyzeTextBuffers(BufferParser oldParser) {
-            ITextBuffer[] buffers = oldParser.Buffers;
-            if (buffers.Length > 0) {
-                if (!oldParser.AnalysisEntry.SuppressErrorList) {
-                    _services.ErrorTaskProvider?.ClearErrorSource(oldParser.AnalysisEntry, ParserTaskMoniker);
-                    _services.ErrorTaskProvider?.ClearErrorSource(oldParser.AnalysisEntry, UnresolvedImportMoniker);
-                    _services.CommentTaskProvider?.ClearErrorSource(oldParser.AnalysisEntry, ParserTaskMoniker);
-                }
+        internal void ReanalyzeEntry(AnalysisEntry entry) {
+            var parser = entry.TryGetBufferParser();
+            if (parser == null) {
+                return;
+            }
+            var buffers = parser.Buffers;
+            if (!buffers.Any()) {
+                return;
+            }
 
-                foreach (var buffer in buffers) {
-                    oldParser.RemoveBuffer(buffer);
-                }
+            foreach (var buffer in buffers) {
+                parser.RemoveBuffer(buffer);
+            }
+            
+        }
 
-                var monitoredResult = await MonitorTextBufferAsync(buffers[0]);
-                if (monitoredResult?.AnalysisEntry != null) {
-                    for (int i = 1; i < buffers.Length; i++) {
-                        monitoredResult.AddBuffer(buffers[i]);
+        internal async Task TransferFromOldAnalyzer(VsProjectAnalyzer oldAnalyzer) {
+            var oldFileAndEntry = oldAnalyzer.LoadedFiles.ToArray();
+            var oldFiles = oldFileAndEntry.Select(kv => kv.Key);
+            var oldEntries = oldFileAndEntry.Select(kv => kv.Value);
+
+            var oldBuffers = oldEntries.ToDictionary(e => e.Path, e => e.TryGetBufferParser()?.AllBuffers);
+
+            foreach (var file in oldEntries) {
+                await oldAnalyzer.UnloadFileAsync(file);
+            }
+
+            var oldBulkEntries = oldEntries
+                .Where(e => !e.IsTemporaryFile && !e.SuppressErrorList)
+                .Select(e => e.Path)
+                .ToArray();
+
+            var entries = (await AnalyzeFileAsync(oldBulkEntries)).ToList();
+            foreach (var e in oldEntries) {
+                if (e.IsTemporaryFile || e.SuppressErrorList) {
+                    entries.Add(await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList));
+                }
+            }
+
+            foreach (var e in entries) {
+                ITextBuffer[] buffers;
+                if (oldBuffers.TryGetValue(e.Path, out buffers)) {
+                    foreach (var b in buffers) {
+                        PythonTextBufferInfo.MarkForReplacement(b);
+                        e.GetOrCreateBufferParser(_services).AddBuffer(b);
                     }
                 }
+            }
+        }
+
+        internal async Task TransferFileFromOldAnalyzer(AnalysisEntry oldEntry, string newPath = null) {
+            var oldSnapshots = oldEntry?.TryGetBufferParser()?
+                .AllBuffers.Select(b => b.CurrentSnapshot).ToArray();
+
+            var oldAnalyzer = oldEntry?.Analyzer;
+            if (oldAnalyzer != null) {
+                await oldAnalyzer.UnloadFileAsync(oldEntry);
+            }
+
+            var entry = await AnalyzeFileAsync(
+                newPath ?? oldEntry?.Path ?? throw new ArgumentNullException(nameof(newPath)),
+                isTemporaryFile: oldEntry?.IsTemporaryFile ?? false,
+                suppressErrorList: oldEntry?.SuppressErrorList ?? false
+            );
+
+            if (entry == null) {
+                Debug.Fail("Failed to create new entry");
+                return;
+            }
+
+            var bufferParser = entry.GetOrCreateBufferParser(_services);
+
+            if (oldSnapshots != null && oldSnapshots.Length > 0) {
+                foreach (var snapshot in oldSnapshots) {
+                    PythonTextBufferInfo.MarkForReplacement(snapshot.TextBuffer);
+                    bufferParser.AddBuffer(snapshot.TextBuffer);
+                }
+                await BufferParser.ParseBuffersAsync(_services, this, oldSnapshots);
             }
         }
 
@@ -736,9 +792,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.AnalysisEntry, ParserTaskMoniker, buffer.Buffer);
-            buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.AnalysisEntry, UnresolvedImportMoniker, buffer.Buffer);
-            buffer.Services.CommentTaskProvider?.AddBufferForErrorSource(buffer.AnalysisEntry, ParserTaskMoniker, buffer.Buffer);
+            buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
+            buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, UnresolvedImportMoniker, buffer.Buffer);
+            buffer.Services.CommentTaskProvider?.AddBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
             buffer.Services.UnresolvedImportSquiggleProvider?.AddBuffer(buffer);
         }
 
@@ -749,21 +805,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // Use Maybe* variants, since if they haven't been created we don't need to
             // remove our sources.
-            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.AnalysisEntry, ParserTaskMoniker, buffer.Buffer);
-            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.AnalysisEntry, UnresolvedImportMoniker, buffer.Buffer);
-            buffer.Services.MaybeCommentTaskProvider?.RemoveBufferForErrorSource(buffer.AnalysisEntry, ParserTaskMoniker, buffer.Buffer);
+            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
+            buffer.Services.MaybeErrorTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, UnresolvedImportMoniker, buffer.Buffer);
+            buffer.Services.MaybeCommentTaskProvider?.RemoveBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
             buffer.Services.MaybeUnresolvedImportSquiggleProvider?.RemoveBuffer(buffer);
-        }
-
-        internal void SwitchAnalyzers(VsProjectAnalyzer oldAnalyzer) {
-            BufferParser[] parsers = oldAnalyzer._projectFiles
-                .Select(x => x.Value.TryGetBufferParser())
-                .Where(x => x != null)
-                .ToArray();
-
-            foreach (var bufferParser in parsers) {
-                ReAnalyzeTextBuffers(bufferParser);
-            }
         }
 
         internal void OnAnalysisStarted() {
@@ -774,42 +819,42 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Starts monitoring a buffer for changes so we will re-parse the buffer to update the analysis
         /// as the text changes.
         /// </summary>
-        internal async Task<BufferParser> MonitorTextBufferAsync(ITextBuffer textBuffer, bool isTemporaryFile = false, bool suppressErrorList = false) {
-            var bi = _services.GetBufferInfo(textBuffer);
-            var existingEntry = bi.AnalysisEntry;
+        //internal async Task<BufferParser> MonitorTextBufferAsync(ITextBuffer textBuffer, bool isTemporaryFile = false, bool suppressErrorList = false) {
+        //    var bi = _services.GetBufferInfo(textBuffer);
+        //    var existingEntry = bi.AnalysisEntry;
 
-            // Create a new entry if the current one is not ours
-            var entry = existingEntry;
-            if (entry == null || entry.Analyzer != this) {
-                entry = await CreateProjectEntryAsync(bi, isTemporaryFile, suppressErrorList).ConfigureAwait(false);
-            }
-            if (entry == null) {
-                return null;
-            }
+        //    // Create a new entry if the current one is not ours
+        //    var entry = existingEntry;
+        //    if (entry == null || entry.Analyzer != this) {
+        //        entry = await CreateProjectEntryAsync(bi, isTemporaryFile, suppressErrorList).ConfigureAwait(false);
+        //    }
+        //    if (entry == null) {
+        //        return null;
+        //    }
 
-            try {
-                if (!bi.TrySetAnalysisEntry(entry, existingEntry)) {
-                    // Raced with another monitor
-                    Debug.Fail("MonitorTextBufferAsync race occurred");
-                    return null;
-                }
-            } catch (ObjectDisposedException) {
-                // Buffer has gone away already
-                return null;
-            }
+        //    try {
+        //        if (!bi.TrySetAnalysisEntry(entry, existingEntry)) {
+        //            // Raced with another monitor
+        //            Debug.Fail("MonitorTextBufferAsync race occurred");
+        //            return null;
+        //        }
+        //    } catch (ObjectDisposedException) {
+        //        // Buffer has gone away already
+        //        return null;
+        //    }
 
-            var bufferParser = new BufferParser(entry);
-            bufferParser.AddBuffer(textBuffer);
+        //    var bufferParser = new BufferParser(entry);
+        //    bufferParser.AddBuffer(textBuffer);
 
-            var snapshot = (entry.AnalysisCookie as SnapshotCookie)?.Snapshot;
-            // File cannot be parsed from disk, so sync the code from the current buffer
-            // This should be rare in normal use, but very frequent in tests
-            if (snapshot != null && (isTemporaryFile || !File.Exists(entry.Path))) {
-                await BufferParser.ParseBuffersAsync(_services, entry, Enumerable.Repeat(snapshot, 1));
-            }
+        //    var snapshot = (entry.AnalysisCookie as SnapshotCookie)?.Snapshot;
+        //    // File cannot be parsed from disk, so sync the code from the current buffer
+        //    // This should be rare in normal use, but very frequent in tests
+        //    if (snapshot != null && (isTemporaryFile || !File.Exists(entry.Path))) {
+        //        await BufferParser.ParseBuffersAsync(_services, this, Enumerable.Repeat(snapshot, 1));
+        //    }
 
-            return bufferParser;
-        }
+        //    return bufferParser;
+        //}
 
         internal void BufferDetached(AnalysisEntry entry, ITextBuffer buffer) {
             if (entry == null) {
@@ -826,9 +871,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 bufferParser.Dispose();
 
                 if (!entry.SuppressErrorList) {
-                    _services.ErrorTaskProvider?.ClearErrorSource(entry, ParserTaskMoniker);
-                    _services.ErrorTaskProvider?.ClearErrorSource(entry, UnresolvedImportMoniker);
-                    _services.CommentTaskProvider?.ClearErrorSource(entry, ParserTaskMoniker);
+                    _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
+                    _services.ErrorTaskProvider?.ClearErrorSource(entry.Path, UnresolvedImportMoniker);
+                    _services.CommentTaskProvider?.ClearErrorSource(entry.Path, ParserTaskMoniker);
                 }
 
                 if (entry.IsTemporaryFile) {
@@ -839,78 +884,56 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private async Task<AnalysisEntry> CreateProjectEntryAsync(PythonTextBufferInfo textBuffer, bool isTemporaryFile, bool suppressErrorList) {
+        internal async Task<AnalysisEntry> AnalyzeFileAsync(
+            string path,
+            string addingFromDirectory = null,
+            bool isTemporaryFile = false,
+            bool suppressErrorList = false
+        ) {
             if (_conn == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return null;
             }
 
-            var path = textBuffer.Filename;
             if (string.IsNullOrEmpty(path)) {
                 return null;
             }
 
             AnalysisEntry entry;
-            if (!_projectFiles.TryGetValue(path, out entry)) {
-                _analysisComplete = false;
-                Interlocked.Increment(ref _parsePending);
+            if (_projectFiles.TryGetValue(path, out entry)) {
+                return entry;
+            }
 
-                var res = await SendRequestAsync(
-                    new AP.AddFileRequest() {
-                        path = path,
-                        isTemporaryFile = isTemporaryFile,
-                        suppressErrorLists = suppressErrorList
-                    }).ConfigureAwait(false);
-
-                if (res != null && res.fileId != -1) {
-                    OnAnalysisStarted();
-
-                    var id = res.fileId;
-                    if (!_projectFilesById.TryGetValue(id, out entry)) {
-                        // we awaited between the check and the AddFileRequest, another add could
-                        // have snuck in.  So we check again here...
-                        entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id, isTemporaryFile, suppressErrorList);
-                    }
-                } else {
-                    Interlocked.Decrement(ref _parsePending);
+            Interlocked.Increment(ref _parsePending);
+            var response = await SendRequestAsync(
+                new AP.AddFileRequest {
+                    path = path,
+                    addingFromDir = addingFromDirectory,
+                    isTemporaryFile = isTemporaryFile,
+                    suppressErrorLists = suppressErrorList
                 }
+            ).ConfigureAwait(false);
 
+            if (response == null || response.fileId == -1) {
+                Interlocked.Decrement(ref _parsePending);
+                return null;
             }
 
-            if (entry != null) {
-                entry.AnalysisCookie = new SnapshotCookie(textBuffer.CurrentSnapshot);
+            // we awaited between the check and the AddFileRequest, another add could
+            // have snuck in.  So we check again here, and we'll leave the other cookie in 
+            // as it's likely a SnapshotCookie which we prefer over a FileCookie.
+            if (_projectFilesById.TryGetValue(response.fileId, out entry)) {
+                Debug.Assert(entry.Path == path, $"raced on AnalyzeFile and path '{path}' != '{entry.Path}'");
+                return entry;
             }
+
+            OnAnalysisStarted();
+            entry = _projectFilesById[response.fileId] = _projectFiles[path]
+                = new AnalysisEntry(this, path, response.fileId, isTemporaryFile, suppressErrorList);
+
+            entry.AnalysisCookie = new FileCookie(path);
 
             return entry;
-        }
-
-
-        internal async Task<AnalysisEntry> AnalyzeFileAsync(string path, string addingFromDirectory = null) {
-            if (_conn == null) {
-                // We aren't able to analyze code, so don't create an entry.
-                return null;
-            }
-            if (string.IsNullOrEmpty(path)) {
-                return null;
-            }
-
-            AnalysisEntry res;
-            if (!_projectFiles.TryGetValue(path, out res)) {
-                Interlocked.Increment(ref _parsePending);
-
-                var response = await SendRequestAsync(new AP.AddFileRequest() { path = path }).ConfigureAwait(false);
-                if (response != null) {
-                    // we awaited between the check and the AddFileRequest, another add could
-                    // have snuck in.  So we check again here, and we'll leave the other cookie in 
-                    // as it's likely a SnapshotCookie which we prefer over a FileCookie.
-                    if (response.fileId != -1 && !_projectFilesById.TryGetValue(response.fileId, out res)) {
-                        res = _projectFilesById[response.fileId] = _projectFiles[path] = new AnalysisEntry(this, path, response.fileId);
-                        res.AnalysisCookie = new FileCookie(path);
-                    }
-                }
-            }
-
-            return res;
         }
 
         internal async Task<IReadOnlyList<AnalysisEntry>> AnalyzeFileAsync(string[] paths, string addingFromDirectory = null) {
@@ -1387,12 +1410,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
                         _services.ErrorTaskProvider.ReplaceItems(
-                            entry,
+                            entry.Path,
                             ParserTaskMoniker,
                             errorItems.Concat(warningItems).ToList()
                         );
                     } else {
-                        _services.ErrorTaskProvider.Clear(entry, ParserTaskMoniker);
+                        _services.ErrorTaskProvider.Clear(entry.Path, ParserTaskMoniker);
                     }
                 }
 
@@ -1409,12 +1432,12 @@ namespace Microsoft.PythonTools.Intellisense {
                         ));
 
                         _services.CommentTaskProvider.ReplaceItems(
-                            entry,
+                            entry.Path,
                             ParserTaskMoniker,
                             taskItems.ToList()
                         );
                     } else {
-                        _services.CommentTaskProvider.Clear(entry, ParserTaskMoniker);
+                        _services.CommentTaskProvider.Clear(entry.Path, ParserTaskMoniker);
                     }
                 }
             }
@@ -1638,15 +1661,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task UnloadFileAsync(AnalysisEntry entry) {
             _analysisComplete = false;
-            AnalysisEntry removed;
-            _projectFiles.TryRemove(entry.Path, out removed);
-            _projectFilesById.TryRemove(entry.FileId, out removed);
 
-            if (!entry.SuppressErrorList) {
-                _services.MaybeErrorTaskProvider?.Clear(entry, ParserTaskMoniker);
-                _services.MaybeErrorTaskProvider?.Clear(entry, UnresolvedImportMoniker);
-                _services.MaybeCommentTaskProvider?.Clear(entry, ParserTaskMoniker);
-            }
+            _projectFiles.TryRemove(entry.Path, out _);
+            _projectFilesById.TryRemove(entry.FileId, out _);
+            entry.TryGetBufferParser()?.ClearBuffers();
 
             await SendRequestAsync(new AP.UnloadFileRequest() { fileId = entry.FileId }).ConfigureAwait(false);
         }

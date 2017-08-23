@@ -15,16 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
-    sealed class UnresolvedImportSquiggleProvider {
+    sealed class UnresolvedImportSquiggleProvider : IPythonTextBufferInfoEventSink {
         // Allows test cases to skip checking user options
         internal static bool _alwaysCreateSquiggle;
         private readonly PythonEditorServices _services;
@@ -52,29 +52,27 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void AddBuffer(PythonTextBufferInfo buffer) {
-            buffer.OnNewAnalysis += OnNewAnalysis;
+            buffer.AddSink(typeof(UnresolvedImportSquiggleProvider), this);
             if (buffer.AnalysisEntry?.IsAnalyzed == true) {
-                OnNewAnalysis(buffer, EventArgs.Empty);
+                OnNewAnalysis(buffer, buffer.AnalysisEntry)
+                    .HandleAllExceptions(_services.Site, GetType())
+                    .DoNotWait();
             }
         }
 
         public void RemoveBuffer(PythonTextBufferInfo buffer) {
-            buffer.OnNewAnalysis -= OnNewAnalysis;
+            buffer.RemoveSink(typeof(UnresolvedImportSquiggleProvider));
         }
 
-        private async void OnNewAnalysis(object sender, EventArgs e) {
-            var bi = sender as PythonTextBufferInfo;
-            if (bi == null) {
-                Debug.Fail("Unexpected Sender type " + sender?.GetType() ?? "(null)");
-                return;
+        async Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
+                await OnNewAnalysis(sender, e.AnalysisEntry);
             }
-            if (!_enabled && !_alwaysCreateSquiggle) {
-                _taskProvider.Clear(bi.AnalysisEntry, VsProjectAnalyzer.UnresolvedImportMoniker);
-                return;
-            }
+        }
 
-            var entry = bi.AnalysisEntry;
-            if (entry == null) {
+        private async Task OnNewAnalysis(PythonTextBufferInfo bi, AnalysisEntry entry) {
+            if (!_enabled && !_alwaysCreateSquiggle || entry == null) {
+                _taskProvider.Clear(bi.Filename, VsProjectAnalyzer.UnresolvedImportMoniker);
                 return;
             }
 
@@ -89,7 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var f = new TaskProviderItemFactory(translator);
 
                     _taskProvider.ReplaceItems(
-                        entry,
+                        bi.Filename,
                         VsProjectAnalyzer.UnresolvedImportMoniker,
                         missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
                             _services.Site,
@@ -103,7 +101,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     );
                 }
             } else {
-                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                _taskProvider.Clear(bi.Filename, VsProjectAnalyzer.UnresolvedImportMoniker);
             }
         }
     }

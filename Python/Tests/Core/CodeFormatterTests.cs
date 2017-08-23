@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -178,7 +179,10 @@ class Oar(object):
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, "C:\\fob.py");
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var view = new MockTextView(buffer);
-                analyzer.MonitorTextBufferAsync(buffer).Wait();
+                var bi = services.GetBufferInfo(buffer);
+                var entry = analyzer.AnalyzeFileAsync(bi.Filename).WaitAndUnwrapExceptions();
+                entry.GetOrCreateBufferParser(services).AddBuffer(buffer);
+
                 var selectionSpan = new SnapshotSpan(
                     buffer.CurrentSnapshot,
                     ExtractMethodTests.GetSelectionSpan(input, selection)

@@ -19,58 +19,46 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools {
     /// <summary>
     /// Provides classification based upon the DLR TokenCategory enum.
     /// </summary>
-    internal sealed class PythonClassifier : IClassifier {
+    internal sealed class PythonClassifier : IClassifier, IPythonTextBufferInfoEventSink {
         private readonly TokenCache _tokenCache;
         private readonly PythonClassifierProvider _provider;
-        private readonly PythonTextBufferInfo _buffer;
-        private PythonLanguageVersion _version;
 
         [ThreadStatic]
         private static Dictionary<PythonLanguageVersion, Tokenizer> _tokenizers;    // tokenizer for each version, shared between all buffers
 
-        internal PythonClassifier(PythonClassifierProvider provider, PythonTextBufferInfo buffer) {
-            buffer.OnChanged += BufferChanged;
-            buffer.OnContentTypeChanged += BufferContentTypeChanged;
-
+        internal PythonClassifier(PythonClassifierProvider provider) {
             _tokenCache = new TokenCache();
             _provider = provider;
-            _buffer = buffer;
-
-            _buffer.OnNewAnalysisEntry += NewAnalysisEntry;
-
-            _version = _buffer.LanguageVersion;
         }
 
-        private void NewAnalysisEntry(object sender, EventArgs e) {
-            var analyzer = _buffer.AnalysisEntry?.Analyzer;
+        private Task OnNewAnalysisEntryAsync(PythonTextBufferInfo sender, AnalysisEntry entry) {
+            var analyzer = entry?.Analyzer;
             if (analyzer == null) {
                 Debug.Fail("Should not have new analysis entry without an analyzer");
-                return;
+                return Task.CompletedTask;
             }
-            var newVersion = analyzer.LanguageVersion;
-            if (newVersion != _version) {
-                _tokenCache.Clear();
+            _tokenCache.Clear();
 
-                _version = newVersion;
+            var snapshot = sender.CurrentSnapshot;
+            ClassificationChanged?.Invoke(
+                this,
+                new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
+            );
 
-                var changed = ClassificationChanged;
-                if (changed != null) {
-                    var snapshot = _buffer.Buffer.CurrentSnapshot;
-
-                    changed(this, new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
-                }
-            }
+            return Task.CompletedTask;
         }
 
         #region IDlrClassifier
@@ -83,25 +71,27 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
             var classifications = new List<ClassificationSpan>();
-            var snapshot = span.Snapshot;
 
             if (span.Length > 0) {
                 // don't add classifications for REPL commands.
-                if (!span.Snapshot.IsReplBufferWithCommand()) {
-                    AddClassifications(GetTokenizer(), classifications, span);
+                var snapshot = span.Snapshot;
+                if (!snapshot.IsReplBufferWithCommand()) {
+                    AddClassifications(GetTokenizer(snapshot), classifications, span);
                 }
             }
 
             return classifications;
         }
 
-        private Tokenizer GetTokenizer() {
+        private Tokenizer GetTokenizer(ITextSnapshot snapshot) {
             if (_tokenizers == null) {
                 _tokenizers = new Dictionary<PythonLanguageVersion, Tokenizer>();
             }
             Tokenizer res;
-            if (!_tokenizers.TryGetValue(_version, out res)) {
-                _tokenizers[_version] = res = new Tokenizer(_version, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
+            var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
+            var version = bi?.LanguageVersion ?? PythonLanguageVersion.None;
+            if (!_tokenizers.TryGetValue(version, out res)) {
+                _tokenizers[version] = res = new Tokenizer(version, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
             }
             return res;
         }
@@ -116,26 +106,17 @@ namespace Microsoft.PythonTools {
 
         #region Private Members
 
-        private Dictionary<TokenCategory, IClassificationType> CategoryMap {
-            get {
-                return _provider.CategoryMap;
+        private Task OnTextContentChangedAsync(PythonTextBufferInfo sender, TextContentChangedEventArgs e) {
+            if (e == null) {
+                Debug.Fail("Invalid type passed to event");
             }
-        }
 
-        private void BufferContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
-            _tokenCache.Clear();
-            _buffer.OnChanged -= BufferChanged;
-            _buffer.OnContentTypeChanged -= BufferContentTypeChanged;
-            _buffer.OnNewAnalysisEntry -= NewAnalysisEntry;
-        }
-
-        private void BufferChanged(object sender, TextContentChangedEventArgs e) {
             var snapshot = e.After;
 
             if (!snapshot.IsReplBufferWithCommand()) {
                 _tokenCache.EnsureCapacity(snapshot.LineCount);
 
-                var tokenizer = GetTokenizer();
+                var tokenizer = GetTokenizer(snapshot);
                 foreach (var change in e.Changes) {
                     if (change.LineCountDelta > 0) {
                         _tokenCache.InsertLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1 - change.LineCountDelta, change.LineCountDelta);
@@ -146,6 +127,8 @@ namespace Microsoft.PythonTools {
                     ApplyChange(tokenizer, snapshot, change.NewSpan);
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -360,7 +343,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (classification == null) {
-                CategoryMap.TryGetValue(token.Category, out classification);
+                _provider.CategoryMap.TryGetValue(token.Category, out classification);
             }
 
             if (classification != null) {
@@ -383,12 +366,23 @@ namespace Microsoft.PythonTools {
             return tokenSpan;
         }
 
+        Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.NewAnalysisEntry) {
+                return OnNewAnalysisEntryAsync(sender, e.AnalysisEntry);
+            } else if (e.Event == PythonTextBufferInfoEvents.ContentTypeChanged) {
+                _tokenCache.Clear();
+            } else if (e.Event == PythonTextBufferInfoEvents.TextContentChanged) {
+                return OnTextContentChangedAsync(sender, (e as PythonTextBufferInfoNestedEventArgs)?.NestedEventArgs as TextContentChangedEventArgs);
+            }
+            return Task.CompletedTask;
+        }
+
         #endregion
     }
 
     internal static partial class ClassifierExtensions {
         public static PythonClassifier GetPythonClassifier(this ITextBuffer buffer) {
-            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.Classifier;
+            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.TryGetSink(typeof(PythonClassifier)) as PythonClassifier;
         }
     }
 }

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
@@ -191,6 +192,47 @@ namespace PythonToolsMockTests {
 
         public ITextSnapshot CurrentSnapshot {
             get { return View.TextView.TextSnapshot; }
+        }
+
+        public WaitHandle AnalysisCompleteEvent {
+            get {
+                var evt = new AnalysisCompleteManualResetEvent(BufferInfo);
+                BufferInfo.AddSink(evt, evt);
+                return evt;
+            }
+        }
+
+        class AnalysisCompleteManualResetEvent : WaitHandle, IPythonTextBufferInfoEventSink {
+            private readonly ManualResetEvent _event;
+            private readonly PythonTextBufferInfo _info;
+
+            public AnalysisCompleteManualResetEvent(PythonTextBufferInfo info) {
+                _event = new ManualResetEvent(false);
+                _info = info;
+                SafeWaitHandle = _event.SafeWaitHandle;
+            }
+
+            protected override void Dispose(bool explicitDisposing) {
+                SafeWaitHandle = null;
+                base.Dispose(explicitDisposing);
+                _event.Dispose();
+                if (explicitDisposing) {
+                    _info.RemoveSink(this);
+                }
+            }
+
+            public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+                if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
+                    if (_info.LastAnalysisReceivedVersion.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
+                        try {
+                            _event.Set();
+                        } catch (ObjectDisposedException) {
+                        }
+                        _info.RemoveSink(this);
+                    }
+                }
+                return Task.CompletedTask;
+            }
         }
 
         internal PythonEditorServices EditorServices => VS.ComponentModel.GetService<PythonEditorServices>();

@@ -15,6 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -23,15 +27,21 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Editor {
-    sealed class PythonTextBufferInfo : IDisposable {
+    sealed class PythonTextBufferInfo {
         public static PythonTextBufferInfo ForBuffer(PythonEditorServices services, ITextBuffer buffer) {
-            return buffer.Properties.GetOrCreateSingletonProperty(
+            var bi = buffer.Properties.GetOrCreateSingletonProperty(
                 typeof(PythonTextBufferInfo),
                 () => new PythonTextBufferInfo(services, buffer)
             );
+            if (bi._replace) {
+                bi = bi.ReplaceBufferInfo();
+                buffer.Properties[typeof(PythonTextBufferInfo)] = bi;
+            }
+            return bi;
         }
 
         public static PythonTextBufferInfo TryGetForBuffer(ITextBuffer buffer) {
@@ -39,47 +49,68 @@ namespace Microsoft.PythonTools.Editor {
             if (buffer == null) {
                 return null;
             }
-            return buffer.Properties.TryGetProperty(typeof(PythonTextBufferInfo), out bi) ? bi : null;
+            if (!buffer.Properties.TryGetProperty(typeof(PythonTextBufferInfo), out bi) || bi == null) {
+                return null;
+            }
+            if (bi._replace) {
+                bi = bi.ReplaceBufferInfo();
+                buffer.Properties[typeof(PythonTextBufferInfo)] = bi;
+            }
+            return bi;
         }
 
-        public static bool TryDispose(ITextBuffer buffer) {
+        /// <summary>
+        /// Calling this function marks the buffer to be replaced next
+        /// time it is retrieved.
+        /// </summary>
+        public static void MarkForReplacement(ITextBuffer buffer) {
+            var bi = TryGetForBuffer(buffer);
+            if (bi != null) {
+                bi._replace = true;
+            }
+        }
+
+        public static IEnumerable<PythonTextBufferInfo> GetAllFromView(ITextView view) {
+            return view.BufferGraph.GetTextBuffers(_ => true)
+                .Select(b => TryGetForBuffer(b))
+                .Where(b => b != null);
+        }
+
+        public static bool TryDisconnect(object owner, ITextBuffer buffer) {
             PythonTextBufferInfo bi;
             if (buffer.Properties.TryGetProperty(typeof(PythonTextBufferInfo), out bi)) {
                 buffer.Properties.RemoveProperty(typeof(PythonTextBufferInfo));
-                bi?.Dispose();
+                //bi?.Disconnect(owner);
                 return true;
             }
             return false;
         }
 
         private readonly object _lock = new object();
-        private bool _isDisposed;
-        private readonly Lazy<string> _filename;
-        private int _analysisEntryId;
+
+        private int _bufferId;
         private AnalysisEntry _analysisEntry;
-        private PythonClassifier _classifier;
-        private PythonAnalysisClassifier _analysisClassifier;
-        private OutliningTaggerProvider.OutliningTagger _outliningTagger;
+
+        private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
+        private readonly Lazy<string> _filename;
+
+        private bool _replace;
 
         private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
             Services = services;
             Buffer = buffer;
+            _eventSinks = new ConcurrentDictionary<object, IPythonTextBufferInfoEventSink>();
             _filename = new Lazy<string>(GetOrCreateFilename);
-            _analysisEntryId = -1;
-            Buffer.ContentTypeChanged += Buffer_ContentTypeChanged;
-            Buffer.Changed += Buffer_Changed;
-            Buffer.ChangedLowPriority += Buffer_ChangedLowPriority;
-        }
+            _bufferId = -1;
 
-        public void Dispose() {
-            if (_isDisposed) {
-                return;
+            ITextDocument doc;
+            if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out doc)) {
+                Document = doc;
+                Document.EncodingChanged += Document_EncodingChanged;
             }
-            _isDisposed = true;
-            Buffer.ContentTypeChanged -= Buffer_ContentTypeChanged;
-            Buffer.Changed -= Buffer_Changed;
-            Buffer.ChangedLowPriority -= Buffer_ChangedLowPriority;
-            TrySetAnalysisEntry(null, AnalysisEntry);
+            Buffer.ContentTypeChanged += Buffer_ContentTypeChanged;
+            Buffer.Changed += Buffer_TextContentChanged;
+            Buffer.ChangedLowPriority += Buffer_TextContentChangedLowPriority;
         }
 
         private T GetOrCreate<T>(ref T destination, Func<PythonTextBufferInfo, T> creator) where T : class {
@@ -95,6 +126,23 @@ namespace Microsoft.PythonTools.Editor {
                 }
             }
             return created;
+        }
+
+        private PythonTextBufferInfo ReplaceBufferInfo() {
+            var newInfo = new PythonTextBufferInfo(Services, Buffer);
+            foreach (var sink in _eventSinks) {
+                newInfo._eventSinks[sink.Key] = sink.Value;
+            }
+
+            Buffer.Properties[typeof(PythonTextBufferInfo)] = newInfo;
+
+            Buffer.ContentTypeChanged -= Buffer_ContentTypeChanged;
+            Buffer.Changed -= Buffer_TextContentChanged;
+            Buffer.ChangedLowPriority -= Buffer_TextContentChangedLowPriority;
+
+            InvokeSinks(new PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewTextBufferInfo, newInfo));
+
+            return newInfo;
         }
 
         private string GetOrCreateFilename() {
@@ -114,6 +162,7 @@ namespace Microsoft.PythonTools.Editor {
 
 
         public ITextBuffer Buffer { get; }
+        public ITextDocument Document { get; }
         public ITextSnapshot CurrentSnapshot => Buffer.CurrentSnapshot;
         public IContentType ContentType => Buffer.ContentType;
         public string Filename => _filename.Value;
@@ -124,66 +173,89 @@ namespace Microsoft.PythonTools.Editor {
 
         #region Events
 
-        private event EventHandler _onNewAnalysisEntry;
-        public event EventHandler OnNewAnalysis;
-        public event EventHandler OnNewAnalysisEntry {
-            add { lock (_lock) _onNewAnalysisEntry += value; }
-            remove { lock (_lock) _onNewAnalysisEntry -= value; }
-        }
-        public event EventHandler OnNewParseTree;
-
-        public event EventHandler<TextContentChangedEventArgs> OnChanged;
-        private void Buffer_Changed(object sender, TextContentChangedEventArgs e) {
-            if (!_isDisposed) {
-                OnChanged?.Invoke(this, e);
-            }
+        private void OnNewAnalysisEntry(AnalysisEntry entry) {
+            InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysisEntry, entry));
         }
 
-        public event EventHandler<TextContentChangedEventArgs> OnChangedLowPriority;
-        private void Buffer_ChangedLowPriority(object sender, TextContentChangedEventArgs e) {
-            if (!_isDisposed) {
-                OnChangedLowPriority?.Invoke(this, e);
-            }
+        private void AnalysisEntry_ParseComplete(object sender, EventArgs e) {
+            InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewParseTree, (AnalysisEntry)sender));
         }
 
+        private void AnalysisEntry_AnalysisComplete(object sender, EventArgs e) {
+            InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysis, (AnalysisEntry)sender));
+        }
 
-        public event EventHandler<ContentTypeChangedEventArgs> OnContentTypeChanged;
+        private void Buffer_TextContentChanged(object sender, TextContentChangedEventArgs e) {
+            InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChanged, e));
+        }
+
+        private void Buffer_TextContentChangedLowPriority(object sender, TextContentChangedEventArgs e) {
+            InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedLowPriority, e));
+        }
+
         private void Buffer_ContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
-            if (!_isDisposed) {
-                OnContentTypeChanged?.Invoke(this, e);
-            }
+            InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.ContentTypeChanged, e));
+        }
+
+        private void Document_EncodingChanged(object sender, EncodingChangedEventArgs e) {
+            InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.DocumentEncodingChanged, e));
         }
 
         #endregion
 
-        #region IntelliSense-related hooks
+        #region Sink management
 
-        public PythonClassifier Classifier => _classifier;
-        public PythonClassifier GetOrCreateClassifier(Func<PythonTextBufferInfo, PythonClassifier> creator) => GetOrCreate(ref _classifier, creator);
+        public void AddSink(object key, IPythonTextBufferInfoEventSink sink) {
+            if (!_eventSinks.TryAdd(key, sink)) {
+                if (_eventSinks[key] != sink) {
+                    throw new InvalidOperationException("cannot replace existing sink");
+                }
+            }
+        }
 
-        public PythonAnalysisClassifier AnalysisClassifier => _analysisClassifier;
-        public PythonAnalysisClassifier GetOrCreateAnalysisClassifier(Func<PythonTextBufferInfo, PythonAnalysisClassifier> creator) => GetOrCreate(ref _analysisClassifier, creator);
+        public T GetOrCreateSink<T>(object key, Func<PythonTextBufferInfo, T> creator) where T : class, IPythonTextBufferInfoEventSink {
+            IPythonTextBufferInfoEventSink sink;
+            if (_eventSinks.TryGetValue(key, out sink)) {
+                return sink as T;
+            }
+            sink = creator(this);
+            if (!_eventSinks.TryAdd(key, sink)) {
+                sink = _eventSinks[key];
+            }
+            return sink as T;
+        }
 
-        public OutliningTaggerProvider.OutliningTagger OutliningTagger => _outliningTagger;
-        public OutliningTaggerProvider.OutliningTagger GetOrCreateOutliningTagger(Func<PythonTextBufferInfo, OutliningTaggerProvider.OutliningTagger> creator) => GetOrCreate(ref _outliningTagger, creator);
+        public IPythonTextBufferInfoEventSink TryGetSink(object key) {
+            IPythonTextBufferInfoEventSink sink;
+            return _eventSinks.TryGetValue(key, out sink) ? sink : null;
+        }
 
+        public bool RemoveSink(object key) => _eventSinks.TryRemove(key, out _);
+
+        private void InvokeSinks(PythonTextBufferInfoEventArgs e) {
+            foreach (var sink in _eventSinks.Values) {
+                sink.PythonTextBufferEventAsync(this, e)
+                    .HandleAllExceptions(Services.Site, GetType())
+                    .DoNotWait();
+            }
+        }
 
         #endregion
 
         #region Analysis Info
 
         public AnalysisEntry AnalysisEntry => Volatile.Read(ref _analysisEntry);
-        public bool TrySetAnalysisEntry(AnalysisEntry entry, AnalysisEntry ifCurrent) {
-            if (entry == ifCurrent) {
-                return true;
-            }
-            if (_isDisposed && entry != null) {
-                throw new ObjectDisposedException(GetType().Name);
-            }
 
+        /// <summary>
+        /// Changes the analysis entry to <paramref name="entry"/> if the current
+        /// entry matches <paramref name="ifCurrent"/>. Returns the current analysis
+        /// entry, regardless of whether it changed or not.
+        /// </summary>
+        public AnalysisEntry TrySetAnalysisEntry(AnalysisEntry entry, AnalysisEntry ifCurrent) {
             var previous = Interlocked.CompareExchange(ref _analysisEntry, entry, ifCurrent);
+
             if (previous != ifCurrent) {
-                return false;
+                return previous;
             }
 
             if (previous != null) {
@@ -196,27 +268,30 @@ namespace Microsoft.PythonTools.Editor {
                 entry.ParseComplete += AnalysisEntry_ParseComplete;
             }
 
-            if (!_isDisposed) {
-                _onNewAnalysisEntry?.Invoke(this, EventArgs.Empty);
+            OnNewAnalysisEntry(entry);
+
+            return entry;
+        }
+
+        public void ClearAnalysisEntry() {
+            var previous = Interlocked.Exchange(ref _analysisEntry, null);
+            if (previous != null) {
+                previous.AnalysisComplete -= AnalysisEntry_AnalysisComplete;
+                previous.ParseComplete -= AnalysisEntry_ParseComplete;
+                previous.Analyzer.BufferDetached(previous, Buffer);
+
+                OnNewAnalysisEntry(null);
             }
-            return true;
         }
 
-        private void AnalysisEntry_ParseComplete(object sender, EventArgs e) {
-            OnNewParseTree?.Invoke(this, e);
-        }
+        public int AnalysisBufferId => Volatile.Read(ref _bufferId);
 
-        private void AnalysisEntry_AnalysisComplete(object sender, EventArgs e) {
-            OnNewAnalysis?.Invoke(this, e);
-        }
-
-        public int AnalysisEntryId => Volatile.Read(ref _analysisEntryId);
-        public bool SetAnalysisEntryId(int id) {
+        public bool SetAnalysisBufferId(int id) {
             if (id < 0) {
-                Volatile.Write(ref _analysisEntryId, -1);
+                Volatile.Write(ref _bufferId, -1);
                 return true;
             }
-            return Interlocked.CompareExchange(ref _analysisEntryId, id, -1) == -1;
+            return Interlocked.CompareExchange(ref _bufferId, id, -1) == -1;
         }
 
         public ITextSnapshot LastSentSnapshot { get; set; }
@@ -249,31 +324,31 @@ namespace Microsoft.PythonTools.Editor {
             return true;
         }
 
-        public Task<AnalysisEntry> WaitForAnalysisEntryAsync(CancellationToken cancellationToken) {
-            // Return our current entry if we have one
-            var entry = AnalysisEntry;
-            if (entry != null) {
-                return Task.FromResult(entry);
-            }
+        //public Task<AnalysisEntry> WaitForAnalysisEntryAsync(CancellationToken cancellationToken) {
+        //    // Return our current entry if we have one
+        //    var entry = AnalysisEntry;
+        //    if (entry != null) {
+        //        return Task.FromResult(entry);
+        //    }
 
-            var tcs = new TaskCompletionSource<AnalysisEntry>();
-            if (cancellationToken.CanBeCanceled) {
-                cancellationToken.Register(() => tcs.TrySetCanceled());
-            }
+        //    var tcs = new TaskCompletionSource<AnalysisEntry>();
+        //    if (cancellationToken.CanBeCanceled) {
+        //        cancellationToken.Register(() => tcs.TrySetCanceled());
+        //    }
 
-            EventHandler handler = null;
-            handler = (s, e) => {
-                cancellationToken.ThrowIfCancellationRequested();
-                var bi = (PythonTextBufferInfo)s;
-                var result = bi.AnalysisEntry;
-                if (result != null) {
-                    bi.OnNewAnalysisEntry -= handler;
-                    tcs.TrySetResult(result);
-                }
-            };
+        //    EventHandler handler = null;
+        //    handler = (s, e) => {
+        //        cancellationToken.ThrowIfCancellationRequested();
+        //        var bi = (PythonTextBufferInfo)s;
+        //        var result = bi.AnalysisEntry;
+        //        if (result != null) {
+        //            bi.OnNewAnalysisEntry -= handler;
+        //            tcs.TrySetResult(result);
+        //        }
+        //    };
 
-            return tcs.Task;
-        }
+        //    return tcs.Task;
+        //}
 
         public bool DoNotParse {
             get => Buffer.Properties.ContainsProperty(BufferParser.DoNotParse);

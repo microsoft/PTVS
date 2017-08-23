@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using AnalysisTests;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -1704,7 +1705,11 @@ async def f():
                 var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
                 buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                analyzer.MonitorTextBufferAsync(buffer).Wait();
+
+                var bi = services.GetBufferInfo(buffer);
+                var entry = analyzer.AnalyzeFileAsync(bi.Filename).WaitAndUnwrapExceptions();
+                entry.GetOrCreateBufferParser(services).AddBuffer(buffer);
+
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 
                 view.Selection.Select(

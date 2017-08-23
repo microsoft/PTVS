@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var targetSpan = new Span(line.Start.Position, span.GetEndPoint(snapshot).Position - line.Start.Position);
 
-            _classifier = PythonTextBufferInfo.TryGetForBuffer(_buffer)?.Classifier;
+            _classifier = _buffer.GetPythonClassifier();
             if (_classifier == null) {
                 throw new ArgumentException(Strings.ReverseExpressionParserFailedToGetClassifierFromBufferException);
             }

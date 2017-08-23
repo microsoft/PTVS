@@ -62,12 +62,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Returns a task that will be completed when an analyzer is assigned to the text buffer.
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="textBuffer"/> is null.</exception>
-        Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken);
+        //Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken);
         /// <summary>
         /// Returns a task that will be completed when an analyzer is assigned to the text view.
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="textView"/> is null.</exception>
-        Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken);
+        //Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns the default analyzer for the Visual Studio session. Must be accessed from
@@ -171,21 +171,21 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public ProjectAnalyzer DefaultAnalyzer => _services.Python?.DefaultAnalyzer;
 
-        public Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken) {
-            if (textBuffer == null) {
-                throw new ArgumentNullException(nameof(textBuffer));
-            }
+        //public Task WaitForAnalyzerAsync(ITextBuffer textBuffer, CancellationToken cancellationToken) {
+        //    if (textBuffer == null) {
+        //        throw new ArgumentNullException(nameof(textBuffer));
+        //    }
 
-            return _services.GetBufferInfo(textBuffer).WaitForAnalysisEntryAsync(cancellationToken);
-        }
+        //    return _services.GetBufferInfo(textBuffer).WaitForAnalysisEntryAsync(cancellationToken);
+        //}
 
-        public Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken) {
-            if (textView == null) {
-                throw new ArgumentNullException(nameof(textView));
-            }
+        //public Task WaitForAnalyzerAsync(ITextView textView, CancellationToken cancellationToken) {
+        //    if (textView == null) {
+        //        throw new ArgumentNullException(nameof(textView));
+        //    }
 
-            return WaitForAnalyzerAsync(textView.TextBuffer, cancellationToken);
-        }
+        //    return WaitForAnalyzerAsync(textView.TextBuffer, cancellationToken);
+        //}
 
         public bool TryGetAnalyzer(ITextBuffer textBuffer, out ProjectAnalyzer analyzer, out string filename) {
             if (textBuffer == null) {

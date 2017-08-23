@@ -168,11 +168,11 @@ namespace Microsoft.PythonTools {
                 return;
             }
 
-            _container.GetUIThread().InvokeAsync(() => {
+            _container.GetUIThread().InvokeTask(async () => {
                 var analyzer = CreateAnalyzer();
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
                 if (oldAnalyzer != null) {
-                    analyzer.SwitchAnalyzers(oldAnalyzer);
+                    await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
                     if (oldAnalyzer.RemoveUser()) {
                         oldAnalyzer.Dispose();
                     }
