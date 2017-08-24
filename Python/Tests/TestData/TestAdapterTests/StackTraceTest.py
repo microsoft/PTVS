@@ -5,6 +5,9 @@ class StackTraceTests(unittest.TestCase):
         obj = Utility()
         obj.instance_method_a()
 
+    def test_not_equal(self):
+        self.assertEqual(1, 2)
+
 def global_func():
     def local_func():
         import not_a_module # trigger exception

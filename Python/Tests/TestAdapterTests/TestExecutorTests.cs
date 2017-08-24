@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using TestUtilities;
@@ -355,14 +356,36 @@ namespace TestAdapterTests {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
             var expectedTests = new[] {
-                TestInfo.StackTraceTestFailure
+                TestInfo.StackTraceBadLocalImportFailure,
+                TestInfo.StackTraceNotEqualFailure
             };
             var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
             executor.RunTests(testCases, runContext, recorder);
 
-            var stackTrace = recorder.Results[0].ErrorStackTrace;
+            var badLocalImportFile = TestInfo.StackTraceBadLocalImportFailure.SourceCodeFilePath;
+            var badLocalImportFrames = new StackFrame[] {
+                new StackFrame("local_func in global_func", badLocalImportFile, 13),
+                new StackFrame("global_func", badLocalImportFile, 14),
+                new StackFrame("Utility.class_static", badLocalImportFile, 19),
+                new StackFrame("Utility.instance_method_b", badLocalImportFile, 22),
+                new StackFrame("Utility.instance_method_a", badLocalImportFile, 25),
+                new StackFrame("StackTraceTests.test_bad_import", badLocalImportFile, 6),
+            };
+
+            ValidateStackFrame(recorder.Results[0], badLocalImportFrames);
+
+            var notEqualFile = TestInfo.StackTraceNotEqualFailure.SourceCodeFilePath;
+            var notEqualFrames = new StackFrame[] {
+                new StackFrame("StackTraceTests.test_not_equal", notEqualFile, 9),
+            };
+
+            ValidateStackFrame(recorder.Results[1], notEqualFrames);
+        }
+
+        private static void ValidateStackFrame(TestResult result, StackFrame[] expectedFrames) {
+            var stackTrace = result.ErrorStackTrace;
             var parser = new PythonStackTraceParser();
             var frames = parser.GetStackFrames(stackTrace).ToArray();
 
@@ -370,16 +393,6 @@ namespace TestAdapterTests {
             foreach (var f in frames) {
                 Console.WriteLine("\"{0}\",\"{1}\",\"{2}\"", f.MethodDisplayName, f.FileName, f.LineNumber);
             }
-
-            var expectedFile = TestInfo.StackTraceTestFailure.SourceCodeFilePath;
-            var expectedFrames = new StackFrame[] {
-                new StackFrame("local_func in global_func", expectedFile, 10),
-                new StackFrame("global_func", expectedFile, 11),
-                new StackFrame("Utility.class_static", expectedFile, 16),
-                new StackFrame("Utility.instance_method_b", expectedFile, 19),
-                new StackFrame("Utility.instance_method_a", expectedFile, 22),
-                new StackFrame("StackTraceTests.test_bad_import", expectedFile, 6),
-            };
 
             CollectionAssert.AreEqual(expectedFrames, frames, new StackFrameComparer());
         }
