@@ -19,6 +19,7 @@ from __future__ import with_statement
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
+import os.path
 import sys
 import json
 import time
@@ -30,6 +31,13 @@ try:
     import thread
 except:
     import _thread as thread
+
+try:
+    from unittest import TextTestResult
+    _IS_OLD_UNITTEST = False
+except:
+    from unittest import _TextTestResult as TextTestResult
+    _IS_OLD_UNITTEST = True
 
 if sys.version_info[0] < 3:
     if sys.version_info[:2] < (2, 6):
@@ -123,7 +131,7 @@ class _IpcChannel(object):
 _channel = None
 
 
-class VsTestResult(unittest.TextTestResult):
+class VsTestResult(TextTestResult):
     _start_time = None
 
     def startTest(self, test):
@@ -160,24 +168,28 @@ class VsTestResult(unittest.TextTestResult):
         self.sendResult(test, 'passed')
 
     def sendResult(self, test, outcome, trace = None):
-        def is_framework_frame(f):
-            import os.path
-            for lib_path in unittest.__path__:
-                if os.path.normcase(f[0]).startswith(os.path.normcase(lib_path)):
+        if _IS_OLD_UNITTEST:
+            # Example unittest.__file__ : c:\python26\lib\unittest.pyc
+            unittest_path = os.path.splitext(os.path.normcase(unittest.__file__))[0] + '.py'
+            def is_framework_frame(f):
+                if os.path.normcase(f[0]) == unittest_path:
                     return True
-            return False
+                return False
+        else:
+            def is_framework_frame(f):
+                for lib_path in unittest.__path__:
+                    if os.path.normcase(f[0]).startswith(os.path.normcase(lib_path)):
+                        return True
+                return False
 
         def get_traceback(trace):
-            frames = []
-            for f in reversed(traceback.extract_tb(trace[2])):
-                if is_framework_frame(f):
-                    break
-                frames.append(f)
+            all = traceback.extract_tb(trace[2])
+            filtered = [f for f in reversed(all) if not is_framework_frame(f)]
 
             # stack trace parser needs the Python version, it parses the user's
             # code to create fully qualified function names
-            lang_ver = '{0}.{1}'.format(sys.version_info.major, sys.version_info.minor)
-            tb = ''.join(traceback.format_list(frames))
+            lang_ver = '{0}.{1}'.format(sys.version_info[0], sys.version_info[1])
+            tb = ''.join(traceback.format_list(filtered))
             return lang_ver + '\n' + tb
 
         if _channel is not None:
@@ -199,8 +211,6 @@ class VsTestResult(unittest.TextTestResult):
 
 def main():
     import os
-    import sys
-    import unittest
     from optparse import OptionParser
     global _channel
 
@@ -319,7 +329,15 @@ def main():
                         test = test
                     )
 
-        runner = unittest.TextTestRunner(verbosity=0, resultclass=VsTestResult)
+        if _IS_OLD_UNITTEST:
+            def _makeResult(self):
+                return VsTestResult(self.stream, self.descriptions, self.verbosity)
+
+            unittest.TextTestRunner._makeResult = _makeResult
+
+            runner = unittest.TextTestRunner(verbosity=0)
+        else:
+            runner = unittest.TextTestRunner(verbosity=0, resultclass=VsTestResult)
         
         result = runner.run(unittest.defaultTestLoader.suiteClass(tests))
 
