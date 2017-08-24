@@ -140,6 +140,7 @@
     <Compile Include="Projects\PythonProject.cs" />
     <Compile Include="PythonAnalyzer.Specializations.cs" />
     <Compile Include="PythonKeywords.cs" />
+    <Compile Include="QualifiedFunctionNameWalker.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

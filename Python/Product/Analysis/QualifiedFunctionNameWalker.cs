@@ -19,8 +19,8 @@ using System.Text;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Debugger {
-    class QualifiedFunctionNameWalker : PythonWalker {
+namespace Microsoft.PythonTools.Analysis {
+    public class QualifiedFunctionNameWalker : PythonWalker {
         private readonly PythonAst _ast;
         private readonly int _lineNumber;
         private readonly StringBuilder _name = new StringBuilder();
