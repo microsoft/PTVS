@@ -10,6 +10,10 @@
   "use_azure": "y",
   "open_source_license": [ "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" ],
   "port": 5000,
+  "from_src_is_new_item": "",
+  "from_src_is_new_project": "",
+  "from_src_is_from_project_wizard": "",
+  "from_src_project_name": "",
   "_copy_without_render": [
     "media/*"
   ],
@@ -47,6 +51,22 @@
       "label": "Port",
       "selector": "string",
       "url": "/bad/url"
+    },
+    "from_src_is_new_item": {
+      "visible": false,
+      "value_source": "IsNewItem"
+    },
+    "from_src_is_new_project": {
+      "visible": false,
+      "value_source": "IsNewProject"
+    },
+    "from_src_is_from_project_wizard": {
+      "visible": false,
+      "value_source": "IsFromProjectWizard"
+    },
+    "from_src_project_name": {
+      "visible": false,
+      "value_source": "ProjectName"
     }
   }
 }

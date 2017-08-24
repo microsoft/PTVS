@@ -19,7 +19,7 @@ namespace Microsoft.CookiecutterTools {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -407,6 +407,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to WARNING: The template item &apos;{0}&apos; has an unsupported value_source &apos;{1}&apos;..
+        /// </summary>
+        public static string LoadTemplateValueSourceNotSupportedWarning {
+            get {
+                return ResourceManager.GetString("LoadTemplateValueSourceNotSupportedWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Some external dependencies are missing. Click the links to install them..
         /// </summary>
         public static string MissingDependenciesInfoBarMessage {
@@ -470,6 +479,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add to Solution.
+        /// </summary>
+        public static string OptionsPage_AddToSolution {
+            get {
+                return ResourceManager.GetString("OptionsPage_AddToSolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string OptionsPage_Cancel {
@@ -484,6 +502,24 @@ namespace Microsoft.CookiecutterTools {
         public static string OptionsPage_Create {
             get {
                 return ResourceManager.GetString("OptionsPage_Create", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create and Open Folder.
+        /// </summary>
+        public static string OptionsPage_CreateAndOpenFolder {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreateAndOpenFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create and Open Project.
+        /// </summary>
+        public static string OptionsPage_CreateAndOpenProject {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreateAndOpenProject", resourceCulture);
             }
         }
         
@@ -763,15 +799,6 @@ namespace Microsoft.CookiecutterTools {
         public static string SearchPage_ErrorLoadingTemplate {
             get {
                 return ResourceManager.GetString("SearchPage_ErrorLoadingTemplate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Files created successfully..
-        /// </summary>
-        public static string SearchPage_FilesCreatedSuccessfully {
-            get {
-                return ResourceManager.GetString("SearchPage_FilesCreatedSuccessfully", resourceCulture);
             }
         }
         

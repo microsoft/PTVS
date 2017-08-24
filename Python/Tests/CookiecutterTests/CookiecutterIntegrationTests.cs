@@ -74,7 +74,7 @@ namespace CookiecutterTests {
                 new ContextItemViewModel("pypi_username", Selectors.String, null, null, null, "{{ cookiecutter.github_username }}"),
                 new ContextItemViewModel("version", Selectors.String, null, null, null, "0.1.0"),
                 new ContextItemViewModel("use_azure", Selectors.String, null, null, null, "y"),
-                new ContextItemViewModel("open_source_license", Selectors.List, null, null, null, "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
+                new ContextItemViewModel("open_source_license", Selectors.List, null, null, null, "BSD license", items: new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
                 new ContextItemViewModel("port", Selectors.String, null, null, null, "5000"),
                 // Note that _copy_without_render item should not appear
         };
@@ -274,7 +274,6 @@ namespace CookiecutterTests {
             var targetPath = _vm.OutputFolderPath;
             try {
                 await _vm.CreateFilesAsync();
-                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
             }
@@ -294,7 +293,6 @@ namespace CookiecutterTests {
             var targetPath = _vm.OutputFolderPath;
             try {
                 await _vm.CreateFilesAsync();
-                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
             }
@@ -316,7 +314,6 @@ namespace CookiecutterTests {
             var targetPath = _vm.OutputFolderPath;
             try {
                 await _vm.CreateFilesAsync();
-                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
             }
@@ -437,8 +434,7 @@ namespace CookiecutterTests {
 
             await _vm.CreateFilesAsync();
 
-            // Succeeded message doesn't appear for add to project
-            Assert.AreEqual(OperationStatus.NotStarted, _vm.CreatingStatus);
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
 
             // Check that we're calling the project system to add the files we generated
             Assert.AreEqual(1, _projectSystemClient.Added.Count);
@@ -477,7 +473,6 @@ namespace CookiecutterTests {
                 await _vm.CreateFilesAsync();
 
                 Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
-                Assert.AreEqual(targetPath, _vm.OpenInExplorerFolderPath);
 
                 Assert.IsTrue(Directory.Exists(Path.Combine(targetPath, "static_files")));
                 Assert.IsTrue(Directory.Exists(Path.Combine(targetPath, "post-deployment")));
@@ -501,8 +496,6 @@ namespace CookiecutterTests {
                 Assert.IsTrue(log.Contains(PII(template.RepositoryName)));
                 Assert.IsTrue(log.Contains(PII(template.RepositoryOwner)));
 
-                Assert.AreEqual(null, _openedFolder);
-                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
                 Assert.AreEqual(targetPath, _openedFolder);
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
@@ -630,61 +623,6 @@ namespace CookiecutterTests {
                 }
 
                 return 0;
-            }
-        }
-
-        class ContextItemViewModelComparer : IComparer {
-            public int Compare(object x, object y) {
-                if (x == y) {
-                    return 0;
-                }
-
-                var a = x as ContextItemViewModel;
-                var b = y as ContextItemViewModel;
-
-                if (a == null) {
-                    return -1;
-                }
-
-                if (b == null) {
-                    return -1;
-                }
-
-                int res;
-                res = a.Name.CompareTo(b.Name);
-                if (res != 0) {
-                    return res;
-                }
-
-                res = a.Val.CompareTo(b.Val);
-                if (res != 0) {
-                    return res;
-                }
-
-                res = a.Default.CompareTo(b.Default);
-                if (res != 0) {
-                    return res;
-                }
-
-                res = a.Selector.CompareTo(b.Selector);
-                if (res != 0) {
-                    return res;
-                }
-
-                res = SafeCompare(a.Description, b.Description);
-                if (res != 0) {
-                    return res;
-                }
-
-                return 0;
-            }
-
-            private int SafeCompare(IComparable a, IComparable b) {
-                if (a == null) {
-                    return b == null ? 0 : -1;
-                }
-
-                return a.CompareTo(b);
             }
         }
     }

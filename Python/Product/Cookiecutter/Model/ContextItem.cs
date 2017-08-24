@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+
 namespace Microsoft.CookiecutterTools.Model {
     class ContextItem {
         public ContextItem(string name, string selector, string defaultValue, string[] items = null) {
@@ -21,6 +23,7 @@ namespace Microsoft.CookiecutterTools.Model {
             Selector = selector;
             DefaultValue = defaultValue;
             Values = items ?? new string[0];
+            Visible = !name.StartsWith("_", StringComparison.InvariantCulture);
         }
 
         public string Name { get; }
@@ -30,5 +33,7 @@ namespace Microsoft.CookiecutterTools.Model {
         public string Selector { get; set; }
         public string DefaultValue { get; }
         public string[] Values { get; }
+        public bool Visible { get; set; }
+        public string ValueSource { get; set; }
     }
 }

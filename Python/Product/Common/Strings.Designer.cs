@@ -901,6 +901,36 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to These tools are an installable component for your version of Visual Studio that allow you to create projects from Cookiecutter templates..
+        /// </summary>
+        public static string CookiecutterComponentInstallInstructions {
+            get {
+                return ResourceManager.GetString("CookiecutterComponentInstallInstructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This project requires Cookiecutter template support for Visual Studio..
+        /// </summary>
+        public static string CookiecutterComponentRequired {
+            get {
+                return ResourceManager.GetString("CookiecutterComponentRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Cookiecutter template at &apos;{0}&apos; was not found.
+        ///
+        ///Please check your internet connection.
+        ///.
+        /// </summary>
+        public static string CookiecutterWizardUnresolvedTemplate {
+            get {
+                return ResourceManager.GetString("CookiecutterWizardUnresolvedTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to your current environment.
         /// </summary>
         public static string CurrentInterpreterDescription {
@@ -4472,11 +4502,11 @@ namespace Microsoft.PythonTools {
         ///#
         ///# Currently, supported options are:
         ///#   standard
-        ///#   visualstudio_ipython_repl.IPythonBackend
-        ///#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab
+        ///#   ptvsd.repl.ipython.IPythonBackend
+        ///#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab
         ///#
         ///
-        ///visualstudio_ipython_repl.IPythonBackend.
+        ///ptvsd.repl.ipython.IPythonBackend.
         /// </summary>
         public static string ReplScriptPathIPythonModeTxtContents {
             get {

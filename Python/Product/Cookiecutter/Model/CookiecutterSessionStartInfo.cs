@@ -14,25 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-
 namespace Microsoft.CookiecutterTools.Model {
-    class TemplateContext {
-        public List<ContextItem> Items { get; } = new List<ContextItem>();
-        public List<DteCommand> Commands { get; } = new List<DteCommand>();
+    class CookiecutterSessionStartInfo {
+        public ProjectLocation ExistingProjectTarget { get; }
+        public string NewProjectName { get; }
+        public string NewProjectFolderPath { get; }
+        public string TemplateUri { get; }
 
-        public TemplateContext() :
-            this(null, null) {
+        public CookiecutterSessionStartInfo(ProjectLocation existingProjectTarget) {
+            ExistingProjectTarget = existingProjectTarget;
         }
 
-        public TemplateContext(ContextItem[] items = null, DteCommand[] cmds = null) {
-            if (items != null) {
-                Items.AddRange(items);
-            }
-
-            if (cmds != null) {
-                Commands.AddRange(cmds);
-            }
+        public CookiecutterSessionStartInfo(string newProjectName, string newProjectFolderPath, string templateUri) {
+            NewProjectName = newProjectName;
+            NewProjectFolderPath = newProjectFolderPath;
+            TemplateUri = templateUri;
         }
     }
 }

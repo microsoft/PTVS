@@ -958,6 +958,18 @@ You can get more information by running Visual Studio with the /log parameter on
   <data name="Retry" xml:space="preserve">
     <value>&amp;Retry</value>
   </data>
+  <data name="CookiecutterComponentInstallInstructions" xml:space="preserve">
+    <value>These tools are an installable component for your version of Visual Studio that allow you to create projects from Cookiecutter templates.</value>
+  </data>
+  <data name="CookiecutterComponentRequired" xml:space="preserve">
+    <value>This project requires Cookiecutter template support for Visual Studio.</value>
+  </data>
+  <data name="CookiecutterWizardUnresolvedTemplate" xml:space="preserve">
+    <value>The Cookiecutter template at '{0}' was not found.
+
+Please check your internet connection.
+</value>
+  </data>
   <data name="AzureToolsInstallInstructions" xml:space="preserve">
     <value>These tools are an installable workload for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.</value>
   </data>
