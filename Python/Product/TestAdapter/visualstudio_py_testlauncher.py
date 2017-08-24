@@ -168,37 +168,13 @@ class VsTestResult(TextTestResult):
         self.sendResult(test, 'passed')
 
     def sendResult(self, test, outcome, trace = None):
-        if _IS_OLD_UNITTEST:
-            # Example unittest.__file__ : c:\python26\lib\unittest.pyc
-            unittest_path = os.path.splitext(os.path.normcase(unittest.__file__))[0] + '.py'
-            def is_framework_frame(f):
-                if os.path.normcase(f[0]) == unittest_path:
-                    return True
-                return False
-        else:
-            def is_framework_frame(f):
-                for lib_path in unittest.__path__:
-                    if os.path.normcase(f[0]).startswith(os.path.normcase(lib_path)):
-                        return True
-                return False
-
-        def get_traceback(trace):
-            all = traceback.extract_tb(trace[2])
-            filtered = [f for f in reversed(all) if not is_framework_frame(f)]
-
-            # stack trace parser needs the Python version, it parses the user's
-            # code to create fully qualified function names
-            lang_ver = '{0}.{1}'.format(sys.version_info[0], sys.version_info[1])
-            tb = ''.join(traceback.format_list(filtered))
-            return lang_ver + '\n' + tb
-
         if _channel is not None:
             tb = None
             message = None
             duration = time.time() - self._start_time if self._start_time else 0
             if trace is not None:
                 traceback.print_exception(*trace)
-                tb = get_traceback(trace)
+                tb = _get_traceback(trace)
                 message = str(trace[1])
             _channel.send_event(
                 name='result', 
@@ -208,6 +184,35 @@ class VsTestResult(TextTestResult):
                 durationInSecs = duration,
                 test = test.test_id
             )
+
+def _get_traceback(trace):
+    def norm_module(file_path):
+        return os.path.splitext(os.path.normcase(file_path))[0] + '.py'
+
+    def is_framework_frame(f):
+        return is_excluded_module_path(norm_module(f[0]))
+
+    if _IS_OLD_UNITTEST:
+        def is_excluded_module_path(file_path):
+            # unittest is a module, not a package on 2.5, 2.6, 3.0, 3.1
+            return file_path == norm_module(unittest.__file__) or file_path == norm_module(__file__)
+
+    else:
+        def is_excluded_module_path(file_path):
+            for lib_path in unittest.__path__:
+                # if it's in unit test package or it's this module
+                if file_path.startswith(os.path.normcase(lib_path)) or file_path == norm_module(__file__):
+                    return True
+            return False
+
+    all = traceback.extract_tb(trace[2])
+    filtered = [f for f in reversed(all) if not is_framework_frame(f)]
+
+    # stack trace parser needs the Python version, it parses the user's
+    # code to create fully qualified function names
+    lang_ver = '{0}.{1}'.format(sys.version_info[0], sys.version_info[1])
+    tb = ''.join(traceback.format_list(filtered))
+    return lang_ver + '\n' + tb
 
 def main():
     import os
@@ -309,12 +314,11 @@ def main():
                     loaded_test.test_id = test
                     tests.append(loaded_test)
             except Exception as err:
-                traceback.print_exc()
-                formatted = traceback.format_exc().splitlines()
-                # Remove the 'Traceback (most recent call last)'
-                formatted = formatted[1:]
-                tb = '\n'.join(formatted)
-                message = str(err)
+                trace = sys.exc_info()
+
+                traceback.print_exception(*trace)
+                tb = _get_traceback(trace)
+                message = str(trace[1])
 
                 if _channel is not None:
                     _channel.send_event(

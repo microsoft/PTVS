@@ -35,11 +35,12 @@ namespace TestAdapterTests {
         public int SourceCodeLineNumber { get; private set; }
         public TestOutcome Outcome { get; private set; }
         public TimeSpan MinDuration { get; private set; }
+        public string ContainedErrorMessage { get; private set; }
 
         private TestInfo() {
         }
 
-        public static TestInfo FromRelativePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, TimeSpan? minDuration = null) {
+        public static TestInfo FromRelativePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, TimeSpan? minDuration = null, string containedErrorMessage = null) {
             return FromAbsolutePaths(className,
                 methodName,
                 TestData.GetPath(projectFilePath),
@@ -47,10 +48,11 @@ namespace TestAdapterTests {
                 sourceCodeLineNumber,
                 outcome,
                 classFilePath != null ? TestData.GetPath(classFilePath) : null,
-                minDuration);
+                minDuration,
+                containedErrorMessage);
         }
 
-        public static TestInfo FromAbsolutePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, TimeSpan? minDuration = null) {
+        public static TestInfo FromAbsolutePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, TimeSpan? minDuration = null, string containedErrorMessage = null) {
             TestInfo ti = new TestInfo();
             ti.ClassName = className;
             ti.MethodName = methodName;
@@ -61,6 +63,7 @@ namespace TestAdapterTests {
             ti.ClassFilePath = classFilePath ?? sourceCodeFilePath;
             ti.RelativeClassFilePath = CommonUtils.GetRelativeFilePath(Path.GetDirectoryName(ti.ProjectFilePath), ti.ClassFilePath);
             ti.MinDuration = minDuration ?? TimeSpan.Zero;
+            ti.ContainedErrorMessage = containedErrorMessage;
             return ti;
         }
 
@@ -140,11 +143,17 @@ namespace TestAdapterTests {
             }
         }
 
-        private static TestInfo GetLoadErrorImportError(string projectName) => TestInfo.FromRelativePaths("ImportErrorTests", "test_import_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestImportError.py", 5, TestOutcome.Failed);
-        private static TestInfo GetLoadErrorNoError(string projectName) => TestInfo.FromRelativePaths("NoErrorTests", "test_no_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestNoError.py", 4, TestOutcome.Passed);
+        private static TestInfo GetLoadErrorImportError(string projectName, string importErrorFormat)
+            => TestInfo.FromRelativePaths("ImportErrorTests", "test_import_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestImportError.py", 5, TestOutcome.Failed, containedErrorMessage: string.Format(importErrorFormat, "boooo"));
 
-        public static TestInfo[] GetTestAdapterLoadErrorTests(string projectName) {
-            return new[] { GetLoadErrorImportError(projectName), GetLoadErrorNoError(projectName) };
+        private static TestInfo GetLoadErrorNoError(string projectName)
+            => TestInfo.FromRelativePaths("NoErrorTests", "test_no_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestNoError.py", 4, TestOutcome.Passed);
+
+        public static TestInfo[] GetTestAdapterLoadErrorTests(string projectName, string importErrorFormat) {
+            return new[] {
+                GetLoadErrorImportError(projectName, importErrorFormat),
+                GetLoadErrorNoError(projectName)
+            };
         }
 
         public static string TestAdapterEnvironmentProject = TestData.GetPath(@"TestData\TestAdapterTests\EnvironmentTest.pyproj");

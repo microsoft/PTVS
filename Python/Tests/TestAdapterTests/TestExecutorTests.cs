@@ -327,7 +327,7 @@ namespace TestAdapterTests {
         public void TestLoadError27() {
             PythonPaths.Python27_x64.AssertInstalled();
 
-            TestLoadError("LoadErrorTest27");
+            TestLoadError("LoadErrorTest27", "No module named {0}");
         }
 
         [TestMethod, Priority(1)]
@@ -335,7 +335,7 @@ namespace TestAdapterTests {
         public void TestLoadError34() {
             PythonPaths.Python34_x64.AssertInstalled();
 
-            TestLoadError("LoadErrorTest34");
+            TestLoadError("LoadErrorTest34", "No module named '{0}'");
         }
 
         [TestMethod, Priority(1)]
@@ -345,7 +345,7 @@ namespace TestAdapterTests {
             // so it's important to test 3.4 and 3.5
             PythonPaths.Python35_x64.AssertInstalled();
 
-            TestLoadError("LoadErrorTest35");
+            TestLoadError("LoadErrorTest35", "No module named '{0}'");
         }
 
         [TestMethod, Priority(1)]
@@ -433,14 +433,14 @@ namespace TestAdapterTests {
             }
         }
 
-        private static void TestLoadError(string projectName) {
+        private static void TestLoadError(string projectName, string importErrorFormat) {
             // A load error is when unittest module fails to load the test (prior to running it)
             // For example, if the file where the test is defined has an unhandled ImportError.
             // We check that this only causes the tests that can't be loaded to fail,
             // all other tests in the test run which can be loaded successfully will be run.
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.GetTestAdapterLoadErrorTests(projectName);
+            var expectedTests = TestInfo.GetTestAdapterLoadErrorTests(projectName, importErrorFormat);
             var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
@@ -452,6 +452,16 @@ namespace TestAdapterTests {
                 AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+
+                if (expectedResult.ContainedErrorMessage != null) {
+                    Assert.IsNotNull(actualResult.ErrorMessage);
+                    Assert.IsTrue(
+                        actualResult.ErrorMessage.Contains(expectedResult.ContainedErrorMessage),
+                        string.Format("Error message did not contain expected text: {0}", expectedResult.ContainedErrorMessage)
+                    );
+                } else {
+                    Assert.IsNull(actualResult.ErrorMessage);
+                }
             }
         }
 
