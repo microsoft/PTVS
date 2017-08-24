@@ -90,6 +90,7 @@ namespace PythonToolsMockTests {
                     view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "",
                     v => {
                         v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
+                        v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
                         v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
                         v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
                     },
@@ -101,7 +102,7 @@ namespace PythonToolsMockTests {
                         entry = analyzer.GetAnalysisEntryFromPath(filename);
                     }
 
-                    if (!cancel.IsCancellationRequested && !entry.IsAnalyzed) {
+                    if (!string.IsNullOrEmpty(content) && !cancel.IsCancellationRequested && !entry.IsAnalyzed) {
                         EventHandler evt = (s, e) => mre.SetIfNotDisposed();
 
                         try {

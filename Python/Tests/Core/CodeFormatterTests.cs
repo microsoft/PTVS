@@ -181,6 +181,7 @@ class Oar(object):
                 var view = new MockTextView(buffer);
                 var bi = services.GetBufferInfo(buffer);
                 var entry = analyzer.AnalyzeFileAsync(bi.Filename).WaitAndUnwrapExceptions();
+                Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null), "Failed to set analysis entry");
                 entry.GetOrCreateBufferParser(services).AddBuffer(buffer);
 
                 var selectionSpan = new SnapshotSpan(
