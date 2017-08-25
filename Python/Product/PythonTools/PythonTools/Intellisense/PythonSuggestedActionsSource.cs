@@ -27,10 +27,9 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
-    class PythonSuggestedActionsSource : ISuggestedActionsSource {
+    class PythonSuggestedActionsSource : ISuggestedActionsSource, IPythonTextBufferInfoEventSink {
         internal readonly PythonEditorServices _services;
         internal readonly ITextView _view;
-        private readonly PythonTextBufferInfo _textBuffer;
 
         private readonly object _currentLock = new object();
         private IEnumerable<SuggestedActionSet> _current;
@@ -46,13 +45,8 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             _services = services;
             _view = textView;
-            _textBuffer = _services.GetBufferInfo(textBuffer);
-            _textBuffer.OnNewAnalysisEntry += OnNewAnalysisEntry;
+            _services.GetBufferInfo(textBuffer).AddSink(typeof(PythonSuggestedActionsSource), this);
             _uiThread = _services.Site.GetUIThread();
-        }
-
-        private void OnNewAnalysisEntry(object sender, EventArgs e) {
-            SuggestedActionsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler<EventArgs> SuggestedActionsChanged;
@@ -119,6 +113,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public bool TryGetTelemetryId(out Guid telemetryId) {
             telemetryId = _telemetryId;
             return false;
+        }
+
+        Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
+                SuggestedActionsChanged?.Invoke(this, EventArgs.Empty);
+            }
+            return Task.CompletedTask;
         }
     }
 }

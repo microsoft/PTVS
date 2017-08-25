@@ -764,12 +764,12 @@ namespace Microsoft.PythonTools.Language {
                         }
                         break;
                     case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                        _textView.GetOutliningTagger()?.Disable();
+                        _textView.GetOutliningTagger()?.Disable(_textView.TextSnapshot);
                         // let VS get the event as well
                         break;
 
                     case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                        _textView.GetOutliningTagger()?.Enable();
+                        _textView.GetOutliningTagger()?.Enable(_textView.TextSnapshot);
                         // let VS get the event as well
                         break;
                     case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:

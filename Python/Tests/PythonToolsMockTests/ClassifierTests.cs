@@ -257,8 +257,7 @@ def f() -> int:
                 AnalysisClassifier.ClassificationChanged += (s, e) => {
                     try {
                         var bi = PythonTextBufferInfo.TryGetForBuffer(_view.View.TextView.TextBuffer);
-                        Assert.IsNotNull(bi, "Expected non-null buffer info");
-                        if (bi.LastAnalysisReceivedVersion == null) {
+                        if (bi?.LastAnalysisReceivedVersion == null) {
                             return;
                         }
                         // make sure we have classifications from the version we analyzed after
