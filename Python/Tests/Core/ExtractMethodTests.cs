@@ -1708,6 +1708,7 @@ async def f():
 
                 var bi = services.GetBufferInfo(buffer);
                 var entry = analyzer.AnalyzeFileAsync(bi.Filename).WaitAndUnwrapExceptions();
+                Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null));
                 entry.GetOrCreateBufferParser(services).AddBuffer(buffer);
 
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);

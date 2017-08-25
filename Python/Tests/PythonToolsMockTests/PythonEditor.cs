@@ -88,13 +88,13 @@ namespace PythonToolsMockTests {
                 var cancel = CancellationTokens.After60s;
                 using (var mre = new ManualResetEventSlim()) {
                     view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "",
-                    v => {
-                        v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
-                        v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
-                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
-                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
-                    },
-                    filename);
+                        v => {
+                            v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
+                            v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
+                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
+                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
+                        },
+                        filename);
 
                     var entry = analyzer.GetAnalysisEntryFromPath(filename);
                     while (entry == null && !cancel.IsCancellationRequested) {
@@ -116,6 +116,7 @@ namespace PythonToolsMockTests {
                     if (cancel.IsCancellationRequested) {
                         Assert.Fail("Timed out waiting for code analysis");
                     }
+
                     vs.ThrowPendingException();
                 }
 
@@ -151,6 +152,16 @@ namespace PythonToolsMockTests {
             set {
                 var buffer = View.TextView.TextBuffer;
                 var bi = PythonTextBufferInfo.TryGetForBuffer(buffer);
+
+                if (bi?.AnalysisEntry == null) {
+                    // No analysis yet, so just set the text.
+                    using (var edit = View.TextView.TextBuffer.CreateEdit()) {
+                        edit.Delete(0, edit.Snapshot.Length);
+                        edit.Insert(0, value);
+                        edit.Apply();
+                    }
+                    return;
+                }
 
                 using (var edit = buffer.CreateEdit()) {
                     edit.Delete(0, edit.Snapshot.Length);
