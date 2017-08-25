@@ -532,7 +532,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                         DebugInfo("set " + pythonPath.Key + "=" + pythonPath.Value);
                         DebugInfo(proc.Arguments);
 
-                        _connected.WaitOne();
+                        // If there's an error in the launcher script,
+                        // it will terminate without connecting back.
+                        while (!_connected.WaitOne(1000) && !proc.ExitCode.HasValue) {
+                        }
+
                         if (proc.ExitCode.HasValue) {
                             // Process has already exited
                             proc.Wait();
@@ -542,9 +546,19 @@ namespace Microsoft.PythonTools.TestAdapter {
                                     Error(line);
                                 }
                             }
+
+                            foreach (var test in GetTestCases()) {
+                                _frameworkHandle.RecordStart(test.Value);
+                                _frameworkHandle.RecordResult(new TestResult(test.Value) {
+                                    Outcome = TestOutcome.Skipped,
+                                    ErrorMessage = Strings.Test_NotRun
+                                });
+                            }
+
+                            killed = true;
                         }
 
-                        if (_debugMode != PythonDebugMode.None) {
+                        if (!killed && _debugMode != PythonDebugMode.None) {
                             try {
                                 if (_debugMode == PythonDebugMode.PythonOnly) {
                                     string qualifierUri = string.Format("tcp://{0}@localhost:{1}", _debugSecret, _debugPort);

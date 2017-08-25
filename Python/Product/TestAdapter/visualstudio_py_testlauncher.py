@@ -313,7 +313,7 @@ def main():
                     # VsTestResult will use that instead of test.id().
                     loaded_test.test_id = test
                     tests.append(loaded_test)
-            except Exception as err:
+            except Exception:
                 trace = sys.exc_info()
 
                 traceback.print_exception(*trace)
