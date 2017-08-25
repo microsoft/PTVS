@@ -300,8 +300,11 @@ namespace Microsoft.PythonTools.Intellisense {
             var updates = snapshots
                 .GroupBy(s => PythonTextBufferInfo.TryGetForBuffer(s.TextBuffer)?.AnalysisEntry.FileId ?? -1)
                 .Where(g => g.Key >= 0)
-                .Select(g => Tuple.Create(g.Key, g.Select(s => GetUpdateForSnapshot(services, s)).ToArray()))
-                .Where(u => u != null).ToList();
+                .Select(g => Tuple.Create(
+                    g.Key,
+                    g.Select(s => GetUpdateForSnapshot(services, s)).Where(u => u != null).ToArray()
+                ))
+                .ToList();
 
             if (!updates.Any()) {
                 return;
