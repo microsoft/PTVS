@@ -190,7 +190,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 entry = await vsAnalyzer.AnalyzeFileAsync(bi.Filename, null, isTemporaryFile, suppressErrorList);
 
                 if (entry == null) {
-                    throw new InvalidOperationException("Failed to create entry for buffer");
+                    return;
                 }
 
                 entry = bi.TrySetAnalysisEntry(entry, null);

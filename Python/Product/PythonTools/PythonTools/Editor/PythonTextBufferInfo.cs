@@ -33,7 +33,7 @@ using Microsoft.VisualStudio.Utilities;
 namespace Microsoft.PythonTools.Editor {
     sealed class PythonTextBufferInfo {
         public static PythonTextBufferInfo ForBuffer(PythonEditorServices services, ITextBuffer buffer) {
-            var bi = buffer.Properties.GetOrCreateSingletonProperty(
+            var bi = (buffer ?? throw new ArgumentNullException(nameof(buffer))).Properties.GetOrCreateSingletonProperty(
                 typeof(PythonTextBufferInfo),
                 () => new PythonTextBufferInfo(services, buffer)
             );
@@ -74,16 +74,6 @@ namespace Microsoft.PythonTools.Editor {
             return view.BufferGraph.GetTextBuffers(_ => true)
                 .Select(b => TryGetForBuffer(b))
                 .Where(b => b != null);
-        }
-
-        public static bool TryDisconnect(object owner, ITextBuffer buffer) {
-            PythonTextBufferInfo bi;
-            if (buffer.Properties.TryGetProperty(typeof(PythonTextBufferInfo), out bi)) {
-                buffer.Properties.RemoveProperty(typeof(PythonTextBufferInfo));
-                //bi?.Disconnect(owner);
-                return true;
-            }
-            return false;
         }
 
         private readonly object _lock = new object();
@@ -323,32 +313,6 @@ namespace Microsoft.PythonTools.Editor {
             LastAnalysisReceivedVersion = ver;
             return true;
         }
-
-        //public Task<AnalysisEntry> WaitForAnalysisEntryAsync(CancellationToken cancellationToken) {
-        //    // Return our current entry if we have one
-        //    var entry = AnalysisEntry;
-        //    if (entry != null) {
-        //        return Task.FromResult(entry);
-        //    }
-
-        //    var tcs = new TaskCompletionSource<AnalysisEntry>();
-        //    if (cancellationToken.CanBeCanceled) {
-        //        cancellationToken.Register(() => tcs.TrySetCanceled());
-        //    }
-
-        //    EventHandler handler = null;
-        //    handler = (s, e) => {
-        //        cancellationToken.ThrowIfCancellationRequested();
-        //        var bi = (PythonTextBufferInfo)s;
-        //        var result = bi.AnalysisEntry;
-        //        if (result != null) {
-        //            bi.OnNewAnalysisEntry -= handler;
-        //            tcs.TrySetResult(result);
-        //        }
-        //    };
-
-        //    return tcs.Task;
-        //}
 
         public bool DoNotParse {
             get => Buffer.Properties.ContainsProperty(BufferParser.DoNotParse);

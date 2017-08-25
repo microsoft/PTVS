@@ -900,7 +900,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (string.IsNullOrEmpty(path)) {
-                return null;
+                throw new ArgumentNullException(nameof(path));
             }
 
             AnalysisEntry entry;
@@ -920,7 +920,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (response == null || response.fileId == -1) {
                 Interlocked.Decrement(ref _parsePending);
-                return null;
+                // TODO: Get SendRequestAsync to return more useful information
+                throw new InvalidOperationException("Failed to create entry for file");
             }
 
             // we awaited between the check and the AddFileRequest, another add could
