@@ -9,7 +9,6 @@
     <OutputPath>.</OutputPath>
     <Name>StackTraceTest</Name>
     <RootNamespace>StackTraceTest</RootNamespace>
-    <InterpreterId>Global|PythonCore|2.7</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
