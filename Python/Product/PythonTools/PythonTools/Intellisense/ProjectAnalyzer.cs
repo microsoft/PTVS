@@ -707,6 +707,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var oldFiles = oldFileAndEntry.Select(kv => kv.Key);
             var oldEntries = oldFileAndEntry.Select(kv => kv.Value);
 
+            var oldReferences = oldAnalyzer.GetReferences();
+
             var oldBuffers = oldEntries.ToDictionary(e => e.Path, e => e.TryGetBufferParser()?.AllBuffers);
 
             foreach (var file in oldEntries) {
@@ -717,6 +719,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 .Where(e => !e.IsTemporaryFile && !e.SuppressErrorList)
                 .Select(e => e.Path)
                 .ToArray();
+
+            foreach (var reference in oldReferences) {
+                await AddReferenceAsync(reference);
+            }
 
             var entries = (await AnalyzeFileAsync(oldBulkEntries)).ToList();
             foreach (var e in oldEntries) {

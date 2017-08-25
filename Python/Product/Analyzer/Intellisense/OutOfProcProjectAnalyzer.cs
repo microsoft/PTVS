@@ -1934,22 +1934,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            var pyItem = item as IPythonProjectEntry;
-            if (pyItem == null) {
-                return;
-            }
-
             // Send a notification for this file before starting analysis
             // An AnalyzeFile event will send the same details in its
             // response.
             await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                fileId = fileId >= 0 ? fileId : ProjectEntryMap.GetId(pyItem),
-                filename = pyItem.FilePath,
+                fileId = fileId >= 0 ? fileId : ProjectEntryMap.GetId(item),
+                filename = item.FilePath,
                 isTemporaryFile = isTemporaryFile,
                 suppressErrorList = suppressErrorList
             });
 
-            EnqueueFile(item, pyItem.FilePath);
+            EnqueueFile(item, item.FilePath);
         }
 
         private async void OnNewAnalysis(object sender, EventArgs e) {
