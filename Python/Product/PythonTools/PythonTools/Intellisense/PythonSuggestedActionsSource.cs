@@ -21,7 +21,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
@@ -29,7 +32,6 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.Intellisense {
     class PythonSuggestedActionsSource : ISuggestedActionsSource, IPythonTextBufferInfoEventSink {
         internal readonly PythonEditorServices _services;
-        internal readonly ITextView _view;
 
         private readonly object _currentLock = new object();
         private IEnumerable<SuggestedActionSet> _current;
@@ -38,14 +40,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static readonly Guid _telemetryId = new Guid("{9D2182D9-27BC-4143-9A93-B7D9C015D01B}");
 
-        public PythonSuggestedActionsSource(
-            PythonEditorServices services,
-            ITextView textView,
-            ITextBuffer textBuffer
-        ) {
+        public PythonSuggestedActionsSource(PythonEditorServices services) {
             _services = services;
-            _view = textView;
-            _services.GetBufferInfo(textBuffer).AddSink(typeof(PythonSuggestedActionsSource), this);
             _uiThread = _services.Site.GetUIThread();
         }
 
@@ -63,43 +59,53 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-            var pos = _view.Caret.Position.BufferPosition;
-            if (pos.Position < pos.GetContainingLine().End.Position) {
-                pos += 1;
-            }
-            var targetPoint = _view.BufferGraph.MapDownToFirstMatch(pos, PointTrackingMode.Positive, EditorExtensions.IsPythonContent, PositionAffinity.Successor);
-            if (targetPoint == null) {
+            var textBuffer = range.Snapshot.TextBuffer;
+            var bi = _services.GetBufferInfo(textBuffer);
+            var entry = bi.AnalysisEntry;
+            if (entry == null) {
                 return false;
             }
-            var textBuffer = targetPoint.Value.Snapshot.TextBuffer;
-            var lineStart = targetPoint.Value.GetContainingLine().Start;
 
-            var span = targetPoint.Value.Snapshot.CreateTrackingSpan(
-                lineStart,
-                targetPoint.Value.Position - lineStart.Position,
-                SpanTrackingMode.EdgePositive,
-                TrackingFidelityMode.Forward
-            );
-            var imports = await _uiThread.InvokeTask(() => VsProjectAnalyzer.GetMissingImportsAsync(_services.Site, _view, textBuffer.CurrentSnapshot, span));
+            var needSuggestion = new List<SnapshotSpan>();
 
-            if (imports == MissingImportAnalysis.Empty) {
+            var tokens = textBuffer.GetPythonClassifier()?.GetClassificationSpans(range);
+            foreach (var t in tokens.MaybeEnumerate()) {
+                if (t.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                    var isMissing = await entry.Analyzer.IsMissingImportAsync(
+                        entry,
+                        t.Span.GetText(),
+                        bi.GetSourceLocation(t.Span.Start)
+                    );
+
+                    if (isMissing) {
+                        needSuggestion.Add(t.Span);
+                    }
+                }
+            }
+
+            if (!needSuggestion.Any()) {
                 return false;
             }
+
 
             var suggestions = new List<SuggestedActionSet>();
-            var availableImports = await imports.GetAvailableImportsAsync(cancellationToken);
 
-            suggestions.Add(new SuggestedActionSet(
-                availableImports.Select(s => new PythonSuggestedImportAction(this, textBuffer, s))
+            foreach (var span in needSuggestion) {
+                var available = await entry.Analyzer.FindNameInAllModulesAsync(span.GetText());
+                var actions = available.Select(s => new PythonSuggestedImportAction(this, textBuffer, s))
                     .OrderBy(k => k)
                     .Distinct()
-            ));
+                    .ToArray();
+                if (actions.Any()) {
+                    suggestions.Add(new SuggestedActionSet(actions));
+                }
+            }
 
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (!suggestions.SelectMany(s => s.Actions).Any()) {
+            if (!suggestions.Any()) {
                 return false;
             }
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             lock (_currentLock) {
                 cancellationToken.ThrowIfCancellationRequested();

@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -96,6 +97,9 @@ namespace Microsoft.PythonTools.Editor {
 
         [Import]
         public ICompletionBroker CompletionBroker = null;
+
+        [Import]
+        public IEditorOptionsFactoryService EditorOptionsFactoryService = null;
 
         [Import]
         public IEditorOperationsFactoryService EditOperationsFactory = null;

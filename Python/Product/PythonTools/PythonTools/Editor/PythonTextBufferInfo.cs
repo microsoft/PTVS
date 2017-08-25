@@ -82,6 +82,7 @@ namespace Microsoft.PythonTools.Editor {
         private AnalysisEntry _analysisEntry;
 
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
+
         private readonly Lazy<string> _filename;
 
         private bool _replace;
@@ -313,6 +314,16 @@ namespace Microsoft.PythonTools.Editor {
             LastAnalysisReceivedVersion = ver;
             return true;
         }
+
+        public SourceLocation GetSourceLocation(SnapshotPoint start) {
+            // TODO: Translate to the last received analysis?
+            return new SourceLocation(
+                start.Position,
+                start.GetContainingLine().LineNumber + 1,
+                start.Position - start.GetContainingLine().Start.Position + 1
+            );
+        }
+
 
         public bool DoNotParse {
             get => Buffer.Properties.ContainsProperty(BufferParser.DoNotParse);

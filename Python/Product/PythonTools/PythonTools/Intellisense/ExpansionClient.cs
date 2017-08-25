@@ -263,13 +263,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
 
                 if (isMissing) {
-                    VsProjectAnalyzer.AddImport(
-                        entry,
-                        null,
-                        import,
-                        _textView,
-                        _textView.TextBuffer
-                    );
+                    VsProjectAnalyzer.AddImport(_textView.TextBuffer, null, import);
                 }
             }
         }

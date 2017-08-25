@@ -113,17 +113,11 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
             AnalysisEntry entry;
-            if (!_source._services.AnalysisEntryService.TryGetAnalysisEntry(_source._view, _buffer, out entry)) {
+            if (!_source._services.AnalysisEntryService.TryGetAnalysisEntry(null, _buffer, out entry)) {
                 return;
             }
 
-            VsProjectAnalyzer.AddImport(
-                entry,
-                _fromModule,
-                _name,
-                _source._view,
-                _buffer
-            );
+            VsProjectAnalyzer.AddImport(_buffer, _fromModule, _name);
         }
 
         public bool TryGetTelemetryId(out Guid telemetryId) {
