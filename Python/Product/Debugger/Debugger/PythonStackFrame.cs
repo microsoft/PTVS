@@ -194,22 +194,6 @@ namespace Microsoft.PythonTools.Debugger {
             return GetQualifiedFunctionName(_thread.Process, FileName, LineNo, FunctionName);
         }
 
-        /// <summary>
-        /// Computes the fully qualified function name, including name of the enclosing class for methods,
-        /// and, recursively, names of any outer functions.
-        /// </summary>
-        /// <example>
-        /// Given this code:
-        /// <code>
-        /// class A:
-        ///   def b(self):
-        ///     def c():
-        ///       class D:
-        ///         def e(self):
-        ///           pass
-        /// </code>
-        /// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
-        /// </example>
         public static string GetQualifiedFunctionName(PythonProcess process, string filename, int lineNo, string functionName) {
             var ast = process.GetAst(filename);
             if (ast == null) {

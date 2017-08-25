@@ -69,23 +69,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        /// <summary>
-        /// Computes the fully qualified function name, including name of the enclosing class for methods,
-        /// and, recursively, names of any outer functions.
-        /// </summary>
-        /// <example>
-        /// Given this code:
-        /// <code>
-        /// class A:
-        ///   def b(self):
-        ///     def c():
-        ///       class D:
-        ///         def e(self):
-        ///           pass
-        /// </code>
-        /// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
-        /// </example>
-        public static string GetQualifiedFunctionName(string filename, int lineNo, string functionName, PythonLanguageVersion version) {
+        private static string GetQualifiedFunctionName(string filename, int lineNo, string functionName, PythonLanguageVersion version) {
             PythonAst ast = null;
             try {
                 using (var source = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
