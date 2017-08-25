@@ -113,7 +113,9 @@ namespace TestUtilities.Python {
         private static PythonEditorServices CreatePythonEditorServices(IServiceContainer site, MockComponentModel model) {
             var services = new PythonEditorServices(site);
 
-            //services.ComponentModel.DefaultCompositionService.SatisfyImportsOnce(services);
+            // We don't have a full composition service availabe, to this code emulates
+            // ComponentModel.DefaultCompositionService.SatisfyImportsOnce(services)
+            // *just* enough for PythonEditorServices.
             foreach (var field in services.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
                 if (!field.GetCustomAttributes().OfType<ImportAttribute>().Any()) {
                     continue;
