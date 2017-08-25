@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
@@ -87,12 +88,13 @@ namespace PythonToolsMockTests {
                 var cancel = CancellationTokens.After60s;
                 using (var mre = new ManualResetEventSlim()) {
                     view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "",
-                    v => {
-                        v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
-                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
-                        v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
-                    },
-                    filename);
+                        v => {
+                            v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
+                            v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
+                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
+                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
+                        },
+                        filename);
 
                     var entry = analyzer.GetAnalysisEntryFromPath(filename);
                     while (entry == null && !cancel.IsCancellationRequested) {
@@ -100,7 +102,7 @@ namespace PythonToolsMockTests {
                         entry = analyzer.GetAnalysisEntryFromPath(filename);
                     }
 
-                    if (!cancel.IsCancellationRequested && !entry.IsAnalyzed) {
+                    if (!string.IsNullOrEmpty(content) && !cancel.IsCancellationRequested && !entry.IsAnalyzed) {
                         EventHandler evt = (s, e) => mre.SetIfNotDisposed();
 
                         try {
@@ -114,6 +116,7 @@ namespace PythonToolsMockTests {
                     if (cancel.IsCancellationRequested) {
                         Assert.Fail("Timed out waiting for code analysis");
                     }
+
                     vs.ThrowPendingException();
                 }
 
@@ -149,6 +152,16 @@ namespace PythonToolsMockTests {
             set {
                 var buffer = View.TextView.TextBuffer;
                 var bi = PythonTextBufferInfo.TryGetForBuffer(buffer);
+
+                if (bi?.AnalysisEntry == null) {
+                    // No analysis yet, so just set the text.
+                    using (var edit = View.TextView.TextBuffer.CreateEdit()) {
+                        edit.Delete(0, edit.Snapshot.Length);
+                        edit.Insert(0, value);
+                        edit.Apply();
+                    }
+                    return;
+                }
 
                 using (var edit = buffer.CreateEdit()) {
                     edit.Delete(0, edit.Snapshot.Length);
@@ -191,6 +204,47 @@ namespace PythonToolsMockTests {
 
         public ITextSnapshot CurrentSnapshot {
             get { return View.TextView.TextSnapshot; }
+        }
+
+        public WaitHandle AnalysisCompleteEvent {
+            get {
+                var evt = new AnalysisCompleteManualResetEvent(BufferInfo);
+                BufferInfo.AddSink(evt, evt);
+                return evt;
+            }
+        }
+
+        class AnalysisCompleteManualResetEvent : WaitHandle, IPythonTextBufferInfoEventSink {
+            private readonly ManualResetEvent _event;
+            private readonly PythonTextBufferInfo _info;
+
+            public AnalysisCompleteManualResetEvent(PythonTextBufferInfo info) {
+                _event = new ManualResetEvent(false);
+                _info = info;
+                SafeWaitHandle = _event.SafeWaitHandle;
+            }
+
+            protected override void Dispose(bool explicitDisposing) {
+                SafeWaitHandle = null;
+                base.Dispose(explicitDisposing);
+                _event.Dispose();
+                if (explicitDisposing) {
+                    _info.RemoveSink(this);
+                }
+            }
+
+            public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+                if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
+                    if (_info.LastAnalysisReceivedVersion.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
+                        try {
+                            _event.Set();
+                        } catch (ObjectDisposedException) {
+                        }
+                        _info.RemoveSink(this);
+                    }
+                }
+                return Task.CompletedTask;
+            }
         }
 
         internal PythonEditorServices EditorServices => VS.ComponentModel.GetService<PythonEditorServices>();

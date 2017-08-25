@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
@@ -50,11 +51,21 @@ namespace TestUtilities.Mocks {
             return null;
         }
 
-        public System.ComponentModel.Composition.Primitives.ComposablePartCatalog DefaultCatalog {
+        public object GetService(Type t) {
+            List<Lazy<object>> extensions;
+            if (Extensions.TryGetValue(t, out extensions)) {
+                Debug.Assert(extensions.Count == 1, "Multiple extensions were registered");
+                return extensions[0].Value;
+            }
+            Console.WriteLine("Unregistered component model service " + t.FullName);
+            return null;
+        }
+
+        public ComposablePartCatalog DefaultCatalog {
             get { throw new NotImplementedException(); }
         }
 
-        public System.ComponentModel.Composition.ICompositionService DefaultCompositionService {
+        public ICompositionService DefaultCompositionService {
             get { throw new NotImplementedException(); }
         }
 

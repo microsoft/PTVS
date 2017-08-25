@@ -1375,7 +1375,7 @@ namespace Microsoft.PythonTools.Project {
 
                 if (oldAnalyzer != null) {
                     if (analyzer != null) {
-                        analyzer.SwitchAnalyzers(oldAnalyzer);
+                        await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
                     }
                     if (oldAnalyzer.RemoveUser()) {
                         oldAnalyzer.Dispose();
@@ -1386,11 +1386,11 @@ namespace Microsoft.PythonTools.Project {
 
                 var defAnalyzer = Site.GetPythonToolsService().MaybeDefaultAnalyzer;
                 if (defAnalyzer != null) {
-                    foreach (var entry in files
-                        .Select(p => defAnalyzer.GetAnalysisEntryFromPath(p))
-                        .Where(e => e != null)) {
-
-                        await defAnalyzer.UnloadFileAsync(entry);
+                    foreach (var f in files) {
+                        var entry = defAnalyzer.GetAnalysisEntryFromPath(f);
+                        if (entry != null) {
+                            await defAnalyzer.UnloadFileAsync(entry);
+                        }
                     }
                 }
 

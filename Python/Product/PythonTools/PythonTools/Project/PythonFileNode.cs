@@ -20,11 +20,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Security;
 using System.Text;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -186,8 +189,12 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private VsProjectAnalyzer GetAnalyzer() {
+            return ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+        }
+
         public AnalysisEntry GetAnalysisEntry() {
-            return ((PythonProjectNode)ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(Url);
+            return GetAnalyzer().GetAnalysisEntryFromPath(Url);
         }
 
         private void TryRename(string oldFile, string newFile) {
@@ -217,19 +224,12 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (res != null) {
-                var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-                var analysis = GetAnalysisEntry();
-                if (analysis != null) {
-                    analyzer.UnloadFileAsync(analysis).DoNotWait();
-                }
-
-                var textBuffer = GetTextBuffer(false);
-
-                BufferParser parser = analysis?.TryGetBufferParser();
-                if (parser != null) {
-                    analyzer.ReAnalyzeTextBuffers(parser);
-                }
-
+                // Analyzer has not changed, but because the filename has we need to
+                // do a transfer.
+                var oldEntry = GetAnalysisEntry();
+                oldEntry.Analyzer.TransferFileFromOldAnalyzer(oldEntry, GetMkDocument())
+                    .HandleAllExceptions(ProjectMgr.Site, GetType())
+                    .DoNotWait();
             }
             return res;
         }

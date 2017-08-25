@@ -28,8 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// amongst o
     /// </summary>
     internal sealed class AnalysisEntry : IDisposable {
-        private readonly object _bufferParserLock = new object();
-        private BufferParser _bufferParser;
+        private readonly WeakReference<BufferParser> _bufferParser;
 
         public readonly bool IsTemporaryFile;
         public readonly bool SuppressErrorList;
@@ -56,10 +55,14 @@ namespace Microsoft.PythonTools.Intellisense {
             Properties = new Dictionary<object, object>();
             IsTemporaryFile = isTemporaryFile;
             SuppressErrorList = suppressErrorList;
+            _bufferParser = new WeakReference<BufferParser>(null);
         }
 
         public void Dispose() {
-            _bufferParser?.Dispose();
+            BufferParser parser;
+            if (_bufferParser.TryGetTarget(out parser) && parser != null) {
+                parser.Dispose();
+            }
         }
 
         internal void OnAnalysisComplete() {
@@ -72,30 +75,21 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal BufferParser TryGetBufferParser() {
-            lock (_bufferParserLock) {
-                return _bufferParser;
-            }
+            BufferParser parser;
+            return _bufferParser.TryGetTarget(out parser) ? parser : null;
         }
 
-        internal void ClearBufferParser(BufferParser expected) {
-            lock (_bufferParserLock) {
-                Debug.Assert(_bufferParser != null && expected == _bufferParser);
-                _bufferParser = null;
+        internal BufferParser GetOrCreateBufferParser(PythonEditorServices services) {
+            BufferParser parser;
+            if (!_bufferParser.TryGetTarget(out parser)) {
+                parser = new BufferParser(services, Analyzer, Path) {
+                    IsTemporaryFile = IsTemporaryFile,
+                    SuppressErrorList = SuppressErrorList
+                };
+                _bufferParser.SetTarget(parser);
             }
+            return parser;
         }
-
-        internal void AddBuffer(ITextBuffer buffer) {
-            BufferParser bp;
-            lock (_bufferParserLock) {
-                bp = _bufferParser;
-                if (bp == null) {
-                    _bufferParser = bp = new BufferParser(this);
-                }
-
-                bp.AddBuffer(buffer);
-            }
-        }
-
 
         public VsProjectAnalyzer Analyzer { get; }
 
@@ -120,7 +114,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // the .py file still open. Re-open the project, and double click on a button
             // on the XAML page.  The python file isn't loaded and we have no 
             // PythonTextBufferInfo associated with it.
-            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisEntryId ?? 0;
+            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisBufferId ?? 0;
         }
 
         public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {

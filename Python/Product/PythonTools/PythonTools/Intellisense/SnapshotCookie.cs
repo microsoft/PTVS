@@ -19,15 +19,16 @@ using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
     class SnapshotCookie : IIntellisenseCookie {
-        private readonly ITextSnapshot _snapshot;
+        private readonly WeakReference<ITextSnapshot> _snapshot;
         
         public SnapshotCookie(ITextSnapshot snapshot) {
-            _snapshot = snapshot;
+            _snapshot = new WeakReference<ITextSnapshot>(snapshot);
         }
 
         public ITextSnapshot Snapshot {
             get {
-                return _snapshot;
+                ITextSnapshot value;
+                return _snapshot.TryGetTarget(out value) ? value : null;
             }
         }
 
@@ -35,7 +36,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public string GetLine(int lineNo) {
             try {
-                return _snapshot.GetLineFromLineNumber(lineNo - 1).GetText();
+                return Snapshot?.GetLineFromLineNumber(lineNo - 1).GetText() ?? string.Empty;
             } catch (ArgumentOutOfRangeException) {
                 return string.Empty;
             }

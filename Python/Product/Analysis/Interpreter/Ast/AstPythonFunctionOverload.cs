@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonFunctionOverload : IPythonFunctionOverload, ILocatedMember {

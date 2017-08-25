@@ -98,7 +98,8 @@ namespace Microsoft.PythonTools {
                 _categoryMap = FillCategoryMap(_classificationRegistry);
             }
 
-            return _services.GetBufferInfo(buffer).GetOrCreateAnalysisClassifier(b => new PythonAnalysisClassifier(this, b));
+            return _services.GetBufferInfo(buffer)
+                .GetOrCreateSink(typeof(PythonAnalysisClassifier), _ => new PythonAnalysisClassifier(this));
         }
 
         public virtual IContentType ContentType {
