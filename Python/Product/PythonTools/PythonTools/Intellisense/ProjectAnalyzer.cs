@@ -702,26 +702,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return Array.Empty<AP.ModuleInfo>();
         }
 
-        private void OnModulesChanged(object sender, EventArgs e) {
-            SendEvent(new AP.ModulesChangedEvent());
-        }
-
-        internal void ReanalyzeEntry(AnalysisEntry entry) {
-            var parser = entry.TryGetBufferParser();
-            if (parser == null) {
-                return;
-            }
-            var buffers = parser.Buffers;
-            if (!buffers.Any()) {
-                return;
-            }
-
-            foreach (var buffer in buffers) {
-                parser.RemoveBuffer(buffer);
-            }
-            
-        }
-
         internal async Task TransferFromOldAnalyzer(VsProjectAnalyzer oldAnalyzer) {
             var oldFileAndEntry = oldAnalyzer.LoadedFiles.ToArray();
             var oldFiles = oldFileAndEntry.Select(kv => kv.Key);
@@ -750,8 +730,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     continue;
                 }
 
-                ITextBuffer[] buffers;
-                if (oldBuffers.TryGetValue(e.Path, out buffers)) {
+                if (oldBuffers.TryGetValue(e.Path, out ITextBuffer[] buffers)) {
                     foreach (var b in buffers) {
                         PythonTextBufferInfo.MarkForReplacement(b);
                         e.GetOrCreateBufferParser(_services).AddBuffer(b);
@@ -818,47 +797,6 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void OnAnalysisStarted() {
             AnalysisStarted?.Invoke(this, EventArgs.Empty);
         }
-
-        /// <summary>
-        /// Starts monitoring a buffer for changes so we will re-parse the buffer to update the analysis
-        /// as the text changes.
-        /// </summary>
-        //internal async Task<BufferParser> MonitorTextBufferAsync(ITextBuffer textBuffer, bool isTemporaryFile = false, bool suppressErrorList = false) {
-        //    var bi = _services.GetBufferInfo(textBuffer);
-        //    var existingEntry = bi.AnalysisEntry;
-
-        //    // Create a new entry if the current one is not ours
-        //    var entry = existingEntry;
-        //    if (entry == null || entry.Analyzer != this) {
-        //        entry = await CreateProjectEntryAsync(bi, isTemporaryFile, suppressErrorList).ConfigureAwait(false);
-        //    }
-        //    if (entry == null) {
-        //        return null;
-        //    }
-
-        //    try {
-        //        if (!bi.TrySetAnalysisEntry(entry, existingEntry)) {
-        //            // Raced with another monitor
-        //            Debug.Fail("MonitorTextBufferAsync race occurred");
-        //            return null;
-        //        }
-        //    } catch (ObjectDisposedException) {
-        //        // Buffer has gone away already
-        //        return null;
-        //    }
-
-        //    var bufferParser = new BufferParser(entry);
-        //    bufferParser.AddBuffer(textBuffer);
-
-        //    var snapshot = (entry.AnalysisCookie as SnapshotCookie)?.Snapshot;
-        //    // File cannot be parsed from disk, so sync the code from the current buffer
-        //    // This should be rare in normal use, but very frequent in tests
-        //    if (snapshot != null && (isTemporaryFile || !File.Exists(entry.Path))) {
-        //        await BufferParser.ParseBuffersAsync(_services, this, Enumerable.Repeat(snapshot, 1));
-        //    }
-
-        //    return bufferParser;
-        //}
 
         internal void BufferDetached(AnalysisEntry entry, ITextBuffer buffer) {
             if (entry == null) {
