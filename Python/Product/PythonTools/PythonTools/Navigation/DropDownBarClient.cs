@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Navigation {
             _dispatcher = Dispatcher.CurrentDispatcher;
             _textView.Caret.PositionChanged += CaretPositionChanged;
             foreach (var tb in PythonTextBufferInfo.GetAllFromView(textView)) {
-                tb.AddSink(typeof(DropDownBarClient), this);
+                tb.AddSink(this, this);
             }
             textView.BufferGraph.GraphBuffersChanged += BufferGraph_GraphBuffersChanged;
             for (int i = 0; i < NavigationLevels; i++) {
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Navigation {
                 }
             }
             foreach (var tb in PythonTextBufferInfo.GetAllFromView(_textView)) {
-                tb.RemoveSink(typeof(DropDownBarClient));
+                tb.RemoveSink(this);
             }
 #if DEBUG
             IVsDropdownBar existing;

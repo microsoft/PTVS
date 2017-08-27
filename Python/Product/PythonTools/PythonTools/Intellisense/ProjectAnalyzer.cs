@@ -1178,22 +1178,29 @@ namespace Microsoft.PythonTools.Intellisense {
             return MissingImportAnalysis.Empty;
         }
 
-        internal static void AddImport(AnalysisEntry entry, string fromModule, string name, ITextView view, ITextBuffer textBuffer) {
-            var lastVersion = entry.GetAnalysisVersion(textBuffer);
+        internal static void AddImport(ITextBuffer textBuffer, string fromModule, string name) {
+            var bi = PythonTextBufferInfo.TryGetForBuffer(textBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
+                Debug.Fail("Cannot add import to buffer with no buffer info");
+                return;
+            }
+
+            var nl = bi.Services.EditorOptionsFactoryService.GetOptions(bi.Buffer).GetNewLineCharacter() ?? "\r\n";
 
             var changes = entry.Analyzer.WaitForRequest(entry.Analyzer.AddImportAsync(
                 entry,
                 textBuffer,
                 fromModule,
                 name,
-                view.Options.GetNewLineCharacter()
+                nl
             ), "ProjectAnalyzer.AddImport");
 
             if (changes != null) {
                 ApplyChanges(
                     changes.changes,
-                    lastVersion,
-                    textBuffer,
+                    bi.LastAnalysisReceivedVersion ?? bi.CurrentSnapshot.Version,
+                    bi.Buffer,
                     changes.version
                 );
             }
