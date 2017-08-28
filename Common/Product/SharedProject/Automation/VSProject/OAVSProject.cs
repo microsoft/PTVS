@@ -51,8 +51,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         {
             get
             {
-                throw new NotImplementedException();
-                //return new OABuildManager(this.project);
+                return null;
             }
         }
 
