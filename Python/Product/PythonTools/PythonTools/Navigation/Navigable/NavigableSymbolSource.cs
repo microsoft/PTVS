@@ -15,8 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -90,28 +90,30 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
                 // Check with the analyzer, which will give us a precise
                 // result, including the source location.
-                var result = await GetDefinitionLocationAsync(entry, _textView, token.Span).ConfigureAwait(false);
+                var result = await GetDefinitionLocationsAsync(entry, token.Span.Start).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (result != null) {
-                    return new NavigableSymbol(_serviceProvider, result, token.Span);
+                if (result.Any()) {
+                    return new NavigableSymbol(_serviceProvider, result.First(), token.Span);
                 }
             }
 
             return null;
         }
 
-        internal static async Task<AnalysisLocation> GetDefinitionLocationAsync(AnalysisEntry entry, ITextView textView, SnapshotSpan span) {
-            var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, textView, span.Start).ConfigureAwait(false);
+        internal static async Task<AnalysisLocation[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt) {
+            var list = new List<AnalysisLocation>();
+
+            var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt).ConfigureAwait(false);
             foreach (var variable in (result?.Variables).MaybeEnumerate()) {
                 if (variable.Type == Analysis.VariableType.Definition &&
                     !string.IsNullOrEmpty(variable.Location?.FilePath)) {
-                    return variable.Location;
+                    list.Add(variable.Location);
                 }
             }
 
-            return null;
+            return list.ToArray();
         }
     }
 }

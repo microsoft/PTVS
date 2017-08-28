@@ -19,16 +19,22 @@ namespace Microsoft.PythonTools.Analysis {
     class AnalysisVariable : IAnalysisVariable {
         private readonly LocationInfo _loc;
         private readonly VariableType _type;
+        private readonly LocationInfo _defLoc;
 
-        public AnalysisVariable(VariableType type, LocationInfo location) {
+        public AnalysisVariable(VariableType type, LocationInfo location, LocationInfo definitionLocation = null) {
             _loc = location;
             _type = type;
+            _defLoc = definitionLocation;
         }
 
         #region IAnalysisVariable Members
 
         public LocationInfo Location {
             get { return _loc; }
+        }
+
+        public LocationInfo DefinitionLocation {
+            get { return _defLoc ?? _loc; }
         }
 
         public VariableType Type {

@@ -1163,7 +1163,6 @@ async def g():
                 vs.InvokeSync(() => {
                     task = view.Analyzer.AnalyzeExpressionAsync(
                         (AnalysisEntry)view.GetAnalysisEntry(),
-                        view.View.View,
                         new SnapshotPoint(snapshot, location)
                     );
                 });
