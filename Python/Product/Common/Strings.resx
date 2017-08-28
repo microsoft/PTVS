@@ -2098,4 +2098,7 @@ Expand selection to the full expression?</value>
   <data name="RemoveReplPrompts" xml:space="preserve">
     <value>Remove Interactive Prompts</value>
   </data>
+  <data name="Test_NotRun" xml:space="preserve">
+    <value>Test could not be run. Check the Tests Output Pane for details.</value>
+  </data>
 </root>

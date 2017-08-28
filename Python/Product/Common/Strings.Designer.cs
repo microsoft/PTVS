@@ -4472,11 +4472,11 @@ namespace Microsoft.PythonTools {
         ///#
         ///# Currently, supported options are:
         ///#   standard
-        ///#   visualstudio_ipython_repl.IPythonBackend
-        ///#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab
+        ///#   ptvsd.repl.ipython.IPythonBackend
+        ///#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab
         ///#
         ///
-        ///visualstudio_ipython_repl.IPythonBackend.
+        ///ptvsd.repl.ipython.IPythonBackend.
         /// </summary>
         public static string ReplScriptPathIPythonModeTxtContents {
             get {
@@ -4971,6 +4971,15 @@ namespace Microsoft.PythonTools {
         public static string Test_NoTestFinishedNotification {
             get {
                 return ResourceManager.GetString("Test_NoTestFinishedNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test could not be run. Check the Tests Output Pane for details..
+        /// </summary>
+        public static string Test_NotRun {
+            get {
+                return ResourceManager.GetString("Test_NotRun", resourceCulture);
             }
         }
         

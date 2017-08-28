@@ -35,10 +35,14 @@ namespace Microsoft.PythonTools.Intellisense {
             ITextView textView,
             ITextBuffer textBuffer
         ) {
-            if (textView == null && textBuffer == null) {
+            if (textView == null || textBuffer == null) {
                 return null;
             }
-            return new PythonSuggestedActionsSource(_services, textView, textBuffer);
+
+            return _services.GetBufferInfo(textBuffer).GetOrCreateSink(
+                typeof(PythonSuggestedActionsSource),
+                _ => new PythonSuggestedActionsSource(_services)
+            );
         }
     }
 }
