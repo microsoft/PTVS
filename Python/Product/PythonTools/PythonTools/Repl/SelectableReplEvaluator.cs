@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -200,15 +199,6 @@ namespace Microsoft.PythonTools.Repl {
 
         private async Task DoInitializeAsync(IInteractiveEvaluator eval) {
             await eval.InitializeAsync();
-
-            var view = eval?.CurrentWindow?.TextView;
-            var buffer = PythonTextBufferInfo.TryGetForBuffer(eval?.CurrentWindow?.CurrentLanguageBuffer);
-            var pyEval = eval as IPythonInteractiveIntellisense;
-            if (view != null && buffer != null && pyEval != null) {
-                var controller = IntellisenseControllerProvider.GetOrCreateController(_serviceProvider, _serviceProvider.GetComponentModel(), view);
-                var entry = pyEval.Analyzer.GetAnalysisEntryFromPath(pyEval.AnalysisFilename);
-                Debug.Assert(entry == buffer.TrySetAnalysisEntry(entry, buffer.AnalysisEntry));
-            }
         }
 
         private void DetachWindow(IInteractiveEvaluator oldEval) {
