@@ -486,6 +486,32 @@ namespace TestAdapterTests {
             }
         }
 
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void TestTeardown() {
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = new[] {
+                TestInfo.TeardownSuccess,
+                TestInfo.TeardownFailure
+            };
+            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+            foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+                var stdOut = actualResult.Messages.Single(m => m.Category == "StdOutMsgs");
+                Assert.IsTrue(stdOut.Text.Contains("doing setUp"), "setUp was not called");
+                Assert.IsTrue(stdOut.Text.Contains("doing tearDown"), "tearDown was not called");
+            }
+        }
+
         [TestMethod, Priority(0)]
         public void TestPassOnCommandLine() {
             var executor = new TestExecutor();
