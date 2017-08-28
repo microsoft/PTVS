@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools {
         private Task OnNewAnalysisEntryAsync(PythonTextBufferInfo sender, AnalysisEntry entry) {
             var analyzer = entry?.Analyzer;
             if (analyzer == null) {
-                Debug.Fail("Should not have new analysis entry without an analyzer");
+                Debug.Assert(entry == null, "Should not have new analysis entry without an analyzer");
                 return Task.CompletedTask;
             }
             _tokenCache.Clear();
@@ -382,7 +382,13 @@ namespace Microsoft.PythonTools {
 
     internal static partial class ClassifierExtensions {
         public static PythonClassifier GetPythonClassifier(this ITextBuffer buffer) {
-            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.TryGetSink(typeof(PythonClassifier)) as PythonClassifier;
+            var bi = PythonTextBufferInfo.TryGetForBuffer(buffer);
+            if (bi == null) {
+                return null;
+            }
+
+            var provider = bi.Services.ComponentModel.GetService<PythonClassifierProvider>();
+            return provider.GetClassifier(buffer) as PythonClassifier;
         }
     }
 }

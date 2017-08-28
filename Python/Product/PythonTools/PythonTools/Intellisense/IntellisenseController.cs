@@ -92,10 +92,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _textView.MouseHover -= TextViewMouseHover;
             _textView.Closed -= TextView_Closed;
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));
-
-            foreach (var buffer in _textView.BufferGraph.GetTextBuffers(_ => true)) {
-                DisconnectSubjectBuffer(buffer);
-            }
+            // Do not disconnect subject buffers here - VS will handle that for us
         }
 
         private void TextViewMouseHover(object sender, MouseHoverEventArgs e) {

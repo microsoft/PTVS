@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
@@ -76,14 +77,10 @@ namespace Microsoft.PythonTools {
 
             if (classifications != null) {
                 Debug.WriteLine("Received {0} classifications", classifications.Data.classifications.Length);
-                // sort the spans by starting position so we can use binary search when handing them out
-                Array.Sort(
-                    classifications.Data.classifications,
-                    (x, y) => x.start - y.start
-                );
 
                 lock (_spanCacheLock) {
-                    _spanCache = classifications.Data.classifications;
+                    // sort the spans by starting position so we can use binary search when handing them out
+                    _spanCache = classifications.Data.classifications.OrderBy(c => c.start).ToArray();
                     _spanTranslator = classifications.GetTracker(classifications.Data.version);
                 }
 

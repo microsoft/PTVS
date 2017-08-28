@@ -217,7 +217,13 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override async Task<ExecutionResult> ExecuteCodeAsync(string text) {
-            var cmdRes = _commands.TryExecuteCommand();
+            var cmds = _commands;
+            if (cmds == null) {
+                WriteError(Strings.ReplDisconnected);
+                return ExecutionResult.Failure;
+            }
+
+            var cmdRes = cmds.TryExecuteCommand();
             if (cmdRes != null) {
                 return await cmdRes;
             }

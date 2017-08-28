@@ -168,6 +168,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 return analyzer as VsProjectAnalyzer;
             }
 
+            // If we have a REPL evaluator we'll use its analyzer
+            IPythonInteractiveIntellisense evaluator;
+            if ((evaluator = buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
+                return evaluator.Analyzer;
+            }
 
             AnalysisEntry entry;
             if (TryGetAnalysisEntry(view, buffer, out entry)) {
@@ -222,6 +227,14 @@ namespace Microsoft.PythonTools.Intellisense {
             if (TryGetAnalysisEntry(textView, null, out entry)) {
                 analyzer = entry.Analyzer;
                 filename = entry.Path;
+                return true;
+            }
+
+            // If we have a REPL evaluator we'll use its analyzer
+            IPythonInteractiveIntellisense evaluator;
+            if ((evaluator = textView.TextBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
+                analyzer = evaluator.Analyzer;
+                filename = evaluator.AnalysisFilename;
                 return true;
             }
 

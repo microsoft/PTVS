@@ -199,14 +199,6 @@ namespace Microsoft.PythonTools.Repl {
 
         private async Task DoInitializeAsync(IInteractiveEvaluator eval) {
             await eval.InitializeAsync();
-
-            var view = eval?.CurrentWindow?.TextView;
-            var buffer = eval?.CurrentWindow?.CurrentLanguageBuffer;
-            if (view != null && buffer != null) {
-                var controller = IntellisenseControllerProvider.GetOrCreateController(_serviceProvider, _serviceProvider.GetComponentModel(), view);
-                controller.DisconnectSubjectBuffer(buffer);
-                controller.ConnectSubjectBuffer(buffer);
-            }
         }
 
         private void DetachWindow(IInteractiveEvaluator oldEval) {

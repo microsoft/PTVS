@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly PythonEditorServices _services;
         private readonly VsProjectAnalyzer _analyzer;
 
-        private IList<PythonTextBufferInfo> _buffers;
+        private PythonTextBufferInfoWithRefCount[] _buffers;
         private bool _parsing, _requeue, _textChange, _parseImmediately;
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _analyzer = analyzer ?? throw new ArgumentNullException(nameof(analyzer));
             FilePath = filePath;
-            _buffers = Array.Empty<PythonTextBufferInfo>();
+            _buffers = Array.Empty<PythonTextBufferInfoWithRefCount>();
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
         }
 
@@ -93,17 +93,8 @@ namespace Microsoft.PythonTools.Intellisense {
             return GetBuffer(buffer)?.LastSentSnapshot;
         }
 
-        public ITextBuffer[] AllBuffers {
-            get {
-                return _buffers.Select(x => x.Buffer).ToArray();
-            }
-        }
-
-        public ITextBuffer[] Buffers {
-            get {
-                return _buffers.Where(x => !x.DoNotParse).Select(x => x.Buffer).ToArray();
-            }
-        }
+        public ITextBuffer[] AllBuffers => _buffers.Select(x => x.Buffer.Buffer).ToArray();
+        public ITextBuffer[] Buffers => _buffers.Where(x => !x.Buffer.DoNotParse).Select(x => x.Buffer.Buffer).ToArray();
 
         internal void AddBuffer(ITextBuffer textBuffer) {
             int newId;
@@ -116,13 +107,14 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             lock (this) {
-                if (_buffers.Contains(bi)) {
+                var existing = _buffers.FirstOrDefault(b => b.Buffer == bi);
+                if (existing != null) {
+                    existing.AddRef();
                     return;
                 }
 
-                EnsureMutableBuffers();
-                _buffers.Add(bi);
-                newId = _buffers.Count - 1;
+                _buffers = _buffers.Concat(Enumerable.Repeat(new PythonTextBufferInfoWithRefCount(bi), 1)).ToArray();
+                newId = _buffers.Length - 1;
 
                 if (!bi.SetAnalysisBufferId(newId)) {
                     // Raced, and now the buffer belongs somewhere else.
@@ -147,12 +139,12 @@ namespace Microsoft.PythonTools.Intellisense {
             lock (this) {
                 _bufferIdMapping.Clear();
                 foreach (var bi in _buffers) {
-                    bi.SetAnalysisBufferId(-1);
-                    bi.ClearAnalysisEntry();
-                    bi.RemoveSink(this);
-                    VsProjectAnalyzer.DisconnectErrorList(bi);
+                    bi.Buffer.SetAnalysisBufferId(-1);
+                    bi.Buffer.ClearAnalysisEntry();
+                    bi.Buffer.RemoveSink(this);
+                    VsProjectAnalyzer.DisconnectErrorList(bi.Buffer);
                 }
-                _buffers = Array.Empty<PythonTextBufferInfo>();
+                _buffers = Array.Empty<PythonTextBufferInfoWithRefCount>();
             }
         }
 
@@ -162,27 +154,23 @@ namespace Microsoft.PythonTools.Intellisense {
 
             lock (this) {
                 if (bi != null) {
-                    EnsureMutableBuffers();
-                    _buffers.Remove(bi);
+                    var existing = _buffers.FirstOrDefault(b => b.Buffer == bi);
+                    if (existing != null && existing.Release()) {
+                        _buffers = _buffers.Where(b => b != existing).ToArray();
 
-                    bi.RemoveSink(this);
+                        bi.RemoveSink(this);
 
-                    VsProjectAnalyzer.DisconnectErrorList(bi);
-                    _bufferIdMapping.Remove(bi.AnalysisBufferId);
-                    bi.SetAnalysisBufferId(-1);
+                        VsProjectAnalyzer.DisconnectErrorList(bi);
+                        _bufferIdMapping.Remove(bi.AnalysisBufferId);
+                        bi.SetAnalysisBufferId(-1);
 
-                    bi.Buffer.Properties.RemoveProperty(typeof(PythonTextBufferInfo));
+                        bi.Buffer.Properties.RemoveProperty(typeof(PythonTextBufferInfo));
+                    }
                 }
-                result = _buffers.Count;
+                result = _buffers.Length;
             }
 
             return result;
-        }
-
-        private void EnsureMutableBuffers() {
-            if (_buffers.IsReadOnly) {
-                _buffers = new List<PythonTextBufferInfo>(_buffers);
-            }
         }
 
         internal void ReparseTimer(object unused) {
@@ -197,7 +185,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 _parsing = true;
-                snapshots = _buffers.Where(b => !b.DoNotParse).Select(b => b.CurrentSnapshot).ToArray();
+                snapshots = _buffers
+                    .Where(b => !b.Buffer.DoNotParse)
+                    .Select(b => b.Buffer.CurrentSnapshot).ToArray();
             }
 
             ParseBuffers(snapshots).WaitAndHandleAllExceptions(_services.Site);
@@ -396,9 +386,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void Dispose() {
-            foreach (var buffer in _buffers.ToArray()) {
-                RemoveBuffer(buffer.Buffer);
-            }
+            ClearBuffers();
             _timer.Dispose();
         }
 
@@ -443,6 +431,24 @@ namespace Microsoft.PythonTools.Intellisense {
                     break;
             }
             return Task.CompletedTask;
+        }
+
+        private class PythonTextBufferInfoWithRefCount {
+            public readonly PythonTextBufferInfo Buffer;
+            private int _refCount;
+
+            public PythonTextBufferInfoWithRefCount(PythonTextBufferInfo buffer) {
+                Buffer = buffer;
+                _refCount = 1;
+            }
+
+            public void AddRef() {
+                Interlocked.Increment(ref _refCount);
+            }
+
+            public bool Release() {
+                return Interlocked.Decrement(ref _refCount) == 0;
+            }
         }
     }
 }

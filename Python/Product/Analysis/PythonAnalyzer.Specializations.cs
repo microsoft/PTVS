@@ -612,6 +612,10 @@ namespace Microsoft.PythonTools.Analysis {
                         if (analysis == null) {
                             xamlProject.Analyze(CancellationToken.None);
                             analysis = xamlProject.Analysis;
+                            if (analysis == null) {
+                                AnalysisLog.Assert(false, "No Xaml analysis");
+                                return self;
+                            }
                         }
 
                         xamlProject.AddDependency(unit.ProjectEntry);
