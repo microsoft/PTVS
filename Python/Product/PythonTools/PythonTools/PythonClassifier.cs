@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools {
         private Task OnNewAnalysisEntryAsync(PythonTextBufferInfo sender, AnalysisEntry entry) {
             var analyzer = entry?.Analyzer;
             if (analyzer == null) {
-                Debug.Fail("Should not have new analysis entry without an analyzer");
+                Debug.Assert(entry == null, "Should not have new analysis entry without an analyzer");
                 return Task.CompletedTask;
             }
             _tokenCache.Clear();
