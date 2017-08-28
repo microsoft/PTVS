@@ -230,21 +230,21 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <returns></returns>
         protected override bool CanShowDefaultIcon() {
-            return File.Exists(assemblyPath);
+            return ResolvedAssembly != null || File.Exists(assemblyPath);
         }
 
         private void GetPathNameFromProjectFile() {
-            string result = this.ItemNode.GetMetadata(ProjectFileConstants.HintPath);
-            if (String.IsNullOrEmpty(result)) {
-                result = this.ItemNode.GetMetadata(ProjectFileConstants.AssemblyName);
-                if (String.IsNullOrEmpty(result)) {
-                    this.assemblyPath = String.Empty;
-                } else if (!result.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) {
-                    result += ".dll";
-                    this.assemblyPath = result;
-                }
+            var path = this.ItemNode.GetMetadata(ProjectFileConstants.HintPath);
+            if (string.IsNullOrEmpty(path)) {
+                path = this.ItemNode.GetMetadata(ProjectFileConstants.AssemblyName);
+            }
+            if (string.IsNullOrEmpty(path)) {
+                this.assemblyPath = string.Empty;
             } else {
-                this.assemblyPath = CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, result);
+                if (!path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) {
+                    path += ".dll";
+                }
+                this.assemblyPath = CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, path);
             }
         }
 

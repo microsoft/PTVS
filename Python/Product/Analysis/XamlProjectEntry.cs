@@ -55,6 +55,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             lock (this) {
+                if (string.IsNullOrEmpty(_content)) {
+                    return;
+                }
+
                 _analysis = new XamlAnalysis(new StringReader(_content));
 
                 _version++;

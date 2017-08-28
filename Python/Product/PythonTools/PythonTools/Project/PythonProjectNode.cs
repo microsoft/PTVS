@@ -1120,6 +1120,10 @@ namespace Microsoft.PythonTools.Project {
             return _analyzer;
         }
 
+        public VsProjectAnalyzer TryGetAnalyzer() {
+            return _analyzer;
+        }
+
         private VsProjectAnalyzer CreateAnalyzer() {
             var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterRegistryService>();
