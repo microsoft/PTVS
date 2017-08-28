@@ -534,8 +534,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                         // If there's an error in the launcher script,
                         // it will terminate without connecting back.
-                        while (!_connected.WaitOne(1000) && !proc.ExitCode.HasValue) {
-                        }
+                        WaitHandle.WaitAny(new WaitHandle[] { _connected, proc.WaitHandle });
 
                         if (proc.ExitCode.HasValue) {
                             // Process has already exited
