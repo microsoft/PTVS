@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools {
     /// which it is applicable to.
     /// </summary>
     [Export(typeof(IClassifierProvider)), ContentType(PythonCoreConstants.ContentType)]
+    [Export(typeof(PythonClassifierProvider))]
     internal class PythonClassifierProvider : IClassifierProvider {
         private Dictionary<TokenCategory, IClassificationType> _categoryMap;
         private IClassificationType _comment;

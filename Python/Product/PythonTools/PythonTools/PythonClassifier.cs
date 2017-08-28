@@ -382,7 +382,13 @@ namespace Microsoft.PythonTools {
 
     internal static partial class ClassifierExtensions {
         public static PythonClassifier GetPythonClassifier(this ITextBuffer buffer) {
-            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.TryGetSink(typeof(PythonClassifier)) as PythonClassifier;
+            var bi = PythonTextBufferInfo.TryGetForBuffer(buffer);
+            if (bi == null) {
+                return null;
+            }
+
+            var provider = bi.Services.ComponentModel.GetService<PythonClassifierProvider>();
+            return provider.GetClassifier(buffer) as PythonClassifier;
         }
     }
 }

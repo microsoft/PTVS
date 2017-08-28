@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -201,11 +202,12 @@ namespace Microsoft.PythonTools.Repl {
             await eval.InitializeAsync();
 
             var view = eval?.CurrentWindow?.TextView;
-            var buffer = eval?.CurrentWindow?.CurrentLanguageBuffer;
-            if (view != null && buffer != null) {
+            var buffer = PythonTextBufferInfo.TryGetForBuffer(eval?.CurrentWindow?.CurrentLanguageBuffer);
+            var pyEval = eval as IPythonInteractiveIntellisense;
+            if (view != null && buffer != null && pyEval != null) {
                 var controller = IntellisenseControllerProvider.GetOrCreateController(_serviceProvider, _serviceProvider.GetComponentModel(), view);
-                controller.DisconnectSubjectBuffer(buffer);
-                controller.ConnectSubjectBuffer(buffer);
+                var entry = pyEval.Analyzer.GetAnalysisEntryFromPath(pyEval.AnalysisFilename);
+                Debug.Assert(entry == buffer.TrySetAnalysisEntry(entry, buffer.AnalysisEntry));
             }
         }
 
