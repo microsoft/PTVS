@@ -103,6 +103,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 return entry != null;
             }
 
+            var bufferInfo = PythonTextBufferInfo.TryGetForBuffer(textBuffer);
+            if (bufferInfo != null) {
+                entry = bufferInfo?.AnalysisEntry;
+                return entry != null;
+            }
+
             // If we find an associated project, use its analyzer
             // This should only happen while racing with text view creation
             var path = textBuffer.GetFilePath();

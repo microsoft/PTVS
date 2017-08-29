@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools {
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
-            _entryService = ComponentModel.GetService<AnalysisEntryService>();
+            _entryService = (AnalysisEntryService)ComponentModel.GetService<IAnalysisEntryService>();
             _diagnosticsProvider = new DiagnosticsProvider(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
