@@ -11,5 +11,13 @@
   <Import Project="swix.generate.targets" />
 
   <Import Project="..\SetupProjectAfter.settings" />
+
+  <Target Name="_CopyPayloads"
+          AfterTargets="Build"
+          Inputs="@(Payload)"
+          Outputs="@(Payload->'$(OutputPath)%(Filename)%(Extension)')">
+    <Copy SourceFiles="@(Payload)"
+          DestinationFolder="$(OutputPath)" />
+  </Target>
 </Project>
 
