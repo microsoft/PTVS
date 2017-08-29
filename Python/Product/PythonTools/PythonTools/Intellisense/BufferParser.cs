@@ -266,7 +266,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         [Conditional("DEBUG")]
-        private static void ValidateBufferContents(IEnumerable<ITextSnapshot> snapshots, Dictionary<int, string> code) {
+        private static void ValidateBufferContents(IEnumerable<ITextSnapshot> snapshots, AP.FileUpdateResponse response) {
+#if DEBUG
             foreach (var snapshot in snapshots) {
                 var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
                 if (bi == null) {
@@ -274,12 +275,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 string newCode;
-                if (!code.TryGetValue(bi.AnalysisBufferId, out newCode)) {
+                if (!response.newCode.TryGetValue(bi.AnalysisBufferId, out newCode)) {
                     continue;
                 }
 
                 Debug.Assert(newCode.TrimEnd() == snapshot.GetText().TrimEnd(), "Buffer content mismatch");
             }
+#endif
         }
 
         internal static async Task ParseBuffersAsync(
@@ -314,7 +316,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (res != null) {
                     Debug.Assert(res.failed != true);
                     analyzer.OnAnalysisStarted();
-                    ValidateBufferContents(snapshots, res.newCode);
+                    ValidateBufferContents(snapshots, res);
                 } else {
                     Interlocked.Decrement(ref analyzer._parsePending);
                 }
