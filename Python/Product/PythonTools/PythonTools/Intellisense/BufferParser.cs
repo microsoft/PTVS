@@ -268,6 +268,10 @@ namespace Microsoft.PythonTools.Intellisense {
         [Conditional("DEBUG")]
         private static void ValidateBufferContents(IEnumerable<ITextSnapshot> snapshots, AP.FileUpdateResponse response) {
 #if DEBUG
+            if (response.newCode == null) {
+                return;
+            }
+
             foreach (var snapshot in snapshots) {
                 var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
                 if (bi == null) {
