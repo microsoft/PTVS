@@ -26,8 +26,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public readonly string SupportUrl;
 
         private const string ExperimentSubkey = @"Software\Microsoft\PythonTools\Experimental";
-        private const string ExperimentalFactoryKey = "NoDatabaseFactory";
-        private static readonly Lazy<bool> _experimentalFactory = new Lazy<bool>(GetExperimentalFactoryFlag);
+        internal const string ExperimentalFactoryKey = "NoDatabaseFactory";
+        internal static readonly Lazy<bool> _experimentalFactory = new Lazy<bool>(GetExperimentalFactoryFlag);
 
         private static bool GetExperimentalFactoryFlag() {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {

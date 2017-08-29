@@ -75,6 +75,10 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Information about a debug REPL connection event
         /// </summary>
-        DebugRepl
+        DebugRepl,
+        /// <summary>
+        /// Information about enabled experimental features
+        /// </summary>
+        Experiments
     }
 }

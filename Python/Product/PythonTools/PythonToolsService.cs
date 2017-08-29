@@ -157,6 +157,9 @@ namespace Microsoft.PythonTools {
                 }
 
                 _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck.ToString());
+                _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
+                    { PythonInterpreterInformation.ExperimentalFactoryKey, PythonInterpreterInformation._experimentalFactory.Value }
+                });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
