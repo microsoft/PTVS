@@ -1192,7 +1192,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            var nl = bi.Services.EditorOptionsFactoryService.GetOptions(bi.Buffer).GetNewLineCharacter() ?? "\r\n";
+            var nl = bi.Services.EditorOptionsFactoryService?.GetOptions(bi.Buffer).GetNewLineCharacter() ?? "\r\n";
 
             var changes = entry.Analyzer.WaitForRequest(entry.Analyzer.AddImportAsync(
                 entry,

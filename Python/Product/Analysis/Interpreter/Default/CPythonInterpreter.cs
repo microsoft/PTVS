@@ -346,7 +346,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
 
         public void Dispose() {
-            lock (_searchPathDb) {
+            lock (_searchPathDbLock) {
                 _searchPathDb = null;
             }
             _zipPackageCache = null;
