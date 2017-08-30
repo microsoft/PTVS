@@ -2465,7 +2465,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     SpanTrackingMode.EdgeInclusive
                 );
 
-                ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
+                ReverseExpressionParser parser;
+                try {
+                    parser = new ReverseExpressionParser(snapshot, buffer, span);
+                } catch (ArgumentException) {
+                    return null;
+                }
 
                 var exprRange = parser.GetExpressionRange(false);
                 if (exprRange != null) {
