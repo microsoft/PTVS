@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Navigation {
             public AnalysisCompleteHandler(PythonLibraryManager owner, PythonProjectNode project) {
                 Project = project ?? throw new ArgumentNullException(nameof(project));
                 _owner = owner ?? throw new ArgumentNullException(nameof(owner));
-                _tasks = new Dictionary<string, LibraryTask>();
+                _tasks = new Dictionary<string, LibraryTask>(StringComparer.OrdinalIgnoreCase);
                 Project.ProjectAnalyzerChanging += Project_ProjectAnalyzerChanging;
                 _analyzer = Project.TryGetAnalyzer();
                 if (_analyzer != null) {
