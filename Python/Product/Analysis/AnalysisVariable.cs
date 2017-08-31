@@ -42,6 +42,19 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #endregion
-    }
 
+        public override bool Equals(object obj) {
+            AnalysisVariable other = obj as AnalysisVariable;
+            if (other != null) {
+                return LocationInfo.FullComparer.Equals(Location, other.Location) &&
+                       LocationInfo.FullComparer.Equals(DefinitionLocation, other.DefinitionLocation) &&
+                       Type.Equals(other.Type);
+            }
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return _type.GetHashCode() ^ _loc.GetHashCode() ^ _defLoc?.GetHashCode() ?? 0;
+        }
+    }
 }
