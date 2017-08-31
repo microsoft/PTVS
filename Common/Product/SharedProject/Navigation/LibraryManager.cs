@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         #region ILibraryManager Members
 
-        public void RegisterHierarchy(IVsHierarchy hierarchy) {
+        public virtual void RegisterHierarchy(IVsHierarchy hierarchy) {
             if ((null == hierarchy) || _hierarchies.ContainsKey(hierarchy)) {
                 return;
             }
@@ -125,7 +125,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
-        public void UnregisterHierarchy(IVsHierarchy hierarchy) {
+        public virtual void UnregisterHierarchy(IVsHierarchy hierarchy) {
             if ((null == hierarchy) || !_hierarchies.ContainsKey(hierarchy)) {
                 return;
             }

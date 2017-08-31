@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
             AnalysisEntry entry;
-            if (!_source._services.AnalysisEntryService.TryGetAnalysisEntry(null, _buffer, out entry)) {
+            if (!_source._services.AnalysisEntryService.TryGetAnalysisEntry(_buffer, out entry)) {
                 return;
             }
 

@@ -1167,7 +1167,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (entryService == null || !entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return MissingImportAnalysis.Empty;
             }
 
@@ -1601,7 +1601,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             AnalysisEntry entry;
-            if (services.AnalysisEntryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (services.AnalysisEntryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return new NormalCompletionAnalysis(
                     services,
                     session,
@@ -1980,7 +1980,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
             AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(view, span.Snapshot.TextBuffer, out entry)) {
+            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return;
             }
             var buffer = span.Snapshot.TextBuffer;
@@ -2045,7 +2045,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task RemoveImportsAsync(ITextView view, ITextBuffer textBuffer, int index, bool allScopes) {
             AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(view, textBuffer, out entry)) {
+            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(textBuffer, out entry)) {
                 return;
             }
             await entry.EnsureCodeSyncedAsync(textBuffer);
@@ -2165,7 +2165,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<NavigationInfo> GetNavigationsAsync(ITextView view) {
             AnalysisEntry entry;
             var textBuffer = view.TextBuffer;
-            if (_services.AnalysisEntryService.TryGetAnalysisEntry(view, textBuffer, out entry)) {
+            if (_services.AnalysisEntryService.TryGetAnalysisEntry(textBuffer, out entry)) {
                 var lastVersion = entry.GetAnalysisVersion(textBuffer);
 
                 var navigations = await SendRequestAsync(
@@ -2407,7 +2407,7 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(view, span.Snapshot.TextBuffer, out entry)) {
+            if (entryService == null || !entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return Task.FromResult<string>(null);
             }
             var analysis = GetApplicableExpression(entry, span.Start);

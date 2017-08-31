@@ -48,7 +48,6 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             return buffer.Properties.GetOrCreateSingletonProperty<INavigableSymbolSource>(
                 () => new NavigableSymbolSource(
                     _serviceProvider,
-                    textView,
                     buffer,
                     _classifierFactory.GetClassifier(buffer),
                     _navigatorService.GetTextStructureNavigator(buffer))

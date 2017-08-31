@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 AnalysisEntry entry;
-                if (!_services.AnalysisEntryService.TryGetAnalysisEntry(_textView, pt.Value.Snapshot.TextBuffer, out entry)) {
+                if (!_services.AnalysisEntryService.TryGetAnalysisEntry(pt.Value.Snapshot.TextBuffer, out entry)) {
                     return;
                 }
                 var t = entry.Analyzer.GetQuickInfoAsync(entry, _textView, pt.Value);
@@ -374,7 +374,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(_textView, snapshot.TextBuffer, out entry)) {
+            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return false;
             }
 

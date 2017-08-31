@@ -818,7 +818,7 @@ namespace Microsoft.PythonTools.Language {
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(_textView, span.Snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return;
             }
 

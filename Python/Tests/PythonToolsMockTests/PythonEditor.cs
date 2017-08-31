@@ -316,10 +316,12 @@ namespace PythonToolsMockTests {
         public object GetAnalysisEntry(ITextBuffer buffer = null) {
             var entryService = VS.ComponentModel.GetService<AnalysisEntryService>();
             AnalysisEntry entry;
-            if (!entryService.TryGetAnalysisEntry(View.TextView, buffer, out entry)) {
-                throw new ArgumentException("no AnalysisEntry available");
+            if (buffer == null) {
+                entryService.TryGetAnalysisEntry(View.TextView, out entry);
+            } else {
+                entryService.TryGetAnalysisEntry(buffer, out entry);
             }
-            return entry;
+            return entry ?? throw new ArgumentException("no AnalysisEntry available");
         }
 
         public void Dispose() {
