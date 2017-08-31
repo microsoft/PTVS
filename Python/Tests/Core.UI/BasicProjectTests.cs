@@ -1013,7 +1013,7 @@ namespace PythonToolsUITests {
             var index = snapshot.GetText().IndexOf(variable + " =");
             var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
-            if (!entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (!entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return Enumerable.Empty<string>();
             }
             return VsProjectAnalyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index)).WaitAndUnwrapExceptions();

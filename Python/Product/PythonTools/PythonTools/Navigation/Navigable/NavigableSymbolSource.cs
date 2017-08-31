@@ -33,7 +33,6 @@ using Microsoft.VisualStudio.Text.Operations;
 namespace Microsoft.PythonTools.Navigation.Navigable {
     class NavigableSymbolSource : INavigableSymbolSource {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ITextView _textView;
         private readonly ITextBuffer _buffer;
         private readonly IClassifier _classifier;
         private readonly ITextStructureNavigator _textNavigator;
@@ -47,9 +46,8 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             PythonPredefinedClassificationTypeNames.Parameter,
         };
 
-        public NavigableSymbolSource(IServiceProvider serviceProvider, ITextView textView, ITextBuffer buffer, IClassifier classifier, ITextStructureNavigator textNavigator) {
+        public NavigableSymbolSource(IServiceProvider serviceProvider, ITextBuffer buffer, IClassifier classifier, ITextStructureNavigator textNavigator) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _textView = textView ?? throw new ArgumentNullException(nameof(textView));
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _classifier = classifier ?? throw new ArgumentNullException(nameof(classifier));
             _textNavigator = textNavigator ?? throw new ArgumentNullException(nameof(textNavigator));
@@ -72,7 +70,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             AnalysisEntry entry = null;
-            _entryService?.TryGetAnalysisEntry(_textView, _buffer, out entry);
+            _entryService?.TryGetAnalysisEntry(_buffer, out entry);
             if (entry == null) {
                 return null;
             }
