@@ -209,7 +209,7 @@ R_A3 = R_A1.r_A()");
                 foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
                     var type = interp.GetBuiltinType(v);
                     Assert.IsNotNull(type, v.ToString());
-                    Assert.IsInstanceOfType(type, typeof(AstPythonBuiltinType), v.ToString());
+                    Assert.IsInstanceOfType(type, typeof(AstPythonBuiltinType), $"Did not find {v}");
                 }
 
                 // Ensure we cannot see or get builtin types directly
