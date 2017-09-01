@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
 
 namespace Microsoft.PythonTools.TestAdapter {
@@ -120,16 +121,14 @@ namespace Microsoft.PythonTools.TestAdapter {
                 // Check the name of all functions on the class using the
                 // analyzer. This will return functions defined on this
                 // class and base classes
-                foreach (var member in GetTestCaseMembers(analysis, classValue)) {
+                foreach (var member in GetTestCaseMembers(entry.Tree, entry.FilePath, analysis, classValue)) {
                     // Find the definition to get the real location of the
                     // member. Otherwise decorators will confuse us.
                     var definition = entry.Analysis
                         .GetVariablesByIndex(classValue.Name + "." + member.Key, 0)
                         .FirstOrDefault(v => v.Type == VariableType.Definition);
 
-                    var location = (definition != null) ?
-                        definition.Location :
-                        member.Value.SelectMany(m => m.Locations).FirstOrDefault(loc => loc != null);
+                    var location = definition?.Location ?? member.Value;
 
                     int endLine = location?.EndLine ?? location?.StartLine ?? 0;
 
@@ -162,15 +161,30 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// return those.  If there aren't any 'test*' tests return (if one at 
         /// all) the runTest overridden method
         /// </summary>
-        private static IEnumerable<KeyValuePair<string, IAnalysisSet>> GetTestCaseMembers(
+        private static IEnumerable<KeyValuePair<string, LocationInfo>> GetTestCaseMembers(
+            PythonAst ast,
+            string sourceFile,
             ModuleAnalysis analysis,
             AnalysisValue classValue
         ) {
-            var methodFunctions = classValue.GetAllMembers(analysis.InterpreterContext)
-                .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
 
-            var tests = methodFunctions.Where(v => v.Key.StartsWith("test"));
-            var runTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
+            IEnumerable<KeyValuePair<string, LocationInfo>> tests = null, runTest = null;
+            if (ast != null && !string.IsNullOrEmpty(sourceFile)) {
+                var walker = new TestMethodWalker(ast, sourceFile, classValue.Locations);
+                ast.Walk(walker);
+                tests = walker.Methods.Where(v => v.Key.StartsWith("test"));
+                runTest = walker.Methods.Where(v => v.Key.Equals("runTest"));
+            }
+
+            var methodFunctions = classValue.GetAllMembers(analysis.InterpreterContext)
+                .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method))
+                .Select(v => new KeyValuePair<string, LocationInfo>(v.Key, v.Value.SelectMany(av => av.Locations).FirstOrDefault(l => l != null)));
+
+            var analysisTests = methodFunctions.Where(v => v.Key.StartsWith("test"));
+            var analysisRunTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
+
+            tests = tests?.Union(analysisTests) ?? analysisTests;
+            runTest = runTest?.Union(analysisRunTest) ?? analysisRunTest;
 
             if (tests.Any()) {
                 return tests;
