@@ -220,11 +220,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         return;
                     }
 
-                    var buffer = new byte[4096];
-                    int read;
-                    while ((read = code.Read(buffer, 0, buffer.Length)) > 0) {
-                        stream.Write(buffer, 0, read);
-                    }
+                    code.CopyTo(stream);
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 try {
