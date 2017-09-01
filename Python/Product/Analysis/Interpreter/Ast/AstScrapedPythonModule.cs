@@ -137,7 +137,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                             sw.WriteLine("Error scraping builtins.");
                             foreach (var line in p.StandardErrorLines) {
                                 sw.WriteLine(line);
-                                Console.WriteLine(line);
                             }
                             Debug.Fail(sw.ToString());
                         }
@@ -157,7 +156,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     ast = parser.ParseFile();
                 }
                 foreach (var err in sink.Errors) {
-                    Console.WriteLine(err.ToString());
+                    Trace.TraceError($"{_filePath ?? "(builtins)"} ({err.Span}): {err.Message}");
                 }
 
                 if (needCache) {
