@@ -749,7 +749,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (oldBuffers.TryGetValue(e.Path, out ITextBuffer[] buffers)) {
                     foreach (var b in buffers.MaybeEnumerate()) {
                         PythonTextBufferInfo.MarkForReplacement(b);
-                        e.GetOrCreateBufferParser(_services).AddBuffer(b);
+                        var bi = _services.GetBufferInfo(b);
+                        var actualEntry = bi.TrySetAnalysisEntry(e, null);
+                        actualEntry?.GetOrCreateBufferParser(_services).AddBuffer(b);
                     }
                 }
             }

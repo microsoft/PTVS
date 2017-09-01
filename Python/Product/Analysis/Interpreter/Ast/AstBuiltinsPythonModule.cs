@@ -55,10 +55,26 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
-            var args = new List<string> { "-B", "-E", "-S" };
+        protected override Stream LoadCachedCode(AstPythonInterpreter interpreter) {
+            var fact = interpreter.Factory as AstPythonInterpreterFactory;
+            if (fact?.Configuration.InterpreterPath == null) {
+                return null;
+            }
+            return fact.ReadCachedModule(fact.Configuration.InterpreterPath);
+        }
 
-            var sb = PythonToolsInstallPath.TryGetFile("scrape_builtins.py", GetType().Assembly);
+        protected override void SaveCachedCode(AstPythonInterpreter interpreter, Stream code) {
+            var fact = interpreter.Factory as AstPythonInterpreterFactory;
+            if (fact?.Configuration.InterpreterPath == null) {
+                return;
+            }
+            fact.WriteCachedModule(fact.Configuration.InterpreterPath, code);
+        }
+
+        protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
+            var args = new List<string> { "-B", "-E" };
+
+            var sb = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
             if (!File.Exists(sb)) {
                 return null;
             }
@@ -90,6 +106,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     _hiddenNames.Add($"__{typeId}");
                 }
             }
+            _hiddenNames.Add("__builtin_module_names");
         }
 
     }

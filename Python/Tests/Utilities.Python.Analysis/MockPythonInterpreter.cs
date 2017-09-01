@@ -72,7 +72,7 @@ namespace TestUtilities.Python {
         }
 
         public IModuleContext CreateModuleContext() {
-            throw new NotImplementedException();
+            return null;
         }
 
         public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {

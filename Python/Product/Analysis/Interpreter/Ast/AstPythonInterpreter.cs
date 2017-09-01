@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly Dictionary<BuiltinTypeId, IPythonType> _builtinTypes;
         private PythonAnalyzer _analyzer;
         private AstScrapedPythonModule _builtinModule;
+        private IReadOnlyList<string> _builtinModuleNames;
         private readonly ConcurrentDictionary<string, IPythonModule> _modules;
         private readonly AstPythonBuiltinType _noneType;
 
@@ -67,8 +68,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             lock (_builtinTypes) {
                 if (!_builtinTypes.TryGetValue(id, out res)) {
                     var bm = ImportModule(BuiltinModuleName) as AstBuiltinsPythonModule;
-                    res = bm?.GetAnyMember($"__{id}") as IPythonType ??
-                        new AstPythonType(SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version));
+                    res = bm?.GetAnyMember($"__{id}") as IPythonType;
+                    if (res == null) {
+                        var name = SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version);
+                        if (string.IsNullOrEmpty(name)) {
+                            Debug.Assert(id == BuiltinTypeId.Unknown, $"no name for {id}");
+                            if (!_builtinTypes.TryGetValue(BuiltinTypeId.Unknown, out res)) {
+                                _builtinTypes[BuiltinTypeId.Unknown] = res = new AstPythonType("<unknown>");
+                            }
+                        } else {
+                            res = new AstPythonType(name);
+                        }
+                    }
                     _builtinTypes[id] = res;
                 }
             }
@@ -90,6 +101,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IList<string> GetModuleNames() {
             var ussp = GetUserSearchPathPackages();
             var ssp = _factory.GetImportableModules();
+            var bmn = _builtinModuleNames;
 
             IEnumerable<string> names = null;
             if (ussp != null) {
@@ -97,6 +109,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
             if (ssp != null) {
                 names = names?.Union(ssp.Keys) ?? ssp.Keys;
+            }
+            if (bmn != null) {
+                names = names?.Union(bmn) ?? bmn;
             }
 
             return names.MaybeEnumerate().ToArray();
@@ -149,26 +164,58 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
+            // Handle builtins explicitly
             if (name == BuiltinModuleName) {
                 if (_builtinModule == null) {
                     _modules[BuiltinModuleName] = _builtinModule = new AstBuiltinsPythonModule(_factory.LanguageVersion);
                     _builtinModule.Imported(this);
+                    var bmn = ((AstBuiltinsPythonModule)_builtinModule).GetAnyMember("__builtin_module_names") as AstPythonStringLiteral;
+                    _builtinModuleNames = bmn?.Value?.Split(',');
                 }
                 return _builtinModule;
             }
 
             IPythonModule mod;
+            // Return any existing module
             if (_modules.TryGetValue(name, out mod) && mod != null) {
                 if (mod is EmptyModule) {
                     Trace.TraceWarning($"Recursively importing {name}");
                 }
                 return mod;
             }
+
+            // Set up a sentinel so we can detect recursive imports
             var sentinalValue = new EmptyModule();
             if (!_modules.TryAdd(name, sentinalValue)) {
                 return _modules[name];
             }
 
+            // Do normal searches
+            mod = ImportFromBuiltins(name) ?? ImportFromSearchPaths(name);
+
+            // Replace our sentinel, or if we raced, get the current
+            // value and abandon the one we just created.
+            if (!_modules.TryUpdate(name, mod, sentinalValue)) {
+                mod = _modules[name];
+            }
+
+            return mod;
+        }
+
+        private IPythonModule ImportFromBuiltins(string name) {
+            if (_builtinModuleNames == null || !_builtinModuleNames.Contains(name)) {
+                return null;
+            }
+
+            try {
+                return new AstBuiltinPythonModule(name, Factory?.Configuration.InterpreterPath);
+            } catch (ArgumentNullException) {
+                Debug.Fail("No factory means cannot import builtin modules");
+                return null;
+            }
+        }
+
+        private IPythonModule ImportFromSearchPaths(string name) {
             var mmp = FindModuleInSearchPath(_userSearchPaths, GetUserSearchPathPackages(), name);
 
             if (mmp.HasValue) {
@@ -183,25 +230,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (!mmp.HasValue) {
-                if (!_modules.TryUpdate(name, null, sentinalValue)) {
-                    return _modules[name];
-                }
                 return null;
             }
 
             var mp = mmp.Value;
 
             if (mp.IsCompiled) {
-                mod = new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
-            } else {
-                mod = AstPythonModule.FromFile(this, mp.SourceFile, _factory.LanguageVersion, mp.FullName);
+                return new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
             }
 
-            if (!_modules.TryUpdate(name, mod, sentinalValue)) {
-                mod = _modules[name];
-            }
-
-            return mod;
+            return AstPythonModule.FromFile(this, mp.SourceFile, _factory.LanguageVersion, mp.FullName);
         }
 
         public void Initialize(PythonAnalyzer state) {
