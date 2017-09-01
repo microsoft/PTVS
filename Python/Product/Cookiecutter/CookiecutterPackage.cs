@@ -119,7 +119,10 @@ namespace Microsoft.CookiecutterTools {
                     NewCookiecutterSession();
                     break;
                 case PackageIds.cmdidAddFromCookiecutter:
-                    NewCookiecutterSession(_projectSystem.GetSelectedFolderProjectLocation());
+                    NewCookiecutterSession(new CookiecutterSessionStartInfo(_projectSystem.GetSelectedFolderProjectLocation()));
+                    break;
+                case PackageIds.cmdidNewProjectFromTemplate:
+                    hr = NewProjectFromTemplate(variantIn, variantOut, commandExecOpt);
                     break;
                 default:
                     Debug.Assert(false);
@@ -217,9 +220,9 @@ namespace Microsoft.CookiecutterTools {
             return window;
         }
 
-        internal void NewCookiecutterSession(ProjectLocation location = null) {
+        internal void NewCookiecutterSession(CookiecutterSessionStartInfo ssi = null) {
             var pane = ShowWindowPane(typeof(CookiecutterToolWindow), true) as CookiecutterToolWindow;
-            pane.NewSession(location);
+            pane.NewSession(ssi);
         }
 
         private int ViewExternalBrowser(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt) {
@@ -245,6 +248,30 @@ namespace Microsoft.CookiecutterTools {
                     }
                 }
             }
+
+            return VSConstants.S_OK;
+        }
+
+        private int NewProjectFromTemplate(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt) {
+            if (IsQueryParameterList(variantIn, variantOut, commandExecOpt)) {
+                Marshal.GetNativeVariantForObject("url", variantOut);
+                return VSConstants.S_OK;
+            }
+
+            var name = GetStringArgument(variantIn) ?? "";
+            var args = name.Split('|');
+            if (args.Length != 3) {
+                return VSConstants.E_FAIL;
+            }
+
+            var projectName = args[0];
+            var targetFolder = args[1];
+            var templateUri = args[2].Trim('"');
+            var projectFolder = Path.Combine(targetFolder, projectName);
+
+            NewCookiecutterSession(
+                new CookiecutterSessionStartInfo(projectName, projectFolder, templateUri)
+            );
 
             return VSConstants.S_OK;
         }

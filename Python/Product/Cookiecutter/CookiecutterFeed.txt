@@ -3,3 +3,6 @@ https://github.com/MSOneCode/cookiecutter-iot-hub-python-get-started
 https://github.com/MSOneCode/cookiecutter-active-directory-python-graphapi-oauth2-0-access
 https://github.com/MSOneCode/cookiecutter-batch-data-lake-store-python-paas-cloud-service-pool
 https://github.com/MSOneCode/cookiecutter-batch-python-paas-cloud-service-pool
+https://github.com/Microsoft/python-sklearn-classifier-cookiecutter
+https://github.com/Microsoft/python-sklearn-clustering-cookiecutter
+https://github.com/Microsoft/python-sklearn-regression-cookiecutter

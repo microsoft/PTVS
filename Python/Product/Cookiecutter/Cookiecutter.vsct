@@ -218,6 +218,21 @@
         </Strings>
       </Button>
 
+      <!--
+      For use from a VS template wizard to invoke the cookiecutter explorer
+      with a specific template and target location
+      -->
+      <Button guid="guidCookiecutterCmdSet" id="cmdidNewProjectFromTemplate" priority="0x0100" type="Button">
+        <Parent guid="guidCookiecutterCmdSet" id="CookiecutterMenu"/>
+        <CommandFlag>AllowParams</CommandFlag>
+        <Strings>
+          <ButtonText>Create Project From Cookiecutter Template</ButtonText>
+          <MenuText>&amp;Create Project From Cookiecutter Template</MenuText>
+          <CanonicalName>.Cookiecutter.NewProjectFromTemplate</CanonicalName>
+          <LocCanonicalName>New Project From Template</LocCanonicalName>
+        </Strings>
+      </Button>
+
       <Button guid="guidCookiecutterCmdSet" id="cmdidViewExternalWebBrowser" priority="0x0100" type="Button">
         <Parent guid="guidCookiecutterCmdSet" id="CookiecutterMenu"/>
         <CommandFlag>AllowParams</CommandFlag>
@@ -332,9 +347,10 @@
       <IDSymbol name="cmdidAddFromCookiecutter" value ="0x1008"/>
       <IDSymbol name="cmdidUpdateTemplate" value ="0x1009"/>
       <IDSymbol name="cmdidCheckForUpdates" value ="0x100a"/>
+      <IDSymbol name="cmdidNewProjectFromTemplate" value ="0x100b"/>
       <IDSymbol name="cmdidViewExternalWebBrowser" value ="0x1100"/>
 
-      <!-- Context Menus -->
+        <!-- Context Menus -->
       <IDSymbol name="ContextMenu" value="101"/>
 
       <!-- Menus -->

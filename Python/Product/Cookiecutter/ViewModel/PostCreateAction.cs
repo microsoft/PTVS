@@ -14,25 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-
-namespace Microsoft.CookiecutterTools.Model {
-    class TemplateContext {
-        public List<ContextItem> Items { get; } = new List<ContextItem>();
-        public List<DteCommand> Commands { get; } = new List<DteCommand>();
-
-        public TemplateContext() :
-            this(null, null) {
-        }
-
-        public TemplateContext(ContextItem[] items = null, DteCommand[] cmds = null) {
-            if (items != null) {
-                Items.AddRange(items);
-            }
-
-            if (cmds != null) {
-                Commands.AddRange(cmds);
-            }
-        }
+namespace Microsoft.CookiecutterTools.ViewModel {
+    enum PostCreateAction {
+        AddToProject,
+        AddToSolution,
+        OpenProject,
+        OpenFolder,
     }
 }
