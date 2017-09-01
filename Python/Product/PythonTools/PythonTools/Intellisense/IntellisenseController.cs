@@ -191,10 +191,23 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 entry = bi.TrySetAnalysisEntry(entry, null);
+
+                if (entry == null) {
+                    Debug.Fail("Analysis entry should never be null here");
+                    return;
+                }
             }
 
             var parser = entry.GetOrCreateBufferParser(_services);
-            parser.AddBuffer(subjectBuffer);
+            try {
+                parser.AddBuffer(subjectBuffer);
+            } catch (InvalidOperationException ex) {
+                // Should not fail here due to missing analysis entry
+                // But if we do, it probably means someone else owns
+                // the buffer now and we should quietly let them.
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                return;
+            }
             await parser.EnsureCodeSyncedAsync(subjectBuffer);
         }
 
