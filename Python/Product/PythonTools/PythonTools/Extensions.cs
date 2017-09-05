@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -257,6 +258,10 @@ namespace Microsoft.PythonTools {
             return serviceProvider.GetComponentModel()?.GetService<AnalysisEntryService>();
         }
 
+        internal static PythonEditorServices GetEditorServices(this IServiceProvider serviceProvider) {
+            return serviceProvider.GetComponentModel()?.GetService<PythonEditorServices>();
+        }
+
         internal static PythonLanguageVersion GetLanguageVersion(this ITextView textView, IServiceProvider serviceProvider) {
             var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
             if (evaluator != null) {
@@ -307,14 +312,15 @@ namespace Microsoft.PythonTools {
         /// Returns null if the caret isn't in Python code or an analysis doesn't exist for some reason.
         /// </summary>
         internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            var buffer = textView.GetPythonBufferAtCaret();
-            if (buffer == null) {
-                return null;
-            }
-
             var service = serviceProvider.GetEntryService();
             AnalysisEntry entry = null;
-            service?.TryGetAnalysisEntry(textView, buffer, out entry);
+
+            var buffer = textView.GetPythonBufferAtCaret();
+            if (buffer == null) {
+                service?.TryGetAnalysisEntry(textView, out entry);
+            } else {
+                service?.TryGetAnalysisEntry(buffer, out entry);
+            }
             return entry;
         }
 

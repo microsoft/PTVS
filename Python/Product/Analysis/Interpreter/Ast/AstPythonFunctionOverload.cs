@@ -14,28 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonFunctionOverload : IPythonFunctionOverload {
+    class AstPythonFunctionOverload : IPythonFunctionOverload, ILocatedMember {
         private readonly IReadOnlyList<IParameterInfo> _parameters;
 
         public AstPythonFunctionOverload(
-            string doc,
-            string returnDoc,
             IEnumerable<IParameterInfo> parameters,
-            IEnumerable<IPythonType> returns
+            LocationInfo loc, 
+            IList<IPythonType> returnType
         ) {
-            Documentation = doc;
-            ReturnDocumentation = returnDoc;
-            _parameters = parameters.ToArray();
-            ReturnType = returns.ToList();
+            _parameters = parameters?.ToArray() ?? throw new ArgumentNullException(nameof(parameters));
+            Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
+            ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
         }
 
-        public string Documentation { get; }
+        internal void SetDocumentation(string doc) {
+            if (Documentation != null) {
+                throw new InvalidOperationException("cannot set Documentation twice");
+            }
+            Documentation = doc;
+        }
+
+        public string Documentation { get; private set; }
         public string ReturnDocumentation { get; }
         public IParameterInfo[] GetParameters() => _parameters.ToArray();
         public IList<IPythonType> ReturnType { get; }
+        public IEnumerable<LocationInfo> Locations { get; }
     }
 }

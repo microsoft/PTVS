@@ -70,47 +70,47 @@ namespace ReplWindowUITests {
         }
     }
 
-    [TestClass]
-    public class ReplWindowPython30Tests : ReplWindowPythonSmokeTests {
-        internal override ReplWindowProxySettings Settings {
-            get {
-                return new ReplWindowProxySettings {
-                    Version = PythonPaths.Python30,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
-                };
-            }
-        }
-    }
+    //[TestClass]
+    //public class ReplWindowPython30Tests : ReplWindowPythonSmokeTests {
+    //    internal override ReplWindowProxySettings Settings {
+    //        get {
+    //            return new ReplWindowProxySettings {
+    //                Version = PythonPaths.Python30,
+    //                RawInput = "input",
+    //                IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+    //                ExitHelp = ReplWindowProxySettings.Python3ExitHelp
+    //            };
+    //        }
+    //    }
+    //}
 
-    [TestClass]
-    public class ReplWindowPython31Tests : ReplWindowPythonSmokeTests {
-        internal override ReplWindowProxySettings Settings {
-            get {
-                return new ReplWindowProxySettings {
-                    Version = PythonPaths.Python31,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
-                };
-            }
-        }
-    }
+    //[TestClass]
+    //public class ReplWindowPython31Tests : ReplWindowPythonSmokeTests {
+    //    internal override ReplWindowProxySettings Settings {
+    //        get {
+    //            return new ReplWindowProxySettings {
+    //                Version = PythonPaths.Python31,
+    //                RawInput = "input",
+    //                IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+    //                ExitHelp = ReplWindowProxySettings.Python3ExitHelp
+    //            };
+    //        }
+    //    }
+    //}
 
-    [TestClass]
-    public class ReplWindowPython32Tests : ReplWindowPythonSmokeTests {
-        internal override ReplWindowProxySettings Settings {
-            get {
-                return new ReplWindowProxySettings {
-                    Version = PythonPaths.Python32,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
-                };
-            }
-        }
-    }
+    //[TestClass]
+    //public class ReplWindowPython32Tests : ReplWindowPythonSmokeTests {
+    //    internal override ReplWindowProxySettings Settings {
+    //        get {
+    //            return new ReplWindowProxySettings {
+    //                Version = PythonPaths.Python32,
+    //                RawInput = "input",
+    //                IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+    //                ExitHelp = ReplWindowProxySettings.Python3ExitHelp
+    //            };
+    //        }
+    //    }
+    //}
 
     [TestClass]
     public class ReplWindowPython33Tests : ReplWindowPythonTests {
@@ -200,33 +200,33 @@ namespace ReplWindowUITests {
         }
     }
 
-    [TestClass]
-    public class ReplWindowPython31x64Tests : ReplWindowPythonSmokeTests {
-        internal override ReplWindowProxySettings Settings {
-            get {
-                return new ReplWindowProxySettings {
-                    Version = PythonPaths.Python31_x64,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
-                };
-            }
-        }
-    }
+    //[TestClass]
+    //public class ReplWindowPython31x64Tests : ReplWindowPythonSmokeTests {
+    //    internal override ReplWindowProxySettings Settings {
+    //        get {
+    //            return new ReplWindowProxySettings {
+    //                Version = PythonPaths.Python31_x64,
+    //                RawInput = "input",
+    //                IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+    //                ExitHelp = ReplWindowProxySettings.Python3ExitHelp
+    //            };
+    //        }
+    //    }
+    //}
 
-    [TestClass]
-    public class ReplWindowPython32x64Tests : ReplWindowPythonSmokeTests {
-        internal override ReplWindowProxySettings Settings {
-            get {
-                return new ReplWindowProxySettings {
-                    Version = PythonPaths.Python32_x64,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp
-                };
-            }
-        }
-    }
+    //[TestClass]
+    //public class ReplWindowPython32x64Tests : ReplWindowPythonSmokeTests {
+    //    internal override ReplWindowProxySettings Settings {
+    //        get {
+    //            return new ReplWindowProxySettings {
+    //                Version = PythonPaths.Python32_x64,
+    //                RawInput = "input",
+    //                IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
+    //                ExitHelp = ReplWindowProxySettings.Python3ExitHelp
+    //            };
+    //        }
+    //    }
+    //}
 
     [TestClass]
     public class ReplWindowPython33x64Tests : ReplWindowPythonSmokeTests {

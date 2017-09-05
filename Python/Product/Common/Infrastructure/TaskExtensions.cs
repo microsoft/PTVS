@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -50,7 +51,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
             } catch (AggregateException ae) {
                 if (ae.InnerException != null) {
-                    throw ae.InnerException;
+                    ExceptionDispatchInfo.Capture(ae.InnerException).Throw();
                 }
                 throw;
             }

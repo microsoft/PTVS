@@ -24,6 +24,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
@@ -187,6 +189,7 @@ namespace PythonToolsUITests {
 
                     var doc = app.GetDocument(item.Document.FullName);
 
+                    doc.WaitForAnalysisAtCaret();
                     var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
                     var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
 
@@ -363,17 +366,17 @@ namespace PythonToolsUITests {
                 var doc = app.GetDocument(item.Document.FullName);
                 System.Threading.Thread.Sleep(1000);
 
-                Keyboard.Type("from fob import ba");
+                doc.Type("from fob import ba");
                 using (doc.WaitForSession<ICompletionSession>()) {
-                    Keyboard.Type("\r");
+                    doc.Type("\r");
                 }
 
                 doc.WaitForText("from fob import baz");
-                Keyboard.Type("\r");
+                doc.Type("\r");
 
-                Keyboard.Type("from fob import Ba");
+                doc.Type("from fob import Ba");
                 using (doc.WaitForSession<ICompletionSession>()) {
-                    Keyboard.Type("\r");
+                    doc.Type("\r");
                 }
                 doc.WaitForText("from fob import baz\r\nfrom fob import Baz");
             }
@@ -565,10 +568,23 @@ pass");
     def oar(self):
         pass");
 
-                // http://pytools.codeplex.com/workitem/299
+                // Previously http://pytools.codeplex.com/workitem/299
+                // New expected behaviors are:
+                //      def f():                def f():
+                //      |   pass                   |pass
+                //
+                //                    become
+                //      def f():                def f():
+                //      
+                //      pass                        pass
                 AutoIndentExistingTest(app, project, "ClassAndFunc.py", 2, 4, @"class C:
     def f(self):
     
+    pass");
+
+                AutoIndentExistingTest(app, project, "ClassAndFunc.py", 2, 8, @"class C:
+    def f(self):
+        
         pass");
             }
         }
@@ -583,6 +599,9 @@ pass");
         /// <param name="expectedText"></param>
         private static void AutoIndentExistingTest(VisualStudioApp app, Project project, string filename, int line, int column, string expectedText) {
             var item = project.ProjectItems.Item(filename);
+            if (item.IsOpen) {
+                item.Document.ActiveWindow?.Close();
+            }
             var window = item.Open();
             window.Activate();
 
@@ -606,7 +625,7 @@ pass");
                 }
                 System.Threading.Thread.Sleep(100);
             }
-            Assert.AreEqual(actual, expectedText);
+            Assert.AreEqual(expectedText, actual);
         }
 
         private static void AutoIndentTest(VisualStudioApp app, Project project, string typedText, string expectedText) {
@@ -616,9 +635,10 @@ pass");
 
             expectedText = Regex.Replace(expectedText, "^\\s+$", "", RegexOptions.Multiline);
 
-            Keyboard.Type(typedText);
-
             var doc = app.GetDocument(item.Document.FullName);
+            doc.WaitForAnalysisAtCaret();
+
+            Keyboard.Type(typedText);
 
             string actual = null;
             for (int i = 0; i < 100; i++) {
@@ -712,6 +732,8 @@ x\
                 }
             }));
 
+            doc.WaitForAnalysisAtCaret();
+
             typing();
 
             string actual = null;
@@ -750,7 +772,9 @@ x\
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyWarning() {
+            var oldSuppress = VsProjectAnalyzer.SuppressTaskProvider;
             using (var app = new PythonVisualStudioApp()) {
+                app.OnDispose(() => VsProjectAnalyzer.SuppressTaskProvider = oldSuppress);
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Warning;
@@ -770,7 +794,9 @@ x\
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyError() {
+            var oldSuppress = VsProjectAnalyzer.SuppressTaskProvider;
             using (var app = new PythonVisualStudioApp()) {
+                app.OnDispose(() => VsProjectAnalyzer.SuppressTaskProvider = oldSuppress);
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Error;
@@ -790,7 +816,9 @@ x\
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyIgnore() {
+            var oldSuppress = VsProjectAnalyzer.SuppressTaskProvider;
             using (var app = new PythonVisualStudioApp()) {
+                app.OnDispose(() => VsProjectAnalyzer.SuppressTaskProvider = oldSuppress);
                 var options = app.Options;
                 var severity = options.IndentationInconsistencySeverity;
                 options.IndentationInconsistencySeverity = Severity.Ignore;

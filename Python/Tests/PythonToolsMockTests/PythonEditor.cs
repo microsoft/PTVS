@@ -16,9 +16,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -69,32 +72,51 @@ namespace PythonToolsMockTests {
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
                     vs.InvokeSync(() => {
-                        analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory);
+                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory, outOfProcAnalyzer: false);
                     });
                     var task = analyzer.ReloadTask;
                     if (task != null) {
                         task.WaitAndUnwrapExceptions();
                     }
                 }
+                if (string.IsNullOrEmpty(filename)) {
+                    do {
+                        filename = PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(), Path.GetRandomFileName()) + ".py";
+                    } while (File.Exists(filename));
+                }
 
-                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                var cancel = CancellationTokens.After60s;
                 using (var mre = new ManualResetEventSlim()) {
-                    EventHandler evt = (s, e) => mre.SetIfNotDisposed();
-                    analyzer.AnalysisStarted += evt;
-                    view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", v => {
-                        v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                    }, filename);
+                    view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "",
+                        v => {
+                            v.TextView.TextBuffer.Properties[BufferParser.ParseImmediately] = true;
+                            v.TextView.TextBuffer.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
+                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testAnalyzer] = analyzer;
+                            v.TextView.TextBuffer.Properties[VsProjectAnalyzer._testFilename] = filename;
+                        },
+                        filename);
 
-                    try {
-                        while (!mre.Wait(500, cts.Token) && !vs.HasPendingException) { }
-                        analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested && !vs.HasPendingException);
-                    } catch (OperationCanceledException) {
-                    } finally {
-                        analyzer.AnalysisStarted -= evt;
+                    var entry = analyzer.GetAnalysisEntryFromPath(filename);
+                    while (entry == null && !cancel.IsCancellationRequested) {
+                        Thread.Sleep(50);
+                        entry = analyzer.GetAnalysisEntryFromPath(filename);
                     }
-                    if (cts.IsCancellationRequested) {
+
+                    if (!string.IsNullOrEmpty(content) && !cancel.IsCancellationRequested && !entry.IsAnalyzed) {
+                        EventHandler evt = (s, e) => mre.SetIfNotDisposed();
+
+                        try {
+                            entry.AnalysisComplete += evt;
+                            while (!mre.Wait(50, cancel) && !vs.HasPendingException) { }
+                        } catch (OperationCanceledException) {
+                        } finally {
+                            analyzer.AnalysisStarted -= evt;
+                        }
+                    }
+                    if (cancel.IsCancellationRequested) {
                         Assert.Fail("Timed out waiting for code analysis");
                     }
+
                     vs.ThrowPendingException();
                 }
 
@@ -128,33 +150,54 @@ namespace PythonToolsMockTests {
         public string Text {
             get { return View.Text; }
             set {
-                using (var mre = new ManualResetEventSlim()) {
+                var buffer = View.TextView.TextBuffer;
+                var bi = PythonTextBufferInfo.TryGetForBuffer(buffer);
+
+                if (bi?.AnalysisEntry == null) {
+                    // No analysis yet, so just set the text.
                     using (var edit = View.TextView.TextBuffer.CreateEdit()) {
                         edit.Delete(0, edit.Snapshot.Length);
-                        edit.Apply();
-                    }
-
-                    var buffer = View.TextView.TextBuffer;
-                    var oldVersion = buffer.CurrentSnapshot;
-                    buffer.GetPythonAnalysisClassifier().ClassificationChanged += (s, e) => {
-                        var en = (AnalysisEntry)GetAnalysisEntry();
-                        if (en.TryGetBufferParser()?.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
-                            mre.SetIfNotDisposed();
-                        }
-                    };
-                    
-                    using (var edit = View.TextView.TextBuffer.CreateEdit()) {
                         edit.Insert(0, value);
                         edit.Apply();
                     }
+                    return;
+                }
 
-                    var entry = (AnalysisEntry)GetAnalysisEntry();
-                    entry.TryGetBufferParser().Requeue();    // force the reparse to happen quickly...
+                using (var edit = buffer.CreateEdit()) {
+                    edit.Delete(0, edit.Snapshot.Length);
+                    edit.Apply();
+                }
 
-                    if (!mre.Wait(10000)) {
-                        throw new TimeoutException("Failed to see buffer start analyzing");
+                if (string.IsNullOrEmpty(value)) {
+                    return;
+                }
+
+                using (ManualResetEventSlim mre1 = new ManualResetEventSlim(), mre2 = new ManualResetEventSlim()) {
+                    EventHandler evt1 = (s, e) => mre1.SetIfNotDisposed();
+                    EventHandler evt2 = (s, e) => mre2.SetIfNotDisposed();
+                    Analyzer.AnalysisStarted += evt1;
+                    bi.AnalysisEntry.AnalysisComplete += evt2;
+
+                    try {
+                        using (var edit = View.TextView.TextBuffer.CreateEdit()) {
+                            edit.Insert(0, value);
+                            edit.Apply();
+                        }
+
+                        if (!mre1.Wait(0)) {
+                            if (!mre1.Wait(10000)) {
+                                throw new TimeoutException("Failed to see buffer start analyzer");
+                            }
+                            mre2.Reset();
+                        }
+
+                        if (!mre2.Wait(10000)) {
+                            throw new TimeoutException("Failed to see entry finish analyzing");
+                        }
+                    } finally {
+                        Analyzer.AnalysisStarted -= evt1;
+                        bi.AnalysisEntry.AnalysisComplete -= evt2;
                     }
-                    Analyzer.WaitForCompleteAnalysis(_ => true);
                 }
             }
         }
@@ -162,6 +205,51 @@ namespace PythonToolsMockTests {
         public ITextSnapshot CurrentSnapshot {
             get { return View.TextView.TextSnapshot; }
         }
+
+        public WaitHandle AnalysisCompleteEvent {
+            get {
+                var evt = new AnalysisCompleteManualResetEvent(BufferInfo);
+                BufferInfo.AddSink(evt, evt);
+                return evt;
+            }
+        }
+
+        class AnalysisCompleteManualResetEvent : WaitHandle, IPythonTextBufferInfoEventSink {
+            private readonly ManualResetEvent _event;
+            private readonly PythonTextBufferInfo _info;
+
+            public AnalysisCompleteManualResetEvent(PythonTextBufferInfo info) {
+                _event = new ManualResetEvent(false);
+                _info = info;
+                SafeWaitHandle = _event.SafeWaitHandle;
+            }
+
+            protected override void Dispose(bool explicitDisposing) {
+                SafeWaitHandle = null;
+                base.Dispose(explicitDisposing);
+                _event.Dispose();
+                if (explicitDisposing) {
+                    _info.RemoveSink(this);
+                }
+            }
+
+            public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+                if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
+                    if (_info.LastAnalysisReceivedVersion.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
+                        try {
+                            _event.Set();
+                        } catch (ObjectDisposedException) {
+                        }
+                        _info.RemoveSink(this);
+                    }
+                }
+                return Task.CompletedTask;
+            }
+        }
+
+        internal PythonEditorServices EditorServices => VS.ComponentModel.GetService<PythonEditorServices>();
+
+        internal PythonTextBufferInfo BufferInfo => EditorServices.GetBufferInfo(View.TextView.TextBuffer);
 
         public List<Completion> GetCompletionListAfter(string substring, bool assertIfNoCompletions = true) {
             var snapshot = CurrentSnapshot;
@@ -195,6 +283,27 @@ namespace PythonToolsMockTests {
         public void ParamInfo() => VS.InvokeSync(() => View.ParamInfo());
         public void Type(string text) => VS.InvokeSync(() => View.Type(text));
 
+        public void TypeAndWaitForAnalysis(string text) {
+            using (var mre = new ManualResetEventSlim()) {
+                EventHandler evt = (s, e) => mre.SetIfNotDisposed();
+                Analyzer.AnalysisStarted += evt;
+
+                Type(text);
+
+                var cts = CancellationTokens.After60s;
+                try {
+                    while (!mre.Wait(500, cts) && !VS.HasPendingException) { }
+                    Analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested && !VS.HasPendingException);
+                } catch (OperationCanceledException) {
+                } finally {
+                    Analyzer.AnalysisStarted -= evt;
+                }
+                if (cts.IsCancellationRequested) {
+                    Assert.Fail("Timed out waiting for code analysis");
+                }
+                VS.ThrowPendingException();
+            }
+        }
 
         public IEnumerable<string> GetCompletions(int index) {
             return GetCompletionList(index, false).Select(c => c.DisplayText);
@@ -207,10 +316,12 @@ namespace PythonToolsMockTests {
         public object GetAnalysisEntry(ITextBuffer buffer = null) {
             var entryService = VS.ComponentModel.GetService<AnalysisEntryService>();
             AnalysisEntry entry;
-            if (!entryService.TryGetAnalysisEntry(View.TextView, buffer, out entry)) {
-                throw new ArgumentException("no AnalysisEntry available");
+            if (buffer == null) {
+                entryService.TryGetAnalysisEntry(View.TextView, out entry);
+            } else {
+                entryService.TryGetAnalysisEntry(buffer, out entry);
             }
-            return entry;
+            return entry ?? throw new ArgumentException("no AnalysisEntry available");
         }
 
         public void Dispose() {

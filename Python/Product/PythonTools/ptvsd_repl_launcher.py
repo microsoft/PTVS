@@ -26,24 +26,26 @@ import os.path
 import sys
 import traceback
 
-try:
-    ptvs_lib_path = os.path.dirname(__file__)
-    sys.path.insert(0, ptvs_lib_path)
-    import ptvsd.repl as repl
-except:
-    traceback.print_exc()
-    print('''
-Internal error detected. Please copy the above traceback and report at
-https://go.microsoft.com/fwlink/?LinkId=293415
-
-Press Enter to close. . .''')
+def _get_repl():
     try:
-        raw_input()
-    except NameError:
-        input()
-    sys.exit(1)
-finally:
-    sys.path.remove(ptvs_lib_path)
+        ptvs_lib_path = os.path.dirname(__file__)
+        sys.path.insert(0, ptvs_lib_path)
+        import ptvsd.repl
+    except:
+        traceback.print_exc()
+        print('''
+    Internal error detected. Please copy the above traceback and report at
+    https://go.microsoft.com/fwlink/?LinkId=293415
+
+    Press Enter to close. . .''')
+        try:
+            raw_input()
+        except NameError:
+            input()
+        sys.exit(1)
+    finally:
+        sys.path.remove(ptvs_lib_path)
+    return ptvsd.repl
 
 # Arguments are:
 # 1. Working directory.
@@ -56,6 +58,7 @@ finally:
 
 def _run_repl():
     from optparse import OptionParser
+    repl = _get_repl()
 
     parser = OptionParser(prog='repl', description='Process REPL options')
     parser.add_option('--port', dest='port',
@@ -87,17 +90,20 @@ def _run_repl():
     sys.argv = args or ['']
 
     try:
-        repl.BACKEND = backend_type()
+        backend = backend_type()
     except repl.UnsupportedReplException:
         backend_error = sys.exc_info()[1].reason
-        repl.BACKEND = repl.BasicReplBackend()
+        backend = repl.BasicReplBackend()
     except Exception:
         backend_error = traceback.format_exc()
-        repl.BACKEND = repl.BasicReplBackend()
-    repl.BACKEND.connect(int(options.port))
+        backend = repl.BasicReplBackend()
+
+    repl.BACKEND = backend
+    backend.connect(int(options.port))
 
     if options.enable_attach:
-        repl.BACKEND.init_debugger()
+        backend.init_debugger()
+
 
     if backend_error is not None:
         sys.stderr.write('Error using selected REPL back-end:\n')
@@ -105,18 +111,20 @@ def _run_repl():
         sys.stderr.write('Using standard backend instead\n')
 
     # execute code on the main thread which we can interrupt
-    repl.BACKEND.execution_loop()    
+    backend.execution_loop()    
 
 if __name__ == '__main__':
-    try:
-        _run_repl()
-    except:
-        if repl.DEBUG:
+    if getattr(_get_repl(), 'DEBUG', False):
+        try:
+            _run_repl()
+        except:
             sys.__stdout__.write(traceback.format_exc())
             sys.__stdout__.write('\n\nPress Enter to close...')
             sys.__stdout__.flush()
-        try:
-            raw_input()
-        except NameError:
-            input()
-        raise
+            try:
+                raw_input()
+            except NameError:
+                input()
+            raise
+    else:
+        _run_repl()

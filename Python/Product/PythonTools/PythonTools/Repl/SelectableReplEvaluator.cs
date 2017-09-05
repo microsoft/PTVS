@@ -19,12 +19,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Utilities;
 using Task = System.Threading.Tasks.Task;
@@ -198,14 +199,6 @@ namespace Microsoft.PythonTools.Repl {
 
         private async Task DoInitializeAsync(IInteractiveEvaluator eval) {
             await eval.InitializeAsync();
-
-            var view = eval?.CurrentWindow?.TextView;
-            var buffer = eval?.CurrentWindow?.CurrentLanguageBuffer;
-            if (view != null && buffer != null) {
-                var controller = IntellisenseControllerProvider.GetOrCreateController(_serviceProvider, _serviceProvider.GetComponentModel(), view);
-                controller.DisconnectSubjectBuffer(buffer);
-                controller.ConnectSubjectBuffer(buffer);
-            }
         }
 
         private void DetachWindow(IInteractiveEvaluator oldEval) {
@@ -215,7 +208,11 @@ namespace Microsoft.PythonTools.Repl {
                     if (oldEval.CurrentWindow.CurrentLanguageBuffer == buffer) {
                         continue;
                     }
-                    buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
+
+                    var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
+                    if (tb != null) {
+                        tb.DoNotParse = true;
+                    }
                 }
             }
         }

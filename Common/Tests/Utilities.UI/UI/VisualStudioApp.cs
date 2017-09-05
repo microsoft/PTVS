@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -216,7 +217,7 @@ namespace TestUtilities.UI {
                 foreach (var ex in ae.InnerExceptions) {
                     Console.WriteLine(ex.ToString());
                 }
-                throw ae.InnerException;
+                ExceptionDispatchInfo.Capture(ae.InnerException).Throw();
             }
 
             if (timedOut) {

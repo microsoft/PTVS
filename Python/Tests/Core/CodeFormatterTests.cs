@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -173,12 +174,16 @@ class Oar(object):
 
         private static void CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
-            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact)) {
+            var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
+            using (var analyzer = new VsProjectAnalyzer(services, fact)) {
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, "C:\\fob.py");
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var view = new MockTextView(buffer);
-                analyzer.MonitorTextBufferAsync(buffer).Wait();
+                var bi = services.GetBufferInfo(buffer);
+                var entry = analyzer.AnalyzeFileAsync(bi.Filename).WaitAndUnwrapExceptions();
+                Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null), "Failed to set analysis entry");
+                entry.GetOrCreateBufferParser(services).AddBuffer(buffer);
+
                 var selectionSpan = new SnapshotSpan(
                     buffer.CurrentSnapshot,
                     ExtractMethodTests.GetSelectionSpan(input, selection)

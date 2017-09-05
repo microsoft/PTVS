@@ -52,7 +52,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int EnableModeless(int fEnable) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int FindToolWindow(uint grfFTW, ref Guid rguidPersistenceSlot, out IVsWindowFrame ppWindowFrame) {
@@ -78,7 +78,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetDialogOwnerHwnd(out IntPtr phwnd) {
-            throw new NotImplementedException();
+            phwnd = IntPtr.Zero;
+            return VSConstants.S_OK;
         }
 
         public int GetDirectoryViaBrowseDlg(VSBROWSEINFOW[] pBrowse) {

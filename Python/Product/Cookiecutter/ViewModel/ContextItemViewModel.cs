@@ -27,6 +27,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _url;
         private string _val;
         private string _default;
+        private bool _visible;
         private readonly List<string> _items;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -35,10 +36,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         /// Constructor for design view.
         /// </summary>
         public ContextItemViewModel() :
-            this(null, Selectors.String, null, null, null, null, null) {
+            this(string.Empty, Selectors.String, string.Empty, string.Empty, string.Empty, string.Empty, true, null) {
         }
 
-        public ContextItemViewModel(string name, string selector, string label, string description, string url, string defaultValue, string[] items = null) {
+        public ContextItemViewModel(string name, string selector, string label, string description, string url, string defaultValue, bool visible = true, string[] items = null) {
             _name = name;
             _selector = selector;
             _label = !string.IsNullOrEmpty(label) ? label : name;
@@ -46,6 +47,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _url = url;
             _val = string.Empty;
             _default = defaultValue;
+            _visible = visible;
             _items = new List<string>();
             if (items != null && items.Length > 0) {
                 _items.AddRange(items);
@@ -143,6 +145,19 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _default) {
                     _default = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Default)));
+                }
+            }
+        }
+
+        public bool Visible {
+            get {
+                return _visible;
+            }
+
+            set {
+                if (value != _visible) {
+                    _visible = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Visible)));
                 }
             }
         }

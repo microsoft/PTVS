@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Repl {
         internal const string DoNotResetConfigurationLaunchOption = "DoNotResetConfiguration";
 
         public PythonCommonInteractiveEvaluator(IServiceProvider serviceProvider) {
-            _serviceProvider = serviceProvider;
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _deferredOutput = new StringBuilder();
             _analysisFilename = Guid.NewGuid().ToString() + ".py";
         }
@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Repl {
                 } else {
                     var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
                     _analyzer = new VsProjectAnalyzer(
-                        _serviceProvider,
+                        _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
                         factory,
                         projectFile: projectFile,
                         comment: "{0} Interactive".FormatInvariant(DisplayName.IfNullOrEmpty("Unnamed"))
@@ -487,6 +487,14 @@ namespace Microsoft.PythonTools.Repl {
             ).Replace("&#x1b;", "\x1b");
 
             WriteOutput(msg, addNewline: true);
+
+            var langBuffer = _window.CurrentLanguageBuffer;
+            if (langBuffer != null) {
+                // Reinitializing, and our new language buffer does not automatically
+                // get connected to the Intellisense controller. Let's fix that.
+                var controller = IntellisenseControllerProvider.GetController(_window.TextView);
+                controller?.ConnectSubjectBuffer(langBuffer);
+            }
 
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);

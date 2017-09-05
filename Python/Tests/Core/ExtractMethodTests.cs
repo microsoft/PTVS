@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using AnalysisTests;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -1699,12 +1700,17 @@ async def f():
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
-            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider(suppressTaskProvider: true);
-            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact)) {
+            var services = PythonToolsTestUtilities.CreateMockServiceProvider(suppressTaskProvider: true).GetEditorServices();
+            using (var analyzer = new VsProjectAnalyzer(services, fact)) {
                 var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
                 buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                analyzer.MonitorTextBufferAsync(buffer).Wait();
+
+                var bi = services.GetBufferInfo(buffer);
+                var entry = analyzer.AnalyzeFileAsync(bi.Filename).WaitAndUnwrapExceptions();
+                Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null));
+                entry.GetOrCreateBufferParser(services).AddBuffer(buffer);
+
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 
                 view.Selection.Select(
@@ -1712,7 +1718,7 @@ async def f():
                     false
                 );
 
-                new MethodExtractor(serviceProvider, view).ExtractMethod(extractInput).Wait();
+                new MethodExtractor(services.Site, view).ExtractMethod(extractInput).Wait();
 
                 if (expected.IsError) {
                     Assert.AreEqual(expected.Text, extractInput.FailureReason);

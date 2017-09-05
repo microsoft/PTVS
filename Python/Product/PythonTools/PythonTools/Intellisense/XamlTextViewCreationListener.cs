@@ -16,6 +16,8 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
@@ -31,38 +33,29 @@ namespace Microsoft.PythonTools.Intellisense {
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     [ContentType("xaml")]
     class XamlTextViewCreationListener : IVsTextViewCreationListener {
-        internal readonly IVsEditorAdaptersFactoryService AdapterService;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly AnalysisEntryService _entryService;
+        private readonly PythonEditorServices _services;
 
         [ImportingConstructor]
-        public XamlTextViewCreationListener(
-            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
-            IVsEditorAdaptersFactoryService adapterService,
-            AnalysisEntryService entryService
-        ) {
-            _serviceProvider = serviceProvider;
-            AdapterService = adapterService;
-            _entryService = entryService;
+        public XamlTextViewCreationListener(PythonEditorServices services) {
+            _services = services;
         }
 
-        public void VsTextViewCreated(VisualStudio.TextManager.Interop.IVsTextView textViewAdapter) {
+        public async void VsTextViewCreated(VisualStudio.TextManager.Interop.IVsTextView textViewAdapter) {
             // TODO: We should probably only track text views in Python projects or loose files.
-            ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
+            var textView = _services.EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
             
             if (textView != null) {
-                var entryService = _serviceProvider.GetEntryService();
-                var analyzer = entryService.GetVsAnalyzer(textView, null);
-                if (analyzer != null) {
-                    var monitorResult = analyzer.MonitorTextBufferAsync(textView.TextBuffer)
-                        .ContinueWith(
-                            task => {
-                                textView.Closed += TextView_Closed;
-                                lock(task.Result) {
-                                    task.Result.AttachedViews++;
-                                }
-                            }
-                        );
+                var analyzer = _services.AnalysisEntryService.GetVsAnalyzer(textView, null);
+                var bi = _services.GetBufferInfo(textView.TextBuffer);
+                if (analyzer != null && bi != null && bi.AnalysisEntry == null) {
+                    var entry = await analyzer.AnalyzeFileAsync(bi.Filename);
+                    if (bi.TrySetAnalysisEntry(entry, null) != entry) {
+                        // Failed to start analyzing
+                        Debug.Fail("Failed to analyze xaml file");
+                        return;
+                    }
+                    await entry.EnsureCodeSyncedAsync(bi.Buffer);
+                    textView.Closed += TextView_Closed;
                 }
             }
         }
@@ -70,10 +63,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private void TextView_Closed(object sender, EventArgs e) {
             var textView = (ITextView)sender;
 
-            AnalysisEntry entry;
-            if (_entryService.TryGetAnalysisEntry(textView, textView.TextBuffer, out entry)) {
-                entry.Analyzer.BufferDetached(entry, textView.TextBuffer);
-            }
+            //AnalysisEntry entry;
+            //if (_entryService.TryGetAnalysisEntry(textView, textView.TextBuffer, out entry)) {
+            //    entry.Analyzer.BufferDetached(entry, textView.TextBuffer);
+            //}
             
             textView.Closed -= TextView_Closed;
         }

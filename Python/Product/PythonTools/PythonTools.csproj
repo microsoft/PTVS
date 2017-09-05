@@ -264,6 +264,9 @@
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
+    <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
+    <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />
+    <Compile Include="PythonTools\Editor\PythonTextBufferInfo.cs" />
     <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
@@ -288,6 +291,7 @@
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
       <SubType>UserControl</SubType>
@@ -298,6 +302,9 @@
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItem.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSource.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSourceProvider.cs" />
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
     <Compile Include="PythonTools\Repl\PythonCommonInteractiveEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugProcessReplEvaluator.cs" />
@@ -740,6 +747,7 @@
     </Content>
     <None Include="ptvsd\setup.py" />
     <Content Include="Snippets\Python\for.snippet">
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -750,46 +758,55 @@
     </Content>
     <Content Include="Snippets\Test\testclass.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Test</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\while.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\def.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\class.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\if.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\with.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\try.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\except.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\main.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

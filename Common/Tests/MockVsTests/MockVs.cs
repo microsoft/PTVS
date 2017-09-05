@@ -518,6 +518,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                         Console.WriteLine(tix);
                     } catch (ReflectionTypeLoadException tlx) {
                         Console.WriteLine(tlx);
+                        foreach (var ex in tlx.LoaderExceptions) {
+                            Console.WriteLine(ex);
+                        }
                     } catch (IOException iox) {
                         Console.WriteLine(iox);
                     }
@@ -550,7 +553,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return asm;
         }
 
-#endregion
+        #endregion
 
         public ITreeNode WaitForItemRemoved(params string[] path) {
             ITreeNode item = null;

@@ -20,5 +20,19 @@ namespace Microsoft.CookiecutterTools.Model {
     class TemplateContext {
         public List<ContextItem> Items { get; } = new List<ContextItem>();
         public List<DteCommand> Commands { get; } = new List<DteCommand>();
+
+        public TemplateContext() :
+            this(null, null) {
+        }
+
+        public TemplateContext(ContextItem[] items = null, DteCommand[] cmds = null) {
+            if (items != null) {
+                Items.AddRange(items);
+            }
+
+            if (cmds != null) {
+                Commands.AddRange(cmds);
+            }
+        }
     }
 }

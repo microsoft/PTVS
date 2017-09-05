@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -36,7 +37,8 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(1)]
         public void BuiltinFunctionSigHelp() {
             using (var view = new PythonEditor()) {
-                view.Type("min(");
+                view.TypeAndWaitForAnalysis("min");
+                view.Type("(");
 
                 for (int retries = 10; retries > 0; --retries) {
                     using (var sh = view.View.WaitForSession<ISignatureHelpSession>()) {
@@ -55,7 +57,7 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(1)]
         public void SigHelpInClass() {
             using (var view = new PythonEditor()) {
-                view.Type("class C(): pass");
+                view.TypeAndWaitForAnalysis("class C(): pass");
                 view.MoveCaret(1, 9);
 
                 view.ParamInfo();
@@ -67,7 +69,8 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(1)]
         public void BuiltinFunctionCompletions() {
             using (var view = new PythonEditor()) {
-                view.Type("min.");
+                view.TypeAndWaitForAnalysis("min");
+                view.Type(".");
 
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.Contains(sh.Session.Completions(), "__call__");
@@ -78,7 +81,8 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(1)]
         public void FilterCompletions() {
             using (var view = new PythonEditor()) {
-                view.Type("min.");
+                view.TypeAndWaitForAnalysis("min");
+                view.Type(".");
 
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.Contains(sh.Session.Completions(), "__call__");
@@ -93,7 +97,8 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(1)]
         public void DotCompletes() {
             using (var view = new PythonEditor()) {
-                view.Type("min.");
+                view.TypeAndWaitForAnalysis("min");
+                view.Type(".");
 
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.Contains(sh.Session.Completions(), "__call__");
@@ -108,7 +113,8 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(1)]
         public void NonIdentifierDismisses() {
             using (var view = new PythonEditor()) {
-                view.Type("min.");
+                view.TypeAndWaitForAnalysis("min");
+                view.Type(".");
 
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.Contains(sh.Session.Completions(), "__call__");
@@ -125,7 +131,8 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(1)]
         public void EnterCommits() {
             using (var view = new PythonEditor()) {
-                view.Type("min.");
+                view.TypeAndWaitForAnalysis("min");
+                view.Type(".");
 
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.ContainsAtLeast(sh.Session.Completions(), "__class__");
@@ -142,7 +149,8 @@ namespace PythonToolsMockTests {
                 view.AdvancedOptions.EnterCommitsIntellisense = false;
                 view.AdvancedOptions.AutoListMembers = true;
 
-                view.Type("min.");
+                view.TypeAndWaitForAnalysis("min");
+                view.Type(".");
 
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.ContainsAtLeast(sh.Session.Completions(), "__class__");
@@ -263,10 +271,23 @@ namespace PythonToolsMockTests {
                     int expected = _i > 0 ? _i : -_i;
 
                     text = code.Substring(lastStart, expected - lastStart);
-                    Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, expected);
-                    view.Type(text);
+                    if (!string.IsNullOrEmpty(text)) {
+                        Console.WriteLine("Typing '{0}' [{1}, {2})", text, lastStart, expected);
+                        view.Type(text);
 
-                    view.View.AssertNoIntellisenseSession();
+                        using (var sh = view.View.WaitForSession<ICompletionSession>(false)) {
+                            // Having a session here is okay as long as nothing is selected
+                            var hasCommittableCompletion = sh?.Session?.SelectedCompletionSet?.SelectionStatus?.IsSelected ?? false;
+                            if (hasCommittableCompletion) {
+                                sh.Session.Dismiss();
+                                Assert.Fail($"Completion for {text} should not have any item selected");
+                            } else if (sh != null) {
+
+                                sh.Session.Dismiss();
+                            }
+                        }
+                    }
+
                     lastStart = expected;
 
                     if (expectCompletions) {
@@ -338,9 +359,9 @@ namespace PythonToolsMockTests {
 
         [TestMethod, Priority(1)]
         public void AutoListInStatements() {
-            AutoListTest("assert a", 0, 6, -6, 7);
+            AutoListTest("assert a", 0, -6, 7);
             AutoListTest("a += b", 0, 5);
-            AutoListTest("del a", 0, 3, -3, 4);
+            AutoListTest("del a", 0, -3, 4);
             AutoListTest("exec a", PythonLanguageVersion.V27, -4, 5);
             AutoListTest("for a in b", -3, -5, 9);
             AutoListTest("if a", -2, 3);
@@ -381,7 +402,7 @@ class B:
     pass
 ")) {
                 view.MoveCaret(5, 9);
-                view.Type("p");
+                view.TypeAndWaitForAnalysis("p");
                 view.MemberList();
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.ContainsAtLeast(sh.Session.Completions(), "param1", "param2");

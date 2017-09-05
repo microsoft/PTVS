@@ -1013,7 +1013,7 @@ namespace PythonToolsUITests {
             var index = snapshot.GetText().IndexOf(variable + " =");
             var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
-            if (!entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (!entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return Enumerable.Empty<string>();
             }
             return VsProjectAnalyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index)).WaitAndUnwrapExceptions();
@@ -1326,7 +1326,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(4, project.ProjectItems.Count);
 
                 try {
-                    File.Delete(TestData.GetPath(@"TestData\HelloWorld\LocalsTest.py"));
+                    FileUtils.Delete(TestData.GetPath(@"TestData\HelloWorld\LocalsTest.py"));
                 } catch {
                 }
                 var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));

@@ -17,25 +17,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstAnalysisWalker : PythonWalker {
-        private readonly IPythonInterpreter _interpreter;
-        private readonly IModuleContext _context;
-        private readonly PythonAst _ast;
         private readonly IPythonModule _module;
-        private readonly string _filePath;
         private readonly Dictionary<string, IMember> _members;
-        private readonly bool _includeLocationInfo;
 
-        private readonly Stack<Dictionary<string, IMember>> _scope;
+        private readonly NameLookupContext _scope;
+
+        private readonly List<AstAnalysisFunctionWalker> _postWalkers;
 
         private IMember _noneInst;
 
@@ -47,32 +40,49 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Dictionary<string, IMember> members,
             bool includeLocationInfo
         ) {
-            _interpreter = interpreter;
-            _context = _interpreter.CreateModuleContext();
-            _ast = ast;
-            _module = module;
-            _filePath = filePath;
-            _members = members;
-            _scope = new Stack<Dictionary<string, IMember>>();
+            _scope = new NameLookupContext(
+                interpreter ?? throw new ArgumentNullException(nameof(interpreter)),
+                interpreter.CreateModuleContext(),
+                ast ?? throw new ArgumentNullException(nameof(ast)),
+                filePath,
+                includeLocationInfo
+            );
+            _module = module ?? throw new ArgumentNullException(nameof(module));
+            _members = members ?? throw new ArgumentNullException(nameof(members));
             _noneInst = new AstPythonConstant(_interpreter.GetBuiltinType(BuiltinTypeId.NoneType));
-            _includeLocationInfo = includeLocationInfo;
+            _postWalkers = new List<AstAnalysisFunctionWalker>();
         }
+
+        public bool CreateBuiltinTypes { get; set; }
+
+        private IPythonInterpreter _interpreter => _scope.Interpreter;
+        private PythonAst _ast => _scope.Ast;
+        private string _filePath => _scope.FilePath;
+        public NameLookupContext Scope => _scope;
 
         public override bool Walk(PythonAst node) {
             if (_ast != node) {
                 throw new InvalidOperationException("walking wrong AST");
             }
-            _scope.Push(_members);
+            _scope.PushScope(_members);
+
+            CollectAllClasses((node.Body as SuiteStatement)?.Statements);
+
             return base.Walk(node);
         }
 
         public override void PostWalk(PythonAst node) {
-            _scope.Pop();
+            _scope.PopScope();
+
+            foreach (var walker in _postWalkers) {
+                walker.Walk();
+            }
+
             base.PostWalk(node);
         }
 
         internal LocationInfo GetLoc(ClassDefinition node) {
-            if (!_includeLocationInfo) {
+            if (!_scope.IncludeLocationInfo) {
                 return null;
             }
             if (node == null || node.StartIndex >= node.EndIndex) {
@@ -84,247 +94,88 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return new LocationInfo(_filePath, start.Line, start.Column, end.Line, end.Column);
         }
 
-        internal LocationInfo GetLoc(FunctionDefinition node) {
-            if (!_includeLocationInfo) {
-                return null;
-            }
-            if (node == null || node.StartIndex >= node.EndIndex) {
-                return null;
-            }
+        internal LocationInfo GetLoc(Node node) => _scope.GetLoc(node);
 
-            var start = node.NameExpression?.GetStart(_ast) ?? node.GetStart(_ast);
-            var end = node.GetEnd(_ast);
-            return new LocationInfo(_filePath, start.Line, start.Column, end.Line, end.Column);
-        }
-
-        internal LocationInfo GetLoc(Node node) {
-            if (!_includeLocationInfo) {
-                return null;
-            }
-            if (node == null || node.StartIndex >= node.EndIndex) {
-                return null;
-            }
-
-            var start = node.GetStart(_ast);
-            var end = node.GetEnd(_ast);
-            return new LocationInfo(_filePath, start.Line, start.Column, end.Line, end.Column);
-        }
-
-        private string GetNameFromExpressionWorker(Expression expr) {
-            var ne = expr as NameExpression;
-            if (ne != null) {
-                return ne.Name;
-            }
-
-            var me = expr as MemberExpression;
-            if (me != null) {
-                return "{0}.{1}".FormatInvariant(GetNameFromExpressionWorker(me.Target), me.Name);
-            }
-
-            throw new FormatException();
-        }
-
-        private string GetNameFromExpression(Expression expr) {
-            try {
-                return GetNameFromExpressionWorker(expr);
-            } catch (FormatException) {
-                return null;
-            }
-        }
-
-        private IMember GetValueFromExpression(Expression expr, Dictionary<string, IMember> scope) {
-            var ne = expr as NameExpression;
-            if (ne != null) {
-                IMember existing = null;
-                if (scope != null && scope.TryGetValue(ne.Name, out existing) && existing != null) {
-                    return existing;
-                }
-                if (_members != null && _members.TryGetValue(ne.Name, out existing) && existing != null) {
-                    return existing;
-                }
-            }
-
-            IPythonType type;
-
-            var me = expr as MemberExpression;
-            if (me != null && me.Target != null && !string.IsNullOrEmpty(me.Name)) {
-                var mc = GetValueFromExpression(me.Target, scope) as IMemberContainer;
-                if (mc != null) {
-                    return mc.GetMember(_context, me.Name);
-                }
-                return null;
-            }
-
-            if (expr is CallExpression) {
-                var cae = (CallExpression)expr;
-                var m = GetValueFromExpression(cae.Target, scope);
-                type = m as IPythonType;
-                if (type != null) {
-                    return new AstPythonConstant(type, GetLoc(expr));
-                }
-                var fn = m as IPythonFunction;
-                if (fn != null) {
-                    return new AstPythonConstant(_interpreter.GetBuiltinType(BuiltinTypeId.NoneType), GetLoc(expr));
-                }
-            }
-
-            type = GetTypeFromExpression(expr);
-            if (type != null) {
-                return new AstPythonConstant(type, GetLoc(expr));
-            }
-
-            return null;
-        }
-
-        private IPythonType GetTypeFromExpression(Expression expr) {
-            var ce = expr as ConstantExpression;
-            if (ce != null) {
-                if (ce.Value == null) {
-                    return _interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
-                }
-                switch (Type.GetTypeCode(ce.Value.GetType())) {
-                    case TypeCode.Boolean: return _interpreter.GetBuiltinType(BuiltinTypeId.Bool);
-                    case TypeCode.Double: return _interpreter.GetBuiltinType(BuiltinTypeId.Float);
-                    case TypeCode.Int32: return _interpreter.GetBuiltinType(BuiltinTypeId.Int);
-                    case TypeCode.String: return _interpreter.GetBuiltinType(BuiltinTypeId.Unicode);
-                    case TypeCode.Object:
-                        if (ce.Value.GetType() == typeof(Complex)) {
-                            return _interpreter.GetBuiltinType(BuiltinTypeId.Complex);
-                        } else if (ce.Value.GetType() == typeof(AsciiString)) {
-                            return _interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
-                        } else if (ce.Value.GetType() == typeof(BigInteger)) {
-                            return _interpreter.GetBuiltinType(BuiltinTypeId.Long);
-                        } else if (ce.Value.GetType() == typeof(Ellipsis)) {
-                            return _interpreter.GetBuiltinType(BuiltinTypeId.Ellipsis);
-                        }
-                        break;
-                }
-                return null;
-            }
-
-            if (expr is ListExpression || expr is ListComprehension) {
-                return _interpreter.GetBuiltinType(BuiltinTypeId.List);
-            }
-            if (expr is DictionaryExpression || expr is DictionaryComprehension) {
-                return _interpreter.GetBuiltinType(BuiltinTypeId.Dict);
-            }
-            if (expr is TupleExpression) {
-                return _interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
-            }
-            if (expr is SetExpression || expr is SetComprehension) {
-                return _interpreter.GetBuiltinType(BuiltinTypeId.Set);
-            }
-            if (expr is LambdaExpression) {
-                return _interpreter.GetBuiltinType(BuiltinTypeId.Function);
-            }
-
-            return null;
-        }
-
-        private IMember GetInScope(string name) {
-            foreach (var m in _scope) {
-                if (m == null) {
-                    continue;
-                }
-                IMember obj;
-                if (m.TryGetValue("__class__", out obj)) {
-                    return obj;
-                }
-            }
-            return null;
-        }
-
-        private IPythonType CurrentClass {
-            get {
-                var m = _scope.Peek();
-                if (m != null) {
-                    IMember cls;
-                    m.TryGetValue("__class__", out cls);
-                    return cls as IPythonType;
-                }
-                return null;
-            }
-        }
+        private IPythonType CurrentClass => _scope.GetInScope("__class__") as IPythonType;
 
         public override bool Walk(AssignmentStatement node) {
-            var m = _scope.Peek();
-            if (m != null) {
-                var value = GetValueFromExpression(node.Right, m);
-                foreach (var ne in node.Left.OfType<NameExpression>()) {
-                    m[ne.Name] = value;
-                }
+            var value = _scope.GetValueFromExpression(node.Right);
+            foreach (var ne in node.Left.OfType<NameExpression>()) {
+                _scope.SetInScope(ne.Name, value);
             }
+
             return base.Walk(node);
         }
 
         public override bool Walk(ImportStatement node) {
-            var m = _scope.Peek();
-            if (m != null && node.Names != null) {
-                try {
-                    for (int i = 0; i < node.Names.Count; ++i) {
-                        var n = node.AsNames?[i] ?? node.Names[i].Names[0];
-                        if (n != null) {
-                            
-                            m[n.Name] = new AstNestedPythonModule(
-                                _interpreter,
-                                n.Name,
-                                PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, n.Name, true).ToArray()
-                            );
-                        }
+            if (node.Names == null) {
+                return false;
+            }
+
+            try {
+                for (int i = 0; i < node.Names.Count; ++i) {
+                    var n = node.AsNames?[i] ?? node.Names[i].Names[0];
+                    if (n != null) {
+                        _scope.SetInScope(n.Name, new AstNestedPythonModule(
+                            _interpreter,
+                            n.Name,
+                            PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, n.Name, true).ToArray()
+                        ));
                     }
-                } catch (IndexOutOfRangeException) {
                 }
+            } catch (IndexOutOfRangeException) {
             }
             return false;
         }
 
         public override bool Walk(FromImportStatement node) {
-            var m = _scope.Peek();
             var modName = node.Root.MakeString();
             if (modName == "__future__") {
                 return false;
             }
 
-            if (m != null && node.Names != null) {
-                bool onlyImportModules = modName.EndsWith(".");
+            if (node.Names == null) {
+                return false;
+            }
 
-                var mod = new AstNestedPythonModule(
-                    _interpreter,
-                    modName,
-                    PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
-                );
-                var ctxt = _interpreter.CreateModuleContext();
-                mod.Imported(ctxt);
-                // Ensure child modules have been loaded
-                mod.GetChildrenModules();
+            bool onlyImportModules = modName.EndsWith(".");
 
-                try {
-                    for (int i = 0; i < node.Names.Count; ++i) {
-                        if (!onlyImportModules) {
-                            if (node.Names[i].Name == "*") {
-                                foreach (var member in mod.GetMemberNames(ctxt)) {
-                                    IMember mem;
-                                    m[member] = mem = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
-                                        _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                        mod.Locations.ToArray()
-                                    );
-                                    (mem as IPythonModule)?.Imported(ctxt);
-                                }
-                                continue;
-                            }
-                            var n = node.AsNames?[i] ?? node.Names[i];
-                            if (n != null) {
-                                IMember mem;
-                                m[n.Name] = mem = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
+            var mod = new AstNestedPythonModule(
+                _interpreter,
+                modName,
+                PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
+            );
+            var ctxt = _interpreter.CreateModuleContext();
+            mod.Imported(ctxt);
+            // Ensure child modules have been loaded
+            mod.GetChildrenModules();
+
+            try {
+                for (int i = 0; i < node.Names.Count; ++i) {
+                    if (!onlyImportModules) {
+                        if (node.Names[i].Name == "*") {
+                            foreach (var member in mod.GetMemberNames(ctxt)) {
+                                var mem = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
                                     _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                    GetLoc(n)
+                                    mod.Locations.ToArray()
                                 );
+                                _scope.SetInScope(member, mem);
                                 (mem as IPythonModule)?.Imported(ctxt);
                             }
+                            continue;
+                        }
+                        var n = node.AsNames?[i] ?? node.Names[i];
+                        if (n != null) {
+                            var mem = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
+                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                GetLoc(n)
+                            );
+                            _scope.SetInScope(n.Name, mem);
+                            (mem as IPythonModule)?.Imported(ctxt);
                         }
                     }
-                } catch (IndexOutOfRangeException) {
                 }
+            } catch (IndexOutOfRangeException) {
             }
             return false;
         }
@@ -334,15 +185,21 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
-            var existing = GetInScope(node.Name) as AstPythonFunction;
+            var existing = _scope.LookupNameInScopes(node.Name, NameLookupContext.LookupOptions.Local) as AstPythonFunction;
+
             if (existing == null) {
-                var m = _scope.Peek();
-                if (m != null) {
-                    m[node.Name] = new AstPythonFunction(_ast, _module, CurrentClass, node, GetLoc(node), GetDoc(node.Body as SuiteStatement));
-                }
-            } else {
-                existing.AddOverload(_ast, node);
+                existing = new AstPythonFunction(_ast, _module, CurrentClass, node, GetLoc(node));
+                _scope.SetInScope(node.Name, existing);
             }
+
+            var funcScope = _scope.Clone();
+            if (CreateBuiltinTypes) {
+                funcScope.SuppressBuiltinLookup = true;
+            }
+            var funcWalk = new AstAnalysisFunctionWalker(funcScope, node);
+            _postWalkers.Add(funcWalk);
+            existing.AddOverload(funcWalk.Overload);
+
             // Do not recurse into functions
             return false;
         }
@@ -353,27 +210,61 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return ce?.Value as string;
         }
 
-        public override bool Walk(ClassDefinition node) {
-            var m = _scope.Peek();
-            if (m != null) {
-                var n = new Dictionary<string, IMember>();
-                var mro = node.Bases.Where(a => string.IsNullOrEmpty(a.Name))
-                    .Select(a => GetNameFromExpression(a.Expression))
-                    .Where(a => !string.IsNullOrEmpty(a))
-                    .Select(a => new AstPythonType(a));
-
-                var t = new AstPythonType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node), mro);
-                m[node.Name] = n["__class__"] = t;
-                _scope.Push(n);
-
-                return true;
+        private AstPythonType CreateType(ClassDefinition node) {
+            if (node == null) {
+                throw new ArgumentNullException(nameof(node));
             }
-            return false;
+            if (CreateBuiltinTypes) {
+                return new AstPythonBuiltinType(_ast, _module, node, GetDoc(node.Body as SuiteStatement));
+            }
+
+            return new AstPythonType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node));
+        }
+
+        private void CollectAllClasses(IEnumerable<Statement> stmts) {
+            foreach (var node in stmts.MaybeEnumerate().OfType<ClassDefinition>()) {
+                _scope.SetInScope(node.Name, CreateType(node));
+            }
+            foreach (var node in stmts.MaybeEnumerate().OfType<AssignmentStatement>()) {
+                var rhs = node.Right as NameExpression;
+                if (rhs == null) {
+                    continue;
+                }
+
+                var cls = _scope.LookupNameInScopes(rhs.Name, NameLookupContext.LookupOptions.Local) as IPythonType;
+                if (cls != null) {
+                    foreach (var lhs in node.Left.OfType<NameExpression>()) {
+                        _scope.SetInScope(lhs.Name, cls);
+                    }
+                }
+            }
+        }
+
+        public override bool Walk(ClassDefinition node) {
+            var t = _scope.GetInScope(node.Name) as AstPythonType;
+            if (t == null) {
+                t = CreateType(node);
+                _scope.SetInScope(node.Name, t);
+            }
+
+            var mro = node.Bases.Where(a => string.IsNullOrEmpty(a.Name))
+                .Select(a => _scope.GetNameFromExpression(a.Expression))
+                .Where(a => !string.IsNullOrEmpty(a))
+                .Select(a => new AstPythonType(a));
+
+            if (t.Mro == null) {
+                t.SetMro(mro);
+            }
+
+            _scope.PushScope();
+            _scope.SetInScope("__class__", t);
+
+            return true;
         }
 
         public override void PostWalk(ClassDefinition node) {
             var cls = CurrentClass as AstPythonType;
-            var m = _scope.Pop();
+            var m = _scope.PopScope();
             if (cls != null && m != null) {
                 cls.AddMembers(m, true);
             }

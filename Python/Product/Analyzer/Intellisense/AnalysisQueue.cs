@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -105,6 +106,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 try {
                     _workEvent.Set();
+                } catch (IOException) {
                 } catch (ObjectDisposedException) {
                     // Queue was closed while we were running
                 }
@@ -213,7 +215,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (evt1 != null) {
                         ThreadPool.QueueUserWorkItem(_ => evt1(this, EventArgs.Empty));
                     }
-                    WaitHandle.SignalAndWait(_analyzer.QueueActivityEvent, _workEvent);
+                    try {
+                        WaitHandle.SignalAndWait(_analyzer.QueueActivityEvent, _workEvent);
+                    } catch (ApplicationException) {
+                        // No idea where this is coming from...
+                        _cancel.Cancel();
+                        break;
+                    }
                     var evt2 = AnalysisStarted;
                     if (evt2 != null) {
                         ThreadPool.QueueUserWorkItem(_ => evt2(this, EventArgs.Empty));

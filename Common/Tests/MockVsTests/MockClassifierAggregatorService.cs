@@ -42,31 +42,30 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         sealed class AggregatedClassifier : IClassifier, IDisposable {
             private readonly ITextBuffer _buffer;
-            private readonly List<IClassifier> _classifiers;
+            private readonly IReadOnlyList<IClassifier> _classifiers;
 
             public AggregatedClassifier(ITextBuffer textBuffer, IEnumerable<IClassifierProvider> providers) {
                 _buffer = textBuffer;
                 _classifiers = providers.Select(p => p.GetClassifier(_buffer)).ToList();
+                foreach (var c in _classifiers) {
+                    c.ClassificationChanged += Subclassification_Changed;
+                }
+            }
+
+            private void Subclassification_Changed(object sender, ClassificationChangedEventArgs e) {
+                var c = (IClassifier)sender;
+                var refreshSpans = c.GetClassificationSpans(e.ChangeSpan);
+                ClassificationChanged?.Invoke(this, e);
             }
 
             public void Dispose() {
-                foreach (var c in _classifiers.OfType<IDisposable>()) {
-                    c.Dispose();
+                foreach (var c in _classifiers) {
+                    c.ClassificationChanged -= Subclassification_Changed;
+                    (c as IDisposable)?.Dispose();
                 }
             }
 
-            public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged {
-                add {
-                    foreach (var c in _classifiers) {
-                        c.ClassificationChanged += value;
-                    }
-                }
-                remove {
-                    foreach (var c in _classifiers) {
-                        c.ClassificationChanged -= value;
-                    }
-                }
-            }
+            public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
             public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
                 return _classifiers.SelectMany(c => c.GetClassificationSpans(span)).ToList();

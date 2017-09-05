@@ -1454,6 +1454,19 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return false;
         }
 
+        internal bool LoadAssemblyReferenceByName(string assemblyName) {
+            try {
+                var asm = Assembly.Load(assemblyName);
+                if (asm != null) {
+                    _referencedAssemblies[asm.FullName] = asm;
+                    _referencedAssemblies[new AssemblyName(asm.FullName).Name] = asm;
+                    return true;
+                }
+            } catch {
+            }
+            return false;
+        }
+
         internal bool UnloadAssemblyReference(string name) {
             return CallAndHandle(() => {
                 return _referencedAssemblies.ContainsKey(name);

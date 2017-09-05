@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools {
     /// which it is applicable to.
     /// </summary>
     [Export(typeof(IClassifierProvider)), ContentType(PythonCoreConstants.ContentType)]
+    [Export(typeof(PythonClassifierProvider))]
     internal class PythonClassifierProvider : IClassifierProvider {
         private Dictionary<TokenCategory, IClassificationType> _categoryMap;
         private IClassificationType _comment;
@@ -46,22 +48,13 @@ namespace Microsoft.PythonTools {
         private IClassificationType _groupingClassification;
         private IClassificationType _dotClassification;
         private IClassificationType _commaClassification;
+        private readonly PythonEditorServices _services;
         private readonly IContentType _type;
-        internal readonly IServiceProvider _serviceProvider;
-        internal readonly AnalysisEntryService _entryService;
-        public readonly IClassificationTypeRegistryService _classificationRegistry;
 
         [ImportingConstructor]
-        public PythonClassifierProvider(
-            IContentTypeRegistryService contentTypeRegistryService,
-            [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
-            IClassificationTypeRegistryService classificationRegistry,
-            AnalysisEntryService entryService
-        ) {
-            _type = contentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
-            _serviceProvider = serviceProvider;
-            _classificationRegistry = classificationRegistry;
-            _entryService = entryService;
+        public PythonClassifierProvider(PythonEditorServices services) {
+            _services = services;
+            _type = _services.ContentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
         }
 
         #region Python Classification Type Definitions
@@ -97,17 +90,11 @@ namespace Microsoft.PythonTools {
 
         public IClassifier GetClassifier(ITextBuffer buffer) {
             if (_categoryMap == null) {
-                _categoryMap = FillCategoryMap(_classificationRegistry);
+                _categoryMap = FillCategoryMap(_services.ClassificationTypeRegistryService);
             }
 
-            PythonClassifier res;
-            if (!buffer.Properties.TryGetProperty<PythonClassifier>(typeof(PythonClassifier), out res) &&
-                buffer.ContentType.IsOfType(ContentType.TypeName)) {
-                res = new PythonClassifier(this, buffer);
-                buffer.Properties.AddProperty(typeof(PythonClassifier), res);
-            }
-
-            return res;
+            return _services.GetBufferInfo(buffer)
+                .GetOrCreateSink(typeof(PythonClassifier), _ => new PythonClassifier(this));
         }
 
         public virtual IContentType ContentType {

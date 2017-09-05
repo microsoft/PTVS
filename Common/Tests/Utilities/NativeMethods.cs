@@ -344,6 +344,10 @@ namespace TestUtilities {
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool CopyFile(string lpExistingFileName, string lpNewFileName, bool bFailIfExists);
 
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
+
         /// <summary>
         /// Use caution when using this directly as the errors it gives when you are not running as elevated are not
         //  very good.  Please use the Wrapper method.

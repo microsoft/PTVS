@@ -45,7 +45,7 @@ namespace Microsoft.CookiecutterTools {
         private IVsInfoBarUIElement _infoBar;
         private IVsInfoBar _infoBarModel;
         private uint _infoBarAdviseCookie;
-        private ProjectLocation _pendingNewSessionProjectLocation;
+        private CookiecutterSessionStartInfo _pendingNewSessionStartInfo;
 
         private readonly object _commandsLock = new object();
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
@@ -143,10 +143,10 @@ namespace Microsoft.CookiecutterTools {
             );
             _cookiecutterPage.ContextMenuRequested += OnContextMenuRequested;
 
-            var projectLocation = _pendingNewSessionProjectLocation;
-            _pendingNewSessionProjectLocation = null;
+            var ssi = _pendingNewSessionStartInfo;
+            _pendingNewSessionStartInfo = null;
 
-            _cookiecutterPage.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate, projectLocation).HandleAllExceptions(this, GetType()).DoNotWait();
+            _cookiecutterPage.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate, ssi).HandleAllExceptions(this, GetType()).DoNotWait();
 
             ((Frame)Content).Content = _cookiecutterPage;
         }
@@ -299,17 +299,17 @@ namespace Microsoft.CookiecutterTools {
             return _cookiecutterPage != null ? _cookiecutterPage.CanUpdateSelection() : false;
         }
 
-        internal void NewSession(ProjectLocation location) {
+        internal void NewSession(CookiecutterSessionStartInfo ssi) {
             if (_cookiecutterPage != null) {
-                _cookiecutterPage.NewSession(location);
+                _cookiecutterPage.NewSession(ssi);
             } else {
                 // This method may be called immediately after showing the tool
                 // window for the first time, which triggers a delayed initialization
                 // of the cookiecutter page on idle, causing the page to be temporarily null.
-                // Store the desired location so that when the page is initialized,
-                // it sets the project location. Doing it in one step in init ensures only
+                // Store the desired session start info so that when the page is initialized,
+                // it uses it. Doing it in one step in init ensures only
                 // one automatic search is triggered.
-                _pendingNewSessionProjectLocation = location;
+                _pendingNewSessionStartInfo = ssi;
             }
         }
 

@@ -536,6 +536,21 @@ NameError: name 'does_not_exist' is not defined
     }
 
     [TestClass]
+    public class DebugReplEvaluatorTests37 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python37 ?? PythonPaths.Python37_x64;
+            }
+        }
+    }
+
+    [TestClass]
     public class DebugReplEvaluatorTests27 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {

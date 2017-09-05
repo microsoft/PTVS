@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -216,7 +217,13 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override async Task<ExecutionResult> ExecuteCodeAsync(string text) {
-            var cmdRes = _commands.TryExecuteCommand();
+            var cmds = _commands;
+            if (cmds == null) {
+                WriteError(Strings.ReplDisconnected);
+                return ExecutionResult.Failure;
+            }
+
+            var cmdRes = cmds.TryExecuteCommand();
             if (cmdRes != null) {
                 return await cmdRes;
             }
@@ -283,7 +290,10 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType))) {
-                buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
+                var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
+                if (tb != null) {
+                    tb.DoNotParse = true;
+                }
             }
 
             if (!quiet) {

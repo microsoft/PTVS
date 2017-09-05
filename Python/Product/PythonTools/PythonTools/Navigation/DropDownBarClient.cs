@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -51,9 +52,9 @@ namespace Microsoft.PythonTools.Navigation {
     /// being outside of a known element to being in a known element we also need to refresh 
     /// the drop down to remove grayed out elements.
     /// </summary>
-    class DropDownBarClient : IVsDropdownBarClient {
-        private readonly AnalysisEntry _analysisEntry;                           // analysis entry which gets updated with new ASTs for us to inspect.
+    class DropDownBarClient : IVsDropdownBarClient, IPythonTextBufferInfoEventSink {
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
+        private readonly PythonEditorServices _services;
         private IWpfTextView _textView;                                 // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
         private NavigationInfo _navigations;
@@ -72,13 +73,25 @@ namespace Microsoft.PythonTools.Navigation {
 
             _serviceProvider = serviceProvider;
             _uiThread = _serviceProvider.GetUIThread();
-            _analysisEntry = analysisEntry;
-            textView.TextBuffer.RegisterForParseTree(ParserOnNewParseTree);
+            _services = _serviceProvider.GetComponentModel().GetService<PythonEditorServices>();
             _textView = textView;
             _dispatcher = Dispatcher.CurrentDispatcher;
             _textView.Caret.PositionChanged += CaretPositionChanged;
+            foreach (var tb in PythonTextBufferInfo.GetAllFromView(textView)) {
+                tb.AddSink(this, this);
+            }
+            textView.BufferGraph.GraphBuffersChanged += BufferGraph_GraphBuffersChanged;
             for (int i = 0; i < NavigationLevels; i++) {
                 _curSelection[i] = -1;
+            }
+        }
+
+        private void BufferGraph_GraphBuffersChanged(object sender, VisualStudio.Text.Projection.GraphBuffersChangedEventArgs e) {
+            foreach (var b in e.RemovedBuffers) {
+                PythonTextBufferInfo.TryGetForBuffer(b)?.RemoveSink(typeof(DropDownBarClient));
+            }
+            foreach (var b in e.AddedBuffers) {
+                _services.GetBufferInfo(b).AddSink(typeof(DropDownBarClient), this);
             }
         }
 
@@ -119,7 +132,9 @@ namespace Microsoft.PythonTools.Navigation {
                     _textView.Properties.RemoveProperty(typeof(DropDownBarClient));
                 }
             }
-            _textView.TextBuffer.UnregisterForParseTree(ParserOnNewParseTree);
+            foreach (var tb in PythonTextBufferInfo.GetAllFromView(_textView)) {
+                tb.RemoveSink(this);
+            }
 #if DEBUG
             IVsDropdownBar existing;
             IVsDropdownBarClient existingClient;
@@ -464,38 +479,6 @@ namespace Microsoft.PythonTools.Navigation {
 
         #region Implementation Details
 
-        /// <summary>
-        /// Wired to parser event for when the parser has completed parsing a new tree and we need
-        /// to update the navigation bar with the new data.
-        /// </summary>
-        private async void ParserOnNewParseTree(AnalysisEntry entry) {
-            var dropDownBar = _dropDownBar;
-            if (dropDownBar == null) {
-                return;
-            }
-
-            var navigations = await _uiThread.InvokeTask(() => _analysisEntry.Analyzer.GetNavigationsAsync(_textView));
-            lock (_navigationsLock) {
-                _navigations = navigations;
-                for (int i = 0; i < _curSelection.Length; i++) {
-                    _curSelection[i] = -1;
-                }
-            }
-
-            Action callback = () => CaretPositionChanged(
-                this,
-                new CaretPositionChangedEventArgs(
-                    _textView,
-                    _textView.Caret.Position,
-                    _textView.Caret.Position
-                )
-            );
-
-            try {
-                await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
-            } catch (TaskCanceledException) {
-            }
-        }
 
         /// <summary>
         /// Moves the caret to the specified index in the current snapshot.  Then updates the view port
@@ -511,6 +494,41 @@ namespace Microsoft.PythonTools.Navigation {
             );
 
             ((System.Windows.Controls.Control)_textView).Focus();
+        }
+
+        /// <summary>
+        /// Wired to parser event for when the parser has completed parsing a new tree and we need
+        /// to update the navigation bar with the new data.
+        /// </summary>
+        async Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.NewParseTree) {
+                var dropDownBar = _dropDownBar;
+                if (dropDownBar == null) {
+                    return;
+                }
+
+                var navigations = await _uiThread.InvokeTask(() => e.AnalysisEntry.Analyzer.GetNavigationsAsync(_textView));
+                lock (_navigationsLock) {
+                    _navigations = navigations;
+                    for (int i = 0; i < _curSelection.Length; i++) {
+                        _curSelection[i] = -1;
+                    }
+                }
+
+                Action callback = () => CaretPositionChanged(
+                    this,
+                    new CaretPositionChangedEventArgs(
+                        _textView,
+                        _textView.Caret.Position,
+                        _textView.Caret.Position
+                    )
+                );
+
+                try {
+                    await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
+                } catch (TaskCanceledException) {
+                }
+            }
         }
 
         #endregion

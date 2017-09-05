@@ -16,8 +16,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -35,15 +39,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             InterpreterConfiguration config,
             InterpreterFactoryCreationOptions options
         ) {
-            if (config == null) {
-                throw new ArgumentNullException(nameof(config));
-            }
-            if (options == null) {
-                options = new InterpreterFactoryCreationOptions();
-            }
-            Configuration = config;
+            Configuration = config ?? throw new ArgumentNullException(nameof(config));
             LanguageVersion = Configuration.Version.ToLanguageVersion();
 
+            options = options ?? new InterpreterFactoryCreationOptions();
             _databasePath = options.DatabasePath;
 
             if (!GlobalInterpreterOptions.SuppressPackageManagers) {
@@ -100,6 +99,139 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return new AstPythonInterpreter(this);
         }
 
+        private string GetCacheFilePath(string filePath) {
+            if (string.IsNullOrEmpty(_databasePath)) {
+                return null;
+            }
+
+            var hash = SHA256.Create();
+            var dir = PathUtils.GetParent(filePath);
+            var dirHash = Convert.ToBase64String(hash.ComputeHash(new UTF8Encoding(false).GetBytes(dir)))
+                .Replace('/', '_').Replace('+', '-');
+
+            return Path.ChangeExtension(PathUtils.GetAbsoluteFilePath(
+                _databasePath,
+                Path.Combine(dirHash, PathUtils.GetFileOrDirectoryName(filePath))
+            ), ".pyi");
+        }
+
+        #region Cache File Management
+
+        public Stream ReadCachedModule(string filePath) {
+            FileStream file = null;
+            var path = GetCacheFilePath(filePath);
+            if (string.IsNullOrEmpty(path)) {
+                return null;
+            }
+
+            for (int retries = 5; retries > 0; --retries) {
+                try {
+                    file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                } catch (DirectoryNotFoundException) {
+                    return null;
+                } catch (FileNotFoundException) {
+                    return null;
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Thread.Sleep(10);
+                }
+            }
+
+            if (file != null) {
+                bool fileIsOkay = false;
+                try {
+                    var cacheTime = File.GetLastWriteTimeUtc(path);
+                    var sourceTime = File.GetLastWriteTimeUtc(filePath);
+                    if (sourceTime <= cacheTime) {
+                        fileIsOkay = true;
+                    }
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
+
+                if (!fileIsOkay) {
+                    file.Dispose();
+                    file = null;
+                    try {
+                        File.Delete(path);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    }
+                }
+            }
+
+            return file;
+        }
+
+        private static FileStream OpenAndOverwrite(string path) {
+            for (int retries = 5; retries > 0; --retries) {
+                try {
+                    return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
+                } catch (DirectoryNotFoundException) {
+                    var dir = PathUtils.GetParent(path);
+                    if (Directory.Exists(dir)) {
+                        break;
+                    }
+
+                    // Directory does not exist, so try to create it.
+                    try {
+                        Directory.CreateDirectory(dir);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                        break;
+                    }
+                } catch (UnauthorizedAccessException) {
+                    if (!File.Exists(path)) {
+                        break;
+                    }
+
+                    // File exists, so may be marked readonly. Try and delete it
+                    File_ReallyDelete(path);
+                } catch (IOException) {
+                    break;
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                    break;
+                }
+
+                Thread.Sleep(10);
+            }
+            return null;
+        }
+
+        private static void File_ReallyDelete(string path) {
+            for (int retries = 5; retries > 0 && File.Exists(path); --retries) {
+                try {
+                    File.SetAttributes(path, FileAttributes.Normal);
+                    File.Delete(path);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                    break;
+                }
+            }
+        }
+
+        public void WriteCachedModule(string filePath, Stream code) {
+            var cache = GetCacheFilePath(filePath);
+            if (string.IsNullOrEmpty(cache)) {
+                return;
+            }
+
+            try {
+                using (var stream = OpenAndOverwrite(cache)) {
+                    if (stream == null) {
+                        return;
+                    }
+
+                    code.CopyTo(stream);
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                try {
+                    File.Delete(cache);
+                } catch (Exception) {
+                }
+            }
+        }
+
+        #endregion
+
         public IReadOnlyDictionary<string, string> GetImportableModules() {
             var spp = _searchPathPackages;
             if (spp != null) {
@@ -148,7 +280,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath) {
             return ModulePath.GetModulesInPath(
                 searchPath,
-                recurse: false
+                recurse: false,
+                includePackages: true
             ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).ToList();
         }
 

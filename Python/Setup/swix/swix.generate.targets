@@ -5,6 +5,7 @@
     <SwrFile Condition="$(OutputLocalized)">$(IntermediateOutputPath)package.g.$(lang).swr</SwrFile>
     <SwixPackageType Condition="$(SwixPackageType) == ''">component</SwixPackageType>
     <SwixVersion Condition="$(SwixVersion) == ''">$(VSTarget).$(BuildNumber)</SwixVersion>
+    <Python Condition="$(Python) == ''">"$(PackagesPath)python\tools\python.exe"</Python>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -17,6 +18,10 @@
       <Type>Required</Type>
     </Dependency>
   </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <Package Include="$(SwrFile)" />
+  </ItemGroup>
 
   <ItemGroup Condition="'$(SourcePath)' != ''">
     <SwrSource Include="$(SourcePath)" />
@@ -36,16 +41,22 @@
 
   <Target Name="_GenerateSwrFromSources" Condition="@(SwrSource) != ''">
     <PropertyGroup>
-      <Python>"$(PackagesPath)python\tools\python.exe"</Python>
       <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py" $(GenerateCommand)</GenerateCommand>
       <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
     </PropertyGroup>
     <Exec Command="$(GenerateCommand) %(SwrSource.ExtraOptions) -s &quot;%(SwrSource.FullPath)&quot; -b &quot;%(SwrSource.BaseInstall)&quot; -o &quot;$(SwrFile).tmp&quot;" />
   </Target>
 
+  <Target Name="_GenerateSwrFromPayloads" Condition="@(Payload) != ''">
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
+
+    <Exec Command="$(Python) &quot;$(MSBuildThisFileDirectory)\swix_vsix_payload.py&quot; -n $(MSBuildProjectName) --version $(SwixVersion) -p &quot;%(Payload.Identity)&quot; -o &quot;$(SwrFile).tmp&quot;"
+          Condition="%(Payload.Extension) == '.vsix'" />
+  </Target>
+
   <Target Name="_GeneratePackage"
           BeforeTargets="Build"
-          DependsOnTargets="$(GenerateSwrDependsOnTargets);_GenerateSwrMetadata;_GenerateSwrFromSources"
+          DependsOnTargets="$(GenerateSwrDependsOnTargets);_GenerateSwrMetadata;_GenerateSwrFromSources;_GenerateSwrFromPayloads"
           Condition="'$(MicrosoftSimplifiedWixPropertiesImported)' == 'true'">
     <PropertyGroup>
       <_Orig Condition="Exists($(SwrFile))">$([System.IO.File]::ReadAllText($(SwrFile)))</_Orig>
@@ -55,10 +66,6 @@
     <Message Text="Updating $(SwrFile)" Importance="High" Condition="$(_Orig) != $(_New)" />
     <WriteLinesToFile File="$(SwrFile)" Lines="$(_New)" Condition="$(_Orig) != $(_New)" Overwrite="yes" Encoding="UTF-8" />
     <Delete Files="$(SwrFile).tmp" />
-
-    <ItemGroup>
-      <Package Include="$(SwrFile)" Condition="Exists($(SwrFile))" />
-    </ItemGroup>
   </Target>
 </Project>
 

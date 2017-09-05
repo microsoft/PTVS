@@ -167,10 +167,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         protected override IAnalysisSet MakeIteratorInfo(Node n, AnalysisUnit unit) {
-            return new IteratorValue(
-                this,
-                BaseIteratorValue.GetIteratorTypeFromType(ClassInfo, unit)
-            );
+            var iterType = BaseIteratorValue.GetIteratorTypeFromType(ClassInfo, unit);
+            if (iterType == null) {
+                return AnalysisSet.Empty;
+            }
+            return new IteratorValue(this, iterType);
         }
 
         protected override void EnsureUnionType() {

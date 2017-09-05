@@ -49,6 +49,16 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy();
         }
 
+        [TestInitialize]
+        public void OnTestInitialized() {
+            MockPythonToolsPackage.SuppressTaskProvider = true;
+        }
+
+        [TestCleanup]
+        public void OnTestCleanup() {
+            MockPythonToolsPackage.SuppressTaskProvider = false;
+        }
+
         [TestMethod, Priority(1)]
         public void GetApplicableSpanTest() {
             var text = "if fob.oar(eggs, spam<=ham) :";
@@ -1113,21 +1123,15 @@ async def g():
                 view.AdvancedOptions.HideAdvancedMembers = false;
 
                 var snapshot = view.CurrentSnapshot;
-                ITextVersion afterEditVersion = null;
-                ManualResetEvent mre = new ManualResetEvent(false);
-                view.View.TextView.TextBuffer.RegisterForNewAnalysis(entry => {
-                    if (afterEditVersion != null &&
-                    entry.TryGetBufferParser().GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
-                        mre.Set();
-                    }
-                });
-                view.View.MoveCaret(new SnapshotPoint(snapshot, editInsert));
-                view.Type(editText);
-                afterEditVersion = view.CurrentSnapshot.Version;
+                using (var evt = view.AnalysisCompleteEvent) {
+                    view.View.MoveCaret(new SnapshotPoint(snapshot, editInsert));
+                    view.Type(editText);
 
-                if (!mre.WaitOne(10000)) {
-                    Assert.Fail("Failed to wait for new analysis");
+                    if (!evt.WaitOne(10000)) {
+                        Assert.Fail("Failed to wait for new analysis");
+                    }
                 }
+
                 var newSnapshot = view.CurrentSnapshot;
                 Assert.AreNotSame(snapshot, newSnapshot);
 
@@ -1169,7 +1173,6 @@ async def g():
                 vs.InvokeSync(() => {
                     task = view.Analyzer.AnalyzeExpressionAsync(
                         (AnalysisEntry)view.GetAnalysisEntry(),
-                        view.View.View,
                         new SnapshotPoint(snapshot, location)
                     );
                 });

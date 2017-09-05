@@ -17,10 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 
@@ -36,9 +33,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             string name,
             IReadOnlyList<string> importNames
         ) {
-            _interpreter = interpreter;
-            _name = name;
-            _importNames = importNames;
+            _interpreter = interpreter ?? throw new ArgumentNullException(nameof(interpreter));
+            _name = name ?? throw new ArgumentNullException(nameof(name));
+            _importNames = importNames ?? throw new ArgumentNullException(nameof(importNames));
         }
 
         public string Name => MaybeModule?.Name ?? _name;

@@ -505,6 +505,14 @@ namespace Microsoft.PythonTools.Repl {
         public Task<ExecutionResult> InitializeAsync() {
             _commands = PythonInteractiveEvaluator.GetInteractiveCommands(_serviceProvider, CurrentWindow, this);
 
+            var langBuffer = CurrentWindow.CurrentLanguageBuffer;
+            if (langBuffer != null) {
+                // Reinitializing, and our new language buffer does not automatically
+                // get connected to the Intellisense controller. Let's fix that.
+                var controller = IntellisenseControllerProvider.GetController(CurrentWindow.TextView);
+                controller?.ConnectSubjectBuffer(langBuffer);
+            }
+
             CurrentWindow.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, CurrentOptions.UseSmartHistory);
             CurrentWindow.WriteLine(Strings.DebugReplHelpMessage);
 

@@ -2317,6 +2317,24 @@ namespace DebuggerTests {
     }
 
     [TestClass]
+    public class DebuggerTests37 : DebuggerTests3x {
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python37;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests37_x64 : DebuggerTests37 {
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python37_x64;
+            }
+        }
+    }
+
+    [TestClass]
     public class DebuggerTests26 : DebuggerTests {
         internal override PythonVersion Version {
             get {

@@ -29,10 +29,19 @@ using TestUtilities.SharedProject;
 namespace TestUtilities.UI {
     public static class TestExtensions {
         public static IVisualStudioInstance ToVs(this SolutionFile self) {
+            return ToVs(self, null, true);
+        }
+
+        public static IVisualStudioInstance ToVs(this SolutionFile self, Func<VisualStudioApp> app, bool disposeApp = false) {
             if (VSTestContext.IsMock) {
                 return self.ToMockVs();
             }
-            return new VisualStudioInstance(self);
+            var appInst = app?.Invoke();
+            return new VisualStudioInstance(
+                self,
+                appInst ?? new VisualStudioApp(),
+                appInst == null || disposeApp
+            );
         }
 
         public static string[] GetDisplayTexts(this ICompletionSession completionSession) {

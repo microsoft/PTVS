@@ -64,6 +64,10 @@ namespace CookiecutterTests {
             new ContextItem("use_azure", Selectors.YesNo, "y") { Description="Enable Azure support.", Url="http://azure.microsoft.com" },
             new ContextItem("open_source_license", Selectors.List, "MIT license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }) { Label="Open Source License", Description="License under which you will distribute the generated files.", Url="https://opensource.org/licenses" },
             new ContextItem("port", Selectors.String, "5000") { Label="Port" },
+            new ContextItem("from_src_is_new_item", Selectors.String, "") { Visible=false, ValueSource=KnownValueSources.IsNewItem },
+            new ContextItem("from_src_is_new_project", Selectors.String, "") { Visible=false, ValueSource=KnownValueSources.IsNewProject },
+            new ContextItem("from_src_is_from_project_wizard", Selectors.String, "") { Visible=false, ValueSource=KnownValueSources.IsFromProjectWizard },
+            new ContextItem("from_src_project_name", Selectors.String, "") { Visible=false, ValueSource=KnownValueSources.ProjectName },
             // Note that _copy_without_render item should not appear
         };
 
@@ -209,7 +213,7 @@ namespace CookiecutterTests {
 
             var vm = new CookiecutterViewModel();
             foreach (var item in context.Items) {
-                vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Values));
+                vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Visible, item.Values));
             }
 
             vm.SaveUserInput(contextFilePath);

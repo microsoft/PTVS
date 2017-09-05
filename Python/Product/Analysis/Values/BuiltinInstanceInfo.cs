@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly BuiltinClassInfo _klass;
 
         public BuiltinInstanceInfo(BuiltinClassInfo klass)
-            : base(klass._type, klass.ProjectState) {
+            : base(klass?._type, klass?.ProjectState) {
             _klass = klass;
         }
 
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         internal override BuiltinTypeId TypeId {
             get {
-                return ClassInfo.PythonType.TypeId;
+                return _klass?.PythonType.TypeId ?? BuiltinTypeId.Unknown;
             }
         }
 
@@ -286,16 +286,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             } else if (strength >= MergeStrength.ToBaseClass) {
                 var bii = ns as BuiltinInstanceInfo;
                 if (bii != null) {
-                    return ClassInfo.UnionEquals(bii.ClassInfo, strength);
+                    return _klass != null && _klass.UnionEquals(bii.ClassInfo, strength);
                 }
                 var ii = ns as InstanceInfo;
                 if (ii != null) {
-                    return ClassInfo.UnionEquals(ii.ClassInfo, strength);
+                    return _klass != null && _klass.UnionEquals(ii.ClassInfo, strength);
                 }
             } else if (this is ConstantInfo || ns is ConstantInfo) {
                 // ConI + BII => BII if CIs match
                 var bii = ns as BuiltinInstanceInfo;
-                return bii != null && ClassInfo.Equals(bii.ClassInfo);
+                return bii != null && _klass != null && _klass.Equals(bii.ClassInfo);
             }
 
             return base.UnionEquals(ns, strength);

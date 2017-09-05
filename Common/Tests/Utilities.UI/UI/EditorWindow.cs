@@ -45,7 +45,7 @@ namespace TestUtilities.UI {
 
         public string Text {
             get {
-                return GetValue();
+                return TextView.TextSnapshot.GetText();
             }
         }
 
@@ -224,7 +224,7 @@ namespace TestUtilities.UI {
 
             if (!(sessionStack.TopSession is T)) {
                 if (assertIfNoSession) {
-                    Console.WriteLine("Buffer text:\r\n{0}", Text);
+                    Console.WriteLine("Buffer text:\r\n{0}", TextView.TextBuffer.CurrentSnapshot.GetText());
                     Console.WriteLine("-----");
                     AutomationWrapper.DumpVS();
                     Assert.Fail("failed to find session " + typeof(T).FullName);

@@ -32,6 +32,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
@@ -1242,15 +1243,15 @@ namespace DjangoUITests {
         }
 
         private static void InsertionTest(string filename, int line, int column, string insertionText, params Classification[] expected) {
-            InsertionTest(filename, line, column, -1, insertionText, false, true, expected);
+            InsertionTest(filename, line, column, -1, insertionText, false, true, true, expected);
         }
 
         private static void InsertionTest(string filename, int line, int column, int selectionLength, string insertionText, bool paste, params Classification[] expected) {
-            InsertionTest(filename, line, column, selectionLength, insertionText, paste, true, expected);
+            InsertionTest(filename, line, column, selectionLength, insertionText, paste, true, true, expected);
         }
 
-        private static void InsertionTest(string filename, int line, int column, int selectionLength, string insertionText, bool paste, bool checkInsertionLen, params Classification[] expected) {
-            InsertionTest(filename, line, column, selectionLength, insertionText, paste, checkInsertionLen, @"TestData\DjangoEditProject.sln", false, expected);
+        private static void InsertionTest(string filename, int line, int column, int selectionLength, string insertionText, bool paste, bool checkInsertionMoved, bool checkInsertionLen, params Classification[] expected) {
+            InsertionTest(filename, line, column, selectionLength, insertionText, paste, checkInsertionMoved, checkInsertionLen, @"TestData\DjangoEditProject.sln", false, expected);
         }
 
         private static bool SetBraceCompletion(VisualStudioApp app, bool value) {
@@ -1281,7 +1282,19 @@ namespace DjangoUITests {
             return new SetRestoreBraceCompletion(app, false);
         }
 
-        private static void InsertionTest(string filename, int line, int column, int selectionLength, string insertionText, bool paste, bool checkInsertionLen, string projectName, bool wait, params Classification[] expected) {
+        private static void InsertionTest(
+            string filename,
+            int line,
+            int column,
+            int selectionLength,
+            string insertionText,
+            bool paste,
+            bool checkInsertionMoved,
+            bool checkInsertionLen,
+            string projectName,
+            bool wait,
+            params Classification[] expected
+        ) {
             using (var app = new VisualStudioApp())
             using (WithoutBraceCompletion(app)) {
                 Window window;
@@ -1292,38 +1305,23 @@ namespace DjangoUITests {
                 if (selectionLength != -1) {
                     item.Select(line, column, selectionLength);
                 }
-                window.Activate();
 
                 if (!String.IsNullOrEmpty(insertionText)) {
-                    AutoResetEvent are = new AutoResetEvent(false);
-                    int delta = 0;
-                    EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
-                        foreach (var change in args.Changes) {
-                            delta += change.Delta;
-                        }
-                        if (selectionLength == -1) {
-                            if (delta >= insertionText.Length) {
-                                are.Set();
-                            }
-                        } else {
-                            if (delta == insertionText.Length - selectionLength) {
-                                are.Set();
-                            }
-                        }
-                    };
-                    item.TextView.TextBuffer.Changed += textChangedHandler;
-
                     if (paste) {
-                        item.Invoke(() => System.Windows.Clipboard.SetText(insertionText));
-                        Keyboard.ControlV();
+                        item.Invoke(() => {
+                            System.Windows.Clipboard.SetText(insertionText);
+                            var editorOps = app.ComponentModel.GetService<IEditorOperationsFactoryService>();
+                            Assert.IsTrue(editorOps.GetEditorOperations(item.TextView).Paste());
+                        });
                     } else {
                         Keyboard.Type(insertionText);
                     }
 
-                    Assert.IsTrue(are.WaitOne(5000), "Failed to see text change");
-                    item.TextView.TextBuffer.Changed -= textChangedHandler;
-
                     var newPos = item.TextView.Caret.Position.BufferPosition;
+
+                    if (checkInsertionMoved) {
+                        Assert.AreNotEqual(pos, newPos);
+                    }
                     if (checkInsertionLen) {
                         Assert.AreEqual(pos + insertionText.Length, newPos.Position);
                     }
@@ -1402,6 +1400,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletions() {
             InsertionTest("Intellisense.html.djt", 6, 3, -1, " end\r",
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 expected: new[] {
                     new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -1438,12 +1437,12 @@ namespace DjangoUITests {
             );
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2719
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions2() {
             InsertionTest("Intellisense2.html.djt", 6, 1, -1, "{{" + Keyboard.OneSecondDelay + " o\t }}",
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 expected: new Classification[] {
                     new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -1488,6 +1487,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletions4() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 6, 11, -1, "|cu\t",
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: true,
@@ -1521,12 +1521,12 @@ namespace DjangoUITests {
             );
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2719
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions5() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 6, 11, -1, ".c\t",
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: true,
@@ -1566,6 +1566,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletions6() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 7, 1, -1, "{%" + Keyboard.OneSecondDelay + " auto\t o\t %}",
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: true,
@@ -1610,6 +1611,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletions7() {
             InsertionTest("TestApp\\Templates\\page4.html.djt", 6, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
+                checkInsertionMoved: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: true,
@@ -1647,6 +1649,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletions8() {
             InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
+                checkInsertionMoved: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: true,
@@ -1692,6 +1695,7 @@ namespace DjangoUITests {
             string keySequence = "c" + Keyboard.CtrlSpace.ToString();
             InsertionTest("TestApp\\Templates\\page2.html.djt", 8, 4, -1, keySequence,
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: true,
@@ -1738,6 +1742,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletions10() {
             InsertionTest("TestApp\\Templates\\page3.html.djt", 6, 1, -1, Keyboard.CtrlSpace + "{%" + Keyboard.OneSecondDelay + " fo\t fob in con\t \t %}",
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: true,
@@ -1784,6 +1789,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletions11() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 3, 1, -1, "<\b\t",
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: false,
@@ -1824,6 +1830,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletions12() {
             InsertionTest("TestApp\\Templates\\page5.html.djt", 6, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
+                checkInsertionMoved: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
                 wait: true,
@@ -1861,6 +1868,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletionsHtml() {
             InsertionTest("Intellisense3.html.djt", 4, 1, -1, "<bo>",
                 paste: false,
+                checkInsertionMoved: true,
                 checkInsertionLen: false,
                 expected: new Classification[] {
                     new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -1902,6 +1910,7 @@ namespace DjangoUITests {
         public void IntellisenseCompletionsCss() {
             InsertionTest("IntellisenseCssJs.html.djt", 3, 36, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
+                checkInsertionMoved: false,
                 checkInsertionLen: false,
                 expected: new Classification[] {
                     new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -1950,12 +1959,12 @@ namespace DjangoUITests {
             );
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2719
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletionsJS() {
             InsertionTest("IntellisenseCssJs.html.djt", 4, 35, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
+                checkInsertionMoved: false,
                 checkInsertionLen: false,
                 expected: new Classification[] {
                     new Classification("HTML Tag Delimiter", 0, 1, "<"),

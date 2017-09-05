@@ -136,7 +136,6 @@ namespace Microsoft.PythonTools.Refactoring {
             var model = (IComponentModel)_engine._serviceProvider.GetService(typeof(SComponentModel));
             var adapterFactory = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = adapterFactory.GetDocumentBuffer(_buffer);
-            model.GetService<AnalysisEntryService>().SetAnalyzer(buffer, Engine._analyzer);
 
             view.SetBuffer(_buffer);
         }

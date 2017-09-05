@@ -378,7 +378,10 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     r.Cancel();
                 }
             }
-            _logFile?.Dispose();
+            try {
+                _logFile?.Dispose();
+            } catch (ObjectDisposedException) {
+            }
         }
 
         internal static async Task<JObject> ReadPacketAsJObject(ProtocolReader reader) {

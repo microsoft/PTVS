@@ -18,11 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using EnvDTE;
 using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     class ProjectSystemClient : IProjectSystemClient {
         private readonly EnvDTE80.DTE2 _dte;
+        private readonly SolutionEvents _solutionEvents;
 
         private static readonly HashSet<Guid> UnsupportedProjectKinds = new HashSet<Guid>() {
             new Guid("cc5fd16d-436d-48ad-a40c-5a424c6e3e79"), // Azure Cloud Service
@@ -30,6 +32,17 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public ProjectSystemClient(EnvDTE80.DTE2 dte) {
             _dte = dte;
+            _solutionEvents = dte.Events.SolutionEvents;
+            _solutionEvents.AfterClosing += OnSolutionChanged;
+            _solutionEvents.Opened += OnSolutionChanged;
+        }
+
+        public event EventHandler SolutionOpenChanged;
+
+        public bool IsSolutionOpen {
+            get {
+                return _dte.Solution.IsOpen;
+            }
         }
 
         public ProjectLocation GetSelectedFolderProjectLocation() {
@@ -91,6 +104,10 @@ namespace Microsoft.CookiecutterTools.Model {
                     itemParent.AddFromFile(absoluteFilePath);
                 }
             }
+        }
+
+        public void AddToSolution(string projectFilePath) {
+            _dte.Solution.AddFromFile(projectFilePath);
         }
 
         private EnvDTE.Project FindProject(string projectUniqueName) {
@@ -200,6 +217,10 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             return null;
+        }
+
+        private void OnSolutionChanged() {
+            SolutionOpenChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

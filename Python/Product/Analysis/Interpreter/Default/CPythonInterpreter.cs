@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         readonly Version _langVersion;
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb, _searchPathDb;
+        private readonly object _searchPathDbLock = new object();
         private PythonAnalyzer _state;
         private IReadOnlyList<string> _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
@@ -83,7 +84,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public IList<string> GetModuleNames() {
             var fromDb = (_typeDb?.GetModuleNames()).MaybeEnumerate().ToList();
 
-            fromDb.AddRange((_searchPathDb?.GetModuleNames()).MaybeEnumerate());
+            PythonTypeDatabase db;
+            lock (_searchPathDbLock) {
+                db = _searchPathDb;
+            }
+            fromDb.AddRange((db?.GetModuleNames()).MaybeEnumerate());
 
             fromDb.AddRange((_searchPathPackages?.Keys).MaybeEnumerate());
 
@@ -93,7 +98,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public IPythonModule ImportModule(string name) {
             var mod = _typeDb?.GetModule(name);
             if (mod == null) {
-                mod = _searchPathDb?.GetModule(name);
+                PythonTypeDatabase db;
+                lock (_searchPathDbLock) {
+                    db = _searchPathDb;
+                }
+                mod = db?.GetModule(name);
                 if (mod == null) {
                     foreach (var searchPath in _searchPaths.MaybeEnumerate()) {
                         try {
@@ -115,9 +124,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return mod;
         }
 
-        private void EnsureSearchPathDB() {
-            if (_searchPathDb == null) {
-                _searchPathDb = new PythonTypeDatabase(_factory, innerDatabase: _typeDb);
+        private PythonTypeDatabase EnsureSearchPathDB() {
+            lock (_searchPathDb) {
+                if (_searchPathDb == null) {
+                    _searchPathDb = new PythonTypeDatabase(_factory, innerDatabase: _typeDb);
+                }
+                return _searchPathDb;
             }
         }
 
@@ -168,7 +180,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return ModulePath.GetModulesInPath(
                 searchPath,
                 recurse: false,
-                requireInitPy: ModulePath.PythonVersionRequiresInitPyFiles(_langVersion)
+                requireInitPy: ModulePath.PythonVersionRequiresInitPyFiles(_langVersion),
+                includePackages: true
             ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).ToList();
         }
 
@@ -190,11 +203,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return null;
             }
 
-            EnsureSearchPathDB();
+            var db = EnsureSearchPathDB();
             if (package.IsNativeExtension || package.IsCompiled) {
-                _searchPathDb.LoadExtensionModule(package);
+                db.LoadExtensionModule(package);
             } else {
-                _searchPathDb.AddModule(package.FullName, AstPythonModule.FromFile(
+                db.AddModule(package.FullName, AstPythonModule.FromFile(
                     this,
                     package.SourceFile,
                     _factory.GetLanguageVersion(),
@@ -202,19 +215,33 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 ));
             }
 
-            var mod = _searchPathDb.GetModule(package.FullName);
+            if (db != _searchPathDb) {
+                // Racing with the DB being invalidated.
+                // It's okay if we miss it here, so don't worry
+                // about taking the lock.
+                return null;
+            }
+
+            var mod = db.GetModule(package.FullName);
 
             if (!package.IsSpecialName) {
                 int i = package.FullName.LastIndexOf('.');
                 if (i >= 1) {
                     var parent = package.FullName.Remove(i);
-                    var parentMod = _searchPathDb.GetModule(parent) as AstPythonModule;
+                    var parentMod = db.GetModule(parent) as AstPythonModule;
                     if (parentMod != null) {
                         parentMod.AddChildModule(package.Name, mod);
                     }
                 }
             }
-            
+
+            lock (_searchPathDbLock) {
+                if (db != _searchPathDb) {
+                    // Raced with the DB being invalidated
+                    return null;
+                }
+            }
+
             return mod;
         }
 
@@ -304,9 +331,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private void PythonAnalyzer_SearchPathsChanged(object sender, EventArgs e) {
-            _searchPaths = _state.GetSearchPaths();
-            _searchPathDb = null;
-            _zipPackageCache = null;
+            lock (_searchPathDbLock) {
+                _searchPaths = _state.GetSearchPaths();
+                _searchPathDb = null;
+                _zipPackageCache = null;
+            }
 
             BeginUpdateSearchPathPackages();
         }
@@ -317,7 +346,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
 
         public void Dispose() {
-            _searchPathDb = null;
+            lock (_searchPathDbLock) {
+                _searchPathDb = null;
+            }
             _zipPackageCache = null;
             _typeDb = null;
 

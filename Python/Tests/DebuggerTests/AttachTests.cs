@@ -1383,10 +1383,32 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests36_x64 : AttachTests35 {
+    public class AttachTests36_x64 : AttachTests36 {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python36_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class AttachTests37 : AttachTests {
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python37;
+            }
+        }
+
+        public override async Task AttachNewThread_PyThreadState_New() {
+            // PyEval_AcquireLock deprecated in 3.2
+        }
+    }
+
+    [TestClass]
+    public class AttachTests37_x64 : AttachTests37 {
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python37_x64;
             }
         }
     }

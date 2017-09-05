@@ -30,6 +30,7 @@ using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -1119,15 +1120,29 @@ namespace Microsoft.PythonTools.Project {
             return _analyzer;
         }
 
+        public VsProjectAnalyzer TryGetAnalyzer() {
+            return _analyzer;
+        }
+
         private VsProjectAnalyzer CreateAnalyzer() {
             var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterRegistryService>();
             var factory = GetInterpreterFactory();
+
+            bool inProc = false;
+            var ipp = BuildProject.GetProperty("_InProcessPythonAnalyzer");
+            if (ipp != null) {
+                if (ipp.EvaluatedValue?.IsTrue() ?? false) {
+                    inProc = true;
+                }
+            }
+
             var res = new VsProjectAnalyzer(
-                Site,
+                model.GetService<PythonEditorServices>(),
                 factory,
                 false,
-                BuildProject
+                BuildProject,
+                outOfProcAnalyzer: !inProc
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
             res.AnalyzerNeedsRestart += OnActiveInterpreterChanged;
@@ -1364,10 +1379,22 @@ namespace Microsoft.PythonTools.Project {
 
                 if (oldAnalyzer != null) {
                     if (analyzer != null) {
-                        analyzer.SwitchAnalyzers(oldAnalyzer);
+                        await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
                     }
                     if (oldAnalyzer.RemoveUser()) {
                         oldAnalyzer.Dispose();
+                    }
+                }
+
+                var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
+
+                var defAnalyzer = Site.GetPythonToolsService().MaybeDefaultAnalyzer;
+                if (defAnalyzer != null) {
+                    foreach (var f in files) {
+                        var entry = defAnalyzer.GetAnalysisEntryFromPath(f);
+                        if (entry != null) {
+                            await defAnalyzer.UnloadFileAsync(entry);
+                        }
                     }
                 }
 
@@ -1375,11 +1402,7 @@ namespace Microsoft.PythonTools.Project {
                     // Set search paths first, as it will save full reanalysis later
                     await analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths());
                     // Add all our files into our analyzer
-                    var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
                     await analyzer.AnalyzeFileAsync(files);
-                    // Ensure any open files that belong to our project are associated
-                    // with our new analyzer
-                    await ReanalyzeOpenFilesAsync(Site, files, analyzer, ProjectIDGuid);
                 }
 
                 ProjectAnalyzerChanged?.Invoke(this, EventArgs.Empty);
@@ -1400,74 +1423,6 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
             }
-        }
-
-        private static async Task ReanalyzeOpenFilesAsync(
-            IServiceProvider site,
-            string[] files,
-            VsProjectAnalyzer analyzer,
-            Guid expectedProjectGuid
-        ) {
-            var editorService = (IVsUIShellOpenDocument)site.GetService(typeof(SVsUIShellOpenDocument));
-            var adapterService = site.GetComponentModel().GetService<IVsEditorAdaptersFactoryService>();
-            var entryService = site.GetEntryService();
-
-            foreach (var f in files) {
-                IVsUIHierarchy uiHierarchy;
-                IVsWindowFrame frame;
-                var uiItemId = new uint[1];
-                int isOpen;
-                var logicalView = new Guid(LogicalViewID.Code);
-
-                ErrorHandler.ThrowOnFailure(editorService.IsDocumentOpen(null, 0, f, ref logicalView, 0, out uiHierarchy, uiItemId, out frame, out isOpen));
-
-                if (isOpen == 0 || frame == null) {
-                    continue;
-                }
-
-                object docView;
-                IVsCodeWindow codeView;
-                if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out docView)) ||
-                    (codeView = docView as IVsCodeWindow) == null) {
-                    continue;
-                }
-
-                IVsTextView textView;
-                if (ErrorHandler.Succeeded(codeView.GetPrimaryView(out textView))) {
-                    ReconnectIntellisenseController(adapterService, entryService, textView, analyzer);
-                }
-                if (ErrorHandler.Succeeded(codeView.GetSecondaryView(out textView))) {
-                    ReconnectIntellisenseController(adapterService, entryService, textView, analyzer);
-                }
-            }
-        }
-
-        private static void ReconnectIntellisenseController(
-            IVsEditorAdaptersFactoryService adapterService,
-            AnalysisEntryService entryService,
-            IVsTextView view,
-            VsProjectAnalyzer analyzer
-        ) {
-            if (view == null) {
-                return;
-            }
-
-            var wpfTextView = adapterService.GetWpfTextView(view);
-            if (wpfTextView == null) {
-                return;
-            }
-
-            var controller = IntellisenseControllerProvider.GetController(wpfTextView);
-            if (controller == null) {
-                return;
-            }
-
-            foreach (var buffer in wpfTextView.BufferGraph.GetTextBuffers(EditorExtensions.IsPythonContent)) {
-                controller.DisconnectSubjectBuffer(buffer);
-                entryService.SetAnalyzer(buffer, analyzer);
-                controller.ConnectSubjectBuffer(buffer);
-            }
-
         }
 
         protected override string AssemblyReferenceTargetMoniker {

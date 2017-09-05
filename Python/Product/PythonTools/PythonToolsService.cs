@@ -101,10 +101,12 @@ namespace Microsoft.PythonTools {
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
-            _entryService = ComponentModel.GetService<AnalysisEntryService>();
+            _entryService = (AnalysisEntryService)ComponentModel.GetService<IAnalysisEntryService>();
             _diagnosticsProvider = new DiagnosticsProvider(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
+
+            EditorServices.SetPythonToolsService(this);
         }
 
         private void OnIdleInitialization(object sender, ComponentManagerEventArgs e) {
@@ -155,6 +157,9 @@ namespace Microsoft.PythonTools {
                 }
 
                 _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck.ToString());
+                _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
+                    { PythonInterpreterInformation.ExperimentalFactoryKey, PythonInterpreterInformation._experimentalFactory.Value }
+                });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
@@ -166,11 +171,11 @@ namespace Microsoft.PythonTools {
                 return;
             }
 
-            _container.GetUIThread().InvokeAsync(() => {
+            _container.GetUIThread().InvokeTask(async () => {
                 var analyzer = CreateAnalyzer();
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
                 if (oldAnalyzer != null) {
-                    analyzer.SwitchAnalyzers(oldAnalyzer);
+                    await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
                     if (oldAnalyzer.RemoveUser()) {
                         oldAnalyzer.Dispose();
                     }
@@ -191,6 +196,8 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        internal PythonEditorServices EditorServices => ComponentModel.GetService<PythonEditorServices>();
+
         internal string GetDiagnosticsLog(bool includeAnalysisLogs) {
             return _diagnosticsProvider.GetLog(includeAnalysisLogs);
         }
@@ -209,12 +216,12 @@ namespace Microsoft.PythonTools {
 
             // may not available in some test cases
             if (interpreters == null) {
-                return new VsProjectAnalyzer(_container, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+                return new VsProjectAnalyzer(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
             }
 
             var defaultFactory = interpreters.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
-            return new VsProjectAnalyzer(_container, defaultFactory);
+            return new VsProjectAnalyzer(EditorServices, defaultFactory);
         }
 
         internal PythonToolsLogger Logger => _logger;
@@ -230,6 +237,8 @@ namespace Microsoft.PythonTools {
                 return _analyzer;
             }
         }
+
+        public VsProjectAnalyzer MaybeDefaultAnalyzer => _analyzer;
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
@@ -549,12 +558,12 @@ namespace Microsoft.PythonTools {
         #region Intellisense
 
         public CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(_container, session, view, snapshot, span, point, options);
+            return VsProjectAnalyzer.GetCompletions(EditorServices, session, view, snapshot, span, point, options);
         }
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
             return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
@@ -562,7 +571,7 @@ namespace Microsoft.PythonTools {
 
         public Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return Task.FromResult(new SignatureAnalysis("", 0, new ISignature[0]));
             }
             return entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span);
@@ -570,10 +579,10 @@ namespace Microsoft.PythonTools {
 
         public ExpressionAnalysis AnalyzeExpression(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return null;
             }
-            return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, view, span.GetStartPoint(snapshot)), "AnalyzeExpression");
+            return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, span.GetStartPoint(snapshot)), "AnalyzeExpression");
         }
 
         public Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {
