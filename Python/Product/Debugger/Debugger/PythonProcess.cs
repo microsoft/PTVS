@@ -107,6 +107,7 @@ namespace Microsoft.PythonTools.Debugger {
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
             processInfo.RedirectStandardInput = (options & PythonDebugOptions.RedirectInput) != 0;
+            processInfo.WorkingDirectory = dir;
 
             processInfo.Arguments = 
                 (String.IsNullOrWhiteSpace(interpreterOptions) ? "" : (interpreterOptions + " ")) +
