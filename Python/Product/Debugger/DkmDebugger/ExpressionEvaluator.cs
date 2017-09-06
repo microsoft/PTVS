@@ -161,9 +161,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         // "0x1e120d50 {python33_d.dll!list_dealloc(PyListObject *)}". If we are lucky, one of those functions will have
                         // the first argument declared as a strongly typed pointer, rather than PyObject* or void*.
                         CppTypeName = "PyObject";
-                        CppTypeModuleName = null;
+                        CppTypeModuleName = Process.GetPythonRuntimeInfo().DLLs.Python.Name;
                         foreach (string methodField in _methodFields) {
-                            var funcPtrEvalResult = cppEval.TryEvaluateObject(null, "PyObject", obj.Address, ".ob_type->" + methodField) as DkmSuccessEvaluationResult;
+                            var funcPtrEvalResult = cppEval.TryEvaluateObject(CppTypeModuleName, "PyObject", obj.Address, ".ob_type->" + methodField) as DkmSuccessEvaluationResult;
                             if (funcPtrEvalResult == null || funcPtrEvalResult.Value.IndexOf('{') < 0) {
                                 continue;
                             }
