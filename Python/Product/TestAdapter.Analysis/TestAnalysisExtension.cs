@@ -117,20 +117,41 @@ namespace Microsoft.PythonTools.TestAdapter {
                 yield break;
             }
 
+            // GetTestCaseMembers may return duplicates, so we filter in
+            // this function.
+            var seen = new Dictionary<string, int>();
+
             foreach (var classValue in GetTestCaseClasses(analysis)) {
                 // Check the name of all functions on the class using the
                 // analyzer. This will return functions defined on this
                 // class and base classes
                 foreach (var member in GetTestCaseMembers(entry.Tree, entry.FilePath, analysis, classValue)) {
+                    var name = $"{classValue.Name}.{member.Key}";
                     // Find the definition to get the real location of the
                     // member. Otherwise decorators will confuse us.
                     var definition = entry.Analysis
-                        .GetVariablesByIndex(classValue.Name + "." + member.Key, 0)
+                        .GetVariablesByIndex(name, 0)
                         .FirstOrDefault(v => v.Type == VariableType.Definition);
 
                     var location = definition?.Location ?? member.Value;
 
                     int endLine = location?.EndLine ?? location?.StartLine ?? 0;
+
+                    int startLine = location?.StartLine ?? 0;
+                    if (seen.TryGetValue(name, out int existingStartLine)) {
+                        // Same name and same line is obviously the same
+                        // test. Within one line probably means that the
+                        // decorator was miscalculated, and it's best to
+                        // skip it anyway. (There isn't a style guide on
+                        // earth that encourages using distinct single-line
+                        // tests with the same name adjacent to each other,
+                        // so this should have no false positives.)
+                        if (Math.Abs(startLine - existingStartLine) <= 1) {
+                            continue;
+                        }
+                    } else {
+                        seen[name] = startLine;
+                    }
 
                     yield return new TestCaseInfo(
                         classValue.DeclaringModule?.FilePath,
@@ -183,8 +204,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             var analysisTests = methodFunctions.Where(v => v.Key.StartsWith("test"));
             var analysisRunTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
 
-            tests = tests?.Union(analysisTests) ?? analysisTests;
-            runTest = runTest?.Union(analysisRunTest) ?? analysisRunTest;
+            tests = tests?.Concat(analysisTests) ?? analysisTests;
+            runTest = runTest?.Concat(analysisRunTest) ?? analysisRunTest;
 
             if (tests.Any()) {
                 return tests;
