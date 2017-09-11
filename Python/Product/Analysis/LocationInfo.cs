@@ -26,13 +26,13 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
 
-        internal LocationInfo(string path, int line, int column) {
+        public LocationInfo(string path, int line, int column) {
             _path = path;
             _line = line;
             _column = column;
         }
 
-        internal LocationInfo(string path, int line, int column, int? endLine, int? endColumn) {
+        public LocationInfo(string path, int line, int column, int? endLine, int? endColumn) {
             _path = path;
             _line = line;
             _column = column;

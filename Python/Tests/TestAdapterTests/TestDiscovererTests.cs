@@ -113,19 +113,29 @@ class MyTest(unittest.TestCase):
     @decorator
     def testAbc(self):
         pass
+
+    @fake_decorator
+    def testDef(self):
+        pass
 ";
                 var entry = AddModule(analyzer, "Fob", code);
 
                 entry.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry).Single();
-                Assert.AreEqual("testAbc", test.MethodName);
-                Assert.AreEqual(10, test.StartLine);
+                var tests = TestAnalyzer.GetTestCasesFromAnalysis(entry)
+                    .Select(t => $"{t.MethodName}:{t.StartLine}");
+                AssertUtil.ArrayEquals(
+                    new[] { "testAbc:10", "testDef:14" },
+                    tests.ToArray()
+                );
 
-                test = GetTestCasesFromAst(code, analyzer).Single();
-                Assert.AreEqual("testAbc", test.MethodName);
-                Assert.AreEqual(10, test.StartLine);
+                tests = GetTestCasesFromAst(code, analyzer)
+                    .Select(t => $"{t.MethodName}:{t.StartLine}");
+                AssertUtil.ArrayEquals(
+                    new[] { "testAbc:9", "testDef:13" },
+                    tests.ToArray()
+                );
             }
         }
 
