@@ -823,11 +823,19 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="paths">The list of search paths.</param>
         /// <remarks>Added in 2.2</remarks>
         public static void WriteDatabaseSearchPaths(string databasePath, IEnumerable<PythonLibraryPath> paths) {
-            Directory.CreateDirectory(databasePath);
-            using (var file = new StreamWriter(Path.Combine(databasePath, "database.path"))) {
-                foreach (var path in paths) {
-                    file.WriteLine(path.ToString());
+            try {
+                Directory.CreateDirectory(databasePath);
+                using (var file = new StreamWriter(Path.Combine(databasePath, "database.path"))) {
+                    foreach (var path in paths) {
+                        file.WriteLine(path.ToString());
+                    }
                 }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                // There's no recoverable reason for this to fail,
+                // so report it when debugging otherwise silently
+                // skip caching.
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(PythonTypeDatabase)));
+                return;
             }
         }
 
