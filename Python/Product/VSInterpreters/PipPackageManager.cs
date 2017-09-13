@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -458,17 +459,18 @@ namespace Microsoft.PythonTools.Interpreter {
                         try {
                             if ((await proc) == 0) {
                                 if (_pipListHasFormatOption) {
-                                    var json = string.Join(Environment.NewLine, proc.StandardOutputLines);
                                     try {
-                                        var data = JArray.Parse(json);
+                                        var data = JToken.ReadFrom(new JsonTextReader(new StringListReader(proc.StandardOutputLines)));
                                         packages = data
                                             .Select(j => new PackageSpec(j.Value<string>("name"), j.Value<string>("version")))
                                             .Where(p => p.IsValid)
                                             .OrderBy(p => p.Name)
                                             .ToList();
-                                    } catch (Newtonsoft.Json.JsonException ex) {
+                                    } catch (JsonException ex) {
                                         Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
-                                        Debug.WriteLine(json);
+                                        foreach (var l in proc.StandardOutputLines) {
+                                            Debug.WriteLine(l);
+                                        }
                                     }
                                 } else {
                                     packages = proc.StandardOutputLines
@@ -488,7 +490,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         } catch (OperationCanceledException) {
                             // Process failed to run
                             Debug.WriteLine("Failed to run pip to collect packages");
-                            Debug.WriteLine(string.Join(Environment.NewLine, proc.StandardOutputLines));
+                            foreach (var line in proc.StandardOutputLines) {
+                                Debug.WriteLine(line);
+                            }
                         }
                     }
 
