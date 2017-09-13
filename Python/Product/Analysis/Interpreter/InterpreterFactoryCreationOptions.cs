@@ -33,5 +33,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPackageManager PackageManager { get; set; }
 
         public bool NoDatabase { get; set; }
+
+        public bool UseExistingCache { get; set; } = true;
     }
 }

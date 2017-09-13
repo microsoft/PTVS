@@ -43,7 +43,17 @@ namespace AnalysisTests {
 
         private static PythonAnalysis CreateAnalysis(PythonVersion version) {
             version.AssertInstalled();
-            return new PythonAnalysis(() => new AstPythonInterpreterFactory(version.Configuration, null));
+            var opts = new InterpreterFactoryCreationOptions {
+                DatabasePath = TestData.GetTempPath("AstAnalysisCache"),
+                UseExistingCache = false
+            };
+
+            Trace.TraceInformation("Cache Path: " + opts.DatabasePath);
+
+            return new PythonAnalysis(() => new AstPythonInterpreterFactory(
+                version.Configuration,
+                opts
+            ));
         }
 
         private static PythonAnalysis CreateAnalysis() {
@@ -197,8 +207,36 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, Priority(0)]
-        public void AstBuiltinScrape() {
-            using (var analysis = CreateAnalysis()) {
+        public void AstBuiltinScrapeV36() => AstBuiltinScrape(PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV35() => AstBuiltinScrape(PythonPaths.Python35_x64 ?? PythonPaths.Python35);
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV34() => AstBuiltinScrape(PythonPaths.Python34_x64 ?? PythonPaths.Python34);
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV33() => AstBuiltinScrape(PythonPaths.Python33_x64 ?? PythonPaths.Python33);
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV32() => AstBuiltinScrape(PythonPaths.Python32_x64 ?? PythonPaths.Python32);
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV31() => AstBuiltinScrape(PythonPaths.Python31_x64 ?? PythonPaths.Python31);
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV30() => AstBuiltinScrape(PythonPaths.Python30);
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV27() => AstBuiltinScrape(PythonPaths.Python27_x64 ?? PythonPaths.Python27);
+
+        [TestMethod, Priority(0)]
+        public void AstBuiltinScrapeV26() => AstBuiltinScrape(PythonPaths.Python26_x64 ?? PythonPaths.Python26);
+
+
+        private void AstBuiltinScrape(PythonVersion version) {
+            version.AssertInstalled();
+            using (var analysis = CreateAnalysis(version)) {
                 var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                 var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 

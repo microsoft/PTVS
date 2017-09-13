@@ -318,6 +318,10 @@ class Signature(object):
             elif c == '(':
                 n += 1
 
+    _AST_ARG_TYPES = tuple(getattr(ast, n) for n in (
+        'arg', 'keyword', 'Name'
+    ) if hasattr(ast, n))
+
     def _ast_arg_to_str(self, arg):
         '''Converts an AST argument object into a string.'''
         arg_id = None
@@ -336,11 +340,13 @@ class Signature(object):
         if isinstance(arg, ast.Tuple):
             arg_id = '(' + ', '.join(a.id for a in arg.elts) + ')'
 
-        if not arg_id and not isinstance(arg, (ast.arg, ast.keyword)):
+        if not arg_id and not isinstance(arg, self._AST_ARG_TYPES):
             warnings.warn('failed to get argument name for ' + repr(arg) + repr(vars(arg)), InspectWarning)
 
         if not arg_id:
-            arg_id = arg.arg
+            arg_id = getattr(arg, 'arg', None)
+            if arg_id is None:
+                arg_id = arg.id
 
         for final_arg in [arg_id + default_value, arg_id]:
             try:
@@ -364,6 +370,9 @@ class MemberInfo(object):
         self.documentation = getattr(value, '__doc__', None)
         if not isinstance(self.documentation, str):
             self.documentation = None
+
+        if self.name:
+            self.name = self.name.replace('-', '_')
 
         if isinstance(value, type):
             self.need_imports, self.type_name = self._get_typename(value, module)
@@ -819,7 +828,7 @@ def add_builtin_objects(state):
     })
 
     if sys.version[0] == '2':
-        KNOWN_RESTYPES.update({
+        Signature.KNOWN_RESTYPES.update({
             "__BytesIterator.__next__": None,
             "__BytesIterator.next": "b''",
             "__UnicodeIterator.__next__": None,
@@ -827,7 +836,7 @@ def add_builtin_objects(state):
             "__Generator.send": "self.next()",
         })
 
-        KNOWN_ARGSPECS.update({
+        Signature.KNOWN_ARGSPECS.update({
             "__BytesIterator.next": "self",
             "__UnicodeIterator.next": "self",
         })
@@ -922,9 +931,15 @@ def add_builtin_objects(state):
 
 
 if __name__ == '__main__':
+    EXCLUDED_MEMBERS = ()
+    
     if len(sys.argv) == 1:
         state = ScrapeState(builtins.__name__, builtins)
         add_builtin_objects(state)
+
+        EXCLUDED_MEMBERS += ('None', 'False', 'True', '__debug__')
+        if sys.version_info[0] == 2:
+            EXCLUDED_MEMBERS += ('print',)
 
     elif len(sys.argv) >= 2:
         state = ScrapeState(sys.argv[1])
@@ -936,7 +951,6 @@ if __name__ == '__main__':
 
     state.collect_top_level_members()
 
-    EXCLUDED_MEMBERS = ('None', 'False', 'True', '__debug__')
     state.members[:] = [m for m in state.members if m.name not in EXCLUDED_MEMBERS]
 
     state.collect_second_level_members()
