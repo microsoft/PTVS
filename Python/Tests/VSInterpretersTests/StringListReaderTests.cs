@@ -61,19 +61,34 @@ namespace VSInterpretersTests {
         public void PartialReadTest() {
             using (var r = new StringListReader(new[] { "0123456789", "ABCDEFGHIJ" })) {
                 var buffer = new char[7];
-                Assert.AreEqual(7, r.ReadBlock(buffer, 0, 7));
+                Assert.AreEqual(7, r.Read(buffer, 0, 7));
                 Assert.AreEqual("0123456", ToString(buffer));
                 
                 // We do not get a full read here, by design
-                Assert.AreEqual(3, r.ReadBlock(buffer, 0, 7));
+                Assert.AreEqual(3, r.Read(buffer, 0, 7));
                 Assert.AreEqual("789", ToString(buffer.Take(3)));
 
-                Assert.AreEqual(7, r.ReadBlock(buffer, 0, 7));
+                Assert.AreEqual(7, r.Read(buffer, 0, 7));
                 Assert.AreEqual("ABCDEFG", ToString(buffer));
 
                 // We do not get a full read here, by design
-                Assert.AreEqual(3, r.ReadBlock(buffer, 0, 7));
+                Assert.AreEqual(3, r.Read(buffer, 0, 7));
                 Assert.AreEqual("HIJ", ToString(buffer.Take(3)));
+            }
+        }
+
+        [TestMethod]
+        public void ReadBlockTest() {
+            using (var r = new StringListReader(new[] { "0123456789", "ABCDEFGHIJ" })) {
+                var buffer = new char[7];
+                Assert.AreEqual(7, r.ReadBlock(buffer, 0, 7));
+                Assert.AreEqual("0123456", ToString(buffer));
+                
+                Assert.AreEqual(7, r.ReadBlock(buffer, 0, 7));
+                Assert.AreEqual("789ABCD", ToString(buffer));
+
+                Assert.AreEqual(6, r.ReadBlock(buffer, 0, 7));
+                Assert.AreEqual("EFGHIJ", ToString(buffer.Take(6)));
             }
         }
 

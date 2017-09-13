@@ -120,7 +120,17 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public override int ReadBlock(char[] buffer, int index, int count) {
-            return Read(buffer, index, count);
+            int totalCount = 0;
+            while (totalCount < count) {
+                int newCount = Read(buffer, index, count);
+                if (newCount == 0) {
+                    break;
+                }
+                index += newCount;
+                count -= newCount;
+                totalCount += newCount;
+            }
+            return totalCount;
         }
 
         public override string ReadToEnd() {
