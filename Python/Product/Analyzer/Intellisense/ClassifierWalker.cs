@@ -267,6 +267,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override bool Walk(ComprehensionFor node) {
             AddParameter(node.Left);
+
+            if (node.IsAsync) {
+                AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), Classifications.Keyword);
+            }
+
             return base.Walk(node);
         }
 

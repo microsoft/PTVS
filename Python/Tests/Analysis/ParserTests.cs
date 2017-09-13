@@ -2545,6 +2545,25 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public void AsyncForComprehension() {
+            foreach (var version in V36AndUp) {
+                var ast = ParseFileNoErrors("AsyncFor.py", version);
+                CheckAst(
+                    ast,
+                    CheckSuite(CheckCoroutineDef(CheckFuncDef("f", NoParameters, CheckSuite(
+                        CheckExprStmt(CheckListComp(Fob, AsyncCompFor(Fob, Oar))),
+                        CheckExprStmt(CheckGeneratorComp(Fob, AsyncCompFor(Fob, Oar))),
+                        CheckExprStmt(CheckSetComp(Fob, AsyncCompFor(Fob, Oar))),
+                        CheckExprStmt(CheckDictComp(Fob, Fob, AsyncCompFor(Fob, Oar))),
+                        CheckExprStmt(CheckListComp(Fob, CompFor(Fob, Oar), AsyncCompFor(Oar, Baz))),
+                        CheckExprStmt(CheckGeneratorComp(Fob, CompFor(Fob, Oar), AsyncCompFor(Oar, Baz))),
+                        CheckExprStmt(CheckListComp(CheckAwaitExpression(Fob), AsyncCompFor(Fob, Oar)))
+                    ))))
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void ConditionalExpr() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -2777,9 +2796,7 @@ namespace AnalysisTests {
 
                 switch (curVersion.Version) {
                     case PythonLanguageVersion.V36:
-                        if (// https://github.com/Microsoft/PTVS/issues/1638
-                            filename.Equals("test_coroutines.py", StringComparison.OrdinalIgnoreCase) ||
-                            // https://github.com/Microsoft/PTVS/issues/1637
+                        if (// https://github.com/Microsoft/PTVS/issues/1637
                             filename.Equals("test_unicode_identifiers.py", StringComparison.OrdinalIgnoreCase) ||
                             // https://github.com/Microsoft/PTVS/issues/1645
                             filename.Equals("test_grammar.py", StringComparison.OrdinalIgnoreCase)
@@ -3877,6 +3894,17 @@ namespace AnalysisTests {
             return iter => {
                 Assert.AreEqual(typeof(ComprehensionFor), iter.GetType());
                 var forIter = (ComprehensionFor)iter;
+
+                lhs(forIter.Left);
+                list(forIter.List);
+            };
+        }
+
+        private Action<ComprehensionIterator> AsyncCompFor(Action<Expression> lhs, Action<Expression> list) {
+            return iter => {
+                Assert.AreEqual(typeof(ComprehensionFor), iter.GetType());
+                var forIter = (ComprehensionFor)iter;
+                Assert.IsTrue(forIter.IsAsync);
 
                 lhs(forIter.Left);
                 list(forIter.List);
