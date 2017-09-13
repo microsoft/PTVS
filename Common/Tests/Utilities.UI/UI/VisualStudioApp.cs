@@ -56,6 +56,17 @@ namespace TestUtilities.UI {
             foreach (var p in ((DTE2)_dte).ToolWindows.OutputWindow.OutputWindowPanes.OfType<OutputWindowPane>()) {
                 p.Clear();
             }
+
+            var uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
+            IntPtr hwnd;
+            ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
+            if (hwnd != _mainWindowHandle) {
+                using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
+                    Console.WriteLine("Unexpected dialog at start of test");
+                    DumpElement(dlg.Element);
+                    dlg.WaitForClosed(TimeSpan.FromSeconds(5), dlg.CloseWindow);
+                }
+            }
         }
 
         private VisualStudioApp(IntPtr windowHandle)
