@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyDictionary<string, string> _searchPathPackages;
 
         private bool _disposed;
+        private readonly bool _skipCache;
 
         public AstPythonInterpreterFactory(
             InterpreterConfiguration config,
@@ -44,6 +45,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             options = options ?? new InterpreterFactoryCreationOptions();
             _databasePath = options.DatabasePath;
+            _skipCache = !options.UseExistingCache;
 
             if (!GlobalInterpreterOptions.SuppressPackageManagers) {
                 try {
@@ -118,6 +120,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         #region Cache File Management
 
         public Stream ReadCachedModule(string filePath) {
+            if (_skipCache) {
+                return null;
+            }
+
             FileStream file = null;
             var path = GetCacheFilePath(filePath);
             if (string.IsNullOrEmpty(path)) {
