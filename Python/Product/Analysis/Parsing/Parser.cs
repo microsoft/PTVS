@@ -4295,7 +4295,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        // comp_for: 'for target_list 'in' or_test [comp_iter]
+        // comp_for: '[async] for target_list 'in' or_test [comp_iter]
         private ComprehensionFor ParseCompFor() {
             bool isAsync = false;
             string firstWhitespace = null, asyncWhitespace = null;
