@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Interpreter {
     class StringListReader : TextReader {
         private readonly IEnumerator<string> _strings;
         private StringReader _current;
+        private int _peekBuffer = -1;
 
         public StringListReader(IEnumerable<string> strings) {
             _strings = strings.GetEnumerator();
@@ -50,10 +51,27 @@ namespace Microsoft.PythonTools.Interpreter {
             return false;
         }
 
+        public override int Peek() {
+            if (_peekBuffer >= 0) {
+                return _peekBuffer;
+            }
+            _peekBuffer = Read();
+            return _peekBuffer;
+        }
+
         public override string ReadLine() {
+            if (_peekBuffer == 0) {
+                _peekBuffer = -1;
+                return string.Empty;
+            }
+
             var r = _current?.ReadLine();
             if (r == null && Next()) {
-                return _current.ReadLine();
+                r = _current.ReadLine();
+            }
+            if (_peekBuffer > 0) {
+                r = $"{(char)_peekBuffer}{r ?? ""}";
+                _peekBuffer = -1;
             }
             return r;
         }
@@ -63,7 +81,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 return -1;
             }
 
-            var i = _current.Read();
+            int i;
+            if (_peekBuffer >= 0) {
+                i = _peekBuffer;
+                _peekBuffer = -1;
+                return i;
+            }
+
+            i = _current.Read();
             if (i < 0 && Next()) {
                 return _current.Read();
             }
@@ -71,14 +96,27 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public override int Read(char[] buffer, int index, int count) {
-            if (_current == null) {
+            if (count == 0) {
                 return 0;
+            }
+
+            bool readPeek = false;
+            if (_peekBuffer >= 0) {
+                readPeek = true;
+                buffer[index] = (char)_peekBuffer;
+                _peekBuffer = -1;
+                index += 1;
+                count -= 1;
+            }
+
+            if (_current == null) {
+                return readPeek ? 1 : 0;
             }
             var i = _current.Read(buffer, index, count);
             if (i == 0 && Next()) {
                 i = _current.Read(buffer, index, count);
             }
-            return i;
+            return i + (readPeek ? 1 : 0);
         }
 
         public override int ReadBlock(char[] buffer, int index, int count) {
@@ -87,9 +125,19 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public override string ReadToEnd() {
             Debug.Fail("Please don't do this - it's why I wrote this reader in the first place!");
-            var sb = new StringBuilder(_current.ReadToEnd());
-            while (Next()) {
-                sb.Append(_current.ReadToEnd());
+            return ReadToEndWithoutAssert();
+        }
+
+        internal string ReadToEndWithoutAssert() {
+            var line = ReadLine();
+            if (line == null) {
+                return null;
+            }
+
+            var sb = new StringBuilder();
+            while (line != null) {
+                sb.Append(line);
+                line = ReadLine();
             }
             return sb.ToString();
         }
