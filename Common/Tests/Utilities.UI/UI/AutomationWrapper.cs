@@ -405,6 +405,13 @@ namespace TestUtilities.UI {
             }
         }
 
+        public void CloseWindow() {
+            object pattern;
+            if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern)) {
+                ((WindowPattern)pattern).Close();
+            }
+        }
+
         public void WaitForClosed(TimeSpan timeout, Action closeCommand = null) {
             using (var closed = new AutoResetEvent(false)) {
                 AutomationEventHandler handler = (s, e) => {
