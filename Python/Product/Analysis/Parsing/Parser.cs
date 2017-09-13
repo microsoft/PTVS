@@ -3654,7 +3654,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 if (MaybeEat(TokenKind.Assign)) {               //  Keyword argument
                     a = FinishKeywordArgument(e);
-                } else if (PeekToken(Tokens.KeywordForToken)) {    //  Generator expression
+                } else if (PeekTokenForOrAsyncFor) {    //  Generator expression
                     var genExpr = ParseGeneratorExpression(e);
                     AddIsAltForm(genExpr);
                     a = new Arg(genExpr);
@@ -3976,7 +3976,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (MaybeEat(TokenKind.Comma)) {
                         // "(" expression "," ...
                         ret = FinishExpressionListAsExpr(expr);
-                    } else if (PeekToken(Tokens.KeywordForToken)) {
+                    } else if (PeekTokenForOrAsyncFor) {
                         // "(" expression "for" ...
                         if (expr is StarredExpression) {
                             ReportSyntaxError("iterable unpacking cannot be used in comprehension");
@@ -4008,9 +4008,9 @@ namespace Microsoft.PythonTools.Parsing {
             return ret;
         }
 
-        //  genexpr_for  ::= "for" target_list "in" or_test [comp_iter]
+        //  genexpr_for  ::= [async] "for" target_list "in" or_test [comp_iter]
         //
-        //  "for" has NOT been eaten before entering this method
+        //  "[async] for" has NOT been eaten before entering this method
         private Expression ParseGeneratorExpression(Expression expr, string rightParenWhiteSpace = null) {
             ComprehensionIterator[] iters = ParseCompIter();
 
@@ -4131,7 +4131,7 @@ namespace Microsoft.PythonTools.Parsing {
                         }
                         se.SetLoc(e1.StartIndex, e2.EndIndex);
 
-                        if (PeekToken(Tokens.KeywordForToken)) {
+                        if (PeekTokenForOrAsyncFor) {
                             if (!first || _langVersion < PythonLanguageVersion.V27) {
                                 ReportSyntaxError("invalid syntax");
                             }
@@ -4181,7 +4181,7 @@ namespace Microsoft.PythonTools.Parsing {
                                 first = true;
                             }
 
-                            if (PeekToken(Tokens.KeywordForToken)) {
+                            if (PeekTokenForOrAsyncFor) {
                                 if (!first) {
                                     ReportSyntaxError("invalid syntax");
                                 }
@@ -4276,7 +4276,7 @@ namespace Microsoft.PythonTools.Parsing {
             iters.Add(firstFor);
 
             while (true) {
-                if (PeekToken(Tokens.KeywordForToken)) {
+                if (PeekTokenForOrAsyncFor) {
                     iters.Add(ParseCompFor());
                 } else if (PeekToken(Tokens.KeywordIfToken)) {
                     iters.Add(ParseCompIf());
@@ -4288,12 +4288,30 @@ namespace Microsoft.PythonTools.Parsing {
             return iters.ToArray();
         }
 
+        private bool PeekTokenForOrAsyncFor {
+            get {
+                return PeekToken(Tokens.KeywordForToken) ||
+                    (AllowAsyncAwaitSyntax && PeekToken(Tokens.KeywordAsyncToken) && PeekToken2()?.Kind == TokenKind.KeywordFor);
+            }
+        }
+
         // comp_for: 'for target_list 'in' or_test [comp_iter]
         private ComprehensionFor ParseCompFor() {
-            Eat(TokenKind.KeywordFor);
-            string forWhiteSpace = _tokenWhiteSpace;
+            bool isAsync = false;
+            string firstWhitespace = null, asyncWhitespace = null;
+            int start = -1;
 
-            var start = GetStart();
+            if (MaybeEat(TokenKind.KeywordAsync)) {
+                isAsync = true;
+                asyncWhitespace = _tokenWhiteSpace;
+                start = GetStart();
+            }
+            Eat(TokenKind.KeywordFor);
+            firstWhitespace = _tokenWhiteSpace;
+            if (start < 0) {
+                start = GetStart();
+            }
+
             bool trailingComma;
             List<string> listWhiteSpace;
             List<Expression> l = ParseExpressionList(out trailingComma, out listWhiteSpace);
@@ -4319,10 +4337,13 @@ namespace Microsoft.PythonTools.Parsing {
                 list = Error("");
             }
 
-            ComprehensionFor ret = new ComprehensionFor(lhs, list);
+            ComprehensionFor ret = new ComprehensionFor(lhs, list, isAsync);
             if (_verbatim) {
-                AddPreceedingWhiteSpace(ret, forWhiteSpace);
+                AddPreceedingWhiteSpace(ret, firstWhitespace);
                 AddSecondPreceedingWhiteSpace(ret, inWhiteSpace);
+                if (isAsync) {
+                    AddThirdPreceedingWhiteSpace(ret, asyncWhitespace);
+                }
                 if (!ateIn) {
                     AddErrorIsIncompleteNode(ret);
                 }
@@ -4366,7 +4387,7 @@ namespace Microsoft.PythonTools.Parsing {
                         if (listWhiteSpace != null) {                            
                             AddListWhiteSpace(ret, listWhiteSpace.ToArray());
                         }
-                    } else if (PeekToken(Tokens.KeywordForToken)) {
+                    } else if (PeekTokenForOrAsyncFor) {
                         ret = FinishListComp(t0, out ateRightBracket);
                     } else {
                         ateRightBracket = Eat(TokenKind.RightBracket);
@@ -4409,7 +4430,7 @@ namespace Microsoft.PythonTools.Parsing {
             while (true) {
                 ComprehensionIterator iterator;
                 
-                if (PeekToken(Tokens.KeywordForToken)) {
+                if (PeekTokenForOrAsyncFor) {
                     iterator = ParseListCompFor();
                 } else if (PeekToken(Tokens.KeywordIfToken)) {
                     iterator = ParseCompIf();
@@ -4425,9 +4446,21 @@ namespace Microsoft.PythonTools.Parsing {
 
         // list_for: 'for' target_list 'in' old_expression_list [list_iter]
         private ComprehensionFor ParseListCompFor() {
+            bool isAsync = false;
+            string firstWhitespace = null, asyncWhitespace = null;
+            int start = -1;
+
+            if (MaybeEat(TokenKind.KeywordAsync)) {
+                isAsync = true;
+                asyncWhitespace = _tokenWhiteSpace;
+                start = GetStart();
+            }
             Eat(TokenKind.KeywordFor);
-            string startWhiteSpace = _tokenWhiteSpace;
-            var start = GetStart();
+            firstWhitespace = _tokenWhiteSpace;
+            if (start < 0) {
+                start = GetStart();
+            }
+
             bool trailingComma;
             List<string> listWhiteSpace;
             List<Expression> l = ParseExpressionList(out trailingComma, out listWhiteSpace);
@@ -4457,11 +4490,14 @@ namespace Microsoft.PythonTools.Parsing {
                 list = Error("");
             }
 
-            ComprehensionFor ret = new ComprehensionFor(lhs, list);
+            ComprehensionFor ret = new ComprehensionFor(lhs, list, isAsync);
             if (_verbatim) {
-                AddPreceedingWhiteSpace(ret, startWhiteSpace);
+                AddPreceedingWhiteSpace(ret, firstWhitespace);
                 if (inWhiteSpace != null) {
                     AddSecondPreceedingWhiteSpace(ret, inWhiteSpace);
+                }
+                if (isAsync) {
+                    AddThirdPreceedingWhiteSpace(ret, asyncWhitespace);
                 }
                 if (!ateIn) {
                     AddErrorIsIncompleteNode(ret);

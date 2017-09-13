@@ -97,7 +97,7 @@ def g():
     # comment before
     async   with x:
         pass
-", new Span[] { }, null, null, new Version(3, 5));
+    [  x   async for x  in await    x]", new Span[] { }, null, null, new Version(3, 6));
         }
 
 
