@@ -60,16 +60,11 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public override string ReadLine() {
-            if (_peekBuffer == 0) {
-                _peekBuffer = -1;
-                return string.Empty;
-            }
-
             var r = _current?.ReadLine();
             if (r == null && Next()) {
                 r = _current.ReadLine();
             }
-            if (_peekBuffer > 0) {
+            if (_peekBuffer >= 0) {
                 r = $"{(char)_peekBuffer}{r ?? ""}";
                 _peekBuffer = -1;
             }
