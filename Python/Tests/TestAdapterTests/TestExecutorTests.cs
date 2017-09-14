@@ -507,8 +507,7 @@ namespace TestAdapterTests {
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
                 var stdOut = actualResult.Messages.Single(m => m.Category == "StdOutMsgs");
-                Assert.IsTrue(stdOut.Text.Contains("doing setUp"), "setUp was not called");
-                Assert.IsTrue(stdOut.Text.Contains("doing tearDown"), "tearDown was not called");
+                AssertUtil.Contains(stdOut.Text, "doing setUp", "doing tearDown");
             }
         }
 
