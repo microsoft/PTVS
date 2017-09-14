@@ -36,7 +36,9 @@ namespace Microsoft.PythonTools.Interpreter {
             base.Dispose(disposing);
             if (disposing) {
                 _strings.Dispose();
-                _current?.Dispose();
+                if (_current != null) {
+                    _current.Dispose();
+                }
             }
         }
 
