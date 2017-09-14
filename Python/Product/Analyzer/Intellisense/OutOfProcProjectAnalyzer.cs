@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
@@ -1302,21 +1303,22 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (pyEntry.Analysis != null) {
-                var values = pyEntry.Analysis.GetValues(
-                    request.expr,
-                    new SourceLocation(
-                        request.index,
-                        request.line,
-                        request.column
-                    )
-                );
-
                 bool first = true;
                 var result = new StringBuilder();
                 int count = 0;
-                List<AnalysisValue> listVars = new List<AnalysisValue>(values);
-                HashSet<string> descriptions = new HashSet<string>();
+                var descriptions = new HashSet<string>();
                 bool multiline = false;
+                bool includeExpression = true;
+
+                var loc = new SourceLocation(request.index, request.line, request.column);
+                var exprAst = ModuleAnalysis.GetExpression(pyEntry.Analysis.GetAstFromText(request.expr, loc)?.Body);
+                if (exprAst is ConstantExpression || exprAst is ErrorExpression) {
+                    includeExpression = false;
+                }
+
+                var values = pyEntry.Analysis.GetValues(request.expr, loc);
+                var listVars = new List<AnalysisValue>(values);
+                
                 foreach (var v in listVars) {
                     string description = null;
                     if (listVars.Count == 1) {
@@ -1346,18 +1348,20 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                string expr = request.expr;
-                if (expr.Length > 4096) {
-                    expr = expr.Substring(0, 4093) + "...";
-                }
-                if (multiline) {
-                    result.Insert(0, expr + ": " + Environment.NewLine);
-                } else if (result.Length > 0) {
-                    result.Insert(0, expr + ": ");
-                } else {
-                    result.Append(expr);
-                    result.Append(": ");
-                    result.Append("<unknown type>");
+                if (includeExpression) {
+                    string expr = request.expr;
+                    if (expr.Length > 4096) {
+                        expr = expr.Substring(0, 4093) + "...";
+                    }
+                    if (multiline) {
+                        result.Insert(0, expr + ": " + Environment.NewLine);
+                    } else if (result.Length > 0) {
+                        result.Insert(0, expr + ": ");
+                    } else {
+                        result.Append(expr);
+                        result.Append(": ");
+                        result.Append("<unknown type>");
+                    }
                 }
 
                 text = result.ToString();
