@@ -172,5 +172,9 @@ namespace TestAdapterTests {
         public static string TestAdapterStackTraceProject = TestData.GetPath(@"TestData\TestAdapterTests\StackTraceTest.pyproj");
         public static TestInfo StackTraceBadLocalImportFailure = TestInfo.FromRelativePaths("StackTraceTests", "test_bad_import", @"TestData\TestAdapterTests\StackTraceTest.pyproj", @"TestData\TestAdapterTests\StackTraceTest.py", 4, TestOutcome.Failed);
         public static TestInfo StackTraceNotEqualFailure = TestInfo.FromRelativePaths("StackTraceTests", "test_not_equal", @"TestData\TestAdapterTests\StackTraceTest.pyproj", @"TestData\TestAdapterTests\StackTraceTest.py", 8, TestOutcome.Failed);
+
+        public static string TestAdapterTeardownProject = TestData.GetPath(@"TestData\TestAdapterTests\TeardownTest.pyproj");
+        public static TestInfo TeardownSuccess = TestInfo.FromRelativePaths("TeardownTests", "test_success", @"TestData\TestAdapterTests\TeardownTest.pyproj", @"TestData\TestAdapterTests\TeardownTest.py", 10, TestOutcome.Passed);
+        public static TestInfo TeardownFailure = TestInfo.FromRelativePaths("TeardownTests", "test_failure", @"TestData\TestAdapterTests\TeardownTest.pyproj", @"TestData\TestAdapterTests\TeardownTest.py", 13, TestOutcome.Failed);
     }
 }
