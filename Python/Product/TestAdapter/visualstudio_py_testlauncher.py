@@ -133,6 +133,7 @@ _channel = None
 
 class VsTestResult(TextTestResult):
     _start_time = None
+    _result = None
 
     def startTest(self, test):
         super(VsTestResult, self).startTest(test)
@@ -143,47 +144,54 @@ class VsTestResult(TextTestResult):
                 test = test.test_id
             )
 
+    def stopTest(self, test):
+        # stopTest is called after tearDown on all Python versions
+        # so it is the right time to send the result back to VS
+        # (sending it in the addX methods is too early on Python <= 3.1)
+        super(VsTestResult, self).stopTest(test)
+        if _channel is not None and self._result is not None:
+            _channel.send_event(**self._result)
+
     def addError(self, test, err):
         super(VsTestResult, self).addError(test, err)
-        self.sendResult(test, 'failed', err)
+        self._setResult(test, 'failed', err)
 
     def addFailure(self, test, err):
         super(VsTestResult, self).addFailure(test, err)
-        self.sendResult(test, 'failed', err)
+        self._setResult(test, 'failed', err)
 
     def addSuccess(self, test):
         super(VsTestResult, self).addSuccess(test)
-        self.sendResult(test, 'passed')
+        self._setResult(test, 'passed')
 
     def addSkip(self, test, reason):
         super(VsTestResult, self).addSkip(test, reason)
-        self.sendResult(test, 'skipped')
+        self._setResult(test, 'skipped')
 
     def addExpectedFailure(self, test, err):
         super(VsTestResult, self).addExpectedFailure(test, err)
-        self.sendResult(test, 'failed', err)
+        self._setResult(test, 'failed', err)
 
     def addUnexpectedSuccess(self, test):
         super(VsTestResult, self).addUnexpectedSuccess(test)
-        self.sendResult(test, 'passed')
+        self._setResult(test, 'passed')
 
-    def sendResult(self, test, outcome, trace = None):
-        if _channel is not None:
-            tb = None
-            message = None
-            duration = time.time() - self._start_time if self._start_time else 0
-            if trace is not None:
-                traceback.print_exception(*trace)
-                tb = _get_traceback(trace)
-                message = str(trace[1])
-            _channel.send_event(
-                name='result', 
-                outcome=outcome,
-                traceback = tb,
-                message = message,
-                durationInSecs = duration,
-                test = test.test_id
-            )
+    def _setResult(self, test, outcome, trace = None):
+        tb = None
+        message = None
+        duration = time.time() - self._start_time if self._start_time else 0
+        if trace is not None:
+            traceback.print_exception(*trace)
+            tb = _get_traceback(trace)
+            message = str(trace[1])
+        self._result = dict(
+            name = 'result', 
+            outcome = outcome,
+            traceback = tb,
+            message = message,
+            durationInSecs = duration,
+            test = test.test_id
+        )
 
 def _get_traceback(trace):
     def norm_module(file_path):
