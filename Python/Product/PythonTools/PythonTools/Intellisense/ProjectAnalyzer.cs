@@ -2373,7 +2373,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 var quickInfo = await SendRequestAsync(req).ConfigureAwait(false);
 
-                if (quickInfo != null) {
+                if (!string.IsNullOrEmpty(quickInfo?.text)) {
                     return new QuickInfo(quickInfo.text, analysis.Span);
                 }
             }

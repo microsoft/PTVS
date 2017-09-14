@@ -896,7 +896,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private PythonAst GetAstFromText(string exprText, string privatePrefix) {
+        internal PythonAst GetAstFromText(string exprText, string privatePrefix) {
             using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true })) {
                 return parser.ParseTopExpression();
             }
