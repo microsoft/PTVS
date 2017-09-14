@@ -42,8 +42,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private bool Next() {
             if (_current != null) {
+                _current.Dispose();
                 if (_strings.MoveNext()) {
-                    _current.Dispose();
                     _current = new StringReader(_strings.Current);
                     return true;
                 } else {
