@@ -154,6 +154,9 @@ Please refer to https://aka.ms/pythononappservice for information about configur
     <Warning Condition="@(_WebConfig) != '' and $(_WebConfigWsgiHandler) != $(_PythonWsgiHandler)" Text="$(_WarningMessage)" />
   </Target>
 
+  <PropertyGroup>
+    <SuppressCollectPythonCloudServiceFiles Condition="'$(SuppressCollectPythonCloudServiceFiles)' != 'true'">false</SuppressCollectPythonCloudServiceFiles>
+  </PropertyGroup>
 
   <!-- *************************************************************************
        CollectPythonCloudServiceFiles deploys extra files for cloud services.
@@ -168,16 +171,12 @@ Please refer to https://aka.ms/pythononappservice for information about configur
        target will add these files as content with a link to "bin\$(name)" to
        ensure they are deployed to approot\bin.
   -->
-  <ItemGroup>
+  <ItemGroup Condition="'$(SuppressCollectPythonCloudServiceFiles)' != 'true'">
     <!-- Common files -->
     <_CloudServiceFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.WebRole.dll" />
     <!-- Web Role files -->
     <_WebRoleFiles Include="$(_AzureSupportPath)wfastcgi.py" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <SuppressCollectPythonCloudServiceFiles Condition="'$(SuppressCollectPythonCloudServiceFiles)' != 'true'">false</SuppressCollectPythonCloudServiceFiles>
-  </PropertyGroup>
 
   <Target Name="CollectPythonCloudServiceFiles"
           DependsOnTargets="_GetPythonCloudServiceFiles;
