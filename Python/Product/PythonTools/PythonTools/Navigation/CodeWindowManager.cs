@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Navigation {
 
             AnalysisEntry entry;
             var entryService = _serviceProvider.GetEntryService();
-            if (entryService == null || !entryService.TryGetAnalysisEntry(wpfTextView, wpfTextView.TextBuffer, out entry)) {
+            if (entryService == null || !entryService.TryGetAnalysisEntry(wpfTextView, out entry)) {
                 return VSConstants.E_FAIL;
             }
 

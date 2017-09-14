@@ -49,6 +49,16 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy();
         }
 
+        [TestInitialize]
+        public void OnTestInitialized() {
+            MockPythonToolsPackage.SuppressTaskProvider = true;
+        }
+
+        [TestCleanup]
+        public void OnTestCleanup() {
+            MockPythonToolsPackage.SuppressTaskProvider = false;
+        }
+
         [TestMethod, Priority(1)]
         public void GetApplicableSpanTest() {
             var text = "if fob.oar(eggs, spam<=ham) :";
@@ -1163,7 +1173,6 @@ async def g():
                 vs.InvokeSync(() => {
                     task = view.Analyzer.AnalyzeExpressionAsync(
                         (AnalysisEntry)view.GetAnalysisEntry(),
-                        view.View.View,
                         new SnapshotPoint(snapshot, location)
                     );
                 });

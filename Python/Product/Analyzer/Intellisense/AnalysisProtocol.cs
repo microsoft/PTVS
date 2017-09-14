@@ -799,7 +799,9 @@ namespace Microsoft.PythonTools.Intellisense {
             public string expr;
             public string file;
             public int line, column;
-
+            // the span of the whole definition, when applicable
+            public int? definitionStartLine, definitionStartColumn;
+            public int? definitionEndLine, definitionEndColumn;
         }
 
         public sealed class AnalyzeExpressionRequest : Request<AnalyzeExpressionResponse> {

@@ -15,8 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +33,6 @@ using Microsoft.VisualStudio.Text.Operations;
 namespace Microsoft.PythonTools.Navigation.Navigable {
     class NavigableSymbolSource : INavigableSymbolSource {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ITextView _textView;
         private readonly ITextBuffer _buffer;
         private readonly IClassifier _classifier;
         private readonly ITextStructureNavigator _textNavigator;
@@ -47,9 +46,8 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             PythonPredefinedClassificationTypeNames.Parameter,
         };
 
-        public NavigableSymbolSource(IServiceProvider serviceProvider, ITextView textView, ITextBuffer buffer, IClassifier classifier, ITextStructureNavigator textNavigator) {
+        public NavigableSymbolSource(IServiceProvider serviceProvider, ITextBuffer buffer, IClassifier classifier, ITextStructureNavigator textNavigator) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _textView = textView ?? throw new ArgumentNullException(nameof(textView));
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _classifier = classifier ?? throw new ArgumentNullException(nameof(classifier));
             _textNavigator = textNavigator ?? throw new ArgumentNullException(nameof(textNavigator));
@@ -72,7 +70,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             AnalysisEntry entry = null;
-            _entryService?.TryGetAnalysisEntry(_textView, _buffer, out entry);
+            _entryService?.TryGetAnalysisEntry(_buffer, out entry);
             if (entry == null) {
                 return null;
             }
@@ -90,28 +88,30 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
                 // Check with the analyzer, which will give us a precise
                 // result, including the source location.
-                var result = await GetDefinitionLocationAsync(entry, _textView, token.Span).ConfigureAwait(false);
+                var result = await GetDefinitionLocationsAsync(entry, token.Span.Start).ConfigureAwait(false);
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (result != null) {
-                    return new NavigableSymbol(_serviceProvider, result, token.Span);
+                if (result.Any()) {
+                    return new NavigableSymbol(_serviceProvider, result.First(), token.Span);
                 }
             }
 
             return null;
         }
 
-        internal static async Task<AnalysisLocation> GetDefinitionLocationAsync(AnalysisEntry entry, ITextView textView, SnapshotSpan span) {
-            var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, textView, span.Start).ConfigureAwait(false);
+        internal static async Task<AnalysisLocation[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt) {
+            var list = new List<AnalysisLocation>();
+
+            var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt).ConfigureAwait(false);
             foreach (var variable in (result?.Variables).MaybeEnumerate()) {
                 if (variable.Type == Analysis.VariableType.Definition &&
                     !string.IsNullOrEmpty(variable.Location?.FilePath)) {
-                    return variable.Location;
+                    list.Add(variable.Location);
                 }
             }
 
-            return null;
+            return list.ToArray();
         }
     }
 }

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -84,7 +85,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var interactiveWindow = _snapshot.TextBuffer.GetInteractiveWindow();
             var pyReplEval = interactiveWindow?.Evaluator as IPythonInteractiveIntellisense;
-            
+
             var analysis = GetAnalysisEntry();
 
             string text;
@@ -132,8 +133,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     replMembers = pyReplEval.GetMemberNames(string.Empty);
                 }
             } else {
-                var analyzer = analysis.Analyzer;
-                if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
+                var analyzer = analysis?.Analyzer;
+                Task<IEnumerable<CompletionResult>> analyzerTask = null;
+
+                if (analyzer != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     lock (analyzer) {
                         var location = VsProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
@@ -141,12 +144,18 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
 
-                        members = analyzer.WaitForRequest(analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions), "GetCompletions.GetMembers");
+                        // Start the task and wait for it below - this allows a bit more time
+                        // when there is a REPL attached, so we are more likely to get results.
+                        analyzerTask = analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions);
                     }
                 }
 
                 if (pyReplEval != null && pyReplEval.Analyzer.ShouldEvaluateForCompletion(text)) {
                     replMembers = pyReplEval.GetMemberNames(text);
+                }
+
+                if (analyzerTask != null) {
+                    members = analyzer.WaitForRequest(analyzerTask, "GetCompletions.GetMembers");
                 }
             }
 

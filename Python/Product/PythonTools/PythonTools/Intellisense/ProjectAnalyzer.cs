@@ -707,6 +707,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var oldFiles = oldFileAndEntry.Select(kv => kv.Key);
             var oldEntries = oldFileAndEntry.Select(kv => kv.Value);
 
+            var oldReferences = oldAnalyzer.GetReferences();
+
             var oldBuffers = oldEntries.ToDictionary(e => e.Path, e => e.TryGetBufferParser()?.AllBuffers);
 
             foreach (var file in oldEntries) {
@@ -718,10 +720,24 @@ namespace Microsoft.PythonTools.Intellisense {
                 .Select(e => e.Path)
                 .ToArray();
 
-            var entries = (await AnalyzeFileAsync(oldBulkEntries)).ToList();
+            foreach (var reference in oldReferences) {
+                await AddReferenceAsync(reference);
+            }
+
+            var entries = (await AnalyzeFileAsync(oldBulkEntries)).MaybeEnumerate().ToList();
             foreach (var e in oldEntries) {
                 if (e.IsTemporaryFile || e.SuppressErrorList) {
-                    entries.Add(await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList));
+                    AnalysisEntry entry;
+                    try {
+                        entry = await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList);
+                    } catch (InvalidOperationException ex) {
+                        // Occurs when we cannot analyze the file.
+                        // Report the error quietly, but since it is now likely to happen
+                        // for every other file
+                        ex.ReportUnhandledException(_services.Site, GetType(), allowUI: false);
+                        continue;
+                    }
+                    entries.Add(entry);
                 }
             }
 
@@ -731,9 +747,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (oldBuffers.TryGetValue(e.Path, out ITextBuffer[] buffers)) {
-                    foreach (var b in buffers) {
+                    foreach (var b in buffers.MaybeEnumerate()) {
                         PythonTextBufferInfo.MarkForReplacement(b);
-                        e.GetOrCreateBufferParser(_services).AddBuffer(b);
+                        var bi = _services.GetBufferInfo(b);
+                        var actualEntry = bi.TrySetAnalysisEntry(e, null);
+                        actualEntry?.GetOrCreateBufferParser(_services).AddBuffer(b);
                     }
                 }
             }
@@ -858,6 +876,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (response == null || response.fileId == -1) {
                 Interlocked.Decrement(ref _parsePending);
+                if (_conn == null) {
+                    // Cannot analyze code because we have closed while working
+                    // Return null rather than raising an exception
+                    return null;
+                }
                 // TODO: Get SendRequestAsync to return more useful information
                 throw new InvalidOperationException("Failed to create entry for file");
             }
@@ -997,7 +1020,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, ITextView view, SnapshotPoint point) {
+        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point) {
             Debug.Assert(entry.Analyzer == this);
 
             var analysis = GetApplicableExpression(entry, point);
@@ -1146,7 +1169,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (entryService == null || !entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return MissingImportAnalysis.Empty;
             }
 
@@ -1186,7 +1209,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            var nl = bi.Services.EditorOptionsFactoryService.GetOptions(bi.Buffer).GetNewLineCharacter() ?? "\r\n";
+            var nl = bi.Services.EditorOptionsFactoryService?.GetOptions(bi.Buffer).GetNewLineCharacter() ?? "\r\n";
 
             var changes = entry.Analyzer.WaitForRequest(entry.Analyzer.AddImportAsync(
                 entry,
@@ -1580,7 +1603,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             AnalysisEntry entry;
-            if (services.AnalysisEntryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (services.AnalysisEntryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return new NormalCompletionAnalysis(
                     services,
                     session,
@@ -1959,7 +1982,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
             AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(view, span.Snapshot.TextBuffer, out entry)) {
+            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return;
             }
             var buffer = span.Snapshot.TextBuffer;
@@ -2024,7 +2047,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task RemoveImportsAsync(ITextView view, ITextBuffer textBuffer, int index, bool allScopes) {
             AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(view, textBuffer, out entry)) {
+            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(textBuffer, out entry)) {
                 return;
             }
             await entry.EnsureCodeSyncedAsync(textBuffer);
@@ -2144,7 +2167,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<NavigationInfo> GetNavigationsAsync(ITextView view) {
             AnalysisEntry entry;
             var textBuffer = view.TextBuffer;
-            if (_services.AnalysisEntryService.TryGetAnalysisEntry(view, textBuffer, out entry)) {
+            if (_services.AnalysisEntryService.TryGetAnalysisEntry(textBuffer, out entry)) {
                 var lastVersion = entry.GetAnalysisVersion(textBuffer);
 
                 var navigations = await SendRequestAsync(
@@ -2369,7 +2392,11 @@ namespace Microsoft.PythonTools.Intellisense {
             var location = new AnalysisLocation(
                 arg.file,
                 arg.line,
-                arg.column
+                arg.column,
+                arg.definitionStartLine,
+                arg.definitionStartColumn,
+                arg.definitionEndLine,
+                arg.definitionEndColumn
             );
             return new AnalysisVariable(type, location);
         }
@@ -2382,7 +2409,7 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(view, span.Snapshot.TextBuffer, out entry)) {
+            if (entryService == null || !entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return Task.FromResult<string>(null);
             }
             var analysis = GetApplicableExpression(entry, span.Start);
@@ -2440,7 +2467,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     SpanTrackingMode.EdgeInclusive
                 );
 
-                ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
+                ReverseExpressionParser parser;
+                try {
+                    parser = new ReverseExpressionParser(snapshot, buffer, span);
+                } catch (ArgumentException) {
+                    return null;
+                }
 
                 var exprRange = parser.GetExpressionRange(false);
                 if (exprRange != null) {

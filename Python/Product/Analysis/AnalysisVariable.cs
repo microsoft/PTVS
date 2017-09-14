@@ -19,10 +19,12 @@ namespace Microsoft.PythonTools.Analysis {
     class AnalysisVariable : IAnalysisVariable {
         private readonly LocationInfo _loc;
         private readonly VariableType _type;
+        private readonly LocationInfo _defLoc;
 
-        public AnalysisVariable(VariableType type, LocationInfo location) {
+        public AnalysisVariable(VariableType type, LocationInfo location, LocationInfo definitionLocation = null) {
             _loc = location;
             _type = type;
+            _defLoc = definitionLocation;
         }
 
         #region IAnalysisVariable Members
@@ -31,11 +33,28 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _loc; }
         }
 
+        public LocationInfo DefinitionLocation {
+            get { return _defLoc ?? _loc; }
+        }
+
         public VariableType Type {
             get { return _type; }
         }
 
         #endregion
-    }
 
+        public override bool Equals(object obj) {
+            AnalysisVariable other = obj as AnalysisVariable;
+            if (other != null) {
+                return LocationInfo.FullComparer.Equals(Location, other.Location) &&
+                       LocationInfo.FullComparer.Equals(DefinitionLocation, other.DefinitionLocation) &&
+                       Type.Equals(other.Type);
+            }
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return _type.GetHashCode() ^ _loc.GetHashCode() ^ _defLoc?.GetHashCode() ?? 0;
+        }
+    }
 }

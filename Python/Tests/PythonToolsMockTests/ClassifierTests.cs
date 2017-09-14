@@ -207,17 +207,20 @@ async def f():
     async for x in f: pass
 
 class F:
-    async def f(self): pass
+    async def f(self): [x async for x in y]
 
 @F
 async def f():
     pass
 ";
 
-            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
-                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: iki(i): k @iiki():k");
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V36)) {
+                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: " + 
+                    "iki(i): (iikiki) @iiki():k");
                 // "await f" does not highlight "f", but "await + f" does
-                helper.CheckAnalysisClassifierSpans("fff k<async>f k<await>f k<async>f k<async>f c<F> k<async>fp c<F>k<async>f");
+                // also note that only async and await are keywords here - not 'for'
+                helper.CheckAnalysisClassifierSpans("fff k<async>f k<await>f k<async>f k<async>f c<F> " +
+                    "k<async>fp<self>p<x>k<async>p c<F>k<async>f");
             }
         }
 
@@ -240,7 +243,6 @@ def f() -> int:
             private readonly PythonAnalysisClassifierProvider _provider2;
             private readonly ManualResetEventSlim _classificationsReady1, _classificationsReady2;
             private readonly PythonEditor _view;
-            private ExceptionDispatchInfo _excInfo;
 
             public ClassifierHelper(string code, PythonLanguageVersion version) {
                 _view = new PythonEditor("", version);
@@ -253,22 +255,7 @@ def f() -> int:
                 _classificationsReady2 = new ManualResetEventSlim();
 
                 AstClassifier.ClassificationChanged += (s, e) => _classificationsReady1.SetIfNotDisposed();
-                var startVersion = _view.CurrentSnapshot.Version;
-                AnalysisClassifier.ClassificationChanged += (s, e) => {
-                    try {
-                        var bi = PythonTextBufferInfo.TryGetForBuffer(_view.View.TextView.TextBuffer);
-                        if (bi?.LastAnalysisReceivedVersion == null) {
-                            return;
-                        }
-                        // make sure we have classifications from the version we analyzed after
-                        // setting the text below.
-                        if (bi.LastAnalysisReceivedVersion.VersionNumber > startVersion.VersionNumber) {
-                            _classificationsReady2.SetIfNotDisposed();
-                        }
-                    } catch (Exception ex) {
-                        _excInfo = ExceptionDispatchInfo.Capture(ex);
-                    }
-                };
+                AnalysisClassifier.ClassificationChanged += (s, e) => _classificationsReady2.SetIfNotDisposed();
 
                 _view.Text = code;
             }
@@ -277,7 +264,6 @@ def f() -> int:
                 _classificationsReady1.Dispose();
                 _classificationsReady2.Dispose();
                 _view.Dispose();
-                _excInfo?.Throw();
             }
 
             public ITextView TextView {
@@ -334,6 +320,8 @@ def f() -> int:
                 { 'k', PredefinedClassificationTypeNames.Keyword },
                 { '(', PythonPredefinedClassificationTypeNames.Grouping },
                 { ')', PythonPredefinedClassificationTypeNames.Grouping },
+                { '[', PythonPredefinedClassificationTypeNames.Grouping },
+                { ']', PythonPredefinedClassificationTypeNames.Grouping },
                 { '+', PythonPredefinedClassificationTypeNames.Operator },
                 { ':', PythonPredefinedClassificationTypeNames.Operator },
                 { '=', PythonPredefinedClassificationTypeNames.Operator },
@@ -383,7 +371,7 @@ def f() -> int:
                         Assert.Fail("Not enough spans expected");
                     }
                     string expected;
-                    var match = Regex.Match(expectedSpans, @"\s*(?<code>.)(\<(?<token>.+?)\>)?(?<rest>.*)$");
+                    var match = Regex.Match(expectedSpans, @"\s*(?<code>.)(\<(?<token>[^>]+)\>)?(?<rest>.*)$");
                     if (!match.Success) {
                         break;
                     }
@@ -395,8 +383,12 @@ def f() -> int:
                         expectedToken = match.Groups["token"].Value;
                     }
 
-                    Assert.IsTrue(
-                        span.ClassificationType.IsOfType(expected),
+                    Console.WriteLine("Expecting: {0}<{1}>", expected, expectedToken);
+                    Console.WriteLine("   Actual: {0}<{1}>", span.ClassificationType.Classification, span.Span.GetText());
+
+                    Assert.AreEqual(
+                        expected,
+                        span.ClassificationType.Classification,
                         string.Format("Expected <{0}>. Actual <{1}>. Expected token <{2}> Actual token <{3}>.", expected, span.ClassificationType.Classification, expectedToken, span.Span.GetText())
                     );
 

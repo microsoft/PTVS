@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 input.CannotRename(Strings.RenameVariable_UnableGetAnalysisCurrentTextView);
                 return;
             }
-            var analysis = await entry.Analyzer.AnalyzeExpressionAsync(entry, _view, caret.Value);
+            var analysis = await entry.Analyzer.AnalyzeExpressionAsync(entry, caret.Value);
             if (analysis == null) {
                 input.CannotRename(Strings.RenameVariable_UnableGetAnalysisCurrentTextView);
                 return;

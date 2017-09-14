@@ -89,6 +89,7 @@
     <Compile Include="PythonInterpreterInformation.cs" />
     <Compile Include="PythonRegistrySearch.cs" />
     <Compile Include="RegistryWatcher.cs" />
+    <Compile Include="StringListReader.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

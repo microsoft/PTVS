@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal Dictionary<string, IAnalysisSet> _specializedValues;
 
         public BuiltinNamespace(MemberContainerType pythonType, PythonAnalyzer projectState) {
-            _projectState = projectState;
+            _projectState = projectState ?? throw new ArgumentNullException(nameof(projectState)); ;
             _type = pythonType;
             // Ideally we'd assert here whenever pythonType is null, but that
             // makes debug builds unusable because it happens so often.

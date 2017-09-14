@@ -95,9 +95,9 @@ namespace TestUtilities.Python {
 
         public static string GetUnicodePathSolution() {
             var tempProject = TestData.GetTempPath("UnicodePath");
-            var tempSln = Path.Combine(tempProject, "UnicodePath‰.sln");
+            var tempSln = Path.Combine(tempProject, "UnicodePath√§.sln");
             if (!File.Exists(tempSln)) {
-                FileUtils.CopyDirectory(TestData.GetPath("TestData\\UnicodePath"), Path.Combine(tempProject, "UnicodePath‰"));
+                FileUtils.CopyDirectory(TestData.GetPath("TestData\\UnicodePath"), Path.Combine(tempProject, "UnicodePath√§"));
                 File.Copy(TestData.GetPath("TestData\\UnicodePath.sln"), tempSln);
             }
             return tempSln;

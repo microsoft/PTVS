@@ -359,6 +359,10 @@ namespace Microsoft.CookiecutterTools.Model {
             //     "description" : "Description for variable 2",
             //     "url" : "http://azure.microsoft.com",
             //     "selector" : "odbcConnection"
+            //   },
+            //   "create_vs_project" : {
+            //     "visible" : false,
+            //     "value_source" : "IsNewProject"
             //   }
             // }
             //
@@ -378,6 +382,8 @@ namespace Microsoft.CookiecutterTools.Model {
                             ReadDescription(item, itemObj);
                             ReadUrl(item, itemObj);
                             ReadSelector(item, itemObj);
+                            ReadVisible(item, itemObj);
+                            ReadValueSource(item, itemObj);
                         } else {
                             WrongJsonType(prop.Name, JTokenType.Object, prop.Value.Type);
                         }
@@ -390,30 +396,18 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        private JToken ReadLabel(ContextItem item, JObject itemObj) {
-            var labelToken = itemObj.SelectToken("label");
-            if (labelToken != null) {
-                if (labelToken.Type == JTokenType.String) {
-                    item.Label = labelToken.Value<string>();
-                } else {
-                    WrongJsonType("label", JTokenType.String, labelToken.Type);
-                }
+        private void ReadLabel(ContextItem item, JObject itemObj) {
+            var val = ReadString(itemObj, "label");
+            if (val != null) {
+                item.Label = val;
             }
-
-            return labelToken;
         }
 
-        private JToken ReadDescription(ContextItem item, JObject itemObj) {
-            var descriptionToken = itemObj.SelectToken("description");
-            if (descriptionToken != null) {
-                if (descriptionToken.Type == JTokenType.String) {
-                    item.Description = descriptionToken.Value<string>();
-                } else {
-                    WrongJsonType("description", JTokenType.String, descriptionToken.Type);
-                }
+        private void ReadDescription(ContextItem item, JObject itemObj) {
+            var val = ReadString(itemObj, "description");
+            if (val != null) {
+                item.Description = val;
             }
-
-            return descriptionToken;
         }
 
         private JToken ReadUrl(ContextItem item, JObject itemObj) {
@@ -440,14 +434,50 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         private void ReadSelector(ContextItem item, JObject itemObj) {
-            var selectorToken = itemObj.SelectToken("selector");
-            if (selectorToken != null) {
-                if (selectorToken.Type == JTokenType.String) {
-                    item.Selector = selectorToken.Value<string>();
+            var val = ReadString(itemObj, "selector");
+            if (val != null) {
+                item.Selector = val;
+            }
+        }
+
+        private void ReadValueSource(ContextItem item, JObject itemObj) {
+            var val = ReadString(itemObj, "value_source");
+            if (val != null) {
+                item.ValueSource = val;
+            }
+        }
+
+        private void ReadVisible(ContextItem item, JObject itemObj) {
+            var val = ReadBool(itemObj, "visible");
+            if (val != null) {
+                item.Visible = val.Value;
+            }
+        }
+
+        private string ReadString(JObject itemObj, string fieldName) {
+            var token = itemObj.SelectToken(fieldName);
+            if (token != null) {
+                if (token.Type == JTokenType.String) {
+                    return token.Value<string>();
                 } else {
-                    WrongJsonType("selector", JTokenType.String, selectorToken.Type);
+                    WrongJsonType(fieldName, JTokenType.String, token.Type);
                 }
             }
+
+            return null;
+        }
+
+        private bool? ReadBool(JObject itemObj, string fieldName) {
+            var token = itemObj.SelectToken(fieldName);
+            if (token != null) {
+                if (token.Type == JTokenType.Boolean) {
+                    return token.Value<bool>();
+                } else {
+                    WrongJsonType(fieldName, JTokenType.Boolean, token.Type);
+                }
+            }
+
+            return null;
         }
 
         private void InvalidUrl(string url) {

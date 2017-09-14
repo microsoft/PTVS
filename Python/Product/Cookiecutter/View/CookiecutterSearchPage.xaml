@@ -32,9 +32,6 @@
         <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CanExecute="OpenInBrowser_CanExecute"
                     Executed="OpenInBrowser_Executed" />
-        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
-                    CanExecute="OpenInExplorer_CanExecute"
-                    Executed="OpenInExplorer_Executed" />
     </Page.CommandBindings>
     <Page.Resources>
         <ResourceDictionary>
@@ -84,33 +81,6 @@
             <!-- Description -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <!-- Created successfully -->
-        <StackPanel Grid.Row="0" Orientation="Vertical" Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_FilesCreatedSuccessfully}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}" />
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_FilesCreatedSuccessfully}"/>
-            </StackPanel>
-            <Button Style="{StaticResource NavigationButton}"
-                    Margin="24 0 0 0"
-                    Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
-                    CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
-                    HorizontalAlignment="Left">
-                <Button.Content>
-                    <StackPanel Orientation="Horizontal">
-                        <imaging:CrispImage Width="16" Height="16"
-                                            Moniker="{x:Static imagecatalog:KnownMonikers.OpenFolder}"
-                                            AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
-                        <Label Content="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
-                    </StackPanel>
-                </Button.Content>
-            </Button>
-        </StackPanel>
 
         <!-- Search -->
         <StackPanel Grid.Row="1" Orientation="Vertical">

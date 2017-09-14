@@ -193,6 +193,10 @@
             <wpf:Lambda x:Key="Collapsed">(bool b) => b ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
 
             <Style x:Key="SearchBox" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="Padding" Value="2" />
+                <Setter Property="IsEnabled" Value="{Binding IsPipInstalled,Mode=OneWay}" />
+                <Setter Property="Text" Value="{Binding SearchQuery,UpdateSourceTrigger=PropertyChanged}" />
+                <Setter Property="AutomationProperties.Name" Value="{x:Static l:Resources.PipExtensionSearchPyPILabel}" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate>
@@ -206,18 +210,18 @@
                                         <ColumnDefinition Width="auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBox x:Name="SearchQueryText"
-                                             Margin="2"
-                                             Background="Transparent"
-                                             BorderBrush="Transparent"
-                                             IsEnabled="{Binding IsPipInstalled,Mode=OneWay}"
-                                             Text="{Binding SearchQuery,UpdateSourceTrigger=PropertyChanged}"
-                                             AutomationProperties.Name="{x:Static l:Resources.PipExtensionSearchPyPILabel}">
-                                        <TextBox.InputBindings>
-                                            <KeyBinding Key="Escape" Command="ApplicationCommands.Delete" CommandTarget="{Binding ElementName=SearchQueryText}" />
-                                            <KeyBinding Key="Return" Command="{x:Static l:PipExtension.InstallPackage}" CommandParameter="{Binding Text,ElementName=SearchQueryText}" />
-                                        </TextBox.InputBindings>
-                                    </TextBox>
+                                    <Grid.InputBindings>
+                                        <KeyBinding Key="Escape"
+                                                    Command="ApplicationCommands.Delete"
+                                                    CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}" />
+                                        <KeyBinding Key="Return"
+                                                    Command="{x:Static l:PipExtension.InstallPackage}"
+                                                    CommandParameter="{Binding Text,RelativeSource={RelativeSource TemplatedParent}}" />
+                                    </Grid.InputBindings>
+                                    
+                                    <ScrollViewer Name="PART_ContentHost"
+                                                  HorizontalScrollBarVisibility="Hidden"
+                                                  VerticalScrollBarVisibility="Hidden" />
 
                                     <Button Grid.Column="1"
                                             VerticalAlignment="Center"
@@ -225,7 +229,7 @@
                                             Cursor="Hand"
                                             ToolTip="{x:Static l:Resources.PipExtensionClearSearchToolTip}"
                                             Command="ApplicationCommands.Delete"
-                                            CommandTarget="{Binding ElementName=SearchQueryText}">
+                                            CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border Background="Transparent" Width="16" Height="16">

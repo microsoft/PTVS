@@ -87,6 +87,7 @@
                 </Style.Resources>
 
                 <Setter Property="Focusable" Value="False" />
+                <Setter Property="IsTabStop" Value="False" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="Template">
                     <Setter.Value>
@@ -97,7 +98,9 @@
                                             VerticalAlignment="{TemplateBinding VerticalAlignment}"
                                             VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
                                             Margin="{TemplateBinding Margin}"
-                                            Padding="{TemplateBinding Padding}">
+                                            Padding="{TemplateBinding Padding}"
+                                            Focusable="{TemplateBinding Focusable}"
+                                            IsTabStop="{TemplateBinding IsTabStop}">
                                 <ContentControl.LayoutTransform>
                                     <ScaleTransform x:Name="_HelpContentScale" ScaleX="1.0" ScaleY="0.0" />
                                 </ContentControl.LayoutTransform>

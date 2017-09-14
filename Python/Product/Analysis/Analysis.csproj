@@ -61,10 +61,12 @@
     <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisWalker.cs" />
     <Compile Include="IHasRichDescription.cs" />
+    <Compile Include="Interpreter\Ast\AstBuiltinPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstBuiltinsPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonBuiltinType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
     <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonStringLiteral.cs" />
     <Compile Include="Interpreter\Ast\AstPythonType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonConstant.cs" />
     <Compile Include="Interpreter\Ast\AstPythonFunction.cs" />
@@ -399,10 +401,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="scrape_builtins.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="scrape_module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

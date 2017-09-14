@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 public async Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
                     AnalysisEntry entry;
-                    if (_parent._entryService.Value == null || !_parent._entryService.Value.TryGetAnalysisEntry(_view, _view.TextBuffer, out entry)) {
+                    if (_parent._entryService.Value == null || !_parent._entryService.Value.TryGetAnalysisEntry(_view, out entry)) {
                         return null;
                     }
 

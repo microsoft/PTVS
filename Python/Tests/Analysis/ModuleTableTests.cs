@@ -50,7 +50,8 @@ namespace AnalysisTests {
             var config = new InterpreterConfiguration(id, id, version: new Version(3, 5));
             var fact = new MockPythonInterpreterFactory(config);
             var interp = new MockPythonInterpreter(fact);
-            var modules = new ModuleTable(null, interp);
+            var analyzer = PythonAnalyzer.CreateSynchronously(fact, interp);
+            var modules = new ModuleTable(analyzer, interp);
 
             var orig = modules.Select(kv => kv.Key).ToSet();
 

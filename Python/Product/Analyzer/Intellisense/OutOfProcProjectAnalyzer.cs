@@ -1253,7 +1253,20 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private AP.AnalysisReference MakeReference(IAnalysisVariable arg) {
-            return MakeReference(arg.Location, arg.Type);
+            var reference = MakeReference(arg.Location, arg.Type);
+            reference.definitionStartLine = arg.DefinitionLocation.StartLine;
+            reference.definitionStartColumn = arg.DefinitionLocation.StartColumn;
+            if (arg.DefinitionLocation.EndLine.HasValue) {
+                reference.definitionEndLine = arg.DefinitionLocation.EndLine.Value;
+            } else {
+                reference.definitionEndLine = arg.DefinitionLocation.StartLine;
+            }
+            if (arg.DefinitionLocation.EndColumn.HasValue) {
+                reference.definitionEndColumn = arg.DefinitionLocation.EndColumn.Value;
+            } else {
+                reference.definitionEndColumn = arg.DefinitionLocation.StartColumn;
+            }
+            return reference;
         }
 
         private AP.AnalysisReference MakeReference(LocationInfo location, VariableType type) {
@@ -1934,22 +1947,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            var pyItem = item as IPythonProjectEntry;
-            if (pyItem == null) {
-                return;
-            }
-
             // Send a notification for this file before starting analysis
             // An AnalyzeFile event will send the same details in its
             // response.
             await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                fileId = fileId >= 0 ? fileId : ProjectEntryMap.GetId(pyItem),
-                filename = pyItem.FilePath,
+                fileId = fileId >= 0 ? fileId : ProjectEntryMap.GetId(item),
+                filename = item.FilePath,
                 isTemporaryFile = isTemporaryFile,
                 suppressErrorList = suppressErrorList
             });
 
-            EnqueueFile(item, pyItem.FilePath);
+            EnqueueFile(item, item.FilePath);
         }
 
         private async void OnNewAnalysis(object sender, EventArgs e) {

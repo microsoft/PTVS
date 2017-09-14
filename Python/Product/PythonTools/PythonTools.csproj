@@ -291,6 +291,7 @@
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
       <SubType>UserControl</SubType>
@@ -301,6 +302,9 @@
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItem.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSource.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSourceProvider.cs" />
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
     <Compile Include="PythonTools\Repl\PythonCommonInteractiveEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugProcessReplEvaluator.cs" />

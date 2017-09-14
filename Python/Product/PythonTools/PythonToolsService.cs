@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools {
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
-            _entryService = ComponentModel.GetService<AnalysisEntryService>();
+            _entryService = (AnalysisEntryService)ComponentModel.GetService<IAnalysisEntryService>();
             _diagnosticsProvider = new DiagnosticsProvider(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
@@ -157,6 +157,9 @@ namespace Microsoft.PythonTools {
                 }
 
                 _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck.ToString());
+                _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
+                    { PythonInterpreterInformation.ExperimentalFactoryKey, PythonInterpreterInformation._experimentalFactory.Value }
+                });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
@@ -560,7 +563,7 @@ namespace Microsoft.PythonTools {
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
             return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
@@ -568,7 +571,7 @@ namespace Microsoft.PythonTools {
 
         public Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return Task.FromResult(new SignatureAnalysis("", 0, new ISignature[0]));
             }
             return entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span);
@@ -576,10 +579,10 @@ namespace Microsoft.PythonTools {
 
         public ExpressionAnalysis AnalyzeExpression(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return null;
             }
-            return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, view, span.GetStartPoint(snapshot)), "AnalyzeExpression");
+            return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, span.GetStartPoint(snapshot)), "AnalyzeExpression");
         }
 
         public Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {

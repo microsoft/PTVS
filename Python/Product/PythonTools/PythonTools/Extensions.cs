@@ -312,14 +312,15 @@ namespace Microsoft.PythonTools {
         /// Returns null if the caret isn't in Python code or an analysis doesn't exist for some reason.
         /// </summary>
         internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            var buffer = textView.GetPythonBufferAtCaret();
-            if (buffer == null) {
-                return null;
-            }
-
             var service = serviceProvider.GetEntryService();
             AnalysisEntry entry = null;
-            service?.TryGetAnalysisEntry(textView, buffer, out entry);
+
+            var buffer = textView.GetPythonBufferAtCaret();
+            if (buffer == null) {
+                service?.TryGetAnalysisEntry(textView, out entry);
+            } else {
+                service?.TryGetAnalysisEntry(buffer, out entry);
+            }
             return entry;
         }
 

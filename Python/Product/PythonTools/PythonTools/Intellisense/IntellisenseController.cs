@@ -92,10 +92,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _textView.MouseHover -= TextViewMouseHover;
             _textView.Closed -= TextView_Closed;
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));
-
-            foreach (var buffer in _textView.BufferGraph.GetTextBuffers(_ => true)) {
-                DisconnectSubjectBuffer(buffer);
-            }
+            // Do not disconnect subject buffers here - VS will handle that for us
         }
 
         private void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
@@ -120,7 +117,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 AnalysisEntry entry;
-                if (!_services.AnalysisEntryService.TryGetAnalysisEntry(_textView, pt.Value.Snapshot.TextBuffer, out entry)) {
+                if (!_services.AnalysisEntryService.TryGetAnalysisEntry(pt.Value.Snapshot.TextBuffer, out entry)) {
                     return;
                 }
                 var t = entry.Analyzer.GetQuickInfoAsync(entry, _textView, pt.Value);
@@ -194,10 +191,23 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 entry = bi.TrySetAnalysisEntry(entry, null);
+
+                if (entry == null) {
+                    Debug.Fail("Analysis entry should never be null here");
+                    return;
+                }
             }
 
             var parser = entry.GetOrCreateBufferParser(_services);
-            parser.AddBuffer(subjectBuffer);
+            try {
+                parser.AddBuffer(subjectBuffer);
+            } catch (InvalidOperationException ex) {
+                // Should not fail here due to missing analysis entry
+                // But if we do, it probably means someone else owns
+                // the buffer now and we should quietly let them.
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                return;
+            }
             await parser.EnsureCodeSyncedAsync(subjectBuffer);
         }
 
@@ -377,7 +387,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(_textView, snapshot.TextBuffer, out entry)) {
+            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return false;
             }
 

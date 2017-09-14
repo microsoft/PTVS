@@ -169,10 +169,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
+            IMember m;
             IPythonType type;
 
             if (expr is CallExpression cae) {
-                var m = GetValueFromExpression(cae.Target);
+                m = GetValueFromExpression(cae.Target);
                 type = m as IPythonType;
                 if (type != null) {
                     if (type == Interpreter.GetBuiltinType(BuiltinTypeId.Type) && cae.Args.Count >= 1) {
@@ -193,9 +194,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
-            type = GetTypeFromLiteral(expr);
-            if (type != null) {
-                return new AstPythonConstant(type, GetLoc(expr));
+            m = GetConstantFromLiteral(expr);
+            if (m != null) {
+                return m;
             }
 
             return null;
@@ -224,6 +225,21 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             Debug.Fail("Unhandled type() value: " + value.GetType().FullName);
+            return null;
+        }
+
+        public IPythonConstant GetConstantFromLiteral(Expression expr) {
+            if (expr is ConstantExpression ce) {
+                if (ce.Value is string s) {
+                    return new AstPythonStringLiteral(s, Interpreter.GetBuiltinType(BuiltinTypeId.Unicode), GetLoc(expr));
+                }
+            }
+
+            var type = GetTypeFromLiteral(expr);
+            if (type != null) {
+                return new AstPythonConstant(type, GetLoc(expr));
+            }
+
             return null;
         }
 

@@ -4,3 +4,4 @@ async  def f(x):
     # comment before
     async   with x:
         pass
+    [  x   async for x  in await    x]

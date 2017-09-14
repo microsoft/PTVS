@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         public ICompletionBroker CompletionBroker = null;
 
-        [Import]
+        [Import(AllowDefault = true)]
         public IEditorOptionsFactoryService EditorOptionsFactoryService = null;
 
         [Import]

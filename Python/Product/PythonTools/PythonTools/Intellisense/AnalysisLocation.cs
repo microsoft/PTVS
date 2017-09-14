@@ -26,12 +26,25 @@ namespace Microsoft.PythonTools.Intellisense {
     public sealed class AnalysisLocation : IEquatable<AnalysisLocation> {
         private readonly string _filePath;
         public readonly int Line, Column;
+        public readonly int? DefinitionStartLine, DefinitionStartColumn;
+        public readonly int? DefinitionEndLine, DefinitionEndColumn;
         private static readonly IEqualityComparer<AnalysisLocation> _fullComparer = new FullLocationComparer();
 
-        internal AnalysisLocation(string filePath, int line, int column) {
+        internal AnalysisLocation(
+            string filePath,
+            int line,
+            int column,
+            int? definitionStartLine = null,
+            int? definitionStartColumn = null,
+            int? definitionEndLine = null,
+            int? definitionEndColumn = null) {
             _filePath = filePath;
             Line = line;
             Column = column;
+            DefinitionStartLine = definitionStartLine;
+            DefinitionStartColumn = definitionStartColumn;
+            DefinitionEndLine = definitionEndLine;
+            DefinitionEndColumn = definitionEndColumn;
         }
 
         public string FilePath {
@@ -86,6 +99,10 @@ namespace Microsoft.PythonTools.Intellisense {
             public bool Equals(AnalysisLocation x, AnalysisLocation y) {
                 return x.Line == y.Line &&
                     x.Column == y.Column &&
+                    x.DefinitionStartLine == y.DefinitionStartLine &&
+                    x.DefinitionStartColumn == y.DefinitionStartColumn &&
+                    x.DefinitionEndLine == y.DefinitionEndLine &&
+                    x.DefinitionEndColumn == y.DefinitionEndColumn &&
                     String.Equals(x._filePath, y._filePath, StringComparison.OrdinalIgnoreCase);
             }
 
