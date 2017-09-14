@@ -36,12 +36,14 @@ namespace Microsoft.PythonTools.Interpreter {
             base.Dispose(disposing);
             if (disposing) {
                 _strings.Dispose();
+                _current?.Dispose();
             }
         }
 
         private bool Next() {
             if (_current != null) {
                 if (_strings.MoveNext()) {
+                    _current.Dispose();
                     _current = new StringReader(_strings.Current);
                     return true;
                 } else {
