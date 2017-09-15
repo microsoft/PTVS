@@ -41,6 +41,9 @@
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootSuffix Exp /Log</StartArguments>
     <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
+    <IsProductComponent>true</IsProductComponent>
+    <ExtensionInstallationRoot>Extensions</ExtensionInstallationRoot>
+    <ExtensionInstallationFolder>Microsoft\Python\VCDebugLauncher</ExtensionInstallationFolder>
     <NoWarn>1762;0436;1998</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">

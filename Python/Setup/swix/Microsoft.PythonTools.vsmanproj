@@ -17,5 +17,16 @@
     <MergeManifest Include="$(OutDir)*.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <VsixV3Payloads Include="$(SetupOutputPath)Microsoft.PythonTools.Debugger.VCLauncher.vsix" Condition="'$(IncludeVCDebugLauncher)' == 'True'" />
+  </ItemGroup>
+
+  <Target Name="_CopyV3PayloadsToOutDir" BeforeTargets="Build">
+    <Copy SourceFiles="@(VsixV3Payloads)" DestinationFolder="$(OutDir)" />
+    <ItemGroup>
+      <MergeManifest Include="@(VsixV3Payloads->'%(FullPath).json')" />
+    </ItemGroup>
+  </Target>
+
   <Import Project="..\SetupProjectAfter.settings" />
 </Project>

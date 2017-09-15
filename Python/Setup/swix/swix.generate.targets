@@ -47,16 +47,9 @@
     <Exec Command="$(GenerateCommand) %(SwrSource.ExtraOptions) -s &quot;%(SwrSource.FullPath)&quot; -b &quot;%(SwrSource.BaseInstall)&quot; -o &quot;$(SwrFile).tmp&quot;" />
   </Target>
 
-  <Target Name="_GenerateSwrFromPayloads" Condition="@(Payload) != ''">
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
-
-    <Exec Command="$(Python) &quot;$(MSBuildThisFileDirectory)\swix_vsix_payload.py&quot; -n $(MSBuildProjectName) --version $(SwixVersion) -p &quot;%(Payload.Identity)&quot; -o &quot;$(SwrFile).tmp&quot;"
-          Condition="%(Payload.Extension) == '.vsix'" />
-  </Target>
-
   <Target Name="_GeneratePackage"
           BeforeTargets="Build"
-          DependsOnTargets="$(GenerateSwrDependsOnTargets);_GenerateSwrMetadata;_GenerateSwrFromSources;_GenerateSwrFromPayloads"
+          DependsOnTargets="$(GenerateSwrDependsOnTargets);_GenerateSwrMetadata;_GenerateSwrFromSources"
           Condition="'$(MicrosoftSimplifiedWixPropertiesImported)' == 'true'">
     <PropertyGroup>
       <_Orig Condition="Exists($(SwrFile))">$([System.IO.File]::ReadAllText($(SwrFile)))</_Orig>
