@@ -47,12 +47,6 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(2)]
         [TestCategory("10s"), TestCategory("60s")]
-        public void TestMutateStdLibV30() {
-            TestMutateStdLib(PythonPaths.Python30_x64 ?? PythonPaths.Python30);
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("10s"), TestCategory("60s")]
         public void TestMutateStdLibV31() {
             TestMutateStdLib(PythonPaths.Python31_x64 ?? PythonPaths.Python31);
         }

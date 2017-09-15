@@ -608,17 +608,6 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
-    public class TestExecutorTests30 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python30 ?? PythonPaths.Python30_x64;
-    }
-
-    [TestClass]
     public class TestExecutorTests31 : TestExecutorTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {

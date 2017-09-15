@@ -225,9 +225,6 @@ R_A3 = R_A1.r_A()");
         public void AstBuiltinScrapeV31() => AstBuiltinScrape(PythonPaths.Python31_x64 ?? PythonPaths.Python31);
 
         [TestMethod, Priority(0)]
-        public void AstBuiltinScrapeV30() => AstBuiltinScrape(PythonPaths.Python30);
-
-        [TestMethod, Priority(0)]
         public void AstBuiltinScrapeV27() => AstBuiltinScrape(PythonPaths.Python27_x64 ?? PythonPaths.Python27);
 
         [TestMethod, Priority(0)]

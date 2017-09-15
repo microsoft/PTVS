@@ -253,13 +253,6 @@ namespace AnalysisTests {
     }
 
     [TestClass]
-    public class DatabaseTest30 : DatabaseTest27 {
-        public override PythonVersion Python {
-            get { return PythonPaths.Python30 ?? PythonPaths.Python30_x64; }
-        }
-    }
-
-    [TestClass]
     public class DatabaseTest31 : DatabaseTest27 {
         public override PythonVersion Python {
             get { return PythonPaths.Python31 ?? PythonPaths.Python31_x64; }
