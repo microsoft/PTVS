@@ -19,7 +19,7 @@
       <Name>%(Filename)%(Extension)</Name>
     </ReleaseFile>
     <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.Debugger.VCLauncher.vsix" Condition="'$(IncludeVCDebugLauncher)' == 'True'">
-      <Name>%(Filename).VS$(VSTargetName)%(Extension)</Name>
+      <Name>%(Filename)%(Extension)</Name>
     </ReleaseFile>
     <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.Wsl.vsix" Condition="'$(IncludeWsl)' == 'True'">
       <Name>%(Filename).VS$(VSTargetName)%(Extension)</Name>
