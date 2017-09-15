@@ -111,11 +111,6 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(1)]
-        public void TestOpen25() {
-            TestOpen(PythonPaths.Python25 ?? PythonPaths.Python25_x64);
-        }
-
-        [TestMethod, Priority(1)]
         public void TestOpen26() {
             TestOpen(PythonPaths.Python26 ?? PythonPaths.Python26_x64);
         }

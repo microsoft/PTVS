@@ -1229,7 +1229,7 @@ namespace ProfilingUITests {
         public void OldClassProfile() {
             bool anyMissing = false;
 
-            foreach (var version in new[] { PythonPaths.Python25, PythonPaths.Python27, PythonPaths.Python27 }) {
+            foreach (var version in new[] { PythonPaths.Python26, PythonPaths.Python27 }) {
                 if (version == null) {
                     anyMissing = true;
                     continue;
@@ -1376,16 +1376,6 @@ namespace ProfilingUITests {
                     profiling.RemoveSession(session, false);
                 }
             }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void BuiltinsProfilePython25() {
-            BuiltinsProfile(
-                PythonPaths.Python25,
-                new[] { "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
-                null
-            );
         }
 
         [TestMethod, Priority(1)]
