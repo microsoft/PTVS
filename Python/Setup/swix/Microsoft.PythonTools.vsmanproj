@@ -29,7 +29,7 @@
       <Output TaskParameter="CopiedFiles" ItemName="MergeManifest" />
       <Output TaskParameter="CopiedFiles" ItemName="_AllCopies" />
     </Copy>
-    <Message Text="Copied: @(_AllCopies->'%(FullPath)','%0D%0A')" Importance="high" />
+    <Message Text="Copied:%0D%0A  @(_AllCopies->'%(FullPath)','%0D%0A  ')" Importance="high" />
   </Target>
 
   <Import Project="..\SetupProjectAfter.settings" />
