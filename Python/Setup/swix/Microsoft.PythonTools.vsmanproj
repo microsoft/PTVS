@@ -23,9 +23,9 @@
 
   <Target Name="_CopyV3PayloadsToOutDir" BeforeTargets="Build">
     <Copy SourceFiles="@(VsixV3Payloads)" DestinationFolder="$(OutDir)" />
-    <ItemGroup>
-      <MergeManifest Include="@(VsixV3Payloads->'%(FullPath).json')" />
-    </ItemGroup>
+    <Copy SourceFiles="@(VsixV3Payloads->'%(FullPath).json')" DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="MergeManifest" />
+    </Copy>
   </Target>
 
   <Import Project="..\SetupProjectAfter.settings" />
