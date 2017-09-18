@@ -492,7 +492,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         PackageManager = new PipPackageManager(),
                         DatabasePath = dbPath,
                         WatchFileSystem = true,
-                        NoDatabase = PythonInterpreterInformation._experimentalFactory.Value
+                        NoDatabase = ExperimentalOptions.NoDatabaseFactory
                     }
                 );
             }

@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools {
         private readonly PythonToolsLogger _logger;
         private readonly Lazy<AdvancedEditorOptions> _advancedOptions;
         private readonly Lazy<DebuggerOptions> _debuggerOptions;
+        private readonly Lazy<Options.ExperimentalOptions> _experimentalOptions;
         private readonly Lazy<DiagnosticsOptions> _diagnosticsOptions;
         private readonly Lazy<GeneralOptions> _generalOptions;
         private readonly Lazy<PythonInteractiveOptions> _debugInteractiveOptions;
@@ -94,6 +95,7 @@ namespace Microsoft.PythonTools {
             _idleManager = new IdleManager(container);
             _advancedOptions = new Lazy<AdvancedEditorOptions>(CreateAdvancedEditorOptions);
             _debuggerOptions = new Lazy<DebuggerOptions>(CreateDebuggerOptions);
+            _experimentalOptions = new Lazy<Options.ExperimentalOptions>(CreateExperimentalOptions);
             _diagnosticsOptions = new Lazy<DiagnosticsOptions>(CreateDiagnosticsOptions);
             _generalOptions = new Lazy<GeneralOptions>(CreateGeneralOptions);
             _surveyNews = new Lazy<SurveyNewsService>(() => new SurveyNewsService(this));
@@ -158,7 +160,7 @@ namespace Microsoft.PythonTools {
 
                 _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck.ToString());
                 _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
-                    { PythonInterpreterInformation.ExperimentalFactoryKey, PythonInterpreterInformation._experimentalFactory.Value }
+                    { "NoDatabaseFactory", ExperimentalOptions.NoDatabaseFactory }
                 });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
@@ -242,6 +244,7 @@ namespace Microsoft.PythonTools {
 
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
+        public Options.ExperimentalOptions ExperimentalOptions => _experimentalOptions.Value;
         public DiagnosticsOptions DiagnosticsOptions => _diagnosticsOptions.Value;
         public GeneralOptions GeneralOptions => _generalOptions.Value;
         internal PythonInteractiveOptions DebugInteractiveOptions => _debugInteractiveOptions.Value;
@@ -254,6 +257,12 @@ namespace Microsoft.PythonTools {
 
         private DebuggerOptions CreateDebuggerOptions() {
             var opts = new DebuggerOptions(this);
+            opts.Load();
+            return opts;
+        }
+
+        private Options.ExperimentalOptions CreateExperimentalOptions() {
+            var opts = new Options.ExperimentalOptions(this);
             opts.Load();
             return opts;
         }
