@@ -291,7 +291,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 name = ModulePath.FromBasePathAndName(
                     "",
                     moduleName,
-                    packages.Contains,
+                    packageName => packages.Contains(packageName + '\\'),
                     new GetModuleCallable(packages).GetModule
                 );
             } catch (ArgumentException) {

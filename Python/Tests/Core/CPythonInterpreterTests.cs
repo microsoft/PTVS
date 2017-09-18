@@ -119,14 +119,17 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void ImportFromZipFile() {
             var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
-            analyzer.AddModule("test-module", "from test_package import *");
+            analyzer.AddModule("test-module", "from test_package import *; from test_package.sub_package import *");
             analyzer.WaitForAnalysis();
-            AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "package_method", "package_method_two", "test_package" });
+            AssertUtil.CheckCollection(analyzer.GetAllNames(), null,
+                new[] { "package_method", "package_method_two", "test_package", "subpackage_method", "subpackage_method_two" });
 
             analyzer.SetSearchPaths(TestData.GetPath("TestData\\AddImport.zip"));
             analyzer.ReanalyzeAll();
 
-            AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
+            AssertUtil.CheckCollection(analyzer.GetAllNames(),
+                new[] { "package_method", "package_method_two", "subpackage_method", "subpackage_method_two" },
+                new[] { "test_package" });
         }
 
         private static void AnalyzeCode(
