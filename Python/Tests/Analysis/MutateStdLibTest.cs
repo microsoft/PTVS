@@ -29,12 +29,6 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(2)]
         [TestCategory("10s"), TestCategory("60s")]
-        public void TestMutateStdLibV25() {
-            TestMutateStdLib(PythonPaths.Python25_x64 ?? PythonPaths.Python25);
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("10s"), TestCategory("60s")]
         public void TestMutateStdLibV26() {
             TestMutateStdLib(PythonPaths.Python26_x64 ?? PythonPaths.Python26);
         }
@@ -43,12 +37,6 @@ namespace AnalysisTests {
         [TestCategory("10s"), TestCategory("60s")]
         public void TestMutateStdLibV27() {
             TestMutateStdLib(PythonPaths.Python27_x64 ?? PythonPaths.Python27);
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("10s"), TestCategory("60s")]
-        public void TestMutateStdLibV30() {
-            TestMutateStdLib(PythonPaths.Python30_x64 ?? PythonPaths.Python30);
         }
 
         [TestMethod, Priority(2)]

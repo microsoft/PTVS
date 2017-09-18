@@ -23,18 +23,6 @@ namespace ReplWindowUITests {
     #region Python 32-bit tests
 
     [TestClass]
-    public class ReplWindowPython25Tests : ReplWindowPythonSmokeTests {
-        internal override ReplWindowProxySettings Settings {
-            get {
-                return new ReplWindowProxySettings {
-                    Version = PythonPaths.Python25,
-                    IntFirstMember = "__abs__",
-                };
-            }
-        }
-    }
-
-    [TestClass]
     public class ReplWindowPython26Tests : ReplWindowPythonTests {
         internal override ReplWindowProxySettings Settings {
             get {

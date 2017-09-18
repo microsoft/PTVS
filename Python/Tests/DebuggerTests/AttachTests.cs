@@ -1279,18 +1279,6 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests30 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python30 ?? PythonPaths.Python30_x64;
-            }
-        }
-
-        // 3.0 does not support packages as scripts (__main__.py)
-        protected override bool HasPtvsdCommandLine => false;
-    }
-
-    [TestClass]
     public class AttachTests31 : AttachTests {
         internal override PythonVersion Version {
             get {
