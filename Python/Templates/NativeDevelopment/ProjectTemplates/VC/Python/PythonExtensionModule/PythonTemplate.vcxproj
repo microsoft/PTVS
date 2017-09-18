@@ -68,8 +68,10 @@
     <PythonCoreDVersion>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Python\PythonCore\$(PythonTag)\InstalledFeatures', 'core_d', null, $(RegistryView)))</PythonCoreDVersion>
     <PythonCoreDVersion Condition="$(PythonCoreDVersion) == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\$(PythonTag)\InstalledFeatures', 'core_d', null, $(RegistryView)))</PythonCoreDVersion>
     <PythonDebugSuffix Condition="$(PythonCoreDVersion) != ''">_d</PythonDebugSuffix>
-    <PythonDExe Condition="$(PythonDExe) == ''">$([System.IO.Path]::GetDirectoryName($(PythonExe)))\python$(PythonDebugSuffix).exe</PythonDExe>
+    <PythonDExe Condition="$(PythonExe) != '' and $(PythonDExe) == ''">$([System.IO.Path]::GetDirectoryName($(PythonExe)))\python$(PythonDebugSuffix).exe</PythonDExe>
     <PythonDExe Condition="!Exists($(PythonDExe))">$(PythonExe)</PythonDExe>
+    <DefaultDebuggerFlavor>WindowsLocalDebugger</DefaultDebuggerFlavor>
+    <DefaultDebuggerFlavor Condition="$(HasPythonDebugLaunchProvider) == 'true'">PythonDebugLaunchProvider</DefaultDebuggerFlavor>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -95,7 +97,7 @@
     <LocalDebuggerCommand>$(PythonDExe)</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>-i -c "print('>>> import $safeprojectname$'); import $safeprojectname$"</LocalDebuggerCommandArguments>
     <LocalDebuggerEnvironment>PYTHONPATH=$(OutDir)</LocalDebuggerEnvironment>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <DebuggerFlavor>$(DefaultDebuggerFlavor)</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>$safeprojectname$</TargetName>
@@ -103,7 +105,7 @@
     <LocalDebuggerCommand>$(PythonExe)</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>-i -c "print('>>> import $safeprojectname$'); import $safeprojectname$"</LocalDebuggerCommandArguments>
     <LocalDebuggerEnvironment>PYTHONPATH=$(OutDir)</LocalDebuggerEnvironment>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <DebuggerFlavor>$(DefaultDebuggerFlavor)</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>$safeprojectname$$(PythonDebugSuffix)</TargetName>
@@ -111,7 +113,7 @@
     <LocalDebuggerCommand>$(PythonDExe)</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>-i -c "print('>>> import $safeprojectname$'); import $safeprojectname$"</LocalDebuggerCommandArguments>
     <LocalDebuggerEnvironment>PYTHONPATH=$(OutDir)</LocalDebuggerEnvironment>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <DebuggerFlavor>$(DefaultDebuggerFlavor)</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>$safeprojectname$</TargetName>
@@ -119,7 +121,7 @@
     <LocalDebuggerCommand>$(PythonExe)</LocalDebuggerCommand>
     <LocalDebuggerCommandArguments>-i -c "print('>>> import $safeprojectname$'); import $safeprojectname$"</LocalDebuggerCommandArguments>
     <LocalDebuggerEnvironment>PYTHONPATH=$(OutDir)</LocalDebuggerEnvironment>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <DebuggerFlavor>$(DefaultDebuggerFlavor)</DebuggerFlavor>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
