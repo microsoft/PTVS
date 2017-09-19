@@ -292,7 +292,17 @@
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
     <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
+    <Compile Include="PythonTools\Options\ExperimentalOptions.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonExperimentalOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonExperimentalOptionsControl.Designer.cs">
+      <DependentUpon>PythonExperimentalOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonExperimentalOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -881,6 +891,9 @@
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Options\PythonExperimentalOptionsControl.resx">
+      <DependentUpon>PythonExperimentalOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonDiagnosticsOptionsControl.resx">
       <DependentUpon>PythonDiagnosticsOptionsControl.cs</DependentUpon>
