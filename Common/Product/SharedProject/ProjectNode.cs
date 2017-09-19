@@ -2313,8 +2313,9 @@ namespace Microsoft.VisualStudioTools.Project {
             uint uiItemId;
             if (ErrorHandler.Succeeded(this.ParseCanonicalName(fullPath, out uiItemId)) &&
                 uiItemId != 0) {
-                Debug.Assert(this.NodeFromItemId(uiItemId) is FolderNode, "Not a FolderNode");
-                folderNode = (FolderNode)this.NodeFromItemId(uiItemId);
+                var node = this.NodeFromItemId(uiItemId);
+                Debug.Assert(node is FolderNode, "Not a FolderNode");
+                folderNode = (FolderNode)node;
             }
 
             if (folderNode == null && fullPath != null && parent != null) {
@@ -5800,11 +5801,18 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="path">The full path on disk to the item which is being queried about..</param>
         internal HierarchyNode GetParentFolderForPath(string path) {
             var parentDir = CommonUtils.GetParent(path);
-            HierarchyNode parent;
-            if (CommonUtils.IsSamePath(parentDir, ProjectHome)) {
-                parent = this;
-            } else {
-                parent = FindNodeByFullPath(parentDir);
+            HierarchyNode parent = this;
+            if (!CommonUtils.IsSameDirectory(parentDir, ProjectHome)) {
+                var relPath = CommonUtils.TrimEndSeparator(CommonUtils.GetRelativeDirectoryPath(ProjectHome, parentDir));
+                foreach (var part in relPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) {
+                    if (string.IsNullOrEmpty(part)) {
+                        continue;
+                    }
+                    parent = parent.AllChildren.FirstOrDefault(c => part.Equals(c.Name, StringComparison.OrdinalIgnoreCase));
+                    if (parent == null) {
+                        break;
+                    }
+                }
                 Debug.WriteLineIf(parent == null, string.Format("Unable to find parent folder {0} for {1}", parentDir, path));
             }
             return parent;

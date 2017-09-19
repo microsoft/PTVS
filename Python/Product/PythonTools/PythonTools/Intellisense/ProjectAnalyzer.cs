@@ -44,6 +44,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
+using Microsoft.Win32.SafeHandles;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -257,10 +258,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 task => {
                     var result = task.Result;
                     if (result == null) {
+                        _conn.Dispose();
                         _conn = null;
                     } else if (!String.IsNullOrWhiteSpace(result.error)) {
                         Debug.Fail("Analyzer initialization failed with " + result.error);
                         _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, "Initialization: " + result.error);
+                        _conn.Dispose();
                         _conn = null;
                     } else {
                         SendEvent(
@@ -438,8 +441,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 VsProjectAnalyzer vsAnalyzer,
                 Thread thread,
                 CancellationTokenSource onKill,
-                string stdOutClientHandle,
-                string stdInClientHandle
+                SafePipeHandle stdOutClientHandle,
+                SafePipeHandle stdInClientHandle
             ) {
                 VsAnalyzer = vsAnalyzer;
                 _thread = thread;
@@ -560,7 +563,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var thread = new Thread(ThreadConnectionWorker);
             var cts = new CancellationTokenSource();
-            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.GetClientHandleAsString(), writer.GetClientHandleAsString());
+            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.ClientSafePipeHandle, writer.ClientSafePipeHandle);
             thread.Start(info);
 
             var conn = new Connection(
