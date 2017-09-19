@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectFile Include="Packages\dirs.proj" />
+    <ProjectFile Include="copysdkvsix.proj" />
     <ProjectFile Include="signswix.proj">
       <Properties></Properties>
     </ProjectFile>

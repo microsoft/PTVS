@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="BuildNumber">
+  <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+
+  <ItemGroup>
+    <VsixV3Payloads Include="$(SetupOutputPath)Microsoft.PythonTools.Debugger.VCLauncher.vsix" Condition="'$(IncludeVCDebugLauncher)' == 'True'" />
+  </ItemGroup>
+
+  <Target Name="Build">
+    <Copy SourceFiles="@(VsixV3Payloads)" DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="_AllCopies" />
+    </Copy>
+    <Copy SourceFiles="@(VsixV3Payloads->'%(FullPath).json')" DestinationFolder="$(OutDir)">
+      <Output TaskParameter="CopiedFiles" ItemName="_AllCopies" />
+    </Copy>
+    <Message Text="Copied:%0D%0A  @(_AllCopies->'%(FullPath)','%0D%0A  ')" Importance="high" />
+  </Target>
+
+  <Import Project="..\SetupProjectAfter.settings" />
+</Project>
