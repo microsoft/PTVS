@@ -45,10 +45,5 @@ namespace Microsoft.PythonTools.Options {
         /// without old-style completion databases.
         /// </summary>
         public bool NoDatabaseFactory { get; set; }
-
-        /// <summary>
-        /// True if the current setting is the active setting.
-        /// </summary>
-        public bool IsNoDatabaseFactoryActive => NoDatabaseFactory == EO.NoDatabaseFactory;
     }
 }

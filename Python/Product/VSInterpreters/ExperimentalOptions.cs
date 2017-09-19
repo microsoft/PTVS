@@ -18,7 +18,7 @@ using System;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public sealed class ExperimentalOptions {
+    public static class ExperimentalOptions {
         private const string ExperimentSubkey = @"Software\Microsoft\PythonTools\Experimental";
         internal const string NoDatabaseFactoryKey = "NoDatabaseFactory";
         internal static readonly Lazy<bool> _noDatabaseFactory = new Lazy<bool>(GetNoDatabaseFactory);
