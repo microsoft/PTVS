@@ -406,7 +406,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <returns></returns>
         public virtual void RenameDirectory(string newPath) {
             if (Directory.Exists(this.Url)) {
-                if (CommonUtils.IsSamePath(this.Url, newPath)) {
+                if (CommonUtils.IsSameDirectory(this.Url, newPath)) {
                     // This is a rename to the same location with (possible) capitilization changes.
                     // Directory.Move does not allow renaming to the same name so P/Invoke MoveFile to bypass this.
                     if (!NativeMethods.MoveFile(this.Url, newPath)) {

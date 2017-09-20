@@ -635,7 +635,6 @@ namespace Microsoft.VisualStudioTools.Project {
                     projectHome = CommonUtils.GetAbsoluteDirectoryPath(
                         this.ProjectFolder,
                         this.GetProjectProperty(CommonConstants.ProjectHome, resetCache: false));
-                    projectHome = CommonUtils.TrimEndSeparator(projectHome);
                 }
 
                 Debug.Assert(projectHome != null, "ProjectHome should not be null");
@@ -5801,7 +5800,7 @@ If the files in the existing folder have the same names as files in the folder y
         internal HierarchyNode GetParentFolderForPath(string path) {
             var parentDir = CommonUtils.GetParent(path);
             HierarchyNode parent;
-            if (CommonUtils.IsSamePath(parentDir, ProjectHome)) {
+            if (CommonUtils.IsSameDirectory(parentDir, ProjectHome)) {
                 parent = this;
             } else {
                 parent = FindNodeByFullPath(parentDir);
