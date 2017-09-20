@@ -350,6 +350,9 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private static string GetFullPathToParent(HierarchyNode parent) {
             while (parent is FileNode) {
+                if (parent == parent.Parent) {
+                    break;
+                }
                 parent = parent.Parent;
             }
             if (parent != null) {
@@ -366,10 +369,17 @@ namespace Microsoft.VisualStudioTools.Project {
         private static string GetRelativePathToParent(HierarchyNode parent) {
             var parts = new List<string>();
             while (parent is FileNode) {
+                if (parent == parent.Parent) {
+                    break;
+                }
                 parent = parent.Parent;
             }
             while (parent is FolderNode) {
                 parts.Add(parent.Name);
+                if (parent == parent.Parent) {
+                    break;
+                }
+                parent = parent.Parent;
             }
 
             parts.Reverse();
