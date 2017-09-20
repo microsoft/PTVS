@@ -185,22 +185,6 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void LoadFlavoredProject() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\FlavoredProject.sln");
-                Assert.AreEqual("HelloWorld.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
-
-                var catids = app.Dte.ObjectExtenders.GetContextualExtenderCATIDs();
-                dynamic extender = project.Extender["WebApplication"];
-                extender.StartWebServerOnDebug = true;
-                extender.StartWebServerOnDebug = false;
-
-                project.Save();
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveProjectAs() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
