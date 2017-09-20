@@ -6,7 +6,6 @@
     <ProjectFile Include="$(BuildRoot)\Python\Product\dirs.proj"/>
     <ProjectFile Include="$(BuildRoot)\Common\Tests\dirs.proj"/>
     <ProjectFile Include="Analysis\AnalysisTests.csproj" />
-    <ProjectFile Include="AzurePublishingUITests\AzurePublishingUITests.csproj" />
     <ProjectFile Include="CookiecutterTests\CookiecutterTests.csproj" />
     <ProjectFile Include="DebuggerTests\DebuggerTests.csproj" />
     <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />

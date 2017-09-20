@@ -42,7 +42,6 @@ namespace TestUtilities.UI {
     public class VisualStudioApp : AutomationWrapper, IDisposable {
         private SolutionExplorerTree _solutionExplorerTreeView;
         private ObjectBrowser _objectBrowser, _resourceView;
-        private AzureCloudServiceActivityLog _azureActivityLog;
         private IntPtr _mainWindowHandle;
         private readonly DTE _dte;
         private IServiceProvider _provider;
@@ -716,42 +715,6 @@ namespace TestUtilities.UI {
         }
 
         /// <summary>
-        /// Provides access to Azure's VS Activity Log window.
-        /// </summary>
-        public AzureCloudServiceActivityLog AzureActivityLog {
-            get {
-                if (_azureActivityLog == null) {
-                    AutomationElement element = null;
-                    for (int i = 0; i < 10 && element == null; i++) {
-                        element = Element.FindFirst(TreeScope.Descendants,
-                            new AndCondition(
-                                new PropertyCondition(
-                                    AutomationElement.ClassNameProperty,
-                                    "GenericPane"
-                                ),
-                                new OrCondition(
-                                    new PropertyCondition(
-                                        AutomationElement.NameProperty,
-                                        "Microsoft Azure Activity Log"
-                                    ),
-                                    new PropertyCondition(
-                                        AutomationElement.NameProperty,
-                                        "Windows Azure Activity Log"
-                                    )
-                                )
-                            )
-                        );
-                        if (element == null) {
-                            System.Threading.Thread.Sleep(500);
-                        }
-                    }
-                    _azureActivityLog = new AzureCloudServiceActivityLog(element);
-                }
-                return _azureActivityLog;
-            }
-        }
-
-        /// <summary>
         /// Produces a name which is compatible with x:Name requirements (starts with a letter/underscore, contains
         /// only letter, numbers, or underscores).
         /// </summary>
@@ -1019,67 +982,6 @@ namespace TestUtilities.UI {
                 foreach (var bp in debug3.Breakpoints) {
                     ((EnvDTE90a.Breakpoint3)bp).Delete();
                 }
-            }
-        }
-
-        public Uri PublishToAzureCloudService(string serviceName, string subscriptionPublishSettingsFilePath) {
-            using (var publishDialog = AzureCloudServicePublishDialog.FromDte(this)) {
-                using (var manageSubscriptionsDialog = publishDialog.SelectManageSubscriptions()) {
-                    LoadPublishSettings(manageSubscriptionsDialog, subscriptionPublishSettingsFilePath);
-                    manageSubscriptionsDialog.Close();
-                }
-
-                publishDialog.ClickNext();
-
-                using (var createServiceDialog = publishDialog.SelectCreateNewService()) {
-                    createServiceDialog.ServiceName = serviceName;
-                    createServiceDialog.Location = "West US";
-                    createServiceDialog.ClickCreate();
-                }
-
-                publishDialog.ClickPublish();
-            }
-
-            return new Uri(string.Format("http://{0}.cloudapp.net", serviceName));
-        }
-
-        public Uri PublishToAzureWebSite(string siteName, string subscriptionPublishSettingsFilePath) {
-            using (var publishDialog = AzureWebSitePublishDialog.FromDte(this)) {
-                using (var importSettingsDialog = publishDialog.ClickImportSettings()) {
-                    importSettingsDialog.ClickImportFromWindowsAzureWebSite();
-
-                    using (var manageSubscriptionsDialog = importSettingsDialog.ClickImportOrManageSubscriptions()) {
-                        LoadPublishSettings(manageSubscriptionsDialog, subscriptionPublishSettingsFilePath);
-                        manageSubscriptionsDialog.Close();
-                    }
-
-                    using (var createSiteDialog = importSettingsDialog.ClickNew()) {
-                        createSiteDialog.SiteName = siteName;
-                        createSiteDialog.ClickCreate();
-                    }
-
-                    importSettingsDialog.ClickOK();
-                }
-
-                publishDialog.ClickPublish();
-            }
-
-            return new Uri(string.Format("http://{0}.azurewebsites.net", siteName));
-        }
-
-        private void LoadPublishSettings(AzureManageSubscriptionsDialog manageSubscriptionsDialog, string publishSettingsFilePath) {
-            manageSubscriptionsDialog.ClickCertificates();
-
-            while (manageSubscriptionsDialog.SubscriptionsListBox.Count > 0) {
-                manageSubscriptionsDialog.SubscriptionsListBox[0].Select();
-                manageSubscriptionsDialog.ClickRemove();
-                WaitForDialogToReplace(manageSubscriptionsDialog.Element);
-                VisualStudioApp.CheckMessageBox(TestUtilities.MessageBoxButton.Yes);
-            }
-
-            using (var importSubscriptionDialog = manageSubscriptionsDialog.ClickImport()) {
-                importSubscriptionDialog.FileName = publishSettingsFilePath;
-                importSubscriptionDialog.ClickImport();
             }
         }
 
