@@ -28,7 +28,7 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDifferentFileType() {
             using (var app = new VisualStudioApp()) {
@@ -43,7 +43,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FileNamesResolve() {
             using (var app = new VisualStudioApp()) {

@@ -39,7 +39,7 @@ namespace ProfilingUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ProfileWithEncoding() {
             var proflaun = Path.Combine(
                 Path.GetDirectoryName(typeof(IPythonProfiling).Assembly.Location),

@@ -144,7 +144,8 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")] // Requires .targets file to be installed
         public void OAProjectMustBeRightType() {
             var sln = new ProjectDefinition(
                 "HelloWorld",

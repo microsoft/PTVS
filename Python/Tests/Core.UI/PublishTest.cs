@@ -98,7 +98,7 @@ namespace PythonToolsUITests {
             return WaitForFiles(dir);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFiles() {
             using (var app = new VisualStudioApp()) {
@@ -124,7 +124,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishReadOnlyFiles() {
             var sourceFile = TestData.GetPath(@"TestData\HelloWorld\Program.py");
@@ -159,7 +159,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesControlled() {
             using (var app = new VisualStudioApp()) {
@@ -408,7 +408,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishVirtualEnvironment() {
             using (var app = new VisualStudioApp()) {

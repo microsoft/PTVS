@@ -89,7 +89,7 @@ module_func()";
         /// <summary>
         /// Add a from .. import for a function in a subpackage
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromSubpackage() {
             string expectedText = @"from test_package.sub_package import subpackage_method
@@ -112,7 +112,7 @@ subpackage_method()";
         /// <summary>
         /// Add a from .. import for a function in a built-in module
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportBuiltinFunction() {
             string expectedText = @"from sys import getrecursionlimit
@@ -124,7 +124,7 @@ getrecursionlimit()";
         /// <summary>
         /// Add a from ... import for a function in another module when a from import already exists for the same module.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImport() {
             string expectedText = @"from test_module import module_func_2, module_func
@@ -137,7 +137,7 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import is an "from ... import oar as baz" import.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportAsName() {
             string expectedText = @"from test_module import module_func_2 as oar, module_func
@@ -150,7 +150,7 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParens() {
             string expectedText = @"from test_module import (module_func_2, module_func)
@@ -163,7 +163,7 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list and the existing import contains an "as" import.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensAsName() {
             string expectedText = @"from test_module import (module_func_2 as oar, module_func)
@@ -177,7 +177,7 @@ module_func()";
         /// the existing import contains parens around the imported items list and the existing import contains an "as" import
         /// and there's a trailing comma at the end.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensAsNameTrailingComma() {
             string expectedText = @"from test_module import (module_func_2 as oar, module_func)
@@ -190,7 +190,7 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list and there's a trailing comma at the end.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensTrailingComma() {
             string expectedText = @"from test_module import (module_func_2, module_func)
@@ -202,7 +202,7 @@ module_func()";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportPackage() {
             string expectedText = @"import test_package
@@ -214,7 +214,7 @@ test_package";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportSubPackage() {
             string expectedText = @"from test_package import sub_package
@@ -274,7 +274,7 @@ sub_package";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AssignedWithoutTypeInfo() {
             AddSmartTagTest("Assignments.py", 1, 2, _NoSmartTags);

@@ -122,7 +122,7 @@ namespace PythonToolsUITests {
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void UnregisteredFileExtensionEditor() {
             using (var app = new PythonVisualStudioApp()) {
@@ -200,7 +200,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ClassificationTest() {
             Classification.Verify(GetClassifications("Program.py"),
@@ -791,7 +791,7 @@ x\
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyError() {
             var oldSuppress = VsProjectAnalyzer.SuppressTaskProvider;
@@ -813,7 +813,7 @@ x\
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IndentationInconsistencyIgnore() {
             var oldSuppress = VsProjectAnalyzer.SuppressTaskProvider;
@@ -857,7 +857,7 @@ x\
             }
         }
 
-        [TestMethod, Priority(1), TestCategory("Squiggle")]
+        [TestMethod, Priority(0), TestCategory("Squiggle")]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportPresent() {
             SquiggleShowHide("ImportPresent.py", app => {
@@ -866,7 +866,7 @@ x\
             });
         }
 
-        [TestMethod, Priority(1), TestCategory("Squiggle")]
+        [TestMethod, Priority(0), TestCategory("Squiggle")]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportSelf() {
             SquiggleShowHide("ImportSelf.py", app => {

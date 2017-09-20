@@ -211,7 +211,7 @@ namespace PythonToolsUITests {
         /// 
         /// Take 2 of https://pytools.codeplex.com/workitem/1523
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded() {
             using (var app = new VisualStudioApp()) {
