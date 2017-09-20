@@ -159,34 +159,45 @@ namespace Microsoft.PythonTools.Intellisense {
                 .DoNotWait();
         }
 
+        private static async Task<AnalysisEntry> AnalyzeBufferAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {
+            ProjectAnalyzer analyzer;
+            string filename;
+            var services = bufferInfo.Services;
+
+            bool isTemporaryFile = false;
+            if (!services.AnalysisEntryService.TryGetAnalyzer(bufferInfo.Buffer, out analyzer, out filename)) {
+                // there's no analyzer for this file, but we can analyze it against either
+                // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
+                // to analyze against the project we're diffing from).  But in either case this
+                // is just a temporary file which should be closed when the view is closed.
+                isTemporaryFile = true;
+                if (!services.AnalysisEntryService.TryGetAnalyzer(textView, out analyzer, out filename)) {
+                    analyzer = services.AnalysisEntryService.DefaultAnalyzer;
+                }
+            }
+
+            var vsAnalyzer = analyzer as VsProjectAnalyzer;
+            if (vsAnalyzer == null) {
+                return null;
+            }
+
+            bool suppressErrorList = textView.Properties.ContainsProperty(SuppressErrorLists);
+            return await vsAnalyzer.AnalyzeFileAsync(bufferInfo.Filename, null, isTemporaryFile, suppressErrorList);
+        }
+
         private async Task ConnectSubjectBufferAsync(ITextBuffer subjectBuffer) {
             var bi = _services.GetBufferInfo(subjectBuffer);
             var entry = bi.AnalysisEntry;
 
             if (entry == null) {
-                ProjectAnalyzer analyzer;
-                string filename;
-                bool isTemporaryFile = false;
-                if (!_services.AnalysisEntryService.TryGetAnalyzer(subjectBuffer, out analyzer, out filename)) {
-                    // there's no analyzer for this file, but we can analyze it against either
-                    // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
-                    // to analyze against the project we're diffing from).  But in either case this
-                    // is just a temporary file which should be closed when the view is closed.
-                    isTemporaryFile = true;
-                    if (!_services.AnalysisEntryService.TryGetAnalyzer(_textView, out analyzer, out filename)) {
-                        analyzer = _services.AnalysisEntryService.DefaultAnalyzer;
-                    }
+                for (int retries = 3; retries > 0 && entry == null; --retries) {
+                    // Likely in the process of changing analyzer, so we'll delay slightly and retry.
+                    await Task.Delay(100);
+                    entry = await AnalyzeBufferAsync(_textView, bi);
                 }
-
-                var vsAnalyzer = analyzer as VsProjectAnalyzer;
-                if (vsAnalyzer == null) {
-                    return;
-                }
-
-                bool suppressErrorList = _textView.Properties.ContainsProperty(SuppressErrorLists);
-                entry = await vsAnalyzer.AnalyzeFileAsync(bi.Filename, null, isTemporaryFile, suppressErrorList);
 
                 if (entry == null) {
+                    Debug.Fail($"Failed to analyze file {bi.Filename}");
                     return;
                 }
 
