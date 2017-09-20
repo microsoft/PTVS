@@ -107,10 +107,19 @@ namespace PythonToolsMockTests {
 
                         try {
                             entry.AnalysisComplete += evt;
-                            while (!mre.Wait(50, cancel) && !vs.HasPendingException) { }
+                            while (!mre.Wait(50, cancel) && !vs.HasPendingException && !entry.IsAnalyzed) {
+                                if (!analyzer.IsAnalyzing && !entry.IsAnalyzed) {
+                                    var bp = entry.TryGetBufferParser();
+                                    Assert.IsNotNull(bp, "No buffer parser was ever created");
+                                    var bi = PythonTextBufferInfo.TryGetForBuffer(view.TextView.TextBuffer);
+                                    Assert.IsNotNull(bi, "No BufferInfo was ever created");
+                                    bi.LastSentSnapshot = null;
+                                    bp.EnsureCodeSyncedAsync(view.TextView.TextBuffer).WaitAndUnwrapExceptions();
+                                }
+                            }
                         } catch (OperationCanceledException) {
                         } finally {
-                            analyzer.AnalysisStarted -= evt;
+                            entry.AnalysisComplete -= evt;
                         }
                     }
                     if (cancel.IsCancellationRequested) {

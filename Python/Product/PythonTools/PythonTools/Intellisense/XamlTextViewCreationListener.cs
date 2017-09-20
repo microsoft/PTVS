@@ -17,12 +17,14 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -44,31 +46,43 @@ namespace Microsoft.PythonTools.Intellisense {
             // TODO: We should probably only track text views in Python projects or loose files.
             var textView = _services.EditorAdaptersFactoryService.GetWpfTextView(textViewAdapter);
             
-            if (textView != null) {
-                var analyzer = _services.AnalysisEntryService.GetVsAnalyzer(textView, null);
-                var bi = _services.GetBufferInfo(textView.TextBuffer);
-                if (analyzer != null && bi != null && bi.AnalysisEntry == null) {
-                    var entry = await analyzer.AnalyzeFileAsync(bi.Filename);
-                    if (bi.TrySetAnalysisEntry(entry, null) != entry) {
-                        // Failed to start analyzing
-                        Debug.Fail("Failed to analyze xaml file");
-                        return;
-                    }
-                    await entry.EnsureCodeSyncedAsync(bi.Buffer);
-                    textView.Closed += TextView_Closed;
-                }
+            if (textView == null) {
+                return;
             }
+
+            var bi = _services.GetBufferInfo(textView.TextBuffer);
+            if (bi == null) {
+                return;
+            }
+
+            var entry = bi.AnalysisEntry ?? await AnalyzeXamlFileAsync(textView, bi);
+
+            for (int retries = 3; retries > 0 && entry == null; --retries) {
+                // Likely in the process of changing analyzer, so we'll delay slightly and retry.
+                await Task.Delay(100);
+                entry = await AnalyzeXamlFileAsync(textView, bi);
+            }
+
+            if (entry == null) {
+                Debug.Fail($"Failed to analyze XAML file {bi.Filename}");
+                return;
+            }
+
+            if (bi.TrySetAnalysisEntry(entry, null) != entry) {
+                // Failed to start analyzing
+                Debug.Fail("Failed to analyze xaml file");
+                return;
+            }
+            await entry.EnsureCodeSyncedAsync(bi.Buffer);
         }
 
-        private void TextView_Closed(object sender, EventArgs e) {
-            var textView = (ITextView)sender;
-
-            //AnalysisEntry entry;
-            //if (_entryService.TryGetAnalysisEntry(textView, textView.TextBuffer, out entry)) {
-            //    entry.Analyzer.BufferDetached(entry, textView.TextBuffer);
-            //}
-            
-            textView.Closed -= TextView_Closed;
+        private static async Task<AnalysisEntry> AnalyzeXamlFileAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {
+            var services = bufferInfo.Services;
+            var analyzer = services.AnalysisEntryService.GetVsAnalyzer(textView, null);
+            if (analyzer == null || bufferInfo.AnalysisEntry == null) {
+                return await analyzer.AnalyzeFileAsync(bufferInfo.Filename);
+            }
+            return null;
         }
     }
 }

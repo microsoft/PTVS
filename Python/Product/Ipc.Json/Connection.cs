@@ -452,6 +452,10 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
 
             var contentBinary = await reader.ReadContentAsync(contentLength);
+            if (contentBinary.Length == 0 && contentLength > 0) {
+                // The stream was closed, so let's abort safely
+                return null;
+            }
             if (contentBinary.Length != contentLength) {
                 throw new InvalidDataException(string.Format("Content length does not match Content-Length header. Expected {0} bytes but read {1} bytes.", contentLength, contentBinary.Length));
             }

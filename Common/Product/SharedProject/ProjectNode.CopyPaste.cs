@@ -790,8 +790,9 @@ namespace Microsoft.VisualStudioTools.Project {
                         // Rename the folder & reparent our existing FolderNode w/ potentially w/ a new ID,
                         // but don't update the children as we'll handle that w/ our file additions...
                         wasExpanded = sourceFolder.GetIsExpanded();
-                        Directory.CreateDirectory(NewFolderPath);
-                        sourceFolder.ReparentFolder(NewFolderPath);
+
+                        var newFolderParent = Project.CreateFolderNodes(CommonUtils.GetParent(NewFolderPath));
+                        sourceFolder.Reparent(newFolderParent);
 
                         sourceFolder.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
                         newNode = sourceFolder;

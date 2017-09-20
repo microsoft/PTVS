@@ -882,6 +882,31 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
+        /// Called when a parent node is modified and the children need to be updated. The new
+        /// parent may be the same object with an updated Url.
+        /// </summary>
+        /// <remarks>
+        /// Note that the full stack of parents has already been updated when this function is
+        /// called. This means you cannot infer the full path to the current node by tracing its
+        /// parents - you need to use other information.
+        /// </remarks>
+        public virtual void Reparent(HierarchyNode newParent) {
+            if (Parent != newParent) {
+                ProjectMgr.OnItemDeleted(this);
+                Parent.RemoveChild(this);
+                ID = ProjectMgr.ItemIdMap.Add(this);
+
+                Parent = newParent;
+
+                Parent.AddChild(this);
+            }
+
+            foreach (var child in AllChildren) {
+                child.Reparent(this);
+            }
+        }
+
+        /// <summary>
         /// This method is called by the interface method GetMkDocument to specify the item moniker.
         /// </summary>
         /// <returns>The moniker for this item</returns>

@@ -44,6 +44,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
+using Microsoft.Win32.SafeHandles;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -257,10 +258,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 task => {
                     var result = task.Result;
                     if (result == null) {
+                        _conn.Dispose();
                         _conn = null;
                     } else if (!String.IsNullOrWhiteSpace(result.error)) {
                         Debug.Fail("Analyzer initialization failed with " + result.error);
                         _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, "Initialization: " + result.error);
+                        _conn.Dispose();
                         _conn = null;
                     } else {
                         SendEvent(
@@ -438,8 +441,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 VsProjectAnalyzer vsAnalyzer,
                 Thread thread,
                 CancellationTokenSource onKill,
-                string stdOutClientHandle,
-                string stdInClientHandle
+                SafePipeHandle stdOutClientHandle,
+                SafePipeHandle stdInClientHandle
             ) {
                 VsAnalyzer = vsAnalyzer;
                 _thread = thread;
@@ -560,7 +563,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var thread = new Thread(ThreadConnectionWorker);
             var cts = new CancellationTokenSource();
-            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.GetClientHandleAsString(), writer.GetClientHandleAsString());
+            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.ClientSafePipeHandle, writer.ClientSafePipeHandle);
             thread.Start(info);
 
             var conn = new Connection(
@@ -724,17 +727,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 await AddReferenceAsync(reference);
             }
 
-            var entries = (await AnalyzeFileAsync(oldBulkEntries)).MaybeEnumerate().ToList();
+            var entries = (await AnalyzeFileAsync(oldBulkEntries)).ToList();
             foreach (var e in oldEntries) {
                 if (e.IsTemporaryFile || e.SuppressErrorList) {
-                    AnalysisEntry entry;
-                    try {
+                    var entry = await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList);
+                    for (int retries = 3; retries > 0 && entry == null; --retries) {
+                        // Likely in the process of changing analyzer, so we'll delay slightly and retry.
+                        await Task.Delay(100);
                         entry = await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList);
-                    } catch (InvalidOperationException ex) {
-                        // Occurs when we cannot analyze the file.
-                        // Report the error quietly, but since it is now likely to happen
-                        // for every other file
-                        ex.ReportUnhandledException(_services.Site, GetType(), allowUI: false);
+                    }
+                    if (entry == null) {
+                        Debug.Fail($"Failed to analyze file {e.Path}");
                         continue;
                     }
                     entries.Add(entry);
@@ -780,8 +783,13 @@ namespace Microsoft.PythonTools.Intellisense {
             var bufferParser = entry.GetOrCreateBufferParser(_services);
 
             if (oldSnapshots != null && oldSnapshots.Length > 0) {
+                var buffers = new HashSet<ITextBuffer>();
                 foreach (var snapshot in oldSnapshots) {
-                    PythonTextBufferInfo.MarkForReplacement(snapshot.TextBuffer);
+                    if (buffers.Add(snapshot.TextBuffer)) {
+                        PythonTextBufferInfo.MarkForReplacement(snapshot.TextBuffer);
+                        var bi = _services.GetBufferInfo(snapshot.TextBuffer);
+                        bi.TrySetAnalysisEntry(entry, null);
+                    }
                     bufferParser.AddBuffer(snapshot.TextBuffer);
                 }
                 await BufferParser.ParseBuffersAsync(_services, this, oldSnapshots);
@@ -876,13 +884,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (response == null || response.fileId == -1) {
                 Interlocked.Decrement(ref _parsePending);
-                if (_conn == null) {
-                    // Cannot analyze code because we have closed while working
+                if (_conn == null || response == null) {
+                    // Cannot analyze code because we have closed while working,
+                    // or some other unhandleable error occurred and was logged.
                     // Return null rather than raising an exception
                     return null;
                 }
                 // TODO: Get SendRequestAsync to return more useful information
-                throw new InvalidOperationException("Failed to create entry for file");
+                Debug.Fail("Failed to create entry for file");
+                return null;
             }
 
             // we awaited between the check and the AddFileRequest, another add could
@@ -905,7 +915,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<IReadOnlyList<AnalysisEntry>> AnalyzeFileAsync(string[] paths, string addingFromDirectory = null) {
             if (_conn == null) {
                 // We aren't able to analyze code, so don't create an entry.
-                return null;
+                return Array.Empty<AnalysisEntry>();
             }
 
             var req = new AP.AddBulkFileRequest { path = new string[paths.Length], addingFromDir = addingFromDirectory };
@@ -940,7 +950,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            return res;
+            return res.Where(n => n != null).ToArray();
         }
 
 

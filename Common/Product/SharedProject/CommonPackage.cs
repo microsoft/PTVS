@@ -55,6 +55,10 @@ namespace Microsoft.VisualStudioTools {
             AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
                 if (e.IsTerminating) {
                     var ex = e.ExceptionObject as Exception;
+                    if (ex is SEHException) {
+                        return;
+                    }
+
                     if (ex != null) {
                         Debug.Fail(
                             string.Format("An unhandled exception is about to terminate the process:\n\n{0}", ex.Message),
