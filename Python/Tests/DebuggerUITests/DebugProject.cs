@@ -63,7 +63,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and then unloads it, ensuring that the solution is created with a single project.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DebugPythonProject() {
             using (var app = new VisualStudioApp()) {
@@ -77,7 +77,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads a project with the startup file in a subdirectory, ensuring that syspath is correct when debugging.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DebugPythonProjectSubFolderStartupFileSysPath() {
             using (var app = new VisualStudioApp()) {
@@ -100,7 +100,7 @@ namespace DebuggerUITests {
         /// If <see cref="DebugPythonProjectSubFolderStartupFileSysPath"/> fails
         /// this test may also fail.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DebugPythonProjectWithAndWithoutClearingPythonPath() {
             var origPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
@@ -143,7 +143,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Tests using a custom interpreter path that is relative
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DebugPythonCustomInterpreter() {
             // try once when the interpreter doesn't exist...
@@ -173,7 +173,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPendingBreakPointLocation() {
             using (var app = new VisualStudioApp()) {
@@ -201,7 +201,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestBoundBreakpoint() {
             using (var app = new VisualStudioApp()) {
@@ -229,7 +229,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestStep() {
             using (var app = new VisualStudioApp()) {
@@ -305,7 +305,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestStep3() {
             using (var app = new VisualStudioApp()) {
@@ -321,7 +321,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestStep5() {
             using (var app = new VisualStudioApp()) {
@@ -402,7 +402,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and then terminates the process while we're at a breakpoint.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTerminateProcess() {
             using (var app = new VisualStudioApp()) {
@@ -420,7 +420,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and makes sure we get the correct module.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestEnumModules() {
             using (var app = new VisualStudioApp()) {
@@ -441,7 +441,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestThread() {
             using (var app = new VisualStudioApp()) {
@@ -509,19 +509,19 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestException() {
             ExceptionTest("SimpleException.py", "Exception Thrown", "Exception", "Exception", 3);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestException2() {
             ExceptionTest("SimpleException2.py", "Exception Thrown", "ValueError: bad value", "ValueError", 3);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestExceptionUnhandled() {
             var waitOnAbnormalExit = GetOptions().WaitOnAbnormalExit;
@@ -534,7 +534,7 @@ namespace DebuggerUITests {
         }
 
         // https://github.com/Microsoft/PTVS/issues/275
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestExceptionInImportLibNotReported() {
             using (var app = new VisualStudioApp()) {
@@ -587,7 +587,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestBreakpoints() {
             using (var app = new VisualStudioApp()) {
@@ -604,7 +604,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestBreakpointsDisable() {
             using (var app = new VisualStudioApp()) {
@@ -621,7 +621,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestBreakpointsDisableReenable() {
             using (var app = new VisualStudioApp()) {
@@ -740,7 +740,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, with script but no project.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithoutDebuggingNoProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\CreateFile1.py");
@@ -759,7 +759,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debugging, with script not in project.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithDebuggingNotInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
@@ -781,7 +781,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, with script not in project.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithoutDebuggingNotInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\CreateFile2.py");
@@ -800,7 +800,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debuggging, with script in project.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithDebuggingInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\Program.py");
@@ -851,7 +851,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debuggging, with script in project.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithoutDebuggingInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\CreateFile3.py");
@@ -870,7 +870,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debugging, no script.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithDebuggingNoScript() {
             try {
@@ -884,7 +884,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, no script.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartWithoutDebuggingNoScript() {
             try {

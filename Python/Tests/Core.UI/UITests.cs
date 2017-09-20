@@ -87,7 +87,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AbsolutePaths() {
             var proj = File.ReadAllText(TestData.GetPath(@"TestData\AbsolutePath\AbsolutePath.pyproj"));
@@ -358,7 +358,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CrossProjectCutPaste() {
             using (var app = new PythonVisualStudioApp()) {
@@ -664,7 +664,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/1223
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddItemPreviousSiblingNotVisible() {
             using (var app = new PythonVisualStudioApp()) {
@@ -734,7 +734,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1221
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddNewFileOverwritingExistingFileNotInProject() {
             using (var app = new PythonVisualStudioApp()) {

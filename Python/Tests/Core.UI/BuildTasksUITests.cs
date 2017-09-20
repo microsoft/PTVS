@@ -111,7 +111,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsWithResourceLabel() {
             using (var app = new VisualStudioApp()) {
@@ -131,7 +131,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsReplWithResourceLabel() {
             using (var app = new PythonVisualStudioApp()) {
@@ -181,7 +181,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInRepl() {
             using (var app = new PythonVisualStudioApp()) {
@@ -276,7 +276,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsErrorList() {
             using (var app = new PythonVisualStudioApp()) {

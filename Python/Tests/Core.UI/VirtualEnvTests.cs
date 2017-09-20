@@ -522,7 +522,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void UnavailableEnvironments() {
             var collection = new Microsoft.Build.Evaluation.ProjectCollection();
             try {

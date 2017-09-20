@@ -114,7 +114,7 @@ def g():
     pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelectionNoSelection() {
             FormattingTest("selection2.py", new Span(5, 0), @"x=1

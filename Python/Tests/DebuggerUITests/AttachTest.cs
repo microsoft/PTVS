@@ -65,7 +65,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachBreakImmediately() {
 
@@ -89,7 +89,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachUserSetsBreakpoint() {
 
@@ -184,7 +184,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestAttachLotsOfThreads() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");

@@ -313,7 +313,7 @@ namespace TestUtilities.Python {
         }
 
         public IEnumerable<string> GetAllNames(IPythonProjectEntry module, int index = 0) {
-            return module.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name);
+            return module.Analysis.GetAllAvailableMembers(SourceLocation.MinValue).Select(m => m.Name);
         }
 
         public IEnumerable<string> GetNamesNoBuiltins(int index = 0) {

@@ -41,7 +41,7 @@ namespace DjangoUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void NewDjangoProject() {
             using (var app = new VisualStudioApp()) {
@@ -114,7 +114,7 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/778
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoCommandsNonDjangoApp() {
             using (var app = new PythonVisualStudioApp()) {
@@ -296,7 +296,7 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoProjectWithSubdirectory() {
             using (var app = new VisualStudioApp()) {

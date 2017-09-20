@@ -93,7 +93,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteItem() {
             using (var app = new VisualStudioApp()) {
@@ -162,7 +162,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteSubfolder() {
             using (var app = new VisualStudioApp()) {
@@ -183,7 +183,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void SaveProjectAs() {
+        public void SaveProjectAndCheckProjectHome() {
             using (var app = new VisualStudioApp()) {
                 EnvDTE.Project project;
                 try {

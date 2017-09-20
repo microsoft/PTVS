@@ -1056,37 +1056,37 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllMixed1() {
             SelectAllAndDeleteTest("SelectAllMixed1.html.djt");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllMixed2() {
             SelectAllAndDeleteTest("SelectAllMixed2.html.djt");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllMixed3() {
             SelectAllAndDeleteTest("SelectAllMixed3.html.djt");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllMixed4() {
             SelectAllAndDeleteTest("SelectAllMixed4.html.djt");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllTag() {
             SelectAllAndDeleteTest("SelectAllTag.html.djt");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllText() {
             SelectAllAndDeleteTest("SelectAllText.html.djt");
