@@ -31,10 +31,19 @@ namespace TestRunnerInterop {
                 FileName = devenvExe,
                 Arguments = arguments,
                 ErrorDialog = false,
-                UseShellExecute = false
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
             psi.Environment["_PTVS_UI_TEST"] = "1";
             _vs = Process.Start(psi);
+
+            // Forward console output to our own output, which will
+            // be captured by the test runner.
+            _vs.OutputDataReceived += (s, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
+            _vs.ErrorDataReceived += (s, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
+            _vs.BeginOutputReadLine();
+            _vs.BeginErrorReadLine();
 
             // Always allow at least five seconds to start
             Thread.Sleep(5000);
@@ -98,7 +107,7 @@ namespace TestRunnerInterop {
             
         }
 
-        public string RunTest(string container, string name, object[] arguments) {
+        public void RunTest(string container, string name, object[] arguments) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().Name);
             }
@@ -106,7 +115,13 @@ namespace TestRunnerInterop {
                 Start(@"C:\Program Files (x86)\Microsoft Visual Studio\Preview\Enterprise\Common7\IDE\devenv.exe", "/rootSuffix Exp");
             }
             var r = _dte.GetObject(container).Execute(name, arguments);
-            return r.IsSuccess ? null : r.Message;
+            if (!r.IsSuccess) {
+                throw new TestFailedException(
+                    r.ExceptionType,
+                    r.ExceptionMessage,
+                    r.ExceptionTraceback
+                );
+            }
         }
 
         void Dispose(bool disposing) {

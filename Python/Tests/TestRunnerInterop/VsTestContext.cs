@@ -29,11 +29,7 @@ namespace TestRunnerInterop {
             if (_vs == null) {
                 throw new InvalidOperationException("TestInitialize was not called");
             }
-            var res = _vs.RunTest(_container, testName, arguments);
-            if (res == null) {
-                return;
-            }
-            throw new Exception(res);
+            _vs.RunTest(_container, testName, arguments);
         }
 
         public void Dispose() {

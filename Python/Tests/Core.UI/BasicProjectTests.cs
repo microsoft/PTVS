@@ -55,8 +55,8 @@ using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {
     //[TestClass]
-    public class BasicProjectTests : SharedProjectTest {
-        public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
+    public class BasicProjectTests {
+        //public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -64,52 +64,45 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TemplateDirectories() {
+        public void TemplateDirectories(VisualStudioApp app) {
             var languageName = PythonVisualStudioApp.TemplateLanguageName;
-            using (var app = new VisualStudioApp()) {
-                var sln = (Solution2)app.Dte.Solution;
 
-                foreach (var templateName in new[] {
-                    "BackgroundService.zip",
-                    PythonVisualStudioApp.PythonApplicationTemplate,
-                    PythonVisualStudioApp.BottleWebProjectTemplate,
-                    PythonVisualStudioApp.DjangoWebProjectTemplate
-                }) {
-                    var templatePath = sln.GetProjectTemplate(templateName, languageName);
-                    Assert.IsTrue(
-                        File.Exists(templatePath) || Directory.Exists(templatePath),
-                        string.Format("Cannot find template '{0}' for language '{1}'", templateName, languageName)
-                    );
-                    Console.WriteLine("Found {0} at {1}", templateName, templatePath);
-                }
+            var sln = (Solution2)app.Dte.Solution;
+
+            foreach (var templateName in new[] {
+                "BackgroundService.zip",
+                PythonVisualStudioApp.PythonApplicationTemplate,
+                PythonVisualStudioApp.BottleWebProjectTemplate,
+                PythonVisualStudioApp.DjangoWebProjectTemplate
+            }) {
+                var templatePath = sln.GetProjectTemplate(templateName, languageName);
+                Assert.IsTrue(
+                    File.Exists(templatePath) || Directory.Exists(templatePath),
+                    string.Format("Cannot find template '{0}' for language '{1}'", templateName, languageName)
+                );
+                Console.WriteLine("Found {0} at {1}", templateName, templatePath);
             }
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void UserProjectFile() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.CreateProject(
-                    PythonVisualStudioApp.TemplateLanguageName,
-                    PythonVisualStudioApp.PythonApplicationTemplate,
-                    TestData.GetTempPath(),
-                    "TestNewProject"
-                );
+        public void UserProjectFile(VisualStudioApp app) {
+            var project = app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                PythonVisualStudioApp.PythonApplicationTemplate,
+                TestData.GetTempPath(),
+                "TestNewProject"
+            );
 
-                // Ensure that the user project is created
-                app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetUserProjectProperty("Test", "Value"));
+            // Ensure that the user project is created
+            app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetUserProjectProperty("Test", "Value"));
 
-                app.ExecuteCommand("File.SaveAll");
+            app.ExecuteCommand("File.SaveAll");
 
-                var userFile = project.FullName + ".user";
-                Assert.IsTrue(File.Exists(userFile), userFile + " does not exist on disk");
-                var xml = Microsoft.Build.Construction.ProjectRootElement.Open(userFile);
-                Assert.IsNotNull(xml);
-                Assert.AreEqual("4.0", xml.ToolsVersion, "ToolsVersion should be '4.0'");
-                Assert.AreEqual("Value", xml.Properties.Single(p => p.Name == "Test").Value, "Test property should be 'Value'");
-            }
+            var userFile = project.FullName + ".user";
+            Assert.IsTrue(File.Exists(userFile), userFile + " does not exist on disk");
+            var xml = Microsoft.Build.Construction.ProjectRootElement.Open(userFile);
+            Assert.IsNotNull(xml);
+            Assert.AreEqual("4.0", xml.ToolsVersion, "ToolsVersion should be '4.0'");
+            Assert.AreEqual("Value", xml.Properties.Single(p => p.Name == "Test").Value, "Test property should be 'Value'");
         }
 
         //[TestMethod, Priority(1)]
@@ -1423,74 +1416,74 @@ namespace PythonToolsUITests {
         }
 
         //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void EnvironmentVariablesWithDebugging() {
-            var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
-            Console.WriteLine("Temp file is: {0}", filename);
-            var code = String.Format(@"
-from os import environ
-f = open('{0}', 'w')
-f.write(environ['fob'] + environ['oar'] + environ['baz'])
-f.close()
-while True: pass
-", filename.Replace("\\", "\\\\"));
+//        [HostType("VSTestHost"), TestCategory("Installed")]
+//        public void EnvironmentVariablesWithDebugging() {
+//            var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
+//            Console.WriteLine("Temp file is: {0}", filename);
+//            var code = String.Format(@"
+//from os import environ
+//f = open('{0}', 'w')
+//f.write(environ['fob'] + environ['oar'] + environ['baz'])
+//f.close()
+//while True: pass
+//", filename.Replace("\\", "\\\\"));
 
-            var project = new ProjectDefinition("EnvironmentVariables", PythonProject,
-                Compile("main", code),
-                Property(PythonConstants.EnvironmentSetting, "fob=1\noar=2;3\r\nbaz=4"),
-                Property(CommonConstants.StartupFile, "main.py")
-            );
+//            var project = new ProjectDefinition("EnvironmentVariables", PythonProject,
+//                Compile("main", code),
+//                Property(PythonConstants.EnvironmentSetting, "fob=1\noar=2;3\r\nbaz=4"),
+//                Property(CommonConstants.StartupFile, "main.py")
+//            );
 
-            using (var solution = project.Generate().ToVs()) {
-                solution.ExecuteCommand("Debug.Start");
-                solution.WaitForMode(dbgDebugMode.dbgRunMode);
+//            using (var solution = project.Generate().ToVs()) {
+//                solution.ExecuteCommand("Debug.Start");
+//                solution.WaitForMode(dbgDebugMode.dbgRunMode);
 
-                for (int i = 0; i < 10 && !File.Exists(filename); i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-                Assert.IsTrue(File.Exists(filename), "environment variables not written out");
-                solution.ExecuteCommand("Debug.StopDebugging");
+//                for (int i = 0; i < 10 && !File.Exists(filename); i++) {
+//                    System.Threading.Thread.Sleep(1000);
+//                }
+//                Assert.IsTrue(File.Exists(filename), "environment variables not written out");
+//                solution.ExecuteCommand("Debug.StopDebugging");
 
-                Assert.AreEqual(
-                    File.ReadAllText(filename),
-                    "12;34"
-                );
-            }
-        }
+//                Assert.AreEqual(
+//                    File.ReadAllText(filename),
+//                    "12;34"
+//                );
+//            }
+//        }
 
         //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void EnvironmentVariablesWithoutDebugging() {
-            var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
-            Console.WriteLine("Temp file is: {0}", filename);
-            var code = String.Format(@"
-from os import environ
-f = open('{0}', 'w')
-f.write(environ['fob'] + environ['oar'] + environ['baz'])
-f.close()
-while True: pass
-", filename.Replace("\\", "\\\\"));
+//        [HostType("VSTestHost"), TestCategory("Installed")]
+//        public void EnvironmentVariablesWithoutDebugging() {
+//            var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
+//            Console.WriteLine("Temp file is: {0}", filename);
+//            var code = String.Format(@"
+//from os import environ
+//f = open('{0}', 'w')
+//f.write(environ['fob'] + environ['oar'] + environ['baz'])
+//f.close()
+//while True: pass
+//", filename.Replace("\\", "\\\\"));
 
-            var project = new ProjectDefinition("EnvironmentVariables", PythonProject,
-                Compile("main", code),
-                Property(PythonConstants.EnvironmentSetting, "fob=1\noar=2;3\r\nbaz=4"),
-                Property(CommonConstants.StartupFile, "main.py")
-            );
+//            var project = new ProjectDefinition("EnvironmentVariables", PythonProject,
+//                Compile("main", code),
+//                Property(PythonConstants.EnvironmentSetting, "fob=1\noar=2;3\r\nbaz=4"),
+//                Property(CommonConstants.StartupFile, "main.py")
+//            );
 
-            using (var solution = project.Generate().ToVs()) {
-                solution.ExecuteCommand("Debug.StartWithoutDebugging");
+//            using (var solution = project.Generate().ToVs()) {
+//                solution.ExecuteCommand("Debug.StartWithoutDebugging");
 
-                for (int i = 0; i < 10 && !File.Exists(filename); i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-                Assert.IsTrue(File.Exists(filename), "environment variables not written out");
+//                for (int i = 0; i < 10 && !File.Exists(filename); i++) {
+//                    System.Threading.Thread.Sleep(1000);
+//                }
+//                Assert.IsTrue(File.Exists(filename), "environment variables not written out");
 
-                Assert.AreEqual(
-                    File.ReadAllText(filename),
-                    "12;34"
-                );
-            }
-        }
+//                Assert.AreEqual(
+//                    File.ReadAllText(filename),
+//                    "12;34"
+//                );
+//            }
+//        }
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -1553,44 +1546,44 @@ while True: pass
         }
 
         //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CopyFullPath() {
-            foreach (var projectType in ProjectTypes) {
-                var def = new ProjectDefinition(
-                    "HelloWorld",
-                    projectType,
-                    Compile("server"),
-                    Folder("IncFolder", isExcluded: false),
-                    Folder("ExcFolder", isExcluded: true),
-                    Compile("app", isExcluded: true),
-                    Compile("missing", isMissing: true)
-                );
+        //[HostType("VSTestHost"), TestCategory("Installed")]
+        //public void CopyFullPath() {
+        //    foreach (var projectType in ProjectTypes) {
+        //        var def = new ProjectDefinition(
+        //            "HelloWorld",
+        //            projectType,
+        //            Compile("server"),
+        //            Folder("IncFolder", isExcluded: false),
+        //            Folder("ExcFolder", isExcluded: true),
+        //            Compile("app", isExcluded: true),
+        //            Compile("missing", isMissing: true)
+        //        );
 
-                using (var solution = def.Generate().ToVs()) {
-                    var projectDir = Path.GetDirectoryName(solution.GetProject("HelloWorld").FullName);
+        //        using (var solution = def.Generate().ToVs()) {
+        //            var projectDir = Path.GetDirectoryName(solution.GetProject("HelloWorld").FullName);
 
-                    CheckCopyFullPath(solution,
-                                      solution.WaitForItem("HelloWorld", "IncFolder"),
-                                      projectDir + "\\IncFolder\\");
-                    var excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
-                    if (excFolder == null) {
-                        solution.SelectProject(solution.GetProject("HelloWorld"));
-                        solution.ExecuteCommand("Project.ShowAllFiles");
-                        excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
-                    }
-                    CheckCopyFullPath(solution, excFolder, projectDir + "\\ExcFolder\\");
-                    CheckCopyFullPath(solution,
-                                      solution.WaitForItem("HelloWorld", "server" + def.ProjectType.CodeExtension),
-                                      projectDir + "\\server" + def.ProjectType.CodeExtension);
-                    CheckCopyFullPath(solution,
-                                      solution.WaitForItem("HelloWorld", "app" + def.ProjectType.CodeExtension),
-                                      projectDir + "\\app" + def.ProjectType.CodeExtension);
-                    CheckCopyFullPath(solution,
-                                      solution.WaitForItem("HelloWorld", "missing" + def.ProjectType.CodeExtension),
-                                      projectDir + "\\missing" + def.ProjectType.CodeExtension);
-                }
-            }
-        }
+        //            CheckCopyFullPath(solution,
+        //                              solution.WaitForItem("HelloWorld", "IncFolder"),
+        //                              projectDir + "\\IncFolder\\");
+        //            var excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
+        //            if (excFolder == null) {
+        //                solution.SelectProject(solution.GetProject("HelloWorld"));
+        //                solution.ExecuteCommand("Project.ShowAllFiles");
+        //                excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
+        //            }
+        //            CheckCopyFullPath(solution, excFolder, projectDir + "\\ExcFolder\\");
+        //            CheckCopyFullPath(solution,
+        //                              solution.WaitForItem("HelloWorld", "server" + def.ProjectType.CodeExtension),
+        //                              projectDir + "\\server" + def.ProjectType.CodeExtension);
+        //            CheckCopyFullPath(solution,
+        //                              solution.WaitForItem("HelloWorld", "app" + def.ProjectType.CodeExtension),
+        //                              projectDir + "\\app" + def.ProjectType.CodeExtension);
+        //            CheckCopyFullPath(solution,
+        //                              solution.WaitForItem("HelloWorld", "missing" + def.ProjectType.CodeExtension),
+        //                              projectDir + "\\missing" + def.ProjectType.CodeExtension);
+        //        }
+        //    }
+        //}
 
         private void CheckCopyFullPath(IVisualStudioInstance vs, ITreeNode element, string expected) {
             string clipboardText = "";

@@ -20,9 +20,8 @@ using TestRunnerInterop;
 
 namespace PythonToolsUITestsRunner {
     [TestClass]
-    public class UnitTest1 {
+    public class BasicProjectTests {
         private static readonly VsTestContext _vs = new VsTestContext("Microsoft.PythonTools.Tests.PythonToolsUITests");
-        public TestContext TestContext { get; set; }
 
         [TestInitialize]
         public void TestInitialize() {
@@ -39,14 +38,16 @@ namespace PythonToolsUITestsRunner {
             _vs.Dispose();
         }
 
-        [TestMethod]
-        public void TestMethod1() {
-            _vs.RunTest("PythonToolsUITests.UITests:AbsolutePaths");
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void TemplateDirectories() {
+            _vs.RunTest("PythonToolsUITests.BasicProjectTests:TemplateDirectories");
         }
 
-        [TestMethod]
-        public void TestMethod2() {
-            _vs.RunTest("PythonToolsUITests.UITests:TestThatIsNotReal");
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void UserProjectFile() {
+            _vs.RunTest("PythonToolsUITests.BasicProjectTests:UserProjectFile");
         }
     }
 }
