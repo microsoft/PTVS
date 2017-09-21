@@ -5,6 +5,7 @@
   <ItemGroup>
     <ProjectFile Include="$(BuildRoot)\Python\Product\dirs.proj"/>
     <ProjectFile Include="$(BuildRoot)\Common\Tests\dirs.proj"/>
+    <ProjectFile Include="TestRunnerInterop\TestRunnerInterop.csproj" />
     <ProjectFile Include="Analysis\AnalysisTests.csproj" />
     <ProjectFile Include="CookiecutterTests\CookiecutterTests.csproj" />
     <ProjectFile Include="DebuggerTests\DebuggerTests.csproj" />
@@ -22,6 +23,7 @@
     <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
     <ProjectFile Include="PythonToolsMockTests\PythonToolsMockTests.csproj" />
+    <ProjectFile Include="PythonToolsUITestsRunner\PythonToolsUITestsRunner.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
