@@ -26,16 +26,39 @@ namespace TestRunnerInterop {
 
         private bool _isDisposed = false;
 
-        public void Start(string devenvExe, string arguments) {
+        private string _currentSettings;
+
+        public void StartOrRestart(
+            string devenvExe,
+            string devenvArguments,
+            string testDataRoot,
+            string tempRoot
+        ) {
+            var settings = $"{devenvExe};{devenvArguments};{testDataRoot};{tempRoot}";
+            if (_vs != null && _app != null && _dte == null) {
+                if (_currentSettings == settings) {
+                    return;
+                }
+                Console.WriteLine("Restarting VS because settings have changed");
+            }
+            _currentSettings = settings;
+            CloseCurrentInstance();
+
             var psi = new ProcessStartInfo {
                 FileName = devenvExe,
-                Arguments = arguments,
+                Arguments = devenvArguments,
                 ErrorDialog = false,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
             psi.Environment["_PTVS_UI_TEST"] = "1";
+            if (!string.IsNullOrEmpty(testDataRoot)) {
+                psi.Environment["_TESTDATA_ROOT_PATH"] = testDataRoot;
+            }
+            if (!string.IsNullOrEmpty(tempRoot)) {
+                psi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
+            }
             _vs = Process.Start(psi);
 
             // Forward console output to our own output, which will
@@ -66,6 +89,23 @@ namespace TestRunnerInterop {
 
             AttachIfDebugging(_vs);
         }
+
+        private void CloseCurrentInstance() {
+            if (_vs != null) {
+                if (!_vs.CloseMainWindow()) {
+                    _vs.Kill();
+                }
+                if (!_vs.WaitForExit(10000)) {
+                    _vs.Kill();
+                }
+                _vs.Dispose();
+                _vs = null;
+            }
+            _app = null;
+            _dte = null;
+        }
+
+        public bool IsRunning => !_isDisposed && _dte != null && !_vs.HasExited;
 
         private static void AttachIfDebugging(Process targetVs) {
             if (!Debugger.IsAttached) {
@@ -104,7 +144,7 @@ namespace TestRunnerInterop {
                     }
                 }
             }
-            
+
         }
 
         public void RunTest(string container, string name, object[] arguments) {
@@ -112,7 +152,7 @@ namespace TestRunnerInterop {
                 throw new ObjectDisposedException(GetType().Name);
             }
             if (_dte == null) {
-                Start(@"C:\Program Files (x86)\Microsoft Visual Studio\Preview\Enterprise\Common7\IDE\devenv.exe", "/rootSuffix Exp");
+                throw new InvalidOperationException("VS has not started");
             }
             var r = _dte.GetObject(container).Execute(name, arguments);
             if (!r.IsSuccess) {
@@ -130,22 +170,14 @@ namespace TestRunnerInterop {
                     // TODO: dispose managed state (managed objects).
                 }
 
-                if (_vs != null) {
-                    if (!_vs.CloseMainWindow()) {
-                        _vs.Kill();
-                    }
-                    if (!_vs.WaitForExit(10000)) {
-                        _vs.Kill();
-                    }
-                    _vs.Dispose();
-                }
+                CloseCurrentInstance();
 
                 _isDisposed = true;
             }
         }
 
         ~VsInstance() {
-          Dispose(false);
+            Dispose(false);
         }
 
         public void Dispose() {

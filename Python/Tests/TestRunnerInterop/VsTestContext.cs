@@ -15,13 +15,17 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 
 namespace TestRunnerInterop {
     public sealed class VsTestContext : IDisposable {
         private readonly string _container, _className;
         private VsInstance _vs;
 
-        public VsTestContext(string container, string className) {
+        public VsTestContext(
+            string container,
+            string className
+        ) {
             _container = container;
             _className = className;
         }
@@ -40,9 +44,16 @@ namespace TestRunnerInterop {
             }
         }
 
-        public void TestInitialize() {
-            if (_vs == null) {
+        public void TestInitialize(string deploymentDirectory) {
+            if (_vs == null || !_vs.IsRunning) {
+                _vs?.Dispose();
                 _vs = new VsInstance();
+                _vs.StartOrRestart(
+                    @"C:\Program Files (x86)\Microsoft Visual Studio\Preview\Enterprise\Common7\IDE\devenv.exe",
+                    "/rootSuffix Exp",
+                    deploymentDirectory,
+                    Path.Combine(deploymentDirectory, "Temp")
+                );
             }
         }
 

@@ -26,9 +26,11 @@ namespace PythonToolsUITestsRunner {
             "PythonToolsUITests.BasicProjectTests"
         );
 
+        public TestContext TestContext { get; set; }
+
         [TestInitialize]
         public void TestInitialize() {
-            _vs.TestInitialize();
+            _vs.TestInitialize(TestContext.DeploymentDirectory);
         }
 
         [TestCleanup]
@@ -57,6 +59,18 @@ namespace PythonToolsUITestsRunner {
         [TestCategory("Installed")]
         public void SetDefaultInterpreter() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.SetDefaultInterpreter));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void LoadPythonProject() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.LoadPythonProject));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void LoadPythonProjectWithNoConfigurations() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.LoadPythonProjectWithNoConfigurations));
         }
     }
 }

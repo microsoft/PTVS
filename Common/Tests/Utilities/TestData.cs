@@ -108,6 +108,13 @@ namespace TestUtilities {
         /// Returns the full path to the test data root.
         /// </summary>
         public static string GetPath() {
+            var pathFromEnv = Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH");
+            if (!string.IsNullOrEmpty(pathFromEnv)) {
+                if (!Directory.Exists(pathFromEnv)) {
+                    Directory.CreateDirectory(pathFromEnv);
+                }
+                return pathFromEnv;
+            }
             return Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
         }
 
@@ -123,7 +130,10 @@ namespace TestUtilities {
         /// deployment to ensure that test files are easily cleaned up.
         /// </summary>
         public static string GetTempPath(string subPath = null, bool randomSubPath = false) {
-            var path = TestData.GetPath("Temp");
+            var path = Environment.GetEnvironmentVariable("_TESTDATA_TEMP_PATH");
+            if (string.IsNullOrEmpty(path)) {
+                path = TestData.GetPath("Temp");
+            }
             if (randomSubPath) {
                 subPath = Path.GetRandomFileName();
                 while (Directory.Exists(Path.Combine(path, subPath))) {

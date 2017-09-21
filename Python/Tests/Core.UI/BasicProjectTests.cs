@@ -118,7 +118,8 @@ namespace PythonToolsUITests {
                         service.DefaultInterpreterId = fact.Configuration.Id;
                         Assert.IsTrue(mre.WaitOne(500));
                         mre.Reset();
-                        Assert.AreSame(fact, service.DefaultInterpreter);
+                        var actual = service.DefaultInterpreter;
+                        Assert.AreSame(fact, actual, $"{fact.Configuration.Id} is not {actual?.Configuration.Id ?? "(null)"}");
                     }
                 } finally {
                     service.DefaultInterpreterChanged -= onChange;
@@ -126,44 +127,26 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void LoadPythonProject() {
-            using (var app = new VisualStudioApp()) {
-                string fullPath = Path.GetFullPath(@"TestData\HelloWorld.sln");
-                Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
-                app.OpenProject(fullPath);
+        public void LoadPythonProject(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
-                Assert.IsTrue(app.Dte.Solution.IsOpen, "The solution is not open");
-                Assert.IsTrue(app.Dte.Solution.Projects.Count == 1, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", app.Dte.Solution.Projects.Count));
+            Assert.IsTrue(app.Dte.Solution.IsOpen, "The solution is not open");
+            Assert.AreEqual(1, app.Dte.Solution.Projects.Count, $"Loading project resulted in wrong number of loaded projects, expected 1, received {app.Dte.Solution.Projects.Count}");
 
-                var iter = app.Dte.Solution.Projects.GetEnumerator();
-                Assert.IsTrue(iter.MoveNext());
-                Project project = (Project)iter.Current;
-                Assert.AreEqual("HelloWorld.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
-            }
+            Assert.AreEqual("HelloWorld.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void LoadPythonProjectWithNoConfigurations() {
-            using (var app = new VisualStudioApp()) {
-                string fullPath = Path.GetFullPath(@"TestData\NoConfigurations\HelloWorld.pyproj");
-                Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
-                app.OpenProject(fullPath);
+        public void LoadPythonProjectWithNoConfigurations(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\NoConfigurations\HelloWorld.pyproj");
 
-                Assert.IsTrue(app.Dte.Solution.IsOpen, "The solution is not open");
-                Assert.IsTrue(app.Dte.Solution.Projects.Count == 1, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", app.Dte.Solution.Projects.Count));
+            Assert.IsTrue(app.Dte.Solution.IsOpen, "The solution is not open");
+            Assert.AreEqual(1, app.Dte.Solution.Projects.Count, $"Loading project resulted in wrong number of loaded projects, expected 1, received {app.Dte.Solution.Projects.Count}");
 
-                var iter = app.Dte.Solution.Projects.GetEnumerator();
-                Assert.IsTrue(iter.MoveNext());
-                Project project = (Project)iter.Current;
-                Assert.AreEqual("HelloWorld.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
+            Assert.AreEqual("HelloWorld.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
 
-                // Expect an exception here causing the test to fail
-                var value = (string)project.Properties.Item("CommandLineArguments").Value;
-                Assert.AreEqual("expected", value);
-            }
+            // An exception here may cause the test to fail
+            var value = (string)project.Properties.Item("CommandLineArguments").Value;
+            Assert.AreEqual("expected", value);
         }
 
         //[TestMethod, Priority(1)]

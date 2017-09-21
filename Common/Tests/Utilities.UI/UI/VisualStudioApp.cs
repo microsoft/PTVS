@@ -820,7 +820,9 @@ namespace TestUtilities.UI {
             }
 
             string fullPath = TestData.GetPath(projName);
-            Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
+            if (!File.Exists(fullPath)) {
+                Assert.Fail("Cannot find " + fullPath);
+            }
             Console.WriteLine("Opening {0}", fullPath);
 
             // If there is a .suo file, delete that so that there is no state carried over from another test.
