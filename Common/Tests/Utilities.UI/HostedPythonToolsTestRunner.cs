@@ -98,6 +98,8 @@ namespace TestUtilities.UI {
                 };
             }
 
+            AssertListener.Initialize();
+
             try {
                 try {
                     if (typeof(Task).IsAssignableFrom(method.ReturnType)) {
@@ -105,6 +107,8 @@ namespace TestUtilities.UI {
                     } else {
                         method.Invoke(instance, args.ToArray());
                     }
+
+                    AssertListener.ThrowUnhandled();
                 } finally {
                     foreach (var a in args) {
                         if (a == sp || a == dte) {
@@ -114,6 +118,10 @@ namespace TestUtilities.UI {
                     }
                 }
             } catch (Exception ex) {
+                if (ex is TargetInvocationException || ex is AggregateException) {
+                    ex = ex.InnerException;
+                }
+
                 return new HostedPythonToolsTestResult {
                     IsSuccess = false,
                     ExceptionType = ex.GetType().FullName,

@@ -49,7 +49,7 @@ using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
 #endif
 
 namespace TestUtilities.UI.Python {
-    internal sealed class ReplWindowProxy : IDisposable {
+    public sealed class ReplWindowProxy : IDisposable {
         private readonly VisualStudioApp _app;
         private readonly ToolWindowPane _toolWindow;
         private readonly IInteractiveWindow _window;

@@ -52,5 +52,11 @@ namespace PythonToolsUITestsRunner {
         public void UserProjectFile() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.UserProjectFile));
         }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void SetDefaultInterpreter() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.SetDefaultInterpreter));
+        }
     }
 }

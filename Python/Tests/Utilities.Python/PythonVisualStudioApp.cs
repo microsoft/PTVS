@@ -44,7 +44,7 @@ using TestUtilities.Python;
 using Process = System.Diagnostics.Process;
 
 namespace TestUtilities.UI.Python {
-    class PythonVisualStudioApp : VisualStudioApp {
+    public class PythonVisualStudioApp : VisualStudioApp {
         private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;

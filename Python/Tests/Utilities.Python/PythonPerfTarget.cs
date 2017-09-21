@@ -19,7 +19,7 @@ using System.Threading;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI.Python {
-    class PythonPerfTarget : AutomationWrapper, IDisposable {
+    public class PythonPerfTarget : AutomationWrapper, IDisposable {
         public PythonPerfTarget(IntPtr hwnd)
             : base(AutomationElement.FromHandle(hwnd)) {
             WaitForInputIdle();

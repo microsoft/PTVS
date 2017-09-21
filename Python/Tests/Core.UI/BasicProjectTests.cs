@@ -58,12 +58,6 @@ namespace PythonToolsUITests {
     public class BasicProjectTests {
         //public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
 
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
         public void TemplateDirectories(VisualStudioApp app) {
             var languageName = PythonVisualStudioApp.TemplateLanguageName;
 
@@ -105,33 +99,29 @@ namespace PythonToolsUITests {
             Assert.AreEqual("Value", xml.Properties.Single(p => p.Name == "Test").Value, "Test property should be 'Value'");
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestSetDefaultInterpreter() {
-            using (var app = new PythonVisualStudioApp()) {
-                var service = app.ComponentModel.GetService<IInterpreterOptionsService>();
-                Assert.IsNotNull(service, "Failed to get IInterpreterOptionsService");
-                var registry = app.ComponentModel.GetService<IInterpreterRegistryService>();
-                Assert.IsNotNull(registry, "Failed to get IInterpreterRegistryService");
-                var oldDefaultInterp = service.DefaultInterpreterId;
+        public void SetDefaultInterpreter(PythonVisualStudioApp app) {
+            var service = app.ComponentModel.GetService<IInterpreterOptionsService>();
+            Assert.IsNotNull(service, "Failed to get IInterpreterOptionsService");
+            var registry = app.ComponentModel.GetService<IInterpreterRegistryService>();
+            Assert.IsNotNull(registry, "Failed to get IInterpreterRegistryService");
+            var oldDefaultInterp = service.DefaultInterpreterId;
 
-                app.OnDispose(() => {
-                    service.DefaultInterpreterId = oldDefaultInterp;
-                });
+            app.OnDispose(() => {
+                service.DefaultInterpreterId = oldDefaultInterp;
+            });
 
-                using (var mre = new ManualResetEvent(false)) {
-                    EventHandler onChange = (o, e) => mre.SetIfNotDisposed();
-                    service.DefaultInterpreterChanged += onChange;
-                    try {
-                        foreach (var fact in registry.Interpreters) {
-                            service.DefaultInterpreterId = fact.Configuration.Id;
-                            Assert.IsTrue(mre.WaitOne(500));
-                            mre.Reset();
-                            Assert.AreSame(fact, service.DefaultInterpreter);
-                        }
-                    } finally {
-                        service.DefaultInterpreterChanged -= onChange;
+            using (var mre = new ManualResetEvent(false)) {
+                EventHandler onChange = (o, e) => mre.SetIfNotDisposed();
+                service.DefaultInterpreterChanged += onChange;
+                try {
+                    foreach (var fact in registry.Interpreters) {
+                        service.DefaultInterpreterId = fact.Configuration.Id;
+                        Assert.IsTrue(mre.WaitOne(500));
+                        mre.Reset();
+                        Assert.AreSame(fact, service.DefaultInterpreter);
                     }
+                } finally {
+                    service.DefaultInterpreterChanged -= onChange;
                 }
             }
         }

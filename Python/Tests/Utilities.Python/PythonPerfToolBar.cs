@@ -17,7 +17,7 @@
 using System.Windows.Automation;
 
 namespace TestUtilities.UI.Python {
-    class PythonPerfToolBar : AutomationWrapper {
+    public class PythonPerfToolBar : AutomationWrapper {
         public PythonPerfToolBar(AutomationElement element)
             : base(element) {
         }

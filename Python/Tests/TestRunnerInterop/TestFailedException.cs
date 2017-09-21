@@ -11,7 +11,7 @@ namespace TestRunnerInterop {
 
         public TestFailedException(string innerType, string message, string stackTrace) {
             _innerType = innerType;
-            Message = message;
+            Message = $"{_innerType.Substring(_innerType.LastIndexOf('.') + 1)}: {message}";
             _stackTrace = stackTrace;
         }
 
