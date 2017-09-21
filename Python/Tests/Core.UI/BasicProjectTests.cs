@@ -149,627 +149,565 @@ namespace PythonToolsUITests {
             Assert.AreEqual("expected", value);
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void SaveProjectAs() {
-            using (var app = new VisualStudioApp()) {
+        public void SaveProjectAs(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+
+            AssertError<ArgumentNullException>(() => project.SaveAs(null));
+            project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
+            project.Save("");   // empty string means just save
+
+            // try too long of a file
+            try {
+                project.SaveAs("TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile.pyproj");
+                Assert.Fail("Did not throw InvalidOperationException for long filename");
+            } catch (InvalidOperationException e) {
+                Assert.IsTrue(e.ToString().Contains("exceeds the maximum number of"));
+            }
+
+            // save to a new location
+            bool hasAdmin = false;
+            try {
+                var path = "C:\\" + Guid.NewGuid().ToString("N");
+                File.WriteAllText(path, "");
+                File.Delete(path);
+                hasAdmin = true;
+            } catch (UnauthorizedAccessException) {
+            }
+
+            // Skip this part if we have admin privileges
+            if (!hasAdmin) {
+                try {
+                project.SaveAs("C:\\TempFile.pyproj");
+                    Assert.Fail("Did not throw UnauthorizedAccessException for protected path");
+            } catch (UnauthorizedAccessException e) {
+                // Saving to a new location is now permitted, but this location will not succeed.
+                Assert.IsTrue(e.ToString().Contains("Access to the path 'C:\\TempFile.pyproj' is denied."));
+            } //catch (InvalidOperationException e) {
+            //    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
+            //}
+            }
+
+            project.SaveAs(PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(randomSubPath: true), "TempFile.pyproj"));
+            project.Save("");   // empty string means just save
+            project.Delete();
+        }
+
+        public void RenameProjectTest(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\RenameProjectTest.sln");
+            var project = app.OpenProject(sln);
+
+            // try it another way...
+            project.Properties.Item("FileName").Value = "HelloWorld2.pyproj";
+            Assert.AreEqual(project.Name, "HelloWorld2");
+
+            // and yet another way...
+            project.Name = "HelloWorld3";
+            Assert.AreEqual(project.Name, "HelloWorld3");
+
+            project.Name = "HelloWorld3";
+
+            // invalid renames
+            AssertError<InvalidOperationException>(() => project.Name = "");
+            AssertError<InvalidOperationException>(() => project.Name = null);
+            AssertError<InvalidOperationException>(() => project.Name = "TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile");
+            AssertError<InvalidOperationException>(() => project.Name = "             ");
+            AssertError<InvalidOperationException>(() => project.Name = "...............");
+            var oldName = project.Name;
+            project.Name = ".fob";
+            Assert.AreEqual(project.Name, ".fob");
+            project.Name = oldName;
+
+            string projPath = Path.Combine(Path.GetDirectoryName(sln), "RenameProjectTest", "HelloWorld3.pyproj");
+            string movePath = Path.Combine(Path.GetDirectoryName(sln), "RenameProjectTest", "HelloWorld_moved.pyproj");
+            try {
+                File.Move(projPath, movePath);
+                AssertError<InvalidOperationException>(() => project.Name = "HelloWorld4");
+            } finally {
+                File.Move(movePath, projPath);
+            }
+
+            try {
+                File.Copy(projPath, movePath);
+                AssertError<InvalidOperationException>(() => project.Name = "HelloWorld_moved");
+            } finally {
+                File.Delete(movePath);
+            }
+        }
+
+        public void ProjectAddItem(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var project = app.OpenProject(sln);
+
+            // "Python Environments", "References", "Search Paths", "Program.py"
+            Assert.AreEqual(4, project.ProjectItems.Count);
+            var item = project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
+
+            Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
+            Assert.AreEqual(Path.Combine(Path.GetDirectoryName(sln), "HelloWorld", "LocalsTest.py"), item.Properties.Item("FullPath").Value);
+            Assert.AreEqual(".py", item.Properties.Item("Extension").Value);
+
+            Assert.IsTrue(item.Object is VSProjectItem);
+            var vsProjItem = (VSProjectItem)item.Object;
+            Assert.AreEqual(vsProjItem.ContainingProject, project);
+            Assert.AreEqual(vsProjItem.ProjectItem.ContainingProject, project);
+            vsProjItem.ProjectItem.Open();
+            Assert.AreEqual(true, vsProjItem.ProjectItem.IsOpen);
+            Assert.AreEqual(true, vsProjItem.ProjectItem.Saved);
+            vsProjItem.ProjectItem.Document.Close(vsSaveChanges.vsSaveChangesNo);
+            Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
+            Assert.AreEqual(vsProjItem.DTE, vsProjItem.ProjectItem.DTE);
+
+            Assert.AreEqual(5, project.ProjectItems.Count);
+
+            // add an existing item
+            project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\HelloWorld\Program.py"));
+
+            Assert.AreEqual(5, project.ProjectItems.Count);
+        }
+
+        public void ProjectAddFolder(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var project = app.OpenProject(sln);
+
+            var folder = project.ProjectItems.AddFolder("Test\\Folder\\Name");
+            var folder2 = project.ProjectItems.AddFolder("Test\\Folder\\Name2");
+
+            // try again when it already exists
+            AssertError<ArgumentException>(() => project.ProjectItems.AddFolder("Test"));
+
+            Assert.AreEqual("Name", folder.Properties.Item("FileName").Value);
+            Assert.AreEqual("Name", folder.Properties.Item("FolderName").Value);
+
+            Assert.AreEqual(
+                Path.Combine(Path.GetDirectoryName(sln), "HelloWorld", "Test", "Folder", "Name"),
+                CommonUtils.TrimEndSeparator((string)folder.Properties.Item("FullPath").Value)
+            );
+
+            folder2.Properties.Item("FolderName").Value = "Name3";
+            Assert.AreEqual("Name3", folder2.Name);
+            folder2.Properties.Item("FileName").Value = "Name4";
+            Assert.AreEqual("Name4", folder2.Name);
+
+            AssertNotImplemented(() => folder.Open(""));
+            AssertNotImplemented(() => folder.SaveAs(""));
+            AssertNotImplemented(() => folder.Save());
+            AssertNotImplemented(() => { var tmp = folder.IsOpen; });
+            Assert.AreEqual(2, folder.Collection.Count);
+            Assert.IsTrue(folder.Saved);
+
+            Assert.AreEqual("{6bb5f8ef-4483-11d3-8bcf-00c04f8ec28c}", folder.Kind);
+
+            folder.ExpandView();
+
+            folder.Delete();
+        }
+
+        public void ProjectAddFolderThroughUI(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\AddFolderExists.sln");
+            var slnDir = Path.GetDirectoryName(sln);
+            var project = app.OpenProject(sln);
+            var solutionExplorer = app.SolutionExplorerTreeView;
+
+            var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)");
+            var projectNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists");
+
+            ProjectNewFolderWithName(app, solutionNode, projectNode, "A");
+
+            var folderA = project.ProjectItems.Item("A");
+            var folderANode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A");
+
+            var expectedA = Path.Combine(slnDir, "AddFolderExists", "A");
+            Assert.AreEqual(expectedA, CommonUtils.TrimEndSeparator((string)folderA.Properties.Item("FullPath").Value));
+            Assert.IsTrue(Directory.Exists(expectedA));
+
+            ProjectNewFolderWithName(app, solutionNode, folderANode, "B");
+
+            var folderB = folderA.ProjectItems.Item("B");
+            var folderBNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A", "B");
+
+            var expectedB = Path.Combine(slnDir, "AddFolderExists", "A", "B");
+            Assert.AreEqual(expectedB, CommonUtils.TrimEndSeparator((string)folderB.Properties.Item("FullPath").Value));
+            Assert.IsTrue(Directory.Exists(expectedB));
+
+            ProjectNewFolderWithName(app, solutionNode, folderBNode, "C");
+
+            var folderC = folderB.ProjectItems.Item("C");
+            var folderCNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A", "B", "C");
+
+            // 817 & 836: Nested subfolders
+            // Setting the wrong VirtualNodeName in FolderNode.FinishFolderAdd caused C's fullpath to be ...\AddFolderExists\B\C\
+            // instead of ...\AddFolderExists\A\B\C\.
+            var expectedC = Path.Combine(slnDir, "AddFolderExists", "A", "B", "C");
+            Assert.AreEqual(expectedC, CommonUtils.TrimEndSeparator((string)folderC.Properties.Item("FullPath").Value));
+            Assert.IsTrue(Directory.Exists(expectedC));
+        }
+
+        public void AddExistingFolder(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\AddExistingFolder.sln");
+            var project = app.OpenProject(sln);
+            var solutionExplorer = app.SolutionExplorerTreeView;
+
+            solutionExplorer.SelectProject(project);
+
+            using (var dialog = SelectFolderDialog.AddExistingFolder(app)) {
+                Assert.AreEqual(Path.Combine(Path.GetDirectoryName(sln), "AddExistingFolder"), dialog.Address, ignoreCase: true);
+
+                dialog.FolderName = Path.Combine(Path.GetDirectoryName(sln), "AddExistingFolder", "TestFolder");
+                dialog.SelectFolder();
+            }
+
+            Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder"));
+            Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder", "TestFile.txt"));
+
+            var subFolderNode = solutionExplorer.WaitForChildOfProject(project, "SubFolder");
+            subFolderNode.Select();
+
+            using (var dialog = SelectFolderDialog.AddExistingFolder(app)) {
+                Assert.AreEqual(Path.Combine(Path.GetDirectoryName(sln), "AddExistingFolder", "SubFolder"), dialog.Address, ignoreCase: true);
+                dialog.FolderName = Path.Combine(Path.GetDirectoryName(sln), "AddExistingFolder", "SubFolder", "TestFolder2");
+                dialog.SelectFolder();
+            }
+
+            Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "SubFolder", "TestFolder2"));
+        }
+
+        public void AddExistingFolderWhileDebugging(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\AddExistingFolder.sln");
+            var project = app.OpenProject(sln);
+            var window = project.ProjectItems.Item("Program.py").Open();
+            window.Activate();
+
+            var docWindow = app.GetDocument(window.Document.FullName);
+
+            var solutionExplorer = app.SolutionExplorerTreeView;
+            app.Dte.ExecuteCommand("Debug.Start");
+            app.WaitForMode(dbgDebugMode.dbgRunMode);
+
+            app.OpenSolutionExplorer();
+            solutionExplorer.SelectProject(project);
+
+            bool dialogWasCreated = false;
+            try {
+                using (SelectFolderDialog.AddExistingFolder(app)) {
+                    // Dialog will be dismissed automatically if it opened
+                    dialogWasCreated = true;
+                }
+            } catch (AssertFailedException) {
+                // Our DTE handling will fail the test, but we want to
+                // prevent that.
+            }
+            Assert.IsFalse(dialogWasCreated, "Was able to add an existing folder while debugging");
+
+            app.Dte.ExecuteCommand("Debug.StopDebugging");
+            app.WaitForMode(dbgDebugMode.dbgDesignMode);
+
+            solutionExplorer.SelectProject(project);
+
+            using (var addDialog = SelectFolderDialog.AddExistingFolder(app)) {
+                Assert.AreEqual(Path.Combine(Path.GetDirectoryName(sln), "AddExistingFolder"), addDialog.Address, ignoreCase: true);
+
+                addDialog.FolderName = TestData.GetPath(@"TestData\AddExistingFolder\TestFolder");
+                addDialog.SelectFolder();
+            }
+
+            Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder"));
+        }
+
+        public void ProjectBuild(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+
+            app.Dte.Solution.SolutionBuild.Build(true);
+        }
+
+        public void ProjectRenameAndDeleteItem(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\RenameItemsTest.sln");
+            var project = app.OpenProject(sln);
+
+            app.Dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
+
+            // invalid renames
+            AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "");
+            AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile");
+            AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "              ");
+            AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "..............");
+            project.ProjectItems.Item("ProgramX.py").Name = ".fob";
+            project.ProjectItems.Item(".fob").Name = "ProgramX.py";
+            AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "ProgramY.py");
+
+            var progXpyc = project.ProjectItems.Item("ProgramX.py").FileNames[0] + "c";
+            var progXpyo = project.ProjectItems.Item("ProgramX.py").FileNames[0] + "o";
+            Assert.IsTrue(File.Exists(progXpyc), "Expected " + progXpyc);
+            Assert.IsTrue(File.Exists(progXpyo), "Expected " + progXpyo);
+
+            project.ProjectItems.Item("ProgramX.py").Name = "PrOgRaMX.py";
+            project.ProjectItems.Item("ProgramX.py").Name = "ProgramX.py";
+
+            project.ProjectItems.Item("ProgramX.py").Name = "Program2.py";
+
+            bool foundProg2 = false;
+            foreach (ProjectItem item in project.ProjectItems) {
+                Assert.AreNotEqual("ProgramX.py", item.Name);
+                if (item.Name == "Program2.py") {
+                    foundProg2 = true;
+                }
+            }
+            Assert.IsTrue(foundProg2);
+
+            Assert.IsFalse(File.Exists(progXpyc), "Did not expect " + progXpyc);
+            Assert.IsFalse(File.Exists(progXpyo), "Did not expect " + progXpyo);
+            var prog2pyc = project.ProjectItems.Item("Program2.py").FileNames[0] + "c";
+            var prog2pyo = project.ProjectItems.Item("Program2.py").FileNames[0] + "o";
+            Assert.IsTrue(File.Exists(prog2pyc), "Expected " + prog2pyc);
+            Assert.IsTrue(File.Exists(prog2pyo), "Expected " + prog2pyo);
+
+
+            // rename using a different method...
+            var progYpyc = project.ProjectItems.Item("ProgramY.py").FileNames[0] + "c";
+
+            project.ProjectItems.Item("ProgramY.py").Properties.Item("FileName").Value = "Program3.py";
+            bool foundProg3 = false;
+            foreach (ProjectItem item in project.ProjectItems) {
+                Assert.AreNotEqual("ProgramY.py", item.Name);
+                if (item.Name == "Program3.py") {
+                    foundProg3 = true;
+                }
+            }
+
+            var prog3pyc = project.ProjectItems.Item("Program3.py").FileNames[0] + "c";
+
+            Assert.IsTrue(File.Exists(progYpyc), "Expected " + progYpyc);
+            Assert.IsTrue(File.Exists(prog3pyc), "Expected " + prog3pyc);
+            Assert.AreEqual("Program3.pyc", File.ReadAllText(prog3pyc), "Program3.pyc should not have changed");
+
+            project.ProjectItems.Item("Program3.py").Remove();
+            Assert.IsTrue(File.Exists(prog3pyc), "Expected " + prog3pyc);
+
+            Assert.IsTrue(foundProg3);
+
+            Assert.AreEqual(0, project.ProjectItems.Item("ProgramZ.py").ProjectItems.Count);
+            AssertError<ArgumentNullException>(() => project.ProjectItems.Item("ProgramZ.py").SaveAs(null));
+            // try Save As, this won't rename it in the project.
+            project.ProjectItems.Item("ProgramZ.py").SaveAs("Program4.py");
+
+            bool foundProgZ = false;
+            foreach (ProjectItem item in project.ProjectItems) {
+                Debug.Assert(item.Name != "Program4.py");
+                if (item.Name == "ProgramZ.py") {
+                    foundProgZ = true;
+                }
+            }
+            Assert.IsTrue(foundProgZ);
+
+            var newItem = project.ProjectItems.AddFromTemplate(((Solution2)app.Dte.Solution).GetProjectItemTemplate("PyClass.zip", "pyproj"), "TemplateItem2.py");
+            newItem.Open();
+
+            // save w/o filename, w/ filename that matches, and w/ wrong filename
+            newItem.Save();
+            newItem.Save("TemplateItem2.py");
+            AssertError<InvalidOperationException>(() => newItem.Save("WrongFilename.py"));
+
+            // rename something in a folder...
+            project.ProjectItems.Item("SubFolder").ProjectItems.Item("SubItem.py").Name = "NewSubItem.py";
+
+            var progDeletepyc = project.ProjectItems.Item("ProgramDelete.py").FileNames[0] + "c";
+            File.WriteAllText(progDeletepyc, "ProgramDelete.pyc");
+
+            project.ProjectItems.Item("ProgramDelete.py").Delete();
+
+            Assert.IsFalse(File.Exists(progDeletepyc), "Should have been deleted: " + progDeletepyc);
+
+            // rename the folder
+            project.ProjectItems.Item("SubFolder").Name = "SubFolderNew";
+            Assert.AreEqual(project.ProjectItems.Item("SubFolderNew").Name, "SubFolderNew");
+            project.Save();
+            var projectFileContents = File.ReadAllText(project.FullName);
+            Assert.AreNotEqual(-1, projectFileContents.IndexOf("\"SubFolderNew"), "Failed to find relative path for SubFolder");
+        }
+
+        public void ChangeDefaultInterpreterProjectClosed(PythonVisualStudioApp app) {
+            var service = app.OptionsService;
+            var original = service.DefaultInterpreter;
+            var interpreters = app.InterpreterService;
+            using (var dis = new DefaultInterpreterSetter(interpreters.Interpreters.FirstOrDefault(i => i != original))) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                app.Dte.Solution.Close();
 
-                AssertError<ArgumentNullException>(() => project.SaveAs(null));
-                project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
-                project.Save("");   // empty string means just save
+                Assert.AreNotEqual(dis.OriginalInterpreter, service.DefaultInterpreter);
+            }
 
-                // try too long of a file
-                try {
-                    project.SaveAs("TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile.pyproj");
-                    Assert.Fail("Did not throw InvalidOperationException for long filename");
-                } catch (InvalidOperationException e) {
-                    Assert.IsTrue(e.ToString().Contains("exceeds the maximum number of"));
+            Assert.AreEqual(original, service.DefaultInterpreter);
+        }
+
+        public void AddTemplateItem(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var project = app.OpenProject(sln);
+
+            project.ProjectItems.AddFromTemplate(((Solution2)app.Dte.Solution).GetProjectItemTemplate("PyClass.zip", "pyproj"), "TemplateItem.py");
+
+            bool foundItem = false;
+            foreach (ProjectItem item in project.ProjectItems) {
+                if (item.Name == "TemplateItem.py") {
+                    foundItem = true;
                 }
+            }
+            Assert.IsTrue(foundItem);
+            Assert.IsFalse(project.Saved);
+        }
 
-                // save to a new location
-                bool hasAdmin = false;
+        public void AutomationProperties(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+
+            int propCount = 0;
+            foreach (Property prop in project.Properties) {
                 try {
-                    var path = "C:\\" + Guid.NewGuid().ToString("N");
-                    File.WriteAllText(path, "");
-                    File.Delete(path);
-                    hasAdmin = true;
-                } catch (UnauthorizedAccessException) {
-                }
-
-                // Skip this part if we have admin privileges
-                if (!hasAdmin) {
+                    Assert.AreEqual(project.Properties.Item(propCount + 1).Value, project.Properties.Item(prop.Name).Value);
+                    Assert.AreEqual(project.Properties.Item(propCount + 1).Value, project.Properties.Item(prop.Name).get_IndexedValue(null));
+                } catch (NotImplementedException) {
+                    // Different test for properties that are not implemented
                     try {
-                    project.SaveAs("C:\\TempFile.pyproj");
-                        Assert.Fail("Did not throw UnauthorizedAccessException for protected path");
-                } catch (UnauthorizedAccessException e) {
-                    // Saving to a new location is now permitted, but this location will not succeed.
-                    Assert.IsTrue(e.ToString().Contains("Access to the path 'C:\\TempFile.pyproj' is denied."));
-                } //catch (InvalidOperationException e) {
-                //    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
-                //}
-                }
-
-                project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
-                project.Save("");   // empty string means just save
-                project.Delete();
-            }
-        }
-
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameProjectTest() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\RenameProjectTest.sln");
-
-                // try it another way...
-                project.Properties.Item("FileName").Value = "HelloWorld2.pyproj";
-                Assert.AreEqual(project.Name, "HelloWorld2");
-
-                // and yet another way...
-                project.Name = "HelloWorld3";
-                Assert.AreEqual(project.Name, "HelloWorld3");
-
-                project.Name = "HelloWorld3";
-
-                // invalid renames
-                AssertError<InvalidOperationException>(() => project.Name = "");
-                AssertError<InvalidOperationException>(() => project.Name = null);
-                AssertError<InvalidOperationException>(() => project.Name = "TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile");
-                AssertError<InvalidOperationException>(() => project.Name = "             ");
-                AssertError<InvalidOperationException>(() => project.Name = "...............");
-                var oldName = project.Name;
-                project.Name = ".fob";
-                Assert.AreEqual(project.Name, ".fob");
-                project.Name = oldName;
-
-                string projPath = TestData.GetPath(@"TestData\RenameProjectTest\HelloWorld3.pyproj");
-                string movePath = TestData.GetPath(@"TestData\RenameProjectTest\HelloWorld_moved.pyproj");
-                try {
-                    File.Move(projPath, movePath);
-                    AssertError<InvalidOperationException>(() => project.Name = "HelloWorld4");
-                } finally {
-                    File.Move(movePath, projPath);
-                }
-
-                try {
-                    File.Copy(projPath, movePath);
-                    AssertError<InvalidOperationException>(() => project.Name = "HelloWorld_moved");
-                } finally {
-                    File.Delete(movePath);
-                }
-            }
-
-        }
-
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ProjectAddItem() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                string fullPath = TestData.GetPath(@"TestData\HelloWorld.sln");
-
-                // "Python Environments", "References", "Search Paths", "Program.py"
-                Assert.AreEqual(4, project.ProjectItems.Count);
-                var item = project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
-
-                Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
-                Assert.AreEqual(Path.Combine(Path.GetDirectoryName(fullPath), "HelloWorld", "LocalsTest.py"), item.Properties.Item("FullPath").Value);
-                Assert.AreEqual(".py", item.Properties.Item("Extension").Value);
-
-                Assert.IsTrue(item.Object is VSProjectItem);
-                var vsProjItem = (VSProjectItem)item.Object;
-                Assert.AreEqual(vsProjItem.ContainingProject, project);
-                Assert.AreEqual(vsProjItem.ProjectItem.ContainingProject, project);
-                vsProjItem.ProjectItem.Open();
-                Assert.AreEqual(true, vsProjItem.ProjectItem.IsOpen);
-                Assert.AreEqual(true, vsProjItem.ProjectItem.Saved);
-                vsProjItem.ProjectItem.Document.Close(vsSaveChanges.vsSaveChangesNo);
-                Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
-                Assert.AreEqual(vsProjItem.DTE, vsProjItem.ProjectItem.DTE);
-
-                Assert.AreEqual(5, project.ProjectItems.Count);
-
-                // add an existing item
-                project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\HelloWorld\Program.py"));
-
-                Assert.AreEqual(5, project.ProjectItems.Count);
-            }
-        }
-
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ProjectAddFolder() {
-            string fullPath = TestData.GetPath(@"TestData\HelloWorld.sln");
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-
-                var folder = project.ProjectItems.AddFolder("Test\\Folder\\Name");
-                var folder2 = project.ProjectItems.AddFolder("Test\\Folder\\Name2");
-
-                // try again when it already exists
-                AssertError<ArgumentException>(() => project.ProjectItems.AddFolder("Test"));
-
-                Assert.AreEqual("Name", folder.Properties.Item("FileName").Value);
-                Assert.AreEqual("Name", folder.Properties.Item("FolderName").Value);
-
-                Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\Test\Folder\Name\"), folder.Properties.Item("FullPath").Value);
-
-                folder2.Properties.Item("FolderName").Value = "Name3";
-                Assert.AreEqual("Name3", folder2.Name);
-                folder2.Properties.Item("FileName").Value = "Name4";
-                Assert.AreEqual("Name4", folder2.Name);
-
-                AssertNotImplemented(() => folder.Open(""));
-                AssertNotImplemented(() => folder.SaveAs(""));
-                AssertNotImplemented(() => folder.Save());
-                AssertNotImplemented(() => { var tmp = folder.IsOpen; });
-                Assert.AreEqual(2, folder.Collection.Count);
-                Assert.AreEqual(true, folder.Saved);
-
-                Assert.AreEqual("{6bb5f8ef-4483-11d3-8bcf-00c04f8ec28c}", folder.Kind);
-
-                folder.ExpandView();
-
-                folder.Delete();
-            }
-        }
-
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ProjectAddFolderThroughUI() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\AddFolderExists.sln");
-                var solutionExplorer = app.SolutionExplorerTreeView;
-
-                var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)");
-                var projectNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists");
-
-                ProjectNewFolderWithName(app, solutionNode, projectNode, "A");
-
-                var folderA = project.ProjectItems.Item("A");
-                var folderANode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A");
-
-                Assert.AreEqual(TestData.GetPath("TestData\\AddFolderExists\\A\\"), folderA.Properties.Item("FullPath").Value);
-                Assert.IsTrue(Directory.Exists(TestData.GetPath("TestData\\AddFolderExists\\A\\")));
-
-                ProjectNewFolderWithName(app, solutionNode, folderANode, "B");
-
-                var folderB = folderA.ProjectItems.Item("B");
-                var folderBNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A", "B");
-
-                Assert.AreEqual(TestData.GetPath("TestData\\AddFolderExists\\A\\B\\"), folderB.Properties.Item("FullPath").Value);
-                Assert.IsTrue(Directory.Exists(TestData.GetPath("TestData\\AddFolderExists\\A\\B\\")));
-
-                ProjectNewFolderWithName(app, solutionNode, folderBNode, "C");
-
-                var folderC = folderB.ProjectItems.Item("C");
-                var folderCNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A", "B", "C");
-
-                // 817 & 836: Nested subfolders
-                // Setting the wrong VirtualNodeName in FolderNode.FinishFolderAdd caused C's fullpath to be ...\AddFolderExists\B\C\
-                // instead of ...\AddFolderExists\A\B\C\.
-                Assert.AreEqual(TestData.GetPath("TestData\\AddFolderExists\\A\\B\\C\\"), folderC.Properties.Item("FullPath").Value);
-                Assert.IsTrue(Directory.Exists(TestData.GetPath("TestData\\AddFolderExists\\A\\B\\C\\")));
-            }
-        }
-
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAddExistingFolder() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
-                var solutionExplorer = app.SolutionExplorerTreeView;
-
-                solutionExplorer.SelectProject(project);
-
-                using (var dialog = SelectFolderDialog.AddExistingFolder(app)) {
-                    Assert.AreEqual(dialog.Address, TestData.GetPath(@"TestData\AddExistingFolder"), ignoreCase: true);
-
-                    dialog.FolderName = TestData.GetPath(@"TestData\AddExistingFolder\TestFolder");
-                    dialog.SelectFolder();
-                }
-
-                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder"));
-                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder", "TestFile.txt"));
-
-                var subFolderNode = solutionExplorer.WaitForChildOfProject(project, "SubFolder");
-                subFolderNode.Select();
-
-                using (var dialog = SelectFolderDialog.AddExistingFolder(app)) {
-                    Assert.AreEqual(dialog.Address, TestData.GetPath(@"TestData\AddExistingFolder\SubFolder"), ignoreCase: true);
-                    dialog.FolderName = TestData.GetPath(@"TestData\AddExistingFolder\SubFolder\TestFolder2");
-                    dialog.SelectFolder();
-                }
-
-                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "SubFolder", "TestFolder2"));
-            }
-        }
-
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAddExistingFolderDebugging() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
-                var window = project.ProjectItems.Item("Program.py").Open();
-                window.Activate();
-
-                var docWindow = app.GetDocument(window.Document.FullName);
-
-                var solutionExplorer = app.SolutionExplorerTreeView;
-                app.Dte.ExecuteCommand("Debug.Start");
-                app.WaitForMode(dbgDebugMode.dbgRunMode);
-
-                app.OpenSolutionExplorer();
-                solutionExplorer.SelectProject(project);
-
-                bool dialogWasCreated = false;
-                try {
-                    using (SelectFolderDialog.AddExistingFolder(app)) {
-                        // Dialog will be dismissed automatically if it opened
-                        dialogWasCreated = true;
-                    }
-                } catch (AssertFailedException) {
-                    // Our DTE handling will fail the test, but we want to
-                    // prevent that.
-                }
-                Assert.IsFalse(dialogWasCreated, "Was able to add an existing folder while debugging");
-
-                app.Dte.ExecuteCommand("Debug.StopDebugging");
-                app.WaitForMode(dbgDebugMode.dbgDesignMode);
-
-                solutionExplorer.SelectProject(project);
-
-                using (var addDialog = SelectFolderDialog.AddExistingFolder(app)) {
-                    Assert.AreEqual(addDialog.Address, Path.GetFullPath(@"TestData\AddExistingFolder"), ignoreCase: true);
-
-                    addDialog.FolderName = Path.GetFullPath(@"TestData\AddExistingFolder\TestFolder");
-                    addDialog.SelectFolder();
-                }
-
-                Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder"));
-            }
-        }
-
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ProjectBuild() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-
-                app.Dte.Solution.SolutionBuild.Build(true);
-            }
-        }
-
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ProjectRenameAndDeleteItem() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\RenameItemsTest.sln");
-
-                app.Dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
-
-                // invalid renames
-                AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "");
-                AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile");
-                AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "              ");
-                AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "..............");
-                project.ProjectItems.Item("ProgramX.py").Name = ".fob";
-                project.ProjectItems.Item(".fob").Name = "ProgramX.py";
-                AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "ProgramY.py");
-
-                var progXpyc = project.ProjectItems.Item("ProgramX.py").FileNames[0] + "c";
-                var progXpyo = project.ProjectItems.Item("ProgramX.py").FileNames[0] + "o";
-                Assert.IsTrue(File.Exists(progXpyc), "Expected " + progXpyc);
-                Assert.IsTrue(File.Exists(progXpyo), "Expected " + progXpyo);
-
-                project.ProjectItems.Item("ProgramX.py").Name = "PrOgRaMX.py";
-                project.ProjectItems.Item("ProgramX.py").Name = "ProgramX.py";
-
-                project.ProjectItems.Item("ProgramX.py").Name = "Program2.py";
-
-                bool foundProg2 = false;
-                foreach (ProjectItem item in project.ProjectItems) {
-                    Debug.Assert(item.Name != "ProgramX.py");
-                    if (item.Name == "Program2.py") {
-                        foundProg2 = true;
-                    }
-                }
-                Assert.IsTrue(foundProg2);
-
-                Assert.IsFalse(File.Exists(progXpyc), "Did not expect " + progXpyc);
-                Assert.IsFalse(File.Exists(progXpyo), "Did not expect " + progXpyo);
-                var prog2pyc = project.ProjectItems.Item("Program2.py").FileNames[0] + "c";
-                var prog2pyo = project.ProjectItems.Item("Program2.py").FileNames[0] + "o";
-                Assert.IsTrue(File.Exists(prog2pyc), "Expected " + prog2pyc);
-                Assert.IsTrue(File.Exists(prog2pyo), "Expected " + prog2pyo);
-
-
-                // rename using a different method...
-                var progYpyc = project.ProjectItems.Item("ProgramY.py").FileNames[0] + "c";
-
-                project.ProjectItems.Item("ProgramY.py").Properties.Item("FileName").Value = "Program3.py";
-                bool foundProg3 = false;
-                foreach (ProjectItem item in project.ProjectItems) {
-                    Debug.Assert(item.Name != "ProgramY.py");
-                    if (item.Name == "Program3.py") {
-                        foundProg3 = true;
-                    }
-                }
-
-                var prog3pyc = project.ProjectItems.Item("Program3.py").FileNames[0] + "c";
-
-                Assert.IsTrue(File.Exists(progYpyc), "Expected " + progYpyc);
-                Assert.IsTrue(File.Exists(prog3pyc), "Expected " + prog3pyc);
-                Assert.AreEqual("Program3.pyc", File.ReadAllText(prog3pyc), "Program3.pyc should not have changed");
-
-                project.ProjectItems.Item("Program3.py").Remove();
-                Assert.IsTrue(File.Exists(prog3pyc), "Expected " + prog3pyc);
-
-                Assert.IsTrue(foundProg3);
-
-                Assert.AreEqual(0, project.ProjectItems.Item("ProgramZ.py").ProjectItems.Count);
-                AssertError<ArgumentNullException>(() => project.ProjectItems.Item("ProgramZ.py").SaveAs(null));
-                // try Save As, this won't rename it in the project.
-                project.ProjectItems.Item("ProgramZ.py").SaveAs("Program4.py");
-
-                bool foundProgZ = false;
-                foreach (ProjectItem item in project.ProjectItems) {
-                    Debug.Assert(item.Name != "Program4.py");
-                    if (item.Name == "ProgramZ.py") {
-                        foundProgZ = true;
-                    }
-                }
-                Assert.IsTrue(foundProgZ);
-
-                var newItem = project.ProjectItems.AddFromTemplate(((Solution2)app.Dte.Solution).GetProjectItemTemplate("PyClass.zip", "pyproj"), "TemplateItem2.py");
-                newItem.Open();
-
-                // save w/o filename, w/ filename that matches, and w/ wrong filename
-                newItem.Save();
-                newItem.Save("TemplateItem2.py");
-                AssertError<InvalidOperationException>(() => newItem.Save("WrongFilename.py"));
-
-                // rename something in a folder...
-                project.ProjectItems.Item("SubFolder").ProjectItems.Item("SubItem.py").Name = "NewSubItem.py";
-
-                var progDeletepyc = project.ProjectItems.Item("ProgramDelete.py").FileNames[0] + "c";
-                File.WriteAllText(progDeletepyc, "ProgramDelete.pyc");
-
-                project.ProjectItems.Item("ProgramDelete.py").Delete();
-
-                Assert.IsFalse(File.Exists(progDeletepyc), "Should have been deleted: " + progDeletepyc);
-
-                // rename the folder
-                project.ProjectItems.Item("SubFolder").Name = "SubFolderNew";
-                Assert.AreEqual(project.ProjectItems.Item("SubFolderNew").Name, "SubFolderNew");
-                project.Save();
-                var projectFileContents = File.ReadAllText(project.FullName);
-                Assert.AreNotEqual(-1, projectFileContents.IndexOf("\"SubFolderNew"), "Failed to find relative path for SubFolder");
-            }
-        }
-
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ChangeDefaultInterpreterProjectClosed() {
-            using (var app = new PythonVisualStudioApp()) {
-                
-                var service = app.OptionsService;
-                var original = service.DefaultInterpreter;
-                var interpreters = app.InterpreterService;
-                using (var dis = new DefaultInterpreterSetter(interpreters.Interpreters.FirstOrDefault(i => i != original))) {
-                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    app.Dte.Solution.Close();
-
-                    Assert.AreNotEqual(dis.OriginalInterpreter, service.DefaultInterpreter);
-                }
-
-                Assert.AreEqual(original, service.DefaultInterpreter);
-            }
-        }
-
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddTemplateItem() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-
-                project.ProjectItems.AddFromTemplate(((Solution2)app.Dte.Solution).GetProjectItemTemplate("PyClass.zip", "pyproj"), "TemplateItem.py");
-
-                bool foundItem = false;
-                foreach (ProjectItem item in project.ProjectItems) {
-                    if (item.Name == "TemplateItem.py") {
-                        foundItem = true;
-                    }
-                }
-                Assert.IsTrue(foundItem);
-                Assert.AreEqual(false, project.Saved);
-            }
-        }
-
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAutomationProperties() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-
-                int propCount = 0;
-                foreach (Property prop in project.Properties) {
-                    try {
-                        Assert.AreEqual(project.Properties.Item(propCount + 1).Value, project.Properties.Item(prop.Name).Value);
-                        Assert.AreEqual(project.Properties.Item(propCount + 1).Value, project.Properties.Item(prop.Name).get_IndexedValue(null));
+                        var value = project.Properties.Item(propCount + 1).Value;
+                        Assert.Fail("Expected NotImplementedException");
                     } catch (NotImplementedException) {
-                        // Different test for properties that are not implemented
-                        try {
-                            var value = project.Properties.Item(propCount + 1).Value;
-                            Assert.Fail("Expected NotImplementedException");
-                        } catch (NotImplementedException) {
-                        }
-                        try {
-                            var value = project.Properties.Item(prop.Name).Value;
-                            Assert.Fail("Expected NotImplementedException");
-                        } catch (NotImplementedException) {
-                        }
                     }
-
-                    Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.Properties.Item(propCount + 1).DTE));
-                    Assert.AreEqual(0, project.Properties.Item(propCount + 1).NumIndices);
-                    Assert.IsNotNull(project.Properties.Item(propCount + 1).Parent);
-                    Assert.IsNull(project.Properties.Item(propCount + 1).Application);
-                    Assert.IsNotNull(project.Properties.Item(propCount + 1).Collection);
-                    propCount++;
+                    try {
+                        var value = project.Properties.Item(prop.Name).Value;
+                        Assert.Fail("Expected NotImplementedException");
+                    } catch (NotImplementedException) {
+                    }
                 }
 
-                Assert.AreEqual(propCount, project.Properties.Count);
-
-                Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.Properties.DTE));
+                Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.Properties.Item(propCount + 1).DTE));
+                Assert.AreEqual(0, project.Properties.Item(propCount + 1).NumIndices);
+                Assert.IsNotNull(project.Properties.Item(propCount + 1).Parent);
+                Assert.IsNull(project.Properties.Item(propCount + 1).Application);
+                Assert.IsNotNull(project.Properties.Item(propCount + 1).Collection);
+                propCount++;
             }
+
+            Assert.AreEqual(propCount, project.Properties.Count);
+
+            Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.Properties.DTE));
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAutomationProject() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
+        public void TestAutomationProject(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
-                Assert.AreEqual("{888888a0-9f3d-457c-b088-3a5042f75d52}", project.Kind, "project.Kind");
-                // we don't yet expose a VSProject interface here, if we did we'd need tests for it, but it doesn't support
-                // any functionality we care about/implement yet.
-                Assert.IsNotNull(project.Object, "project.Object");
-                Assert.IsInstanceOfType(project.Object, typeof(OAVSProject), "project.Object");
+            Assert.AreEqual("{888888a0-9f3d-457c-b088-3a5042f75d52}", project.Kind, "project.Kind");
+            // we don't yet expose a VSProject interface here, if we did we'd need tests for it, but it doesn't support
+            // any functionality we care about/implement yet.
+            Assert.IsNotNull(project.Object, "project.Object");
+            Assert.IsInstanceOfType(project.Object, typeof(OAVSProject), "project.Object");
 
-                Assert.IsTrue(project.Saved, "project.Saved");
-                project.Saved = false;
-                Assert.IsFalse(project.Saved, "project.Saved");
-                project.Saved = true;
+            Assert.IsTrue(project.Saved, "project.Saved");
+            project.Saved = false;
+            Assert.IsFalse(project.Saved, "project.Saved");
+            project.Saved = true;
 
-                Assert.IsNull(project.Globals, "project.Globals");
-                Assert.AreEqual("{c0000016-9ab0-4d58-80e6-54f29e8d3144}", project.ExtenderCATID, "project.ExetenderCATID");
-                var extNames = project.ExtenderNames;
-                Assert.IsInstanceOfType(extNames, typeof(string[]), "project.ExtenderNames");
-                Assert.AreEqual(0, ((string[])extNames).Length, "len(projectExtenderNames)");
-                Assert.IsNull(project.ParentProjectItem, "project.ParentProjectItem");
-                Assert.IsNull(project.CodeModel, "project.CodeModel");
-                AssertError<ArgumentNullException>(() => project.get_Extender(null));
-                AssertError<COMException>(() => project.get_Extender("DoesNotExist"));
-                Assert.IsNotNull(project.Collection, "project.Collection");
+            Assert.IsNull(project.Globals, "project.Globals");
+            Assert.AreEqual("{c0000016-9ab0-4d58-80e6-54f29e8d3144}", project.ExtenderCATID, "project.ExetenderCATID");
+            var extNames = project.ExtenderNames;
+            Assert.IsInstanceOfType(extNames, typeof(string[]), "project.ExtenderNames");
+            Assert.AreEqual(0, ((string[])extNames).Length, "len(projectExtenderNames)");
+            Assert.IsNull(project.ParentProjectItem, "project.ParentProjectItem");
+            Assert.IsNull(project.CodeModel, "project.CodeModel");
+            AssertError<ArgumentNullException>(() => project.get_Extender(null));
+            AssertError<COMException>(() => project.get_Extender("DoesNotExist"));
+            Assert.IsNotNull(project.Collection, "project.Collection");
 
-                foreach (ProjectItem item in project.ProjectItems) {
-                    Assert.AreEqual(item.Name, project.ProjectItems.Item(1).Name);
-                    break;
-                }
-
-                Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.ProjectItems.DTE), "project.ProjectItems.DTE");
-                Assert.AreEqual(project, project.ProjectItems.Parent, "project.ProjectItems.Parent");
-                Assert.IsNull(project.ProjectItems.Kind, "project.ProjectItems.Kind");
-
-                AssertError<ArgumentException>(() => project.ProjectItems.Item(-1));
-                AssertError<ArgumentException>(() => project.ProjectItems.Item(0));
+            foreach (ProjectItem item in project.ProjectItems) {
+                Assert.AreEqual(item.Name, project.ProjectItems.Item(1).Name);
+                break;
             }
+
+            Assert.IsTrue(ComUtilities.IsSameComObject(app.Dte, project.ProjectItems.DTE), "project.ProjectItems.DTE");
+            Assert.AreEqual(project, project.ProjectItems.Parent, "project.ProjectItems.Parent");
+            Assert.IsNull(project.ProjectItems.Kind, "project.ProjectItems.Kind");
+
+            AssertError<ArgumentException>(() => project.ProjectItems.Item(-1));
+            AssertError<ArgumentException>(() => project.ProjectItems.Item(0));
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestProjectItemAutomation() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
+        public void ProjectItemAutomation(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
-                var item = project.ProjectItems.Item("Program.py");
-                Assert.IsNull(item.ExtenderNames);
-                Assert.IsNull(item.ExtenderCATID);
-                Assert.IsNull(item.SubProject);
-                Assert.AreEqual("{6bb5f8ee-4483-11d3-8bcf-00c04f8ec28c}", item.Kind);
-                Assert.IsNull(item.ConfigurationManager);
-                Assert.IsNotNull(item.Collection.Item("Program.py"));
-                AssertError<ArgumentOutOfRangeException>(() => item.get_FileNames(-1));
-                AssertNotImplemented(() => item.Saved = false);
+            var item = project.ProjectItems.Item("Program.py");
+            Assert.IsNull(item.ExtenderNames);
+            Assert.IsNull(item.ExtenderCATID);
+            Assert.IsNull(item.SubProject);
+            Assert.AreEqual("{6bb5f8ee-4483-11d3-8bcf-00c04f8ec28c}", item.Kind);
+            Assert.IsNull(item.ConfigurationManager);
+            Assert.IsNotNull(item.Collection.Item("Program.py"));
+            AssertError<ArgumentOutOfRangeException>(() => item.get_FileNames(-1));
+            AssertNotImplemented(() => item.Saved = false);
 
 
-                AssertError<ArgumentException>(() => item.get_IsOpen("ThisIsNotTheGuidYoureLookingFor"));
-                AssertError<ArgumentException>(() => item.Open("ThisIsNotTheGuidYoureLookingFor"));
-            }
+            AssertError<ArgumentException>(() => item.get_IsOpen("ThisIsNotTheGuidYoureLookingFor"));
+            AssertError<ArgumentException>(() => item.Open("ThisIsNotTheGuidYoureLookingFor"));
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestRelativePaths() {
+        public void RelativePaths(VisualStudioApp app) {
             // link to outside file should show up as top-level item
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\RelativePaths.sln");
+            var project = app.OpenProject(@"TestData\RelativePaths.sln");
 
-                var item = project.ProjectItems.Item("Program.py");
-                Assert.IsNotNull(item);
+            var item = project.ProjectItems.Item("Program.py");
+            Assert.IsNotNull(item);
+        }
+
+        public void ProjectConfiguration(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+
+            project.ConfigurationManager.AddConfigurationRow("NewConfig", "Debug", true);
+            project.ConfigurationManager.AddConfigurationRow("NewConfig2", "UnknownConfig", true);
+
+            AssertError<ArgumentException>(() => project.ConfigurationManager.DeleteConfigurationRow(null));
+            project.ConfigurationManager.DeleteConfigurationRow("NewConfig");
+            project.ConfigurationManager.DeleteConfigurationRow("NewConfig2");
+
+            var debug = project.ConfigurationManager.Item("Debug", "Any CPU");
+            Assert.IsFalse(debug.IsBuildable);
+
+            Assert.AreEqual("Any CPU", ((object[])project.ConfigurationManager.PlatformNames)[0]);
+            Assert.AreEqual("Any CPU", ((object[])project.ConfigurationManager.SupportedPlatforms)[0]);
+
+            Assert.IsNull(project.ConfigurationManager.ActiveConfiguration.Object);
+
+            //var workingDir = project.ConfigurationManager.ActiveConfiguration.Properties.Item("WorkingDirectory");
+            //Assert.AreEqual(".", workingDir);
+
+            // not supported
+            AssertError<COMException>(() => project.ConfigurationManager.AddPlatform("NewPlatform", "Any CPU", false));
+            AssertError<COMException>(() => project.ConfigurationManager.DeletePlatform("NewPlatform"));
+        }
+
+        public void DependentNodes(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\XamlProject.sln");
+            var project = app.OpenProject(sln);
+
+            Assert.IsNotNull(project.ProjectItems.Item("Program.py").ProjectItems.Item("Program.xaml"));
+            project.ProjectItems.Item("Program.py").Name = "NewProgram.py";
+
+            Assert.IsNotNull(project.ProjectItems.Item("NewProgram.py").ProjectItems.Item("NewProgram.xaml"));
+        }
+
+        public void DotNetReferences(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\XamlProject.sln");
+
+            var references = project.ProjectItems.Item("References");
+            foreach (var pf in new[] { references.ProjectItems.Item("PresentationFramework"), references.ProjectItems.Item(1) }) {
+                Assert.AreEqual("PresentationFramework", pf.Name);
+                Assert.AreEqual(typeof(OAReferenceItem), pf.GetType());
+                AssertError<InvalidOperationException>(() => pf.Delete());
+                AssertError<InvalidOperationException>(() => pf.Open(""));
             }
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ProjectConfiguration() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-
-                project.ConfigurationManager.AddConfigurationRow("NewConfig", "Debug", true);
-                project.ConfigurationManager.AddConfigurationRow("NewConfig2", "UnknownConfig", true);
-
-                AssertError<ArgumentException>(() => project.ConfigurationManager.DeleteConfigurationRow(null));
-                project.ConfigurationManager.DeleteConfigurationRow("NewConfig");
-                project.ConfigurationManager.DeleteConfigurationRow("NewConfig2");
-
-                var debug = project.ConfigurationManager.Item("Debug", "Any CPU");
-                Assert.IsFalse(debug.IsBuildable);
-
-                Assert.AreEqual("Any CPU", ((object[])project.ConfigurationManager.PlatformNames)[0]);
-                Assert.AreEqual("Any CPU", ((object[])project.ConfigurationManager.SupportedPlatforms)[0]);
-
-                Assert.IsNull(project.ConfigurationManager.ActiveConfiguration.Object);
-
-                //var workingDir = project.ConfigurationManager.ActiveConfiguration.Properties.Item("WorkingDirectory");
-                //Assert.AreEqual(".", workingDir);
-
-                // not supported
-                AssertError<COMException>(() => project.ConfigurationManager.AddPlatform("NewPlatform", "Any CPU", false));
-                AssertError<COMException>(() => project.ConfigurationManager.DeletePlatform("NewPlatform"));
-            }
-        }
-
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DependentNodes() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\XamlProject.sln");
-
-                Assert.IsNotNull(project.ProjectItems.Item("Program.py").ProjectItems.Item("Program.xaml"));
-                project.ProjectItems.Item("Program.py").Name = "NewProgram.py";
-
-                Assert.IsNotNull(project.ProjectItems.Item("NewProgram.py").ProjectItems.Item("NewProgram.xaml"));
-            }
-        }
-
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DotNetReferences() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\XamlProject.sln");
-
-                var references = project.ProjectItems.Item("References");
-                foreach (var pf in new[] { references.ProjectItems.Item("PresentationFramework"), references.ProjectItems.Item(1) }) {
-                    Assert.AreEqual("PresentationFramework", pf.Name);
-                    Assert.AreEqual(typeof(OAReferenceItem), pf.GetType());
-                    AssertError<InvalidOperationException>(() => pf.Delete());
-                    AssertError<InvalidOperationException>(() => pf.Open(""));
-                }
-            }
-        }
-
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DotNetSearchPathReferences() {
-            var dllPath = TestData.GetPath(@"TestData\AssemblyReference\PythonApplication\Assemblies\ClassLibrary3.dll");
-            Directory.CreateDirectory(Path.GetDirectoryName(dllPath));
+            var dllPath = Path.Combine(TestData.GetTempPath(randomSubPath: true), "ClassLibrary3.dll");
             CompileFile("ClassLibrary.cs", dllPath);
 
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AssemblyReference\SearchPathReference.sln");
+                project.GetPythonProject()._searchPaths.Add(Path.GetDirectoryName(dllPath), false);
 
                 var program = project.ProjectItems.Item("Program3.py");
                 var window = program.Open();

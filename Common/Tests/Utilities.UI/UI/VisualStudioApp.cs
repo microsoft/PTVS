@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Automation;
 using EnvDTE;
@@ -799,6 +800,37 @@ namespace TestUtilities.UI {
             }
         }
 
+        public string CopyProjectForTest(string projName) {
+            string fullPath = TestData.GetPath(projName);
+            if (!File.Exists(fullPath)) {
+                Assert.Fail("Cannot find " + fullPath);
+            }
+            var basePath = TestData.GetTempPath(randomSubPath: true);
+            var finalPath = Path.Combine(basePath, Path.GetFileName(fullPath));
+
+            // If it's not a solution, copy the containing directory
+            if (!Path.GetExtension(fullPath).Equals(".sln", StringComparison.OrdinalIgnoreCase)) {
+                FileUtils.CopyDirectory(Path.GetDirectoryName(fullPath), basePath);
+                return Path.Combine(basePath, Path.GetFileName(fullPath));
+            }
+
+            // If it's a solution, copy it and all referenced directories
+            File.Copy(fullPath, finalPath, true);
+            Console.WriteLine($"Copying {fullPath} to {finalPath}");
+            foreach (var line in File.ReadAllLines(fullPath)) {
+                var m = Regex.Match(line, @"Project\(.+?\) = "".+?"", ""(.+?)\\\w+\.\w+""");
+                if (!m.Success) {
+                    continue;
+                }
+                var subdir = m.Groups[1].Value;
+                var from = Path.Combine(Path.GetDirectoryName(fullPath), subdir);
+                var to = Path.Combine(basePath, subdir);
+                Console.WriteLine($"Copying {from} to {to}");
+                FileUtils.CopyDirectory(from, to);
+            }
+            return finalPath;
+        }
+
         public Project OpenProject(
             string projName,
             string startItem = null,
@@ -813,8 +845,7 @@ namespace TestUtilities.UI {
             Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
 
             // Close any open solution
-            string slnDir, slnFile, slnOpts;
-            if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out slnDir, out slnFile, out slnOpts))) {
+            if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out _, out string slnFile, out _))) {
                 Console.WriteLine("Closing {0}", slnFile);
                 solution.CloseSolutionElement(0, null, 0);
             }
@@ -823,6 +854,7 @@ namespace TestUtilities.UI {
             if (!File.Exists(fullPath)) {
                 Assert.Fail("Cannot find " + fullPath);
             }
+
             Console.WriteLine("Opening {0}", fullPath);
 
             // If there is a .suo file, delete that so that there is no state carried over from another test.
