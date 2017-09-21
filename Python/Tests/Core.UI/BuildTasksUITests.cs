@@ -34,7 +34,7 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    //[TestClass]
     public class BuildTasksUI27Tests {
         static BuildTasksUI27Tests() {
             AssertListener.Initialize();
@@ -69,7 +69,7 @@ namespace PythonToolsUITests {
             dteProject.Save();
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsAdded() {
             using (var app = new VisualStudioApp()) {
@@ -111,7 +111,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsWithResourceLabel() {
             using (var app = new VisualStudioApp()) {
@@ -131,7 +131,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsReplWithResourceLabel() {
             using (var app = new PythonVisualStudioApp()) {
@@ -155,7 +155,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunInRepl() {
             using (var app = new PythonVisualStudioApp()) {
@@ -181,7 +181,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInRepl() {
             using (var app = new PythonVisualStudioApp()) {
@@ -222,7 +222,7 @@ namespace PythonToolsUITests {
             Assert.IsTrue(outputText.Contains(expected), string.Format("Expected to see:\r\n\r\n{0}\r\n\r\nActual content:\r\n\r\n{1}", expected, outputText));
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInOutput() {
             using (var app = new PythonVisualStudioApp()) {
@@ -244,7 +244,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInConsole() {
             using (var app = new PythonVisualStudioApp()) {
@@ -276,7 +276,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsErrorList() {
             using (var app = new PythonVisualStudioApp()) {
@@ -347,7 +347,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRequiredPackages() {
             using (var app = new PythonVisualStudioApp())
@@ -439,7 +439,7 @@ namespace PythonToolsUITests {
         }
 
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsSearchPath() {
             var expectedSearchPath = string.Format("['{0}', '{1}', '{2}']",
@@ -471,7 +471,7 @@ namespace PythonToolsUITests {
         }
     }
 
-    [TestClass]
+    //[TestClass]
     public class BuildTasksUI26Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {
@@ -480,7 +480,7 @@ namespace PythonToolsUITests {
         }
     }
 
-    [TestClass]
+    //[TestClass]
     public class BuildTasksUI35Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {

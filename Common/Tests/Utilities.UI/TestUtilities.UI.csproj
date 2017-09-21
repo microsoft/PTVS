@@ -85,6 +85,7 @@
     <Compile Include="..\..\Product\SharedProject\VSShellUtilities.cs">
       <Link>VSShellUtilities.cs</Link>
     </Compile>
+    <Compile Include="HostedPythonToolsTestRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\AddExistingItemDialog.cs" />
     <Compile Include="UI\AutomationDialog.cs" />
@@ -140,6 +141,11 @@
     <ProjectReference Include="$(BuildRoot)\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Python\Tests\TestRunnerInterop\TestRunnerInterop.csproj">
+      <Project>{3e8c485b-905a-4dbc-b059-161ccb1ad591}</Project>
+      <Name>TestRunnerInterop</Name>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </ProjectReference>
     <ProjectReference Include="..\MockVsTests\MockVsTests.csproj">
       <Project>{a390e1c0-0d90-4a9e-8413-3e959bb07292}</Project>

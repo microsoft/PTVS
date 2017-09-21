@@ -50,7 +50,7 @@ using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    //[TestClass]
     public class WebProjectTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -60,7 +60,7 @@ namespace PythonToolsUITests {
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadWebFlavoredProject() {
             using (var app = new PythonVisualStudioApp()) {
@@ -111,19 +111,19 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectCommandLineArgs() {
             CheckCommandLineArgs(Guid.NewGuid().ToString("N"));
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectStartupModuleArgs() {
             CheckCommandLineArgs("{StartupModule}", "CheckCommandLineArgs");
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectEnvironment() {
             using (var app = new PythonVisualStudioApp()) {
@@ -152,7 +152,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectStaticUri() {
             using (var app = new PythonVisualStudioApp()) {
@@ -237,7 +237,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectBuildWarnings() {
             using (var app = new PythonVisualStudioApp())
@@ -316,7 +316,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectAddSupportFiles() {
             using (var app = new PythonVisualStudioApp()) {
@@ -343,7 +343,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WorkerProjectAddSupportFiles() {
             using (var app = new PythonVisualStudioApp()) {
@@ -370,7 +370,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectCreateVirtualEnvOnNew() {
             using (var app = new PythonVisualStudioApp()) {
@@ -413,7 +413,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectInstallOnNew() {
             using (var app = new PythonVisualStudioApp()) {
@@ -534,25 +534,25 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void UpdateWebRoleServiceDefinitionInVS() {
             CloudProjectTest("Web", false);
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void UpdateWorkerRoleServiceDefinitionInVS() {
             CloudProjectTest("Worker", false);
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void UpdateWebRoleServiceDefinitionInVSDocumentOpen() {
             CloudProjectTest("Web", true);
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void UpdateWorkerRoleServiceDefinitionInVSDocumentOpen() {
             CloudProjectTest("Worker", true);
@@ -792,31 +792,31 @@ namespace PythonToolsUITests {
 
         #endregion
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FlaskEndToEndV34() {
             EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "3.4");
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FlaskEndToEndV27() {
             EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "2.7");
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void BottleEndToEndV34() {
             EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "3.4");
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void BottleEndToEndV27() {
             EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "2.7");
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoEndToEndV27() {
             EndToEndTest(
@@ -827,7 +827,7 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoEndToEndV34() {
             EndToEndTest(

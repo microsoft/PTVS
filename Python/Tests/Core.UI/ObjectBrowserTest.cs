@@ -102,7 +102,7 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserBasicTest() {
             using (var app = new VisualStudioApp()) {
@@ -130,7 +130,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserSearchTextTest() {
             using (var app = new VisualStudioApp()) {
@@ -183,7 +183,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserExpandTypeBrowserTest() {
             using (var app = new VisualStudioApp()) {
@@ -221,7 +221,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserCommentsTest() {
             using (var app = new VisualStudioApp()) {
@@ -284,7 +284,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserInheritanceRelationshipTest() {
             using (var app = new VisualStudioApp()) {
@@ -337,7 +337,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserNavigationTest() {
             using (var app = new VisualStudioApp()) {
@@ -400,7 +400,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserContextMenuBasicTest() {
             using (var app = new VisualStudioApp()) {
@@ -477,7 +477,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserTypeBrowserViewTest() {
             using (var app = new VisualStudioApp()) {
@@ -535,7 +535,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserTypeBrowserSortTest() {
             using (var app = new VisualStudioApp()) {
@@ -625,7 +625,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserNavigateVarContextMenuTest() {
             using (var app = new VisualStudioApp()) {
@@ -692,7 +692,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserFindAllReferencesTest() {
             using (var app = new VisualStudioApp()) {
@@ -756,7 +756,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void NavigateTo() {
             using (var app = new VisualStudioApp()) {
@@ -784,7 +784,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        ////[TestMethod, Priority(1)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ResourceViewIsDisabledTest() {
             using (var app = new VisualStudioApp()) {

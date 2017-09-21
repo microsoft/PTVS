@@ -30,7 +30,7 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    //[TestClass]
     public class ErrorListTaskListTests : SharedProjectTest {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -115,7 +115,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure errors in a file show up in the error list window.
         /// </summary>
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorList() {
             using (var app = new VisualStudioApp()) {
@@ -141,7 +141,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure task comments in a file show up in the task list window.
         /// </summary>
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CommentTaskList() {
             using (var app = new VisualStudioApp()) {
@@ -162,7 +162,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure deleting a project clears the error list
         /// </summary>
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenProjectIsDeleted() {
             using (var app = new VisualStudioApp()) {
@@ -182,7 +182,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure deleting a project clears the error list
         /// </summary>
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenProjectIsUnloaded() {
             using (var app = new VisualStudioApp()) {
@@ -211,7 +211,7 @@ namespace PythonToolsUITests {
         /// 
         /// Take 2 of https://pytools.codeplex.com/workitem/1523
         /// </summary>
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded() {
             using (var app = new VisualStudioApp()) {
@@ -238,7 +238,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure deleting a file w/ errors clears the error list
         /// </summary>
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenFileIsDeleted() {
             using (var app = new PythonVisualStudioApp()) {

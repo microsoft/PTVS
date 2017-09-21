@@ -20,7 +20,7 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    //[TestClass]
     public class NugetTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -28,7 +28,7 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDifferentFileType() {
             using (var app = new VisualStudioApp()) {
@@ -43,7 +43,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FileNamesResolve() {
             using (var app = new VisualStudioApp()) {

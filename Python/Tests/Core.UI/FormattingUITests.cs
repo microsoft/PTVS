@@ -36,7 +36,7 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    //[TestClass]
     public class FormattingUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -44,7 +44,7 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ToggleableOptionTest() {
             using (var app = new PythonVisualStudioApp()) {
@@ -75,7 +75,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatDocument() {
             FormattingTest("document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
@@ -88,7 +88,7 @@ def g():
     pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatAsyncDocument() {
             FormattingTest("async.py", null, @"async  def f(x):
@@ -101,7 +101,7 @@ def g():
         }
 
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelection() {
             FormattingTest("selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
@@ -114,7 +114,7 @@ def g():
     pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelectionNoSelection() {
             FormattingTest("selection2.py", new Span(5, 0), @"x=1
@@ -124,7 +124,7 @@ y=2
 z=3", new Span[0], null, null);
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatReduceLines() {
             FormattingTest(

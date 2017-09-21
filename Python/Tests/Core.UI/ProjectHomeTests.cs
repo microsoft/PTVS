@@ -34,7 +34,7 @@ using Mouse = TestUtilities.UI.Mouse;
 using Path = System.IO.Path;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    //[TestClass]
     public class ProjectHomeTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -42,7 +42,7 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadRelativeProjects() {
             using (var app = new VisualStudioApp()) {
@@ -93,7 +93,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteItem() {
             using (var app = new VisualStudioApp()) {
@@ -118,7 +118,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteItem2() {
             using (var app = new VisualStudioApp()) {
@@ -145,7 +145,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteFolder() {
             using (var app = new VisualStudioApp()) {
@@ -162,7 +162,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteSubfolder() {
             using (var app = new VisualStudioApp()) {
@@ -181,7 +181,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveProjectAndCheckProjectHome() {
             using (var app = new VisualStudioApp()) {
@@ -212,7 +212,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DragDropTest() {
             using (var app = new VisualStudioApp()) {
@@ -245,7 +245,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CutPasteTest() {
             using (var app = new VisualStudioApp()) {

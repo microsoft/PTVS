@@ -24,7 +24,7 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    //[TestClass]
     public class SnippetsTests : PythonProjectTest {
         [TestInitialize]
         public void TestInitialize() {
@@ -90,7 +90,7 @@ namespace PythonToolsUITests {
             )
         };
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestBasicSnippetsTab() {
             using (var vs = BasicProjectVS) {
@@ -160,7 +160,7 @@ namespace PythonToolsUITests {
             return editor;
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPassSelected() {
             var snippet = new Snippet(
@@ -180,7 +180,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPassSelectedIndented() {
             using (var vs = BasicProjectVS) {
@@ -199,7 +199,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestSurroundWith() {
             using (var vs = BasicProjectVS) {
@@ -211,7 +211,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestSurroundWithMultiline() {
             using (var vs = BasicProjectVS) {
@@ -228,7 +228,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestInsertSnippet() {
             using (var vs = BasicProjectVS) {
@@ -240,7 +240,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestInsertSnippetEmptySelectionNonEmptyLine() {
             using (var vs = BasicProjectVS) {
@@ -262,7 +262,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTestClassSnippet() {
             using (var vs = BasicProjectVS) {
@@ -279,7 +279,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTestClassSnippetBadImport() {
             using (var vs = BasicProjectVS) {
@@ -296,7 +296,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTestClassSnippetImportAs() {
             using (var vs = BasicProjectVS) {
@@ -313,7 +313,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTestClassSnippetUnitTestImported() {
             using (var vs = BasicProjectVS) {
@@ -333,7 +333,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Starting a nested session should dismiss the initial session
         /// </summary>
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestNestedSession() {
             using (var vs = BasicProjectVS) {
