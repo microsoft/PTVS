@@ -16,13 +16,12 @@
 
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI.Python {
     static class EditorWindowExtensions {
         public static void WaitForAnalyzerAtCaret(this EditorWindow doc) {
             for (int i = 0; i < 100; i++) {
-                var analyzer = doc.TextView.GetAnalyzerAtCaret(VSTestContext.ServiceProvider);
+                var analyzer = doc.TextView.GetAnalyzerAtCaret(doc.VisualStudioApp.ServiceProvider);
                 if (analyzer != null) {
                     return;
                 }
@@ -34,7 +33,7 @@ namespace TestUtilities.UI.Python {
 
         public static void WaitForAnalysisAtCaret(this EditorWindow doc) {
             for (int i = 0; i < 100; i++) {
-                var analysis = doc.TextView.GetAnalysisAtCaret(VSTestContext.ServiceProvider);
+                var analysis = doc.TextView.GetAnalysisAtCaret(doc.VisualStudioApp.ServiceProvider);
                 if (analysis != null && analysis.IsAnalyzed) {
                     return;
                 }

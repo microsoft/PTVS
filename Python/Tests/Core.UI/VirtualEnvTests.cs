@@ -42,12 +42,6 @@ namespace PythonToolsUITests {
         const string TestPackageSpec = "ptvsd==2.2.0";
         const string TestPackageDisplay = "ptvsd (2.2.0)";
 
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
         public TestContext TestContext { get; set; }
 
         static DefaultInterpreterSetter Init(PythonVisualStudioApp app) {
@@ -108,8 +102,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void InstallUninstallPackage() {
-            using (var app = new PythonVisualStudioApp())
+        public void InstallUninstallPackage(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -143,8 +136,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CreateInstallRequirementsTxt() {
-            using (var app = new PythonVisualStudioApp())
+        public void CreateInstallRequirementsTxt(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -166,8 +158,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void InstallGenerateRequirementsTxt() {
-            using (var app = new PythonVisualStudioApp())
+        public void InstallGenerateRequirementsTxt(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -203,7 +194,7 @@ namespace PythonToolsUITests {
                     project,
                     "requirements.txt"
                 );
-                
+
                 AssertUtil.ContainsAtLeast(
                     File.ReadAllLines(requirementsTxt).Select(s => s.Trim()),
                     TestPackageSpec
@@ -213,8 +204,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void LoadVirtualEnv() {
-            using (var app = new PythonVisualStudioApp())
+        public void LoadVirtualEnv(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
                 var projectName = project.UniqueName;
@@ -238,8 +228,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ActivateVirtualEnv() {
-            using (var app = new PythonVisualStudioApp())
+        public void ActivateVirtualEnv(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -272,8 +261,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RemoveVirtualEnv() {
-            using (var app = new PythonVisualStudioApp())
+        public void RemoveVirtualEnv(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -300,8 +288,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DeleteVirtualEnv() {
-            using (var app = new PythonVisualStudioApp())
+        public void DeleteVirtualEnv(PythonVisualStudioApp app) {
             using (var procs = new ProcessScope("Microsoft.PythonTools.Analyzer"))
             using (var dis = Init(app)) {
                 var options = app.GetService<PythonToolsService>().GeneralOptions;
@@ -349,12 +336,11 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DefaultBaseInterpreterSelection() {
+        public void DefaultBaseInterpreterSelection(PythonVisualStudioApp app) {
             // The project that will be loaded references these environments.
             PythonPaths.Python27.AssertInstalled();
             PythonPaths.Python33.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp())
             using (var dis = Init(app)) {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
@@ -381,8 +367,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void NoGlobalSitePackages() {
-            using (var app = new PythonVisualStudioApp())
+        public void NoGlobalSitePackages(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -415,8 +400,7 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CreateVEnv() {
-            using (var app = new PythonVisualStudioApp())
+        public void CreateVEnv(PythonVisualStudioApp app) {
             using (var dis = Init3(app)) {
                 if (dis.CurrentDefault.FindModules("virtualenv").Contains("virtualenv")) {
                     dis.CurrentDefault.PipUninstall("virtualenv");
@@ -443,39 +427,35 @@ namespace PythonToolsUITests {
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddExistingVEnv() {
+        public void AddExistingVEnv(PythonVisualStudioApp app) {
             var python = PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
             python.AssertInstalled();
 
-            using (var app = new PythonVisualStudioApp()) {
-                var project = CreateTemporaryProject(app);
+            var project = CreateTemporaryProject(app);
 
-                string envName;
-                var envPath = TestData.GetPath(@"TestData\\Environments\\venv");
-                File.WriteAllText(Path.Combine(envPath, "pyvenv.cfg"),
-                    string.Format(@"home = {0}
+            string envName;
+            var envPath = TestData.GetPath(@"TestData\\Environments\\venv");
+            File.WriteAllText(Path.Combine(envPath, "pyvenv.cfg"),
+                string.Format(@"home = {0}
 include-system-site-packages = false
 version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
-                var env = app.AddExistingVirtualEnvironment(project, envPath, out envName);
-                Assert.IsNotNull(env);
-                Assert.IsNotNull(env.Element);
-                Assert.AreEqual(
-                    string.Format("venv (Python 3.{0} (32-bit))", python.Version.ToVersion().Minor),
-                    envName
-                );
-            }
+            var env = app.AddExistingVirtualEnvironment(project, envPath, out envName);
+            Assert.IsNotNull(env);
+            Assert.IsNotNull(env.Element);
+            Assert.AreEqual(
+                string.Format("venv (Python 3.{0} (32-bit))", python.Version.ToVersion().Minor),
+                envName
+            );
         }
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void LaunchUnknownEnvironment() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\Environments\Unknown.sln");
+        public void LaunchUnknownEnvironment(PythonVisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\Environments\Unknown.sln");
 
-                app.ExecuteCommand("Debug.Start");
-                PythonVisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Global|PythonCore|2.8|x86", "incorrectly configured");
-            }
+            app.ExecuteCommand("Debug.Start");
+            app.CheckMessageBox(MessageBoxButton.Ok, "Global|PythonCore|2.8|x86", "incorrectly configured");
         }
 
         class MockProjectContextProvider : IProjectContextProvider {
@@ -612,8 +592,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void EnvironmentReplWorkingDirectory() {
-            using (var app = new PythonVisualStudioApp())
+        public void EnvironmentReplWorkingDirectory(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
@@ -632,8 +611,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void VirtualEnvironmentReplWorkingDirectory() {
-            using (var app = new PythonVisualStudioApp())
+        public void VirtualEnvironmentReplWorkingDirectory(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 

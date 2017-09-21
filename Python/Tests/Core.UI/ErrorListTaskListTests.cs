@@ -32,12 +32,6 @@ using TestUtilities.UI.Python;
 namespace PythonToolsUITests {
     //[TestClass]
     public class ErrorListTaskListTests : SharedProjectTest {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
         internal struct TaskItemInfo {
             public int Line, Column;
             public string Document, Message;
@@ -117,14 +111,13 @@ namespace PythonToolsUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ErrorList() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProject.sln");
-                var projectNode = project.GetPythonProject();
+        public void ErrorList(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\ErrorProject.sln");
+            var projectNode = project.GetPythonProject();
 
-                var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py");
-                var expectedCategory = VSTASKCATEGORY.CAT_BUILDCOMPILE;
-                var expectedItems = new[] {
+            var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py");
+            var expectedCategory = VSTASKCATEGORY.CAT_BUILDCOMPILE;
+            var expectedItems = new[] {
                     new TaskItemInfo(expectedDocument, 2, 8, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected indent"),
                     new TaskItemInfo(expectedDocument, 2, 13, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token '('"),
                     new TaskItemInfo(expectedDocument, 2, 30, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token ')'"),
@@ -134,8 +127,7 @@ namespace PythonToolsUITests {
                     new TaskItemInfo(expectedDocument, 4, 0, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token 'pass'"),
                 };
 
-                TaskListTest(app, typeof(SVsErrorList), expectedItems, navigateTo: new[] { 0, 1, 2, 3, 4, 5, 6 });
-            }
+            TaskListTest(app, typeof(SVsErrorList), expectedItems, navigateTo: new[] { 0, 1, 2, 3, 4, 5, 6 });
         }
 
         /// <summary>
@@ -143,20 +135,18 @@ namespace PythonToolsUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CommentTaskList() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProject.sln");
-                var projectNode = project.GetPythonProject();
+        public void CommentTaskList(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\ErrorProject.sln");
+            var projectNode = project.GetPythonProject();
 
-                var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py");
-                var expectedCategory = VSTASKCATEGORY.CAT_COMMENTS;
-                var expectedItems = new[] {
+            var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py");
+            var expectedCategory = VSTASKCATEGORY.CAT_COMMENTS;
+            var expectedItems = new[] {
                     new TaskItemInfo(expectedDocument, 4, 5, VSTASKPRIORITY.TP_NORMAL, expectedCategory, null, "TODO 123"),
                     new TaskItemInfo(expectedDocument, 5, 0, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "456 UnresolvedMergeConflict"),
                 };
 
-                TaskListTest(app, typeof(SVsTaskList), expectedItems, navigateTo: new[] { 0, 1 });
-            }
+            TaskListTest(app, typeof(SVsTaskList), expectedItems, navigateTo: new[] { 0, 1 });
         }
 
         /// <summary>
@@ -164,19 +154,17 @@ namespace PythonToolsUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenProjectIsDeleted() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
+        public void ErrorListAndTaskListAreClearedWhenProjectIsDeleted(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
 
-                app.WaitForTaskListItems(typeof(SVsErrorList), 7);
-                app.WaitForTaskListItems(typeof(SVsTaskList), 2);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 7);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 2);
 
-                Console.WriteLine("Deleting project");
-                app.Dte.Solution.Remove(project);
+            Console.WriteLine("Deleting project");
+            app.Dte.Solution.Remove(project);
 
-                app.WaitForTaskListItems(typeof(SVsErrorList), 0);
-                app.WaitForTaskListItems(typeof(SVsTaskList), 0);
-            }
+            app.WaitForTaskListItems(typeof(SVsErrorList), 0);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 0);
         }
 
         /// <summary>
@@ -184,26 +172,24 @@ namespace PythonToolsUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenProjectIsUnloaded() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
+        public void ErrorListAndTaskListAreClearedWhenProjectIsUnloaded(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
 
-                app.WaitForTaskListItems(typeof(SVsErrorList), 7);
-                app.WaitForTaskListItems(typeof(SVsTaskList), 2);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 7);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 2);
 
-                IVsSolution solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
-                Assert.IsNotNull(solutionService);
+            IVsSolution solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
+            Assert.IsNotNull(solutionService);
 
-                IVsHierarchy selectedHierarchy;
-                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-                Assert.IsNotNull(selectedHierarchy);
+            IVsHierarchy selectedHierarchy;
+            ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+            Assert.IsNotNull(selectedHierarchy);
 
-                Console.WriteLine("Unloading project");
-                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+            Console.WriteLine("Unloading project");
+            ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
 
-                app.WaitForTaskListItems(typeof(SVsErrorList), 0);
-                app.WaitForTaskListItems(typeof(SVsTaskList), 0);
-            }
+            app.WaitForTaskListItems(typeof(SVsErrorList), 0);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 0);
         }
 
         /// <summary>
@@ -213,26 +199,24 @@ namespace PythonToolsUITests {
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProjectMultipleFiles.sln");
+        public void ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\ErrorProjectMultipleFiles.sln");
 
-                app.WaitForTaskListItems(typeof(SVsErrorList), 14);
-                app.WaitForTaskListItems(typeof(SVsTaskList), 4);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 14);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 4);
 
-                var solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
-                Assert.IsNotNull(solutionService);
+            var solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
+            Assert.IsNotNull(solutionService);
 
-                IVsHierarchy selectedHierarchy;
-                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-                Assert.IsNotNull(selectedHierarchy);
+            IVsHierarchy selectedHierarchy;
+            ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+            Assert.IsNotNull(selectedHierarchy);
 
-                Console.WriteLine("Unloading project");
-                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+            Console.WriteLine("Unloading project");
+            ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
 
-                app.WaitForTaskListItems(typeof(SVsErrorList), 0);
-                app.WaitForTaskListItems(typeof(SVsTaskList), 0);
-            }
+            app.WaitForTaskListItems(typeof(SVsErrorList), 0);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 0);
         }
 
         /// <summary>
@@ -240,19 +224,17 @@ namespace PythonToolsUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenFileIsDeleted() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ErrorProjectDeleteFile.sln");
+        public void ErrorListAndTaskListAreClearedWhenFileIsDeleted(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\ErrorProjectDeleteFile.sln");
 
-                app.WaitForTaskListItems(typeof(SVsErrorList), 7);
-                app.WaitForTaskListItems(typeof(SVsTaskList), 2);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 7);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 2);
 
-                Console.WriteLine("Deleting file");
-                project.ProjectItems.Item("Program.py").Delete();
+            Console.WriteLine("Deleting file");
+            project.ProjectItems.Item("Program.py").Delete();
 
-                app.WaitForTaskListItems(typeof(SVsErrorList), 0);
-                app.WaitForTaskListItems(typeof(SVsTaskList), 0);
-            }
+            app.WaitForTaskListItems(typeof(SVsErrorList), 0);
+            app.WaitForTaskListItems(typeof(SVsTaskList), 0);
         }
     }
 }

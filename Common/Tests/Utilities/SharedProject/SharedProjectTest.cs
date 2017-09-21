@@ -43,14 +43,6 @@ namespace TestUtilities.SharedProject {
 
         static SharedProjectTest() {
             var runningLoc = Path.GetDirectoryName(typeof(SharedProjectTest).Assembly.Location);
-            // we want to pick up all of the MEF exports which are available, but they don't
-            // depend upon us.  So if we're just running some tests in the IDE when the deployment
-            // happens it won't have the DLLS with the MEF exports.  So we copy them here.
-#if USE_PYTHON_TESTDATA
-            TestUtilities.Python.PythonTestData.Deploy(includeTestData: false);
-#else
-            TestData.Deploy(null, includeTestData: false);
-#endif
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             try {

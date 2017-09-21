@@ -50,8 +50,8 @@ namespace TestUtilities.UI.Python {
         private PythonPerfToolBar _perfToolBar;
         public readonly PythonToolsService PythonToolsService;
         
-        public PythonVisualStudioApp(DTE dte = null)
-            : base(dte) {
+        public PythonVisualStudioApp(IServiceProvider site)
+            : base(site) {
 
             var shell = (IVsShell)ServiceProvider.GetService(typeof(SVsShell));
             var pkg = new Guid("6dbd7c1e-1f1b-496d-ac7c-c55dae66c783");
@@ -204,9 +204,9 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public ReplWindowProxy ExecuteInInteractive(Project project, ReplWindowProxySettings settings = null) {
+        public ReplWindowProxy ExecuteInInteractive(PythonVisualStudioApp app, Project project, ReplWindowProxySettings settings = null) {
             // Prepare makes sure that IPython mode is disabled, and that the REPL is reset and cleared
-            var window = ReplWindowProxy.Prepare(settings, project.Name);
+            var window = ReplWindowProxy.Prepare(app, settings, project.Name);
             OpenSolutionExplorer().SelectProject(project);
             ExecuteCommand("Python.ExecuteInInteractive");
             return window;
@@ -285,7 +285,7 @@ namespace TestUtilities.UI.Python {
 
             var interpreterService = InterpreterService;
             var factory = interpreterService.FindInterpreter(interp.Id);
-            var defaultInterpreterSetter = new DefaultInterpreterSetter(factory);
+            var defaultInterpreterSetter = new DefaultInterpreterSetter(factory, ServiceProvider);
 
             try {
                 if (!string.IsNullOrEmpty(installPackages)) {

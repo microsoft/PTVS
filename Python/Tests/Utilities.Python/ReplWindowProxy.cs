@@ -127,13 +127,13 @@ namespace TestUtilities.UI.Python {
         }
 
         public static ReplWindowProxy Prepare(
+            PythonVisualStudioApp app,
             ReplWindowProxySettings settings,
             string projectName = null,
             bool useIPython = false
         ) {
             settings.AssertValid();
 
-            var app = new PythonVisualStudioApp();
             ReplWindowProxy result = null;
             try {
                 result = OpenInteractive(app, settings, projectName, useIPython ? IPythonBackend : StandardBackend);

@@ -24,24 +24,18 @@ using TestUtilities.UI.Python;
 namespace PythonToolsUITests {
     //[TestClass]
     public class AddImportTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
         /// <summary>
         /// Imports get added after a doc string
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DocString() {
+        public void DocString(VisualStudioApp app) {
             string expectedText = @"'''fob'''
 import itertools
 
 itertools";
 
-            AddSmartTagTest("DocString.py", 3, 10, new[] { "import itertools" }, 0, expectedText);
+            AddSmartTagTest(app, "DocString.py", 3, 10, new[] { "import itertools" }, 0, expectedText);
         }
 
         /// <summary>
@@ -49,13 +43,13 @@ itertools";
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void UnicodeDocString() {
+        public void UnicodeDocString(VisualStudioApp app) {
             string expectedText = @"u'''fob'''
 import itertools
 
 itertools";
 
-            AddSmartTagTest("UnicodeDocString.py", 3, 10, new[] { "import itertools" }, 0, expectedText);
+            AddSmartTagTest(app, "UnicodeDocString.py", 3, 10, new[] { "import itertools" }, 0, expectedText);
         }
 
         /// <summary>
@@ -63,14 +57,14 @@ itertools";
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DocStringFuture() {
+        public void DocStringFuture(VisualStudioApp app) {
             string expectedText = @"'''fob'''
 from __future__ import with_statement
 import itertools
 
 with_statement";
 
-            AddSmartTagTest("DocStringFuture.py", 4, 10, new[] { "from __future__ import with_statement" }, 0, expectedText);
+            AddSmartTagTest(app, "DocStringFuture.py", 4, 10, new[] { "from __future__ import with_statement" }, 0, expectedText);
         }
 
 
@@ -79,11 +73,11 @@ with_statement";
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportFunctionFrom() {
+        public void ImportFunctionFrom(VisualStudioApp app) {
             string expectedText = @"from test_module import module_func
 module_func()";
 
-            AddSmartTagTest("ImportFunctionFrom.py", 1, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportFunctionFrom.py", 1, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -91,11 +85,11 @@ module_func()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportFunctionFromSubpackage() {
+        public void ImportFunctionFromSubpackage(VisualStudioApp app) {
             string expectedText = @"from test_package.sub_package import subpackage_method
 subpackage_method()";
 
-            AddSmartTagTest("ImportFunctionFromSubpackage.py", 1, 1, new[] { "from test_package.sub_package import subpackage_method" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportFunctionFromSubpackage.py", 1, 1, new[] { "from test_package.sub_package import subpackage_method" }, 0, expectedText);
         }
 
         /// <summary>
@@ -103,10 +97,10 @@ subpackage_method()";
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportWithErrors() {
+        public void ImportWithErrors(VisualStudioApp app) {
             // http://pytools.codeplex.com/workitem/547
-            AddSmartTagTest("ImportWithError.py", 1, 9, _NoSmartTags);
-            AddSmartTagTest("ImportWithError.py", 2, 3, _NoSmartTags);
+            AddSmartTagTest(app, "ImportWithError.py", 1, 9, _NoSmartTags);
+            AddSmartTagTest(app, "ImportWithError.py", 2, 3, _NoSmartTags);
         }
 
         /// <summary>
@@ -114,11 +108,11 @@ subpackage_method()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportBuiltinFunction() {
+        public void ImportBuiltinFunction(VisualStudioApp app) {
             string expectedText = @"from sys import getrecursionlimit
 getrecursionlimit()";
 
-            AddSmartTagTest("ImportBuiltinFunction.py", 1, 1, new[] { "from sys import getrecursionlimit" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportBuiltinFunction.py", 1, 1, new[] { "from sys import getrecursionlimit" }, 0, expectedText);
         }
 
         /// <summary>
@@ -126,11 +120,11 @@ getrecursionlimit()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportFunctionFromExistingFromImport() {
+        public void ImportFunctionFromExistingFromImport(VisualStudioApp app) {
             string expectedText = @"from test_module import module_func_2, module_func
 module_func()";
 
-            AddSmartTagTest("ImportFunctionFromExistingFromImport.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportFunctionFromExistingFromImport.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -139,11 +133,11 @@ module_func()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportFunctionFromExistingFromImportAsName() {
+        public void ImportFunctionFromExistingFromImportAsName(VisualStudioApp app) {
             string expectedText = @"from test_module import module_func_2 as oar, module_func
 module_func()";
 
-            AddSmartTagTest("ImportFunctionFromExistingFromImportAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -152,11 +146,11 @@ module_func()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportFunctionFromExistingFromImportParens() {
+        public void ImportFunctionFromExistingFromImportParens(VisualStudioApp app) {
             string expectedText = @"from test_module import (module_func_2, module_func)
 module_func()";
 
-            AddSmartTagTest("ImportFunctionFromExistingFromImportParens.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportParens.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -165,11 +159,11 @@ module_func()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportFunctionFromExistingFromImportParensAsName() {
+        public void ImportFunctionFromExistingFromImportParensAsName(VisualStudioApp app) {
             string expectedText = @"from test_module import (module_func_2 as oar, module_func)
 module_func()";
 
-            AddSmartTagTest("ImportFunctionFromExistingFromImportParensAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportParensAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -179,11 +173,11 @@ module_func()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportFunctionFromExistingFromImportParensAsNameTrailingComma() {
+        public void ImportFunctionFromExistingFromImportParensAsNameTrailingComma(VisualStudioApp app) {
             string expectedText = @"from test_module import (module_func_2 as oar, module_func)
 module_func()";
 
-            AddSmartTagTest("ImportFunctionFromExistingFromImportParensAsNameTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportParensAsNameTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -192,11 +186,11 @@ module_func()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportFunctionFromExistingFromImportParensTrailingComma() {
+        public void ImportFunctionFromExistingFromImportParensTrailingComma(VisualStudioApp app) {
             string expectedText = @"from test_module import (module_func_2, module_func)
 module_func()";
 
-            AddSmartTagTest("ImportFunctionFromExistingFromImportParensTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportFunctionFromExistingFromImportParensTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
         }
 
         /// <summary>
@@ -204,11 +198,11 @@ module_func()";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportPackage() {
+        public void ImportPackage(VisualStudioApp app) {
             string expectedText = @"import test_package
 test_package";
 
-            AddSmartTagTest("ImportPackage.py", 1, 1, new[] { "*", "import test_package" }, 1, expectedText);
+            AddSmartTagTest(app, "ImportPackage.py", 1, 1, new[] { "*", "import test_package" }, 1, expectedText);
         }
 
         /// <summary>
@@ -216,11 +210,11 @@ test_package";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ImportSubPackage() {
+        public void ImportSubPackage(VisualStudioApp app) {
             string expectedText = @"from test_package import sub_package
 sub_package";
 
-            AddSmartTagTest("ImportSubPackage.py", 1, 1, new[] { "from test_package import sub_package" }, 0, expectedText);
+            AddSmartTagTest(app, "ImportSubPackage.py", 1, 1, new[] { "from test_package import sub_package" }, 0, expectedText);
         }
 
         private static string[] _NoSmartTags = new string[0];
@@ -230,10 +224,9 @@ sub_package";
         /// </summary>
         //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void Parameters() {
+        public void Parameters(VisualStudioApp app) {
             var getreclimit = new[] { "from sys import getrecursionlimit" };
 
-            using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AddImport.sln");
                 var item = project.ProjectItems.Item("Parameters.py");
                 var window = item.Open();
@@ -268,7 +261,6 @@ sub_package";
 
                 AddSmartTagTest(doc, 42, 16, _NoSmartTags);
                 AddSmartTagTest(doc, 51, 16, _NoSmartTags);
-            }
         }
 
         /// <summary>
@@ -276,9 +268,9 @@ sub_package";
         /// </summary>
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AssignedWithoutTypeInfo() {
-            AddSmartTagTest("Assignments.py", 1, 2, _NoSmartTags);
-            AddSmartTagTest("Assignments.py", 1, 8, _NoSmartTags);
+        public void AssignedWithoutTypeInfo(VisualStudioApp app) {
+            AddSmartTagTest(app, "Assignments.py", 1, 2, _NoSmartTags);
+            AddSmartTagTest(app, "Assignments.py", 1, 8, _NoSmartTags);
         }
 
         private static void AddSmartTagTest(EditorWindow doc, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
@@ -315,17 +307,15 @@ sub_package";
             }
         }
 
-        private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\AddImport.sln");
-                var item = project.ProjectItems.Item(filename);
-                var window = item.Open();
-                window.Activate();
+        private static void AddSmartTagTest(VisualStudioApp app, string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
+            var project = app.OpenProject(@"TestData\AddImport.sln");
+            var item = project.ProjectItems.Item(filename);
+            var window = item.Open();
+            window.Activate();
 
-                var doc = app.GetDocument(item.Document.FullName);
+            var doc = app.GetDocument(item.Document.FullName);
 
-                AddSmartTagTest(doc, line, column, expectedActions, invokeAction, expectedText);
-            }
+            AddSmartTagTest(doc, line, column, expectedActions, invokeAction, expectedText);
         }
     }
 }
