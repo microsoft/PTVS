@@ -18,18 +18,19 @@ using System;
 
 namespace TestRunnerInterop {
     public sealed class VsTestContext : IDisposable {
-        private readonly string _container;
+        private readonly string _container, _className;
         private VsInstance _vs;
 
-        public VsTestContext(string container) {
+        public VsTestContext(string container, string className) {
             _container = container;
+            _className = className;
         }
 
         public void RunTest(string testName, params object[] arguments) {
             if (_vs == null) {
                 throw new InvalidOperationException("TestInitialize was not called");
             }
-            _vs.RunTest(_container, testName, arguments);
+            _vs.RunTest(_container, $"{_className}.{testName}", arguments);
         }
 
         public void Dispose() {

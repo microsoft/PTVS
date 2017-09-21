@@ -28,6 +28,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Core.UI\PythonToolsUITests.csproj">
+      <Project>{9cf2e4fd-ff16-459a-b675-c06eff62f1ec}</Project>
+      <Name>PythonToolsUITests</Name>
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\TestRunnerInterop\TestRunnerInterop.csproj">
       <Project>{3e8c485b-905a-4dbc-b059-161ccb1ad591}</Project>
       <Name>TestRunnerInterop</Name>

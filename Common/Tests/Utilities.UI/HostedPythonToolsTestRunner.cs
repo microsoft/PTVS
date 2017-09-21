@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
@@ -44,14 +45,12 @@ namespace TestUtilities.UI {
         }
 
         public IVsHostedPythonToolsTestResult Execute(string name, object[] arguments) {
-            var parts = name.Split(":".ToCharArray(), 2);
-            if (parts.Length == 2) {
-                var type = _assembly.GetType(parts[0]);
-                if (type != null) {
-                    var method = type.GetMethod(parts[1], BindingFlags.Instance | BindingFlags.Public);
-                    if (method != null) {
-                        return InvokeTest(type, method);
-                    }
+            var parts = name.Split('.');
+            var type = _assembly.GetType(string.Join(".", parts.Take(parts.Length - 1)));
+            if (type != null) {
+                var method = type.GetMethod(parts.Last(), BindingFlags.Instance | BindingFlags.Public);
+                if (method != null) {
+                    return InvokeTest(type, method);
                 }
             }
 

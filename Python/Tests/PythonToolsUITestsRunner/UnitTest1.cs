@@ -21,7 +21,10 @@ using TestRunnerInterop;
 namespace PythonToolsUITestsRunner {
     [TestClass]
     public class BasicProjectTests {
-        private static readonly VsTestContext _vs = new VsTestContext("Microsoft.PythonTools.Tests.PythonToolsUITests");
+        private static readonly VsTestContext _vs = new VsTestContext(
+            "Microsoft.PythonTools.Tests.PythonToolsUITests",
+            "PythonToolsUITests.BasicProjectTests"
+        );
 
         [TestInitialize]
         public void TestInitialize() {
@@ -41,13 +44,13 @@ namespace PythonToolsUITestsRunner {
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void TemplateDirectories() {
-            _vs.RunTest("PythonToolsUITests.BasicProjectTests:TemplateDirectories");
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.TemplateDirectories));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void UserProjectFile() {
-            _vs.RunTest("PythonToolsUITests.BasicProjectTests:UserProjectFile");
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.UserProjectFile));
         }
     }
 }
