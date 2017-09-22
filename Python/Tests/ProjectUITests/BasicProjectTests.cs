@@ -26,13 +26,13 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools.VSTestHost;
+using Microsoft.VisualStudio.Text;
 using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using VSLangProj;
 
-namespace Microsoft.VisualStudioTools.SharedProjectTests {
+namespace ProjectUITests {
     [TestClass]
     public class BasicProjectTests : SharedProjectTest {
         [ClassInitialize]
@@ -41,8 +41,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
 #if FALSE
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void LoadNodejsProject() {
             string fullPath = Path.GetFullPath(@"TestData\NodejsProjectData\HelloWorld.sln");
             Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
@@ -57,8 +57,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             Assert.AreEqual("HelloWorld.njsproj", Path.GetFileName(project.FileName), "Wrong project file name");
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void SaveProjectAs() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -96,8 +96,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void RenameProjectTest() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\RenameProjectTest.sln");
@@ -156,54 +156,48 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             );
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ProjectAddItem() {
-            try {
-                foreach (var projectType in ProjectTypes) {
-                    using (var solution = BasicProject(projectType).Generate().ToVs()) {
-                        var project = solution.GetProject("HelloWorld");
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void ProjectAddItem(VisualStudioApp app) {
+            foreach (var projectType in ProjectTypes) {
+                using (var solution = BasicProject(projectType).Generate().ToVs(app)) {
+                    var project = solution.GetProject("HelloWorld");
 
-                        // Counts may differ between project types, so we take
-                        // the initial count and check against the delta.
-                        int previousCount = project.ProjectItems.Count;
+                    // Counts may differ between project types, so we take
+                    // the initial count and check against the delta.
+                    int previousCount = project.ProjectItems.Count;
 
-                        var item = project.ProjectItems.AddFromFileCopy(Path.Combine(solution.SolutionDirectory, "Extra" + projectType.CodeExtension));
+                    var item = project.ProjectItems.AddFromFileCopy(Path.Combine(solution.SolutionDirectory, "Extra" + projectType.CodeExtension));
 
-                        Assert.AreEqual("Extra" + projectType.CodeExtension, item.Properties.Item("FileName").Value);
-                        Assert.AreEqual(Path.Combine(solution.SolutionDirectory, "HelloWorld", "Extra" + projectType.CodeExtension), item.Properties.Item("FullPath").Value);
-                        Assert.AreEqual(projectType.CodeExtension, item.Properties.Item("Extension").Value);
+                    Assert.AreEqual("Extra" + projectType.CodeExtension, item.Properties.Item("FileName").Value);
+                    Assert.AreEqual(Path.Combine(solution.SolutionDirectory, "HelloWorld", "Extra" + projectType.CodeExtension), item.Properties.Item("FullPath").Value);
+                    Assert.AreEqual(projectType.CodeExtension, item.Properties.Item("Extension").Value);
 
-                        Assert.IsTrue(item.Object is VSProjectItem);
-                        var vsProjItem = (VSProjectItem)item.Object;
-                        Assert.AreEqual(vsProjItem.ContainingProject, project);
-                        Assert.AreEqual(vsProjItem.ProjectItem.ContainingProject, project);
-                        vsProjItem.ProjectItem.Open();
-                        Assert.AreEqual(true, vsProjItem.ProjectItem.IsOpen);
-                        Assert.AreEqual(true, vsProjItem.ProjectItem.Saved);
-                        vsProjItem.ProjectItem.Document.Close(vsSaveChanges.vsSaveChangesNo);
-                        Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
-                        Assert.AreEqual(vsProjItem.DTE, vsProjItem.ProjectItem.DTE);
+                    Assert.IsTrue(item.Object is VSProjectItem);
+                    var vsProjItem = (VSProjectItem)item.Object;
+                    Assert.AreEqual(vsProjItem.ContainingProject, project);
+                    Assert.AreEqual(vsProjItem.ProjectItem.ContainingProject, project);
+                    vsProjItem.ProjectItem.Open();
+                    Assert.AreEqual(true, vsProjItem.ProjectItem.IsOpen);
+                    Assert.AreEqual(true, vsProjItem.ProjectItem.Saved);
+                    vsProjItem.ProjectItem.Document.Close(vsSaveChanges.vsSaveChangesNo);
+                    Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
+                    Assert.AreEqual(vsProjItem.DTE, vsProjItem.ProjectItem.DTE);
 
-                        Assert.AreEqual(1, project.ProjectItems.Count - previousCount, "Expected one new item");
-                        previousCount = project.ProjectItems.Count;
+                    Assert.AreEqual(1, project.ProjectItems.Count - previousCount, "Expected one new item");
+                    previousCount = project.ProjectItems.Count;
 
-                        // add an existing item
-                        project.ProjectItems.AddFromFile(Path.Combine(solution.SolutionDirectory, "HelloWorld", "server" + projectType.CodeExtension));
+                    // add an existing item
+                    project.ProjectItems.AddFromFile(Path.Combine(solution.SolutionDirectory, "HelloWorld", "server" + projectType.CodeExtension));
 
-                        Assert.AreEqual(0, project.ProjectItems.Count - previousCount, "Expected no new items");
-                    }
+                    Assert.AreEqual(0, project.ProjectItems.Count - previousCount, "Expected no new items");
                 }
-            } finally {
-                VSTestContext.DTE.Solution.Close();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CleanSolution() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void CleanSolution(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -220,22 +214,22 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     )
 
                 );
-                using (var app = proj.Generate().ToVs()) {
-                    var msbuildLogProperty = app.Dte.get_Properties("Environment", "ProjectsAndSolution").Item("MSBuildOutputVerbosity");
+                using (var solution = proj.Generate().ToVs(app)) {
+                    var msbuildLogProperty = solution.Dte.get_Properties("Environment", "ProjectsAndSolution").Item("MSBuildOutputVerbosity");
                     var originalValue = msbuildLogProperty.Value;
                     msbuildLogProperty.Value = 2;
-                    app.OnDispose(() => msbuildLogProperty.Value = originalValue);
+                    solution.OnDispose(() => msbuildLogProperty.Value = originalValue);
 
-                    app.ExecuteCommand("Build.CleanSolution");
-                    app.WaitForOutputWindowText("Build", "Hello Clean World!");
-                    app.WaitForOutputWindowText("Build", "1 succeeded");
+                    solution.ExecuteCommand("Build.CleanSolution");
+                    solution.WaitForOutputWindowText("Build", "Hello Clean World!");
+                    solution.WaitForOutputWindowText("Build", "1 succeeded");
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void BuildSolution() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void BuildSolution(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -252,21 +246,21 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     ),
                     Target("CreateManifestResourceNames")
                 );
-                using (var app = proj.Generate().ToVs()) {
-                    var msbuildLogProperty = app.Dte.get_Properties("Environment", "ProjectsAndSolution").Item("MSBuildOutputVerbosity");
+                using (var solution = proj.Generate().ToVs(app)) {
+                    var msbuildLogProperty = solution.Dte.get_Properties("Environment", "ProjectsAndSolution").Item("MSBuildOutputVerbosity");
                     var originalValue = msbuildLogProperty.Value;
                     msbuildLogProperty.Value = 2;
-                    app.OnDispose(() => msbuildLogProperty.Value = originalValue);
+                    solution.OnDispose(() => msbuildLogProperty.Value = originalValue);
 
-                    app.ExecuteCommand("Build.RebuildSolution");
-                    app.WaitForOutputWindowText("Build", "Hello Build World!");
-                    app.WaitForOutputWindowText("Build", "1 succeeded");
+                    solution.ExecuteCommand("Build.RebuildSolution");
+                    solution.WaitForOutputWindowText("Build", "Hello Build World!");
+                    solution.WaitForOutputWindowText("Build", "1 succeeded");
                 }
             }
         }
 #if FALSE
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ProjectAddFolder() {
             try {
                 string fullPath = TestData.GetPath(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -309,8 +303,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ProjectAddFolderThroughUI() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\AddFolderExists.sln");
@@ -356,8 +350,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void TestAddExistingFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -388,8 +382,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void TestAddExistingFolderProject() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -408,8 +402,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void TestAddExistingFolderDebugging() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             var window = project.ProjectItems.Item("server.js").Open();
@@ -467,8 +461,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 4) Change name
         /// 5) Enter to commit
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ProjectAddAndRenameFolder() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -500,8 +494,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 3) Rename nested folder
         /// 4) Drag and drop nested folder onto project
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ProjectAddAndMoveRenamedFolder() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -540,8 +534,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ProjectBuild() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -554,8 +548,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ProjectRenameAndDeleteItem() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\RenameItemsTest.sln");
@@ -633,8 +627,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void TestAutomationProperties() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -706,8 +700,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void TestAutomationProject() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -751,8 +745,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void TestProjectItemAutomation() {
             var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
@@ -771,8 +765,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             AssertError<ArgumentException>(() => item.Open("ThisIsNotTheGuidYoureLookingFor"));
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void TestRelativePaths() {
             // link to outside file should show up as top-level item
             var project = OpenProject(@"TestData\NodejsProjectData\RelativePaths.sln");
@@ -781,8 +775,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             Assert.IsNotNull(item);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ProjectConfiguration() {
             var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
@@ -813,8 +807,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void AddFolderExists() {
             Directory.CreateDirectory(TestData.GetPath(@"TestData\NodejsProjectData\\AddFolderExists\\X"));
             Directory.CreateDirectory(TestData.GetPath(@"TestData\NodejsProjectData\\AddFolderExists\\Y"));
@@ -865,8 +859,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void AddFolderCopyAndPasteFile() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddFolderCopyAndPasteFile.sln");
             using (var app = new VisualStudioApp()) {
@@ -906,8 +900,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void CopyAndPasteFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\CopyAndPasteFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -946,8 +940,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void CopyAndPasteEmptyFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\CopyAndPasteFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -996,8 +990,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Verify we can copy a folder with multiple items in it.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void CopyFolderWithMultipleItems() {
             // http://mpfproj10.codeplex.com/workitem/11618
             var project = OpenProject(@"TestData\NodejsProjectData\FolderMultipleItems.sln");
@@ -1021,8 +1015,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void LoadProjectWithDuplicateItems() {
             var solution = OpenProject(@"TestData\NodejsProjectData\DuplicateItems.sln");
 
@@ -1188,12 +1182,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 #endif
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void OpenCommandHere() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void OpenCommandHere(VisualStudioApp app) {
             var existing = System.Diagnostics.Process.GetProcesses().Select(x => x.Id).ToSet();
             try {
-                VSTestContext.DTE.Commands.Item("File.OpenCommandPromptHere");
+                app.Dte.Commands.Item("File.OpenCommandPromptHere");
             } catch (ArgumentException) {
                 Assert.Inconclusive("Open Command Prompt Here command is not implemented");
             }
@@ -1206,7 +1200,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Folder("Folder", isExcluded: true)
                 );
 
-                using (var solution = def.Generate().ToVs()) {
+                using (var solution = def.Generate().ToVs(app)) {
                     var folder = solution.WaitForItem("HelloWorld", "Folder");
                     if (folder == null) {
                         solution.SelectProject(solution.GetProject("HelloWorld"));
@@ -1233,9 +1227,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void PasteFileWhileOpenInEditor() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void PasteFileWhileOpenInEditor(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -1244,7 +1238,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Folder("Folder", isExcluded: true),
                     Compile("Folder\\server", content: "// new server", isExcluded: true)
                 );
-                using (var solution = proj.Generate().ToVs()) {
+                using (var solution = proj.Generate().ToVs(app)) {
                     var window = solution.GetProject("HelloWorld").ProjectItems.Item(projectType.Code("server")).Open();
                     window.Activate();
 
@@ -1262,7 +1256,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Keyboard.ControlV();
 
                     // paste again, we should get the replace prompts...
-                    VisualStudioApp.CheckMessageBox(
+                    solution.CheckMessageBox(
                         TestUtilities.MessageBoxButton.Yes,
                         "is already part of the project. Do you want to overwrite it?"
                     );
@@ -1280,53 +1274,47 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Checks various combinations of item visibility from within the users project
         /// and from imported projects and how it's controlled by the Visible metadata.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ItemVisibility() {
-            try {
-                foreach (var projectType in ProjectTypes) {
-                    var imported = new ProjectDefinition(
-                        "Imported",
-                        ItemGroup(
-                            CustomItem("MyItemType", "..\\Imported\\ImportedItem.txt", ""),
-                            CustomItem(
-                                "MyItemType",
-                                "..\\Imported\\VisibleItem.txt",
-                                "",
-                                metadata: new Dictionary<string, string>() { { "Visible", "true" } }
-                            )
-                        )
-                    );
-                    var baseProj = new ProjectDefinition(
-                        "HelloWorld",
-                        projectType,
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void ItemVisibility(VisualStudioApp app) {
+            foreach (var projectType in ProjectTypes) {
+                var imported = new ProjectDefinition(
+                    "Imported",
+                    ItemGroup(
+                        CustomItem("MyItemType", "..\\Imported\\ImportedItem.txt", ""),
                         CustomItem(
                             "MyItemType",
-                            "ProjectInvisible.txt",
+                            "..\\Imported\\VisibleItem.txt",
                             "",
-                            metadata: new Dictionary<string, string>() { { "Visible", "false" } }
-                        ),
-                        Import("..\\Imported\\Imported.proj"),
-                        Property("ProjectView", "ProjectFiles")
-                    );
+                            metadata: new Dictionary<string, string>() { { "Visible", "true" } }
+                        )
+                    )
+                );
+                var baseProj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    CustomItem(
+                        "MyItemType",
+                        "ProjectInvisible.txt",
+                        "",
+                        metadata: new Dictionary<string, string>() { { "Visible", "false" } }
+                    ),
+                    Import("..\\Imported\\Imported.proj"),
+                    Property("ProjectView", "ProjectFiles")
+                );
 
-                    var solutionFile = SolutionFile.Generate("HelloWorld", baseProj, imported);
-                    using (var solution = solutionFile.ToVs()) {
-                        Assert.IsNotNull(solution.WaitForItem("HelloWorld", "VisibleItem.txt"), "VisibleItem.txt not found");
-                        Assert.IsNull(solution.FindItem("HelloWorld", "ProjectInvisible.txt"), "VisibleItem.txt not found");
-                        Assert.IsNull(solution.FindItem("HelloWorld", "ImportedItem.txt"), "VisibleItem.txt not found");
-                    }
+                var solutionFile = SolutionFile.Generate("HelloWorld", baseProj, imported);
+                using (var solution = solutionFile.ToVs(app)) {
+                    Assert.IsNotNull(solution.WaitForItem("HelloWorld", "VisibleItem.txt"), "VisibleItem.txt not found");
+                    Assert.IsNull(solution.FindItem("HelloWorld", "ProjectInvisible.txt"), "VisibleItem.txt not found");
+                    Assert.IsNull(solution.FindItem("HelloWorld", "ImportedItem.txt"), "VisibleItem.txt not found");
                 }
-            } finally {
-                VSTestContext.DTE.Solution.Close();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ProjectAddExistingExcludedFolder() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void ProjectAddExistingExcludedFolder(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
                     "HelloWorld",
@@ -1334,7 +1322,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Folder("Folder", isExcluded: true)
                 );
 
-                using (var solution = def.Generate().ToVs()) {
+                using (var solution = def.Generate().ToVs(app)) {
                     try {
                         solution.GetProject("HelloWorld").ProjectItems.Item("Folder");
                         Assert.Fail("Expected ArgumentException");
@@ -1466,16 +1454,16 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// Make sure that our events fire correctly for the rename
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameFile() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenameFile(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
                     Compile("server")
                 );
-                using (var solution = proj.Generate().ToVs()) {
+                using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
 
                     var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
@@ -1484,7 +1472,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     ErrorHandler.ThrowOnFailure(project.AdviseHierarchyEvents(hierarchyEvents, out hierarchyCookie));
                     try {
-                        var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                        var trackDocs = (IVsTrackProjectDocuments2)app.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
                         var docTracker = new DocumentTracker();
                         uint cookie = VSConstants.VSCOOKIE_NIL;
 
@@ -1517,9 +1505,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// The existing item should be removed.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameFileExistsInHierarchy() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenameFileExistsInHierarchy(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -1527,12 +1515,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Compile("server"),
                     Compile("server2", isMissing: true)
                 );
-                using (var solution = proj.Generate().ToVs()) {
+                using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
 
                     var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
 
-                    var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                    var trackDocs = (IVsTrackProjectDocuments2)app.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
                     var docTracker = new DocumentTracker();
                     uint cookie = VSConstants.VSCOOKIE_NIL;
 
@@ -1545,7 +1533,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Keyboard.Type("server2\r");
 
                         Assert.IsNull(solution.WaitForItemRemoved("HelloWorld", projectType.Code("server")));
-                            
+
                         Assert.IsTrue(docTracker.Renamed, "didn't get rename event");
                     } finally {
                         if (cookie != VSConstants.VSCOOKIE_NIL) {
@@ -1562,9 +1550,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// The rename should be cancelled.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameFileExistsInHierarchy_FileOpen_Cancel() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenameFileExistsInHierarchy_FileOpen_Cancel(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -1572,12 +1560,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Compile("server"),
                     Compile("server2")
                 );
-                using (var solution = proj.Generate().ToVs()) {
+                using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
 
                     var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
 
-                    var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                    var trackDocs = (IVsTrackProjectDocuments2)app.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
                     var docTracker = new DocumentTracker();
                     uint cookie = VSConstants.VSCOOKIE_NIL;
 
@@ -1586,11 +1574,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         var editor = solution.OpenItem("HelloWorld", projectType.Code("server2"));
                         editor.Invoke(() => {
                             editor.TextView.TextBuffer.Delete(
-                                new VisualStudio.Text.Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
+                                new Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
                             );
                         });
                         File.Delete(Path.Combine(solution.SolutionDirectory, "HelloWorld", projectType.Code("server2")));
-                        
+
                         var file = solution.FindItem("HelloWorld", projectType.Code("server"));
                         AutomationWrapper.Select(file);
 
@@ -1616,9 +1604,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// The rename should be cancelled.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameFileExistsInHierarchy_FileOpen_Save() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenameFileExistsInHierarchy_FileOpen_Save(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -1626,12 +1614,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Compile("server"),
                     Compile("server2")
                 );
-                using (var solution = proj.Generate().ToVs()) {
+                using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
 
                     var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
 
-                    var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                    var trackDocs = (IVsTrackProjectDocuments2)app.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
                     var docTracker = new DocumentTracker();
                     uint cookie = VSConstants.VSCOOKIE_NIL;
 
@@ -1640,7 +1628,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         var editor = solution.OpenItem("HelloWorld", projectType.Code("server2"));
                         editor.Invoke(() => {
                             editor.TextView.TextBuffer.Delete(
-                                new VisualStudio.Text.Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
+                                new Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
                             );
                         });
                         File.Delete(Path.Combine(solution.SolutionDirectory, "HelloWorld", projectType.Code("server2")));
@@ -1672,9 +1660,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// 
         /// The rename should be cancelled.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameFileExistsInHierarchy_FileOpen_DontSave() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenameFileExistsInHierarchy_FileOpen_DontSave(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -1682,12 +1670,12 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Compile("server"),
                     Compile("server2")
                 );
-                using (var solution = proj.Generate().ToVs()) {
+                using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
 
                     var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
 
-                    var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                    var trackDocs = (IVsTrackProjectDocuments2)app.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
                     var docTracker = new DocumentTracker();
                     uint cookie = VSConstants.VSCOOKIE_NIL;
 
@@ -1696,7 +1684,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         var editor = solution.OpenItem("HelloWorld", projectType.Code("server2"));
                         editor.Invoke(() => {
                             editor.TextView.TextBuffer.Delete(
-                                new VisualStudio.Text.Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
+                                new Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
                             );
                         });
                         File.Delete(Path.Combine(solution.SolutionDirectory, "HelloWorld", projectType.Code("server2")));
@@ -1720,9 +1708,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void IsDocumentInProject() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void IsDocumentInProject(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -1731,7 +1719,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Folder("folder"),
                     Compile("folder\\file2")
                 );
-                using (var solution = proj.Generate().ToVs()) {
+                using (var solution = proj.Generate().ToVs(app)) {
                     var project = (IVsProject)((dynamic)solution.GetProject("HelloWorld")).Project;
                     foreach (var item in proj.Items.OfType<CompileItem>()) {
                         foreach (var name in new[] { item.Name, item.Name.Replace('\\', '/') }) {
@@ -1750,7 +1738,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                             Assert.AreNotEqual(0, found);
 
                             Console.WriteLine(absoluteName);
-                            ThreadHelper.JoinableTaskFactory.Run(async() => {
+                            ThreadHelper.JoinableTaskFactory.Run(async () => {
                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                                 ErrorHandler.ThrowOnFailure(project.IsDocumentInProject(absoluteName, out found, priority, out itemid));
                             });
@@ -1762,9 +1750,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DeleteFolderWithReadOnlyFile() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void DeleteFolderWithReadOnlyFile(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
@@ -1773,7 +1761,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Folder("folder"),
                     Compile("folder\\file2")
                 );
-                using (var solution = proj.Generate().ToVs()) {
+                using (var solution = proj.Generate().ToVs(app)) {
                     foreach (var item in proj.Items.OfType<CompileItem>()) {
                         foreach (var name in new[] { item.Name, item.Name.Replace('\\', '/') }) {
                             string fullName = Path.Combine(solution.SolutionDirectory, proj.Name, name) + projectType.CodeExtension;

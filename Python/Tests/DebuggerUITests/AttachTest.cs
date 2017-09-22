@@ -24,183 +24,161 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
-using TestUtilities.UI.Python;
 using Path = System.IO.Path;
 using SD = System.Diagnostics;
-
 
 namespace DebuggerUITests {
     /// <summary>
     /// Summary description for AttachTest
     /// </summary>
-    [TestClass]
+    //[TestClass]
     public class AttachTest {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAttachBasic() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void TestAttachBasic(VisualStudioApp app) {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
 
+            var dbg2 = (Debugger2)app.Dte.Debugger;
+            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-            using (var app = new VisualStudioApp()) {
-                var dbg2 = (Debugger2)app.Dte.Debugger;
-                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
-
-                try {
-                    AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
-                } finally {
-                    dbg2.DetachAll();
-                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
-                    if (!processToAttach.HasExited) processToAttach.Kill();
-                }
+            try {
+                AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+            } finally {
+                dbg2.DetachAll();
+                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAttachBreakImmediately() {
+        //[TestMethod, Priority(0)]
+        //[TestCategory("Installed")]
+        public void TestAttachBreakImmediately(VisualStudioApp app) {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
             int breakLine = 22;
 
-            using (var app = new VisualStudioApp()) {
-                var dbg2 = (Debugger2)app.Dte.Debugger;
-                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            var dbg2 = (Debugger2)app.Dte.Debugger;
+            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-                app.Dte.Debugger.Breakpoints.Add(File: startFile, Line: breakLine);
+            app.Dte.Debugger.Breakpoints.Add(File: startFile, Line: breakLine);
 
-                try {
-                    AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
-                } finally {
-                    dbg2.DetachAll();
-                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
-                    if (!processToAttach.HasExited) processToAttach.Kill();
-                }
+            try {
+                AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
+            } finally {
+                dbg2.DetachAll();
+                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAttachUserSetsBreakpoint() {
+        //[TestMethod, Priority(0)]
+        //[TestCategory("Installed")]
+        public void TestAttachUserSetsBreakpoint(VisualStudioApp app) {
 
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
             int breakLine = 22;
 
-            using (var app = new VisualStudioApp()) {
-                var dbg2 = (Debugger2)app.Dte.Debugger;
-                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            var dbg2 = (Debugger2)app.Dte.Debugger;
+            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-                try {
-                    AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
-                    dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
-                    DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
+            try {
+                AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
+                DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
 
-                } finally {
-                    dbg2.DetachAll();
-                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
-                    if (!processToAttach.HasExited) processToAttach.Kill();
-                }
+            } finally {
+                dbg2.DetachAll();
+                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAttachThreadsBreakAllAndSetExitFlag() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void TestAttachThreadsBreakAllAndSetExitFlag(VisualStudioApp app) {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
 
-            using (var app = new VisualStudioApp()) {
-                var dbg2 = (Debugger2)app.Dte.Debugger;
-                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            var dbg2 = (Debugger2)app.Dte.Debugger;
+            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-                try {
-                    Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
-                    dbg2.Break(WaitForBreakMode: false);
-                    DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
+            try {
+                Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                dbg2.Break(WaitForBreakMode: false);
+                DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
 
-                    var x = proc.Threads.Cast<Thread2>()
-                        .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
-                        .SelectMany<StackFrame, Expression>(f => f.Locals.Cast<Expression>())
-                        .Where(e => e.Name == "exit_flag")
-                        .First();
+                var x = proc.Threads.Cast<Thread2>()
+                    .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
+                    .SelectMany<StackFrame, Expression>(f => f.Locals.Cast<Expression>())
+                    .Where(e => e.Name == "exit_flag")
+                    .First();
 
-                    Assert.IsNotNull(x, "Couldn't find a frame with 'exit_flag' defined!");
+                Assert.IsNotNull(x, "Couldn't find a frame with 'exit_flag' defined!");
 
-                    x.Value = "True";
+                x.Value = "True";
 
-                    dbg2.Go(WaitForBreakOrEnd: false);
-                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                dbg2.Go(WaitForBreakOrEnd: false);
+                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
 
-                } finally {
-                    if (!processToAttach.HasExited) processToAttach.Kill();
-                }
+            } finally {
+                if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAttachThreadsBreakOneAndSetExitFlag() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void TestAttachThreadsBreakOneAndSetExitFlag(VisualStudioApp app) {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
             int breakLine = 8;
 
-            using (var app = new VisualStudioApp()) {
-                var dbg2 = (Debugger2)app.Dte.Debugger;
-                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            var dbg2 = (Debugger2)app.Dte.Debugger;
+            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-                try {
-                    Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
-                    dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
-                    DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
-                    dbg2.BreakpointLastHit.Delete();
+            try {
+                Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
+                DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
+                dbg2.BreakpointLastHit.Delete();
 
-                    var x = proc.Threads.Cast<Thread2>()
-                        .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
-                        .SelectMany<StackFrame, Expression>(f => f.Locals.Cast<Expression>())
-                        .Where(e => e.Name == "exit_flag")
-                        .First();
+                var x = proc.Threads.Cast<Thread2>()
+                    .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
+                    .SelectMany<StackFrame, Expression>(f => f.Locals.Cast<Expression>())
+                    .Where(e => e.Name == "exit_flag")
+                    .First();
 
-                    Assert.IsNotNull(x, "Couldn't find a frame with 'exit_flag' defined!");
+                Assert.IsNotNull(x, "Couldn't find a frame with 'exit_flag' defined!");
 
-                    x.Value = "True";
+                x.Value = "True";
 
-                    dbg2.Go(WaitForBreakOrEnd: false);
-                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                dbg2.Go(WaitForBreakOrEnd: false);
+                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
 
-                } finally {
-                    if (!processToAttach.HasExited) processToAttach.Kill();
-                }
+            } finally {
+                if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestAttachLotsOfThreads() {
+        //[TestMethod, Priority(0)]
+        //[TestCategory("Installed")]
+        public void TestAttachLotsOfThreads(VisualStudioApp app) {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "LotsOfThreads.py";
 
-            using (var app = new VisualStudioApp()) {
-                var dbg2 = (Debugger2)app.Dte.Debugger;
-                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
-                System.Threading.Thread.Sleep(2000);
+            var dbg2 = (Debugger2)app.Dte.Debugger;
+            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            System.Threading.Thread.Sleep(2000);
 
-                try {
-                    Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+            try {
+                Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
 
-                } finally {
-                    if (!processToAttach.HasExited) processToAttach.Kill();
-                }
+            } finally {
+                if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
 

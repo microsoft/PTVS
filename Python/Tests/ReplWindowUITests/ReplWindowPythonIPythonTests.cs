@@ -28,18 +28,19 @@ namespace ReplWindowUITests {
     /// These tests are run for important versions of Python that use or support
     /// IPython mode in the REPL.
     /// </summary>
-    [TestClass, Ignore]
+    //[TestClass, Ignore]
     public abstract class ReplWindowPythonIPythonTests : ReplWindowPythonTests {
         internal virtual ReplWindowProxy PrepareIPython(
+            PythonVisualStudioApp app,
             bool addNewLineAtEndOfFullyTypedWord = false
         ) {
-            return Prepare(useIPython: true, addNewLineAtEndOfFullyTypedWord: addNewLineAtEndOfFullyTypedWord);
+            return Prepare(app, useIPython: true, addNewLineAtEndOfFullyTypedWord: addNewLineAtEndOfFullyTypedWord);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void IPythonMode() {
-            using (var interactive = PrepareIPython()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void IPythonMode(PythonVisualStudioApp app) {
+            using (var interactive = PrepareIPython(app)) {
                 interactive.SubmitCode("x = 42\n?x");
 
                 interactive.WaitForText(
@@ -52,10 +53,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void IPythonCtrlBreakAborts() {
-            using (var interactive = PrepareIPython()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void IPythonCtrlBreakAborts(PythonVisualStudioApp app) {
+            using (var interactive = PrepareIPython(app)) {
                 var code = "while True: pass";
                 interactive.Type(code + "\n", waitForLastLine: false);
                 interactive.WaitForText(">" + code, ".", "");
@@ -75,10 +76,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void IPythonSimpleCompletion() {
-            using (var interactive = PrepareIPython(addNewLineAtEndOfFullyTypedWord: false)) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void IPythonSimpleCompletion(PythonVisualStudioApp app) {
+            using (var interactive = PrepareIPython(app, addNewLineAtEndOfFullyTypedWord: false)) {
                 interactive.SubmitCode("x = 42");
                 interactive.WaitForText(">x = 42", ">");
                 interactive.ClearScreen();
@@ -102,10 +103,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void IPythonSimpleSignatureHelp() {
-            using (var interactive = PrepareIPython()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void IPythonSimpleSignatureHelp(PythonVisualStudioApp app) {
+            using (var interactive = PrepareIPython(app)) {
                 Assert.IsNotNull(interactive);
 
                 interactive.SubmitCode("def f(): pass");
@@ -127,10 +128,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void IPythonInlineGraph() {
-            using (var interactive = PrepareIPython()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void IPythonInlineGraph(PythonVisualStudioApp app) {
+            using (var interactive = PrepareIPython(app)) {
                 interactive.SubmitCode(@"from pylab import *
 x = linspace(0, 4*pi)
 plot(x, x)");
@@ -143,11 +144,11 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void IPythonStartInInteractive() {
-            using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void IPythonStartInInteractive(PythonVisualStudioApp app) {
+            using (var interactive = PrepareIPython(app))
+            using (app.SelectDefaultInterpreter(interactive.Settings.Version)) {
                 var project = interactive.App.OpenProject(@"TestData\InteractiveFile.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -155,11 +156,11 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void ExecuteInIPythonReplSysArgv() {
-            using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void ExecuteInIPythonReplSysArgv(PythonVisualStudioApp app) {
+            using (var interactive = PrepareIPython(app))
+            using (app.SelectDefaultInterpreter(interactive.Settings.Version)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -167,11 +168,11 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void ExecuteInIPythonReplSysArgvScriptArgs() {
-            using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void ExecuteInIPythonReplSysArgvScriptArgs(PythonVisualStudioApp app) {
+            using (var interactive = PrepareIPython(app))
+            using (app.SelectDefaultInterpreter(interactive.Settings.Version)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");

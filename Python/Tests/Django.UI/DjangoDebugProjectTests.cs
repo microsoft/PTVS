@@ -20,25 +20,17 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace DjangoUITests {
-    [TestClass]
+    //[TestClass]
     public class DjangoDebugProjectTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DebugDjangoProject() {
-            using (var app = new VisualStudioApp()) {
-                DebuggerUITests.DebugProject.OpenProjectAndBreak(
-                    app,
-                    TestData.GetPath(@"TestData\DjangoDebugProject.sln"),
-                    @"TestApp\views.py",
-                    5,
-                    false);
-            }
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void DebugDjangoProject(VisualStudioApp app) {
+            DebuggerUITests.DebugProject.OpenProjectAndBreak(
+                app,
+                TestData.GetPath(@"TestData\DjangoDebugProject.sln"),
+                @"TestApp\views.py",
+                5,
+                false);
         }
     }
 }

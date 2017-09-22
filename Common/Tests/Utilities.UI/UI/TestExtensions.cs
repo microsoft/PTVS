@@ -42,55 +42,55 @@ namespace TestUtilities.UI {
             return completionSession.CompletionSets.First().Completions.Select(x => x.InsertionText).ToArray();
         }
 
-        //public static bool GetIsFolderExpanded(this EnvDTE.Project project, string folder) {
-        //    return GetNodeState(project, folder, __VSHIERARCHYITEMSTATE.HIS_Expanded);
-        //}
+        public static bool GetIsFolderExpanded(this EnvDTE.Project project, string folder) {
+            return GetNodeState(project, folder, __VSHIERARCHYITEMSTATE.HIS_Expanded);
+        }
 
-        //public static bool GetIsItemBolded(this EnvDTE.Project project, string item) {
-        //    return GetNodeState(project, item, __VSHIERARCHYITEMSTATE.HIS_Bold);
-        //}
+        public static bool GetIsItemBolded(this EnvDTE.Project project, string item) {
+            return GetNodeState(project, item, __VSHIERARCHYITEMSTATE.HIS_Bold);
+        }
 
-        //public static bool GetNodeState(this EnvDTE.Project project, string item, __VSHIERARCHYITEMSTATE state) {
-        //    IVsHierarchy hier = null;
-        //    uint id = 0;
-        //    ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
-        //        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+        public static bool GetNodeState(this EnvDTE.Project project, string item, __VSHIERARCHYITEMSTATE state) {
+            IVsHierarchy hier = null;
+            uint id = 0;
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-        //        hier = ((dynamic)project).Project as IVsHierarchy;
-        //        object projectDir;
-        //        ErrorHandler.ThrowOnFailure(
-        //            hier.GetProperty(
-        //                (uint)VSConstants.VSITEMID.Root,
-        //                (int)__VSHPROPID.VSHPROPID_ProjectDir,
-        //                out projectDir
-        //            )
-        //        );
+                hier = ((dynamic)project).Project as IVsHierarchy;
+                object projectDir;
+                ErrorHandler.ThrowOnFailure(
+                    hier.GetProperty(
+                        (uint)VSConstants.VSITEMID.Root,
+                        (int)__VSHPROPID.VSHPROPID_ProjectDir,
+                        out projectDir
+                    )
+                );
 
-        //        string itemPath = Path.Combine((string)projectDir, item);
-        //        if (ErrorHandler.Failed(hier.ParseCanonicalName(itemPath, out id))) {
-        //            ErrorHandler.ThrowOnFailure(
-        //                hier.ParseCanonicalName(itemPath + "\\", out id)
-        //            );
-        //        }
-        //    });
+                string itemPath = Path.Combine((string)projectDir, item);
+                if (ErrorHandler.Failed(hier.ParseCanonicalName(itemPath, out id))) {
+                    ErrorHandler.ThrowOnFailure(
+                        hier.ParseCanonicalName(itemPath + "\\", out id)
+                    );
+                }
+            });
 
-        //    // make sure we're still expanded.
-        //    var solutionWindow = UIHierarchyUtilities.GetUIHierarchyWindow(
-        //        VSTestContext.ServiceProvider,
-        //        new Guid(ToolWindowGuids80.SolutionExplorer)
-        //    );
+            // make sure we're still expanded.
+            var solutionWindow = UIHierarchyUtilities.GetUIHierarchyWindow(
+                ServiceProvider.GlobalProvider,
+                new Guid(ToolWindowGuids80.SolutionExplorer)
+            );
 
-        //    uint result;
-        //    ErrorHandler.ThrowOnFailure(
-        //        solutionWindow.GetItemState(
-        //            hier as IVsUIHierarchy,
-        //            id,
-        //            (uint)state,
-        //            out result
-        //        )
-        //    );
-        //    return (result & (uint)state) != 0;
-        //}
+            uint result;
+            ErrorHandler.ThrowOnFailure(
+                solutionWindow.GetItemState(
+                    hier as IVsUIHierarchy,
+                    id,
+                    (uint)state,
+                    out result
+                )
+            );
+            return (result & (uint)state) != 0;
+        }
 
     }
 }

@@ -23,6 +23,7 @@
     <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
     <ProjectFile Include="PythonToolsMockTests\PythonToolsMockTests.csproj" />
+    <ProjectFile Include="ProjectUITests\ProjectUITests.csproj" />
     <ProjectFile Include="PythonToolsUITestsRunner\PythonToolsUITestsRunner.csproj" />
   </ItemGroup>
 

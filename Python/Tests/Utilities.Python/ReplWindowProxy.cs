@@ -707,7 +707,7 @@ namespace TestUtilities.UI.Python {
                     sb.AppendLine();
                 }
                 sb.Append(line);
-                
+
             }
             if (sb.Length > 0) {
                 yield return sb.ToString();
@@ -898,7 +898,7 @@ namespace TestUtilities.UI.Python {
             Assert.IsTrue(t.Wait(TimeSpan.FromSeconds(15)), "Timed out resetting the window");
             Assert.IsTrue(t.Result.IsSuccessful, "Window failed to reset");
         }
-        
+
         public void CancelExecution(int attempts = 100) {
             Console.WriteLine("REPL Cancelling Execution");
             var rfi = _replWindowInfo.ReadyForInput;

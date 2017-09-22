@@ -2,7 +2,7 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
         <Identity Id="Microsoft.PythonTools.Tests.TestUtilities" Version="3.2" Language="en-US" Publisher="Microsoft Corporation" />
-        <DisplayName>Python Tools UI Test Utilities</DisplayName>
+        <DisplayName>Tests-PythonUtilities</DisplayName>
         <Description xml:space="preserve">Python Tools UI Test Utilities</Description>
         <MoreInfo>http://aka.ms/ptvs</MoreInfo>
     </Metadata>

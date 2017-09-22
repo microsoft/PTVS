@@ -26,8 +26,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>
-    </ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{9CF2E4FD-FF16-459A-B675-C06EFF62F1EC}</ProjectGuid>
     <OutputType>Library</OutputType>

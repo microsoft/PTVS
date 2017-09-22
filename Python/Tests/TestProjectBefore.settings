@@ -11,5 +11,6 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <MicroBuild_FXCop>false</MicroBuild_FXCop>
     <MicroBuild_APIScan>false</MicroBuild_APIScan>
+    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
   </PropertyGroup>
 </Project>

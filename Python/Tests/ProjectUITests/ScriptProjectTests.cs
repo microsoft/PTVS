@@ -16,23 +16,22 @@
 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
 
-namespace Microsoft.VisualStudioTools.SharedProjectTests {
+namespace ProjectUITests {
     /// <summary>
     /// Test cases which are applicable to projects designed for scripting languages.
     /// </summary>
-    [TestClass]
+    //[TestClass]
     public class ScriptProjectTests : SharedProjectTest {
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RunWithoutStartupFile() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RunWithoutStartupFile(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition("RunWithoutStartupFile", projectType);
 
-                using (var solution = testDef.Generate().ToVs()) {
+                using (var solution = testDef.Generate().ToVs(app)) {
                     solution.OpenDialogWithDteExecuteCommand("Debug.Start");
                     solution.CheckMessageBox("startup file");
 
@@ -46,9 +45,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// Renaming the folder containing the startup script should update the startup script
         /// https://nodejstools.codeplex.com/workitem/476
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameStartupFileFolder() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenameStartupFileFolder(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition(
                     "RenameStartupFileFolder", 
@@ -58,7 +57,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Property("StartupFile", "Folder\\server" + projectType.CodeExtension)
                 );
 
-                using (var solution = testDef.Generate().ToVs()) {
+                using (var solution = testDef.Generate().ToVs(app)) {
                     var folder = solution.GetProject("RenameStartupFileFolder").ProjectItems.Item("Folder");
                     folder.Name = "FolderNew";
 
@@ -72,9 +71,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameStartupFile() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenameStartupFile(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition(
                     "RenameStartupFileFolder",
@@ -84,7 +83,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     Property("StartupFile", "Folder\\server" + projectType.CodeExtension)
                 );
 
-                using (var solution = testDef.Generate().ToVs()) {
+                using (var solution = testDef.Generate().ToVs(app)) {
                     var file = solution.GetProject("RenameStartupFileFolder").ProjectItems.Item("Folder").ProjectItems.Item("server" + projectType.CodeExtension);
                     file.Name = "server2" + projectType.CodeExtension;
 

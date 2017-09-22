@@ -37,10 +37,10 @@ namespace ReplWindowUITests {
         /// Simple line-by-line tests which verify we submit when we get to
         /// the next statement.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void SendToInteractiveLineByLine() {
-            RunOne("Program.py",
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void SendToInteractiveLineByLine(PythonVisualStudioApp app) {
+            RunOne(app, "Program.py",
                 Input("if True:"),
                 Input("    x = 1"),
                 Input("    y = 2"),
@@ -67,10 +67,10 @@ namespace ReplWindowUITests {
         /// Simple cell-by-cell tests which verify we submit when we get to
         /// the next statement.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void SendToInteractiveCellByCell() {
-            RunOne("Cells.py",
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void SendToInteractiveCellByCell(PythonVisualStudioApp app) {
+            RunOne(app, "Cells.py",
                 Input(@"#%% cell 1
 ... x = 1
 ... 
@@ -98,10 +98,10 @@ namespace ReplWindowUITests {
         /// Line-by-line tests that verify we work with buffering code
         /// while it's executing.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void SendToInteractiveDelayed() {
-            RunOne("Delayed.py",
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void SendToInteractiveDelayed(PythonVisualStudioApp app) {
+            RunOne(app, "Delayed.py",
                Input("import time").Complete,
                Input("if True:"),
                Input("    time.sleep(5)"),
@@ -117,10 +117,10 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Mixed line-by-line and selection, no buffering
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void SendToInteractiveSelection() {
-            RunOne("Delayed.py",
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void SendToInteractiveSelection(PythonVisualStudioApp app) {
+            RunOne(app, "Delayed.py",
                Input("import time").Complete,
                Selection(@"if True:
 ...     time.sleep(5)
@@ -140,10 +140,10 @@ namespace ReplWindowUITests {
         /// Mixed line-by-line and selection, buffering while the selection
         /// is submitted.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void SendToInteractiveSelectionNoWait() {
-            RunOne("Delayed.py",
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void SendToInteractiveSelectionNoWait(PythonVisualStudioApp app) {
+            RunOne(app, "Delayed.py",
                Input("import time").Complete,
                Selection(@"if True:
 ...     time.sleep(5)
@@ -160,30 +160,28 @@ namespace ReplWindowUITests {
         }
 
 
-        private void RunOne(string filename, params SendToStep[] inputs) {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\SendToInteractive.sln");
-                var program = project.ProjectItems.Item(filename);
-                var window = program.Open();
+        private void RunOne(PythonVisualStudioApp app, string filename, params SendToStep[] inputs) {
+            var project = app.OpenProject(@"TestData\SendToInteractive.sln");
+            var program = project.ProjectItems.Item(filename);
+            var window = program.Open();
 
-                window.Activate();
+            window.Activate();
 
-                var doc = app.GetDocument(program.Document.FullName);
-                doc.MoveCaret(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, 0));
+            var doc = app.GetDocument(program.Document.FullName);
+            doc.MoveCaret(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, 0));
 
-                var interactive = ReplWindowProxy.Prepare(new ReplWindowPython35Tests().Settings, useIPython: false);
+            var interactive = ReplWindowProxy.Prepare(app, new ReplWindowPython35Tests().Settings, useIPython: false);
 
-                interactive.ExecuteText("42").Wait();
-                interactive.ClearScreen();
+            interactive.ExecuteText("42").Wait();
+            interactive.ClearScreen();
 
-                WaitForText(interactive.TextView, ">>> ");
+            WaitForText(interactive.TextView, ">>> ");
 
-                var state = new StepState(interactive, app, doc, window);
-                state.Content.Append(">>> ");
+            var state = new StepState(interactive, app, doc, window);
+            state.Content.Append(">>> ");
 
-                foreach (var input in inputs) {
-                    input.Execute(state);
-                }
+            foreach (var input in inputs) {
+                input.Execute(state);
             }
         }
 

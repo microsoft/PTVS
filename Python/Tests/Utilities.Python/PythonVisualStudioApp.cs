@@ -49,7 +49,7 @@ namespace TestUtilities.UI.Python {
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
         public readonly PythonToolsService PythonToolsService;
-        
+
         public PythonVisualStudioApp(IServiceProvider site)
             : base(site) {
 
@@ -127,7 +127,7 @@ namespace TestUtilities.UI.Python {
         public const string FlaskWebProjectTemplate = "WebProjectFlask";
         public const string DjangoWebProjectTemplate = "DjangoProject";
         public const string WorkerRoleProjectTemplate = "WorkerRoleProject";
-        
+
         public const string EmptyFileTemplate = "EmptyPyFile";
         public const string WebRoleSupportTemplate = "AzureCSWebRole";
         public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole";
@@ -204,9 +204,9 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public ReplWindowProxy ExecuteInInteractive(PythonVisualStudioApp app, Project project, ReplWindowProxySettings settings = null) {
+        public ReplWindowProxy ExecuteInInteractive(Project project, ReplWindowProxySettings settings = null) {
             // Prepare makes sure that IPython mode is disabled, and that the REPL is reset and cleared
-            var window = ReplWindowProxy.Prepare(app, settings, project.Name);
+            var window = ReplWindowProxy.Prepare(this, settings, project.Name);
             OpenSolutionExplorer().SelectProject(project);
             ExecuteCommand("Python.ExecuteInInteractive");
             return window;
@@ -271,6 +271,19 @@ namespace TestUtilities.UI.Python {
         /// This method should always be called as a using block.
         /// </remarks>
         public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion python) {
+            return new DefaultInterpreterSetter(
+                InterpreterService.FindInterpreter(python.Id),
+                ServiceProvider
+            );
+        }
+
+        /// <summary>
+        /// Selects the given interpreter as the default.
+        /// </summary>
+        /// <remarks>
+        /// This method should always be called as a using block.
+        /// </remarks>
+        public DefaultInterpreterSetter SelectDefaultInterpreter(InterpreterConfiguration python) {
             return new DefaultInterpreterSetter(
                 InterpreterService.FindInterpreter(python.Id),
                 ServiceProvider
