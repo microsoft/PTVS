@@ -683,7 +683,7 @@ lambda larg1, larg2: None";
                 TestQuickInfo(view, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 5 + 3 + 1 + 1, "cls._parse_block(ast.expr): <unknown type>");
 
                 // the whole string shows up in quick info
-                TestQuickInfo(view, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "\"ABCDEFGHIJKLMNOPQRSTUVWYXZ\": str");
+                TestQuickInfo(view, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "str");
 
                 // trailing new lines don't show up in quick info
                 TestQuickInfo(view, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def file.f()\r\nhelpful information");
@@ -946,7 +946,7 @@ def func(a):
                 var expected1 = string.Join(Environment.NewLine, docString.Take(29)) + Environment.NewLine + "...";
                 var expected2 = string.Join(Environment.NewLine, docString.Take(15)).TrimStart() + Environment.NewLine + "...";
 
-                using (var view = new PythonEditor(code)) {
+                using (var view = new PythonEditor(code, filename: "file.py")) {
                     TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def file.func(a)\r\n" + expected1);
 
                     SignatureAnalysis sigs;
@@ -965,7 +965,7 @@ def func(a):
 
 ";
 
-                using (var view = new PythonEditor(code)) {
+                using (var view = new PythonEditor(code, filename: "file.py")) {
                     // The long lines cause us to truncate sooner.
                     expected1 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
                     expected2 = string.Join(Environment.NewLine, docString.Take(8)).TrimStart() + Environment.NewLine + "...";

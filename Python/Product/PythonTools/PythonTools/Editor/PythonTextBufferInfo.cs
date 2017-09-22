@@ -291,28 +291,22 @@ namespace Microsoft.PythonTools.Editor {
 
         public bool UpdateLastReceivedParse(int version) {
             var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-            if (ver == null || ver.VersionNumber >= version) {
-                return false;
-            }
-
             while (ver != null && ver.VersionNumber < version) {
                 ver = ver.Next;
             }
+            var r = LastParseReceivedVersion != ver;
             LastParseReceivedVersion = ver;
-            return true;
+            return r;
         }
 
         public bool UpdateLastReceivedAnalysis(int version) {
             var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-            if (ver == null || ver.VersionNumber >= version) {
-                return false;
-            }
-
             while (ver != null && ver.VersionNumber < version) {
                 ver = ver.Next;
             }
+            var r = LastAnalysisReceivedVersion != ver;
             LastAnalysisReceivedVersion = ver;
-            return true;
+            return r;
         }
 
         public SourceLocation GetSourceLocation(SnapshotPoint start) {
