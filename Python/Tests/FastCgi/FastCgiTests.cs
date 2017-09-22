@@ -36,7 +36,6 @@ namespace FastCgiTest {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestInitialize]
@@ -203,7 +202,7 @@ namespace FastCgiTest {
         }
 
         private static string CreateSite() {
-            string dirName = TestData.GetTempPath(randomSubPath: true);
+            string dirName = TestData.GetTempPath();
 
             File.Copy("TestData\\applicationhostOriginal.config",
                 Path.Combine(dirName, "applicationHost.config"));
@@ -570,7 +569,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public void TestFileSystemChanges() {
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChanges"), location);
 
             IisExpressTest(
@@ -599,7 +598,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(1)]
         public void TestFileSystemChangesPackage() {
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesPackage"), location);
             
             IisExpressTest(
@@ -623,7 +622,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(1)]
         public void TestFileSystemChangesCustomRegex() {
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesCustomRegex"), location);
 
             IisExpressTest(
@@ -645,7 +644,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(1)]
         public void TestFileSystemChangesDisabled() {
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesDisabled"), location);
             
             IisExpressTest(
@@ -1216,7 +1215,7 @@ namespace FastCgiTest {
         }
 
         private string GenerateApplicationHostConfig(string siteLocation) {
-            var tempConfig = Path.Combine(TestData.GetTempPath(randomSubPath: true), "applicationHost.config");
+            var tempConfig = Path.Combine(TestData.GetTempPath(), "applicationHost.config");
             StringBuilder baseConfig = new StringBuilder(File.ReadAllText("TestData\\WFastCgi\\applicationHost.config"));
             baseConfig.Replace("[PYTHONPATH]", InterpreterPath)
                       .Replace("[WFASTCGIPATH]", WFastCgiPath)

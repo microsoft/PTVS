@@ -41,7 +41,6 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal virtual string DebuggerTestPath {
@@ -435,7 +434,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -450,7 +448,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -465,7 +462,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -480,7 +476,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -495,7 +490,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -510,7 +504,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -525,7 +518,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -540,7 +532,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -555,7 +546,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {

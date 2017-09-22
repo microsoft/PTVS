@@ -801,13 +801,13 @@ namespace TestUtilities.UI {
             if (!File.Exists(fullPath)) {
                 Assert.Fail("Cannot find " + fullPath);
             }
-            var basePath = TestData.GetTempPath(randomSubPath: true);
+            var basePath = TestData.GetTempPath();
             var finalPath = Path.Combine(basePath, Path.GetFileName(fullPath));
 
             // If it's not a solution, copy the containing directory
             if (!Path.GetExtension(fullPath).Equals(".sln", StringComparison.OrdinalIgnoreCase)) {
                 FileUtils.CopyDirectory(Path.GetDirectoryName(fullPath), basePath);
-                return Path.Combine(basePath, Path.GetFileName(fullPath));
+                return finalPath;
             }
 
             // If it's a solution, copy it and all referenced directories

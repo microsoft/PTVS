@@ -29,7 +29,7 @@ namespace CookiecutterTests {
         public async Task CloneWindowsIncompatibleRepo() {
             var client = GitClientProvider.Create(null, null);
 
-            var outputParentFolder = TestData.GetTempPath("Cookiecutter", true);
+            var outputParentFolder = TestData.GetTempPath();
 
             try {
                 // Clone a repo that uses folders with invalid characters on Windows

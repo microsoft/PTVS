@@ -55,7 +55,7 @@ namespace TestUtilities.SharedProject {
         /// <returns></returns>
         public static SolutionFile Generate(string solutionName, int pathSpaceRemaining, params ISolutionElement[] toGenerate) {
             List<MSBuild.Project> projects = new List<MSBuild.Project>();
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
 
             if (pathSpaceRemaining >= 0) {
                 int targetPathLength = 260 - pathSpaceRemaining;

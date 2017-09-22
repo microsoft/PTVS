@@ -28,10 +28,10 @@ using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ProjectUITests {
-    [TestClass]
+    //[TestClass]
     public class ShowAllFiles : SharedProjectTest {
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesToggle(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -53,8 +53,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesFilesAlwaysHidden(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = MakeBasicProject(projectType);
@@ -66,8 +66,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesSymLinks(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -128,8 +128,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesLinked(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -169,8 +169,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesIncludeExclude(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -365,8 +365,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesChanges(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = MakeBasicProject(projectType).Generate().ToVs(app)) {
@@ -449,8 +449,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesHiddenFiles(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -542,8 +542,8 @@ namespace ProjectUITests {
 
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesOnPerUser(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var solutionFile = SolutionFile.Generate("ShowAllFilesOnPerUser",
@@ -580,8 +580,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesOnPerProject(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -612,8 +612,8 @@ namespace ProjectUITests {
 
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesOffPerUser(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var solutionFile = SolutionFile.Generate("ShowAllFilesOffPerUser",
@@ -650,8 +650,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesOffPerProject(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -681,8 +681,8 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesDefault(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -718,8 +718,8 @@ namespace ProjectUITests {
         /// <summary>
         /// https://nodejstools.codeplex.com/workitem/240
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllMoveNotInProject(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -775,8 +775,8 @@ namespace ProjectUITests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1996
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllExcludeSelected(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -838,8 +838,8 @@ namespace ProjectUITests {
         /// 
         /// https://nodejstools.codeplex.com/workitem/380
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesRapidChanges(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -871,8 +871,8 @@ namespace ProjectUITests {
         /// Creating & deleting and then re-creating files rapidly should have the files be 
         /// present in solution explorer.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesRapidChanges2(VisualStudioApp app) {
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -904,14 +904,14 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesCopyExcludedFolderWithItemByKeyboard(VisualStudioApp app) {
             ShowAllFilesCopyExcludedFolderWithItem(app, DragDropCopyCutPaste.CopyByKeyboard);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesCopyExcludedFolderWithItemByMouse(VisualStudioApp app) {
             ShowAllFilesCopyExcludedFolderWithItem(app, DragDropCopyCutPaste.CopyByMouse);
         }
@@ -952,14 +952,14 @@ namespace ProjectUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard(VisualStudioApp app) {
             ShowAllFilesMoveExcludedItemToExcludedFolder(app, DragDropCopyCutPaste.MoveByKeyboard);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
         public void ShowAllFilesMoveExcludedItemToExcludedFolderByMouse(VisualStudioApp app) {
             ShowAllFilesMoveExcludedItemToExcludedFolder(app, DragDropCopyCutPaste.MoveByMouse);
         }

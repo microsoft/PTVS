@@ -390,7 +390,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishVirtualEnvironment(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\VirtualEnv.sln");
-            var dir = TestData.GetTempPath(randomSubPath: true);
+            var dir = TestData.GetTempPath();
             project.Properties.Item("PublishUrl").Value = dir;
             app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
 

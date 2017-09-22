@@ -30,7 +30,6 @@ namespace ReplWindowUITests {
     public class SendToReplTests {
         static SendToReplTests() {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         /// <summary>

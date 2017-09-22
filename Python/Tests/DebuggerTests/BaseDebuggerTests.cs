@@ -32,7 +32,6 @@ namespace DebuggerTests {
     public class BaseDebuggerTests {
         static BaseDebuggerTests() {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         protected const int DefaultWaitForExitTimeout = 20000;

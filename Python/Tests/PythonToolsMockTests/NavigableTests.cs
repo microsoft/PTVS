@@ -32,7 +32,6 @@ namespace PythonToolsMockTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         private static PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;

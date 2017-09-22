@@ -43,7 +43,6 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         private static readonly List<string> DeleteFolder = new List<string>();
@@ -57,15 +56,26 @@ namespace PythonToolsUITests {
 
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
-            return new InterpreterConfiguration(Guid.NewGuid().ToString(), description, null, null, null, null, InterpreterArchitecture.Unknown, version, uiMode);
+            return new InterpreterConfiguration(
+                $"Mock|{Guid.NewGuid()}",
+                description,
+                // Path doesn't matter, as long as it exists
+                PythonPaths.Versions.FirstOrDefault()?.PrefixPath,
+                PythonPaths.Versions.FirstOrDefault()?.InterpreterPath,
+                null,
+                null,
+                InterpreterArchitecture.Unknown,
+                version,
+                uiMode
+            );
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
-            return new InterpreterConfiguration(Guid.NewGuid().ToString(), description, version: version);
+            return MockInterpreterConfiguration(description, version, InterpreterUIMode.Normal);
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string path) {
-            return new InterpreterConfiguration(path, path, Path.GetDirectoryName(path), path, "", "", InterpreterArchitecture.Unknown, new Version(2, 7));
+            return new InterpreterConfiguration($"Mock|{path}", path, Path.GetDirectoryName(path), path, "", "", InterpreterArchitecture.Unknown, new Version(2, 7));
         }
 
         [TestMethod, Priority(1)]
@@ -713,7 +723,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         public async Task SaveLoadCache() {
-            var cachePath = Path.Combine(TestData.GetTempPath(randomSubPath: true), "pip.cache");
+            var cachePath = Path.Combine(TestData.GetTempPath(), "pip.cache");
             using (var cache = new TestPipPackageCache(cachePath)) {
                 AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
 
@@ -848,7 +858,7 @@ namespace PythonToolsUITests {
                 Assert.Inconclusive("Requires Python with venv");
             }
 
-            var env = TestData.GetTempPath(randomSubPath: true);
+            var env = TestData.GetTempPath();
             if (env.Length > 140) {
                 env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 DeleteFolder.Add(env);
@@ -1028,7 +1038,7 @@ namespace PythonToolsUITests {
     class TestPipPackageCache : PipPackageCache {
         public TestPipPackageCache(string cachePath = null) : base(
             null, null,
-            cachePath ?? Path.Combine(TestData.GetTempPath(randomSubPath: true), "test.cache")
+            cachePath ?? Path.Combine(TestData.GetTempPath(), "test.cache")
         ) {
             _userCount = 1;
         }

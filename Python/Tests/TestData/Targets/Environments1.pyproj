@@ -26,7 +26,6 @@
   <ItemGroup>
     <Interpreter Include="env\">
       <Id>env</Id>
-      <BaseInterpreter>Global|PythonCore|2.7-32</BaseInterpreter>
       <Version>2.7</Version>
       <Description>env (Python 2.7)</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
@@ -36,7 +35,6 @@
     </Interpreter>
     <Interpreter Include="env2\">
       <Id>env2</Id>
-      <BaseInterpreter>Global|PythonCore|2.7-32</BaseInterpreter>
       <Version>3.3</Version>
       <Description>env2 (Python 3.3)</Description>
       <InterpreterPath>Scripts2\python.exe</InterpreterPath>

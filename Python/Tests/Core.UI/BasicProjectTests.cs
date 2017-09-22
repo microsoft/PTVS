@@ -186,7 +186,7 @@ namespace PythonToolsUITests {
                   //}
             }
 
-            project.SaveAs(PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(randomSubPath: true), "TempFile.pyproj"));
+            project.SaveAs(PathUtils.GetAbsoluteFilePath(TestData.GetTempPath(), "TempFile.pyproj"));
             project.Save("");   // empty string means just save
             project.Delete();
         }
@@ -701,7 +701,7 @@ namespace PythonToolsUITests {
         }
 
         public void DotNetSearchPathReferences(VisualStudioApp app) {
-            var dllPath = Path.Combine(TestData.GetTempPath(randomSubPath: true), "ClassLibrary3.dll");
+            var dllPath = Path.Combine(TestData.GetTempPath(), "ClassLibrary3.dll");
             CompileFile("ClassLibrary.cs", dllPath);
 
             var project = app.OpenProject(@"TestData\AssemblyReference\SearchPathReference.sln");

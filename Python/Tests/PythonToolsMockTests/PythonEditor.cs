@@ -242,8 +242,14 @@ namespace PythonToolsMockTests {
                 }
             }
 
-            public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            public async Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
                 if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
+                    for (int retries = 100; retries > 0 && _info.LastAnalysisReceivedVersion == null; --retries) {
+                        await Task.Delay(100);
+                    }
+                    if (_info.LastAnalysisReceivedVersion == null) {
+                        throw new NullReferenceException("LastAnalysisReceivedVersion was not set");
+                    }
                     if (_info.LastAnalysisReceivedVersion.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
                         try {
                             _event.Set();
@@ -252,7 +258,6 @@ namespace PythonToolsMockTests {
                         _info.RemoveSink(this);
                     }
                 }
-                return Task.CompletedTask;
             }
         }
 

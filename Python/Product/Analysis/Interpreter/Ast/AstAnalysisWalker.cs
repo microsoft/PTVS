@@ -156,7 +156,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         if (node.Names[i].Name == "*") {
                             foreach (var member in mod.GetMemberNames(ctxt)) {
                                 var mem = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
-                                    _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                    _interpreter.GetBuiltinType(BuiltinTypeId.Object),
                                     mod.Locations.ToArray()
                                 );
                                 _scope.SetInScope(member, mem);
@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         var n = node.AsNames?[i] ?? node.Names[i];
                         if (n != null) {
                             var mem = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                _interpreter.GetBuiltinType(BuiltinTypeId.Object),
                                 GetLoc(n)
                             );
                             _scope.SetInScope(n.Name, mem);

@@ -36,7 +36,6 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         [TestMethod, Priority(0)]
@@ -474,8 +473,7 @@ x = unittest.skipIf(False)
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
             var interp = fact.CreateInterpreter();
 
-            var dbFolder = TestData.GetTempPath(randomSubPath: true);
-            Directory.CreateDirectory(dbFolder);
+            var dbFolder = TestData.GetTempPath();
 
             var state = new PythonAnalysis(fact, interp, SharedDatabaseState.BuiltinName2x);
             state.CreateProjectOnDisk = true;

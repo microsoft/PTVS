@@ -40,7 +40,14 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
+        }
+
+        private string CompletionDB {
+            get {
+                var completionDB = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "CompletionDB");
+                Assert.IsTrue(Directory.Exists(completionDB), $"Did not find {completionDB}");
+                return completionDB;
+            }
         }
 
         private void TestOpen(PythonVersion path) {
@@ -50,12 +57,15 @@ namespace PythonToolsTests {
             Guid testId = Guid.NewGuid();
             var testDir = TestData.GetTempPath(testId.ToString());
 
+            var scraper = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "PythonScraper.py");
+            Assert.IsTrue(File.Exists(scraper), $"Did not find {scraper}");
+
             // run the scraper
             using (var proc = ProcessOutput.RunHiddenAndCapture(
                 path.InterpreterPath,
-                TestData.GetPath("PythonScraper.py"),
+                scraper,
                 testDir,
-                TestData.GetPath("CompletionDB")
+                CompletionDB
             )) {
                 Console.WriteLine("Command: " + proc.Arguments);
 
@@ -147,15 +157,15 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(1)]
         public void TestPthFiles() {
-            var outputPath = TestData.GetTempPath(randomSubPath: true);
+            var outputPath = TestData.GetTempPath();
             Console.WriteLine("Writing to: " + outputPath);
 
             // run the analyzer
             using (var output = ProcessOutput.RunHiddenAndCapture("Microsoft.PythonTools.Analyzer.exe",
-                "/lib", TestData.GetPath(@"TestData\PathStdLib"),
+                "/lib", TestData.GetPath("TestData", "PathStdLib"),
                 "/version", "2.7",
                 "/outdir", outputPath,
-                "/indir", TestData.GetPath("CompletionDB"),
+                "/indir", CompletionDB,
                 "/log", "AnalysisLog.txt")) {
                 output.Wait();
                 Console.WriteLine("* Stdout *");
@@ -169,7 +179,7 @@ namespace PythonToolsTests {
                 Assert.AreEqual(0, output.ExitCode);
             }
 
-            File.Copy(TestData.GetPath(@"CompletionDB\__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
+            File.Copy(Path.Combine(CompletionDB, "__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
 
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var paths = new List<string> { outputPath };
@@ -190,7 +200,7 @@ namespace PythonToolsTests {
         public void PydInPackage() {
             PythonPaths.Python27.AssertInstalled();
 
-            var outputPath = TestData.GetTempPath(randomSubPath: true);
+            var outputPath = TestData.GetTempPath();
             Console.WriteLine("Writing to: " + outputPath);
 
             // run the analyzer
@@ -199,7 +209,7 @@ namespace PythonToolsTests {
                 "/lib", TestData.GetPath(@"TestData\PydStdLib"),
                 "/version", "2.7",
                 "/outdir", outputPath,
-                "/indir", TestData.GetPath("CompletionDB"),
+                "/indir", CompletionDB,
                 "/log", "AnalysisLog.txt")) {
                 output.Wait();
                 Console.WriteLine("* Stdout *");
@@ -335,7 +345,7 @@ namespace PythonToolsTests {
 
             var request = new PythonTypeDatabaseCreationRequest {
                 Factory = factory,
-                OutputPath = TestData.GetTempPath(randomSubPath: true),
+                OutputPath = TestData.GetTempPath(),
                 SkipUnchanged = true,
                 OnExit = tcs.SetResult
             };

@@ -92,7 +92,7 @@ namespace ProfilingUITests {
 
         private string SaveDirectory {
             get {
-                var p = TestData.GetTempPath(randomSubPath: true);
+                var p = TestData.GetTempPath();
                 Console.WriteLine($"Saving to {p}");
                 return p;
             }

@@ -36,7 +36,6 @@ namespace DjangoTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         private void TestSingleRenderVariable(string template, string value="data") {

@@ -22,7 +22,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.CookiecutterTools.Model;
@@ -52,7 +51,6 @@ namespace CookiecutterTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestInitialize]
@@ -66,7 +64,7 @@ namespace CookiecutterTests {
             _feedTemplateSource = new MockTemplateSource();
             _projectSystemClient = new MockProjectSystemClient();
 
-            var output = TestData.GetTempPath("Cookiecutter", true);
+            var output = TestData.GetTempPath();
             var outputProjectFolder = Path.Combine(output, "project");
 
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());

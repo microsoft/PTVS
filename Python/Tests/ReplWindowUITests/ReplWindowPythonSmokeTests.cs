@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools;
@@ -96,7 +97,10 @@ namespace ReplWindowUITests {
                     app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
                 });
 
-                var project = app.OpenProject(PythonTestData.GetUnicodePathSolution());
+                var sln = TestData.GetTempPath();
+                File.Copy(TestData.GetPath("TestData", "UnicodePath.sln"), Path.Combine(sln, "UnicodePathä.sln"));
+                FileUtils.CopyDirectory(TestData.GetPath("TestData", "UnicodePath"), Path.Combine(sln, "UnicodePathä"));
+                var project = app.OpenProject(Path.Combine(sln, "UnicodePathä.sln"));
 
                 using (var interactive = app.ExecuteInInteractive(project, Settings)) {
                     interactive.WaitForTextEnd("hello world from unicode path", ">");
