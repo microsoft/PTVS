@@ -24,6 +24,7 @@ namespace TestRunnerInterop {
     public sealed class VsTestContext : IDisposable {
         private readonly string _container, _className, _testDataRoot;
         private VsInstance _vs;
+        private string _devenvExe;
 
         private Dictionary<string, DateTime> _testDataFiles;
 
@@ -35,6 +36,9 @@ namespace TestRunnerInterop {
             _container = container;
             _className = className;
             _testDataRoot = testDataRoot ?? GetDefaultTestDataDirectory();
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("_TESTDATA_NO_ROOTSUFFIX"))) {
+                RootSuffix = "Exp";
+            }
         }
 
         public void RunTest(string testName, params object[] arguments) {
@@ -51,6 +55,40 @@ namespace TestRunnerInterop {
             }
         }
 
+        public string DevEnvExe {
+            get {
+                if (_devenvExe == null) {
+                    foreach (var envVar in new string[] {
+                        $"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}",
+                        "VisualStudio_IDE",
+                        "VSAPPIDDIR"
+                    }) {
+                        _devenvExe = Environment.GetEnvironmentVariable(envVar);
+                        if (string.IsNullOrEmpty(_devenvExe)) {
+                            continue;
+                        }
+                        _devenvExe = Path.Combine(_devenvExe, "devenv.exe");
+                        if (File.Exists(_devenvExe)) {
+                            return _devenvExe;
+                        }
+
+                        _devenvExe = Path.Combine(Path.GetDirectoryName(_devenvExe), "IDE", "Common7", "devenv.exe");
+                        if (File.Exists(_devenvExe)) {
+                            return _devenvExe;
+                        }
+
+                        _devenvExe = null;
+                    }
+                }
+                return _devenvExe;
+            }
+            set {
+                _devenvExe = value;
+            }
+        }
+
+        public string RootSuffix { get; set; }
+
         public void TestInitialize(string deploymentDirectory) {
             _testDataFiles = GetAllFileInfo(_testDataRoot);
 
@@ -58,8 +96,8 @@ namespace TestRunnerInterop {
                 _vs?.Dispose();
                 _vs = new VsInstance();
                 _vs.StartOrRestart(
-                    @"C:\Program Files (x86)\Microsoft Visual Studio\Preview\Enterprise\Common7\IDE\devenv.exe",
-                    "/rootSuffix Exp",
+                    DevEnvExe,
+                    string.IsNullOrEmpty(RootSuffix) ? null : $"/rootSuffix {RootSuffix}",
                     _testDataRoot,
                     Path.Combine(deploymentDirectory, "Temp")
                 );
