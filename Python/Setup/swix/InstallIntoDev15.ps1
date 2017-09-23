@@ -91,8 +91,8 @@ if (-not $uninstall) {
 
     if ($tests) {
         gci -Directory $tests | %{
-            pushd "$_"
-            copy -Recurse -Force * (mkdir "$vs\Common7\IDE\Extensions\Microsoft\Python\Tests\$($_.Name)" -Force)
+            "Copying from $($_.FullName)"
+            copy -Recurse -Force "$($_.FullName)\*" (mkdir "$vs\Common7\IDE\Extensions\Microsoft\Python\Tests\$($_.Name)" -Force)
         }
     }
 }
