@@ -2887,7 +2887,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Sends the current editor selection to a Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Geçerli düzenleyici seçimini Etkileşimli Python penceresine gönderir.]]></Val>
+              <Val><![CDATA[Geçerli düzenleyici seçimini Python Etkileşimli penceresine gönderir.]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3187,7 +3187,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Etkileşimli Python penceresini açar.]]></Val>
+              <Val><![CDATA[Python Etkileşimli penceresini açar.]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
