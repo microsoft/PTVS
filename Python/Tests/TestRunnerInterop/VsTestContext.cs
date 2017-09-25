@@ -39,13 +39,18 @@ namespace TestRunnerInterop {
             if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("_TESTDATA_NO_ROOTSUFFIX"))) {
                 RootSuffix = "Exp";
             }
+            DefaultTimeout = TimeSpan.FromSeconds(120.0);
         }
 
-        public void RunTest(string testName, params object[] arguments) {
+        public TimeSpan DefaultTimeout { get; set; }
+
+        public void RunTest(string testName, params object[] arguments) => RunTest(DefaultTimeout, testName, arguments);
+
+        public void RunTest(TimeSpan timeout, string testName, params object[] arguments) {
             if (_vs == null) {
                 throw new InvalidOperationException("TestInitialize was not called");
             }
-            _vs.RunTest(_container, $"{_className}.{testName}", arguments);
+            _vs.RunTest(_container, $"{_className}.{testName}", timeout, arguments);
         }
 
         public void Dispose() {
