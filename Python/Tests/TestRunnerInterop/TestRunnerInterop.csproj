@@ -47,6 +47,7 @@
     <Compile Include="VisualStudioApp.cs" />
     <Compile Include="VsInstance.cs" />
     <Compile Include="VsTestContext.cs" />
+    <Compile Include="VsTestInvoker.cs" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

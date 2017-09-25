@@ -50,7 +50,7 @@ namespace TestUtilities.UI {
             if (type != null) {
                 var method = type.GetMethod(parts.Last(), BindingFlags.Instance | BindingFlags.Public);
                 if (method != null) {
-                    return InvokeTest(type, method);
+                    return InvokeTest(type, method, arguments);
                 }
             }
 
@@ -69,7 +69,7 @@ namespace TestUtilities.UI {
             _activeInstances.Clear();
         }
 
-        private IVsHostedPythonToolsTestResult InvokeTest(Type type, MethodInfo method) {
+        private IVsHostedPythonToolsTestResult InvokeTest(Type type, MethodInfo method, object[] arguments) {
             object instance;
             if (!_activeInstances.TryGetValue(type, out instance)) {
                 instance = Activator.CreateInstance(type);
@@ -77,16 +77,20 @@ namespace TestUtilities.UI {
             }
 
             var args = new List<object>();
+            var inputArgs = arguments.ToList();
             var sp = ServiceProvider.GlobalProvider;
             var dte = ServiceProvider.GlobalProvider.GetService(typeof(EnvDTE.DTE));
             try {
                 foreach (var a in method.GetParameters()) {
-                    if (typeof(IServiceProvider).IsAssignableFrom(a.ParameterType)) {
+                    if (a.ParameterType.IsAssignableFrom(typeof(IServiceProvider))) {
                         args.Add(sp);
-                    } else if (typeof(EnvDTE.DTE).IsAssignableFrom(a.ParameterType)) {
+                    } else if (a.ParameterType.IsAssignableFrom(typeof(EnvDTE.DTE))) {
                         args.Add(dte);
+                    } else if (inputArgs.Count > 0 && a.ParameterType.IsAssignableFrom(inputArgs[0].GetType())) {
+                        args.Add(inputArgs[0]);
+                        inputArgs.RemoveAt(0);
                     } else {
-                        args.Add(ConstructParameter(a.ParameterType, sp, dte));
+                        args.Add(ConstructParameter(a.ParameterType, sp, dte, inputArgs));
                     }
                 }
             } catch (Exception ex) {
@@ -135,7 +139,7 @@ namespace TestUtilities.UI {
             };
         }
 
-        private static object ConstructParameter(Type target, object serviceProvider, object dte) {
+        private static object ConstructParameter(Type target, object serviceProvider, object dte, List<object> inputArgs) {
             bool hasDefaultConstructor = false;
 
             foreach (var constructor in target.GetConstructors()) {
@@ -151,6 +155,13 @@ namespace TestUtilities.UI {
                 }
                 if (args[0].ParameterType.IsAssignableFrom(typeof(EnvDTE.DTE))) {
                     return target.InvokeMember(null, BindingFlags.CreateInstance, null, null, new[] { dte });
+                }
+                if (inputArgs.Count > 0) {
+                    var firstArg = inputArgs[0];
+                    if (args[0].ParameterType.IsAssignableFrom(firstArg.GetType())) {
+                        inputArgs.RemoveAt(0);
+                        return target.InvokeMember(null, BindingFlags.CreateInstance, null, null, new[] { firstArg });
+                    }
                 }
             }
 

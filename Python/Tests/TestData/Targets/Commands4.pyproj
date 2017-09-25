@@ -7,7 +7,7 @@
     <ProjectHome>
     </ProjectHome>
     <StartupFile>Program.py</StartupFile>
-    <SearchPath>..;..\HelloWorld</SearchPath>
+    <SearchPath>..\;..\HelloWorld</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <AssemblyName>Commands4</AssemblyName>
     <Name>Commands4</Name>
@@ -24,7 +24,6 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Program.py" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|2.6-32" />

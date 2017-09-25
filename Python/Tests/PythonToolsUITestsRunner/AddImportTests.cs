@@ -20,28 +20,24 @@ using TestRunnerInterop;
 namespace PythonToolsUITestsRunner {
     [TestClass]
     public class AddImportTests {
-        private static readonly VsTestContext _vs = new VsTestContext(
+        #region UI test boilerplate
+        public VsTestInvoker _vs => new VsTestInvoker(
+            VsTestContext.Instance,
+            // Remote container (DLL) name
             "Microsoft.PythonTools.Tests.PythonToolsUITests",
-            "PythonToolsUITests.AddImportTests",
-            null
+            // Remote class name
+            $"PythonToolsUITests.{GetType().Name}"
         );
 
         public TestContext TestContext { get; set; }
 
         [TestInitialize]
-        public void TestInitialize() {
-            _vs.TestInitialize(TestContext.DeploymentDirectory);
-        }
-
+        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
         [TestCleanup]
-        public void TestCleanup() {
-            _vs.TestCleanup();
-        }
-
+        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
         [ClassCleanup]
-        public static void ClassCleanup() {
-            _vs.Dispose();
-        }
+        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+        #endregion
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]

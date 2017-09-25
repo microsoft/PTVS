@@ -232,6 +232,22 @@ namespace TestUtilities {
             IsIronPython = ironPython;
         }
 
+        public PythonVersion(string version) {
+            var v = System.Version.Parse(version).ToLanguageVersion();
+            var candididates = PythonPaths.Versions.Where(pv => pv.IsCPython && pv.Version == v).ToArray();
+            PythonVersion selected;
+            if (candididates.Length > 1) {
+                selected = candididates.FirstOrDefault(c => c.Isx64) ?? candididates.First();
+            } else {
+                selected = candididates.FirstOrDefault();
+            }
+            selected.AssertInstalled();
+
+            Configuration = selected.Configuration;
+            IsCPython = selected.IsCPython;
+            IsIronPython = selected.IsIronPython;
+        }
+
         public override string ToString() => Configuration.Description;
         public string PrefixPath => Configuration.PrefixPath;
         public string InterpreterPath => Configuration.InterpreterPath;

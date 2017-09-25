@@ -22,35 +22,30 @@ using System.Threading;
 
 namespace TestRunnerInterop {
     public sealed class VsTestContext : IDisposable {
-        private readonly string _container, _className, _testDataRoot;
+        private readonly string _testDataRoot;
         private VsInstance _vs;
         private string _devenvExe;
 
         private Dictionary<string, DateTime> _testDataFiles;
 
-        public VsTestContext(
-            string container,
-            string className,
-            string testDataRoot
-        ) {
-            _container = container;
-            _className = className;
-            _testDataRoot = testDataRoot ?? GetDefaultTestDataDirectory();
+        private static readonly Lazy<VsTestContext> _instance = new Lazy<VsTestContext>(() => new VsTestContext());
+        public static VsTestContext Instance => _instance.Value;
+
+        private VsTestContext() {
+            DefaultTimeout = TimeSpan.FromSeconds(120.0);
+            _testDataRoot = GetDefaultTestDataDirectory();
             if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("_TESTDATA_NO_ROOTSUFFIX"))) {
                 RootSuffix = "Exp";
             }
-            DefaultTimeout = TimeSpan.FromSeconds(120.0);
         }
 
         public TimeSpan DefaultTimeout { get; set; }
 
-        public void RunTest(string testName, params object[] arguments) => RunTest(DefaultTimeout, testName, arguments);
-
-        public void RunTest(TimeSpan timeout, string testName, params object[] arguments) {
+        public void RunTest(string container, string fullTestName, TimeSpan timeout, object[] arguments) {
             if (_vs == null) {
                 throw new InvalidOperationException("TestInitialize was not called");
             }
-            _vs.RunTest(_container, $"{_className}.{testName}", timeout, arguments);
+            _vs.RunTest(container, fullTestName, timeout, arguments);
         }
 
         public void Dispose() {
@@ -200,13 +195,13 @@ namespace TestRunnerInterop {
             return path;
         }
 
-        private string GetDefaultTestDataDirectory() {
+        private static string GetDefaultTestDataDirectory() {
             var candidate = Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH");
             if (Directory.Exists(candidate)) {
                 return candidate;
             }
 
-            var rootDir = GetDirectoryAboveContaningFile(Path.GetDirectoryName(GetType().Assembly.Location), "build.root");
+            var rootDir = GetDirectoryAboveContaningFile(Path.GetDirectoryName(typeof(VsTestContext).Assembly.Location), "build.root");
             if (!string.IsNullOrEmpty(rootDir)) {
                 candidate = Path.Combine(rootDir, "Python", "Tests");
                 if (Directory.Exists(Path.Combine(candidate, "TestData"))) {
@@ -216,5 +211,6 @@ namespace TestRunnerInterop {
 
             return null;
         }
+
     }
 }

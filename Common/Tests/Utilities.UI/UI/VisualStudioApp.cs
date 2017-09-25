@@ -814,11 +814,11 @@ namespace TestUtilities.UI {
             File.Copy(fullPath, finalPath, true);
             Console.WriteLine($"Copying {fullPath} to {finalPath}");
             foreach (var line in File.ReadAllLines(fullPath)) {
-                var m = Regex.Match(line, @"Project\(.+?\) = "".+?"", ""(.+?)\\\w+\.\w+""");
+                var m = Regex.Match(line, @"Project\(.+?\) = "".+?"", ""(.+?)""");
                 if (!m.Success) {
                     continue;
                 }
-                var subdir = m.Groups[1].Value;
+                var subdir = Path.GetDirectoryName(m.Groups[1].Value);
                 var from = Path.Combine(Path.GetDirectoryName(fullPath), subdir);
                 var to = Path.Combine(basePath, subdir);
                 Console.WriteLine($"Copying {from} to {to}");
