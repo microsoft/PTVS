@@ -1288,7 +1288,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal bool IsAnalyzing {
             get {
-
                 return _parsePending > 0 || !_analysisComplete;
             }
         }

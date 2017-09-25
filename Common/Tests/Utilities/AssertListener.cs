@@ -131,7 +131,9 @@ namespace TestUtilities {
             if (Debugger.IsAttached) {
                 Debugger.Break();
             }
+
             Console.WriteLine(message);
+            Console.WriteLine(new StackTrace());
 
             if (_testContext == null) {
                 lock (_unhandled) {

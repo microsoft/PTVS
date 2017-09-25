@@ -6,14 +6,13 @@
     <ProjectGuid>{1a537bfb-bcdc-454b-8c30-fde4dbb72797}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>Program.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <SearchPath>..\PythonLibrary</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>PythonApplication3</Name>
     <RootNamespace>PythonApplication3</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>IronPython|2.7-32</InterpreterId>
+    <InterpreterId />
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments />
     <InterpreterPath />
@@ -30,12 +29,6 @@
   <ItemGroup>
     <Compile Include="Program.py" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ClassLibrary\ClassLibrary.csproj">
-      <Name>ClassLibrary</Name>
-      <Project>{32326054-184d-4603-98b8-15bb3baa5b9c}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

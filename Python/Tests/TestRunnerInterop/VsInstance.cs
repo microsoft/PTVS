@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -188,13 +189,9 @@ namespace TestRunnerInterop {
                     );
                 }
                 return;
-            } catch (Exception ex) {
-                if (!timedOut) {
-                    throw;
-                }
-                Console.WriteLine(ex);
+            } catch (COMException ex) when (timedOut) {
+                throw new TimeoutException($"Terminating {container}.{name}() after {timeout}", ex);
             }
-            throw new TimeoutException($"Terminating {container}.{name}() after {timeout}");
         }
 
         void Dispose(bool disposing) {

@@ -86,7 +86,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.RenameProjectTest));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void ProjectAddItem() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.ProjectAddItem));
@@ -182,5 +182,106 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
         }
 
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void DotNetProjectReferences() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetProjectReferences));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void DotNetAssemblyReferences() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetAssemblyReferences));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void MultipleDotNetAssemblyReferences() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultipleDotNetAssemblyReferences));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void MultiProjectAnalysis() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultiProjectAnalysis));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void CProjectReference() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.CProjectReference));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void DeprecatedPydReferenceNode() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DeprecatedPydReferenceNode));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void DeprecatedWebPIReferenceNode() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DeprecatedWebPIReferenceNode));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void AddFolderExists() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.AddFolderExists));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void AddFolderCopyAndPasteFile() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.AddFolderCopyAndPasteFile));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void CopyAndPasteFolder() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.CopyAndPasteFolder));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void AddFromFileInSubDirectory() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.AddFromFileInSubDirectory));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void AddFromFileOutsideOfProject() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.AddFromFileOutsideOfProject));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void CopyFolderWithMultipleItems() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.CopyFolderWithMultipleItems));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void OpenInteractiveFromSolutionExplorer() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.OpenInteractiveFromSolutionExplorer));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void LoadProjectWithDuplicateItems() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.LoadProjectWithDuplicateItems));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void PreviewFile() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.PreviewFile));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")]
+        public void PreviewMissingFile() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.PreviewMissingFile));
+        }
     }
 }

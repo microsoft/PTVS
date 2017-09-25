@@ -51,6 +51,7 @@ using Keyboard = TestUtilities.UI.Keyboard;
 using MessageBoxButton = TestUtilities.MessageBoxButton;
 using Mouse = TestUtilities.UI.Mouse;
 using Thread = System.Threading.Thread;
+using Task = System.Threading.Tasks.Task;
 
 namespace PythonToolsUITests {
     //[TestClass]
@@ -730,10 +731,9 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET project.  Makes sure we get completion after a build, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DotNetProjectReferences(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\ProjectReference\ProjectReference.sln", expectedProjects: 2, projectName: "PythonApplication");
+            var sln = app.CopyProjectForTest(@"TestData\ProjectReference\ProjectReference.sln");
+            var project = app.OpenProject(sln, expectedProjects: 2, projectName: "PythonApplication");
 
             app.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
             var program = project.ProjectItems.Item("Program.py");
@@ -792,12 +792,11 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DotNetAssemblyReferences(VisualStudioApp app) {
-            CompileFile("ClassLibrary.cs", "ClassLibrary.dll");
-
-            var project = app.OpenProject(@"TestData\AssemblyReference\AssemblyReference.sln");
+            var sln = app.CopyProjectForTest(@"TestData\AssemblyReference\AssemblyReference.sln");
+            var projectDir = Path.Combine(PathUtils.GetParent(sln), "PythonApplication");
+            var project = app.OpenProject(sln);
+            CompileFile(Path.Combine(projectDir, "ClassLibrary.cs"), "ClassLibrary.dll");
 
             var program = project.ProjectItems.Item("Program.py");
             var window = program.Open();
@@ -810,7 +809,7 @@ namespace PythonToolsUITests {
             var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
             AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "str");
 
-            CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
+            CompileFile(Path.Combine(projectDir, "ClassLibraryBool.cs"), "ClassLibrary.dll");
 
             WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "bool");
         }
@@ -820,13 +819,13 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultipleDotNetAssemblyReferences(VisualStudioApp app) {
-            CompileFile("ClassLibrary.cs", "ClassLibrary.dll");
-            CompileFile("ClassLibrary2.cs", "ClassLibrary2.dll");
+            var sln = app.CopyProjectForTest(@"TestData\AssemblyReference\AssemblyReference.sln");
+            var projectDir = Path.Combine(PathUtils.GetParent(sln), "PythonApplication");
+            var project = app.OpenProject(sln);
 
-            var project = app.OpenProject(@"TestData\AssemblyReference\AssemblyReference.sln");
+            CompileFile(Path.Combine(projectDir, "ClassLibrary.cs"), "ClassLibrary.dll");
+            CompileFile(Path.Combine(projectDir, "ClassLibrary2.cs"), "ClassLibrary2.dll");
 
             var program = project.ProjectItems.Item("Program2.py");
             System.Threading.Tasks.Task.Run(() => {
@@ -868,7 +867,7 @@ namespace PythonToolsUITests {
             AssertUtil.ContainsExactly(docs, "built-in function Class1.Fob()");
 
             // recompile one file, we should still have type info for both DLLs, with one updated
-            CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
+            CompileFile(Path.Combine(projectDir, "ClassLibraryBool.cs"), "ClassLibrary.dll");
 
             Assert.IsTrue(analyzer.WaitForAnalysisStarted(TimeSpan.FromSeconds(30)), "Analysis did not restart");
             analyzer.WaitForCompleteAnalysis(_ => true);
@@ -877,7 +876,7 @@ namespace PythonToolsUITests {
             AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "b", snapshot), "int");
 
             // recompile the 2nd file, we should then have updated types for both DLLs
-            CompileFile("ClassLibrary2Char.cs", "ClassLibrary2.dll");
+            CompileFile(Path.Combine(projectDir, "ClassLibrary2Char.cs"), "ClassLibrary2.dll");
 
             Thread.Sleep(2000); // allow time to reload the new DLL
             analyzer.WaitForCompleteAnalysis(_ => true);
@@ -887,13 +886,15 @@ namespace PythonToolsUITests {
         }
 
         private static IEnumerable<string> GetVariableDescriptions(IServiceProvider serviceProvider, ITextView view, string variable, ITextSnapshot snapshot) {
-            var index = snapshot.GetText().IndexOf(variable + " =");
-            var entryService = serviceProvider.GetEntryService();
-            AnalysisEntry entry;
-            if (!entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
-                return Enumerable.Empty<string>();
-            }
-            return VsProjectAnalyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index)).WaitAndUnwrapExceptions();
+            return serviceProvider.GetUIThread().Invoke(() => {
+                var index = snapshot.GetText().IndexOf(variable + " =");
+                var entryService = serviceProvider.GetEntryService();
+                AnalysisEntry entry;
+                if (!entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+                    return Enumerable.Empty<string>();
+                }
+                return VsProjectAnalyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index)).WaitAndUnwrapExceptions();
+            });
         }
 
         private static SignatureAnalysis GetSignatures(VisualStudioApp app, ITextView textView, string text, ITextSnapshot snapshot) {
@@ -907,11 +908,12 @@ namespace PythonToolsUITests {
         }
 
         private static void CompileFile(string file, string outname) {
+            Assert.IsTrue(Path.IsPathRooted(file), $"{file} is not a full path");
             string loc = typeof(string).Assembly.Location;
             using (var proc = ProcessOutput.Run(
                 Path.Combine(Path.GetDirectoryName(loc), "csc.exe"),
-                new[] { "/nologo", "/target:library", "/out:" + outname, file },
-                TestData.GetPath(@"TestData\AssemblyReference\PythonApplication"),
+                new[] { "/nologo", "/target:library", "/out:" + outname, PathUtils.GetFileOrDirectoryName(file) },
+                PathUtils.GetParent(file),
                 null,
                 false,
                 null
@@ -937,8 +939,6 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultiProjectAnalysis(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln", projectName: "PythonApplication", expectedProjects: 2);
 
@@ -954,9 +954,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot).First(), "int");
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CProjectReference(PythonVisualStudioApp app) {
+        public async Task CProjectReference(PythonVisualStudioApp app) {
             var pythons = PythonPaths.Versions.Where(p => p.Version.Is3x() && !p.Isx64).Reverse().Take(2).ToList();
             Assert.AreEqual(2, pythons.Count, "Two different Python 3 interpreters required");
             var buildPython = pythons[0];
@@ -964,7 +962,10 @@ namespace PythonToolsUITests {
             buildPython.AssertInstalled();
             testPython.AssertInstalled();
 
-            var vcproj = TestData.GetPath(@"TestData\ProjectReference\NativeModule\NativeModule.vcxproj");
+            var slnFile = app.CopyProjectForTest(@"TestData\ProjectReference\CProjectReference.sln");
+            var slnDir = PathUtils.GetParent(slnFile);
+
+            var vcproj = Path.Combine(slnDir, "NativeModule", "NativeModule.vcxproj");
             File.WriteAllText(vcproj, File.ReadAllText(vcproj)
                 .Replace("$(PYTHON_INCLUDE)", Path.Combine(buildPython.PrefixPath, "include"))
                 .Replace("$(PYTHON_LIB)", Path.Combine(buildPython.PrefixPath, "libs"))
@@ -972,42 +973,48 @@ namespace PythonToolsUITests {
 
             using (var evt = new AutoResetEvent(false))
             using (var dis = app.SelectDefaultInterpreter(buildPython)) {
-                var project = app.OpenProject(@"TestData\ProjectReference\CProjectReference.sln", projectName: "PythonApplication2", expectedProjects: 2);
+                var project = app.OpenProject(slnFile, projectName: "PythonApplication2", expectedProjects: 2);
 
                 var sln = app.GetService<IVsSolution4>(typeof(SVsSolution));
                 sln.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
                 var pyproj = project.GetPythonProject();
 
                 app.Dte.Solution.SolutionBuild.Clean(true);
-                app.Dte.Solution.SolutionBuild.Build(true);
-
-                Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\ProjectReference\Debug\native_module.pyd")), ".pyd was not created");
-
-                var searchPaths = app.ServiceProvider.GetUIThread().Invoke(() => pyproj.GetSearchPaths().ToArray());
-                AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug"));
 
                 var analyzer = pyproj.GetAnalyzer();
-                analyzer.WaitForAnalysisStarted(TimeSpan.FromSeconds(5.0));
+                var t = Task.Run(() => Assert.IsTrue(analyzer.WaitForAnalysisStarted(TimeSpan.FromSeconds(30.0))));
+
+                app.Dte.Solution.SolutionBuild.Build(true);
+
+                await t;
+
+                Assert.IsTrue(File.Exists(Path.Combine(slnDir, "Debug", "native_module.pyd")), ".pyd was not created");
+
+                var searchPaths = app.ServiceProvider.GetUIThread().Invoke(() => pyproj.GetSearchPaths().ToArray());
+                AssertUtil.ContainsExactly(searchPaths, Path.Combine(slnDir, "Debug"));
+
                 analyzer.WaitForCompleteAnalysis(_ => true);
-                for (int retries = 10; retries > 0 && analyzer.GetModulesResult(true).Result.FirstOrDefault(x => x.Name == "native_module") == null; --retries) {
-                    Thread.Sleep(500);
+
+                var modules = new string[0];
+                for (int retries = 10; retries > 0 && !modules.Contains("native_module"); --retries) {
+                    Thread.Sleep(1000);
+                    modules = (await analyzer.GetModulesResult(true)).Select(x => x.Name).OrderBy(k => k).ToArray();
                 }
-                Assert.IsNotNull(analyzer.GetModulesResult(true).Result.FirstOrDefault(x => x.Name == "native_module"), "module was not loaded");
+                AssertUtil.ContainsAtLeast(modules, "native_module");
 
                 pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
                 dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id));
                 Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
 
                 analyzer = pyproj.GetAnalyzer();
-                for (int retries = 10; retries > 0 && analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault() == null; --retries) {
-                    Thread.Sleep(500);
+                for (int retries = 10; retries > 0 && !modules.Contains("native_module"); --retries) {
+                    Thread.Sleep(1000);
+                    modules = (await analyzer.GetModulesResult(true)).Select(x => x.Name).OrderBy(k => k).ToArray();
                 }
-                Assert.IsNotNull(analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault(), "module was not reloadod");
+                AssertUtil.ContainsAtLeast(modules, "native_module");
             }
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeprecatedPydReferenceNode(PythonVisualStudioApp app) {
             var proj = app.OpenProject(@"TestData\DeprecatedReferences.sln", expectedProjects: 2, projectName: "PydReference");
             Trace.TraceInformation("References:");
@@ -1017,8 +1024,6 @@ namespace PythonToolsUITests {
             Assert.AreEqual("..\\spam.pyd", proj.GetPythonProject().GetReferenceContainer().EnumReferences().OfType<DeprecatedReferenceNode>().FirstOrDefault()?.Caption);
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeprecatedWebPIReferenceNode(PythonVisualStudioApp app) {
             var proj = app.OpenProject(@"TestData\DeprecatedReferences.sln", expectedProjects: 2, projectName: "WebPIReference");
             Trace.TraceInformation("References:");
@@ -1032,17 +1037,19 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFolderExists(VisualStudioApp app) {
+            var projectPath = app.CopyProjectForTest(@"TestData\AddFolderExists.sln");
+            var projectDir = PathUtils.GetParent(projectPath);
+
             try {
                 // Ensure X does not exist, otherwise we won't be able to create
                 // it and pass the test.
-                Directory.Delete(TestData.GetPath(@"TestData\AddFolderExists\X"), true);
+                Directory.Delete(PathUtils.GetAbsoluteDirectoryPath(projectDir, "AddFolderExists\\X"), true);
             } catch { }
-            Directory.CreateDirectory(TestData.GetPath(@"TestData\AddFolderExists\Y"));
 
-            var project = app.OpenProject(@"TestData\AddFolderExists.sln");
+            Directory.CreateDirectory(PathUtils.GetAbsoluteDirectoryPath(projectDir, "AddFolderExists\\Y"));
+
+            var project = app.OpenProject(projectPath);
             var solutionExplorer = app.OpenSolutionExplorer();
 
             var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)");
@@ -1078,10 +1085,8 @@ namespace PythonToolsUITests {
             WaitForItem(project, "X");
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFolderCopyAndPasteFile(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\AddFolderCopyAndPasteFile.sln");
+            var project = app.OpenProject(app.CopyProjectForTest(@"TestData\AddFolderCopyAndPasteFile.sln"));
             var solutionExplorer = app.OpenSolutionExplorer();
 
             solutionExplorer.FindChildOfProject(project, "Program.py").Select();
@@ -1112,10 +1117,11 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "Fob", "Program.py"));
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyAndPasteFolder(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\CopyAndPasteFolder.sln");
+            var projectPath = app.CopyProjectForTest(@"TestData\CopyAndPasteFolder.sln");
+            var projectDir = PathUtils.GetParent(projectPath);
+            var project = app.OpenProject(projectPath);
+
             var solutionExplorer = app.OpenSolutionExplorer();
             var solutionNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 project)");
 
@@ -1125,8 +1131,8 @@ namespace PythonToolsUITests {
 
             // paste to project node, make sure the files are there
             StringCollection paths = new StringCollection() {
-                    Path.Combine(Directory.GetCurrentDirectory(), "TestData", "CopiedFiles")
-                };
+                TestData.GetPath("TestData", "CopiedFiles")
+            };
 
             ClipboardSetFileDropList(paths);
 
@@ -1135,8 +1141,8 @@ namespace PythonToolsUITests {
             Keyboard.ControlV();
 
             Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "CopiedFiles"));
-            Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "SomeFile.py")));
-            Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "Fob", "SomeOtherFile.py")));
+            Assert.IsTrue(File.Exists(Path.Combine(projectDir, "CopyAndPasteFolder", "CopiedFiles", "SomeFile.py")));
+            Assert.IsTrue(File.Exists(Path.Combine(projectDir, "CopyAndPasteFolder", "CopiedFiles", "Fob", "SomeOtherFile.py")));
 
             Mouse.MoveTo(folderNode.GetClickablePoint());
             Mouse.Click();
@@ -1148,12 +1154,10 @@ namespace PythonToolsUITests {
             Thread.Sleep(2000);
 
             Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "X", "CopiedFiles"));
-            Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "SomeFile.py")));
-            Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "Fob", "SomeOtherFile.py")));
+            Assert.IsTrue(File.Exists(Path.Combine(projectDir, "CopyAndPasteFolder", "X", "CopiedFiles", "SomeFile.py")));
+            Assert.IsTrue(File.Exists(Path.Combine(projectDir, "CopyAndPasteFolder", "X", "CopiedFiles", "Fob", "SomeOtherFile.py")));
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFromFileInSubDirectory(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
             string fullPath = TestData.GetPath(@"TestData\AddExistingFolder.sln");
@@ -1174,8 +1178,6 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(folder.ProjectItems.Item("TestFile.txt"));
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFromFileOutsideOfProject(PythonVisualStudioApp app) {
             var options = app.PythonToolsService.GeneralOptions;
             var prevSetting = options.UpdateSearchPathsWhenAddingLinkedFiles;
@@ -1224,11 +1226,9 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify we can copy a folder with multiple items in it.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyFolderWithMultipleItems(VisualStudioApp app) {
             // http://mpfproj10.codeplex.com/workitem/11618
-            var project = app.OpenProject(@"TestData\FolderMultipleItems.sln");
+            var project = app.OpenProject(app.CopyProjectForTest(@"TestData\FolderMultipleItems.sln"));
             var solutionExplorer = app.SolutionExplorerTreeView;
             var solutionNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)");
 
@@ -1250,8 +1250,6 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify we can start the interactive window when focus in within solution explorer in one of our projects.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void OpenInteractiveFromSolutionExplorer(PythonVisualStudioApp app) {
             // http://pytools.codeplex.com/workitem/765
             var python = PythonPaths.Python26 ?? PythonPaths.Python27;
@@ -1277,8 +1275,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadProjectWithDuplicateItems(VisualStudioApp app) {
             var solution = app.OpenProject(@"TestData\DuplicateItems.sln");
 
@@ -1365,8 +1361,6 @@ namespace PythonToolsUITests {
         //            }
         //        }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void PreviewFile(PythonVisualStudioApp app) {
             var solution = app.OpenProject(@"TestData\HelloWorld.sln");
 
@@ -1395,8 +1389,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void PreviewMissingFile(PythonVisualStudioApp app) {
             var solution = app.OpenProject(@"TestData\MissingFiles.sln");
 
