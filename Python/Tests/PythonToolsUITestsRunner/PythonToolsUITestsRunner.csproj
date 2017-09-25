@@ -33,6 +33,8 @@
     <Compile Include="NugetTests.cs" />
     <Compile Include="ProjectHomeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PublishTest.cs" />
+    <Compile Include="RemoveImportTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core.UI\PythonToolsUITests.csproj">

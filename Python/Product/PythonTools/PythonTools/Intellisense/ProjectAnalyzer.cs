@@ -662,7 +662,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 var bp = entry.TryGetBufferParser();
                 if (bp != null) {
                     foreach (var version in analysisComplete.versions) {
-                        bp.Analyzed(version.bufferId, version.version);
+                        var buffer = bp.GetBuffer(version.bufferId);
+                        if (buffer == null) {
+                            continue;
+                        }
+
+                        buffer.UpdateLastReceivedAnalysis(version.version);
                     }
                 };
 
@@ -1354,20 +1359,21 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 LocationTracker translator = null;
                 if (bufferParser != null) {
-                    if (!bufferParser.Parsed(buffer.bufferId, buffer.version)) {
-                        // ignore receiving responses out of order...
-                        Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
-                        continue;
-                    }
-
                     var textBuffer = bufferParser.GetBuffer(buffer.bufferId);
                     if (textBuffer == null) {
                         // ignore unexpected buffer ID
                         continue;
                     }
 
+                    var newVersion = textBuffer.UpdateLastReceivedParse(buffer.version);
+                    if (newVersion == null) {
+                        // ignore receiving responses out of order...
+                        Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
+                        continue;
+                    }
+
                     translator = new LocationTracker(
-                        textBuffer.LastParseReceivedVersion,
+                        newVersion,
                         textBuffer.Buffer,
                         buffer.version
                     );

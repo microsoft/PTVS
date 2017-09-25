@@ -32,7 +32,6 @@ using TestUtilities.UI;
 using CommonUtils = pythontools::Microsoft.VisualStudioTools.CommonUtils;
 
 namespace PythonToolsUITests {
-    //[TestClass]
     public class PublishTest {
         private static string TestFtpUrl = "ftp://anonymous:blazzz@" + GetPyToolsIp() + "/testdir";
 
@@ -92,8 +91,6 @@ namespace PythonToolsUITests {
             return WaitForFiles(dir);
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFiles(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\HelloWorld.sln");
             try {
@@ -116,8 +113,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishReadOnlyFiles(VisualStudioApp app) {
             var sourceFile = TestData.GetPath(@"TestData\HelloWorld\Program.py");
             Assert.IsTrue(File.Exists(sourceFile), sourceFile + " not found");
@@ -149,8 +144,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesControlled(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\PublishTest.sln");
             try {
@@ -177,8 +170,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesImpersonate(VisualStudioApp app) {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             try {
@@ -280,8 +271,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesImpersonateWrongCredentials(VisualStudioApp app) {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             try {
@@ -317,8 +306,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesImpersonateCancelCredentials(VisualStudioApp app) {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             try {
@@ -355,8 +342,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFtp(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\HelloWorld.sln");
             string subDir = Guid.NewGuid().ToString();
@@ -386,8 +371,6 @@ namespace PythonToolsUITests {
             Directory.Delete(dir, true);
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishVirtualEnvironment(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\VirtualEnv.sln");
             var dir = TestData.GetTempPath();

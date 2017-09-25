@@ -48,10 +48,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 while (lastAnalysisVersion.Next != null && lastAnalysisVersion.VersionNumber != fromVersion) {
                     lastAnalysisVersion = lastAnalysisVersion.Next;
                 }
-            } else {
-                // Warn the developer, but we should be able to continue with
-                // the ITextVersion that was provided.
-                Debug.Fail("fromVersion {0} was less than lastAnalysisVersion {1}".FormatInvariant(fromVersion, lastAnalysisVersion.VersionNumber));
             }
 
             _fromVersion = lastAnalysisVersion;
