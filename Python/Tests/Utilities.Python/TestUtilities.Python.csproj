@@ -111,7 +111,7 @@
     <Compile Include="PythonPerfExplorer.cs" />
     <Compile Include="PythonPerfTarget.cs" />
     <Compile Include="PythonPerfToolBar.cs" />
-    <Compile Include="PythonProjectTest.cs" />
+    <Compile Include="PythonProjectGenerator.cs" />
     <Compile Include="PythonToolsTestUtilities.cs" />
     <Compile Include="EditorWindowExtensions.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />

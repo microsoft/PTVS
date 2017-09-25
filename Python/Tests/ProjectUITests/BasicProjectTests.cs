@@ -34,11 +34,7 @@ using VSLangProj;
 
 namespace ProjectUITests {
     [TestClass]
-    public class BasicProjectTests : SharedProjectTest {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
+    public class BasicProjectTests {
 
 #if FALSE
         //[TestMethod, Priority(1)]
@@ -151,15 +147,15 @@ namespace ProjectUITests {
             return new ProjectDefinition(
                 "HelloWorld",
                 projectType,
-                Compile("server"),
-                Compile("..\\Extra", isExcluded: true)
+                ProjectGenerator.Compile("server"),
+                ProjectGenerator.Compile("..\\Extra", isExcluded: true)
             );
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ProjectAddItem(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ProjectAddItem(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = BasicProject(projectType).Generate().ToVs(app)) {
                     var project = solution.GetProject("HelloWorld");
 
@@ -197,20 +193,20 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CleanSolution(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CleanSolution(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Property("OutputPath", "."),
-                    Compile("server"),
-                    Target(
+                    ProjectGenerator.Property("OutputPath", "."),
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Target(
                         "Clean",
-                        Tasks.Message("Hello Clean World!", importance: "high")
+                        ProjectGenerator.Tasks.Message("Hello Clean World!", importance: "high")
                     ),
-                    Target(
+                    ProjectGenerator.Target(
                         "CoreCompile",
-                        Tasks.Message("CoreCompile", importance: "high")
+                        ProjectGenerator.Tasks.Message("CoreCompile", importance: "high")
                     )
 
                 );
@@ -229,22 +225,22 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void BuildSolution(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void BuildSolution(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Property("OutputPath", "."),
-                    Compile("server"),
-                    Target(
+                    ProjectGenerator.Property("OutputPath", "."),
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Target(
                         "Build",
-                        Tasks.Message("Hello Build World!", importance: "high")
+                        ProjectGenerator.Tasks.Message("Hello Build World!", importance: "high")
                     ),
-                    Target(
+                    ProjectGenerator.Target(
                         "CoreCompile",
-                        Tasks.Message("CoreCompile", importance: "high")
+                        ProjectGenerator.Tasks.Message("CoreCompile", importance: "high")
                     ),
-                    Target("CreateManifestResourceNames")
+                    ProjectGenerator.Target("CreateManifestResourceNames")
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     var msbuildLogProperty = solution.Dte.get_Properties("Environment", "ProjectsAndSolution").Item("MSBuildOutputVerbosity");
@@ -1184,7 +1180,7 @@ namespace ProjectUITests {
 #endif
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void OpenCommandHere(VisualStudioApp app) {
+        public void OpenCommandHere(VisualStudioApp app, ProjectGenerator pg) {
             var existing = System.Diagnostics.Process.GetProcesses().Select(x => x.Id).ToSet();
             try {
                 app.Dte.Commands.Item("File.OpenCommandPromptHere");
@@ -1192,12 +1188,12 @@ namespace ProjectUITests {
                 Assert.Inconclusive("Open Command Prompt Here command is not implemented");
             }
 
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("server"),
-                    Folder("Folder", isExcluded: true)
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Folder("Folder", isExcluded: true)
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -1229,14 +1225,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void PasteFileWhileOpenInEditor(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void PasteFileWhileOpenInEditor(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("server"),
-                    Folder("Folder", isExcluded: true),
-                    Compile("Folder\\server", content: "// new server", isExcluded: true)
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Folder("Folder", isExcluded: true),
+                    ProjectGenerator.Compile("Folder\\server", content: "// new server", isExcluded: true)
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     var window = solution.GetProject("HelloWorld").ProjectItems.Item(projectType.Code("server")).Open();
@@ -1276,13 +1272,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ItemVisibility(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ItemVisibility(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var imported = new ProjectDefinition(
                     "Imported",
-                    ItemGroup(
-                        CustomItem("MyItemType", "..\\Imported\\ImportedItem.txt", ""),
-                        CustomItem(
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.CustomItem("MyItemType", "..\\Imported\\ImportedItem.txt", ""),
+                        ProjectGenerator.CustomItem(
                             "MyItemType",
                             "..\\Imported\\VisibleItem.txt",
                             "",
@@ -1293,14 +1289,14 @@ namespace ProjectUITests {
                 var baseProj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    CustomItem(
+                    ProjectGenerator.CustomItem(
                         "MyItemType",
                         "ProjectInvisible.txt",
                         "",
                         metadata: new Dictionary<string, string>() { { "Visible", "false" } }
                     ),
-                    Import("..\\Imported\\Imported.proj"),
-                    Property("ProjectView", "ProjectFiles")
+                    ProjectGenerator.Import("..\\Imported\\Imported.proj"),
+                    ProjectGenerator.Property("ProjectView", "ProjectFiles")
                 );
 
                 var solutionFile = SolutionFile.Generate("HelloWorld", baseProj, imported);
@@ -1314,12 +1310,12 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ProjectAddExistingExcludedFolder(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ProjectAddExistingExcludedFolder(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Folder("Folder", isExcluded: true)
+                    ProjectGenerator.Folder("Folder", isExcluded: true)
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -1456,12 +1452,12 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RenameFile(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void RenameFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("server")
+                    ProjectGenerator.Compile("server")
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
@@ -1507,13 +1503,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RenameFileExistsInHierarchy(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void RenameFileExistsInHierarchy(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("server"),
-                    Compile("server2", isMissing: true)
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Compile("server2", isMissing: true)
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
@@ -1552,13 +1548,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RenameFileExistsInHierarchy_FileOpen_Cancel(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void RenameFileExistsInHierarchy_FileOpen_Cancel(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("server"),
-                    Compile("server2")
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Compile("server2")
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
@@ -1606,13 +1602,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RenameFileExistsInHierarchy_FileOpen_Save(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void RenameFileExistsInHierarchy_FileOpen_Save(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("server"),
-                    Compile("server2")
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Compile("server2")
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
@@ -1662,13 +1658,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RenameFileExistsInHierarchy_FileOpen_DontSave(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void RenameFileExistsInHierarchy_FileOpen_DontSave(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("server"),
-                    Compile("server2")
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Compile("server2")
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     Console.WriteLine(projectType.ProjectExtension);
@@ -1710,14 +1706,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void IsDocumentInProject(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void IsDocumentInProject(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("file1"),
-                    Folder("folder"),
-                    Compile("folder\\file2")
+                    ProjectGenerator.Compile("file1"),
+                    ProjectGenerator.Folder("folder"),
+                    ProjectGenerator.Compile("folder\\file2")
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     var project = (IVsProject)((dynamic)solution.GetProject("HelloWorld")).Project;
@@ -1752,14 +1748,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void DeleteFolderWithReadOnlyFile(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void DeleteFolderWithReadOnlyFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
                     "HelloWorld",
                     projectType,
-                    Compile("file1"),
-                    Folder("folder"),
-                    Compile("folder\\file2")
+                    ProjectGenerator.Compile("file1"),
+                    ProjectGenerator.Folder("folder"),
+                    ProjectGenerator.Compile("folder\\file2")
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     foreach (var item in proj.Items.OfType<CompileItem>()) {

@@ -16,6 +16,7 @@
       <Asset Type="Microsoft.VisualStudio.Assembly" Path="|TestUtilities;_GetTargetPath|" AssemblyName="|TestUtilities;_GetAssemblyName|" />
       <Asset Type="Microsoft.VisualStudio.Assembly" Path="|TestUtilities.Python.Analysis;_GetTargetPath|" AssemblyName="|TestUtilities.Python.Analysis;_GetAssemblyName|" />
       <Asset Type="Microsoft.VisualStudio.Assembly" Path="|TestUtilities.UI;_GetTargetPath|" AssemblyName="|TestUtilities.UI;_GetAssemblyName|" />
+      <Asset Type="Microsoft.VisualStudio.MEFComponent" Path="|%CurrentProject%;_GetTargetPath|" />
     </Assets>
     <Prerequisites>
         <Prerequisite Id="Microsoft.VisualStudio.CoreEditor" Version="15.0"/>

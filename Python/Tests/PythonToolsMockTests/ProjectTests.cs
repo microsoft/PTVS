@@ -36,20 +36,12 @@ using TestUtilities.SharedProject;
 
 namespace PythonToolsMockTests {
     [TestClass]
-    public class ProjectTests : SharedProjectTest {
-        public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
-
-        [ClassInitialize]
-        public static void Initialize(TestContext context) {
-            AssertListener.Initialize();
-        }
-
+    public class ProjectTests {
         [TestMethod, Priority(1)]
-        public void BasicProjectTest() {
-            var sln = new ProjectDefinition(
+        public void BasicProjectTest(PythonProjectGenerator pg) {
+            var sln = pg.Project(
                 "HelloWorld",
-                PythonProject,
-                Compile("server", "")
+                ProjectGenerator.Compile("server", "")
             ).Generate();
 
             using (var vs = sln.ToMockVs()) {
@@ -68,13 +60,13 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(1)]
-        public void CutRenamePaste() {
-            foreach (var projectType in ProjectTypes) {
+        public void CutRenamePaste(PythonProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CutRenamePaste"),
-                        Compile("CutRenamePaste\\CutRenamePaste")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CutRenamePaste"),
+                        ProjectGenerator.Compile("CutRenamePaste\\CutRenamePaste")
                     )
                 );
 
@@ -100,11 +92,10 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(1)]
-        public void ShouldWarnOnRun() {
-            var sln = new ProjectDefinition(
+        public void ShouldWarnOnRun(PythonProjectGenerator pg) {
+            var sln = pg.Project(
                 "HelloWorld",
-                PythonProject,
-                Compile("app", "print \"hello\"")
+                ProjectGenerator.Compile("app", "print \"hello\"")
             ).Generate();
 
             using (var vs = sln.ToMockVs())
@@ -145,11 +136,10 @@ namespace PythonToolsMockTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")] // Requires .targets file to be installed
-        public void OAProjectMustBeRightType() {
-            var sln = new ProjectDefinition(
+        public void OAProjectMustBeRightType(PythonProjectGenerator pg) {
+            var sln = pg.Project(
                 "HelloWorld",
-                PythonProject,
-                Compile("server", "")
+                ProjectGenerator.Compile("server", "")
             ).Generate();
 
             using (var vs = sln.ToMockVs()) {

@@ -25,21 +25,16 @@ using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     //[TestClass]
-    public class SnippetsTests : PythonProjectTest {
-        [TestInitialize]
-        public void TestInitialize() {
-            AssertListener.Initialize();
-        }
-
-        private static ProjectDefinition BasicProjectDefinition = Project(
+    public class SnippetsTests {
+        private static ProjectDefinition BasicProjectDefinition = new ProjectDefinition(
             "SnippetsTest",
-            Compile("app", ""),
-            Compile("indented", "if True:\r\n    \r\n    pass"),
-            Compile("nonempty", "42"),
-            Compile("multiline", "1\r\n2\r\n3"),
-            Compile("imported", "import unittest\r\n"),
-            Compile("importedas", "import unittest as foo\r\n"),
-            Compile("badimport", "import\r\n")
+            ProjectGenerator.Compile("app", ""),
+            ProjectGenerator.Compile("indented", "if True:\r\n    \r\n    pass"),
+            ProjectGenerator.Compile("nonempty", "42"),
+            ProjectGenerator.Compile("multiline", "1\r\n2\r\n3"),
+            ProjectGenerator.Compile("imported", "import unittest\r\n"),
+            ProjectGenerator.Compile("importedas", "import unittest as foo\r\n"),
+            ProjectGenerator.Compile("badimport", "import\r\n")
         );
 
         private static SolutionFile BasicProject => BasicProjectDefinition.Generate();

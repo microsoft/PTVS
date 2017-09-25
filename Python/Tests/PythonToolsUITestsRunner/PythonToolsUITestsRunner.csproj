@@ -28,6 +28,10 @@
     <Compile Include="BasicProjectTests.cs" />
     <Compile Include="BuildTasksUITests.cs" />
     <Compile Include="EditorTests.cs" />
+    <Compile Include="ErrorListTaskListTests.cs" />
+    <Compile Include="FormattingUITests.cs" />
+    <Compile Include="NugetTests.cs" />
+    <Compile Include="ProjectHomeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

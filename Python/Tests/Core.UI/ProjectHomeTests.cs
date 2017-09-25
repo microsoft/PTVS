@@ -15,29 +15,21 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Input;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project.Automation;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
-using Keyboard = TestUtilities.UI.Keyboard;
 using Mouse = TestUtilities.UI.Mouse;
 using Path = System.IO.Path;
 
 namespace PythonToolsUITests {
-    //[TestClass]
     public class ProjectHomeTests {
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadRelativeProjects(VisualStudioApp app) {
             string fullPath = TestData.GetPath(@"TestData\ProjectHomeProjects.sln");
             app.OpenProject(@"TestData\ProjectHomeProjects.sln", expectedProjects: 9);
@@ -85,10 +77,10 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteItem(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\ProjectHomeSingleProject.sln");
+            var sln = app.CopyProjectForTest(@"TestData\ProjectHomeSingleProject.sln");
+            var slnDir = PathUtils.GetParent(sln);
+            var project = app.OpenProject(sln);
 
             Assert.AreEqual("ProjectSingle.pyproj", Path.GetFileName(project.FileName));
 
@@ -99,19 +91,19 @@ namespace PythonToolsUITests {
             Assert.AreEqual(false, project.Saved);
             project.Save();
             Assert.AreEqual(true, project.Saved);
-            Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\ProjectHomeProjects\TemplateItem.py")));
+            Assert.IsTrue(File.Exists(Path.Combine(slnDir, "ProjectHomeProjects", "TemplateItem.py")));
 
             newItem.Delete();
             Assert.AreEqual(false, project.Saved);
             project.Save();
             Assert.AreEqual(true, project.Saved);
-            Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\ProjectHomeProjects\TemplateItem.py")));
+            Assert.IsFalse(File.Exists(Path.Combine(slnDir, "ProjectHomeProjects", "TemplateItem.py")));
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteItem2(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\ProjectHomeSingleProject.sln");
+            var sln = app.CopyProjectForTest(@"TestData\ProjectHomeSingleProject.sln");
+            var slnDir = PathUtils.GetParent(sln);
+            var project = app.OpenProject(sln);
 
             var folder = project.ProjectItems.Item("Subfolder");
 
@@ -124,17 +116,15 @@ namespace PythonToolsUITests {
             Assert.AreEqual(false, project.Saved);
             project.Save();
             Assert.AreEqual(true, project.Saved);
-            Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\ProjectHomeProjects\Subfolder\TemplateItem.py")));
+            Assert.IsTrue(File.Exists(Path.Combine(slnDir, "ProjectHomeProjects", "Subfolder", "TemplateItem.py")));
 
             newItem.Delete();
             Assert.AreEqual(false, project.Saved);
             project.Save();
             Assert.AreEqual(true, project.Saved);
-            Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\ProjectHomeProjects\Subfolder\TemplateItem.py")));
+            Assert.IsFalse(File.Exists(Path.Combine(slnDir, "ProjectHomeProjects", "Subfolder", "TemplateItem.py")));
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteFolder(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\ProjectHomeSingleProject.sln");
 
@@ -148,8 +138,6 @@ namespace PythonToolsUITests {
             newFolder.Delete();
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDeleteSubfolder(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\ProjectHomeSingleProject.sln");
 
@@ -165,17 +153,18 @@ namespace PythonToolsUITests {
             newFolder.Delete();
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveProjectAndCheckProjectHome(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var slnDir = PathUtils.GetParent(sln);
+
             EnvDTE.Project project;
             try {
-                project = app.OpenProject(@"TestData\HelloWorld.sln");
+                project = app.OpenProject(sln);
 
-                project.SaveAs(TestData.GetPath(@"TestData\ProjectHomeProjects\TempFile.pyproj"));
+                project.SaveAs(Path.Combine(slnDir, "ProjectHomeProjects", "TempFile.pyproj"));
 
                 Assert.AreEqual(
-                    PathUtils.TrimEndSeparator(TestData.GetPath(@"TestData\HelloWorld\")),
+                    PathUtils.TrimEndSeparator(Path.Combine(slnDir, "HelloWorld")),
                     PathUtils.TrimEndSeparator(((OAProject)project).ProjectNode.ProjectHome)
                 );
 
@@ -186,18 +175,21 @@ namespace PythonToolsUITests {
                 GC.WaitForPendingFinalizers();
             }
 
-            project = app.OpenProject(@"TestData\HelloWorldRelocated.sln");
+            project = app.OpenProject(Path.Combine(slnDir, "HelloWorldRelocated.sln"));
 
             Assert.AreEqual("TempFile.pyproj", project.FileName);
 
-            Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\"),
-                ((OAProject)project).ProjectNode.ProjectHome);
+            Assert.AreEqual(
+                PathUtils.TrimEndSeparator(Path.Combine(slnDir, "HelloWorld")),
+                PathUtils.TrimEndSeparator(((OAProject)project).ProjectNode.ProjectHome)
+            );
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DragDropTest(VisualStudioApp app) {
-            app.OpenProject(@"TestData\DragDropRelocatedTest.sln");
+        public void DragDropRelocatedTest(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\DragDropRelocatedTest.sln");
+            var slnDir = PathUtils.GetParent(sln);
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "DragDropRelocatedTest"), Path.Combine(slnDir, "DragDropRelocatedTest"));
+            app.OpenProject(sln);
 
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
@@ -219,16 +211,17 @@ namespace PythonToolsUITests {
 
             app.Dte.Solution.Close(true);
             // Ensure file was moved and the path was updated correctly.
-            var project = app.OpenProject(@"TestData\DragDropRelocatedTest.sln");
+            var project = app.OpenProject(sln);
             foreach (var item in project.ProjectItems.OfType<OAFileItem>()) {
                 Assert.IsTrue(File.Exists((string)item.Properties.Item("FullPath").Value), (string)item.Properties.Item("FullPath").Value);
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CutPasteTest(VisualStudioApp app) {
-            app.OpenProject(@"TestData\CutPasteRelocatedTest.sln");
+        public void CutPasteRelocatedTest(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\CutPasteRelocatedTest.sln");
+            var slnDir = PathUtils.GetParent(sln);
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "CutPasteRelocatedTest"), Path.Combine(slnDir, "CutPasteRelocatedTest"));
+            app.OpenProject(sln);
 
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
@@ -245,7 +238,7 @@ namespace PythonToolsUITests {
 
             app.Dte.Solution.Close(true);
             // Ensure file was moved and the path was updated correctly.
-            var project = app.OpenProject(@"TestData\CutPasteRelocatedTest.sln");
+            var project = app.OpenProject(sln);
             foreach (var item in project.ProjectItems.OfType<OAFileItem>()) {
                 Assert.IsTrue(File.Exists((string)item.Properties.Item("FullPath").Value), (string)item.Properties.Item("FullPath").Value);
             }

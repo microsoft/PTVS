@@ -16,17 +16,13 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
-    //[TestClass]
     public class NugetTests {
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddDifferentFileType(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\HelloWorld.sln");
-            string fullPath = TestData.GetPath(@"TestData\HelloWorld.sln");
+            var fullPath = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var project = app.OpenProject(fullPath);
 
             // "Python Environments", "References", "Search Paths", "Program.py"
             Assert.AreEqual(4, project.ProjectItems.Count);
@@ -35,8 +31,6 @@ namespace PythonToolsUITests {
             Assert.AreEqual("EmptyXName.xaml", item.Properties.Item("FileName").Value);
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FileNamesResolve(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\HelloWorld.sln");
 

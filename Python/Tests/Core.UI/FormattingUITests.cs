@@ -18,27 +18,19 @@ extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Automation;
 using analysis::Microsoft.PythonTools.Parsing;
-using EnvDTE;
 using Microsoft.PythonTools;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Document;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    //[TestClass]
     public class FormattingUITests {
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ToggleableOptionTest(PythonVisualStudioApp app) {
             app.PythonToolsService.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
             foreach (var expectedResult in new bool?[] { false, null, true }) {
@@ -66,8 +58,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatDocument(PythonVisualStudioApp app) {
             FormattingTest(app, "document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
@@ -79,8 +69,6 @@ def g():
     pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatAsyncDocument(PythonVisualStudioApp app) {
             FormattingTest(app, "async.py", null, @"async  def f(x):
     async  for  i in await  x:
@@ -92,8 +80,6 @@ def g():
         }
 
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelection(PythonVisualStudioApp app) {
             FormattingTest(app, "selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
@@ -105,8 +91,6 @@ def g():
     pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelectionNoSelection(PythonVisualStudioApp app) {
             FormattingTest(app, "selection2.py", new Span(5, 0), @"x=1
 
@@ -115,8 +99,6 @@ y=2
 z=3", new Span[0], null, null);
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatReduceLines(PythonVisualStudioApp app) {
             FormattingTest(
                 app,

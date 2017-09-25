@@ -32,7 +32,7 @@ using Mouse = TestUtilities.UI.Mouse;
 
 namespace ProjectUITests {
     //[TestClass]
-    public class SourceControl : SharedProjectTest {
+    public class SourceControl {
         private static Regex _pathRegex = new Regex(@"\{path:([^}]*)\}");
         const string VSQUERYRENAMEFILEFLAGS_NoFlags = "VSQUERYRENAMEFILEFLAGS_NoFlags";
         const string VSQUERYRENAMEFILEFLAGS_Directory = "VSQUERYRENAMEFILEFLAGS_Directory";
@@ -61,7 +61,7 @@ namespace ProjectUITests {
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
         // Currently Fails: https://pytools.codeplex.com/workitem/2609
-        public void MoveFolderWithItem(VisualStudioApp app) {
+        public void MoveFolderWithItem(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
 
@@ -69,19 +69,19 @@ namespace ProjectUITests {
 
             ExpectSourceControl();
 
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("SourceControl", projectType,
-                    PropertyGroup(
-                        Property("SccProjectName", "HelloWorld"),
-                        Property("SccLocalPath", "LocalPath"),
-                        Property("SccAuxPath", "AuxPath"),
-                        Property("SccProvider", "TestProvider")
+                    ProjectGenerator.PropertyGroup(
+                        ProjectGenerator.Property("SccProjectName", "HelloWorld"),
+                        ProjectGenerator.Property("SccLocalPath", "LocalPath"),
+                        ProjectGenerator.Property("SccAuxPath", "AuxPath"),
+                        ProjectGenerator.Property("SccProvider", "TestProvider")
                     ),
-                    ItemGroup(
-                        Folder("Fob"),
-                        Folder("Fob\\Oar"),
-                        Compile("Program"),
-                        Compile("Fob\\Oar\\Quox")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Fob"),
+                        ProjectGenerator.Folder("Fob\\Oar"),
+                        ProjectGenerator.Compile("Program"),
+                        ProjectGenerator.Compile("Fob\\Oar\\Quox")
                     )
                 );
 
@@ -113,12 +113,12 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void AddNewItem(VisualStudioApp app) {
+        public void AddNewItem(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
 
             app.SelectSourceControlProvider("Test Source Provider");
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = SourceControlProject(projectType);
 
                 using (var solution = testDef.Generate()) {
@@ -143,12 +143,12 @@ namespace ProjectUITests {
             }
         }
 
-        public void AddExistingItem(VisualStudioApp app) {
+        public void AddExistingItem(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
 
             app.SelectSourceControlProvider("Test Source Provider");
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = SourceControlProject(projectType);
 
                 using (var solution = testDef.Generate()) {
@@ -175,12 +175,12 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void IncludeInProject(VisualStudioApp app) {
+        public void IncludeInProject(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
 
             app.SelectSourceControlProvider("Test Source Provider");
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = SourceControlProject(projectType);
 
                 using (var solution = testDef.Generate().ToVs(app)) {
@@ -212,12 +212,12 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RemoveItem(VisualStudioApp app) {
+        public void RemoveItem(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
 
             app.SelectSourceControlProvider("Test Source Provider");
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = SourceControlProject(projectType);
 
                 using (var solution = testDef.Generate()) {
@@ -252,7 +252,7 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void BasicSourceControl(VisualStudioApp app) {
+        public void BasicSourceControl(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
 
@@ -260,7 +260,7 @@ namespace ProjectUITests {
 
             ExpectSourceControl();
 
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = SourceControlProject(projectType);
 
                 using (var solution = testDef.Generate()) {
@@ -297,13 +297,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void SourceControlGlyphChanged(VisualStudioApp app) {
+        public void SourceControlGlyphChanged(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
 
             app.SelectSourceControlProvider("Test Source Provider");
 
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = SourceControlProject(projectType);
                 using (var solution = testDef.Generate()) {
                     var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
@@ -346,14 +346,14 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void SourceControlNoControl(VisualStudioApp app) {
+        public void SourceControlNoControl(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
 
             app.SelectSourceControlProvider("Test Source Provider");
             DontExpectSourceControl();
 
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = NoSourceControlProject(projectType);
                 using (var solution = testDef.Generate()) {
                     var project = app.OpenProject(solution.Filename, onDialog: OnNoSccDialog);
@@ -379,8 +379,8 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void SourceControlExcludedFilesNotPresent(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void SourceControlExcludedFilesNotPresent(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = SourceControlProject(projectType).Generate()) {
                     // close any projects before switching source control...
                     app.Dte.Solution.Close();
@@ -406,8 +406,8 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void SourceControlRenameFolder(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void SourceControlRenameFolder(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 // close any projects before switching source control...
                 app.Dte.Solution.Close();
 
@@ -570,25 +570,25 @@ namespace ProjectUITests {
 
         private static ProjectDefinition SourceControlProject(ProjectType projectType) {
             return new ProjectDefinition("SourceControl", projectType,
-                PropertyGroup(
-                    Property("SccProjectName", "HelloWorld"),
-                    Property("SccLocalPath", "LocalPath"),
-                    Property("SccAuxPath", "AuxPath"),
-                    Property("SccProvider", "TestProvider")
+                ProjectGenerator.PropertyGroup(
+                    ProjectGenerator.Property("SccProjectName", "HelloWorld"),
+                    ProjectGenerator.Property("SccLocalPath", "LocalPath"),
+                    ProjectGenerator.Property("SccAuxPath", "AuxPath"),
+                    ProjectGenerator.Property("SccProvider", "TestProvider")
                 ),
-                ItemGroup(
-                    Folder("TestFolder"),
-                    Compile("Program"),
-                    Compile("TestFolder\\SubItem"),
-                    Compile("ExcludedFile", isExcluded: true)
+                ProjectGenerator.ItemGroup(
+                    ProjectGenerator.Folder("TestFolder"),
+                    ProjectGenerator.Compile("Program"),
+                    ProjectGenerator.Compile("TestFolder\\SubItem"),
+                    ProjectGenerator.Compile("ExcludedFile", isExcluded: true)
                 )
             );
         }
 
         private static ProjectDefinition NoSourceControlProject(ProjectType projectType) {
             return new ProjectDefinition("NoSourceControl", projectType,
-                ItemGroup(
-                    Compile("Program")
+                ProjectGenerator.ItemGroup(
+                    ProjectGenerator.Compile("Program")
                 )
             );
         }

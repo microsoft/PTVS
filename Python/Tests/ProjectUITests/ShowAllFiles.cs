@@ -29,17 +29,17 @@ using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ProjectUITests {
     //[TestClass]
-    public class ShowAllFiles : SharedProjectTest {
+    public class ShowAllFiles {
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesToggle(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesToggle(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFiles",
                     projectType,
-                    Folder("SubFolder"),
-                    Compile("SubFolder\\server"),
-                    Property("ProjectView", "ProjectFiles")
+                    ProjectGenerator.Folder("SubFolder"),
+                    ProjectGenerator.Compile("SubFolder\\server"),
+                    ProjectGenerator.Property("ProjectView", "ProjectFiles")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -55,8 +55,8 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesFilesAlwaysHidden(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesFilesAlwaysHidden(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = MakeBasicProject(projectType);
                 using (var solution = def.Generate().ToVs(app)) {
                     var projectNode = solution.WaitForItem("ShowAllFiles");
@@ -68,18 +68,18 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesSymLinks(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesSymLinks(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesSymLink",
                     projectType,
-                    Folder("SubFolder")
+                    ProjectGenerator.Folder("SubFolder")
                 );
                 var userDef = new ProjectDefinition(
                     def.Name,
                     projectType,
                     true,
-                    Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                 );
 
                 var solutionFile = SolutionFile.Generate(def.Name, def, userDef);
@@ -130,15 +130,15 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesLinked(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesLinked(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesLinked",
                     projectType,
-                    Compile("..\\File"),
-                    Folder("SubFolder"),
-                    Compile("..\\LinkedFile").Link("SubFolder\\LinkedFile"),
-                    Property("ProjectView", "ProjectFiles")
+                    ProjectGenerator.Compile("..\\File"),
+                    ProjectGenerator.Folder("SubFolder"),
+                    ProjectGenerator.Compile("..\\LinkedFile").Link("SubFolder\\LinkedFile"),
+                    ProjectGenerator.Property("ProjectView", "ProjectFiles")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -171,34 +171,34 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesIncludeExclude(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesIncludeExclude(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesIncludeExclude",
                     projectType,
-                    ItemGroup(
-                        Folder("ExcludeFolder1"),
-                        Folder("ExcludeFolder2"),
-                        Folder("IncludeFolder1", isExcluded: true),
-                        Folder("IncludeFolder2", isExcluded: true),
-                        Folder("IncludeFolder3", isExcluded: true),
-                        Folder("NotOnDiskFolder", isMissing: true)
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("ExcludeFolder1"),
+                        ProjectGenerator.Folder("ExcludeFolder2"),
+                        ProjectGenerator.Folder("IncludeFolder1", isExcluded: true),
+                        ProjectGenerator.Folder("IncludeFolder2", isExcluded: true),
+                        ProjectGenerator.Folder("IncludeFolder3", isExcluded: true),
+                        ProjectGenerator.Folder("NotOnDiskFolder", isMissing: true)
                     ),
-                    ItemGroup(
-                        Compile("NotInProject", isExcluded: true),
-                        Compile("server"),
-                        Compile("NotOnDisk", isMissing: true),
-                        Content("ExcludeFolder1\\Item.txt", ""),
-                        Content("ExcludeFolder2\\Item.txt", ""),
-                        Content("IncludeFolder1\\Item.txt", "", isExcluded: true),
-                        Content("IncludeFolder2\\Item.txt", "", isExcluded: true),
-                        Content("IncludeFolder2\\Item2.txt", "", isExcluded: true),
-                        Content("IncludeFolder3\\Text.txt", "", isExcluded: true),
-                        Compile("..\\LinkedFile")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("NotInProject", isExcluded: true),
+                        ProjectGenerator.Compile("server"),
+                        ProjectGenerator.Compile("NotOnDisk", isMissing: true),
+                        ProjectGenerator.Content("ExcludeFolder1\\Item.txt", ""),
+                        ProjectGenerator.Content("ExcludeFolder2\\Item.txt", ""),
+                        ProjectGenerator.Content("IncludeFolder1\\Item.txt", "", isExcluded: true),
+                        ProjectGenerator.Content("IncludeFolder2\\Item.txt", "", isExcluded: true),
+                        ProjectGenerator.Content("IncludeFolder2\\Item2.txt", "", isExcluded: true),
+                        ProjectGenerator.Content("IncludeFolder3\\Text.txt", "", isExcluded: true),
+                        ProjectGenerator.Compile("..\\LinkedFile")
                     ),
-                    PropertyGroup(
-                        Property("ProjectView", "ShowAllFiles"),
-                        StartupFile("server")
+                    ProjectGenerator.PropertyGroup(
+                        ProjectGenerator.Property("ProjectView", "ShowAllFiles"),
+                        ProjectGenerator.StartupFile("server")
                     )
                 );
 
@@ -367,8 +367,8 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesChanges(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesChanges(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = MakeBasicProject(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.WaitForItem("ShowAllFiles");
                     AutomationWrapper.Select(projectNode);
@@ -451,25 +451,25 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesHiddenFiles(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesHiddenFiles(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesHiddenFiles",
                     projectType,
-                    ItemGroup(
-                        Folder("Folder", isExcluded: true),
-                        Folder("HiddenFolder", isExcluded: true)
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Folder", isExcluded: true),
+                        ProjectGenerator.Folder("HiddenFolder", isExcluded: true)
                     ),
-                    ItemGroup(
-                        Compile("NotInProject", isExcluded: true),
-                        Compile("NotInProject2", isExcluded: true),
-                        Compile("server"),
-                        Content("Folder\\File.txt", "", isExcluded: true),
-                        Content("Folder\\File2.txt", "", isExcluded: true),
-                        Content("HiddenFolder\\HiddenFile.txt", "", isExcluded: true)
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("NotInProject", isExcluded: true),
+                        ProjectGenerator.Compile("NotInProject2", isExcluded: true),
+                        ProjectGenerator.Compile("server"),
+                        ProjectGenerator.Content("Folder\\File.txt", "", isExcluded: true),
+                        ProjectGenerator.Content("Folder\\File2.txt", "", isExcluded: true),
+                        ProjectGenerator.Content("HiddenFolder\\HiddenFile.txt", "", isExcluded: true)
                     ),
-                    PropertyGroup(
-                        Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.PropertyGroup(
+                        ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                     )
                 );
 
@@ -544,19 +544,19 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesOnPerUser(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesOnPerUser(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var solutionFile = SolutionFile.Generate("ShowAllFilesOnPerUser",
                     new ProjectDefinition(
                         "ShowAllFilesOnPerUser",
                         projectType,
-                        Compile("NotInProject", isExcluded: true)
+                        ProjectGenerator.Compile("NotInProject", isExcluded: true)
                     ),
                     new ProjectDefinition(
                         "ShowAllFilesOnPerUser",
                         projectType,
                     /* isUserProject: */ true,
-                        Property("ProjectView", "ShowAllFiles")
+                        ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                     )
                 );
 
@@ -582,13 +582,13 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesOnPerProject(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesOnPerProject(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesOnPerProject",
                     projectType,
-                    Compile("NotInProject", isExcluded: true),
-                    Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.Compile("NotInProject", isExcluded: true),
+                    ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -614,19 +614,19 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesOffPerUser(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesOffPerUser(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var solutionFile = SolutionFile.Generate("ShowAllFilesOffPerUser",
                     new ProjectDefinition(
                         "ShowAllFilesOffPerUser",
                         projectType,
-                        Compile("NotInProject", isExcluded: true)
+                        ProjectGenerator.Compile("NotInProject", isExcluded: true)
                     ),
                     new ProjectDefinition(
                         "ShowAllFilesOffPerUser",
                         projectType,
                     /* isUserProject: */ true,
-                        Property("ProjectView", "ProjectFiles")
+                        ProjectGenerator.Property("ProjectView", "ProjectFiles")
                     )
                 );
 
@@ -652,13 +652,13 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesOffPerProject(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesOffPerProject(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesOffPerProject",
                     projectType,
-                    Compile("NotInProject", isExcluded: true),
-                    Property("ProjectView", "ProjectFiles")
+                    ProjectGenerator.Compile("NotInProject", isExcluded: true),
+                    ProjectGenerator.Property("ProjectView", "ProjectFiles")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -683,15 +683,15 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesDefault(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesDefault(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesDefault",
                     projectType,
-                    Folder("SubFolder"),
-                    Compile("SubFolder\\server"),
-                    Compile("NotInProject", isExcluded: true),
-                    Property("ProjectView", "")
+                    ProjectGenerator.Folder("SubFolder"),
+                    ProjectGenerator.Compile("SubFolder\\server"),
+                    ProjectGenerator.Compile("NotInProject", isExcluded: true),
+                    ProjectGenerator.Property("ProjectView", "")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -720,19 +720,19 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllMoveNotInProject(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllMoveNotInProject(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllMoveNotInProject",
                     projectType,
-                    ItemGroup(
-                        Folder("Folder", isExcluded: true),
-                        Folder("Folder\\SubFolder", isExcluded: true),
-                        Compile("NotInProject", isExcluded:true),
-                        Compile("Folder\\File", isExcluded: true),
-                        Content("Folder\\SubFolder\\SubFile.txt", "", isExcluded: true)
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Folder", isExcluded: true),
+                        ProjectGenerator.Folder("Folder\\SubFolder", isExcluded: true),
+                        ProjectGenerator.Compile("NotInProject", isExcluded:true),
+                        ProjectGenerator.Compile("Folder\\File", isExcluded: true),
+                        ProjectGenerator.Content("Folder\\SubFolder\\SubFile.txt", "", isExcluded: true)
                     ),
-                    Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -777,17 +777,17 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllExcludeSelected(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllExcludeSelected(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllExcludeSelected",
                     projectType,
-                    ItemGroup(
-                        Folder("Folder"),
-                        Compile("Folder\\File1"),
-                        Compile("Folder\\File2")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Folder"),
+                        ProjectGenerator.Compile("Folder\\File1"),
+                        ProjectGenerator.Compile("Folder\\File2")
                     ),
-                    Property("ProjectView", "ProjectFiles")
+                    ProjectGenerator.Property("ProjectView", "ProjectFiles")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -840,12 +840,12 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesRapidChanges(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesRapidChanges(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesRapidChanges",
                     projectType,
-                    Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -873,12 +873,12 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesRapidChanges2(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void ShowAllFilesRapidChanges2(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesRapidChanges",
                     projectType,
-                    Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -906,28 +906,28 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesCopyExcludedFolderWithItemByKeyboard(VisualStudioApp app) {
-            ShowAllFilesCopyExcludedFolderWithItem(app, DragDropCopyCutPaste.CopyByKeyboard);
+        public void ShowAllFilesCopyExcludedFolderWithItemByKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            ShowAllFilesCopyExcludedFolderWithItem(app, pg, DragDropCopyCutPaste.CopyByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesCopyExcludedFolderWithItemByMouse(VisualStudioApp app) {
-            ShowAllFilesCopyExcludedFolderWithItem(app, DragDropCopyCutPaste.CopyByMouse);
+        public void ShowAllFilesCopyExcludedFolderWithItemByMouse(VisualStudioApp app, ProjectGenerator pg) {
+            ShowAllFilesCopyExcludedFolderWithItem(app, pg, DragDropCopyCutPaste.CopyByMouse);
         }
 
         /// <summary>
         /// https://nodejstools.codeplex.com/workitem/475
         /// </summary>
-        private void ShowAllFilesCopyExcludedFolderWithItem(VisualStudioApp app, DragDropCopyCutPaste.MoveDelegate copier) {
-            foreach (var projectType in ProjectTypes) {
+        private void ShowAllFilesCopyExcludedFolderWithItem(VisualStudioApp app, ProjectGenerator pg, DragDropCopyCutPaste.MoveDelegate copier) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "CopyExcludedFolderWithItem",
                     projectType,
-                    Property("ProjectView", "ShowAllFiles"),
-                    Folder("NewFolder1"),
-                    Folder("NewFolder2", isExcluded: true),
-                    Compile("server", isExcluded: true)
+                    ProjectGenerator.Property("ProjectView", "ShowAllFiles"),
+                    ProjectGenerator.Folder("NewFolder1"),
+                    ProjectGenerator.Folder("NewFolder2", isExcluded: true),
+                    ProjectGenerator.Compile("server", isExcluded: true)
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -954,27 +954,27 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard(VisualStudioApp app) {
-            ShowAllFilesMoveExcludedItemToExcludedFolder(app, DragDropCopyCutPaste.MoveByKeyboard);
+        public void ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            ShowAllFilesMoveExcludedItemToExcludedFolder(app, pg, DragDropCopyCutPaste.MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void ShowAllFilesMoveExcludedItemToExcludedFolderByMouse(VisualStudioApp app) {
-            ShowAllFilesMoveExcludedItemToExcludedFolder(app, DragDropCopyCutPaste.MoveByMouse);
+        public void ShowAllFilesMoveExcludedItemToExcludedFolderByMouse(VisualStudioApp app, ProjectGenerator pg) {
+            ShowAllFilesMoveExcludedItemToExcludedFolder(app, pg, DragDropCopyCutPaste.MoveByMouse);
         }
 
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1909
         /// </summary>
-        private void ShowAllFilesMoveExcludedItemToExcludedFolder(VisualStudioApp app, DragDropCopyCutPaste.MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void ShowAllFilesMoveExcludedItemToExcludedFolder(VisualStudioApp app, ProjectGenerator pg, DragDropCopyCutPaste.MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
                     "ShowAllFilesMoveExcludedItemToExcludedFolder",
                     projectType,
-                    Property("ProjectView", "ShowAllFiles"),
-                    Folder("NewFolder1", isExcluded: true),
-                    Compile("server", isExcluded: true)
+                    ProjectGenerator.Property("ProjectView", "ShowAllFiles"),
+                    ProjectGenerator.Folder("NewFolder1", isExcluded: true),
+                    ProjectGenerator.Compile("server", isExcluded: true)
                 );
 
                 using (var solution = def.Generate().ToVs(app)) {
@@ -1006,20 +1006,20 @@ namespace ProjectUITests {
             var def = new ProjectDefinition(
                 "ShowAllFiles",
                 projectType,
-                ItemGroup(
-                    Folder("Folder", isExcluded: true),
-                    Folder("Folder\\SubFolder", isExcluded: true),
-                    Content("Folder\\SubFolder\\SubFile.txt", "", isExcluded: true),
-                    Content("Folder\\SubFolder\\File.txt", "", isExcluded: true),
-                    Compile("NotInProject", isExcluded: true),
-                    Compile("Folder\\File", isExcluded: true),
-                    Content("Folder\\File.txt", "", isExcluded: true),
-                    Compile("server"),
-                    Content("ShowAllFiles.v11.suo", "", isExcluded: true),
-                    Folder("..\\MovedIntoShowAllFiles", isExcluded: true),
-                    Content("..\\MovedIntoShowAllFiles\\Text.txt", "", isExcluded: true)
+                ProjectGenerator.ItemGroup(
+                    ProjectGenerator.Folder("Folder", isExcluded: true),
+                    ProjectGenerator.Folder("Folder\\SubFolder", isExcluded: true),
+                    ProjectGenerator.Content("Folder\\SubFolder\\SubFile.txt", "", isExcluded: true),
+                    ProjectGenerator.Content("Folder\\SubFolder\\File.txt", "", isExcluded: true),
+                    ProjectGenerator.Compile("NotInProject", isExcluded: true),
+                    ProjectGenerator.Compile("Folder\\File", isExcluded: true),
+                    ProjectGenerator.Content("Folder\\File.txt", "", isExcluded: true),
+                    ProjectGenerator.Compile("server"),
+                    ProjectGenerator.Content("ShowAllFiles.v11.suo", "", isExcluded: true),
+                    ProjectGenerator.Folder("..\\MovedIntoShowAllFiles", isExcluded: true),
+                    ProjectGenerator.Content("..\\MovedIntoShowAllFiles\\Text.txt", "", isExcluded: true)
                 ),
-                Property("ProjectView", "ShowAllFiles")
+                ProjectGenerator.Property("ProjectView", "ShowAllFiles")
             );
 
             return def;

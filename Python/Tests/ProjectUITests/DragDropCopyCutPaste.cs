@@ -30,30 +30,30 @@ using Mouse = TestUtilities.UI.Mouse;
 
 namespace ProjectUITests {
     //[TestClass]
-    public class DragDropCopyCutPaste : SharedProjectTest {
+    public class DragDropCopyCutPaste {
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MultiPasteKeyboard(VisualStudioApp app) {
-            MultiPaste(app, CopyByKeyboard);
+        public void MultiPasteKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MultiPaste(app, pg, CopyByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MultiPasteMouse(VisualStudioApp app) {
-            MultiPaste(app, CopyByMouse);
+        public void MultiPasteMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MultiPaste(app, pg, CopyByMouse);
         }
 
         /// <summary>
         /// Cut item, paste into folder, paste into top-level, 2nd paste should prompt for overwrite
         /// </summary>
-        private void MultiPaste(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MultiPaste(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("HelloWorld",
                     projectType,
-                    ItemGroup(
-                        Compile("server"),
-                        Compile("server2"),
-                        Folder("SubFolder")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("server"),
+                        ProjectGenerator.Compile("server2"),
+                        ProjectGenerator.Folder("SubFolder")
                     )
                 );
 
@@ -98,13 +98,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutPastePasteItem(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CutPastePasteItem(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Compile("CutPastePasteItem"),
-                        Folder("PasteFolder")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("CutPastePasteItem"),
+                        ProjectGenerator.Folder("PasteFolder")
                     )
                 );
 
@@ -135,13 +135,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutRenamePaste(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CutRenamePaste(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CutRenamePaste"),
-                        Compile("CutRenamePaste\\CutRenamePaste")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CutRenamePaste"),
+                        ProjectGenerator.Compile("CutRenamePaste\\CutRenamePaste")
                     )
                 );
 
@@ -171,13 +171,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutDeletePaste(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CutDeletePaste(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CutDeletePaste"),
-                        Compile("CutDeletePaste\\CutDeletePaste")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CutDeletePaste"),
+                        ProjectGenerator.Compile("CutDeletePaste\\CutDeletePaste")
                     )
                 );
 
@@ -202,25 +202,25 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyFileToFolderTooLongKeyboard(VisualStudioApp app) {
-            CopyFileToFolderTooLong(app, CopyByKeyboard);
+        public void CopyFileToFolderTooLongKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            CopyFileToFolderTooLong(app, pg, CopyByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyFileToFolderTooLongMouse(VisualStudioApp app) {
-            CopyFileToFolderTooLong(app, CopyByMouse);
+        public void CopyFileToFolderTooLongMouse(VisualStudioApp app, ProjectGenerator pg) {
+            CopyFileToFolderTooLong(app, pg, CopyByMouse);
         }
 
         /// <summary>
         /// Adds a new folder which fits exactly w/ no space left in the path name
         /// </summary>
-        private void CopyFileToFolderTooLong(VisualStudioApp app, MoveDelegate copier) {
-            foreach (var projectType in ProjectTypes) {
+        private void CopyFileToFolderTooLong(VisualStudioApp app, ProjectGenerator pg, MoveDelegate copier) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("LFN",
                     projectType,
-                    ItemGroup(
-                        Compile("server")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("server")
                     )
                 );
 
@@ -259,25 +259,25 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutFileToFolderTooLongKeyboard(VisualStudioApp app) {
-            CutFileToFolderTooLong(app, MoveByKeyboard);
+        public void CutFileToFolderTooLongKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            CutFileToFolderTooLong(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutFileToFolderTooLongMouse(VisualStudioApp app) {
-            CutFileToFolderTooLong(app, MoveByMouse);
+        public void CutFileToFolderTooLongMouse(VisualStudioApp app, ProjectGenerator pg) {
+            CutFileToFolderTooLong(app, pg, MoveByMouse);
         }
 
         /// <summary>
         /// Adds a new folder which fits exactly w/ no space left in the path name
         /// </summary>
-        private void CutFileToFolderTooLong(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void CutFileToFolderTooLong(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("LFN",
                     projectType,
-                    ItemGroup(
-                        Compile("server")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("server")
                     )
                 );
 
@@ -319,13 +319,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutRenamePasteFolder(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CutRenamePasteFolder(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CutRenamePaste"),
-                        Folder("CutRenamePaste\\CutRenamePasteFolder")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CutRenamePaste"),
+                        ProjectGenerator.Folder("CutRenamePaste\\CutRenamePasteFolder")
                     )
                 );
 
@@ -353,15 +353,15 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopiedBeforeDragPastedAfterDrop(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CopiedBeforeDragPastedAfterDrop(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Compile("CopiedBeforeDragPastedAfterDrop"),
-                        Compile("DragAndDroppedDuringCopy"),
-                        Folder("DragDuringCopyDestination"),
-                        Folder("PasteFolder")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("CopiedBeforeDragPastedAfterDrop"),
+                        ProjectGenerator.Compile("DragAndDroppedDuringCopy"),
+                        ProjectGenerator.Folder("DragDuringCopyDestination"),
+                        ProjectGenerator.Folder("PasteFolder")
                     )
                 );
 
@@ -396,35 +396,35 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void DragToAnotherProjectKeyboard(VisualStudioApp app) {
-            DragToAnotherProject(app, CopyByKeyboard);
+        public void DragToAnotherProjectKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            DragToAnotherProject(app, pg, CopyByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void DragToAnotherProjectMouse(VisualStudioApp app) {
-            DragToAnotherProject(app, DragAndDrop);
+        public void DragToAnotherProjectMouse(VisualStudioApp app, ProjectGenerator pg) {
+            DragToAnotherProject(app, pg, DragAndDrop);
         }
 
         /// <summary>
         /// Copy from CSharp into our project
         /// </summary>
-        private void DragToAnotherProject(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void DragToAnotherProject(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
                     new ProjectDefinition(
                         "DragDropCopyCutPaste",
                         projectType,
-                        ItemGroup(
-                            Folder("!Source"),
-                            Compile("!Source\\DraggedToOtherProject")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("!Source"),
+                            ProjectGenerator.Compile("!Source\\DraggedToOtherProject")
                         )
                     ),
                     new ProjectDefinition(
                         "ConsoleApplication1",
                         ProjectType.CSharp,
-                        ItemGroup(
-                            Folder("DraggedToOtherProject")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("DraggedToOtherProject")
                         )
                     )
                 };
@@ -448,12 +448,12 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutFolderPasteOnSelf(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CutFolderPasteOnSelf(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CutFolderPasteOnSelf")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CutFolderPasteOnSelf")
                     )
                 );
 
@@ -477,13 +477,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void DragFolderOntoSelf(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void DragFolderOntoSelf(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("DragFolderOntoSelf"),
-                        Compile("DragFolderOntoSelf\\File")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("DragFolderOntoSelf"),
+                        ProjectGenerator.Compile("DragFolderOntoSelf\\File")
                     )
                 );
 
@@ -506,13 +506,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void DragFolderOntoChild(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void DragFolderOntoChild(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("ParentFolder"),
-                        Folder("ParentFolder\\ChildFolder")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("ParentFolder"),
+                        ProjectGenerator.Folder("ParentFolder\\ChildFolder")
                     )
                 );
 
@@ -542,15 +542,15 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutFileReplace(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CutFileReplace(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("MoveDupFilename"),
-                        Folder("MoveDupFilename\\Fob"),
-                        Compile("MoveDupFilename\\Fob\\server"),
-                        Compile("MoveDupFilename\\server")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("MoveDupFilename"),
+                        ProjectGenerator.Folder("MoveDupFilename\\Fob"),
+                        ProjectGenerator.Compile("MoveDupFilename\\Fob\\server"),
+                        ProjectGenerator.Compile("MoveDupFilename\\server")
                     )
                 );
 
@@ -573,14 +573,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutFolderAndFile(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CutFolderAndFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CutFolderAndFile"),
-                        Folder("CutFolderAndFile\\CutFolder"),
-                        Compile("CutFolderAndFile\\CutFolder\\CutFolderAndFile")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CutFolderAndFile"),
+                        ProjectGenerator.Folder("CutFolderAndFile\\CutFolder"),
+                        ProjectGenerator.Compile("CutFolderAndFile\\CutFolder\\CutFolderAndFile")
                     )
                 );
 
@@ -608,12 +608,12 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CutFilePasteSameLocation(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CutFilePasteSameLocation(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Compile("CutFilePasteSameLocation")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("CutFilePasteSameLocation")
                     )
                 );
 
@@ -638,13 +638,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void DragFolderAndFileOntoSelf(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void DragFolderAndFileOntoSelf(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("DragFolderAndFileOntoSelf"),
-                        Compile("DragFolderAndFileOntoSelf\\File")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("DragFolderAndFileOntoSelf"),
+                        ProjectGenerator.Compile("DragFolderAndFileOntoSelf\\File")
                     )
                 );
 
@@ -667,24 +667,24 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyFolderFromAnotherHierarchy(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CopyFolderFromAnotherHierarchy(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
                     new ProjectDefinition(
                         "DragDropCopyCutPaste",
                         projectType,
-                        ItemGroup(
-                            Folder("!Source"),
-                            Compile("!Source\\DraggedToOtherProject")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("!Source"),
+                            ProjectGenerator.Compile("!Source\\DraggedToOtherProject")
                         )
                     ),
                     new ProjectDefinition(
                         "ConsoleApplication1",
                         ProjectType.CSharp,
-                        ItemGroup(
-                            Folder("CopiedFolderWithItemsNotInProject"),
-                            Compile("CopiedFolderWithItemsNotInProject\\Class"),
-                            Content("CopiedFolderWithItemsNotInProject\\Text.txt", "", isExcluded:true)
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("CopiedFolderWithItemsNotInProject"),
+                            ProjectGenerator.Compile("CopiedFolderWithItemsNotInProject\\Class"),
+                            ProjectGenerator.Content("CopiedFolderWithItemsNotInProject\\Text.txt", "", isExcluded:true)
                         )
                     )
                 };
@@ -707,13 +707,13 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyDeletePaste(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CopyDeletePaste(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CopyDeletePaste"),
-                        Compile("CopyDeletePaste\\CopyDeletePaste")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CopyDeletePaste"),
+                        ProjectGenerator.Compile("CopyDeletePaste\\CopyDeletePaste")
                     )
                 );
 
@@ -744,34 +744,34 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CrossHierarchyFileDragAndDropKeyboard(VisualStudioApp app) {
-            CrossHierarchyFileDragAndDrop(app, CopyByKeyboard);
+        public void CrossHierarchyFileDragAndDropKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            CrossHierarchyFileDragAndDrop(app, pg, CopyByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CrossHierarchyFileDragAndDropMouse(VisualStudioApp app) {
-            CrossHierarchyFileDragAndDrop(app, DragAndDrop);
+        public void CrossHierarchyFileDragAndDropMouse(VisualStudioApp app, ProjectGenerator pg) {
+            CrossHierarchyFileDragAndDrop(app, pg, DragAndDrop);
         }
 
         /// <summary>
         /// Copy from C# into our project
         /// </summary>
-        private void CrossHierarchyFileDragAndDrop(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void CrossHierarchyFileDragAndDrop(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
                     new ProjectDefinition(
                         "DragDropCopyCutPaste",
                         projectType,
-                        ItemGroup(
-                            Folder("DropFolder")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("DropFolder")
                         )
                     ),
                     new ProjectDefinition(
                         "ConsoleApplication1",
                         ProjectType.CSharp,
-                        ItemGroup(
-                            Compile("CrossHierarchyFileDragAndDrop")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Compile("CrossHierarchyFileDragAndDrop")
                         )
                     )
                 };
@@ -790,28 +790,28 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFolderNameKeyboard(VisualStudioApp app) {
-            MoveDuplicateFolderName(app, MoveByKeyboard);
+        public void MoveDuplicateFolderNameKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFolderName(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFolderNameMouse(VisualStudioApp app) {
-            MoveDuplicateFolderName(app, MoveByMouse);
+        public void MoveDuplicateFolderNameMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFolderName(app, pg, MoveByMouse);
         }
 
         /// <summary>
         /// Drag file from another hierarchy into folder in our hierarchy, item should be added
         ///     Cannot move the folder 'DuplicateFolderName'. A folder with that name already exists in the destination directory.
         /// </summary>
-        private void MoveDuplicateFolderName(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFolderName(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("DuplicateFolderName"),
-                        Folder("DuplicateFolderNameTarget"),
-                        Folder("DuplicateFolderNameTarget\\DuplicateFolderName")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("DuplicateFolderName"),
+                        ProjectGenerator.Folder("DuplicateFolderNameTarget"),
+                        ProjectGenerator.Folder("DuplicateFolderNameTarget\\DuplicateFolderName")
                     )
                 );
 
@@ -829,28 +829,28 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyDuplicateFolderNameKeyboard(VisualStudioApp app) {
-            CopyDuplicateFolderName(app, CopyByKeyboard);
+        public void CopyDuplicateFolderNameKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            CopyDuplicateFolderName(app, pg, CopyByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyDuplicateFolderNameMouse(VisualStudioApp app) {
-            CopyDuplicateFolderName(app, CopyByMouse);
+        public void CopyDuplicateFolderNameMouse(VisualStudioApp app, ProjectGenerator pg) {
+            CopyDuplicateFolderName(app, pg, CopyByMouse);
         }
 
         /// <summary>
         /// Copy folder to a destination where the folder already exists.  Say don't copy, nothing should be copied.
         /// </summary>
-        private void CopyDuplicateFolderName(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void CopyDuplicateFolderName(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CopyDuplicateFolderName"),
-                        Compile("CopyDuplicateFolderName\\server"),
-                        Folder("CopyDuplicateFolderNameTarget"),
-                        Folder("CopyDuplicateFolderNameTarget\\CopyDuplicateFolderName")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CopyDuplicateFolderName"),
+                        ProjectGenerator.Compile("CopyDuplicateFolderName\\server"),
+                        ProjectGenerator.Folder("CopyDuplicateFolderNameTarget"),
+                        ProjectGenerator.Folder("CopyDuplicateFolderNameTarget\\CopyDuplicateFolderName")
                     )
                 );
 
@@ -873,35 +873,35 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveCrossHierarchyKeyboard(VisualStudioApp app) {
-            MoveCrossHierarchy(app, MoveByKeyboard);
+        public void MoveCrossHierarchyKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveCrossHierarchy(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveCrossHierarchyMouse(VisualStudioApp app) {
-            MoveCrossHierarchy(app, MoveByMouse);
+        public void MoveCrossHierarchyMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveCrossHierarchy(app, pg, MoveByMouse);
         }
 
         /// <summary>
         /// Cut item from one project, paste into another project, item should be removed from original project
         /// </summary>
-        private void MoveCrossHierarchy(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveCrossHierarchy(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
                     new ProjectDefinition(
                         "DragDropCopyCutPaste",
                         projectType,
-                        ItemGroup(
-                            Folder("!Source"),
-                            Compile("!Source\\DraggedToOtherProject")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("!Source"),
+                            ProjectGenerator.Compile("!Source\\DraggedToOtherProject")
                         )
                     ),
                     new ProjectDefinition(
                         "ConsoleApplication1",
                         ProjectType.CSharp,
-                        ItemGroup(
-                            Compile("CrossHierarchyCut")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Compile("CrossHierarchyCut")
                         )
                     )
                 };
@@ -921,26 +921,26 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveReverseCrossHierarchyKeyboard(VisualStudioApp app) {
-            MoveReverseCrossHierarchy(app, MoveByKeyboard);
+        public void MoveReverseCrossHierarchyKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveReverseCrossHierarchy(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveReverseCrossHierarchyMouse(VisualStudioApp app) {
-            MoveReverseCrossHierarchy(app, MoveByMouse);
+        public void MoveReverseCrossHierarchyMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveReverseCrossHierarchy(app, pg, MoveByMouse);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameOverwriteKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameOverwrite(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameOverwriteKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameOverwrite(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameOverwriteMouse(VisualStudioApp app) {
-            MoveDuplicateFileNameOverwrite(app, MoveByMouse);
+        public void MoveDuplicateFileNameOverwriteMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameOverwrite(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -948,16 +948,16 @@ namespace ProjectUITests {
         /// makes sure only one file is left.
         /// </summary>
         /// <param name="mover"></param>
-        private void MoveDuplicateFileNameOverwrite(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameOverwrite(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var project = new ProjectDefinition(
                     "DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("A"),
-                        Folder("B"),
-                        Content("quox.txt", "top-level"),
-                        Content("A\\quox.txt", "A")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("A"),
+                        ProjectGenerator.Folder("B"),
+                        ProjectGenerator.Content("quox.txt", "top-level"),
+                        ProjectGenerator.Content("A\\quox.txt", "A")
                     )
                 );
 
@@ -985,14 +985,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameOverwriteAllItemsKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameOverwriteAllItems(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameOverwriteAllItemsKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameOverwriteAllItems(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameOverwriteAllItemsMouse(VisualStudioApp app) {
-            MoveDuplicateFileNameOverwriteAllItems(app, MoveByMouse);
+        public void MoveDuplicateFileNameOverwriteAllItemsMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameOverwriteAllItems(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -1000,18 +1000,18 @@ namespace ProjectUITests {
         /// checks do this for all items, and makes sure only one file is left.
         /// </summary>
         /// <param name="mover"></param>
-        private void MoveDuplicateFileNameOverwriteAllItems(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameOverwriteAllItems(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var project = new ProjectDefinition(
                     "DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("A"),
-                        Folder("B"),
-                        Folder("C"),
-                        Content("quox.txt", "top-level"),
-                        Content("A\\quox.txt", "A"),
-                        Content("C\\quox.txt", "C")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("A"),
+                        ProjectGenerator.Folder("B"),
+                        ProjectGenerator.Folder("C"),
+                        ProjectGenerator.Content("quox.txt", "top-level"),
+                        ProjectGenerator.Content("A\\quox.txt", "A"),
+                        ProjectGenerator.Content("C\\quox.txt", "C")
                     )
                 );
 
@@ -1042,14 +1042,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameDontOverwriteKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameDontOverwrite(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameDontOverwriteKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameDontOverwrite(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameDontOverwriteMouse(VisualStudioApp app) {
-            MoveDuplicateFileNameDontOverwrite(app, MoveByMouse);
+        public void MoveDuplicateFileNameDontOverwriteMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameDontOverwrite(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -1058,16 +1058,16 @@ namespace ProjectUITests {
         /// files should still be in the project.
         /// </summary>
         /// <param name="mover"></param>
-        private void MoveDuplicateFileNameDontOverwrite(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameDontOverwrite(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var project = new ProjectDefinition(
                     "DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("A"),
-                        Folder("B"),
-                        Content("quox.txt", "top-level"),
-                        Content("A\\quox.txt", "A")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("A"),
+                        ProjectGenerator.Folder("B"),
+                        ProjectGenerator.Content("quox.txt", "top-level"),
+                        ProjectGenerator.Content("A\\quox.txt", "A")
                     )
                 );
 
@@ -1099,14 +1099,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameDontOverwrite2Keyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameDontOverwrite2(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameDontOverwrite2Keyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameDontOverwrite2(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameDontOverwrite2Mouse(VisualStudioApp app) {
-            MoveDuplicateFileNameDontOverwrite2(app, MoveByMouse);
+        public void MoveDuplicateFileNameDontOverwrite2Mouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameDontOverwrite2(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -1115,18 +1115,18 @@ namespace ProjectUITests {
         /// all the files should still exist somewhere.
         /// </summary>
         /// <param name="mover"></param>
-        private void MoveDuplicateFileNameDontOverwrite2(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameDontOverwrite2(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var project = new ProjectDefinition(
                     "DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("A"),
-                        Folder("B"),
-                        Folder("C"),
-                        Content("quox.txt", "top-level"),
-                        Content("A\\quox.txt", "A"),
-                        Content("C\\quox.txt", "C")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("A"),
+                        ProjectGenerator.Folder("B"),
+                        ProjectGenerator.Folder("C"),
+                        ProjectGenerator.Content("quox.txt", "top-level"),
+                        ProjectGenerator.Content("A\\quox.txt", "A"),
+                        ProjectGenerator.Content("C\\quox.txt", "C")
                     )
                 );
 
@@ -1165,14 +1165,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameDontOverwriteAllItemsKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameDontOverwriteAllItems(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameDontOverwriteAllItemsKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameDontOverwriteAllItems(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameDontOverwriteAllItemsMouse(VisualStudioApp app) {
-            MoveDuplicateFileNameDontOverwriteAllItems(app, MoveByMouse);
+        public void MoveDuplicateFileNameDontOverwriteAllItemsMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameDontOverwriteAllItems(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -1180,18 +1180,18 @@ namespace ProjectUITests {
         /// do this for all items, and makes sure all the files still exist somewhere.
         /// </summary>
         /// <param name="mover"></param>
-        private void MoveDuplicateFileNameDontOverwriteAllItems(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameDontOverwriteAllItems(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var project = new ProjectDefinition(
                     "DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("A"),
-                        Folder("B"),
-                        Folder("C"),
-                        Content("quox.txt", "top-level"),
-                        Content("A\\quox.txt", "A"),
-                        Content("C\\quox.txt", "C")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("A"),
+                        ProjectGenerator.Folder("B"),
+                        ProjectGenerator.Folder("C"),
+                        ProjectGenerator.Content("quox.txt", "top-level"),
+                        ProjectGenerator.Content("A\\quox.txt", "A"),
+                        ProjectGenerator.Content("C\\quox.txt", "C")
                     )
                 );
 
@@ -1226,14 +1226,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameCancelKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameCancel(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameCancelKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameCancel(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameCancelMouse(VisualStudioApp app) {
-            MoveDuplicateFileNameCancel(app, MoveByMouse);
+        public void MoveDuplicateFileNameCancelMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameCancel(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -1242,18 +1242,18 @@ namespace ProjectUITests {
         /// of the files are still there.
         /// </summary>
         /// <param name="mover"></param>
-        private void MoveDuplicateFileNameCancel(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameCancel(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var project = new ProjectDefinition(
                     "DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("A"),
-                        Folder("B"),
-                        Folder("C"),
-                        Content("quox.txt", "top-level"),
-                        Content("A\\quox.txt", "A"),
-                        Content("C\\quox.txt", "C")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("A"),
+                        ProjectGenerator.Folder("B"),
+                        ProjectGenerator.Folder("C"),
+                        ProjectGenerator.Content("quox.txt", "top-level"),
+                        ProjectGenerator.Content("A\\quox.txt", "A"),
+                        ProjectGenerator.Content("C\\quox.txt", "C")
                     )
                 );
 
@@ -1296,14 +1296,14 @@ namespace ProjectUITests {
         /// <summary>
         /// Cut an item from our project, paste into another project, item should be removed from our project
         /// </summary>
-        private void MoveReverseCrossHierarchy(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveReverseCrossHierarchy(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
                     new ProjectDefinition(
                         "DragDropCopyCutPaste",
                         projectType,
-                        ItemGroup(
-                            Compile("CrossHierarchyCut")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Compile("CrossHierarchyCut")
                         )
                     ),
                     new ProjectDefinition(
@@ -1331,22 +1331,22 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDoubleCrossHierarchy(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void MoveDoubleCrossHierarchy(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
                     new ProjectDefinition(
                         "DragDropCopyCutPaste",
                         projectType,
-                        ItemGroup(
-                            Folder("!Source"),
-                            Compile("!Source\\DoubleCrossHierarchy")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("!Source"),
+                            ProjectGenerator.Compile("!Source\\DoubleCrossHierarchy")
                         )
                     ),
                     new ProjectDefinition(
                         "ConsoleApplication1",
                         ProjectType.CSharp,
-                        ItemGroup(
-                            Compile("DoubleCrossHierarchy")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Compile("DoubleCrossHierarchy")
                         )
                     )
                 };
@@ -1378,8 +1378,8 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void DragTwiceAndOverwrite(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void DragTwiceAndOverwrite(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
                     new ProjectDefinition(
                         "DragDropCopyCutPaste",
@@ -1388,9 +1388,9 @@ namespace ProjectUITests {
                     new ProjectDefinition(
                         "ConsoleApplication1",
                         ProjectType.CSharp,
-                        ItemGroup(
-                            Folder("DraggedToOtherProject"),
-                            Compile("DragTwiceAndOverwrite")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("DraggedToOtherProject"),
+                            ProjectGenerator.Compile("DragTwiceAndOverwrite")
                         )
                     )
                 };
@@ -1420,14 +1420,14 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyFolderMissingItem(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CopyFolderMissingItem(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("CopyFolderMissingItem"),
-                        Compile("CopyFolderMissingItem\\missing", isMissing: true),
-                        Folder("PasteFolder")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("CopyFolderMissingItem"),
+                        ProjectGenerator.Compile("CopyFolderMissingItem\\missing", isMissing: true),
+                        ProjectGenerator.Folder("PasteFolder")
                     )
                 );
 
@@ -1455,13 +1455,13 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyPasteMissingFile(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CopyPasteMissingFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Compile("MissingFile", isMissing: true),
-                        Folder("PasteFolder")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("MissingFile", isMissing: true),
+                        ProjectGenerator.Folder("PasteFolder")
                     )
                 );
 
@@ -1484,14 +1484,14 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveFolderExistingFile(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void MoveFolderExistingFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
                     projectType,
-                    ItemGroup(
-                        Folder("PasteFolder"),
-                        Content("PasteFolder\\FolderCollision", ""),
-                        Folder("FolderCollision")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("PasteFolder"),
+                        ProjectGenerator.Content("PasteFolder\\FolderCollision", ""),
+                        ProjectGenerator.Folder("FolderCollision")
                     )
                 );
 
@@ -1514,15 +1514,15 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveFolderWithContents(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void MoveFolderWithContents(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("FolderWithContentsProj",
                     projectType,
-                    ItemGroup(
-                        Folder("A"),
-                        Folder("A\\B"),
-                        Content("A\\B\\File.txt", ""),
-                        Folder("C")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("A"),
+                        ProjectGenerator.Folder("A\\B"),
+                        ProjectGenerator.Content("A\\B\\File.txt", ""),
+                        ProjectGenerator.Folder("C")
                     )
                 );
 
@@ -1545,24 +1545,24 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveProjectToSolutionFolderKeyboard(VisualStudioApp app) {
-            MoveProjectToSolutionFolder(app, MoveByKeyboard);
+        public void MoveProjectToSolutionFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveProjectToSolutionFolder(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveProjectToSolutionFolderMouse(VisualStudioApp app) {
-            MoveProjectToSolutionFolder(app, MoveByMouse);
+        public void MoveProjectToSolutionFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveProjectToSolutionFolder(app, pg, MoveByMouse);
         }
 
         /// <summary>
         /// Cut an item from our project, paste into another project, item should be removed from our project
         /// </summary>
-        private void MoveProjectToSolutionFolder(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveProjectToSolutionFolder(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new ISolutionElement[] {
                     new ProjectDefinition("DragDropCopyCutPaste", projectType),
-                    SolutionFolder("SolFolder")
+                    ProjectGenerator.SolutionFolder("SolFolder")
                 };
 
                 using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs(app)) {
@@ -1582,8 +1582,8 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyReadOnlyFileByKeyboard(VisualStudioApp app) {
-            CopyReadOnlyFile(app, CopyByKeyboard);
+        public void CopyReadOnlyFileByKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            CopyReadOnlyFile(app, pg, CopyByKeyboard);
         }
 
         /// <summary>
@@ -1591,18 +1591,18 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void CopyReadOnlyFileByMouse(VisualStudioApp app) {
-            CopyReadOnlyFile(app, CopyByMouse);
+        public void CopyReadOnlyFileByMouse(VisualStudioApp app, ProjectGenerator pg) {
+            CopyReadOnlyFile(app, pg, CopyByMouse);
         }
 
-        private void CopyReadOnlyFile(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void CopyReadOnlyFile(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
                     new ProjectDefinition(
                         "CopyReadOnlyFile",
                         projectType,
-                        ItemGroup(
-                            Compile("Class")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Compile("Class")
                         )
                     )
                 };
@@ -1634,29 +1634,29 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(2)]
         //[TestCategory("Installed")]
-        public void CopyFileFromFolderToLinkedFolderKeyboard(VisualStudioApp app) {
-            CopyFileFromFolderToLinkedFolder(app, CopyByKeyboard);
+        public void CopyFileFromFolderToLinkedFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            CopyFileFromFolderToLinkedFolder(app, pg, CopyByKeyboard);
         }
 
         //[TestMethod, Priority(2)]
         //[TestCategory("Installed")]
-        public void CopyFileFromFolderToLinkedFolderMouse(VisualStudioApp app) {
-            CopyFileFromFolderToLinkedFolder(app, CopyByMouse);
+        public void CopyFileFromFolderToLinkedFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
+            CopyFileFromFolderToLinkedFolder(app, pg, CopyByMouse);
         }
 
         /// <summary>
         /// Copy item from folder to a symbolic link of that folder.  Expect a copy to be made.
         /// NOTE: Because of symbolic link creation, this test must be run as administrator.
         /// </summary>
-        private void CopyFileFromFolderToLinkedFolder(VisualStudioApp app, MoveDelegate copier) {
-            foreach (var projectType in ProjectTypes) {
+        private void CopyFileFromFolderToLinkedFolder(VisualStudioApp app, ProjectGenerator pg, MoveDelegate copier) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projectDefs = new[] {
                     new ProjectDefinition("MoveLinkedFolder",
                         projectType,
-                        ItemGroup(
-                            Folder("Folder"),
-                            Content("Folder\\FileInFolder.txt", "File inside of linked folder..."),
-                            SymbolicLink("FolderLink", "Folder")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("Folder"),
+                            ProjectGenerator.Content("Folder\\FileInFolder.txt", "File inside of linked folder..."),
+                            ProjectGenerator.SymbolicLink("FolderLink", "Folder")
                         )
                     )
                 };
@@ -1682,19 +1682,19 @@ namespace ProjectUITests {
         // Copy and paste cross project into a folder should include the item in the folder
         //[TestMethod, Priority(2)]
         //[TestCategory("Installed")]
-        public void CopyFileToFolderCrossProject(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void CopyFileToFolderCrossProject(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projectDefs = new[] {
                     new ProjectDefinition("CopyToFolderCrossProjectDest",
                         projectType,
-                        ItemGroup(
-                            Folder("Folder")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("Folder")
                         )
                     ),
                     new ProjectDefinition("CopyToFolderCrossProjectSource",
                         projectType,
-                        ItemGroup(
-                            Content("File.txt", "File copied to folder")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Content("File.txt", "File copied to folder")
                         )
                     )
                 };

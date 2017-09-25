@@ -24,29 +24,29 @@ using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ProjectUITests {
     [TestClass]
-    public class NewDragDropCopyCutPaste : SharedProjectTest {
+    public class NewDragDropCopyCutPaste {
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveToMissingFolderKeyboard(VisualStudioApp app) {
-            MoveToMissingFolder(app, MoveByKeyboard);
+        public void MoveToMissingFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveToMissingFolder(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveToMissingFolderMouse(VisualStudioApp app) {
-            MoveToMissingFolder(app, MoveByMouse);
+        public void MoveToMissingFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveToMissingFolder(app, pg, MoveByMouse);
         }
 
-        private void MoveToMissingFolder(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveToMissingFolder(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("MoveToMissingFolder",
                     projectType,
-                    PropertyGroup(
-                        Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.PropertyGroup(
+                        ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                     ),
-                    ItemGroup(
-                        Folder("Fob", isExcluded: false, isMissing: true),
-                        Compile("codefile", isExcluded: false)
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Fob", isExcluded: false, isMissing: true),
+                        ProjectGenerator.Compile("codefile", isExcluded: false)
                     )
                 );
 
@@ -65,27 +65,27 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveExcludedFolderKeyboard(VisualStudioApp app) {
-            MoveExcludedFolder(app, MoveByKeyboard);
+        public void MoveExcludedFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveExcludedFolder(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveExcludedFolderMouse(VisualStudioApp app) {
-            MoveExcludedFolder(app, MoveByMouse);
+        public void MoveExcludedFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveExcludedFolder(app, pg, MoveByMouse);
         }
 
-        private void MoveExcludedFolder(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveExcludedFolder(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("MoveExcludedFolder",
                     projectType,
-                    PropertyGroup(
-                        Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.PropertyGroup(
+                        ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                     ),
-                    ItemGroup(
-                        Folder("Fob", isExcluded: true),
-                        Folder("Fob\\Oar", isExcluded: true),
-                        Folder("Baz", isExcluded: true)
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Fob", isExcluded: true),
+                        ProjectGenerator.Folder("Fob\\Oar", isExcluded: true),
+                        ProjectGenerator.Folder("Baz", isExcluded: true)
                     )
                 );
 
@@ -104,27 +104,27 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveExcludedItemToFolderKeyboard(VisualStudioApp app) {
-            MoveExcludedItemToFolder(app, MoveByKeyboard);
+        public void MoveExcludedItemToFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveExcludedItemToFolder(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveExcludedItemToFolderMouse(VisualStudioApp app) {
-            MoveExcludedItemToFolder(app, MoveByMouse);
+        public void MoveExcludedItemToFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveExcludedItemToFolder(app, pg, MoveByMouse);
         }
 
-        private void MoveExcludedItemToFolder(VisualStudioApp app, MoveDelegate mover) {
+        private void MoveExcludedItemToFolder(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
 
-            foreach (var projectType in ProjectTypes) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("MoveExcludedItemToFolder",
                     projectType,
-                    PropertyGroup(
-                        Property("ProjectView", "ShowAllFiles")
+                    ProjectGenerator.PropertyGroup(
+                        ProjectGenerator.Property("ProjectView", "ShowAllFiles")
                     ),
-                    ItemGroup(
-                        Folder("Folder"),
-                        Compile("codefile", isExcluded: true)
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Folder"),
+                        ProjectGenerator.Compile("codefile", isExcluded: true)
                     )
                 );
 
@@ -145,27 +145,27 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameSkipMoveKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameSkipMove(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameSkipMoveKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameSkipMove(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameSkipMoveMouse(VisualStudioApp app) {
-            MoveDuplicateFileNameSkipMove(app, MoveByMouse);
+        public void MoveDuplicateFileNameSkipMoveMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameSkipMove(app, pg, MoveByMouse);
         }
 
         /// <summary>
         /// Move item within the project from one location to where it already exists, skipping the move.
         /// </summary>
-        private void MoveDuplicateFileNameSkipMove(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameSkipMove(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("MoveDuplicateFileName",
                     projectType,
-                    ItemGroup(
-                        Folder("Folder"),
-                        Content("textfile.txt", "root"),
-                        Content("Folder\\textfile.txt", "Folder")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Folder"),
+                        ProjectGenerator.Content("textfile.txt", "root"),
+                        ProjectGenerator.Content("Folder\\textfile.txt", "Folder")
                     )
                 );
 
@@ -190,14 +190,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNamesSkipOneKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNamesSkipOne(app, MoveByKeyboard);
+        public void MoveDuplicateFileNamesSkipOneKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNamesSkipOne(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNamesSkipOneMouse(VisualStudioApp app) {
-            MoveDuplicateFileNamesSkipOne(app, MoveByMouse);
+        public void MoveDuplicateFileNamesSkipOneMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNamesSkipOne(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -205,16 +205,16 @@ namespace ProjectUITests {
         /// 
         /// The 1st item shouldn't be removed from the parent hierarchy, the 2nd should, and only the 2nd item should be overwritten.
         /// </summary>
-        private void MoveDuplicateFileNamesSkipOne(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNamesSkipOne(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("MoveDuplicateFileName",
                     projectType,
-                    ItemGroup(
-                        Folder("Folder"),
-                        Content("textfile1.txt", "root1"),
-                        Content("textfile2.txt", "root2"),
-                        Content("Folder\\textfile1.txt", "Folder1"),
-                        Content("Folder\\textfile2.txt", "Folder2")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Folder"),
+                        ProjectGenerator.Content("textfile1.txt", "root1"),
+                        ProjectGenerator.Content("textfile2.txt", "root2"),
+                        ProjectGenerator.Content("Folder\\textfile1.txt", "Folder1"),
+                        ProjectGenerator.Content("Folder\\textfile2.txt", "Folder2")
                     )
                 );
 
@@ -248,14 +248,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNamesFoldersSkipOneKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNamesFoldersSkipOne(app, MoveByKeyboard);
+        public void MoveDuplicateFileNamesFoldersSkipOneKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNamesFoldersSkipOne(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNamesFoldersSkipOneMouse(VisualStudioApp app) {
-            MoveDuplicateFileNamesFoldersSkipOne(app, MoveByMouse);
+        public void MoveDuplicateFileNamesFoldersSkipOneMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNamesFoldersSkipOne(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -263,18 +263,18 @@ namespace ProjectUITests {
         /// 
         /// The 1st item shouldn't be removed from the parent hierarchy, the 2nd should, and only the 2nd item should be overwritten.
         /// </summary>
-        private void MoveDuplicateFileNamesFoldersSkipOne(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNamesFoldersSkipOne(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("MoveDuplicateFileName",
                     projectType,
-                    ItemGroup(
-                        Folder("Source"),
-                        Content("Source\\textfile1.txt", "source1"),
-                        Content("Source\\textfile2.txt", "source2"),
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("Source"),
+                        ProjectGenerator.Content("Source\\textfile1.txt", "source1"),
+                        ProjectGenerator.Content("Source\\textfile2.txt", "source2"),
 
-                        Folder("Target"),
-                        Content("Target\\textfile1.txt", "target1"),
-                        Content("Target\\textfile2.txt", "target2")
+                        ProjectGenerator.Folder("Target"),
+                        ProjectGenerator.Content("Target\\textfile1.txt", "target1"),
+                        ProjectGenerator.Content("Target\\textfile2.txt", "target2")
                     )
                 );
 
@@ -308,14 +308,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNamesCrossProjectSkipOneKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNamesCrossProjectSkipOne(app, MoveByKeyboard);
+        public void MoveDuplicateFileNamesCrossProjectSkipOneKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNamesCrossProjectSkipOne(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNamesCrossProjectSkipOneMouse(VisualStudioApp app) {
-            MoveDuplicateFileNamesCrossProjectSkipOne(app, MoveByMouse);
+        public void MoveDuplicateFileNamesCrossProjectSkipOneMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNamesCrossProjectSkipOne(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -323,22 +323,22 @@ namespace ProjectUITests {
         /// 
         /// The 1st item shouldn't be removed from the parent hierarchy, the 2nd should, and only the 2nd item should be overwritten.
         /// </summary>
-        private void MoveDuplicateFileNamesCrossProjectSkipOne(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNamesCrossProjectSkipOne(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projectDefs = new[] {
                     new ProjectDefinition("MoveDuplicateFileName",
                         projectType,
-                        ItemGroup(
-                            Content("textfile1.txt", "textfile1 - lang"),
-                            Content("textfile2.txt", "textfile2 - lang")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Content("textfile1.txt", "textfile1 - lang"),
+                            ProjectGenerator.Content("textfile2.txt", "textfile2 - lang")
                         )
                     ),
                     new ProjectDefinition("MoveDuplicateFileName2",
                         projectType,
-                        ItemGroup(
-                            Folder("Folder"),
-                            Content("textfile1.txt", "textfile1 - 2"),
-                            Content("textfile2.txt", "textfile2 - 2")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("Folder"),
+                            ProjectGenerator.Content("textfile1.txt", "textfile1 - 2"),
+                            ProjectGenerator.Content("textfile2.txt", "textfile2 - 2")
                         )
                     )
                 };
@@ -375,14 +375,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameCrossProjectSkipMoveKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameCrossProjectSkipMove(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameCrossProjectSkipMoveKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameCrossProjectSkipMove(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameCrossProjectSkipMoveMouse(VisualStudioApp app) {
-            MoveDuplicateFileNameCrossProjectSkipMove(app, MoveByMouse);
+        public void MoveDuplicateFileNameCrossProjectSkipMoveMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameCrossProjectSkipMove(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -390,20 +390,20 @@ namespace ProjectUITests {
         /// 
         /// https://pytools.codeplex.com/workitem/1967
         /// </summary>
-        private void MoveDuplicateFileNameCrossProjectSkipMove(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameCrossProjectSkipMove(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projectDefs = new[] {
                     new ProjectDefinition("MoveDuplicateFileName1",
                         projectType,
-                        ItemGroup(
-                            Content("textfile.txt", "MoveDuplicateFileName1")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Content("textfile.txt", "MoveDuplicateFileName1")
                         )
                     ),
                     new ProjectDefinition("MoveDuplicateFileName2",
                         projectType,
-                        ItemGroup(
-                            Folder("Folder"),
-                            Content("textfile.txt", "MoveDuplicateFileName2")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("Folder"),
+                            ProjectGenerator.Content("textfile.txt", "MoveDuplicateFileName2")
                         )
                     )
                 };
@@ -430,33 +430,33 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveKeyboard(VisualStudioApp app) {
-            MoveDuplicateFileNameCrossProjectCSharpSkipMove(app, MoveByKeyboard);
+        public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameCrossProjectCSharpSkipMove(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveMouse(VisualStudioApp app) {
-            MoveDuplicateFileNameCrossProjectCSharpSkipMove(app, MoveByMouse);
+        public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveDuplicateFileNameCrossProjectCSharpSkipMove(app, pg, MoveByMouse);
         }
 
         /// <summary>
         /// Move item to where item exists across project types.
         /// </summary>
-        private void MoveDuplicateFileNameCrossProjectCSharpSkipMove(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveDuplicateFileNameCrossProjectCSharpSkipMove(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projectDefs = new[] {
                     new ProjectDefinition("MoveDuplicateFileName1",
                         projectType,
-                        ItemGroup(
-                            Content("textfile.txt", "MoveDuplicateFileName1")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Content("textfile.txt", "MoveDuplicateFileName1")
                         )
                     ),
                     new ProjectDefinition("MoveDuplicateFileNameCS",
                         ProjectType.CSharp,
-                        ItemGroup(
-                            Folder("Folder"),
-                            Content("textfile.txt", "MoveDuplicateFileNameCS")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Folder("Folder"),
+                            ProjectGenerator.Content("textfile.txt", "MoveDuplicateFileNameCS")
                         )
                     )
                 };
@@ -483,14 +483,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(2)]
         //[TestCategory("Installed")]
-        public void MoveFileFromFolderToLinkedFolderKeyboard(VisualStudioApp app) {
-            MoveFileFromFolderToLinkedFolder(app, MoveByKeyboard);
+        public void MoveFileFromFolderToLinkedFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
+            MoveFileFromFolderToLinkedFolder(app, pg, MoveByKeyboard);
         }
 
         //[TestMethod, Priority(2)]
         //[TestCategory("Installed")]
-        public void MoveFileFromFolderToLinkedFolderMouse(VisualStudioApp app) {
-            MoveFileFromFolderToLinkedFolder(app, MoveByMouse);
+        public void MoveFileFromFolderToLinkedFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
+            MoveFileFromFolderToLinkedFolder(app, pg, MoveByMouse);
         }
 
         /// <summary>
@@ -498,16 +498,16 @@ namespace ProjectUITests {
         /// ourselves to ourselves and that moves are reflected in both the folder and its symbolic link.
         /// NOTE: Because of symbolic link creation, this test must be run as administrator.
         /// </summary>
-        private void MoveFileFromFolderToLinkedFolder(VisualStudioApp app, MoveDelegate mover) {
-            foreach (var projectType in ProjectTypes) {
+        private void MoveFileFromFolderToLinkedFolder(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var projectDefs = new[] {
                     new ProjectDefinition("MoveLinkedFolder",
                         projectType,
-                        ItemGroup(
-                            Content("textfile.txt", "text file contents"),
-                            Folder("Folder"),
-                            Content("Folder\\FileInFolder.txt", "File inside of linked folder..."),
-                            SymbolicLink("FolderLink", "Folder")
+                        ProjectGenerator.ItemGroup(
+                            ProjectGenerator.Content("textfile.txt", "text file contents"),
+                            ProjectGenerator.Folder("Folder"),
+                            ProjectGenerator.Content("Folder\\FileInFolder.txt", "File inside of linked folder..."),
+                            ProjectGenerator.SymbolicLink("FolderLink", "Folder")
                         )
                     )
                 };

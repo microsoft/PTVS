@@ -24,14 +24,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.Python;
-using TestUtilities.SharedProject;
 using TestUtilities.UI;
-using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    //[TestClass]
-    public class ErrorListTaskListTests : SharedProjectTest {
+    public class ErrorListTaskListTests {
         internal struct TaskItemInfo {
             public int Line, Column;
             public string Document, Message;
@@ -109,8 +105,6 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure errors in a file show up in the error list window.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorList(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\ErrorProject.sln");
             var projectNode = project.GetPythonProject();
@@ -133,8 +127,6 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure task comments in a file show up in the task list window.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CommentTaskList(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\ErrorProject.sln");
             var projectNode = project.GetPythonProject();
@@ -152,8 +144,6 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure deleting a project clears the error list
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenProjectIsDeleted(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
 
@@ -170,8 +160,6 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure deleting a project clears the error list
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenProjectIsUnloaded(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
 
@@ -197,8 +185,6 @@ namespace PythonToolsUITests {
         /// 
         /// Take 2 of https://pytools.codeplex.com/workitem/1523
         /// </summary>
-        //[TestMethod, Priority(0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\ErrorProjectMultipleFiles.sln");
 
@@ -222,10 +208,8 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Make sure deleting a file w/ errors clears the error list
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenFileIsDeleted(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\ErrorProjectDeleteFile.sln");
+            var project = app.OpenProject(app.CopyProjectForTest(@"TestData\ErrorProjectDeleteFile.sln"));
 
             app.WaitForTaskListItems(typeof(SVsErrorList), 7);
             app.WaitForTaskListItems(typeof(SVsTaskList), 2);

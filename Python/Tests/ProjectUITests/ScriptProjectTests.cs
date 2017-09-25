@@ -24,11 +24,11 @@ namespace ProjectUITests {
     /// Test cases which are applicable to projects designed for scripting languages.
     /// </summary>
     //[TestClass]
-    public class ScriptProjectTests : SharedProjectTest {
+    public class ScriptProjectTests {
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RunWithoutStartupFile(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void RunWithoutStartupFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("RunWithoutStartupFile", projectType);
 
                 using (var solution = testDef.Generate().ToVs(app)) {
@@ -47,14 +47,14 @@ namespace ProjectUITests {
         /// </summary>
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RenameStartupFileFolder(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void RenameStartupFileFolder(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition(
                     "RenameStartupFileFolder", 
                     projectType,
-                    Folder("Folder"),
-                    Compile("Folder\\server"),
-                    Property("StartupFile", "Folder\\server" + projectType.CodeExtension)
+                    ProjectGenerator.Folder("Folder"),
+                    ProjectGenerator.Compile("Folder\\server"),
+                    ProjectGenerator.Property("StartupFile", "Folder\\server" + projectType.CodeExtension)
                 );
 
                 using (var solution = testDef.Generate().ToVs(app)) {
@@ -73,14 +73,14 @@ namespace ProjectUITests {
 
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
-        public void RenameStartupFile(VisualStudioApp app) {
-            foreach (var projectType in ProjectTypes) {
+        public void RenameStartupFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition(
                     "RenameStartupFileFolder",
                     projectType,
-                    Folder("Folder"),
-                    Compile("Folder\\server"),
-                    Property("StartupFile", "Folder\\server" + projectType.CodeExtension)
+                    ProjectGenerator.Folder("Folder"),
+                    ProjectGenerator.Compile("Folder\\server"),
+                    ProjectGenerator.Property("StartupFile", "Folder\\server" + projectType.CodeExtension)
                 );
 
                 using (var solution = testDef.Generate().ToVs(app)) {
