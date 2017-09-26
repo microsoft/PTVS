@@ -1276,6 +1276,7 @@ namespace ProjectUITests {
             foreach (var projectType in pg.ProjectTypes) {
                 var imported = new ProjectDefinition(
                     "Imported",
+                    projectType,
                     ProjectGenerator.ItemGroup(
                         ProjectGenerator.CustomItem("MyItemType", "..\\Imported\\ImportedItem.txt", ""),
                         ProjectGenerator.CustomItem(

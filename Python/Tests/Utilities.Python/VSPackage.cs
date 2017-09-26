@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "TestUtilities.UI", CodeBase = "TestUtilities.UI.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "TestUtilities.Python", CodeBase = "TestUtilities.Python.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "TestUtilities.Python.Analysis", CodeBase = "TestUtilities.Python.Analysis.dll", Version = AssemblyVersionInfo.StableVersion)]
+[assembly: ProvideCodeBase(AssemblyName = "MockVsTests", CodeBase = "MockVsTests.dll", Version = AssemblyVersionInfo.StableVersion)]
 
 namespace TestUtilities.Python {
     [PackageRegistration(UseManagedResourcesOnly = true)]

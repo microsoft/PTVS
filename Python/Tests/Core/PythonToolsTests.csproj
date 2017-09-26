@@ -122,7 +122,6 @@
     <Compile Include="ProximityExpressionWalkerTests.cs" />
     <Compile Include="PythonProjectProcessor.cs" />
     <Compile Include="PythonProjectTests.cs" />
-    <Compile Include="PythonTestDefinitions.cs" />
     <Compile Include="RegistryWatcherTest.cs" />
     <Compile Include="ReplEvaluatorTests.cs" />
   </ItemGroup>

@@ -27,5 +27,9 @@ namespace TestUtilities.Python {
         public ProjectDefinition Project(string name, params ProjectContentGenerator[] items) {
             return new ProjectDefinition(name, PythonProject, items);
         }
+
+        public SolutionFile Generate(ProjectDefinition project) {
+            return new ProjectDefinition(PythonProject, project).Generate();
+        }
     }
 }
