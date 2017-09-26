@@ -57,6 +57,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.XamlDesignerSupport",
     "MockVsTests",
     "ProfilingUITests",
+    "ProjectUITests",
     "PythonToolsTests",
     "PythonToolsMockTests",
     "PythonToolsUITests",
