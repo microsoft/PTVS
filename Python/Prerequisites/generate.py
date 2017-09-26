@@ -61,6 +61,7 @@ ASSEMBLIES = sorted([
     "PythonToolsTests",
     "PythonToolsMockTests",
     "PythonToolsUITests",
+    "PythonToolsUITestsRunner",
     "ReplWindowUITests",
     "SharedProjectUITests",
     "TestAdapterTests",
