@@ -288,4 +288,8 @@ Error:
   <data name="LaunchProfiling_WorkingDirectoryBrowseButtonDescription" xml:space="preserve">
     <value>Browse folder dialog for working directory</value>
   </data>
+  <data name="Reports" xml:space="preserve">
+    <value>Reports</value>
+    <comment>Tree view node that contains the set of profiling reports</comment>
+  </data>
 </root>

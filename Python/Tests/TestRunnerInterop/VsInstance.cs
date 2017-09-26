@@ -167,13 +167,17 @@ namespace TestRunnerInterop {
                 throw new InvalidOperationException("VS has not started");
             }
 
-            bool completed = false, timedOut = false;
+            bool timedOut = false;
+            CancellationTokenSource cts = null;
 
             if (!Debugger.IsAttached && timeout < TimeSpan.MaxValue) {
-                Task.Delay(timeout).ContinueWith(_ => {
-                    if (!completed) {
+                cts = new CancellationTokenSource();
+                Task.Delay(timeout, cts.Token).ContinueWith(t => {
+                    cts.Dispose();
+                    if (!t.IsCanceled) {
                         timedOut = true;
                         Console.WriteLine($"Terminating {container}.{name}() after {timeout}");
+                        // Terminate VS to unblock the Execute() call below
                         CloseCurrentInstance(hard: true);
                     }
                 });
@@ -181,6 +185,7 @@ namespace TestRunnerInterop {
 
             try {
                 var r = dte.GetObject(container).Execute(name, arguments);
+                cts?.Cancel();
                 if (!r.IsSuccess) {
                     throw new TestFailedException(
                         r.ExceptionType,
@@ -189,8 +194,12 @@ namespace TestRunnerInterop {
                     );
                 }
                 return;
-            } catch (COMException ex) when (timedOut) {
-                throw new TimeoutException($"Terminating {container}.{name}() after {timeout}", ex);
+            } catch (COMException ex) {
+                if (timedOut) {
+                    throw new TimeoutException($"Terminating {container}.{name}() after {timeout}", ex);
+                }
+                // A COMException probably needs VS to restart, so close it.
+                CloseCurrentInstance();
             }
         }
 
