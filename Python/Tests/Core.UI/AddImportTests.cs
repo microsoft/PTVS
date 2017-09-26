@@ -238,10 +238,10 @@ sub_package";
         }
 
         private static void AddSmartTagTest(EditorWindow doc, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
-            doc.Invoke(() => {
+            doc.InvokeTask(async () => {
                 var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                 doc.TextView.Caret.MoveTo(point);
-                doc.WaitForAnalyzerAtCaret();
+                await doc.WaitForAnalyzerAtCaretAsync();
             });
 
             if (expectedActions.Length > 0) {
