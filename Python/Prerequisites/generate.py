@@ -12,6 +12,7 @@ ASSEMBLIES = sorted([
     "CookiecutterTests",
     "DebuggerTests",
     "DebuggerUITests",
+    "DebuggerUITestsRunner",
     "DjangoTests",
     "DjangoUITests",
     "FastCgiTest",
