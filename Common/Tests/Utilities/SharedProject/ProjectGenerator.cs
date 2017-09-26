@@ -71,6 +71,10 @@ namespace TestUtilities.SharedProject {
             Assert.IsTrue(ProjectTypes.Count() > 0, "no project types were registered and no tests will run");
         }
 
+        public ProjectGenerator(params ProjectType[] types) {
+            ProjectTypes = types.ToArray();
+        }
+
         /// <summary>
         /// Helper function to create a ProjectProperty object to simply syntax in 
         /// project definitions.
