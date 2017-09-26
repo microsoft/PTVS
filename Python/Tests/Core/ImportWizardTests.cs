@@ -39,7 +39,6 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         private static string CreateRequestedProject(dynamic settings) {
@@ -175,7 +174,7 @@ namespace PythonToolsTests {
             // https://pytools.codeplex.com/workitem/2022
             using (var wpf = new WpfProxy()) {
                 var settings = wpf.Create(() => new ImportSettings(null, null));
-                var sourcePath = TestData.GetTempPath(randomSubPath: true);
+                var sourcePath = TestData.GetTempPath();
                 // Create a fake set of files to import
                 Directory.CreateDirectory(Path.Combine(sourcePath, "ABC"));
                 File.WriteAllText(Path.Combine(sourcePath, "ABC", "a;b;c.py"), "");
@@ -213,7 +212,7 @@ namespace PythonToolsTests {
 
             using (var wpf = new WpfProxy()) {
                 var settings = wpf.Create(() => new ImportSettings(null, mockService));
-                var sourcePath = TestData.GetTempPath(randomSubPath: true);
+                var sourcePath = TestData.GetTempPath();
                 // Create a fake set of files to import
                 File.WriteAllText(Path.Combine(sourcePath, "main.py"), "");
                 Directory.CreateDirectory(Path.Combine(sourcePath, "A"));
@@ -383,7 +382,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(1)]
         public void ImportWizardCandidateStartupFiles() {
-            var sourcePath = TestData.GetTempPath(randomSubPath: true);
+            var sourcePath = TestData.GetTempPath();
             // Create a fake set of files to import
             File.WriteAllText(Path.Combine(sourcePath, "a.py"), "");
             File.WriteAllText(Path.Combine(sourcePath, "b.py"), "");

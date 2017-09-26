@@ -69,26 +69,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        /// <summary>
-        /// Indicates that the specified buffer ID has been analyzed with this version.
-        /// </summary>
-        /// <returns>
-        /// True if the specified version is newer than the last one we had received.
-        /// </returns>
-        public bool Analyzed(int bufferId, int version) {
-            return GetBuffer(bufferId)?.UpdateLastReceivedAnalysis(version) ?? false;
-        }
-
-        /// <summary>
-        /// Indicates that the specified buffer ID has been parsed with this version.
-        /// </summary>
-        /// <returns>
-        /// True if the specified version is newer than the last one we had received.
-        /// </returns>
-        public bool Parsed(int bufferId, int version) {
-            return GetBuffer(bufferId)?.UpdateLastReceivedParse(version) ?? false;
-        }
-
         internal ITextSnapshot GetLastSentSnapshot(ITextBuffer buffer) {
             return GetBuffer(buffer)?.LastSentSnapshot;
         }

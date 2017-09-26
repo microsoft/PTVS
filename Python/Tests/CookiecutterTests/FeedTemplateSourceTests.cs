@@ -24,7 +24,6 @@ using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace CookiecutterTests {
     [TestClass]
@@ -36,7 +35,6 @@ namespace CookiecutterTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestMethod]

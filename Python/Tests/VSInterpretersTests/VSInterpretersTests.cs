@@ -39,7 +39,6 @@ namespace VSInterpretersTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         private static readonly List<string> _tempFiles = new List<string>();

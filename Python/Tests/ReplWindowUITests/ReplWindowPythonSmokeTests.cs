@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools;
@@ -33,16 +34,12 @@ namespace ReplWindowUITests {
     /// </summary>
     [TestClass, Ignore]
     public abstract class ReplWindowPythonSmokeTests {
-        static ReplWindowPythonSmokeTests() {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
         internal abstract ReplWindowProxySettings Settings {
             get;
         }
 
         internal virtual ReplWindowProxy Prepare(
+            PythonVisualStudioApp app,
             bool enableAttach = false,
             bool useIPython = false,
             bool addNewLineAtEndOfFullyTypedWord = false
@@ -57,14 +54,13 @@ namespace ReplWindowUITests {
                 s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
             }
 
-            return ReplWindowProxy.Prepare(s, useIPython: useIPython);
+            return ReplWindowProxy.Prepare(app, s, useIPython: useIPython);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void ExecuteInReplSysArgv() {
-            using (var app = new PythonVisualStudioApp())
-            using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void ExecuteInReplSysArgv(PythonVisualStudioApp app) {
+            using (app.SelectDefaultInterpreter(Settings.Version)) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
                 });
@@ -77,11 +73,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void ExecuteInReplSysArgvScriptArgs() {
-            using (var app = new PythonVisualStudioApp())
-            using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void ExecuteInReplSysArgvScriptArgs(PythonVisualStudioApp app) {
+            using (app.SelectDefaultInterpreter(Settings.Version)) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
                 });
@@ -94,16 +89,18 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void ExecuteInReplUnicodeFilename() {
-            using (var app = new PythonVisualStudioApp())
-            using (new DefaultInterpreterSetter(InterpreterFactoryCreator.CreateInterpreterFactory(Settings.Version.Configuration))) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void ExecuteInReplUnicodeFilename(PythonVisualStudioApp app) {
+            using (app.SelectDefaultInterpreter(Settings.Version)) {
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
                 });
 
-                var project = app.OpenProject(PythonTestData.GetUnicodePathSolution());
+                var sln = TestData.GetTempPath();
+                File.Copy(TestData.GetPath("TestData", "UnicodePath.sln"), Path.Combine(sln, "UnicodePathä.sln"));
+                FileUtils.CopyDirectory(TestData.GetPath("TestData", "UnicodePath"), Path.Combine(sln, "UnicodePathä"));
+                var project = app.OpenProject(Path.Combine(sln, "UnicodePathä.sln"));
 
                 using (var interactive = app.ExecuteInInteractive(project, Settings)) {
                     interactive.WaitForTextEnd("hello world from unicode path", ">");
@@ -111,10 +108,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void CwdImport() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void CwdImport(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 interactive.SubmitCode("import sys\nsys.path");
                 interactive.SubmitCode("import os\nos.chdir(r'" + TestData.GetPath("TestData\\ReplCwd") + "')");
 
@@ -142,10 +139,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void QuitAndReset() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void QuitAndReset(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 interactive.SubmitCode("quit()");
                 interactive.WaitForText(">quit()", "The interactive Python process has exited.", ">");
                 interactive.Reset();
@@ -157,10 +154,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void PrintAllCharacters() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void PrintAllCharacters(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 interactive.SubmitCode("print(\"" +
                     string.Join("", Enumerable.Range(0, 256).Select(i => string.Format("\\x{0:X2}", i))) +
                     "\\nDONE\")",

@@ -44,14 +44,14 @@ using TestUtilities.Python;
 using Process = System.Diagnostics.Process;
 
 namespace TestUtilities.UI.Python {
-    class PythonVisualStudioApp : VisualStudioApp {
+    public class PythonVisualStudioApp : VisualStudioApp {
         private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
         public readonly PythonToolsService PythonToolsService;
-        
-        public PythonVisualStudioApp(DTE dte = null)
-            : base(dte) {
+
+        public PythonVisualStudioApp(IServiceProvider site)
+            : base(site) {
 
             var shell = (IVsShell)ServiceProvider.GetService(typeof(SVsShell));
             var pkg = new Guid("6dbd7c1e-1f1b-496d-ac7c-c55dae66c783");
@@ -127,7 +127,7 @@ namespace TestUtilities.UI.Python {
         public const string FlaskWebProjectTemplate = "WebProjectFlask";
         public const string DjangoWebProjectTemplate = "DjangoProject";
         public const string WorkerRoleProjectTemplate = "WorkerRoleProject";
-        
+
         public const string EmptyFileTemplate = "EmptyPyFile";
         public const string WebRoleSupportTemplate = "AzureCSWebRole";
         public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole";
@@ -206,7 +206,7 @@ namespace TestUtilities.UI.Python {
 
         public ReplWindowProxy ExecuteInInteractive(Project project, ReplWindowProxySettings settings = null) {
             // Prepare makes sure that IPython mode is disabled, and that the REPL is reset and cleared
-            var window = ReplWindowProxy.Prepare(settings, project.Name);
+            var window = ReplWindowProxy.Prepare(this, settings, project.Name);
             OpenSolutionExplorer().SelectProject(project);
             ExecuteCommand("Python.ExecuteInInteractive");
             return window;
@@ -277,6 +277,19 @@ namespace TestUtilities.UI.Python {
             );
         }
 
+        /// <summary>
+        /// Selects the given interpreter as the default.
+        /// </summary>
+        /// <remarks>
+        /// This method should always be called as a using block.
+        /// </remarks>
+        public DefaultInterpreterSetter SelectDefaultInterpreter(InterpreterConfiguration python) {
+            return new DefaultInterpreterSetter(
+                InterpreterService.FindInterpreter(python.Id),
+                ServiceProvider
+            );
+        }
+
         public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion interp, string installPackages) {
             interp.AssertInstalled();
             if (interp.IsIronPython && !string.IsNullOrEmpty(installPackages)) {
@@ -285,7 +298,7 @@ namespace TestUtilities.UI.Python {
 
             var interpreterService = InterpreterService;
             var factory = interpreterService.FindInterpreter(interp.Id);
-            var defaultInterpreterSetter = new DefaultInterpreterSetter(factory);
+            var defaultInterpreterSetter = new DefaultInterpreterSetter(factory, ServiceProvider);
 
             try {
                 if (!string.IsNullOrEmpty(installPackages)) {

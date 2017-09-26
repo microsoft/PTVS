@@ -29,17 +29,16 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace ProfilingUITests {
-    [TestClass]
+    //[TestClass]
     public class ProfilingTests {
         public TestContext TestContext { get; set; }
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        //[TestMethod, Priority(0)]
         public async Task ProfileWithEncoding() {
             var proflaun = Path.Combine(
                 Path.GetDirectoryName(typeof(IPythonProfiling).Assembly.Location),

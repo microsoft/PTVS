@@ -69,7 +69,7 @@ namespace DebuggerTests {
         public virtual async Task AttachThreadingStartNewThread() {
             // http://pytools.codeplex.com/workitem/638
             // http://pytools.codeplex.com/discussions/285741#post724014
-            var psi = new ProcessStartInfo(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
+            var psi = new ProcessStartInfo(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
             psi.WorkingDirectory = TestData.GetPath(@"TestData\DebuggerProject");
             psi.EnvironmentVariables["PYTHONPATH"] = @"..\..";
             psi.UseShellExecute = false;
@@ -148,7 +148,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(2)]
         [TestCategory("10s"), TestCategory("60s")]
         public virtual async Task AttachReattach() {
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
             try {
                 using (var dumpWriter = new MiniDumpWriter(p)) {
                     Thread.Sleep(1000);
@@ -197,7 +197,7 @@ namespace DebuggerTests {
         [TestCategory("10s")]
         public virtual async Task AttachMultithreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
             try {
                 using (var dumpWriter = new MiniDumpWriter(p)) {
                     Thread.Sleep(1000);
@@ -233,7 +233,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(3)]
         public virtual async Task AttachSingleThreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
             try {
                 Thread.Sleep(1000);
 
@@ -263,7 +263,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(2)]
         [TestCategory("10s"), TestCategory("60s")]
         public virtual async Task AttachReattachThreadingInited() {
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
             try {
                 using (var dumpWriter = new MiniDumpWriter(p)) {
                     Thread.Sleep(1000);
@@ -298,7 +298,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(3)]
         [TestCategory("10s")]
         public virtual async Task AttachReattachInfiniteThreads() {
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
             try {
                 using (var dumpWriter = new MiniDumpWriter(p)) {
                     Thread.Sleep(1000);
@@ -724,7 +724,7 @@ int main(int argc, char* argv[]) {
         [TestCategory("10s")]
         public virtual async Task AttachAndStepWithBlankSysPrefix() {
             string script = TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunBlankPrefix.py");
-            var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
+            var p = Process.Start(Version.InterpreterPath, "-B \"" + script + "\"");
             try {
                 using (var dumpWriter = new MiniDumpWriter(p)) {
                     Thread.Sleep(1000);
@@ -780,7 +780,7 @@ int main(int argc, char* argv[]) {
             var expectedOutput = new[] { "stdout", "stderr" };
 
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");
-            var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
+            var p = Process.Start(Version.InterpreterPath, "-B \"" + script + "\"");
             try {
                 using (var dumpWriter = new MiniDumpWriter(p)) {
                     Thread.Sleep(1000);
@@ -833,7 +833,7 @@ int main(int argc, char* argv[]) {
         }
 
         protected virtual string PtvsdInterpreterArguments {
-            get { return ""; }
+            get { return "-B"; }
         }
 
         private void CaptureOutput(StreamReader reader, StringBuilder builder) {
@@ -869,7 +869,7 @@ int main(int argc, char* argv[]) {
                 RedirectStandardError = true,
                 CreateNoWindow = true,
                 Environment = {
-                    { "PYTHONPATH", TestData.GetPath() },
+                    { "PYTHONPATH", Path.GetDirectoryName(GetType().Assembly.Location) },
                 }
             };
 
@@ -984,7 +984,7 @@ int main(int argc, char* argv[]) {
             var expectedOutput = new[] { "stdout", "stderr" };
             var actualOutput = new List<string>();
 
-            await TestPtvsd("-m ptvsd " + args, script, "", uri, actualOutput, async proc => {
+            await TestPtvsd("-B -m ptvsd " + args, script, "", uri, actualOutput, async proc => {
                 var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 proc.ProcessLoaded += async (sender, e) => {
                     Console.WriteLine("Process loaded");
@@ -1106,8 +1106,8 @@ int main(int argc, char* argv[]) {
                 return;
             }
 
-            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsdLoop.py");
-            string runFile = Path.Combine(TestData.GetTempPath(randomSubPath: true), "AttachPtvsdLoop.running");
+            string script = TestData.GetPath("TestData", "DebuggerProject", "AttachPtvsdLoop.py");
+            string runFile = Path.Combine(TestData.GetTempPath(), "AttachPtvsdLoop.running");
 
             await TestPtvsd("-m ptvsd", script, "- \"" + runFile + "\"", new Uri("tcp://localhost"), null, async proc => {
                 proc.ProcessLoaded += async (sender, e) => {
@@ -1207,7 +1207,7 @@ int main(int argc, char* argv[]) {
         }
 
         private string CompileCode(string hostCode) {
-            var buildDir = TestData.GetTempPath(randomSubPath: true);
+            var buildDir = TestData.GetTempPath();
 
             var pythonHome = "\"" + Version.PrefixPath.Replace("\\", "\\\\") + "\"";
             if (Version.Version >= PythonLanguageVersion.V30) {

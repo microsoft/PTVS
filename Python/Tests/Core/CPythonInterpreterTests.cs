@@ -37,7 +37,6 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0)]
@@ -148,7 +147,7 @@ namespace PythonToolsTests {
             Assert.IsNotNull(factory, "no factory found");
 
             analyzer = PythonAnalyzer.CreateSynchronously(factory);
-            var path = Path.Combine(TestData.GetTempPath(randomSubPath: true), module.Replace('.', '\\'));
+            var path = Path.Combine(TestData.GetTempPath(), module.Replace('.', '\\'));
             Directory.CreateDirectory(PathUtils.GetParent(path));
             File.WriteAllText(path, code);
 

@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,19 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TestUtilities.SharedProject;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
-namespace TestUtilities.Python {
-    public class PythonProjectTest : SharedProjectTest {
-        public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
+// General Information about an assembly is controlled through the following
+// set of attributes. Change these attribute values to modify the information
+// associated with an assembly.
+[assembly: AssemblyTitle("TestRunnerInterop")]
+[assembly: AssemblyDescription("")]
+[assembly: AssemblyConfiguration("")]
 
-        public static ProjectDefinition Project(string name, params ProjectContentGenerator[] items) {
-            return new ProjectDefinition(name, PythonProject, items);
-        }
-    }
-}
+[assembly: ComVisible(false)]
+[assembly: Guid("3e8c485b-905a-4dbc-b059-161ccb1ad591")]
+
+[assembly: PrimaryInteropAssembly(1, 0)]

@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.PyAnalysis {
             for (int value = 0; value < res._types.Length; ++value) {
                 res._types[value] = (IPythonType)fallback.GetAnyMember(
                     ((ITypeDatabaseReader)fallbackDb).GetBuiltinTypeName((BuiltinTypeId)value)
-                );
+                ) ?? new FallbackBuiltinPythonType(state.LanguageVersion, (BuiltinTypeId)value);
             }
 
             res.SetClassInfo(state);

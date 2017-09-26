@@ -35,12 +35,12 @@ namespace ReplWindowUITests {
     /// These tests are run for the important versions of Python that support
     /// the REPL.
     /// </summary>
-    [TestClass, Ignore]
+    //[TestClass, Ignore]
     public abstract class ReplWindowPythonTests : ReplWindowPythonSmokeTests {
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void RegressionImportSysBackspace() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void RegressionImportSysBackspace(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 const string importCode = ">import sys";
                 interactive.SubmitCode(importCode.Substring(1));
                 interactive.WaitForText(importCode, ">");
@@ -58,10 +58,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void RegressionImportMultipleModules() {
-            using (var interactive = Prepare(addNewLineAtEndOfFullyTypedWord: true)) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void RegressionImportMultipleModules(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app, addNewLineAtEndOfFullyTypedWord: true)) {
                 Keyboard.Type("import ");
 
                 using (var sh = interactive.WaitForSession<ICompletionSession>()) {
@@ -78,11 +78,11 @@ namespace ReplWindowUITests {
         /// Type "raise Exception()", hit enter, raise Exception() should have
         /// appropriate syntax color highlighting.
         /// </summary>
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2762
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void SyntaxHighlightingRaiseException() {
-            using (var interactive = Prepare())
+        //[Ignore] // https://github.com/Microsoft/PTVS/issues/2762
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void SyntaxHighlightingRaiseException(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app))
             using (var newClassifications = new AutoResetEvent(false)) {
                 const string code = "raise Exception()";
                 interactive.Classifier.ClassificationChanged += (s, e) => newClassifications.SetIfNotDisposed();
@@ -122,10 +122,10 @@ namespace ReplWindowUITests {
         /// also outputs, make sure the auto indent is gone before we do the
         /// input. (regression for http://pytools.codeplex.com/workitem/92)
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void PrintWithParens() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void PrintWithParens(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 const string inputCode = ">print ('a',";
                 const string autoIndent = ".       ";
                 interactive.Type(inputCode.Substring(1));
@@ -149,10 +149,10 @@ namespace ReplWindowUITests {
         /// Make sure that we can successfully delete an autoindent inputted span
         /// (regression for http://pytools.codeplex.com/workitem/93)
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void UndeletableIndent() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void UndeletableIndent(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 const string inputCode = ">print (('a',";
                 const string autoIndent = ".        ";
                 interactive.Type(inputCode.Substring(1));
@@ -168,10 +168,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void InlineImage() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void InlineImage(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 interactive.SubmitCode(@"import sys
 repl = sys.modules['ptvsd.repl'].BACKEND
 repl is not None");
@@ -205,10 +205,10 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void ImportCompletions() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void ImportCompletions(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 if (((ReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
                     interactive.SubmitCode("import clr");
                     interactive.WaitForText(">import clr", ">");
@@ -238,10 +238,10 @@ repl is not None");
         }
 
         [Ignore] // https://github.com/Microsoft/PTVS/issues/2682
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void Comments() {
-            using (var interactive = Prepare()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void Comments(PythonVisualStudioApp app) {
+            using (var interactive = Prepare(app)) {
                 const string code = "# fob";
                 Keyboard.Type(code + "\r");
 
@@ -257,13 +257,13 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void NoSnippets() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void NoSnippets(PythonVisualStudioApp app) {
             // https://pytools.codeplex.com/workitem/2945 is the reason for
             // disabling snippets; https://pytools.codeplex.com/workitem/2947 is
             // where we will re-enable them when they work properly.
-            using (var interactive = Prepare()) {
+            using (var interactive = Prepare(app)) {
                 int spaces = interactive.TextView.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId);
                 int textWidth = interactive.CurrentPrimaryPrompt.Length + 3;
 
@@ -277,13 +277,13 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public virtual void TestPydocRedirected() {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public virtual void TestPydocRedirected(PythonVisualStudioApp app) {
             // We run this test on multiple interpreters because pydoc
             // output redirection has changed on Python 3.x
             // https://github.com/Microsoft/PTVS/issues/2531
-            using (var interactive = Prepare()) {
+            using (var interactive = Prepare(app)) {
                 interactive.SubmitCode("help(exit)");
                 interactive.WaitForText(
                     ">help(exit)",

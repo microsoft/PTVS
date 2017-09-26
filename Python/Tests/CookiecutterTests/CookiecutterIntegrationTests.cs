@@ -27,7 +27,6 @@ using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace CookiecutterTests {
     [TestClass]
@@ -82,14 +81,13 @@ namespace CookiecutterTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestInitialize]
         public void SetupTest() {
             _redirector = new MockRedirector();
 
-            var output = TestData.GetTempPath("Cookiecutter", true);
+            var output = TestData.GetTempPath();
             var outputProjectFolder = Path.Combine(output, "integration");
             var feedUrl = new Uri(TestFeedPath);
             var installedPath = TestInstalledTemplateFolderPath;

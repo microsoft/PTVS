@@ -16,14 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition.Hosting;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using Microsoft.Build.Construction;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.SharedProject {
     /// <summary>
@@ -36,114 +32,43 @@ namespace TestUtilities.SharedProject {
     /// This helps to make the project definition more readable and similar to typical
     /// MSBuild structure.
     /// </summary>
-    [TestClass]
-    public class SharedProjectTest {
-        public static CompositionContainer Container;
-        public static IEnumerable<ProjectType> ProjectTypes { get; set; }
+    public class ProjectGenerator {
+        public IEnumerable<ProjectType> ProjectTypes { get; set; }
 
-        static SharedProjectTest() {
-            var runningLoc = Path.GetDirectoryName(typeof(SharedProjectTest).Assembly.Location);
-            // we want to pick up all of the MEF exports which are available, but they don't
-            // depend upon us.  So if we're just running some tests in the IDE when the deployment
-            // happens it won't have the DLLS with the MEF exports.  So we copy them here.
-#if USE_PYTHON_TESTDATA
-            TestUtilities.Python.PythonTestData.Deploy(includeTestData: false);
-#else
-            TestData.Deploy(null, includeTestData: false);
-#endif
+        public ProjectGenerator(IServiceProvider site) {
+            // Initialize our ProjectTypes information from the catalog
+            var container = ((IComponentModel)site.GetService(typeof(SComponentModel))).DefaultExportProvider;
 
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            try {
-                // load all of the available DLLs that depend upon TestUtilities into our catalog
-                List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
-                foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                    TryAddAssembly(catalogs, file);
-                }
+            // First, get a mapping from extension type to all available IProjectProcessor's for
+            // that extension
+            var processorsMap = container
+                .GetExports<IProjectProcessor, IProjectProcessorMetadata>()
+                .GroupBy(x => x.Metadata.ProjectExtension)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.Select(lazy => lazy.Value).ToArray(),
+                    StringComparer.OrdinalIgnoreCase
+                );
 
-                // Compose everything
-                var catalog = new AggregateCatalog(catalogs.ToArray());
+            // Then create the ProjectTypes
+            ProjectTypes = container
+                .GetExports<ProjectTypeDefinition, IProjectTypeDefinitionMetadata>()
+                .Select(lazyVal => {
+                    var md = lazyVal.Metadata;
+                    IProjectProcessor[] processors;
+                    processorsMap.TryGetValue(md.ProjectExtension, out processors);
 
-                var container = Container = new CompositionContainer(catalog);
-                var compBatch = new CompositionBatch();
-                container.Compose(compBatch);
-
-                // Initialize our ProjectTypes information from the catalog.            
-
-                // First, get a mapping from extension type to all available IProjectProcessor's for
-                // that extension
-                var processorsMap = container
-                    .GetExports<IProjectProcessor, IProjectProcessorMetadata>()
-                    .GroupBy(x => x.Metadata.ProjectExtension)
-                    .ToDictionary(
-                        x => x.Key,
-                        x => x.Select(lazy => lazy.Value).ToArray(),
-                        StringComparer.OrdinalIgnoreCase
+                    return new ProjectType(
+                        md.CodeExtension,
+                        md.ProjectExtension,
+                        Guid.Parse(md.ProjectTypeGuid),
+                        md.SampleCode,
+                        processors
                     );
-
-                // Then create the ProjectTypes
-                ProjectTypes = container
-                    .GetExports<ProjectTypeDefinition, IProjectTypeDefinitionMetadata>()
-                    .Select(lazyVal => {
-                        var md = lazyVal.Metadata;
-                        IProjectProcessor[] processors;
-                        processorsMap.TryGetValue(md.ProjectExtension, out processors);
-
-                        return new ProjectType(
-                            md.CodeExtension,
-                            md.ProjectExtension,
-                            Guid.Parse(md.ProjectTypeGuid),
-                            md.SampleCode,
-                            processors
-                        );
-                    });
-            } catch (ReflectionTypeLoadException ex) {
-                foreach (var e in ex.LoaderExceptions) {
-                    Trace.TraceError(e.ToString());
-                }
-                throw;
-            } finally {
-                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
-            }
+                });
 
             // something's broken if we don't have any languages to test against, so fail the test.
             Assert.IsTrue(ProjectTypes.Count() > 0, "no project types were registered and no tests will run");
-        }
-
-        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            Assembly asm = null;
-            var name = new AssemblyName(args.Name);
-            var path = Path.Combine(VisualStudioPath.PrivateAssemblies, name.Name + ".dll");
-            if (File.Exists(path)) {
-                asm = Assembly.LoadFile(path);
-            } else {
-                path = Path.Combine(VisualStudioPath.PublicAssemblies, name.Name + ".dll");
-                if (File.Exists(path)) {
-                    asm = Assembly.LoadFile(path);
-                }
-            }
-            if (asm != null && asm.FullName != name.FullName) {
-                asm = null;
-            }
-            return asm;
-        }
-
-        private static void TryAddAssembly(List<AssemblyCatalog> catalogs, string file) {
-            Assembly asm;
-            try {
-                asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
-            } catch {
-                return;
-            }
-
-            // Include any test assemblies which reference this assembly, they might
-            // have defined a project kind.
-            foreach (var reference in asm.GetReferencedAssemblies()) {
-                if (reference.FullName == typeof(SharedProjectTest).Assembly.GetName().FullName) {
-                    Console.WriteLine("Including {0}", file);
-                    catalogs.Add(new AssemblyCatalog(asm));
-                    break;
-                }
-            }
         }
 
         /// <summary>

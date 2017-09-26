@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     public interface IAnalysisEntryService {
@@ -240,7 +241,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // This should only happen while racing with text view creation
             var path = PythonTextBufferInfo.TryGetForBuffer(textBuffer)?.Filename ?? textBuffer.GetFilePath();
             if (path != null) {
-                analyzer = _services.Site.GetProjectFromFile(path)?.GetAnalyzer();
+                analyzer = _services.Site.GetUIThread().Invoke(() => _services.Site.GetProjectFromFile(path)?.GetAnalyzer());
                 if (analyzer != null) {
                     // Don't check whether the analyzer knows about us yet,
                     // since this request is probably finding out which analyzer

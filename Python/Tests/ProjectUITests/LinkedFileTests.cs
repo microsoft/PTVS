@@ -27,56 +27,54 @@ using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using MSBuild = Microsoft.Build.Evaluation;
 using MessageBoxButton = TestUtilities.MessageBoxButton;
-using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace VisualStudioToolsUITests {
-    [TestClass]
-    public class LinkedFileTests : SharedProjectTest {
+    public class LinkedFileTests {
         private static ProjectDefinition LinkedFiles(ProjectType projectType) {
             return new ProjectDefinition(
                 "LinkedFiles",
                 projectType,
-                ItemGroup(
-                    Folder("MoveToFolder"),
-                    Folder("FolderWithAFile"),
-                    Folder("Fob"),
-                    Folder("..\\LinkedFilesDir", isExcluded: true),
-                    Folder("AlreadyLinkedFolder"),
+                ProjectGenerator.ItemGroup(
+                    ProjectGenerator.Folder("MoveToFolder"),
+                    ProjectGenerator.Folder("FolderWithAFile"),
+                    ProjectGenerator.Folder("Fob"),
+                    ProjectGenerator.Folder("..\\LinkedFilesDir", isExcluded: true),
+                    ProjectGenerator.Folder("AlreadyLinkedFolder"),
 
-                    Compile("Program"),
-                    Compile("..\\ImplicitLinkedFile"),
-                    Compile("..\\ExplicitLinkedFile")
+                    ProjectGenerator.Compile("Program"),
+                    ProjectGenerator.Compile("..\\ImplicitLinkedFile"),
+                    ProjectGenerator.Compile("..\\ExplicitLinkedFile")
                         .Link("ExplicitDir\\ExplicitLinkedFile"),
-                    Compile("..\\ExplicitLinkedFileWrongFilename")
+                    ProjectGenerator.Compile("..\\ExplicitLinkedFileWrongFilename")
                         .Link("ExplicitDir\\Blah"),
-                    Compile("..\\MovedLinkedFile"),
-                    Compile("..\\MovedLinkedFileOpen"),
-                    Compile("..\\MovedLinkedFileOpenEdit"),
-                    Compile("..\\FileNotInProject"),
-                    Compile("..\\DeletedLinkedFile"),
-                    Compile("LinkedInModule")
+                    ProjectGenerator.Compile("..\\MovedLinkedFile"),
+                    ProjectGenerator.Compile("..\\MovedLinkedFileOpen"),
+                    ProjectGenerator.Compile("..\\MovedLinkedFileOpenEdit"),
+                    ProjectGenerator.Compile("..\\FileNotInProject"),
+                    ProjectGenerator.Compile("..\\DeletedLinkedFile"),
+                    ProjectGenerator.Compile("LinkedInModule")
                         .Link("Fob\\LinkedInModule"),
-                    Compile("SaveAsCreateLink"),
-                    Compile("..\\SaveAsCreateFile"),
-                    Compile("..\\SaveAsCreateFileNewDirectory"),
-                    Compile("FolderWithAFile\\ExistsOnDiskAndInProject"),
-                    Compile("FolderWithAFile\\ExistsInProjectButNotOnDisk", isMissing: true),
-                    Compile("FolderWithAFile\\ExistsOnDiskButNotInProject"),
-                    Compile("..\\LinkedFilesDir\\SomeLinkedFile")
+                    ProjectGenerator.Compile("SaveAsCreateLink"),
+                    ProjectGenerator.Compile("..\\SaveAsCreateFile"),
+                    ProjectGenerator.Compile("..\\SaveAsCreateFileNewDirectory"),
+                    ProjectGenerator.Compile("FolderWithAFile\\ExistsOnDiskAndInProject"),
+                    ProjectGenerator.Compile("FolderWithAFile\\ExistsInProjectButNotOnDisk", isMissing: true),
+                    ProjectGenerator.Compile("FolderWithAFile\\ExistsOnDiskButNotInProject"),
+                    ProjectGenerator.Compile("..\\LinkedFilesDir\\SomeLinkedFile")
                         .Link("Oar\\SomeLinkedFile"),
-                    Compile("..\\RenamedLinkFile")
+                    ProjectGenerator.Compile("..\\RenamedLinkFile")
                         .Link("Fob\\NewNameForLinkFile"),
-                    Compile("..\\BadLinkPath")
+                    ProjectGenerator.Compile("..\\BadLinkPath")
                         .Link("..\\BadLinkPathFolder\\BadLinkPath"),
-                    Compile("..\\RootedLinkIgnored")
+                    ProjectGenerator.Compile("..\\RootedLinkIgnored")
                         .Link("C:\\RootedLinkIgnored"),
-                    Compile("C:\\RootedIncludeIgnored", isMissing: true)
+                    ProjectGenerator.Compile("C:\\RootedIncludeIgnored", isMissing: true)
                         .Link("RootedIncludeIgnored"),
-                    Compile("Fob\\AddExistingInProjectDirButNotInProject"),
-                    Compile("..\\ExistingItem", isExcluded: true),
-                    Compile("..\\ExistsInProjectButNotOnDisk", isExcluded: true),
-                    Compile("..\\ExistsOnDiskAndInProject", isExcluded: true),
-                    Compile("..\\ExistsOnDiskButNotInProject", isExcluded: true)
+                    ProjectGenerator.Compile("Fob\\AddExistingInProjectDirButNotInProject"),
+                    ProjectGenerator.Compile("..\\ExistingItem", isExcluded: true),
+                    ProjectGenerator.Compile("..\\ExistsInProjectButNotOnDisk", isExcluded: true),
+                    ProjectGenerator.Compile("..\\ExistsOnDiskAndInProject", isExcluded: true),
+                    ProjectGenerator.Compile("..\\ExistsOnDiskButNotInProject", isExcluded: true)
                 )
             );
         }
@@ -87,32 +85,26 @@ namespace VisualStudioToolsUITests {
                 new ProjectDefinition(
                     "LinkedFiles1",
                     projectType,
-                    ItemGroup(
-                        Compile("..\\FileNotInProject1"),
-                        Compile("..\\FileNotInProject2")
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("..\\FileNotInProject1"),
+                        ProjectGenerator.Compile("..\\FileNotInProject2")
                     )
                 ),
                 new ProjectDefinition(
                     "LinkedFiles2",
                     projectType,
-                    ItemGroup(
-                        Compile("..\\FileNotInProject2", isMissing: true)
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Compile("..\\FileNotInProject2", isMissing: true)
                     )
                 )
             );
         }
 
-
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenameLinkedNode() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenameLinkedNode(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     // implicitly linked node
                     var projectNode = solution.FindItem("LinkedFiles", "ImplicitLinkedFile" + projectType.CodeExtension);
                     Assert.IsNotNull(projectNode, "projectNode");
@@ -155,11 +147,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void MoveLinkedNode() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void MoveLinkedNode(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
 
                     var projectNode = solution.FindItem("LinkedFiles", "MovedLinkedFile" + projectType.CodeExtension);
                     Assert.IsNotNull(projectNode, "projectNode");
@@ -206,11 +198,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void MultiProjectMove() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void MultiProjectMove(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = MultiProjectLinkedFiles(projectType).ToVs(app)) {
 
                     var fileNode = solution.FindItem("LinkedFiles1", "FileNotInProject1" + projectType.CodeExtension);
                     Assert.IsNotNull(fileNode, "projectNode");
@@ -235,11 +227,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void MultiProjectMoveExists2() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void MultiProjectMoveExists2(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = MultiProjectLinkedFiles(projectType).ToVs(app)) {
 
                     var fileNode = solution.FindItem("LinkedFiles1", "FileNotInProject2" + projectType.CodeExtension);
                     Assert.IsNotNull(fileNode, "projectNode");
@@ -253,18 +245,18 @@ namespace VisualStudioToolsUITests {
                     ThreadPool.QueueUserWorkItem(x => solution.ExecuteCommand("Edit.Paste"));
 
                     string path = Path.Combine(solution.SolutionDirectory, "FileNotInProject2" + projectType.CodeExtension);
-                    VisualStudioApp.CheckMessageBox(String.Format("There is already a link to '{0}'. You cannot have more than one link to the same file in a project.", path));
+                    solution.CheckMessageBox(String.Format("There is already a link to '{0}'. You cannot have more than one link to the same file in a project.", path));
 
                     solution.WaitForDialogDismissed();
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void MoveLinkedNodeOpen() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void MoveLinkedNodeOpen(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
 
                     var openWindow = solution.GetProject("LinkedFiles").ProjectItems.Item("MovedLinkedFileOpen" + projectType.CodeExtension).Open();
                     Assert.IsNotNull(openWindow, "openWindow");
@@ -288,16 +280,16 @@ namespace VisualStudioToolsUITests {
                     Assert.IsFalse(File.Exists(Path.Combine(solution.SolutionDirectory, "MoveToFolder\\MovedLinkedFileOpen" + projectType.CodeExtension)));
 
                     // window sholudn't have changed.
-                    Assert.AreEqual(VSTestContext.DTE.Windows.Item("MovedLinkedFileOpen" + projectType.CodeExtension), openWindow);
+                    Assert.AreEqual(app.Dte.Windows.Item("MovedLinkedFileOpen" + projectType.CodeExtension), openWindow);
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void MoveLinkedNodeOpenEdited() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void MoveLinkedNodeOpenEdited(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
 
                     var openWindow = solution.GetProject("LinkedFiles").ProjectItems.Item("MovedLinkedFileOpenEdit" + projectType.CodeExtension).Open();
                     Assert.IsNotNull(openWindow, "openWindow");
@@ -325,7 +317,7 @@ namespace VisualStudioToolsUITests {
                     Assert.IsFalse(File.Exists(Path.Combine(solution.SolutionDirectory, "MoveToFolder\\MovedLinkedFileOpenEdit" + projectType.CodeExtension)));
 
                     // window sholudn't have changed.
-                    Assert.AreEqual(VSTestContext.DTE.Windows.Item("MovedLinkedFileOpenEdit" + projectType.CodeExtension), openWindow);
+                    Assert.AreEqual(app.Dte.Windows.Item("MovedLinkedFileOpenEdit" + projectType.CodeExtension), openWindow);
 
                     Assert.AreEqual(openWindow.Document.Saved, false);
                     openWindow.Document.Save();
@@ -335,11 +327,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void MoveLinkedNodeFileExistsButNotInProject() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void MoveLinkedNodeFileExistsButNotInProject(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
 
                     var fileNode = solution.FindItem("LinkedFiles", "FileNotInProject" + projectType.CodeExtension);
                     Assert.IsNotNull(fileNode, "projectNode");
@@ -363,11 +355,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DeleteLinkedNode() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void DeleteLinkedNode(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "DeletedLinkedFile" + projectType.CodeExtension);
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
@@ -381,11 +373,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void LinkedFileInProjectIgnored() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void LinkedFileInProjectIgnored(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "Fob", "LinkedInModule" + projectType.CodeExtension);
 
                     Assert.IsNull(projectNode);
@@ -393,11 +385,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void SaveAsCreateLink() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void SaveAsCreateLink(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
 
                     var autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("SaveAsCreateLink" + projectType.CodeExtension);
                     var isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
@@ -415,11 +407,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void SaveAsCreateFile() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void SaveAsCreateFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
 
                     var autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("SaveAsCreateFile" + projectType.CodeExtension);
                     var isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
@@ -436,11 +428,11 @@ namespace VisualStudioToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void SaveAsCreateFileNewDirectory() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void SaveAsCreateFileNewDirectory(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
 
                     var autoItem = solution.GetProject("LinkedFiles").ProjectItems.Item("SaveAsCreateFileNewDirectory" + projectType.CodeExtension);
                     var isLinkFile = autoItem.Properties.Item("IsLinkFile").Value;
@@ -462,11 +454,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding a duplicate link to the same item
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddExistingItem() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void AddExistingItem(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "FolderWithAFile");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
@@ -485,11 +477,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding a link to a folder which is already linked in somewhere else.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddExistingItemAndItemIsAlreadyLinked() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void AddExistingItemAndItemIsAlreadyLinked(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "AlreadyLinkedFolder");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
@@ -512,11 +504,11 @@ namespace VisualStudioToolsUITests {
         /// this verifies we deal with the project name string comparison correctly (including a \ at the end of the
         /// path).
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddExistingItemAndLinkAlreadyExists() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void AddExistingItemAndLinkAlreadyExists(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "Oar");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
@@ -535,11 +527,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (when the file only exists on disk)
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "FolderWithAFile");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
@@ -559,11 +551,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (both in the project and on disk)
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddExistingItemAndFileByNameExistsOnDiskAndInProject() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void AddExistingItemAndFileByNameExistsOnDiskAndInProject(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "FolderWithAFile");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
@@ -583,11 +575,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (in the project, but not on disk)
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "FolderWithAFile");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
@@ -607,11 +599,11 @@ namespace VisualStudioToolsUITests {
         /// Adding new linked item when the file lives in the project dir but not in the directory we selected
         /// Add Existing Item from.  We should add the file to the directory where it lives.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void AddExistingItemAsLinkButFileExistsInProjectDirectory() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void AddExistingItemAsLinkButFileExistsInProjectDirectory(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "Fob");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
@@ -630,11 +622,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// Reaming the file name in the Link attribute is ignored.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RenamedLinkedFile() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RenamedLinkedFile(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "Fob", "NewNameForLinkFile" + projectType.CodeExtension);
                     Assert.IsNull(projectNode);
 
@@ -647,11 +639,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// A link path outside of our project dir will result in the link being ignored.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void BadLinkPath() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void BadLinkPath(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "..");
                     Assert.IsNull(projectNode);
 
@@ -664,11 +656,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// A rooted link path is ignored.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RootedLinkIgnored() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RootedLinkIgnored(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var projectNode = solution.FindItem("LinkedFiles", "RootedLinkIgnored" + projectType.CodeExtension);
                     Assert.IsNull(projectNode);
                 }
@@ -678,11 +670,11 @@ namespace VisualStudioToolsUITests {
         /// <summary>
         /// A rooted link path is ignored.
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void RootedIncludeIgnored() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void RootedIncludeIgnored(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
                     var rootedIncludeIgnored = solution.FindItem("LinkedFiles", "RootedIncludeIgnored" + projectType.CodeExtension);
                     Assert.IsNotNull(rootedIncludeIgnored, "rootedIncludeIgnored");
                 }
@@ -693,24 +685,24 @@ namespace VisualStudioToolsUITests {
         /// Test linked files with a project home set (done by save as in this test)
         /// https://nodejstools.codeplex.com/workitem/1511
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestLinkedWithProjectHome() {
-            foreach (var projectType in ProjectTypes) {
-                using (var solution = MultiProjectLinkedFiles(projectType).ToVs()) {
+        //[TestMethod, Priority(1)]
+        //[TestCategory("Installed")]
+        public void TestLinkedWithProjectHome(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                using (var solution = MultiProjectLinkedFiles(projectType).ToVs(app)) {
                     var project = (solution as VisualStudioInstance).Project;
-                    
+
                     // save the project to an odd location.  This will result in project home being set.
                     var newProjName = "TempFile";
                     try {
-                        project.SaveAs(Path.GetTempPath() +  newProjName + projectType.ProjectExtension);
+                        project.SaveAs(Path.GetTempPath() + newProjName + projectType.ProjectExtension);
                     } catch (UnauthorizedAccessException) {
                         Assert.Inconclusive("Couldn't save the file");
                     }
-                    
+
                     // create a temporary file and add a link to it in the project
                     solution.FindItem(newProjName).Select();
-                    var tempFile  = Path.GetTempFileName();
+                    var tempFile = Path.GetTempFileName();
                     using (var addExistingDlg = AddExistingItemDialog.FromDte((solution as VisualStudioInstance).App)) {
                         addExistingDlg.FileName = tempFile;
                         addExistingDlg.AddLink();
@@ -722,7 +714,7 @@ namespace VisualStudioToolsUITests {
                     // verify that the project file contains the correct text for Link
                     var fileText = File.ReadAllText(project.FullName);
                     var pattern = string.Format(
-                        @"<Content Include=""{0}"">\s*<Link>{1}</Link>\s*</Content>", 
+                        @"<Content Include=""{0}"">\s*<Link>{1}</Link>\s*</Content>",
                         Regex.Escape(tempFile),
                         Regex.Escape(Path.GetFileName(tempFile)));
                     AssertUtil.AreEqual(new Regex(pattern), fileText);

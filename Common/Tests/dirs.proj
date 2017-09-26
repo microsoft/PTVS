@@ -6,7 +6,6 @@
     <ProjectFile Include="Utilities\TestUtilities.csproj"/>
     <ProjectFile Include="Utilities.UI\TestUtilities.UI.csproj"/>
     <ProjectFile Include="SccPackage\TestSccPackage.csproj"/>
-    <ProjectFile Include="SharedProjectUITests\SharedProjectUITests.csproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

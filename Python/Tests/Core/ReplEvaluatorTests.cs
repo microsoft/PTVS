@@ -38,7 +38,6 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(1)]

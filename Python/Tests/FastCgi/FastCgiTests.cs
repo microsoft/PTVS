@@ -36,7 +36,6 @@ namespace FastCgiTest {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestInitialize]
@@ -203,9 +202,9 @@ namespace FastCgiTest {
         }
 
         private static string CreateSite() {
-            string dirName = TestData.GetTempPath(randomSubPath: true);
+            string dirName = TestData.GetTempPath();
 
-            File.Copy("TestData\\applicationhostOriginal.config",
+            File.Copy(TestData.GetPath("TestData", "applicationhostOriginal.config"),
                 Path.Combine(dirName, "applicationHost.config"));
 
             File.Copy(
@@ -313,7 +312,7 @@ namespace FastCgiTest {
 
             var module = djangoSettings.Split(new[] { '.' }, 2)[0];
             FileUtils.CopyDirectory(
-                TestData.GetPath(Path.Combine("TestData", "WFastCgi", module)),
+                TestData.GetPath("TestData", "WFastCgi", module),
                 Path.Combine(site, module)
             );
 
@@ -340,7 +339,7 @@ namespace FastCgiTest {
             var module = handler.Split(new[] { '.' }, 2)[0];
             try {
                 File.Copy(
-                    TestData.GetPath("TestData\\WFastCGI\\" + module + ".py"),
+                    TestData.GetPath("TestData", "WFastCGI", module + ".py"),
                     Path.Combine(site, module + ".py"),
                     true
                 );
@@ -440,7 +439,7 @@ namespace FastCgiTest {
         public void TestDjangoNewApp() {
             EnsureDjango();
             IisExpressTest(
-                "TestData\\WFastCgi\\DjangoApp",
+                TestData.GetPath("TestData", "WFastCgi", "DjangoApp"),
                 new GetAndValidateUrl(GetLocalUrl(), ValidateWelcomeToDjango)
             );
         }
@@ -449,7 +448,7 @@ namespace FastCgiTest {
         public void TestDjangoNewAppUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
-                "TestData\\WFastCgi\\DjangoAppUrlRewrite",
+                TestData.GetPath("TestData", "WFastCgi", "DjangoAppUrlRewrite"),
                 new GetAndValidateUrl(GetLocalUrl(), ValidateWelcomeToDjango)
             );
         }
@@ -457,7 +456,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestHelloWorld() {
             IisExpressTest(
-                "TestData\\WFastCgi\\HelloWorld",
+                TestData.GetPath("TestData", "WFastCgi", "HelloWorld"),
                 new GetAndValidateUrl(GetLocalUrl(), ValidateHelloWorld)
             );
         }
@@ -465,7 +464,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestHelloWorldCallable() {
             IisExpressTest(
-                "TestData\\WFastCgi\\HelloWorldCallable",
+                TestData.GetPath("TestData", "WFastCgi", "HelloWorldCallable"),
                 new GetAndValidateUrl(GetLocalUrl(), ValidateHelloWorld)
             );
         }
@@ -476,7 +475,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHandler() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHandler",
+                TestData.GetPath("TestData", "WFastCgi", "BadHandler"),
                 new GetAndValidateErrorUrl(GetLocalUrl(), ValidateString("'module' object has no attribute 'does_not_exist'"))
             );
         }
@@ -487,7 +486,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHandler2() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHandler2",
+                TestData.GetPath("TestData", "WFastCgi", "BadHandler2"),
                 new GetAndValidateErrorUrl(GetLocalUrl(), ValidateString("\"myapp_does_not_exist.does_not_exist\" could not be imported"))
             );
         }
@@ -498,7 +497,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHandler3() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHandler3",
+                TestData.GetPath("TestData", "WFastCgi", "BadHandler3"),
                 new GetAndValidateErrorUrl(GetLocalUrl(), ValidateString("Exception: handler file is raising"))
             );
         }
@@ -509,7 +508,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHandler4() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHandler4",
+                TestData.GetPath("TestData", "WFastCgi", "BadHandler4"),
                 new GetAndValidateErrorUrl(GetLocalUrl(), ValidateString("\"myapp\" could not be imported"))
             );
         }
@@ -520,7 +519,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHandler5() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHandler5",
+                TestData.GetPath("TestData", "WFastCgi", "BadHandler5"),
                 new GetAndValidateErrorUrl(GetLocalUrl(), ValidateString("WSGI_HANDLER env var must be set"))
             );
         }
@@ -531,7 +530,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHandler6() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHandler6",
+                TestData.GetPath("TestData", "WFastCgi", "BadHandler6"),
                 new GetAndValidateErrorUrl(GetLocalUrl(), ValidateString("\"myapp.app\" could not be imported"))
             );
         }
@@ -542,7 +541,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHandler7() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHandler7",
+                TestData.GetPath("TestData", "WFastCgi", "BadHandler7"),
                 new GetAndValidateErrorUrl(GetLocalUrl(),
                     ValidateString("something to std err"),
                     ValidateString("something to std out")
@@ -556,7 +555,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestEnvironment() {
             IisExpressTest(
-                "TestData\\WFastCgi\\Environment",
+                TestData.GetPath("TestData", "WFastCgi", "Environment"),
                 new GetAndValidateUrl(
                     GetLocalUrl("/fob/oar/baz?quox=100"),
                     ValidateString("QUERY_STRING: quox=100\nPATH_INFO: /fob/oar/baz\nSCRIPT_NAME: \n")
@@ -570,7 +569,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public void TestFileSystemChanges() {
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChanges"), location);
 
             IisExpressTest(
@@ -599,7 +598,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(1)]
         public void TestFileSystemChangesPackage() {
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesPackage"), location);
             
             IisExpressTest(
@@ -623,7 +622,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(1)]
         public void TestFileSystemChangesCustomRegex() {
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesCustomRegex"), location);
 
             IisExpressTest(
@@ -645,7 +644,7 @@ namespace FastCgiTest {
         /// </summary>
         [TestMethod, Priority(1)]
         public void TestFileSystemChangesDisabled() {
-            var location = TestData.GetTempPath(randomSubPath: true);
+            var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesDisabled"), location);
             
             IisExpressTest(
@@ -671,8 +670,8 @@ namespace FastCgiTest {
         public void TestStaticFiles() {
             EnsureDjango();
             IisExpressTest(
-                CollectStaticFiles("TestData\\WFastCgi\\DjangoSimpleApp"),
-                "TestData\\WFastCgi\\DjangoSimpleApp",
+                CollectStaticFiles(TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleApp")),
+                TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleApp"),
                 null,
                 new GetAndValidateUrl(
                     GetLocalUrl("/static/fob/helloworld.txt"),
@@ -688,8 +687,8 @@ namespace FastCgiTest {
         public void TestStaticFilesUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
-                CollectStaticFiles("TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite"),
-                "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
+                CollectStaticFiles(TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleAppUrlRewrite")),
+                TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleAppUrlRewrite"),
                 null,
                 new GetAndValidateUrl(
                     GetLocalUrl("/static/fob/helloworld.txt"),
@@ -704,7 +703,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestEnvironmentUrlRewrite() {
             IisExpressTest(
-                "TestData\\WFastCgi\\EnvironmentUrlRewrite",
+                TestData.GetPath("TestData", "WFastCgi", "EnvironmentUrlRewrite"),
                 new GetAndValidateUrl(
                     GetLocalUrl("/fob/oar/baz?quox=100"),
                     ValidateString("QUERY_STRING: quox=100\nPATH_INFO: /fob/oar/baz\nSCRIPT_NAME: \n")
@@ -719,7 +718,7 @@ namespace FastCgiTest {
         public void TestStreamingHandler() {
             int partCount = 0;
             IisExpressTest(
-                "TestData\\WFastCgi\\StreamingHandler",
+                TestData.GetPath("TestData", "WFastCgi", "StreamingHandler"),
                 new GetAndValidateUrlPieces(
                     GetLocalUrl(),
                     piece => {
@@ -746,7 +745,7 @@ namespace FastCgiTest {
         public void TestDjangoQueryString() {
             EnsureDjango();
             IisExpressTest(
-                "TestData\\WFastCgi\\DjangoSimpleApp",
+                TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleApp"),
                 new GetAndValidateUrl(
                     GetLocalUrl("?fob=42&oar=100"),
                     ValidateString("GET: fob=42&oar=100", "GET: oar=100&fob=42")
@@ -761,7 +760,7 @@ namespace FastCgiTest {
         public void TestDjangoPost() {
             EnsureDjango();
             IisExpressTest(
-                "TestData\\WFastCgi\\DjangoSimpleApp",
+                TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleApp"),
                 new PostAndValidateUrl(
                     GetLocalUrl(),
                     ValidateString("POST: fob=42&oar=100", "POST: oar=100&fob=42"),
@@ -778,7 +777,7 @@ namespace FastCgiTest {
         public void TestDjangoPath() {
             EnsureDjango();
             IisExpressTest(
-                "TestData\\WFastCgi\\DjangoSimpleApp",
+                TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleApp"),
                 new GetAndValidateUrl(
                     GetLocalUrl("/fob/oar/baz"),
                     ValidateString("path: /fob/oar/baz\npath_info: /fob/oar/baz")
@@ -793,7 +792,7 @@ namespace FastCgiTest {
         public void TestDjangoQueryStringUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
-                "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
+                TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleAppUrlRewrite"),
                 new GetAndValidateUrl(
                     GetLocalUrl("?fob=42&oar=100"),
                     ValidateString("GET: fob=42&oar=100", "GET: oar=100&fob=42")
@@ -808,7 +807,7 @@ namespace FastCgiTest {
         public void TestDjangoPostUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
-                "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
+                TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleAppUrlRewrite"),
                 new PostAndValidateUrl(
                     GetLocalUrl(),
                     ValidateString("POST: fob=42&oar=100", "POST: oar=100&fob=42"),
@@ -825,7 +824,7 @@ namespace FastCgiTest {
         public void TestDjangoPathUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
-                "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
+                TestData.GetPath("TestData", "WFastCgi", "DjangoSimpleAppUrlRewrite"),
                 new GetAndValidateUrl(
                     GetLocalUrl("/fob/oar/baz"),
                     ValidateString("path: /fob/oar/baz\npath_info: /fob/oar/baz")
@@ -840,10 +839,10 @@ namespace FastCgiTest {
         public void TestExpandPathEnvironmentVariables() {
             IisExpressTest(
                 null,
-                "TestData\\WFastCgi\\ExpandPathEnvironmentVariables",
+                TestData.GetPath("TestData", "WFastCgi", "ExpandPathEnvironmentVariables"),
                 new Dictionary<string, string> {
-                    { "SITELOCATION", TestData.GetPath("TestData\\WFastCgi\\ExpandPathEnvironmentVariables") },
-                    { "OTHERLOCATION", TestData.GetPath("TestData\\WFastCgi\\ExpandPathEnvironmentVariablesOtherDir") }
+                    { "SITELOCATION", TestData.GetPath("TestData", "WFastCgi", "ExpandPathEnvironmentVariables") },
+                    { "OTHERLOCATION", TestData.GetPath("TestData", "WFastCgi", "ExpandPathEnvironmentVariablesOtherDir") }
                 },
                 new GetAndValidateUrl(GetLocalUrl(), ValidateHelloWorld)
             );
@@ -852,7 +851,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHeaders1() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHeaders",
+                TestData.GetPath("TestData", "WFastCgi", "BadHeaders"),
                 new GetAndValidateErrorUrl(
                     GetLocalUrl("/test_1"),
                     ValidateString("500 Error")
@@ -863,7 +862,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHeaders2() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHeaders",
+                TestData.GetPath("TestData", "WFastCgi", "BadHeaders"),
                 new GetAndValidateErrorUrl(
                     GetLocalUrl("/test_2"),
                     ValidateString("Exception")
@@ -874,7 +873,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHeaders3() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHeaders",
+                TestData.GetPath("TestData", "WFastCgi", "BadHeaders"),
                 new GetAndValidateErrorUrl(
                     GetLocalUrl("/test_3"),
                     ValidateString("start_response has already been called")
@@ -885,7 +884,7 @@ namespace FastCgiTest {
         [TestMethod, Priority(1)]
         public void TestBadHeaders4() {
             IisExpressTest(
-                "TestData\\WFastCgi\\BadHeaders",
+                TestData.GetPath("TestData", "WFastCgi", "BadHeaders"),
                 new GetAndValidateErrorUrl(
                     GetLocalUrl("/test_4"),
                     ValidateString("start_response has not yet been called")
@@ -1122,18 +1121,27 @@ namespace FastCgiTest {
 
         private void IisExpressTest(
             Action initialization,
-            string location,
+            string sourceLocation,
             Dictionary<string, string> environment,
             params Action[] actions
         ) {
             Console.WriteLine("Current Directory: {0}", Environment.CurrentDirectory);
             Console.WriteLine("WFastCgiPath: {0}", WFastCgiPath);
-            if (!Path.IsPathRooted(location)) {
-                location = TestData.GetPath(location);
+            if (!Path.IsPathRooted(sourceLocation)) {
+                sourceLocation = TestData.GetPath(sourceLocation);
             }
-            Console.WriteLine("Test location: {0}", location);
+            Console.WriteLine("Test source: {0}", sourceLocation);
+            var location = TestData.GetTempPath();
+            FileUtils.CopyDirectory(sourceLocation, location);
 
-            var appConfig = GenerateApplicationHostConfig(location);
+            var appConfig = Path.Combine(TestData.GetTempPath(), "applicationHost.config");
+            var baseConfig = File.ReadAllText(TestData.GetPath("TestData", "WFastCgi", "applicationHost.config"));
+            baseConfig = baseConfig
+                .Replace("[PYTHONPATH]", InterpreterPath)
+                .Replace("[WFASTCGIPATH]", WFastCgiPath)
+                .Replace("[SITE_LOCATION]", location);
+
+            File.WriteAllText(appConfig, baseConfig);
 
             var webConfigLocSource = Path.Combine(location, "web.config.source");
             if (!File.Exists(webConfigLocSource)) {
@@ -1215,53 +1223,15 @@ namespace FastCgiTest {
             return res;
         }
 
-        private string GenerateApplicationHostConfig(string siteLocation) {
-            var tempConfig = Path.Combine(TestData.GetTempPath(randomSubPath: true), "applicationHost.config");
-            StringBuilder baseConfig = new StringBuilder(File.ReadAllText("TestData\\WFastCgi\\applicationHost.config"));
-            baseConfig.Replace("[PYTHONPATH]", InterpreterPath)
-                      .Replace("[WFASTCGIPATH]", WFastCgiPath)
-                      .Replace("[SITE_LOCATION]", Path.GetFullPath(siteLocation));
-
-            File.WriteAllText(tempConfig, baseConfig.ToString());
-            return tempConfig;
-        }
-
         private static string WFastCgiPath {
             get {
-                var wfastcgiPath = TestData.GetPath("wfastcgi.py");
+                var wfastcgiPath = Path.Combine(Path.GetDirectoryName(typeof(FastCgiTests).Assembly.Location), "wfastcgi.py");
                 if (File.Exists(wfastcgiPath)) {
                     return wfastcgiPath;
                 }
 
-                //wfastcgiPath = Path.Combine(
-                //    Environment.GetEnvironmentVariable("ProgramFiles"),
-                //    "MSbuild",
-                //    "Microsoft",
-                //    "VisualStudio",
-                //    "v" + AssemblyVersionInfo.VSVersion,
-                //    "Python Tools",
-                //    "wfastcgi.py"
-                //);
-
-                //if (File.Exists(wfastcgiPath)) {
-                //    return wfastcgiPath;
-                //}
-
-                //wfastcgiPath = Path.Combine(
-                //    Environment.GetEnvironmentVariable("ProgramFiles(x86)"),
-                //    "MSbuild",
-                //    "Microsoft",
-                //    "VisualStudio",
-                //    "v" + AssemblyVersionInfo.VSVersion,
-                //    "Python Tools",
-                //    "wfastcgi.py"
-                //);
-
-                //if (File.Exists(wfastcgiPath)) {
-                //    return wfastcgiPath;
-                //}
-
-                throw new InvalidOperationException("Failed to find wfastcgi.py");
+                Assert.Inconclusive("Failed to find wfastcgi.py");
+                return null;
             }
         }
 

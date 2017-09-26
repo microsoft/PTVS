@@ -85,7 +85,7 @@ namespace TestUtilities.Python {
             _entries = new Dictionary<string, IPythonProjectEntry>(StringComparer.OrdinalIgnoreCase);
             _tasks = new ConcurrentDictionary<IPythonProjectEntry, TaskCompletionSource<CollectingErrorSink>>();
             _cachedMembers = new Dictionary<BuiltinTypeId, string[]>();
-            _root = TestData.GetTempPath(randomSubPath: true);
+            _root = TestData.GetTempPath();
         }
 
         public void Dispose() {

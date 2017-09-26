@@ -54,7 +54,7 @@
     </CreatePythonCommandItem>
   </Target>
   
-  <Target Name="Command2" Label="Test Command 2" Returns="@(Commands)">
+  <Target Name="Command2" Label="Test Command 2" Returns="@(Commands)" DependsOnTargets="ResolveStartupModule">
     <CreatePythonCommandItem Target="$(StartupModule)"
                              TargetType="module"
                              Arguments='"A B C"'

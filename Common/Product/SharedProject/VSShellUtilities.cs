@@ -25,8 +25,7 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     ///This class provides some useful static shell based methods. 
     /// </summary>
-
-    internal static class UIHierarchyUtilities {
+    public static class UIHierarchyUtilities {
         /// <summary>
         /// Get reference to IVsUIHierarchyWindow interface from guid persistence slot.
         /// </summary>

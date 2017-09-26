@@ -168,7 +168,7 @@
     <Compile Include="SharedProject\ProjectTypeDefinition.cs" />
     <Compile Include="SharedProject\ProjectTypeGuidAttribute.cs" />
     <Compile Include="SharedProject\SampleCodeAttribute.cs" />
-    <Compile Include="SharedProject\SharedProjectTest.cs" />
+    <Compile Include="SharedProject\ProjectGenerator.cs" />
     <Compile Include="SharedProject\SolutionElementFlags.cs" />
     <Compile Include="SharedProject\SolutionFile.cs" />
     <Compile Include="SharedProject\StartupFileProjectProperty.cs" />
