@@ -16,7 +16,6 @@
 
 using System;
 using EnvDTE;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.SharedProject;
@@ -24,7 +23,6 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    //[TestClass]
     public class SnippetsTests {
         private static ProjectDefinition BasicProjectDefinition = new ProjectDefinition(
             "SnippetsTest",
@@ -36,8 +34,6 @@ namespace PythonToolsUITests {
             ProjectGenerator.Compile("importedas", "import unittest as foo\r\n"),
             ProjectGenerator.Compile("badimport", "import\r\n")
         );
-
-        private static SolutionFile BasicProject => BasicProjectDefinition.Generate();
 
         private static readonly Snippet[] BasicSnippets = new Snippet[] {
             new Snippet(
@@ -85,10 +81,8 @@ namespace PythonToolsUITests {
             )
         };
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestBasicSnippetsTab(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestBasicSnippetsTab(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
                     TestOneTabSnippet(vs, snippet);
                     
@@ -155,9 +149,7 @@ namespace PythonToolsUITests {
             return editor;
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPassSelected(PythonVisualStudioApp app) {
+        public void TestPassSelected(PythonVisualStudioApp app, PythonProjectGenerator pg) {
             var snippet = new Snippet(
                 "class",
                 "class ClassName(object):\r\n    pass",
@@ -165,7 +157,7 @@ namespace PythonToolsUITests {
                 new Declaration("(base)", "class myclass(base):\r\n    pass")
             );
 
-            using (var vs = BasicProject.ToVs(app)) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 var editor = TestOneTabSnippet(vs, snippet);
 
                 Keyboard.Type("42");
@@ -175,10 +167,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPassSelectedIndented(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestPassSelectedIndented(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 var editor = vs.OpenItem("SnippetsTest", "indented.py");
                 editor.MoveCaret(2, 5);
                 editor.Invoke(() => editor.TextView.Caret.EnsureVisible());
@@ -194,10 +184,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestSurroundWith(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestSurroundWith(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
                     TestOneSurroundWithSnippet(vs, snippet);
 
@@ -206,10 +194,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestSurroundWithMultiline(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestSurroundWithMultiline(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
                     TestOneSurroundWithSnippet(
                         vs,
@@ -223,10 +209,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestInsertSnippet(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestInsertSnippet(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
                     TestOneInsertSnippet(vs, snippet, "Python");
 
@@ -235,10 +219,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestInsertSnippetEmptySelectionNonEmptyLine(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestInsertSnippetEmptySelectionNonEmptyLine(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
                     Console.WriteLine("Testing: {0}", snippet.Shortcut);
                     var editor = vs.OpenItem("SnippetsTest", "nonempty.py");
@@ -257,10 +239,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestTestClassSnippet(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestTestClassSnippet(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 var snippet = new Snippet(
                     "testc",
                     "import unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
@@ -274,10 +254,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestTestClassSnippetBadImport(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestTestClassSnippetBadImport(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 var snippet = new Snippet(
                     "testc",
                     "import\r\nimport unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
@@ -291,10 +269,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestTestClassSnippetImportAs(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestTestClassSnippetImportAs(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 var snippet = new Snippet(
                     "testc",
                     "import unittest as foo\r\nimport unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
@@ -308,10 +284,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestTestClassSnippetUnitTestImported(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestTestClassSnippetUnitTestImported(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 var snippet = new Snippet(
                     "testc",
                     "import unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
@@ -328,10 +302,8 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Starting a nested session should dismiss the initial session
         /// </summary>
-        //[TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestNestedSession(PythonVisualStudioApp app) {
-            using (var vs = BasicProject.ToVs(app)) {
+        public void TestNestedSession(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 var editor = vs.OpenItem("SnippetsTest", "app.py");
                 editor.MoveCaret(1, 1);
                 editor.Invoke(() => editor.TextView.Caret.EnsureVisible());

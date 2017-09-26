@@ -17,7 +17,7 @@
 using System.ComponentModel.Composition;
 using TestUtilities.SharedProject;
 
-namespace PythonToolsTests {
+namespace TestUtilities.Python {
     public sealed class PythonTestDefintions {
         [Export]
         [ProjectExtension(".pyproj")]

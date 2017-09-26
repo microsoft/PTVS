@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Infrastructure;
 using TestUtilities.SharedProject;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace PythonToolsTests {
+namespace TestUtilities.Python {
     [Export(typeof(IProjectProcessor))]
     [ProjectExtension(".pyproj")]
     public class PythonProjectProcessor : IProjectProcessor {

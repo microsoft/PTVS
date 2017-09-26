@@ -51,6 +51,7 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
       <HintPath>$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\envdte.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -112,6 +113,8 @@
     <Compile Include="PythonPerfTarget.cs" />
     <Compile Include="PythonPerfToolBar.cs" />
     <Compile Include="PythonProjectGenerator.cs" />
+    <Compile Include="PythonProjectProcessor.cs" />
+    <Compile Include="PythonTestDefinitions.cs" />
     <Compile Include="PythonToolsTestUtilities.cs" />
     <Compile Include="EditorWindowExtensions.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />
@@ -120,6 +123,11 @@
     <Compile Include="VSPackage.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Tests\MockVsTests\MockVsTests.csproj">
+      <Project>{a390e1c0-0d90-4a9e-8413-3e959bb07292}</Project>
+      <Name>MockVsTests</Name>
+      <IncludeInVsix>true</IncludeInVsix>
+    </ProjectReference>
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Analysis</Name>

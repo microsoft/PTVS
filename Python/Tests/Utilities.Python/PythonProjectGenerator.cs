@@ -22,10 +22,23 @@ namespace TestUtilities.Python {
     public class PythonProjectGenerator : ProjectGenerator {
         public PythonProjectGenerator(IServiceProvider site) : base(site) { }
 
+        public static PythonProjectGenerator CreateStatic() {
+            return new PythonProjectGenerator(
+                ProjectType.FromType(typeof(PythonTestDefintions), new[] { new PythonProjectProcessor() }).ToArray()
+            );
+        }
+
+        private PythonProjectGenerator(params ProjectType[] projectTypes) : base(projectTypes) {
+        }
+
         public ProjectType PythonProject => ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
 
         public ProjectDefinition Project(string name, params ProjectContentGenerator[] items) {
             return new ProjectDefinition(name, PythonProject, items);
+        }
+
+        public SolutionFile Generate(ProjectDefinition project) {
+            return new ProjectDefinition(PythonProject, project).Generate();
         }
     }
 }
