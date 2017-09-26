@@ -290,33 +290,42 @@ namespace TestUtilities.UI {
                         action();
                     } catch (Exception e) {
                         excep = ExceptionDispatchInfo.Capture(e);
-
                     }
                 })
             );
 
-            if (excep != null) {
-                excep.Throw();
-            }
+            excep?.Throw();
+        }
+
+        public void InvokeTask(Func<Task> asyncAction) {
+            ExceptionDispatchInfo excep = null;
+            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                try {
+                    Assert.AreSame(((UIElement)TextView).Dispatcher.Thread, Thread.CurrentThread);
+                    await asyncAction();
+                } catch (Exception e) {
+                    excep = ExceptionDispatchInfo.Capture(e);
+                }
+            });
+
+            excep?.Throw();
         }
 
         public T Invoke<T>(Func<T> action) {
-            Exception excep = null;
+            ExceptionDispatchInfo excep = null;
             T res = default(T);
             ((UIElement)TextView).Dispatcher.Invoke(
                 (Action)(() => {
                     try {
                         res = action();
                     } catch (Exception e) {
-                        excep = e;
-
+                        excep = ExceptionDispatchInfo.Capture(e);
                     }
                 })
             );
 
-            if (excep != null) {
-                Assert.Fail("Exception on UI thread: " + excep.ToString());
-            }
+            excep?.Throw();
             return res;
         }
 

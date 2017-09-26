@@ -163,7 +163,7 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(item.Document.FullName);
 
-                doc.WaitForAnalysisAtCaret();
+                doc.InvokeTask(() => doc.WaitForAnalysisAtCaretAsync());
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
                 var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
 
@@ -583,7 +583,7 @@ pass");
             expectedText = Regex.Replace(expectedText, "^\\s+$", "", RegexOptions.Multiline);
 
             var doc = app.GetDocument(item.Document.FullName);
-            doc.WaitForAnalysisAtCaret();
+            doc.InvokeTask(() => doc.WaitForAnalysisAtCaretAsync());
 
             Keyboard.Type(typedText);
 
@@ -671,7 +671,7 @@ x\
                 }
             }));
 
-            doc.WaitForAnalysisAtCaret();
+            doc.InvokeTask(() => doc.WaitForAnalysisAtCaretAsync());
 
             typing();
 

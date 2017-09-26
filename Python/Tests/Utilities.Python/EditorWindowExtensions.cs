@@ -14,30 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI.Python {
     static class EditorWindowExtensions {
-        public static void WaitForAnalyzerAtCaret(this EditorWindow doc) {
+        public static async Task WaitForAnalyzerAtCaretAsync(this EditorWindow doc) {
             for (int i = 0; i < 100; i++) {
                 var analyzer = doc.TextView.GetAnalyzerAtCaret(doc.VisualStudioApp.ServiceProvider);
                 if (analyzer != null) {
                     return;
                 }
-                System.Threading.Thread.Sleep(100);
+                await Task.Delay(100);
             }
 
             Assert.Fail("Timed out waiting for analyzer");
         }
 
-        public static void WaitForAnalysisAtCaret(this EditorWindow doc) {
+        public static async Task WaitForAnalysisAtCaretAsync(this EditorWindow doc) {
             for (int i = 0; i < 100; i++) {
                 var analysis = doc.TextView.GetAnalysisAtCaret(doc.VisualStudioApp.ServiceProvider);
                 if (analysis != null && analysis.IsAnalyzed) {
                     return;
                 }
-                System.Threading.Thread.Sleep(100);
+                await Task.Delay(100);
             }
 
             Assert.Fail("Timed out waiting for analyzer");

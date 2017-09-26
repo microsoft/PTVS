@@ -271,10 +271,10 @@ def f():
 
             var doc = app.GetDocument(item.Document.FullName);
 
-            doc.Invoke(() => {
+            doc.InvokeTask(async () => {
                 var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                 doc.TextView.Caret.MoveTo(point);
-                doc.WaitForAnalyzerAtCaret();
+                await doc.WaitForAnalyzerAtCaretAsync();
             });
 
             if (allScopes) {
