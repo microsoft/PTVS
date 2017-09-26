@@ -65,6 +65,7 @@ ASSEMBLIES = sorted([
     "ReplWindowUITests",
     "SharedProjectUITests",
     "TestAdapterTests",
+    "TestRunnerInterop",
     "TestSccPackage",
     "TestUtilities",
     "TestUtilities.Python",
