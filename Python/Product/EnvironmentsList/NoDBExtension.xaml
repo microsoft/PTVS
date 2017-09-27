@@ -1,0 +1,53 @@
+<UserControl x:Class="Microsoft.PythonTools.EnvironmentsList.NoDBExtension"
+             x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:l="clr-namespace:Microsoft.PythonTools.EnvironmentsList"
+             xmlns:inf="clr-namespace:Microsoft.PythonTools.Infrastructure;assembly=Microsoft.PythonTools.VSCommon"
+             xmlns:s="clr-namespace:System;assembly=mscorlib"
+             xmlns:scm="clr-namespace:System.ComponentModel;assembly=System"
+             xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
+
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <UserControl.CommandBindings>
+        <CommandBinding Command="{x:Static l:NoDBExtension.DisableExperiment}"
+                        CanExecute="DisableExperiment_CanExecute"
+                        Executed="DisableExperiment_Executed" />
+    </UserControl.CommandBindings>
+    
+    <Grid x:Name="Subcontext">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+        </Grid.Resources>
+
+        <Label Grid.Row="0">
+            <TextBlock Text="{x:Static l:Resources.NoDBExtensionMessage}"
+                       TextWrapping="Wrap" />
+        </Label>
+
+        <Button Grid.Row="1"
+                Style="{StaticResource NavigationButton}"
+                Content="{x:Static l:Resources.NoDBExtensionReactivate}"
+                Command="{x:Static l:NoDBExtension.DisableExperiment}"
+                Margin="6" />
+    </Grid>
+</UserControl>
