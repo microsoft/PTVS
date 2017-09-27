@@ -28,6 +28,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private static bool GetBooleanFactoryFlag(string keyName) {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {
                 var value = root?.GetValue(NoDatabaseFactoryKey);
+                if (value == null) {
+                    return true;
+                }
                 int? asInt = value as int?;
                 if (asInt.HasValue) {
                     if (asInt.GetValueOrDefault() == 0) {
@@ -50,7 +53,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (value) {
                     root.SetValue(keyName, 1);
                 } else {
-                    root.DeleteValue(keyName, false);
+                    root.SetValue(keyName, 0);
                 }
             }
         }
