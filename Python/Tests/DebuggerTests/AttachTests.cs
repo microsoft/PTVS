@@ -1247,11 +1247,11 @@ int main(int argc, char* argv[]) {
 
             using (var p = ProcessOutput.Run(
                 Path.Combine(vc.BinPath, "cl.exe"),
-                new[] { "/Zi", "/MD", "test.cpp" },
+                new[] { "/nologo", "/Zi", "/MD", "test.cpp" },
                 buildDir,
                 env,
                 false,
-                new TraceRedirector()
+                new TraceRedirector("cl.exe")
             )) {
                 Trace.TraceInformation(p.Arguments);
                 if (!p.Wait(TimeSpan.FromMilliseconds(DefaultWaitForExitTimeout))) {
