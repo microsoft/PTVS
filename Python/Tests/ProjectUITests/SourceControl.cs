@@ -31,7 +31,6 @@ using MessageBoxButton = TestUtilities.MessageBoxButton;
 using Mouse = TestUtilities.UI.Mouse;
 
 namespace ProjectUITests {
-    //[TestClass]
     public class SourceControl {
         private static Regex _pathRegex = new Regex(@"\{path:([^}]*)\}");
         const string VSQUERYRENAMEFILEFLAGS_NoFlags = "VSQUERYRENAMEFILEFLAGS_NoFlags";

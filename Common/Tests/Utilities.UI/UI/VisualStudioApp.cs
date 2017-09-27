@@ -603,7 +603,9 @@ namespace TestUtilities.UI {
                 string t = title.ToString();
                 AssertUtil.Contains(t, text);
             } finally {
-                NativeMethods.EndDialog(hwnd, buttonId);
+                if (!NativeMethods.EndDialog(hwnd, buttonId)) {
+                    NativeMethods.PostMessage(hwnd, NativeMethods.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                }
             }
         }
 

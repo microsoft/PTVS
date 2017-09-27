@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
     /// <summary>
@@ -161,5 +162,83 @@ namespace TestRunnerInterop {
         public const int OLECMDERR_E_NOTSUPPORTED = unchecked((int)0x80040100);
         public const int OLECMDERR_E_CANCELED = -2147221245;
         public const int OLECMDERR_E_UNKNOWNGROUP = unchecked((int)0x80040104);
+
+        public enum JOBOBJECTINFOCLASS {
+            JobObjectBasicAccountingInformation = 1,
+            JobObjectBasicLimitInformation,
+            JobObjectBasicProcessIdList,
+            JobObjectBasicUIRestrictions,
+            JobObjectSecurityLimitInformation,
+            JobObjectEndOfJobTimeInformation,
+            JobObjectAssociateCompletionPortInformation,
+            JobObjectBasicAndIoAccountingInformation,
+            JobObjectExtendedLimitInformation,
+            JobObjectJobSetInformation,
+            MaxJobObjectInfoClass
+        }
+
+        public enum JOB_OBJECT_LIMIT : uint {
+            WORKINGSET = 0x00000001,
+            PROCESS_TIME = 0x00000002,
+            JOB_TIME = 0x00000004,
+            ACTIVE_PROCESS = 0x00000008,
+            AFFINITY = 0x00000010,
+            PRIORITY_CLASS = 0x00000020,
+            PRESERVE_JOB_TIME = 0x00000040,
+            SCHEDULING_CLASS = 0x00000080,
+            PROCESS_MEMORY = 0x00000100,
+            JOB_MEMORY = 0x00000200,
+            DIE_ON_UNHANDLED_EXCEPTION = 0x00000400,
+            BREAKAWAY_OK = 0x00000800,
+            SILENT_BREAKAWAY_OK = 0x00001000,
+            KILL_ON_JOB_CLOSE = 0x00002000,
+            SUBSET_AFFINITY = 0x00004000,
+        }
+
+        public struct IO_COUNTERS {
+            public ulong ReadOperationCount;
+            public ulong WriteOperationCount;
+            public ulong OtherOperationCount;
+            public ulong ReadTransferCount;
+            public ulong WriteTransferCount;
+            public ulong OtherTransferCount;
+        }
+
+        public struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
+            public JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+            public IO_COUNTERS IoInfo;
+            public UIntPtr ProcessMemoryLimit;
+            public UIntPtr JobMemoryLimit;
+            public UIntPtr PeakProcessMemoryUsed;
+            public UIntPtr PeakJobMemoryUsed;
+        }
+
+        public struct JOBOBJECT_BASIC_LIMIT_INFORMATION {
+            public long PerProcessUserTimeLimit;
+            public long PerJobUserTimeLimit;
+            public JOB_OBJECT_LIMIT LimitFlags;
+            public UIntPtr MinimumWorkingSetSize;
+            public UIntPtr MaximumWorkingSetSize;
+            public uint ActiveProcessLimit;
+            public UIntPtr Affinity;
+            public uint PriorityClass;
+            public uint SchedulingClass;
+        }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool AssignProcessToJobObject(SafeFileHandle hJob, IntPtr hProcess);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern SafeFileHandle CreateJobObject(IntPtr lpJobAttributes, string lpName);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetInformationJobObject(
+            SafeFileHandle hJob,
+            JOBOBJECTINFOCLASS JobObjectInfoClass,
+            ref JOBOBJECT_EXTENDED_LIMIT_INFORMATION lpJobObjectInfo,
+            int cbJobObjectInfoLength
+        );
     }
 }

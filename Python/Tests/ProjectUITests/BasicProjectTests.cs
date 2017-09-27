@@ -33,7 +33,6 @@ using TestUtilities.UI;
 using VSLangProj;
 
 namespace ProjectUITests {
-    [TestClass]
     public class BasicProjectTests {
 
 #if FALSE

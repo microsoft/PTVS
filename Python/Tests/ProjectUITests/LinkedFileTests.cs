@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using EnvDTE;
@@ -25,10 +24,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
-using MSBuild = Microsoft.Build.Evaluation;
 using MessageBoxButton = TestUtilities.MessageBoxButton;
+using MSBuild = Microsoft.Build.Evaluation;
 
-namespace VisualStudioToolsUITests {
+namespace ProjectUITests {
     public class LinkedFileTests {
         private static ProjectDefinition LinkedFiles(ProjectType projectType) {
             return new ProjectDefinition(
