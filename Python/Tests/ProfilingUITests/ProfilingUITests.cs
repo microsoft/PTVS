@@ -1328,6 +1328,8 @@ namespace ProfilingUITests {
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
         public void BuiltinsProfilePython26(PythonVisualStudioApp app) {
+            TestInitialize(app);
+
             BuiltinsProfile(
                 app,
                 PythonPaths.Python26,
