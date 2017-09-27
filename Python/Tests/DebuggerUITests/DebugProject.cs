@@ -24,8 +24,7 @@ using EnvDTE;
 using EnvDTE90;
 using EnvDTE90a;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Options;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
@@ -35,30 +34,13 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using Thread = System.Threading.Thread;
 
 namespace DebuggerUITests {
-    //[TestClass]
     public class DebugProject {
-        bool PrevWaitOnNormalExit;
-
-        [TestInitialize]
-        public void MyTestInit(VisualStudioApp app) {
-            var options = GetOptions(app);
-            PrevWaitOnNormalExit = options.WaitOnNormalExit;
-            options.WaitOnNormalExit = false;
-        }
-
-        [TestCleanup]
-        public void MyTestCleanup(VisualStudioApp app) {
-            GetOptions(app).WaitOnNormalExit = PrevWaitOnNormalExit;
-        }
-
         #region Test Cases
 
         /// <summary>
         /// Loads the simple project and then unloads it, ensuring that the solution is created with a single project.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void DebugPythonProject(VisualStudioApp app) {
+        public void DebugPythonProject(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             StartHelloWorldAndBreak(app);
 
             app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
@@ -68,10 +50,9 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads a project with the startup file in a subdirectory, ensuring that syspath is correct when debugging.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void DebugPythonProjectSubFolderStartupFileSysPath(VisualStudioApp app) {
-            app.OpenProject(TestData.GetPath(@"TestData\SysPath.sln"));
+        public void DebugPythonProjectSubFolderStartupFileSysPath(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var sln = app.CopyProjectForTest(@"TestData\SysPath.sln");
+            var project = app.OpenProject(sln);
 
             ClearOutputWindowDebugPaneText(app);
             app.Dte.ExecuteCommand("Debug.Start");
@@ -80,7 +61,7 @@ namespace DebuggerUITests {
             // sys.path should point to the startup file directory, not the project directory.
             // this matches the behavior of start without debugging.
             // Note: backslashes are escaped in the output
-            string testDataPath = TestData.GetPath("TestData\\SysPath\\Sub'").Replace("\\", "\\\\");
+            string testDataPath = Path.Combine(Path.GetDirectoryName(project.FullName), "Sub").Replace("\\", "\\\\");
             WaitForDebugOutput(app, text => text.Contains(testDataPath));
         }
 
@@ -89,30 +70,21 @@ namespace DebuggerUITests {
         /// If <see cref="DebugPythonProjectSubFolderStartupFileSysPath"/> fails
         /// this test may also fail.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void DebugPythonProjectWithAndWithoutClearingPythonPath(VisualStudioApp app) {
-            var origPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
-            string testDataPath = TestData.GetPath("TestData\\HelloWorld").Replace("\\", "\\\\");
-            Environment.SetEnvironmentVariable("PYTHONPATH", testDataPath);
-            try {
-                app.OpenProject(TestData.GetPath(@"TestData\SysPath.sln"));
+        public void DebugPythonProjectWithAndWithoutClearingPythonPath(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var sysPathSln = app.CopyProjectForTest(@"TestData\SysPath.sln");
+            var helloWorldSln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var testDataPath = Path.Combine(PathUtils.GetParent(helloWorldSln), "HelloWorld").Replace("\\", "\\\\");
+            var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
 
-                var uiThread = app.ServiceProvider.GetUIThread();
-                uiThread.Invoke(() => {
-                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = false;
-                });
+            using (new EnvironmentVariableSetter("PYTHONPATH", testDataPath)) {
+                app.OpenProject(sysPathSln);
 
-                try {
+                using (new PythonServiceGeneralOptionsSetter(pyService, clearGlobalPythonPath: false)) {
                     ClearOutputWindowDebugPaneText(app);
                     app.Dte.ExecuteCommand("Debug.Start");
                     WaitForMode(app, dbgDebugMode.dbgDesignMode);
 
                     WaitForDebugOutput(app, text => text.Contains(testDataPath));
-                } finally {
-                    uiThread.Invoke(() => {
-                        app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = true;
-                    });
                 }
 
                 ClearOutputWindowDebugPaneText(app);
@@ -121,46 +93,51 @@ namespace DebuggerUITests {
 
                 var outputWindowText = WaitForDebugOutput(app, text => text.Contains("DONE"));
                 Assert.IsFalse(outputWindowText.Contains(testDataPath), outputWindowText);
-            } finally {
-                Environment.SetEnvironmentVariable("PYTHONPATH", origPythonPath);
             }
         }
 
         /// <summary>
         /// Tests using a custom interpreter path that is relative
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void DebugPythonCustomInterpreter(VisualStudioApp app) {
-            // try once when the interpreter doesn't exist...
-            var project = app.OpenProject(TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py");
+        public void DebugPythonCustomInterpreter(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var sln = app.CopyProjectForTest(@"TestData\RelativeInterpreterPath.sln");
+            var project = app.OpenProject(sln, "Program.py");
+            var interpreterPath = Path.Combine(PathUtils.GetParent(sln), "Interpreter.exe");
+            File.Copy(PythonPaths.Python27.InterpreterPath, interpreterPath, true);
+
+            app.Dte.Debugger.Breakpoints.Add(File: "Program.py", Line: 1);
+            app.Dte.ExecuteCommand("Debug.Start");
+
+            WaitForMode(app, dbgDebugMode.dbgBreakMode);
+
+            Assert.IsNotNull(app.Dte.Debugger.BreakpointLastHit);
+            Assert.AreEqual(1, app.Dte.Debugger.BreakpointLastHit.FileLine);
+
+            app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
+        }
+
+        /// <summary>
+        /// Tests using a custom interpreter path that doesn't exist
+        /// </summary>
+        public void DebugPythonCustomInterpreterMissing(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var sln = app.CopyProjectForTest(@"TestData\RelativeInterpreterPath.sln");
+            var project = app.OpenProject(sln, "Program.py");
+            var interpreterPath = Path.Combine(PathUtils.GetParent(sln), "Interpreter.exe");
 
             app.Dte.ExecuteCommand("Debug.Start");
 
             string expectedMissingInterpreterText = string.Format(
                 "The project cannot be launched because no Python interpreter is available at \"{0}\". Please check the " +
                 "Python Environments window and ensure the version of Python is installed and has all settings specified.",
-                TestData.GetPath(@"TestData\Interpreter.exe"));
+                interpreterPath);
             var dialog = app.WaitForDialog();
             app.CheckMessageBox(MessageBoxButton.Ok, expectedMissingInterpreterText);
-
-            app.Dte.Solution.Close(false);
-
-            // copy an interpreter over and try again
-            File.Copy(PythonPaths.Python27.InterpreterPath, TestData.GetPath(@"TestData\Interpreter.exe"));
-            try {
-                OpenProjectAndBreak(app, TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py", 1);
-                app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-                Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
-            } finally {
-                FileUtils.Delete(TestData.GetPath(@"TestData\Interpreter.exe"));
-            }
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestPendingBreakPointLocation(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\DebuggerProject.sln", "BreakpointInfo.py");
+        public void PendingBreakPointLocation(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var sln = app.CopyProjectForTest(@"TestData\DebuggerProject.sln");
+            var project = app.OpenProject(sln, "BreakpointInfo.py");
             var bpInfo = project.ProjectItems.Item("BreakpointInfo.py");
 
             project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(x => true);
@@ -183,9 +160,7 @@ namespace DebuggerUITests {
             // Make sure 
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestBoundBreakpoint(VisualStudioApp app) {
+        public void BoundBreakpoint(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             var project = OpenDebuggerProjectAndBreak(app, "BreakpointInfo.py", 2);
 
             var pendingBp = (Breakpoint3)app.Dte.Debugger.Breakpoints.Item(1);
@@ -193,7 +168,7 @@ namespace DebuggerUITests {
 
             var bp = (Breakpoint3)pendingBp.Children.Item(1);
             Assert.AreEqual("Python", bp.Language);
-            Assert.AreEqual(TestData.GetPath(@"TestData\DebuggerProject\BreakpointInfo.py"), bp.File);
+            Assert.AreEqual(Path.Combine(Path.GetDirectoryName(project.FullName), "BreakpointInfo.py"), bp.File);
             Assert.AreEqual(2, bp.FileLine);
             Assert.AreEqual(1, bp.FileColumn);
             Assert.AreEqual(true, bp.Enabled);
@@ -209,9 +184,7 @@ namespace DebuggerUITests {
             Assert.AreEqual(false, bp.BreakWhenHit);
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestStep(VisualStudioApp app) {
+        public void Step(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             var project = OpenDebuggerProjectAndBreak(app, "SteppingTest.py", 1);
             app.Dte.Debugger.StepOver(true);
             WaitForMode(app, dbgDebugMode.dbgBreakMode);
@@ -223,9 +196,7 @@ namespace DebuggerUITests {
             WaitForMode(app, dbgDebugMode.dbgDesignMode);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestShowCallStackOnCodeMap(VisualStudioApp app) {
+        public void ShowCallStackOnCodeMap(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             var project = OpenDebuggerProjectAndBreak(app, "SteppingTest3.py", 2);
 
             app.Dte.ExecuteCommand("Debug.ShowCallStackonCodeMap");
@@ -281,9 +252,7 @@ namespace DebuggerUITests {
             }
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestStep3(VisualStudioApp app) {
+        public void Step3(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             var project = OpenDebuggerProjectAndBreak(app, "SteppingTest3.py", 2);
             app.Dte.Debugger.StepOut(true);
             WaitForMode(app, dbgDebugMode.dbgBreakMode);
@@ -295,9 +264,7 @@ namespace DebuggerUITests {
             WaitForMode(app, dbgDebugMode.dbgDesignMode);
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestStep5(VisualStudioApp app) {
+        public void Step5(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             var project = OpenDebuggerProjectAndBreak(app, "SteppingTest5.py", 5);
             app.Dte.Debugger.StepInto(true);
             WaitForMode(app, dbgDebugMode.dbgBreakMode);
@@ -309,16 +276,12 @@ namespace DebuggerUITests {
             WaitForMode(app, dbgDebugMode.dbgDesignMode);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestSetNextLine(VisualStudioApp app) {
+        public void SetNextLine(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             var project = OpenDebuggerProjectAndBreak(app, "SetNextLine.py", 7);
 
             var doc = app.Dte.Documents.Item("SetNextLine.py");
             ((TextSelection)doc.Selection).GotoLine(8);
             ((TextSelection)doc.Selection).EndOfLine(false);
-            //((TextSelection)doc.Selection).CharRight(false, 5);
-            //((TextSelection)doc.Selection).CharRight(true, 1);
             var curLine = ((TextSelection)doc.Selection).CurrentLine;
 
             app.Dte.Debugger.SetNextStatement();
@@ -372,9 +335,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and then terminates the process while we're at a breakpoint.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestTerminateProcess(VisualStudioApp app) {
+        public void TerminateProcess(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             StartHelloWorldAndBreak(app);
 
             Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
@@ -388,9 +349,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and makes sure we get the correct module.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestEnumModules(VisualStudioApp app) {
+        public void EnumModules(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             StartHelloWorldAndBreak(app);
 
             var modules = ((Process3)app.Dte.Debugger.CurrentProcess).Modules;
@@ -407,9 +366,7 @@ namespace DebuggerUITests {
             WaitForMode(app, dbgDebugMode.dbgDesignMode);
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestThread(VisualStudioApp app) {
+        public void MainThread(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             StartHelloWorldAndBreak(app);
 
             var thread = ((Thread2)app.Dte.Debugger.CurrentThread);
@@ -424,9 +381,7 @@ namespace DebuggerUITests {
             WaitForMode(app, dbgDebugMode.dbgDesignMode);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void ExpressionEvaluation(VisualStudioApp app) {
+        public void ExpressionEvaluation(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             OpenDebuggerProject(app, "Program.py");
 
             app.Dte.Debugger.Breakpoints.Add(File: "Program.py", Line: 14);
@@ -467,87 +422,34 @@ namespace DebuggerUITests {
 
             app.Dte.Debugger.ExecuteStatement("x = 2");
 
-            app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
+            app.Dte.Debugger.TerminateAll();
+            WaitForMode(app, dbgDebugMode.dbgDesignMode);
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestException(VisualStudioApp app) {
+        public void SimpleException(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             ExceptionTest(app, "SimpleException.py", "Exception Thrown", "Exception", "Exception", 3);
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestException2(VisualStudioApp app) {
+        public void SimpleException2(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             ExceptionTest(app, "SimpleException2.py", "Exception Thrown", "ValueError: bad value", "ValueError", 3);
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestExceptionUnhandled(VisualStudioApp app) {
-            var waitOnAbnormalExit = GetOptions(app).WaitOnAbnormalExit;
-            GetOptions(app).WaitOnAbnormalExit = false;
-            try {
+        public void SimpleExceptionUnhandled(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, waitOnAbnormalExit: false)) {
                 ExceptionTest(app, "SimpleExceptionUnhandled.py", "Exception User-Unhandled", "ValueError: bad value", "ValueError", 2);
-            } finally {
-                GetOptions(app).WaitOnAbnormalExit = waitOnAbnormalExit;
             }
         }
 
         // https://github.com/Microsoft/PTVS/issues/275
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestExceptionInImportLibNotReported(VisualStudioApp app) {
-            bool justMyCode = (bool)app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value;
-            app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value = true;
-            try {
+        public void ExceptionInImportLibNotReported(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            using (new DebuggingGeneralOptionsSetter(app.Dte, enableJustMyCode: true)) {
                 OpenDebuggerProjectAndBreak(app, "ImportLibException.py", 2);
                 app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
                 Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
-            } finally {
-                app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value = justMyCode;
             }
         }
 
-        private static void ExceptionTest(VisualStudioApp app, string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
-            var debug3 = (Debugger3)app.Dte.Debugger;
-            bool justMyCode = (bool)app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value;
-            app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value = true;
-            try {
-
-                OpenDebuggerProject(app, filename);
-
-                var exceptionSettings = debug3.ExceptionGroups.Item("Python Exceptions");
-
-                exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
-
-                app.Dte.ExecuteCommand("Debug.Start");
-                WaitForMode(app, dbgDebugMode.dbgBreakMode);
-
-                exceptionSettings.SetBreakWhenThrown(false, exceptionSettings.Item(exceptionType));
-                exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
-                debug3.ExceptionGroups.ResetAll();
-
-                var excepAdorner = app.WaitForExceptionAdornment();
-                AutomationWrapper.DumpElement(excepAdorner.Element);
-
-                Assert.AreEqual(expectedDescription, excepAdorner.Description.TrimEnd());
-                Assert.AreEqual(expectedTitle, excepAdorner.Title.TrimEnd());
-
-                Assert.AreEqual((uint)expectedLine, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-
-                debug3.Go(WaitForBreakOrEnd: true);
-
-                WaitForMode(app, dbgDebugMode.dbgDesignMode);
-            } finally {
-                app.Dte.Properties["Debugging", "General"].Item("EnableJustMyCode").Value = true;
-            }
-        }
-
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestBreakpoints(VisualStudioApp app) {
+        public void Breakpoints(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             OpenDebuggerProjectAndBreak(app, "BreakpointTest2.py", 3);
             var debug3 = (Debugger3)app.Dte.Debugger;
             Assert.AreEqual((uint)3, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
@@ -560,9 +462,7 @@ namespace DebuggerUITests {
             WaitForMode(app, dbgDebugMode.dbgDesignMode);
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestBreakpointsDisable(VisualStudioApp app) {
+        public void BreakpointsDisable(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             OpenDebuggerProjectAndBreak(app, "BreakpointTest4.py", 2);
             var debug3 = (Debugger3)app.Dte.Debugger;
             Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
@@ -575,9 +475,7 @@ namespace DebuggerUITests {
             WaitForMode(app, dbgDebugMode.dbgDesignMode);
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void TestBreakpointsDisableReenable(VisualStudioApp app) {
+        public void BreakpointsDisableReenable(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             var debug3 = (Debugger3)app.Dte.Debugger;
             OpenDebuggerProjectAndBreak(app, "BreakpointTest4.py", 2);
             Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
@@ -632,16 +530,14 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure the presence of errors causes F5 to prevent running w/o a confirmation.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestLaunchWithErrorsDontRun(PythonVisualStudioApp app) {
-            var originalValue = GetOptions(app).PromptBeforeRunningWithBuildErrorSetting;
-            GetOptions(app).PromptBeforeRunningWithBuildErrorSetting = true;
-            try {
-                var project = app.OpenProject(@"TestData\ErrorProject.sln");
+        public void LaunchWithErrorsDontRun(PythonVisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            using (new PythonDebuggingGeneralOptionsSetter(app.Dte, promptBeforeRunningWithBuildErrorSetting: true)) {
+                var sln = app.CopyProjectForTest(@"TestData\ErrorProject.sln");
+                var project = app.OpenProject(sln);
+                var projectDir = PathUtils.GetParent(project.FullName);
 
                 // Open a file with errors
-                string scriptFilePath = TestData.GetPath(@"TestData\ErrorProject\Program.py");
+                string scriptFilePath = Path.Combine(projectDir, "Program.py");
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
                 app.Dte.ExecuteCommand("View.ErrorList");
                 var items = app.WaitForErrorListItems(7);
@@ -659,17 +555,13 @@ namespace DebuggerUITests {
                 }
 
                 WaitForMode(app, dbgDebugMode.dbgDesignMode);
-            } finally {
-                GetOptions(app).PromptBeforeRunningWithBuildErrorSetting = originalValue;
             }
         }
 
         /// <summary>
         /// Start with debugging, with script but no project.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void StartWithDebuggingNoProject(VisualStudioApp app) {
+        public void StartWithDebuggingNoProject(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
 
             app.DeleteAllBreakPoints();
@@ -688,10 +580,11 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, with script but no project.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void StartWithoutDebuggingNoProject(VisualStudioApp app) {
-            string scriptFilePath = TestData.GetPath(@"TestData\CreateFile1.py");
+        public void StartWithoutDebuggingNoProject(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var tempFolder = TestData.GetTempPath();
+            string scriptFilePath = Path.Combine(tempFolder, "CreateFile1.py");
+            string resultFilePath = Path.Combine(tempFolder, "File1.txt");
+            File.Copy(TestData.GetPath(@"TestData\CreateFile1.py"), scriptFilePath, true);
 
             app.DeleteAllBreakPoints();
 
@@ -699,15 +592,13 @@ namespace DebuggerUITests {
             app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
             app.Dte.ExecuteCommand("Python.StartWithoutDebugging");
             Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
-            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File1.txt"));
+            WaitForFileCreatedByScript(resultFilePath);
         }
 
         /// <summary>
         /// Start with debugging, with script not in project.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void StartWithDebuggingNotInProject(VisualStudioApp app) {
+        public void StartWithDebuggingNotInProject(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
 
             OpenDebuggerProject(app);
@@ -725,10 +616,11 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, with script not in project.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void StartWithoutDebuggingNotInProject(VisualStudioApp app) {
-            string scriptFilePath = TestData.GetPath(@"TestData\CreateFile2.py");
+        public void StartWithoutDebuggingNotInProject(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var tempFolder = TestData.GetTempPath();
+            string scriptFilePath = Path.Combine(tempFolder, "CreateFile2.py");
+            string resultFilePath = Path.Combine(tempFolder, "File2.txt");
+            File.Copy(TestData.GetPath(@"TestData\CreateFile2.py"), scriptFilePath, true);
 
             OpenDebuggerProject(app);
 
@@ -736,18 +628,16 @@ namespace DebuggerUITests {
             app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
             app.Dte.ExecuteCommand("Python.StartWithoutDebugging");
             Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
-            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File2.txt"));
+            WaitForFileCreatedByScript(resultFilePath);
         }
 
         /// <summary>
         /// Start with debuggging, with script in project.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void StartWithDebuggingInProject(VisualStudioApp app) {
-            string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\Program.py");
-
-            OpenDebuggerProject(app);
+        public void StartWithDebuggingInProject(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var proj = OpenDebuggerProject(app);
+            var projDir = PathUtils.GetParent(proj.FullName);
+            var scriptFilePath = Path.Combine(projDir, "Program.py");
 
             app.Dte.ItemOperations.OpenFile(scriptFilePath);
             app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
@@ -762,12 +652,11 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start with debuggging, with script in subfolder project.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void StartWithDebuggingSubfolderInProject(VisualStudioApp app) {
-            string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\Sub\paths.py");
-
-            OpenDebuggerProject(app);
+        public void StartWithDebuggingSubfolderInProject(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var proj = OpenDebuggerProject(app);
+            var projDir = PathUtils.GetParent(proj.FullName);
+            var scriptFilePath = Path.Combine(projDir, "Sub", "paths.py");
+            var expectedProjDir = "'" + PathUtils.TrimEndSeparator(projDir).Replace("\\", "\\\\") + "'";
 
             app.Dte.ItemOperations.OpenFile(scriptFilePath);
             app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 3);
@@ -776,10 +665,10 @@ namespace DebuggerUITests {
             Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
             AssertUtil.ContainsAtLeast(
                 app.Dte.Debugger.GetExpression("sys.path").DataMembers.Cast<Expression>().Select(e => e.Value),
-                "'" + TestData.GetPath(@"TestData\DebuggerProject").Replace("\\", "\\\\") + "'"
+                expectedProjDir
             );
             Assert.AreEqual(
-                "'" + TestData.GetPath(@"TestData\DebuggerProject").Replace("\\", "\\\\") + "'",
+                expectedProjDir,
                 app.Dte.Debugger.GetExpression("os.path.abspath(os.curdir)").Value
             );
             app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
@@ -789,26 +678,23 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debuggging, with script in project.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void StartWithoutDebuggingInProject(VisualStudioApp app) {
-            string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\CreateFile3.py");
-
-            OpenDebuggerProject(app);
+        public void StartWithoutDebuggingInProject(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var proj = OpenDebuggerProject(app);
+            var projDir = PathUtils.GetParent(proj.FullName);
+            var scriptFilePath = Path.Combine(projDir, "CreateFile3.py");
+            var resultFilePath = Path.Combine(projDir, "File3.txt");
 
             app.Dte.ItemOperations.OpenFile(scriptFilePath);
             app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
             app.Dte.ExecuteCommand("Python.StartWithoutDebugging");
             Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
-            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\DebuggerProject\File3.txt"));
+            WaitForFileCreatedByScript(resultFilePath);
         }
 
         /// <summary>
         /// Start with debugging, no script.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void StartWithDebuggingNoScript(VisualStudioApp app) {
+        public void StartWithDebuggingNoScript(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             try {
                 app.ExecuteCommand("Python.StartWithDebugging");
             } catch (COMException e) {
@@ -820,14 +706,22 @@ namespace DebuggerUITests {
         /// <summary>
         /// Start without debugging, no script.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public void StartWithoutDebuggingNoScript(VisualStudioApp app) {
+        public void StartWithoutDebuggingNoScript(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
             try {
                 app.ExecuteCommand("Python.StartWithoutDebugging");
             } catch (COMException e) {
                 // Requires an opened python file with focus
                 Assert.IsTrue(e.ToString().Contains("is not available"));
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        public class DotNotWaitOnNormalExit : PythonDebuggingGeneralOptionsSetter {
+            public DotNotWaitOnNormalExit(DTE dte) :
+                base(dte, waitOnNormalExit: false) {
             }
         }
 
@@ -844,17 +738,39 @@ namespace DebuggerUITests {
             Assert.IsTrue(exists, "Python script was expected to create file '{0}'.", createdFilePath);
         }
 
-        protected static IPythonOptions GetOptions(VisualStudioApp app) {
-            return (IPythonOptions)app.Dte.GetObject("VsPython");
+        private static void ExceptionTest(VisualStudioApp app, string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
+            var debug3 = (Debugger3)app.Dte.Debugger;
+            using (new DebuggingGeneralOptionsSetter(app.Dte, enableJustMyCode: true)) {
+                OpenDebuggerProject(app, filename);
+
+                var exceptionSettings = debug3.ExceptionGroups.Item("Python Exceptions");
+
+                exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
+
+                app.Dte.ExecuteCommand("Debug.Start");
+                WaitForMode(app, dbgDebugMode.dbgBreakMode);
+
+                exceptionSettings.SetBreakWhenThrown(false, exceptionSettings.Item(exceptionType));
+                exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
+                debug3.ExceptionGroups.ResetAll();
+
+                var excepAdorner = app.WaitForExceptionAdornment();
+                AutomationWrapper.DumpElement(excepAdorner.Element);
+
+                Assert.AreEqual(expectedDescription, excepAdorner.Description.TrimEnd());
+                Assert.AreEqual(expectedTitle, excepAdorner.Title.TrimEnd());
+
+                Assert.AreEqual((uint)expectedLine, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+
+                debug3.Go(WaitForBreakOrEnd: true);
+
+                WaitForMode(app, dbgDebugMode.dbgDesignMode);
+            }
         }
 
-        #endregion
-
-        #region Helpers
-
-
         internal static Project OpenDebuggerProject(VisualStudioApp app, string startItem = null) {
-            return app.OpenProject(@"TestData\DebuggerProject.sln", startItem);
+            var solutionPath = app.CopyProjectForTest(@"TestData\DebuggerProject.sln");
+            return app.OpenProject(solutionPath, startItem);
         }
 
         private static Project OpenDebuggerProjectAndBreak(VisualStudioApp app, string startItem, int lineNo, bool setStartupItem = true) {
@@ -868,10 +784,11 @@ namespace DebuggerUITests {
         }
 
         private static string WaitForDebugOutput(VisualStudioApp app, Predicate<string> condition) {
-            var text = app.GetOutputWindowText("Debug");
+            var uiThread = app.ServiceProvider.GetUIThread();
+            var text = uiThread.Invoke(() => app.GetOutputWindowText("Debug"));
             for (int i = 0; i < 50 && !condition(text); i++) {
                 Thread.Sleep(100);
-                text = app.GetOutputWindowText("Debug");
+                text = uiThread.Invoke(() => app.GetOutputWindowText("Debug"));
             }
 
             Assert.IsTrue(condition(text));
@@ -883,7 +800,8 @@ namespace DebuggerUITests {
         }
 
         internal static Project OpenProjectAndBreak(VisualStudioApp app, string projName, string filename, int lineNo, bool setStartupItem = true) {
-            var project = app.OpenProject(projName, filename, setStartupItem: setStartupItem);
+            var projectPath = app.CopyProjectForTest(projName);
+            var project = app.OpenProject(projectPath, filename, setStartupItem: setStartupItem);
 
             app.Dte.Debugger.Breakpoints.Add(File: filename, Line: lineNo);
             app.Dte.ExecuteCommand("Debug.Start");
@@ -894,7 +812,6 @@ namespace DebuggerUITests {
             Assert.AreEqual(lineNo, app.Dte.Debugger.BreakpointLastHit.FileLine);
             return project;
         }
-
 
         internal static void WaitForMode(VisualStudioApp app, dbgDebugMode mode) {
             for (int i = 0; i < 30 && app.Dte.Debugger.CurrentMode != mode; i++) {

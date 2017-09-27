@@ -24,7 +24,7 @@ namespace DebuggerUITestsRunner {
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
             // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.DebuggerUITests", // TODO: not used?
+            "Microsoft.PythonTools.Tests.DebuggerUITests",
             // Remote class name
             $"DebuggerUITests.{GetType().Name}"
         );
@@ -39,7 +39,7 @@ namespace DebuggerUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void AttachBasic() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachBasic));

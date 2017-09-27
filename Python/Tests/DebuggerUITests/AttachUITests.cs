@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Linq;
 using EnvDTE;
 using EnvDTE80;
@@ -23,16 +24,14 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
-using TestUtilities;
 using TestUtilities.UI;
-using Path = System.IO.Path;
 using SD = System.Diagnostics;
 
 namespace DebuggerUITests {
     public class AttachUITests {
+        #region Test Cases
         public void AttachBasic(VisualStudioApp app) {
-
-            string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
+            string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
@@ -48,8 +47,7 @@ namespace DebuggerUITests {
         }
 
         public void AttachBreakImmediately(VisualStudioApp app) {
-
-            string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
+            string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
             int breakLine = 22;
 
@@ -68,8 +66,7 @@ namespace DebuggerUITests {
         }
 
         public void AttachUserSetsBreakpoint(VisualStudioApp app) {
-
-            string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
+            string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
             int breakLine = 22;
 
@@ -80,7 +77,6 @@ namespace DebuggerUITests {
                 AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
                 dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
                 DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
-
             } finally {
                 dbg2.DetachAll();
                 DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
@@ -89,7 +85,7 @@ namespace DebuggerUITests {
         }
 
         public void AttachThreadsBreakAllAndSetExitFlag(VisualStudioApp app) {
-            string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
+            string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
@@ -112,14 +108,13 @@ namespace DebuggerUITests {
 
                 dbg2.Go(WaitForBreakOrEnd: false);
                 DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
-
             } finally {
                 if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
 
         public void AttachThreadsBreakOneAndSetExitFlag(VisualStudioApp app) {
-            string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
+            string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
             int breakLine = 8;
 
@@ -144,14 +139,13 @@ namespace DebuggerUITests {
 
                 dbg2.Go(WaitForBreakOrEnd: false);
                 DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
-
             } finally {
                 if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
 
         public void AttachLotsOfThreads(VisualStudioApp app) {
-            string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
+            string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "LotsOfThreads.py";
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
@@ -166,8 +160,7 @@ namespace DebuggerUITests {
             }
         }
 
-        //TODO: TestAttachThreadsMakingProgress
-        // See workitem http://pytools.codeplex.com/workitem/456 
+        #endregion
 
         #region Helper methods
 
@@ -235,21 +228,3 @@ namespace DebuggerUITests {
         #endregion
     }
 }
-
-////EnvDTE80.Debugger2
-
-//var atp = app.OpenDebugAttach();
-
-//var sctpd = atp.SelectCodeTypeForDebugging();
-//sctpd.SetDebugSpecificCodeTypes();
-
-//foreach (var codeType in sctpd.AvailableCodeTypes.Items) {
-//    if (codeType.Name == AD7Engine.DebugEngineName) codeType.SetSelected();
-//    else codeType.SetUnselected();
-//}
-
-//sctpd.ClickOk();
-
-//atp.SelectProcessForDebuggingByName("python.exe");
-//atp.ClickAttach();
-//DebugProject.WaitForMode(app, dbgDebugMode.dbgRunMode);
