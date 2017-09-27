@@ -98,13 +98,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComparePerfReports.cs" />
+    <Compile Include="DebuggingGeneralOptionsSetter.cs" />
     <Compile Include="DefaultInterpreterSetter.cs" />
     <Compile Include="Django\NewAppDialog.cs" />
+    <Compile Include="EnvironmentVariableSetter.cs" />
     <Compile Include="MockInteractiveWindowCommandsFactory.cs" />
     <Compile Include="MockPackageManager.cs" />
     <Compile Include="MockPythonToolsOptionsService.cs" />
     <Compile Include="MockReplWindow.cs" />
     <Compile Include="MockUIThread.cs" />
+    <Compile Include="PythonServiceGeneralOptionsSetter.cs" />
+    <Compile Include="PythonDebuggingGeneralOptionsSetter.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />
     <Compile Include="FormattingOptionsTreeView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

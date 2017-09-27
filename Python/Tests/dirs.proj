@@ -10,6 +10,7 @@
     <ProjectFile Include="CookiecutterTests\CookiecutterTests.csproj" />
     <ProjectFile Include="DebuggerTests\DebuggerTests.csproj" />
     <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />
+    <ProjectFile Include="DebuggerUITestsRunner\DebuggerUITestsRunner.csproj" />
     <ProjectFile Include="Django\DjangoTests.csproj" />
     <ProjectFile Include="Django.UI\DjangoUITests.csproj" />
     <ProjectFile Include="FastCgi\FastCgiTest.csproj" />

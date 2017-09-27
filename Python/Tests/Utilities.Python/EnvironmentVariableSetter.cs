@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,23 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using TestUtilities.Python;
-using TestUtilities.UI;
+using System;
 
-namespace DjangoUITests {
-    //[TestClass]
-    public class DjangoDebugProjectTests {
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void DebugDjangoProject(VisualStudioApp app) {
-            DebuggerUITests.DebugProjectUITests.OpenProjectAndBreak(
-                app,
-                TestData.GetPath(@"TestData\DjangoDebugProject.sln"),
-                @"TestApp\views.py",
-                5,
-                false);
+namespace TestUtilities.Python {
+    public class EnvironmentVariableSetter : IDisposable {
+        private readonly string _name;
+        private readonly string _previousValue;
+
+        public EnvironmentVariableSetter(
+            string name,
+            string val
+        ) {
+            _name = name;
+            _previousValue = Environment.GetEnvironmentVariable(name);
+            Environment.SetEnvironmentVariable(_name, val);
+        }
+
+        public void Dispose() {
+            Environment.SetEnvironmentVariable(_name, _previousValue);
         }
     }
 }
