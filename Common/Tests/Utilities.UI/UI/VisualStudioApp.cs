@@ -1043,11 +1043,21 @@ namespace TestUtilities.UI {
                 while (ErrorHandler.Succeeded(items.Next(1, taskItems, itemCnt)) && itemCnt[0] == 1) {
                     allItems.Add(taskItems[0]);
                 }
-                if (allItems.Count >= expectedCount) {
+                if (expectedCount > 0 && allItems.Count >= expectedCount || allItems.Count == expectedCount) {
                     break;
                 }
                 // give time for errors to process...
                 System.Threading.Thread.Sleep(1000);
+            }
+
+            foreach (var item in allItems) {
+                string text, document;
+                if (ErrorHandler.Succeeded(item.Document(out document)) &&
+                    ErrorHandler.Succeeded(item.get_Text(out text))) {
+                    Console.WriteLine("Task Item: {0} :: {1}", text, document);
+                } else {
+                    Console.WriteLine("Task Item: <unknown>");
+                }
             }
 
             if (exactMatch) {

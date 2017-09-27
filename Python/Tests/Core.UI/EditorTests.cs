@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
@@ -818,15 +819,19 @@ x\
         public void ImportPresentThenAddThenRemoveReference(PythonVisualStudioApp app) {
             var python = PythonPaths.Versions.LastOrDefault(p => p.Version.Is3x() && !p.Isx64);
             python.AssertInstalled();
+            Console.WriteLine("Using {0}", python.InterpreterPath);
 
-            var vcproj = TestData.GetPath(@"TestData\ProjectReference\NativeModule\NativeModule.vcxproj");
+            var sln = app.CopyProjectForTest(@"TestData\ProjectReference\CProjectReference.sln");
+            var slnDir = PathUtils.GetParent(sln);
+
+            var vcproj = Path.Combine(slnDir, "NativeModule", "NativeModule.vcxproj");
             File.WriteAllText(vcproj, File.ReadAllText(vcproj)
                 .Replace("$(PYTHON_INCLUDE)", Path.Combine(python.PrefixPath, "include"))
                 .Replace("$(PYTHON_LIB)", Path.Combine(python.PrefixPath, "libs"))
             );
 
             using (app.SelectDefaultInterpreter(python)) {
-                var project = app.OpenProject(@"TestData\ProjectReference\CProjectReference.sln", projectName: "PythonApplication2", expectedProjects: 2);
+                var project = app.OpenProject(sln, projectName: "PythonApplication2", expectedProjects: 2);
 
                 var wnd = project.ProjectItems.Item("Program.py").Open();
                 wnd.Activate();
@@ -845,6 +850,7 @@ x\
                     Assert.AreEqual(0, items.Count);
                 } finally {
                     wnd.Close();
+                    app.Dte.Solution.Close();
                 }
             }
         }

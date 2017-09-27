@@ -221,7 +221,7 @@ namespace PythonToolsUITests {
             }
             Assert.IsNotNull(newProcess, "Process did not start");
             try {
-                Keyboard.PressAndRelease(System.Windows.Input.Key.Space);
+                newProcess.CloseMainWindow();
                 newProcess.WaitForExit(1000);
                 if (newProcess.HasExited) {
                     newProcess = null;

@@ -40,7 +40,7 @@ namespace PythonToolsUITests {
 
                     var value = spacingView.WaitForItem(
                         "Class Definitions",
-                        "Insert space between a class declaration's name and bases list"
+                        "Insert space between a class name and bases list"
                     );
                     Assert.IsNotNull(value, "Did not find item");
 

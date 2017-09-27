@@ -699,10 +699,13 @@ namespace PythonToolsUITests {
         }
 
         public void DotNetSearchPathReferences(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\AssemblyReference\SearchPathReference.sln");
+            var projectDir = Path.Combine(PathUtils.GetParent(sln), "PythonApplication");
+            var project = app.OpenProject(sln);
+            CompileFile(Path.Combine(projectDir, "ClassLibrary.cs"), "ClassLibrary3.dll");
             var dllPath = Path.Combine(TestData.GetTempPath(), "ClassLibrary3.dll");
-            CompileFile("ClassLibrary.cs", dllPath);
+            File.Move(Path.Combine(projectDir, "ClassLibrary3.dll"), dllPath);
 
-            var project = app.OpenProject(@"TestData\AssemblyReference\SearchPathReference.sln");
             project.GetPythonProject()._searchPaths.Add(Path.GetDirectoryName(dllPath), false);
 
             var program = project.ProjectItems.Item("Program3.py");
