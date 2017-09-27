@@ -25,7 +25,7 @@ namespace DjangoUITests {
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
         public void DebugDjangoProject(VisualStudioApp app) {
-            DebuggerUITests.DebugProject.OpenProjectAndBreak(
+            DebuggerUITests.DebugProjectUITests.OpenProjectAndBreak(
                 app,
                 TestData.GetPath(@"TestData\DjangoDebugProject.sln"),
                 @"TestApp\views.py",

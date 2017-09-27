@@ -19,7 +19,7 @@ using TestRunnerInterop;
 
 namespace DebuggerUITestsRunner {
     [TestClass]
-    public class DebugProject {
+    public class DebugProjectUITests {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -42,199 +42,199 @@ namespace DebuggerUITestsRunner {
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DebugPythonProject() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.DebugPythonProject));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProject));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DebugPythonProjectSubFolderStartupFileSysPath() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.DebugPythonProjectSubFolderStartupFileSysPath));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProjectSubFolderStartupFileSysPath));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DebugPythonProjectWithAndWithoutClearingPythonPath() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.DebugPythonProjectWithAndWithoutClearingPythonPath));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProjectWithAndWithoutClearingPythonPath));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DebugPythonCustomInterpreter() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.DebugPythonCustomInterpreter));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonCustomInterpreter));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DebugPythonCustomInterpreterMissing() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.DebugPythonCustomInterpreterMissing));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonCustomInterpreterMissing));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void PendingBreakPointLocation() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.PendingBreakPointLocation));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.PendingBreakPointLocation));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BoundBreakpoint() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.BoundBreakpoint));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BoundBreakpoint));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void Step() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.Step));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.Step));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void ShowCallStackOnCodeMap() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.ShowCallStackOnCodeMap));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.ShowCallStackOnCodeMap));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void Step3() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.Step3));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.Step3));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void Step5() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.Step5));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.Step5));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void SetNextLine() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.SetNextLine));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.SetNextLine));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void TerminateProcess() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.TerminateProcess));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.TerminateProcess));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void EnumModules() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.EnumModules));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.EnumModules));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void MainThread() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.MainThread));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.MainThread));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void ExpressionEvaluation() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.ExpressionEvaluation));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.ExpressionEvaluation));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SimpleException() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.SimpleException));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.SimpleException));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SimpleException2() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.SimpleException2));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.SimpleException2));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SimpleExceptionUnhandled() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.SimpleExceptionUnhandled));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.SimpleExceptionUnhandled));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void ExceptionInImportLibNotReported() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.ExceptionInImportLibNotReported));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.ExceptionInImportLibNotReported));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void Breakpoints() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.Breakpoints));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.Breakpoints));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BreakpointsDisable() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.BreakpointsDisable));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BreakpointsDisable));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BreakpointsDisableReenable() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.BreakpointsDisableReenable));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BreakpointsDisableReenable));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void LaunchWithErrorsDontRun() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.LaunchWithErrorsDontRun));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.LaunchWithErrorsDontRun));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void StartWithDebuggingNoProject() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithDebuggingNoProject));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingNoProject));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartWithoutDebuggingNoProject() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithoutDebuggingNoProject));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithoutDebuggingNoProject));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartWithDebuggingNotInProject() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithDebuggingNotInProject));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingNotInProject));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartWithoutDebuggingNotInProject() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithoutDebuggingNotInProject));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithoutDebuggingNotInProject));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartWithDebuggingInProject() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithDebuggingInProject));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingInProject));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void StartWithDebuggingSubfolderInProject() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithDebuggingSubfolderInProject));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingSubfolderInProject));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartWithoutDebuggingInProject() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithoutDebuggingInProject));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithoutDebuggingInProject));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartWithDebuggingNoScript() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithDebuggingNoScript));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingNoScript));
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartWithoutDebuggingNoScript() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProject.StartWithoutDebuggingNoScript));
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithoutDebuggingNoScript));
         }
     }
 }

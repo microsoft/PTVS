@@ -24,7 +24,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DebugProject.cs" />
+    <Compile Include="DebugProjectUITests.cs" />
     <Compile Include="AttachUITests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

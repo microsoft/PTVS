@@ -41,7 +41,7 @@ namespace DebuggerUITests {
                 AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
             } finally {
                 dbg2.DetachAll();
-                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgDesignMode);
                 if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
@@ -60,7 +60,7 @@ namespace DebuggerUITests {
                 AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
             } finally {
                 dbg2.DetachAll();
-                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgDesignMode);
                 if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
@@ -76,10 +76,10 @@ namespace DebuggerUITests {
             try {
                 AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
                 dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
-                DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
+                DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgBreakMode);
             } finally {
                 dbg2.DetachAll();
-                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgDesignMode);
                 if (!processToAttach.HasExited) processToAttach.Kill();
             }
         }
@@ -94,7 +94,7 @@ namespace DebuggerUITests {
             try {
                 Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
                 dbg2.Break(WaitForBreakMode: false);
-                DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
+                DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgBreakMode);
 
                 var x = proc.Threads.Cast<Thread2>()
                     .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
@@ -107,7 +107,7 @@ namespace DebuggerUITests {
                 x.Value = "True";
 
                 dbg2.Go(WaitForBreakOrEnd: false);
-                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgDesignMode);
             } finally {
                 if (!processToAttach.HasExited) processToAttach.Kill();
             }
@@ -124,7 +124,7 @@ namespace DebuggerUITests {
             try {
                 Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
                 dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
-                DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
+                DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 dbg2.BreakpointLastHit.Delete();
 
                 var x = proc.Threads.Cast<Thread2>()
@@ -138,7 +138,7 @@ namespace DebuggerUITests {
                 x.Value = "True";
 
                 dbg2.Go(WaitForBreakOrEnd: false);
-                DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
+                DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgDesignMode);
             } finally {
                 if (!processToAttach.HasExited) processToAttach.Kill();
             }
@@ -184,7 +184,7 @@ namespace DebuggerUITests {
                 }
             }
             Assert.IsTrue(foundit, "The process to attach [{0}] could not be found in LocalProcesses (did it exit immediately?)", processToAttach.Id);
-            DebugProject.WaitForMode(app, expectedMode);
+            DebugProjectUITests.WaitForMode(app, expectedMode);
             return result;
         }
 

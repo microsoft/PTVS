@@ -34,7 +34,7 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using Thread = System.Threading.Thread;
 
 namespace DebuggerUITests {
-    public class DebugProject {
+    public class DebugProjectUITests {
         #region Test Cases
 
         /// <summary>
