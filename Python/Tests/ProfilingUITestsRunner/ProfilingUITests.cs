@@ -114,64 +114,64 @@ namespace ProfilingUITestsRunner {
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestSaveDirtySession() {
-            _vs.RunTest(nameof(PUIT.TestSaveDirtySession));
+        public void SaveDirtySession() {
+            _vs.RunTest(nameof(PUIT.SaveDirtySession));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestDeleteReport() {
-            _vs.RunTest(nameof(PUIT.TestDeleteReport));
+        public void DeleteReport() {
+            _vs.RunTest(nameof(PUIT.DeleteReport));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestCompareReports() {
-            _vs.RunTest(nameof(PUIT.TestCompareReports));
+        public void CompareReports() {
+            _vs.RunTest(nameof(PUIT.CompareReports));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestRemoveReport() {
-            _vs.RunTest(nameof(PUIT.TestRemoveReport));
+        public void RemoveReport() {
+            _vs.RunTest(nameof(PUIT.RemoveReport));
         }
 
         // P2 because the report viewer may crash VS depending on prior state.
         // We will restart VS before running this test to ensure it is clean.
         [TestMethod, Priority(2)]
         [TestCategory("Installed")]
-        public void TestOpenReport() {
-            _vs.RunTest(nameof(PUIT.TestOpenReport));
+        public void OpenReport() {
+            _vs.RunTest(nameof(PUIT.OpenReport));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestOpenReportCtxMenu() {
-            _vs.RunTest(nameof(PUIT.TestOpenReportCtxMenu));
+        public void OpenReportCtxMenu() {
+            _vs.RunTest(nameof(PUIT.OpenReportCtxMenu));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestTargetPropertiesForProject() {
-            _vs.RunTest(nameof(PUIT.TestTargetPropertiesForProject));
+        public void TargetPropertiesForProject() {
+            _vs.RunTest(nameof(PUIT.TargetPropertiesForProject));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestTargetPropertiesForInterpreter() {
-            _vs.RunTest(nameof(PUIT.TestTargetPropertiesForInterpreter));
+        public void TargetPropertiesForInterpreter() {
+            _vs.RunTest(nameof(PUIT.TargetPropertiesForInterpreter));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestTargetPropertiesForExecutable() {
-            _vs.RunTest(nameof(PUIT.TestTargetPropertiesForExecutable));
+        public void TargetPropertiesForExecutable() {
+            _vs.RunTest(nameof(PUIT.TargetPropertiesForExecutable));
         }
 
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
-        public void TestStopProfiling() {
-            _vs.RunTest(nameof(PUIT.TestStopProfiling));
+        public void StopProfiling() {
+            _vs.RunTest(nameof(PUIT.StopProfiling));
         }
 
         [TestMethod, Priority(1)]

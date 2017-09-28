@@ -534,7 +534,7 @@ namespace ProfilingUITests {
             }
         }
 
-        public void TestSaveDirtySession(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void SaveDirtySession(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
             CopyAndOpenProject(app, out project, out profiling);
@@ -571,7 +571,7 @@ namespace ProfilingUITests {
             }
         }
 
-        public void TestDeleteReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void DeleteReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
             CopyAndOpenProject(app, out project, out profiling);
@@ -591,7 +591,7 @@ namespace ProfilingUITests {
             }
         }
 
-        public void TestCompareReports(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void CompareReports(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
             CopyAndOpenProject(app, out project, out profiling);
@@ -659,7 +659,7 @@ namespace ProfilingUITests {
             }
         }
 
-        public void TestRemoveReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void RemoveReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
             CopyAndOpenProject(app, out project, out profiling);
@@ -675,7 +675,7 @@ namespace ProfilingUITests {
             Assert.IsTrue(File.Exists(reportFilename));
         }
 
-        public void TestOpenReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void OpenReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
             CopyAndOpenProject(app, out project, out profiling);
@@ -720,7 +720,7 @@ namespace ProfilingUITests {
             AutomationWrapper.EnsureExpanded(child);
         }
 
-        public void TestOpenReportCtxMenu(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void OpenReportCtxMenu(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
             CopyAndOpenProject(app, out project, out profiling);
@@ -742,7 +742,7 @@ namespace ProfilingUITests {
             }
         }
 
-        public void TestTargetPropertiesForProject(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void TargetPropertiesForProject(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
             CopyAndOpenProject(app, out project, out profiling);
@@ -765,7 +765,7 @@ namespace ProfilingUITests {
             }
         }
 
-        public void TestTargetPropertiesForInterpreter(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void TargetPropertiesForInterpreter(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             PythonPaths.Python27.AssertInstalled();
 
             IPythonProfiling profiling = GetProfiling(app);
@@ -806,7 +806,7 @@ namespace ProfilingUITests {
             }
         }
 
-        public void TestTargetPropertiesForExecutable(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void TargetPropertiesForExecutable(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
@@ -842,7 +842,7 @@ namespace ProfilingUITests {
             }
         }
 
-        public void TestStopProfiling(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+        public void StopProfiling(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
