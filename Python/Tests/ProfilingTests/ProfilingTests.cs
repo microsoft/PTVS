@@ -25,11 +25,9 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Profiling;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
-using TestUtilities.UI;
 
-namespace ProfilingUITests {
-    //[TestClass]
+namespace ProfilingTests {
+    [TestClass]
     public class ProfilingTests {
         public TestContext TestContext { get; set; }
 
@@ -38,7 +36,7 @@ namespace ProfilingUITests {
             AssertListener.Initialize();
         }
 
-        //[TestMethod, Priority(0)]
+        [TestMethod, Priority(0)]
         public async Task ProfileWithEncoding() {
             var proflaun = Path.Combine(
                 Path.GetDirectoryName(typeof(IPythonProfiling).Assembly.Location),
