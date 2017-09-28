@@ -3,7 +3,7 @@
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
-    <Cmt Name="RCCX" />
+    <Cmt Name="Rccx" />
   </OwnedComments>
   <Settings Name="@SettingsPath@\default.lss" Type="Lss" />
   <Item ItemId=";Images" ItemType="0" PsrId="211" Leaf="false">
@@ -64,7 +64,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CaptionDirty" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";CaptionDirty" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} *]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -331,7 +331,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";PerformanceBaseFileName" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";PerformanceBaseFileName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -444,6 +444,15 @@
           <Val><![CDATA[Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Arquivos Python (*.py;*.pyw)|*.py;*.pyw|Todos os Arquivos (*.*)|*.*]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Reports" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Reports]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Relatórios]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -796,7 +805,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17150.1]]></Val>
+        <Val><![CDATA[3.0.17270.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -832,7 +841,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17150.1]]></Val>
+        <Val><![CDATA[3.0.17270.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
