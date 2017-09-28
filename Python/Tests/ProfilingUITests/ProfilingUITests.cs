@@ -21,12 +21,11 @@ using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Automation;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Profiling;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
@@ -34,60 +33,41 @@ using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
+using Task = System.Threading.Tasks.Task;
 
 namespace ProfilingUITests {
-    //[TestClass]
     public class ProfilingUITests {
-        bool _waitOnNormalExit, _waitOnAbnormalExit;
 
-        [TestInitialize]
-        public void TestInitialize(VisualStudioApp app) {
-            IVsShell shell = (IVsShell)app.ServiceProvider.GetService(typeof(IVsShell));
-            Guid perfGuid = new Guid("{F4A63B2A-49AB-4b2d-AA59-A10F01026C89}");
-            int installed;
-            ErrorHandler.ThrowOnFailure(
-                shell.IsPackageInstalled(ref perfGuid, out installed)
-            );
-            if (installed == 0) {
-                Assert.Fail("Profiling is not installed");
-                return;
+        public class DotNotWaitOnExit : PythonDebuggingGeneralOptionsSetter {
+            public DotNotWaitOnExit(EnvDTE.DTE dte) :
+                base(dte, waitOnNormalExit: false, waitOnAbnormalExit: false) {
             }
-
-            PythonToolsService pyService;
-            try {
-                pyService = app.ServiceProvider.GetPythonToolsService_NotThreadSafe();
-            } catch (InvalidOperationException) {
-                // Nothing to initialize
-                return;
-            }
-            _waitOnNormalExit = pyService.DebuggerOptions.WaitOnNormalExit;
-            _waitOnAbnormalExit = pyService.DebuggerOptions.WaitOnAbnormalExit;
-            pyService.DebuggerOptions.WaitOnNormalExit = false;
-            pyService.DebuggerOptions.WaitOnAbnormalExit = false;
         }
 
-        [TestCleanup]
-        public void DeleteVspFiles(VisualStudioApp app) {
-            try {
-                foreach (var file in Directory.EnumerateFiles(Path.GetTempPath(), "*.vsp", SearchOption.TopDirectoryOnly)) {
-                    try {
-                        File.Delete(file);
-                    } catch {
-                        // Weak attempt only
-                    }
-                }
-            } catch {
+        public class ProfilePackageLoader : IDisposable {
+            public ProfilePackageLoader(EnvDTE.DTE dte) {
+                var sp = dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+                var shell = (IVsShell)sp.QueryService<IVsShell>();
+                Guid perfGuid = new Guid("{F4A63B2A-49AB-4b2d-AA59-A10F01026C89}");
+                int installed;
+                ErrorHandler.ThrowOnFailure(
+                    shell.IsPackageInstalled(ref perfGuid, out installed)
+                );
+                Assert.AreNotEqual(0, installed, "Profiling is not installed");
             }
 
-            PythonToolsService pyService;
-            try {
-                pyService = app.ServiceProvider.GetPythonToolsService_NotThreadSafe();
-            } catch (InvalidOperationException) {
-                // Nothing to uninitialize
-                return;
+            public void Dispose() {
+                try {
+                    foreach (var file in Directory.EnumerateFiles(Path.GetTempPath(), "*.vsp", SearchOption.TopDirectoryOnly)) {
+                        try {
+                            File.Delete(file);
+                        } catch {
+                            // Weak attempt only
+                        }
+                    }
+                } catch {
+                }
             }
-            pyService.DebuggerOptions.WaitOnNormalExit = _waitOnNormalExit;
-            pyService.DebuggerOptions.WaitOnAbnormalExit = _waitOnAbnormalExit;
         }
 
         private string SaveDirectory {
@@ -98,9 +78,7 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void DefaultInterpreterSelected(PythonVisualStudioApp app) {
+        public void DefaultInterpreterSelected(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var service = app.InterpreterService;
             var options = app.OptionsService;
             var originalDefault = options.DefaultInterpreter;
@@ -118,10 +96,9 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void StartupProjectSelected(PythonVisualStudioApp app) {
-            app.OpenProject(TestData.GetPath(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln"));
+        public void StartupProjectSelected(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
+            var sln = app.CopyProjectForTest(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln");
+            app.OpenProject(sln);
 
             foreach (var project in app.Dte.Solution.Projects.Cast<EnvDTE.Project>()) {
                 var tree = app.OpenSolutionExplorer();
@@ -217,28 +194,30 @@ namespace ProfilingUITests {
             return LaunchSession(app, () => profiling.LaunchProject(project, openReport));
         }
 
-        private void OpenProfileTestProject(
+        private void CopyAndOpenProject(
             PythonVisualStudioApp app,
             out EnvDTE.Project project,
             out IPythonProfiling profiling,
             string projectFile = @"TestData\ProfileTest.sln"
         ) {
-            profiling = (IPythonProfiling)app.Dte.GetObject("PythonProfiling");
+            profiling = GetProfiling(app);
+
+            Assert.IsNotNull(projectFile);
+
+            var sln = app.CopyProjectForTest(projectFile);
+            project = app.OpenProject(sln);
+        }
+
+        private IPythonProfiling GetProfiling(PythonVisualStudioApp app) {
+            var profiling = (IPythonProfiling)app.Dte.GetObject("PythonProfiling");
 
             // no sessions yet
             Assert.IsNull(profiling.GetSession(1));
 
-            if (string.IsNullOrEmpty(projectFile)) {
-                project = null;
-            } else {
-                project = app.OpenProject(projectFile);
-            }
+            return profiling;
         }
 
-
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void NewProfilingSession(PythonVisualStudioApp app) {
+        public void NewProfilingSession(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             PythonPaths.Python27.AssertInstalled();
 
             var testFile = TestData.GetPath(@"TestData\ProfileTest\Program.py");
@@ -285,12 +264,7 @@ namespace ProfilingUITests {
             }
         }
 
-        /// <summary>
-        /// https://pytools.codeplex.com/workitem/1179
-        /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void DeleteMultipleSessions(PythonVisualStudioApp app) {
+        public void DeleteMultipleSessions(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             app.Dte.Solution.Close(false);
 
             app.OpenPythonPerformance();
@@ -324,12 +298,10 @@ namespace ProfilingUITests {
             Assert.IsNull(app.PythonPerformanceExplorerTreeView.WaitForItemRemoved("Performance1 *"));
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void NewProfilingSessionOpenSolution(PythonVisualStudioApp app) {
+        public void NewProfilingSessionOpenSolution(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
+            CopyAndOpenProject(app, out project, out profiling);
             app.OpenPythonPerformance();
             app.PythonPerformanceExplorerToolBar.NewPerfSession();
 
@@ -364,9 +336,7 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchPythonProfilingWizard(PythonVisualStudioApp app) {
+        public void LaunchPythonProfilingWizard(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
             using (var perfTarget = app.LaunchPythonProfiling()) {
@@ -394,13 +364,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchProject(PythonVisualStudioApp app) {
+        public void LaunchProject(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 while (profiling.IsProfiling) {
                     Thread.Sleep(100);
@@ -420,13 +389,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchProjectWithSpaceInFilename(PythonVisualStudioApp app) {
+        public void LaunchProjectWithSpaceInFilename(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, @"TestData\Profile Test.sln");
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\Profile Test"), false);
+            CopyAndOpenProject(app, out project, out profiling, @"TestData\Profile Test.sln");
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 while (profiling.IsProfiling) {
                     Thread.Sleep(100);
@@ -446,13 +414,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchProjectWithSearchPath(PythonVisualStudioApp app) {
+        public void LaunchProjectWithSearchPath(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, @"TestData\ProfileTestSysPath.sln");
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
+            CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTestSysPath.sln");
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 while (profiling.IsProfiling) {
                     Thread.Sleep(100);
@@ -472,19 +439,19 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchProjectWithPythonPathSet(PythonVisualStudioApp app) {
+        public void LaunchProjectWithPythonPathSet(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, @"TestData\ProfileTestSysPath.sln");
+            CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTestSysPath.sln");
+            var projDir = PathUtils.GetParent(project.FullName);
             IPythonProfileSession session = null;
+            // TODO: hugues - use new setter classes for these
             var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
             var oldClearPythonPath = app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath;
             try {
-                Environment.SetEnvironmentVariable("PYTHONPATH", TestData.GetPath(@"TestData\ProfileTestSysPath\B"));
+                Environment.SetEnvironmentVariable("PYTHONPATH", Path.Combine(projDir, "B"));
                 app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = false;
-                session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
+                session = LaunchProject(app, profiling, project, projDir, false);
 
                 while (profiling.IsProfiling) {
                     Thread.Sleep(100);
@@ -508,19 +475,19 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchProjectWithPythonPathClear(PythonVisualStudioApp app) {
+        public void LaunchProjectWithPythonPathClear(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, @"TestData\ProfileTestSysPath.sln");
+            CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTestSysPath.sln");
+            var projDir = PathUtils.GetParent(project.FullName);
             IPythonProfileSession session = null;
+            // TODO: hugues - use new setter classes for these
             var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
             var oldClearPythonPath = app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath;
             try {
-                Environment.SetEnvironmentVariable("PYTHONPATH", TestData.GetPath(@"TestData\ProfileTestSysPath\B"));
+                Environment.SetEnvironmentVariable("PYTHONPATH", Path.Combine(projDir, "B"));
                 app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = true;
-                session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
+                session = LaunchProject(app, profiling, project, projDir, false);
 
                 while (profiling.IsProfiling) {
                     Thread.Sleep(100);
@@ -544,14 +511,12 @@ namespace ProfilingUITests {
             }
         }
 
-
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchProjectWithEnvironment(PythonVisualStudioApp app) {
+        public void LaunchProjectWithEnvironment(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, @"TestData\ProfileTestEnvironment.sln");
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestEnvironment"), false);
+            CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTestEnvironment.sln");
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 while (profiling.IsProfiling) {
                     Thread.Sleep(100);
@@ -569,13 +534,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestSaveDirtySession(PythonVisualStudioApp app) {
+        public void TestSaveDirtySession(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 while (profiling.IsProfiling) {
                     Thread.Sleep(100);
@@ -607,13 +571,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestDeleteReport(PythonVisualStudioApp app) {
+        public void TestDeleteReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 string reportFilename;
                 WaitForReport(profiling, session, app, out reportFilename);
@@ -628,13 +591,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestCompareReports(PythonVisualStudioApp app) {
+        public void TestCompareReports(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 for (int i = 0; i < 100 && profiling.IsProfiling; i++) {
                     Thread.Sleep(100);
@@ -697,14 +659,12 @@ namespace ProfilingUITests {
             }
         }
 
-
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestRemoveReport(PythonVisualStudioApp app) {
+        public void TestRemoveReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             string reportFilename;
             WaitForReport(profiling, session, app, out reportFilename);
 
@@ -715,15 +675,12 @@ namespace ProfilingUITests {
             Assert.IsTrue(File.Exists(reportFilename));
         }
 
-        // P2 because the report viewer may crash VS depending on prior state.
-        // We will restart VS before running this test to ensure it is clean.
-        //[TestMethod, Priority(2), TestCategory("RestartVS")]
-        //[TestCategory("Installed")]
-        public void TestOpenReport(PythonVisualStudioApp app) {
+        public void TestOpenReport(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 IPythonPerformanceReport report;
                 AutomationElement child;
@@ -763,13 +720,12 @@ namespace ProfilingUITests {
             AutomationWrapper.EnsureExpanded(child);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestOpenReportCtxMenu(PythonVisualStudioApp app) {
+        public void TestOpenReportCtxMenu(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
                 IPythonPerformanceReport report;
                 AutomationElement child;
@@ -786,13 +742,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestTargetPropertiesForProject(PythonVisualStudioApp app) {
+        public void TestTargetPropertiesForProject(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             while (profiling.IsProfiling) {
                 Thread.Sleep(100);
             }
@@ -810,19 +765,17 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestTargetPropertiesForInterpreter(PythonVisualStudioApp app) {
+        public void TestTargetPropertiesForInterpreter(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             PythonPaths.Python27.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
             var session = LaunchProcess(app,
                 profiling,
                 "Global|PythonCore|2.7-32",
-                TestData.GetPath(@"TestData\ProfileTest\Program.py"),
-                TestData.GetPath(@"TestData\ProfileTest"),
+                Path.Combine(projDir, "Program.py"),
+                projDir,
                 "",
                 false
             );
@@ -853,20 +806,18 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestTargetPropertiesForExecutable(PythonVisualStudioApp app) {
+        public void TestTargetPropertiesForExecutable(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
             var session = LaunchProcess(app,
                 profiling,
                 interp.InterpreterPath,
-                TestData.GetPath(@"TestData\ProfileTest\Program.py"),
-                TestData.GetPath(@"TestData\ProfileTest"),
+                Path.Combine(projDir, "Program.py"),
+                projDir,
                 "",
                 false
             );
@@ -891,20 +842,18 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void TestStopProfiling(PythonVisualStudioApp app) {
+        public void TestStopProfiling(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
             var session = LaunchProcess(app,
                 profiling,
                 interp.InterpreterPath,
-                TestData.GetPath(@"TestData\ProfileTest\InfiniteProfile.py"),
-                TestData.GetPath(@"TestData\ProfileTest"),
+                Path.Combine(projDir, "InfiniteProfile.py"),
+                projDir,
                 "",
                 false
             );
@@ -951,13 +900,12 @@ namespace ProfilingUITests {
             Keyboard.PressAndRelease(System.Windows.Input.Key.Delete);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void MultipleTargets(PythonVisualStudioApp app) {
+        public void MultipleTargets(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             IPythonProfileSession session2 = null;
             try {
                 {
@@ -981,8 +929,8 @@ namespace ProfilingUITests {
                     interp.AssertInstalled();
 
                     session2 = LaunchProcess(app, profiling, interp.InterpreterPath,
-                        TestData.GetPath(@"TestData\ProfileTest\Program.py"),
-                        TestData.GetPath(@"TestData\ProfileTest"),
+                        Path.Combine(projDir, "Program.py"),
+                        projDir,
                         "",
                         false
                     );
@@ -1010,13 +958,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void MultipleTargetsWithProjectHome(PythonVisualStudioApp app) {
+        public void MultipleTargetsWithProjectHome(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, @"TestData\ProfileTest2.sln");
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest2"), false);
+            CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTest2.sln");
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             IPythonProfileSession session2 = null;
             try {
                 {
@@ -1040,8 +987,8 @@ namespace ProfilingUITests {
                     interp.AssertInstalled();
 
                     session2 = LaunchProcess(app, profiling, interp.InterpreterPath,
-                        TestData.GetPath(@"TestData\ProfileTest\Program.py"),
-                        TestData.GetPath(@"TestData\ProfileTest"),
+                        Path.Combine(projDir, "Program.py"),
+                        projDir,
                         "",
                         false
                     );
@@ -1069,13 +1016,12 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void MultipleReports(PythonVisualStudioApp app) {
+        public void MultipleReports(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling);
-            var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
+            CopyAndOpenProject(app, out project, out profiling);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
             try {
 
                 while (profiling.IsProfiling) {
@@ -1105,19 +1051,16 @@ namespace ProfilingUITests {
             }
         }
 
-
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchExecutable(PythonVisualStudioApp app) {
+        public void LaunchExecutable(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
             var session = LaunchProcess(app, profiling, interp.InterpreterPath,
-                TestData.GetPath(@"TestData\ProfileTest\Program.py"),
-                TestData.GetPath(@"TestData\ProfileTest"),
+                Path.Combine(projDir, "Program.py"),
+                projDir,
                 "",
                 false
             );
@@ -1140,18 +1083,16 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void ClassProfile(PythonVisualStudioApp app) {
+        public void ClassProfile(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
             var session = LaunchProcess(app, profiling, interp.InterpreterPath,
-                TestData.GetPath(@"TestData\ProfileTest\ClassProfile.py"),
-                TestData.GetPath(@"TestData\ProfileTest"),
+                Path.Combine(projDir, "ClassProfile.py"),
+                projDir,
                 "",
                 false
             );
@@ -1175,9 +1116,7 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void OldClassProfile(PythonVisualStudioApp app) {
+        public void OldClassProfile(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             bool anyMissing = false;
 
             foreach (var version in new[] { PythonPaths.Python26, PythonPaths.Python27 }) {
@@ -1186,12 +1125,12 @@ namespace ProfilingUITests {
                     continue;
                 }
 
-                EnvDTE.Project project;
-                IPythonProfiling profiling;
-                OpenProfileTestProject(app, out project, out profiling, null);
+                IPythonProfiling profiling = GetProfiling(app);
+                var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+                var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
                 var session = LaunchProcess(app, profiling, version.InterpreterPath,
-                    TestData.GetPath(@"TestData\ProfileTest\OldStyleClassProfile.py"),
-                    TestData.GetPath(@"TestData\ProfileTest"),
+                    Path.Combine(projDir, "OldStyleClassProfile.py"),
+                    projDir,
                     "",
                     false
                 );
@@ -1222,19 +1161,16 @@ namespace ProfilingUITests {
             }
         }
 
-
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void DerivedProfile(PythonVisualStudioApp app) {
+        public void DerivedProfile(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
             var session = LaunchProcess(app, profiling, interp.InterpreterPath,
-                TestData.GetPath(@"TestData\ProfileTest\DerivedProfile.py"),
-                TestData.GetPath(@"TestData\ProfileTest"),
+                Path.Combine(projDir, "DerivedProfile.py"),
+                projDir,
                 "",
                 false
             );
@@ -1257,15 +1193,11 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void Pystone(PythonVisualStudioApp app) {
+        public void Pystone(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             var interp = PythonPaths.Python27;
             interp.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
             var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                 Path.Combine(interp.PrefixPath, "Lib", "test", "pystone.py"),
                 Path.Combine(interp.PrefixPath, "Lib", "test"),
@@ -1291,12 +1223,12 @@ namespace ProfilingUITests {
         private void BuiltinsProfile(PythonVisualStudioApp app, PythonVersion interp, string[] expectedFunctions, string[] expectedNonFunctions) {
             interp.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
             var session = LaunchProcess(app, profiling, interp.Id,
-                TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
-                TestData.GetPath(@"TestData\ProfileTest"),
+                Path.Combine(projDir, "BuiltinsProfile.py"),
+                projDir,
                 "",
                 false
             );
@@ -1325,11 +1257,7 @@ namespace ProfilingUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython26(PythonVisualStudioApp app) {
-            TestInitialize(app);
-
+        public void BuiltinsProfilePython26(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python26,
@@ -1338,9 +1266,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython27(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython27(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python27,
@@ -1349,9 +1275,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython27x64(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython27x64(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python27_x64,
@@ -1360,9 +1284,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython31(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython31(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python31,
@@ -1371,9 +1293,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython32(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython32(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python32,
@@ -1382,9 +1302,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython32x64(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython32x64(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python32_x64,
@@ -1393,9 +1311,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython33(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython33(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python33,
@@ -1404,9 +1320,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython33x64(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython33x64(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python33_x64,
@@ -1415,9 +1329,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython34(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython34(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python34,
@@ -1426,9 +1338,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython34x64(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython34x64(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python34_x64,
@@ -1437,9 +1347,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython35(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython35(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python35,
@@ -1448,9 +1356,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython35x64(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython35x64(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python35_x64,
@@ -1459,9 +1365,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython36(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython36(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python36,
@@ -1470,9 +1374,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython36x64(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython36x64(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python36_x64,
@@ -1481,9 +1383,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython37(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython37(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python37,
@@ -1492,9 +1392,7 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void BuiltinsProfilePython37x64(PythonVisualStudioApp app) {
+        public void BuiltinsProfilePython37x64(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
                 PythonPaths.Python37_x64,
@@ -1503,18 +1401,16 @@ namespace ProfilingUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void LaunchExecutableUsingInterpreterGuid(PythonVisualStudioApp app) {
+        public void LaunchExecutableUsingInterpreterGuid(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
             PythonPaths.Python27.AssertInstalled();
 
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            OpenProfileTestProject(app, out project, out profiling, null);
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
             var session = LaunchProcess(app, profiling,
                 PythonPaths.Python27.Id,
-                TestData.GetPath(@"TestData\ProfileTest\Program.py"),
-                TestData.GetPath(@"TestData\ProfileTest"),
+                Path.Combine(projDir, "Program.py"),
+                projDir,
                 "",
                 false
             );

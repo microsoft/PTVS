@@ -136,7 +136,9 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.TestRemoveReport));
         }
 
-        [TestMethod, Priority(1)]
+        // P2 because the report viewer may crash VS depending on prior state.
+        // We will restart VS before running this test to ensure it is clean.
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestOpenReport() {
             _vs.RunTest(nameof(PUIT.TestOpenReport));
@@ -178,6 +180,7 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.MultipleTargets));
         }
 
+        [Ignore] // project needs upgrade
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void MultipleTargetsWithProjectHome() {
