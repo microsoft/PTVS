@@ -40,11 +40,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             switch (commandId) {
                 case GetTestCasesCommand:
                     IProjectEntry projEntry;
-                    IEnumerable<TestCaseInfo> testCases;
-                    if (_analyzer.TryGetProjectEntryByPath(body, out projEntry)) {
-                        testCases = GetTestCasesFromAnalysis(projEntry);
-                    } else {
-                        testCases = GetTestCasesFromAst(body);
+                    var testCases = new List<TestCaseInfo>();
+                    foreach (var f in body.Split(';')) {
+                        if (_analyzer.TryGetProjectEntryByPath(f, out projEntry)) {
+                            testCases.AddRange(GetTestCasesFromAnalysis(projEntry));
+                        } else {
+                            testCases.AddRange(GetTestCasesFromAst(f));
+                        }
                     }
 
                     return serializer.Serialize(testCases.Select(tc => tc.AsDictionary()).ToArray());

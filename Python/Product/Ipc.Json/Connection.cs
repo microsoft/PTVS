@@ -323,8 +323,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 // was completed.  That's okay, there's no one waiting on the 
                 // response anymore.
                 if (_requestCache.TryGetValue(reqSeq.Value, out r)) {
-                    r.message = packet["message"].ToObject<string>();
-                    r.success = packet["success"].ToObject<bool>();
+                    r.message = packet["message"]?.ToObject<string>() ?? string.Empty;
+                    r.success = packet["success"]?.ToObject<bool>() ?? false;
                     r.SetResponse(body);
                 }
             }
@@ -571,6 +571,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             public int request_seq;
             public bool success;
             public string command;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string message;
             public object body;
         }
