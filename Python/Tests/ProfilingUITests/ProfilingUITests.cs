@@ -445,30 +445,26 @@ namespace ProfilingUITests {
             CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTestSysPath.sln");
             var projDir = PathUtils.GetParent(project.FullName);
             IPythonProfileSession session = null;
-            // TODO: hugues - use new setter classes for these
-            var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
-            var oldClearPythonPath = app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath;
             try {
-                Environment.SetEnvironmentVariable("PYTHONPATH", Path.Combine(projDir, "B"));
-                app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = false;
-                session = LaunchProject(app, profiling, project, projDir, false);
+                using (new PythonServiceGeneralOptionsSetter(app.PythonToolsService, clearGlobalPythonPath: false))
+                using (new EnvironmentVariableSetter("PYTHONPATH", Path.Combine(projDir, "B"))) {
+                    session = LaunchProject(app, profiling, project, projDir, false);
 
-                while (profiling.IsProfiling) {
-                    Thread.Sleep(100);
+                    while (profiling.IsProfiling) {
+                        Thread.Sleep(100);
+                    }
+
+                    var report = session.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("HelloWorld"));
+
+                    Assert.IsNull(session.GetReport(2));
+
+                    Assert.IsNotNull(session.GetReport(report.Filename));
+
+                    VerifyReport(report, true, "B.mod2.func");
                 }
-
-                var report = session.GetReport(1);
-                var filename = report.Filename;
-                Assert.IsTrue(filename.Contains("HelloWorld"));
-
-                Assert.IsNull(session.GetReport(2));
-
-                Assert.IsNotNull(session.GetReport(report.Filename));
-
-                VerifyReport(report, true, "B.mod2.func");
             } finally {
-                app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = oldClearPythonPath;
-                Environment.SetEnvironmentVariable("PYTHONPATH", oldPythonPath);
                 if (session != null) {
                     profiling.RemoveSession(session, true);
                 }
@@ -481,30 +477,26 @@ namespace ProfilingUITests {
             CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTestSysPath.sln");
             var projDir = PathUtils.GetParent(project.FullName);
             IPythonProfileSession session = null;
-            // TODO: hugues - use new setter classes for these
-            var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
-            var oldClearPythonPath = app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath;
             try {
-                Environment.SetEnvironmentVariable("PYTHONPATH", Path.Combine(projDir, "B"));
-                app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = true;
-                session = LaunchProject(app, profiling, project, projDir, false);
+                using (new PythonServiceGeneralOptionsSetter(app.PythonToolsService, clearGlobalPythonPath: true))
+                using (new EnvironmentVariableSetter("PYTHONPATH", Path.Combine(projDir, "B"))) {
+                    session = LaunchProject(app, profiling, project, projDir, false);
 
-                while (profiling.IsProfiling) {
-                    Thread.Sleep(100);
+                    while (profiling.IsProfiling) {
+                        Thread.Sleep(100);
+                    }
+
+                    var report = session.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("HelloWorld"));
+
+                    Assert.IsNull(session.GetReport(2));
+
+                    Assert.IsNotNull(session.GetReport(report.Filename));
+
+                    VerifyReport(report, true, "A.mod.func");
                 }
-
-                var report = session.GetReport(1);
-                var filename = report.Filename;
-                Assert.IsTrue(filename.Contains("HelloWorld"));
-
-                Assert.IsNull(session.GetReport(2));
-
-                Assert.IsNotNull(session.GetReport(report.Filename));
-
-                VerifyReport(report, true, "A.mod.func");
             } finally {
-                app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = oldClearPythonPath;
-                Environment.SetEnvironmentVariable("PYTHONPATH", oldPythonPath);
                 if (session != null) {
                     profiling.RemoveSession(session, true);
                 }
