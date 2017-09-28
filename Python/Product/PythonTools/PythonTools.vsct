@@ -429,8 +429,8 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
         <Strings>
-          <ButtonText>&amp;Import coverage file...</ButtonText>
-          <ToolTipText>Imports a coverage.xml file produced by coverage.py.</ToolTipText>
+          <ButtonText>&amp;Import coverage.py XML file...</ButtonText>
+          <ToolTipText>Imports an XML file produced by coverage.py.</ToolTipText>
           <CanonicalName>Import Coverage</CanonicalName>
           <LocCanonicalName>Import Coverage</LocCanonicalName>
         </Strings>

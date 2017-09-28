@@ -18,7 +18,9 @@
     <ProjectFile Include="IpcJsonTests\IpcJsonTests.csproj" />
     <ProjectFile Include="TestAdapterTests\TestAdapterTests.csproj" />
     <ProjectFile Include="VSInterpretersTests\VSInterpretersTests.csproj" />
+    <ProjectFile Include="ProfilingTests\ProfilingTests.csproj" />
     <ProjectFile Include="ProfilingUITests\ProfilingUITests.csproj" />
+    <ProjectFile Include="ProfilingUITestsRunner\ProfilingUITestsRunner.csproj" />
     <ProjectFile Include="Core\PythonToolsTests.csproj" />
     <ProjectFile Include="Core.UI\PythonToolsUITests.csproj" />
     <ProjectFile Include="IronPython\IronPythonTests.csproj" Condition="'$(IncludeIronPython)' == 'True'" />
