@@ -17,15 +17,11 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace DjangoUITests {
-    //[TestClass]
     public class DjangoAzureProjectUITests {
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddCloudProject(VisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,

@@ -26,7 +26,7 @@ namespace DjangoUITestsRunner {
             // Remote container (DLL) name
             "Microsoft.PythonTools.Tests.DjangoUITests",
             // Remote class name
-            $"DjangoProjectUITests.{GetType().Name}"
+            $"DjangoUITests.{GetType().Name}"
         );
 
         public TestContext TestContext { get; set; }

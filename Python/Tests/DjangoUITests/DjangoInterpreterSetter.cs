@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,18 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using TestUtilities;
-using TestUtilities.UI;
+using System;
+using TestUtilities.Python;
 
 namespace DjangoUITests {
-    public class DjangoDebugProjectUITests {
-        public void DebugDjangoProject(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
-            DebuggerUITests.DebugProjectUITests.OpenProjectAndBreak(
-                app,
-                TestData.GetPath(@"TestData\DjangoDebugProject.sln"),
-                @"TestApp\views.py",
-                5,
-                false);
+    public class DjangoInterpreterSetter : InterpreterWithPackageSetter {
+        public DjangoInterpreterSetter(IServiceProvider site) :
+            base(site, "django") {
         }
     }
 }

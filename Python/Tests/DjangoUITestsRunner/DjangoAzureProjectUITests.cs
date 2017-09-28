@@ -26,7 +26,7 @@ namespace DjangoUITestsRunner {
             // Remote container (DLL) name
             "Microsoft.PythonTools.Tests.DjangoUITests",
             // Remote class name
-            $"DjangoAzureProjectUITests.{GetType().Name}"
+            $"DjangoUITests.{GetType().Name}"
         );
 
         public TestContext TestContext { get; set; }
@@ -39,7 +39,7 @@ namespace DjangoUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void AddCloudProject() {
             _vs.RunTest(nameof(DjangoUITests.DjangoAzureProjectUITests.AddCloudProject));
