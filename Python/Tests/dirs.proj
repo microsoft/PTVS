@@ -22,12 +22,13 @@
     <ProjectFile Include="ProfilingUITestsRunner\ProfilingUITestsRunner.csproj" />
     <ProjectFile Include="Core\PythonToolsTests.csproj" />
     <ProjectFile Include="Core.UI\PythonToolsUITests.csproj" />
+    <ProjectFile Include="PythonToolsUITestsRunner\PythonToolsUITestsRunner.csproj" />
     <ProjectFile Include="IronPython\IronPythonTests.csproj" Condition="'$(IncludeIronPython)' == 'True'" />
     <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
     <ProjectFile Include="PythonToolsMockTests\PythonToolsMockTests.csproj" />
     <ProjectFile Include="ProjectUITests\ProjectUITests.csproj" />
-    <ProjectFile Include="PythonToolsUITestsRunner\PythonToolsUITestsRunner.csproj" />
+    <ProjectFile Include="ProjectUITestsRunner\ProjectUITestsRunner.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

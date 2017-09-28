@@ -33,12 +33,9 @@ using TestUtilities.UI;
 using VSLangProj;
 
 namespace ProjectUITests {
-    [TestClass]
     public class BasicProjectTests {
 
 #if FALSE
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void LoadNodejsProject() {
             string fullPath = Path.GetFullPath(@"TestData\NodejsProjectData\HelloWorld.sln");
             Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
@@ -53,8 +50,6 @@ namespace ProjectUITests {
             Assert.AreEqual("HelloWorld.njsproj", Path.GetFileName(project.FileName), "Wrong project file name");
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void SaveProjectAs() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -92,8 +87,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameProjectTest() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\RenameProjectTest.sln");
@@ -152,8 +145,6 @@ namespace ProjectUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectAddItem(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = BasicProject(projectType).Generate().ToVs(app)) {
@@ -191,8 +182,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CleanSolution(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -223,8 +212,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void BuildSolution(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -255,8 +242,6 @@ namespace ProjectUITests {
             }
         }
 #if FALSE
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectAddFolder() {
             try {
                 string fullPath = TestData.GetPath(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -299,8 +284,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectAddFolderThroughUI() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\AddFolderExists.sln");
@@ -346,8 +329,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void TestAddExistingFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -378,8 +359,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void TestAddExistingFolderProject() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -398,8 +377,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void TestAddExistingFolderDebugging() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddExistingFolder.sln");
             var window = project.ProjectItems.Item("server.js").Open();
@@ -457,8 +434,6 @@ namespace ProjectUITests {
         /// 4) Change name
         /// 5) Enter to commit
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectAddAndRenameFolder() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -490,8 +465,6 @@ namespace ProjectUITests {
         /// 3) Rename nested folder
         /// 4) Drag and drop nested folder onto project
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectAddAndMoveRenamedFolder() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -530,8 +503,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectBuild() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -544,8 +515,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectRenameAndDeleteItem() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\RenameItemsTest.sln");
@@ -623,8 +592,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void TestAutomationProperties() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -696,8 +663,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void TestAutomationProject() {
             try {
                 var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
@@ -741,8 +706,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void TestProjectItemAutomation() {
             var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
@@ -761,8 +724,6 @@ namespace ProjectUITests {
             AssertError<ArgumentException>(() => item.Open("ThisIsNotTheGuidYoureLookingFor"));
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void TestRelativePaths() {
             // link to outside file should show up as top-level item
             var project = OpenProject(@"TestData\NodejsProjectData\RelativePaths.sln");
@@ -771,8 +732,6 @@ namespace ProjectUITests {
             Assert.IsNotNull(item);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectConfiguration() {
             var project = OpenProject(@"TestData\NodejsProjectData\HelloWorld.sln");
 
@@ -803,8 +762,6 @@ namespace ProjectUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddFolderExists() {
             Directory.CreateDirectory(TestData.GetPath(@"TestData\NodejsProjectData\\AddFolderExists\\X"));
             Directory.CreateDirectory(TestData.GetPath(@"TestData\NodejsProjectData\\AddFolderExists\\Y"));
@@ -855,8 +812,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddFolderCopyAndPasteFile() {
             var project = OpenProject(@"TestData\NodejsProjectData\AddFolderCopyAndPasteFile.sln");
             using (var app = new VisualStudioApp()) {
@@ -896,8 +851,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyAndPasteFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\CopyAndPasteFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -936,8 +889,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyAndPasteEmptyFolder() {
             var project = OpenProject(@"TestData\NodejsProjectData\CopyAndPasteFolder.sln");
             using (var app = new VisualStudioApp()) {
@@ -986,8 +937,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Verify we can copy a folder with multiple items in it.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyFolderWithMultipleItems() {
             // http://mpfproj10.codeplex.com/workitem/11618
             var project = OpenProject(@"TestData\NodejsProjectData\FolderMultipleItems.sln");
@@ -1011,8 +960,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void LoadProjectWithDuplicateItems() {
             var solution = OpenProject(@"TestData\NodejsProjectData\DuplicateItems.sln");
 
@@ -1178,12 +1125,10 @@ namespace ProjectUITests {
             }
         }
 #endif
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void OpenCommandHere(VisualStudioApp app, ProjectGenerator pg) {
             var existing = System.Diagnostics.Process.GetProcesses().Select(x => x.Id).ToSet();
             try {
-                app.Dte.Commands.Item("File.OpenCommandPromptHere");
+                app.Dte.Commands.Item("Python.OpenCommandPromptHere");
             } catch (ArgumentException) {
                 Assert.Inconclusive("Open Command Prompt Here command is not implemented");
             }
@@ -1223,8 +1168,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void PasteFileWhileOpenInEditor(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1232,7 +1175,7 @@ namespace ProjectUITests {
                     projectType,
                     ProjectGenerator.Compile("server"),
                     ProjectGenerator.Folder("Folder", isExcluded: true),
-                    ProjectGenerator.Compile("Folder\\server", content: "// new server", isExcluded: true)
+                    ProjectGenerator.Compile("Folder\\server", content: projectType.SampleCode, isExcluded: true)
                 );
                 using (var solution = proj.Generate().ToVs(app)) {
                     var window = solution.GetProject("HelloWorld").ProjectItems.Item(projectType.Code("server")).Open();
@@ -1258,10 +1201,7 @@ namespace ProjectUITests {
                     );
 
                     System.Threading.Thread.Sleep(1000);
-                    solution.AssertFileExistsWithContent("// new server", "HelloWorld", "server" + projectType.CodeExtension);
-
-                    var dlg = solution.WaitForDialog(); // not a simple dialog we can check
-                    NativeMethods.EndDialog(dlg, new IntPtr((int)TestUtilities.MessageBoxButton.Yes));
+                    solution.AssertFileExistsWithContent(projectType.SampleCode, "HelloWorld", "server" + projectType.CodeExtension);
                 }
             }
         }
@@ -1270,8 +1210,6 @@ namespace ProjectUITests {
         /// Checks various combinations of item visibility from within the users project
         /// and from imported projects and how it's controlled by the Visible metadata.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ItemVisibility(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var imported = new ProjectDefinition(
@@ -1309,8 +1247,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ProjectAddExistingExcludedFolder(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -1451,8 +1387,6 @@ namespace ProjectUITests {
         /// 
         /// Make sure that our events fire correctly for the rename
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1502,8 +1436,6 @@ namespace ProjectUITests {
         /// 
         /// The existing item should be removed.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameFileExistsInHierarchy(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1547,8 +1479,6 @@ namespace ProjectUITests {
         /// 
         /// The rename should be cancelled.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameFileExistsInHierarchy_FileOpen_Cancel(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1581,9 +1511,9 @@ namespace ProjectUITests {
 
                         Keyboard.Type(System.Windows.Input.Key.F2);
                         Keyboard.Type("server2\r");
-                        solution.WaitForDialog();
-                        Keyboard.Type(System.Windows.Input.Key.Escape);
-                        solution.WaitForDialogDismissed();
+                        using (var dlg = AutomationDialog.WaitForDialog(app)) {
+                            dlg.WaitForClosed(TimeSpan.FromSeconds(10), dlg.CloseWindow);
+                        }
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server")));
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server2")));
                     } finally {
@@ -1601,8 +1531,6 @@ namespace ProjectUITests {
         /// 
         /// The rename should be cancelled.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameFileExistsInHierarchy_FileOpen_Save(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1635,10 +1563,9 @@ namespace ProjectUITests {
 
                         Keyboard.Type(System.Windows.Input.Key.F2);
                         Keyboard.Type("server2\r");
-                        solution.WaitForDialog();
-                        Keyboard.Type("Y");
-                        System.Threading.Thread.Sleep(500);
-                        solution.WaitForDialog();
+                        using (var dlg = AutomationDialog.WaitForDialog(app)) {
+                            dlg.ClickButtonAndClose("Yes");
+                        }
                         Keyboard.Type(System.Windows.Input.Key.Escape);
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server")));
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server2")));
@@ -1657,8 +1584,6 @@ namespace ProjectUITests {
         /// 
         /// The rename should be cancelled.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameFileExistsInHierarchy_FileOpen_DontSave(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1691,9 +1616,9 @@ namespace ProjectUITests {
 
                         Keyboard.Type(System.Windows.Input.Key.F2);
                         Keyboard.Type("server2\r");
-                        solution.WaitForDialog();
-                        Keyboard.Type("N");
-                        solution.WaitForDialogDismissed();
+                        using (var dlg = AutomationDialog.WaitForDialog(app)) {
+                            dlg.ClickButtonAndClose("No");
+                        }
                         Assert.IsNull(solution.FindItem("HelloWorld", projectType.Code("server")));
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server2")));
                     } finally {
@@ -1705,8 +1630,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void IsDocumentInProject(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(
@@ -1747,8 +1670,6 @@ namespace ProjectUITests {
         }
 
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DeleteFolderWithReadOnlyFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var proj = new ProjectDefinition(

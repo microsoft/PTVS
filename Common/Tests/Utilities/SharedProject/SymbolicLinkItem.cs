@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 using System;
 using System.IO;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace TestUtilities.SharedProject {
@@ -41,8 +42,12 @@ namespace TestUtilities.SharedProject {
             if (!IsMissing) {
                 var absName = Path.IsPathRooted(Name) ? Name : Path.Combine(project.DirectoryPath, Name);
                 var absReferencePath = Path.IsPathRooted(ReferencePath) ? ReferencePath : Path.Combine(project.DirectoryPath, ReferencePath);
-                
-                NativeMethods.CreateSymbolicLink(absName, absReferencePath);
+
+                try {
+                    NativeMethods.CreateSymbolicLink(absName, absReferencePath);
+                } catch (UnauthorizedAccessException ex) {
+                    Assert.Inconclusive(ex.Message);
+                }
             }
 
             if (!IsExcluded) {

@@ -279,6 +279,10 @@ namespace TestUtilities.UI {
             App.CheckMessageBox(button, text);
         }
 
+        public void MaybeCheckMessageBox(MessageBoxButton button, params string[] text) {
+            App.MaybeCheckMessageBox(button, text);
+        }
+
         public void Sleep(int ms) {
             Thread.Sleep(ms);
         }
