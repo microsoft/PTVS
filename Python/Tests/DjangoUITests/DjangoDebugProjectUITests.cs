@@ -14,17 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace DjangoUITests {
-    //[TestClass]
-    public class DjangoDebugProjectTests {
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void DebugDjangoProject(VisualStudioApp app) {
+    public class DjangoDebugProjectUITests {
+        public void DebugDjangoProject(VisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
             DebuggerUITests.DebugProjectUITests.OpenProjectAndBreak(
                 app,
                 TestData.GetPath(@"TestData\DjangoDebugProject.sln"),

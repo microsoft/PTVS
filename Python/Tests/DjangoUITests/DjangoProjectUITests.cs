@@ -21,22 +21,17 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Django;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using TestUtilities.UI.Python.Django;
 using PythonConstants = Microsoft.PythonTools.PythonConstants;
 
 namespace DjangoUITests {
-    //[TestClass]
-    public class DjangoProjectTests {
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
+    public class DjangoProjectUITests {
         public void NewDjangoProject(VisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
@@ -52,8 +47,6 @@ namespace DjangoUITests {
             Assert.IsNotNull(folder.ProjectItems.Item("wsgi.py"));
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void NewDjangoProjectSafeProjectName(VisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
@@ -72,38 +65,22 @@ namespace DjangoUITests {
             Assert.AreEqual("Django_Project__100.settings", settings);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public void DjangoCollectStaticFilesCommand(PythonVisualStudioApp app) {
-            var service = app.GetService<IComponentModel>(typeof(SComponentModel)).GetService<IInterpreterRegistryService>();
+        public void DjangoCollectStaticFilesCommand(PythonVisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
+            var sln = app.CopyProjectForTest(@"TestData\DjangoApplication.sln");
+            var project = app.OpenProject(sln);
+            app.SolutionExplorerTreeView.SelectProject(project);
 
-            var envWithDjango = service.Interpreters.LastOrDefault(env => env.FindModulesAsync("django").WaitAndUnwrapExceptions().Contains("django"));
-            if (envWithDjango == null) {
-                Assert.Inconclusive("No available environments have Django installed");
-            }
+            app.Dte.ExecuteCommand("Project.CollectStaticFiles");
 
-            using (app.SelectDefaultInterpreter(envWithDjango.Configuration)) {
-                var project = app.OpenProject(@"TestData\DjangoApplication.sln");
-                app.SolutionExplorerTreeView.SelectProject(project);
+            using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
+                Assert.IsNotNull(console);
 
-                app.Dte.ExecuteCommand("Project.CollectStaticFiles");
+                console.WaitForTextEnd("The interactive Python process has exited.", ">");
 
-                using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
-                    Assert.IsNotNull(console);
-
-                    console.WaitForTextEnd("The interactive Python process has exited.", ">");
-
-                    Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("0 static files copied"));
-                }
+                Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("0 static files copied"));
             }
         }
 
-
-        /// <summary>
-        /// http://pytools.codeplex.com/workitem/778
-        /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
         public void DjangoCommandsNonDjangoApp(VisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
@@ -130,8 +107,6 @@ namespace DjangoUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void StartNewApp(PythonVisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
@@ -184,8 +159,6 @@ namespace DjangoUITests {
             Assert.IsNotNull(project.ProjectItems.Item("NewPage.html"));
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void StartNewAppDuplicateName(VisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
@@ -218,11 +191,6 @@ namespace DjangoUITests {
             using (var dlg = AutomationDialog.WaitForDialog(app)) { }
         }
 
-        /// <summary>
-        /// http://pytools.codeplex.com/workitem/748
-        /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void StartNewAppSameAsProjectName(VisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
@@ -240,9 +208,6 @@ namespace DjangoUITests {
             using (var dlg = AutomationDialog.WaitForDialog(app)) { }
         }
 
-        [Ignore] // https://devdiv.visualstudio.com/DevDiv/_workitems?id=433488
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DebugProjectProperties(VisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
@@ -274,16 +239,16 @@ namespace DjangoUITests {
             dbgProps.AssertMatchesProject(project.GetPythonProject());
         }
 
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
         public void DjangoProjectWithSubdirectory(VisualStudioApp app) {
-            var project = app.OpenProject("TestData\\DjangoProjectWithSubDirectory.sln");
+            var sln = app.CopyProjectForTest(@"TestData\DjangoProjectWithSubDirectory.sln");
+            var slnDir = PathUtils.GetParent(sln);
+            var project = app.OpenProject(sln);
 
             var pyProj = project.GetPythonProject();
             var dsm = pyProj.Site.GetUIThread().Invoke(() => pyProj.GetProperty("DjangoSettingsModule"));
             Assert.AreEqual("config.settings", dsm);
             var workDir = pyProj.Site.GetUIThread().Invoke(() => pyProj.GetWorkingDirectory()).TrimEnd('\\');
-            Assert.AreEqual(TestData.GetPath("TestData\\DjangoProjectWithSubDirectory\\project"), workDir, true);
+            Assert.AreEqual(Path.Combine(slnDir, "DjangoProjectWithSubDirectory", "project"), workDir, true);
 
             var cmd = pyProj.FindCommand("DjangoCollectStaticCommand");
 
