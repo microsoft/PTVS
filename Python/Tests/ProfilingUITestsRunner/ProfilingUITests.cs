@@ -180,7 +180,6 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.MultipleTargets));
         }
 
-        [Ignore] // project needs upgrade
         [TestMethod, Priority(1)]
         [TestCategory("Installed")]
         public void MultipleTargetsWithProjectHome() {

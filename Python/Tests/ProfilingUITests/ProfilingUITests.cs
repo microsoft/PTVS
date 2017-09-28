@@ -959,11 +959,14 @@ namespace ProfilingUITests {
         }
 
         public void MultipleTargetsWithProjectHome(PythonVisualStudioApp app, ProfilePackageLoader pkgLoader, DotNotWaitOnExit optionSetter) {
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTest2.sln");
-            var projDir = PathUtils.GetParent(project.FullName);
-            var session = LaunchProject(app, profiling, project, projDir, false);
+            var profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest2.sln");
+            var slnDir = PathUtils.GetParent(sln);
+            var profileTestDir = Path.Combine(slnDir, "ProfileTest");
+            var profileTest2Dir = Path.Combine(slnDir, "ProfileTest2");
+            FileUtils.CopyDirectory(TestData.GetPath(@"TestData\ProfileTest"), profileTestDir);
+            var project = app.OpenProject(sln);
+            var session = LaunchProject(app, profiling, project, profileTest2Dir, false);
             IPythonProfileSession session2 = null;
             try {
                 {
@@ -987,8 +990,8 @@ namespace ProfilingUITests {
                     interp.AssertInstalled();
 
                     session2 = LaunchProcess(app, profiling, interp.InterpreterPath,
-                        Path.Combine(projDir, "Program.py"),
-                        projDir,
+                        Path.Combine(profileTestDir, "Program.py"),
+                        profileTestDir,
                         "",
                         false
                     );
