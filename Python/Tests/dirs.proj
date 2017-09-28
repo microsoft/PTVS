@@ -11,8 +11,9 @@
     <ProjectFile Include="DebuggerTests\DebuggerTests.csproj" />
     <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />
     <ProjectFile Include="DebuggerUITestsRunner\DebuggerUITestsRunner.csproj" />
-    <ProjectFile Include="Django\DjangoTests.csproj" />
-    <ProjectFile Include="Django.UI\DjangoUITests.csproj" />
+    <ProjectFile Include="DjangoTests\DjangoTests.csproj" />
+    <ProjectFile Include="DjangoUITests\DjangoUITests.csproj" />
+    <ProjectFile Include="DjangoUITestsRunner\DjangoUITestsRunner.csproj" />
     <ProjectFile Include="FastCgi\FastCgiTest.csproj" />
     <ProjectFile Include="IpcJsonTests\IpcJsonTests.csproj" />
     <ProjectFile Include="TestAdapterTests\TestAdapterTests.csproj" />

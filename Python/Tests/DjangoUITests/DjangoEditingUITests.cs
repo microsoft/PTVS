@@ -37,7 +37,7 @@ using TestUtilities.UI;
 
 namespace DjangoUITests {
     //[TestClass]
-    public class DjangoEditingTests {
+    public class DjangoEditingUITests {
         private IPythonInterpreterFactory PreviousDefault;
 
         [TestInitialize]

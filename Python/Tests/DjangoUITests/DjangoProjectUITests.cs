@@ -21,12 +21,10 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Django;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using TestUtilities.UI.Python.Django;
@@ -34,7 +32,7 @@ using PythonConstants = Microsoft.PythonTools.PythonConstants;
 
 namespace DjangoUITests {
     //[TestClass]
-    public class DjangoProjectTests {
+    public class DjangoProjectUITests {
         //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public void NewDjangoProject(VisualStudioApp app) {

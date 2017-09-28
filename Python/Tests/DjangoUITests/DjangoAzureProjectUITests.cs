@@ -23,7 +23,7 @@ using TestUtilities.UI.Python;
 
 namespace DjangoUITests {
     //[TestClass]
-    public class DjangoAzureProjectTests {
+    public class DjangoAzureProjectUITests {
         //[TestMethod, Priority(1)]
         //[TestCategory("Installed")]
         public void AddCloudProject(VisualStudioApp app) {
