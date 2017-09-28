@@ -29,16 +29,11 @@ using Keyboard = TestUtilities.UI.Keyboard;
 using Mouse = TestUtilities.UI.Mouse;
 
 namespace ProjectUITests {
-    //[TestClass]
     public class DragDropCopyCutPaste {
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MultiPasteKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MultiPaste(app, pg, CopyByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MultiPasteMouse(VisualStudioApp app, ProjectGenerator pg) {
             MultiPaste(app, pg, CopyByMouse);
         }
@@ -96,8 +91,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Cut item, paste into folder, paste into top-level, 2nd paste shouldn’t do anything
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutPastePasteItem(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -133,8 +126,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Cut item, rename it, paste into top-level, check error message
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutRenamePaste(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -169,8 +160,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Cut item, rename it, paste into top-level, check error message
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutDeletePaste(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -200,14 +189,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyFileToFolderTooLongKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             CopyFileToFolderTooLong(app, pg, CopyByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyFileToFolderTooLongMouse(VisualStudioApp app, ProjectGenerator pg) {
             CopyFileToFolderTooLong(app, pg, CopyByMouse);
         }
@@ -224,7 +209,7 @@ namespace ProjectUITests {
                     )
                 );
 
-                using (var solution = SolutionFile.Generate("LongFileNames", 29, testDef).ToVs(app)) {
+                using (var solution = SolutionFile.Generate("LongFileNames", 33, testDef).ToVs(app)) {
                     // find server, send copy & paste, verify copy of file is there
                     var projectNode = solution.WaitForItem("LFN");
                     AutomationWrapper.Select(projectNode);
@@ -257,14 +242,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutFileToFolderTooLongKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             CutFileToFolderTooLong(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutFileToFolderTooLongMouse(VisualStudioApp app, ProjectGenerator pg) {
             CutFileToFolderTooLong(app, pg, MoveByMouse);
         }
@@ -281,7 +262,7 @@ namespace ProjectUITests {
                     )
                 );
 
-                using (var solution = SolutionFile.Generate("LongFileNames", 29, testDef).ToVs(app)) {
+                using (var solution = SolutionFile.Generate("LongFileNames", 33, testDef).ToVs(app)) {
                     // find server, send copy & paste, verify copy of file is there
                     var projectNode = solution.WaitForItem("LFN");
                     AutomationWrapper.Select(projectNode);
@@ -317,8 +298,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Cut folder, rename it, paste into top-level, check error message
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutRenamePasteFolder(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -351,8 +330,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Copy a file node, drag and drop a different file, paste the node, should succeed
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopiedBeforeDragPastedAfterDrop(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -394,14 +371,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DragToAnotherProjectKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             DragToAnotherProject(app, pg, CopyByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DragToAnotherProjectMouse(VisualStudioApp app, ProjectGenerator pg) {
             DragToAnotherProject(app, pg, DragAndDrop);
         }
@@ -446,8 +419,6 @@ namespace ProjectUITests {
         /// Cut folder, paste onto itself, should report an error that the destination is the same as the source
         ///     Cannot move 'X'. The destination folder is the same as the source folder.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutFolderPasteOnSelf(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -475,8 +446,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Drag and drop a folder onto itself, nothing should happen
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DragFolderOntoSelf(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -504,8 +473,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Drag and drop a folder onto itself, nothing should happen
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DragFolderOntoChild(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -540,8 +507,6 @@ namespace ProjectUITests {
         /// Move a file to a location where A file with the same name now already exists.  We should get an overwrite
         /// dialog, and after answering yes to overwrite the file should be moved.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutFileReplace(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -571,8 +536,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutFolderAndFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -606,8 +569,6 @@ namespace ProjectUITests {
         /// Drag and drop a folder onto itself, nothing should happen
         ///     Cannot move 'CutFilePasteSameLocation'. The destination folder is the same as the source folder.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CutFilePasteSameLocation(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -636,8 +597,6 @@ namespace ProjectUITests {
         /// Drag and drop a folder onto itself, nothing should happen
         ///     Cannot move 'DragFolderAndFileToSameFolder'. The destination folder is the same as the source folder.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DragFolderAndFileOntoSelf(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -665,8 +624,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Add folder from another project, folder contains items on disk which are not in the project, only items in the project should be added.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyFolderFromAnotherHierarchy(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
@@ -705,8 +662,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyDeletePaste(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -742,14 +697,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CrossHierarchyFileDragAndDropKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             CrossHierarchyFileDragAndDrop(app, pg, CopyByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CrossHierarchyFileDragAndDropMouse(VisualStudioApp app, ProjectGenerator pg) {
             CrossHierarchyFileDragAndDrop(app, pg, DragAndDrop);
         }
@@ -788,14 +739,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFolderNameKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFolderName(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFolderNameMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFolderName(app, pg, MoveByMouse);
         }
@@ -827,14 +774,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyDuplicateFolderNameKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             CopyDuplicateFolderName(app, pg, CopyByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyDuplicateFolderNameMouse(VisualStudioApp app, ProjectGenerator pg) {
             CopyDuplicateFolderName(app, pg, CopyByMouse);
         }
@@ -862,7 +805,7 @@ namespace ProjectUITests {
                     );
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "This folder already contains a folder called 'CopyDuplicateFolderName'");
+                        AssertUtil.Contains(dialog.Text, "The folder 'CopyDuplicateFolderName' already exists.");
                         dialog.No();
                     }
 
@@ -871,14 +814,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveCrossHierarchyKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveCrossHierarchy(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveCrossHierarchyMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveCrossHierarchy(app, pg, MoveByMouse);
         }
@@ -919,26 +858,18 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveReverseCrossHierarchyKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveReverseCrossHierarchy(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveReverseCrossHierarchyMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveReverseCrossHierarchy(app, pg, MoveByMouse);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameOverwriteKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameOverwrite(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameOverwriteMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameOverwrite(app, pg, MoveByMouse);
         }
@@ -970,7 +901,7 @@ namespace ProjectUITests {
                     );
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
+                        AssertUtil.Contains(dialog.Text, "A file named 'quox.txt' already exists.");
                         dialog.Yes();
                     }
 
@@ -983,14 +914,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameOverwriteAllItemsKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameOverwriteAllItems(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameOverwriteAllItemsMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameOverwriteAllItems(app, pg, MoveByMouse);
         }
@@ -1025,7 +952,7 @@ namespace ProjectUITests {
                     );
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
+                        AssertUtil.Contains(dialog.Text, "A file named 'quox.txt' already exists.");
                         dialog.AllItems = true;
                         dialog.Yes();
                     }
@@ -1040,14 +967,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwriteKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameDontOverwrite(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwriteMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameDontOverwrite(app, pg, MoveByMouse);
         }
@@ -1080,7 +1003,7 @@ namespace ProjectUITests {
                     );
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
+                        AssertUtil.Contains(dialog.Text, "A file named 'quox.txt' already exists.");
                         dialog.No();
                     }
 
@@ -1097,14 +1020,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwrite2Keyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameDontOverwrite2(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwrite2Mouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameDontOverwrite2(app, pg, MoveByMouse);
         }
@@ -1140,14 +1059,14 @@ namespace ProjectUITests {
                     );
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
+                        AssertUtil.Contains(dialog.Text, "A file named 'quox.txt' already exists.");
                         dialog.No();
                     }
 
                     System.Threading.Thread.Sleep(1000);
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
+                        AssertUtil.Contains(dialog.Text, "A file named 'quox.txt' already exists.");
                         dialog.No();
                     }
 
@@ -1163,14 +1082,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwriteAllItemsKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameDontOverwriteAllItems(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwriteAllItemsMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameDontOverwriteAllItems(app, pg, MoveByMouse);
         }
@@ -1205,7 +1120,7 @@ namespace ProjectUITests {
                     );
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
+                        AssertUtil.Contains(dialog.Text, "A file named 'quox.txt' already exists.");
                         dialog.AllItems = true;
                         dialog.No();
                     }
@@ -1224,14 +1139,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameCancelKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameCancel(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameCancelMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameCancel(app, pg, MoveByMouse);
         }
@@ -1267,7 +1178,7 @@ namespace ProjectUITests {
                     );
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "A file with the same name 'quox.txt' already exists.");
+                        AssertUtil.Contains(dialog.Text, "A file named 'quox.txt' already exists.");
                         dialog.Cancel();
                     }
 
@@ -1329,8 +1240,6 @@ namespace ProjectUITests {
         /// Drag item from our project to other project, copy
         /// Drag item from other project to our project, still copy back
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDoubleCrossHierarchy(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
@@ -1376,8 +1285,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Drag item from another project, drag same item again, prompt to overwrite, say yes, only one item should be in the hierarchy
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DragTwiceAndOverwrite(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var projects = new[] {
@@ -1405,7 +1312,7 @@ namespace ProjectUITests {
                     }
 
                     using (var dialog = solution.WaitForOverwriteFileDialog()) {
-                        AssertUtil.Contains(dialog.Text, "A file with the same name 'DragTwiceAndOverwrite.cs' already exists.");
+                        AssertUtil.Contains(dialog.Text, "A file named 'DragTwiceAndOverwrite.cs' already exists.");
                         dialog.Yes();
                     }
 
@@ -1418,8 +1325,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Drag item from another project, drag same item again, prompt to overwrite, say yes, only one item should be in the hierarchy
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyFolderMissingItem(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -1453,8 +1358,6 @@ namespace ProjectUITests {
         /// 
         /// https://pytools.codeplex.com/workitem/1141
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyPasteMissingFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -1482,8 +1385,6 @@ namespace ProjectUITests {
         /// 
         /// https://nodejstools.codeplex.com/workitem/241
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveFolderExistingFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("DragDropCopyCutPaste",
@@ -1512,8 +1413,6 @@ namespace ProjectUITests {
         /// 
         /// http://pytools.codeplex.com/workitem/2609
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveFolderWithContents(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("FolderWithContentsProj",
@@ -1543,14 +1442,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveProjectToSolutionFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveProjectToSolutionFolder(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveProjectToSolutionFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveProjectToSolutionFolder(app, pg, MoveByMouse);
         }
@@ -1580,8 +1475,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Copy read-only file within project - ensure RO attribute is removed.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyReadOnlyFileByKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             CopyReadOnlyFile(app, pg, CopyByKeyboard);
         }
@@ -1589,8 +1482,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Copy read-only file within project - ensure RO attribute is removed.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void CopyReadOnlyFileByMouse(VisualStudioApp app, ProjectGenerator pg) {
             CopyReadOnlyFile(app, pg, CopyByMouse);
         }
@@ -1632,14 +1523,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(2)]
-        //[TestCategory("Installed")]
         public void CopyFileFromFolderToLinkedFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             CopyFileFromFolderToLinkedFolder(app, pg, CopyByKeyboard);
         }
 
-        //[TestMethod, Priority(2)]
-        //[TestCategory("Installed")]
         public void CopyFileFromFolderToLinkedFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
             CopyFileFromFolderToLinkedFolder(app, pg, CopyByMouse);
         }
@@ -1680,8 +1567,6 @@ namespace ProjectUITests {
 
         // https://github.com/Microsoft/PTVS/issues/206
         // Copy and paste cross project into a folder should include the item in the folder
-        //[TestMethod, Priority(2)]
-        //[TestCategory("Installed")]
         public void CopyFileToFolderCrossProject(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var projectDefs = new[] {
@@ -1718,6 +1603,7 @@ namespace ProjectUITests {
         /// </summary>
         internal static void MoveByMouse(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
             destination.DragOntoThis(Key.LeftShift, source);
+            vs.MaybeCheckMessageBox(TestUtilities.MessageBoxButton.Ok, "One or more files will be");
         }
 
         /// <summary>
@@ -1726,6 +1612,7 @@ namespace ProjectUITests {
         /// </summary>
         private static void DragAndDrop(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
             destination.DragOntoThis(source);
+            vs.MaybeCheckMessageBox(TestUtilities.MessageBoxButton.Ok, "One or more files will be");
         }
 
         /// <summary>
@@ -1750,6 +1637,7 @@ namespace ProjectUITests {
 
             AutomationWrapper.Select(destination);
             vs.ControlV();
+            vs.MaybeCheckMessageBox(TestUtilities.MessageBoxButton.Ok, "One or more files will be");
         }
 
         /// <summary>

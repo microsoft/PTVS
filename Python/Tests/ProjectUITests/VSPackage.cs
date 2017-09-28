@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Shell;
 using TestRunnerInterop;
 using TestUtilities.UI;
 
-namespace PythonToolsUITests {
+namespace ProjectUITests {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideAutomationObject(AutomationObject)]
     public sealed class VSPackage : Package {

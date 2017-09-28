@@ -19,10 +19,13 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
         private readonly object _lock = new object();
+        private readonly SafeFileHandle _jobObject;
         private Process _vs;
         private VisualStudioApp _app;
         private EnvDTE.DTE _dte;
@@ -30,6 +33,25 @@ namespace TestRunnerInterop {
         private bool _isDisposed = false;
 
         private string _currentSettings;
+
+        public VsInstance() {
+            _jobObject = NativeMethods.CreateJobObject(IntPtr.Zero, null);
+            if (_jobObject.IsInvalid) {
+                throw new InvalidOperationException("Failed to create job object");
+            }
+
+            var objInfo = new NativeMethods.JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
+            objInfo.BasicLimitInformation.LimitFlags = NativeMethods.JOB_OBJECT_LIMIT.KILL_ON_JOB_CLOSE;
+            if (!NativeMethods.SetInformationJobObject(
+                _jobObject,
+                NativeMethods.JOBOBJECTINFOCLASS.JobObjectExtendedLimitInformation,
+                ref objInfo,
+                Marshal.SizeOf(objInfo)
+            )) {
+                _jobObject.Dispose();
+                throw new InvalidOperationException("Failed to set job info");
+            }
+        }
 
         public void StartOrRestart(
             string devenvExe,
@@ -63,7 +85,16 @@ namespace TestRunnerInterop {
                 if (!string.IsNullOrEmpty(tempRoot)) {
                     psi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
                 }
+
                 _vs = Process.Start(psi);
+                if (!NativeMethods.AssignProcessToJobObject(_jobObject, _vs.Handle)) {
+                    try {
+                        _vs.Kill();
+                    } catch (Exception) {
+                    }
+                    _vs.Dispose();
+                    throw new InvalidOperationException("Failed to add VS to our job object");
+                }
 
                 // Forward console output to our own output, which will
                 // be captured by the test runner.
@@ -102,10 +133,16 @@ namespace TestRunnerInterop {
                         _vs.Kill();
                     } else {
                         if (!_vs.CloseMainWindow()) {
-                            _vs.Kill();
+                            try {
+                                _vs.Kill();
+                            } catch (Exception) {
+                            }
                         }
                         if (!_vs.WaitForExit(10000)) {
-                            _vs.Kill();
+                            try {
+                                _vs.Kill();
+                            } catch (Exception) {
+                            }
                         }
                     }
                     _vs.Dispose();
@@ -187,6 +224,9 @@ namespace TestRunnerInterop {
                 var r = dte.GetObject(container).Execute(name, arguments);
                 cts?.Cancel();
                 if (!r.IsSuccess) {
+                    if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException") {
+                        throw new AssertInconclusiveException(r.ExceptionMessage);
+                    }
                     throw new TestFailedException(
                         r.ExceptionType,
                         r.ExceptionMessage,
@@ -200,6 +240,8 @@ namespace TestRunnerInterop {
                 }
                 // A COMException probably needs VS to restart, so close it.
                 CloseCurrentInstance();
+            } catch (ThreadAbortException) {
+                CloseCurrentInstance(hard: true);
             }
         }
 
@@ -209,6 +251,7 @@ namespace TestRunnerInterop {
                     // TODO: dispose managed state (managed objects).
                 }
 
+                _jobObject.Dispose();
                 CloseCurrentInstance();
 
                 _isDisposed = true;

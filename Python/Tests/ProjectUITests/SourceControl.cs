@@ -31,7 +31,6 @@ using MessageBoxButton = TestUtilities.MessageBoxButton;
 using Mouse = TestUtilities.UI.Mouse;
 
 namespace ProjectUITests {
-    //[TestClass]
     public class SourceControl {
         private static Regex _pathRegex = new Regex(@"\{path:([^}]*)\}");
         const string VSQUERYRENAMEFILEFLAGS_NoFlags = "VSQUERYRENAMEFILEFLAGS_NoFlags";
@@ -58,8 +57,6 @@ namespace ProjectUITests {
         /// C# project.  Once enables in Tools->Options->Source Control you can get
         /// the list of events from Tools->Show Scc Track Document Events.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         // Currently Fails: https://pytools.codeplex.com/workitem/2609
         public void MoveFolderWithItem(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
@@ -98,6 +95,7 @@ namespace ProjectUITests {
                     var destFolder = window.WaitForItem("Solution 'SourceControl' (1 project)", "SourceControl");
                     Mouse.MoveTo(destFolder.GetClickablePoint());
                     Mouse.Up(MouseButton.Left);
+                    app.MaybeCheckMessageBox(MessageBoxButton.Ok, "One or more files will be");
 
                     window.AssertFileExists(Path.GetDirectoryName(solution.Filename), "Solution 'SourceControl' (1 project)", "SourceControl", "Oar", "Quox" + projectType.CodeExtension);
                     var projectDir = Path.GetDirectoryName(project.FullName);
@@ -111,8 +109,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddNewItem(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
@@ -173,8 +169,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void IncludeInProject(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
@@ -210,8 +204,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RemoveItem(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
@@ -250,8 +242,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void BasicSourceControl(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
@@ -295,8 +285,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Verify the glyph change APIs update the glyphs appropriately
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void SourceControlGlyphChanged(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
@@ -344,8 +332,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Verify we don't get called for a project which doesn't have source control enabled.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void SourceControlNoControl(VisualStudioApp app, ProjectGenerator pg) {
             // close any projects before switching source control...
             app.Dte.Solution.Close();
@@ -377,8 +363,6 @@ namespace ProjectUITests {
         /// 
         /// https://pytools.codeplex.com/workitem/1417
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void SourceControlExcludedFilesNotPresent(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = SourceControlProject(projectType).Generate()) {
@@ -404,8 +388,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void SourceControlRenameFolder(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 // close any projects before switching source control...
@@ -423,7 +405,7 @@ namespace ProjectUITests {
 
                         AssertDocumentEvents(Path.GetDirectoryName(project.FullName),
                             OnQueryRenameFiles("TestFolder\\", "Renamed\\", VSQUERYRENAMEFILEFLAGS_Directory),
-                            OnAfterRenameFiles("TestFolder\\", "Renamed", VSRENAMEFILEFLAGS_Directory)
+                            OnAfterRenameFiles("TestFolder\\", "Renamed\\", VSRENAMEFILEFLAGS_Directory)
                         );
                         app.Dte.Solution.Close();
                     } finally {
