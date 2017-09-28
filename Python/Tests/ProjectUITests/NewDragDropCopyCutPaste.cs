@@ -25,14 +25,10 @@ using Keyboard = TestUtilities.UI.Keyboard;
 namespace ProjectUITests {
     [TestClass]
     public class NewDragDropCopyCutPaste {
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveToMissingFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveToMissingFolder(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveToMissingFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveToMissingFolder(app, pg, MoveByMouse);
         }
@@ -63,14 +59,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveExcludedFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveExcludedFolder(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveExcludedFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveExcludedFolder(app, pg, MoveByMouse);
         }
@@ -102,14 +94,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveExcludedItemToFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveExcludedItemToFolder(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveExcludedItemToFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveExcludedItemToFolder(app, pg, MoveByMouse);
         }
@@ -143,14 +131,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameSkipMoveKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameSkipMove(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameSkipMoveMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameSkipMove(app, pg, MoveByMouse);
         }
@@ -188,14 +172,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNamesSkipOneKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNamesSkipOne(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNamesSkipOneMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNamesSkipOne(app, pg, MoveByMouse);
         }
@@ -246,14 +226,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNamesFoldersSkipOneKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNamesFoldersSkipOne(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNamesFoldersSkipOneMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNamesFoldersSkipOne(app, pg, MoveByMouse);
         }
@@ -306,14 +282,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNamesCrossProjectSkipOneKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNamesCrossProjectSkipOne(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNamesCrossProjectSkipOneMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNamesCrossProjectSkipOne(app, pg, MoveByMouse);
         }
@@ -373,14 +345,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectSkipMoveKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameCrossProjectSkipMove(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectSkipMoveMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameCrossProjectSkipMove(app, pg, MoveByMouse);
         }
@@ -428,14 +396,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameCrossProjectCSharpSkipMove(app, pg, MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveDuplicateFileNameCrossProjectCSharpSkipMove(app, pg, MoveByMouse);
         }
@@ -469,10 +433,9 @@ namespace ProjectUITests {
                     );
 
                     // say no to replacing in the C# project system
-                    solution.WaitForDialog();
-                    Keyboard.Type(Key.N);
-
-                    solution.WaitForDialogDismissed();
+                    using (var dlg = AutomationDialog.WaitForDialog(app)) {
+                        dlg.ClickButtonAndClose("No");
+                    }
 
                     solution.AssertFileExistsWithContent("MoveDuplicateFileName1", "MoveDuplicateFileName1", "textfile.txt");
                     solution.AssertFileExistsWithContent("MoveDuplicateFileNameCS", "MoveDuplicateFileNameCS", "textfile.txt");
@@ -481,16 +444,14 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(2)]
-        //[TestCategory("Installed")]
         public void MoveFileFromFolderToLinkedFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveFileFromFolderToLinkedFolder(app, pg, MoveByKeyboard);
+            app.MaybeCheckMessageBox(TestUtilities.MessageBoxButton.Ok, "One or more files will be");
         }
 
-        //[TestMethod, Priority(2)]
-        //[TestCategory("Installed")]
         public void MoveFileFromFolderToLinkedFolderMouse(VisualStudioApp app, ProjectGenerator pg) {
             MoveFileFromFolderToLinkedFolder(app, pg, MoveByMouse);
+            app.MaybeCheckMessageBox(TestUtilities.MessageBoxButton.Ok, "One or more files will be");
         }
 
         /// <summary>
@@ -547,6 +508,7 @@ namespace ProjectUITests {
         /// </summary>
         private static void MoveByMouse(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source) {
             destination.DragOntoThis(Key.LeftShift, source);
+            vs.MaybeCheckMessageBox(TestUtilities.MessageBoxButton.Ok, "One or more files will be");
         }
 
         /// <summary>
@@ -564,6 +526,7 @@ namespace ProjectUITests {
 
             AutomationWrapper.Select(destination);
             vs.ControlV();
+            vs.MaybeCheckMessageBox(TestUtilities.MessageBoxButton.Ok, "One or more files will be");
         }
 
         private delegate void MoveDelegate(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source);

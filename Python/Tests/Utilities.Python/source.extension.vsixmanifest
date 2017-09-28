@@ -17,6 +17,7 @@
       <Asset Type="Microsoft.VisualStudio.Assembly" Path="|TestUtilities.Python.Analysis;_GetTargetPath|" AssemblyName="|TestUtilities.Python.Analysis;_GetAssemblyName|" />
       <Asset Type="Microsoft.VisualStudio.Assembly" Path="|TestUtilities.UI;_GetTargetPath|" AssemblyName="|TestUtilities.UI;_GetAssemblyName|" />
       <Asset Type="Microsoft.VisualStudio.Assembly" Path="|MockVsTests;_GetTargetPath|" AssemblyName="|MockVsTests;_GetAssemblyName|" />
+      <Asset Type="Microsoft.VisualStudio.Assembly" Path="|TestSccPackage;_GetTargetPath|" AssemblyName="|TestSccPackage;_GetAssemblyName|" />
       <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|%CurrentProject%;_GetTargetPath|" />
     </Assets>
     <Prerequisites>

@@ -28,10 +28,7 @@ using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ProjectUITests {
-    //[TestClass]
     public class ShowAllFiles {
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesToggle(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -53,8 +50,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesFilesAlwaysHidden(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = MakeBasicProject(projectType);
@@ -66,8 +61,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesSymLinks(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -128,8 +121,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesLinked(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -169,8 +160,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesIncludeExclude(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -365,8 +354,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesChanges(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = MakeBasicProject(projectType).Generate().ToVs(app)) {
@@ -375,34 +362,34 @@ namespace ProjectUITests {
 
                     var dteProject = solution.GetProject("ShowAllFiles");
 
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NotInProject" + projectType.CodeExtension));
+                    solution.AssertFileExists("ShowAllFiles", "NotInProject" + projectType.CodeExtension);
 
                     // everything should be there...
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder"));
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "File" + projectType.CodeExtension));
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "File.txt"));
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "SubFolder"));
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "SubFolder", "SubFile.txt"));
+                    solution.AssertFolderExists("ShowAllFiles", "Folder");
+                    solution.AssertFileExists("ShowAllFiles", "Folder", "File" + projectType.CodeExtension);
+                    solution.AssertFileExists("ShowAllFiles", "Folder", "File.txt");
+                    solution.AssertFolderExists("ShowAllFiles", "Folder", "SubFolder");
+                    solution.AssertFileExists("ShowAllFiles", "Folder", "SubFolder", "SubFile.txt");
                                         
                     // create some stuff, it should show up...
                     File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFile.txt"), "");
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NewFile.txt"));
+                    solution.AssertFileExists("ShowAllFiles", "NewFile.txt");
                     
                     File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\Folder\NewFile.txt"), "");
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "NewFile.txt"));
+                    solution.AssertFileExists("ShowAllFiles", "Folder", "NewFile.txt");
                     Assert.IsTrue(dteProject.GetIsFolderExpanded(@"Folder"));
 
                     File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\Folder\SubFolder\NewFile.txt"), "");
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "Folder", "SubFolder", "NewFile.txt"));
+                    solution.AssertFileExists("ShowAllFiles", "Folder", "SubFolder", "NewFile.txt");
 
                     Directory.CreateDirectory(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder"));
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NewFolder"));
+                    solution.AssertFolderExists("ShowAllFiles", "NewFolder");
                     
                     Directory.CreateDirectory(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder"));
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NewFolder", "SubFolder"));
+                    solution.AssertFolderExists("ShowAllFiles", "NewFolder", "SubFolder");
                     
                     File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder\NewFile.txt"), "");
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "NewFolder", "SubFolder", "NewFile.txt"));
+                    solution.AssertFileExists("ShowAllFiles", "NewFolder", "SubFolder", "NewFile.txt");
                     
                     // delete some stuff, it should go away
                     File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\Folder\File.txt"));
@@ -449,8 +436,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesHiddenFiles(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -542,8 +527,6 @@ namespace ProjectUITests {
 
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesOnPerUser(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var solutionFile = SolutionFile.Generate("ShowAllFilesOnPerUser",
@@ -580,8 +563,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesOnPerProject(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -612,8 +593,6 @@ namespace ProjectUITests {
 
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesOffPerUser(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var solutionFile = SolutionFile.Generate("ShowAllFilesOffPerUser",
@@ -650,8 +629,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesOffPerProject(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -681,8 +658,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesDefault(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -718,8 +693,6 @@ namespace ProjectUITests {
         /// <summary>
         /// https://nodejstools.codeplex.com/workitem/240
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllMoveNotInProject(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -763,6 +736,7 @@ namespace ProjectUITests {
                     var projectNode = solution.WaitForItem("ShowAllMoveNotInProject");
                     AutomationWrapper.Select(projectNode);
                     Keyboard.ControlV();
+                    //app.MaybeCheckMessageBox(MessageBoxButton.Yes, "A file named");
                     Assert.IsNotNull(solution.WaitForItem("ShowAllMoveNotInProject", "SubFolder"));
 
                     solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
@@ -775,8 +749,6 @@ namespace ProjectUITests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1996
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllExcludeSelected(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -838,8 +810,6 @@ namespace ProjectUITests {
         /// 
         /// https://nodejstools.codeplex.com/workitem/380
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesRapidChanges(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -871,8 +841,6 @@ namespace ProjectUITests {
         /// Creating & deleting and then re-creating files rapidly should have the files be 
         /// present in solution explorer.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesRapidChanges2(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -904,14 +872,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesCopyExcludedFolderWithItemByKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             ShowAllFilesCopyExcludedFolderWithItem(app, pg, DragDropCopyCutPaste.CopyByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesCopyExcludedFolderWithItemByMouse(VisualStudioApp app, ProjectGenerator pg) {
             ShowAllFilesCopyExcludedFolderWithItem(app, pg, DragDropCopyCutPaste.CopyByMouse);
         }
@@ -952,14 +916,10 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             ShowAllFilesMoveExcludedItemToExcludedFolder(app, pg, DragDropCopyCutPaste.MoveByKeyboard);
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void ShowAllFilesMoveExcludedItemToExcludedFolderByMouse(VisualStudioApp app, ProjectGenerator pg) {
             ShowAllFilesMoveExcludedItemToExcludedFolder(app, pg, DragDropCopyCutPaste.MoveByMouse);
         }

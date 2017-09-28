@@ -571,7 +571,11 @@ namespace TestUtilities.UI {
         }
 
         public void CheckMessageBox(MessageBoxButton button, params string[] text) {
-            CheckAndDismissDialog(text, 65535, new IntPtr((int)button));
+            CheckAndDismissDialog(text, 65535, new IntPtr((int)button), true);
+        }
+
+        public void MaybeCheckMessageBox(MessageBoxButton button, params string[] text) {
+            CheckAndDismissDialog(text, 65535, new IntPtr((int)button), false);
         }
 
         /// <summary>
@@ -580,7 +584,7 @@ namespace TestUtilities.UI {
         /// dlgField is the field to check the text of.
         /// buttonId is the button to press to dismiss.
         /// </summary>
-        private void CheckAndDismissDialog(string[] text, int dlgField, IntPtr buttonId) {
+        private void CheckAndDismissDialog(string[] text, int dlgField, IntPtr buttonId, bool assertIfNoDialog) {
             var handle = new IntPtr(Dte.MainWindow.HWnd);
             IVsUIShell uiShell = ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
             IntPtr hwnd;
@@ -591,19 +595,64 @@ namespace TestUtilities.UI {
                 uiShell.GetDialogOwnerHwnd(out hwnd);
             }
 
+            if (!assertIfNoDialog && (hwnd == IntPtr.Zero || hwnd == handle)) {
+                return;
+            }
+
             Assert.AreNotEqual(IntPtr.Zero, hwnd, "hwnd is null, We failed to get the dialog");
             Assert.AreNotEqual(handle, hwnd, "hwnd is Dte.MainWindow, We failed to get the dialog");
             Console.WriteLine("Ending dialog: ");
-            AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
+            var dlgElement = AutomationElement.FromHandle(hwnd);
+            AutomationWrapper.DumpElement(dlgElement);
             Console.WriteLine("--------");
-            try {
-                StringBuilder title = new StringBuilder(4096);
-                Assert.AreNotEqual(NativeMethods.GetDlgItemText(hwnd, dlgField, title, title.Capacity), (uint)0);
 
-                string t = title.ToString();
-                AssertUtil.Contains(t, text);
+            bool isDialog = false;
+            bool closed = false;
+            try {
+                StringBuilder titleBuffer = new StringBuilder(4096);
+                uint ures = NativeMethods.GetDlgItemText(hwnd, dlgField, titleBuffer, titleBuffer.Capacity);
+                if (ures == 0) {
+                    titleBuffer.Clear();
+                    var txt = dlgElement.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text));
+                    if (txt != null) {
+                        titleBuffer.Append(txt.Current.Name);
+                    } else {
+                        titleBuffer.Append(dlgElement.Current.Name);
+                    }
+                } else {
+                    isDialog = true;
+                }
+
+                string title = titleBuffer.ToString();
+                if (assertIfNoDialog) {
+                    AssertUtil.Contains(title, text);
+                } else if (!text.All(title.Contains)) {
+                    // We do not want to close the dialog now, as it may be expected
+                    // by a later part of the test.
+                    closed = true;
+                }
             } finally {
-                if (!NativeMethods.EndDialog(hwnd, buttonId)) {
+                if (!closed) {
+                    if (isDialog) {
+                        closed = NativeMethods.EndDialog(hwnd, buttonId);
+                    } else {
+                        if (buttonId.ToInt64() == (long)MessageBoxButton.Ok) {
+                            new AutomationDialog(this, dlgElement).ClickButtonAndClose("OK");
+                            closed = true;
+                        } else if (buttonId.ToInt64() == (long)MessageBoxButton.Cancel) {
+                            new AutomationDialog(this, dlgElement).ClickButtonAndClose("Cancel");
+                            closed = true;
+                        } else if (buttonId.ToInt64() == (long)MessageBoxButton.Yes) {
+                            new AutomationDialog(this, dlgElement).ClickButtonAndClose("Yes");
+                            closed = true;
+                        } else if (buttonId.ToInt64() == (long)MessageBoxButton.No) {
+                            new AutomationDialog(this, dlgElement).ClickButtonAndClose("No");
+                            closed = true;
+                        }
+                    }
+                }
+
+                if (!closed) {
                     NativeMethods.PostMessage(hwnd, NativeMethods.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
                 }
             }

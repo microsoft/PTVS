@@ -23,10 +23,7 @@ namespace ProjectUITests {
     /// <summary>
     /// Test cases which are applicable to projects designed for scripting languages.
     /// </summary>
-    //[TestClass]
     public class ScriptProjectTests {
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RunWithoutStartupFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("RunWithoutStartupFile", projectType);
@@ -45,8 +42,6 @@ namespace ProjectUITests {
         /// Renaming the folder containing the startup script should update the startup script
         /// https://nodejstools.codeplex.com/workitem/476
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameStartupFileFolder(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition(
@@ -71,8 +66,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameStartupFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition(

@@ -99,8 +99,6 @@ namespace ProjectUITests {
             );
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenameLinkedNode(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -146,8 +144,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveLinkedNode(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -197,8 +193,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MultiProjectMove(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs(app)) {
@@ -226,8 +220,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MultiProjectMoveExists2(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs(app)) {
@@ -251,8 +243,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveLinkedNodeOpen(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -284,8 +274,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveLinkedNodeOpenEdited(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -326,8 +314,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void MoveLinkedNodeFileExistsButNotInProject(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -354,8 +340,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void DeleteLinkedNode(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -372,8 +356,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void LinkedFileInProjectIgnored(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -384,8 +366,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void SaveAsCreateLink(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -406,8 +386,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void SaveAsCreateFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -427,8 +405,6 @@ namespace ProjectUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void SaveAsCreateFileNewDirectory(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -453,8 +429,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Adding a duplicate link to the same item
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddExistingItem(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -476,8 +450,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Adding a link to a folder which is already linked in somewhere else.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddExistingItemAndItemIsAlreadyLinked(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -503,8 +475,6 @@ namespace ProjectUITests {
         /// this verifies we deal with the project name string comparison correctly (including a \ at the end of the
         /// path).
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddExistingItemAndLinkAlreadyExists(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -526,8 +496,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (when the file only exists on disk)
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -550,8 +518,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (both in the project and on disk)
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsOnDiskAndInProject(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -574,8 +540,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Adding new linked item when file of same name exists (in the project, but not on disk)
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -598,8 +562,6 @@ namespace ProjectUITests {
         /// Adding new linked item when the file lives in the project dir but not in the directory we selected
         /// Add Existing Item from.  We should add the file to the directory where it lives.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void AddExistingItemAsLinkButFileExistsInProjectDirectory(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -621,8 +583,6 @@ namespace ProjectUITests {
         /// <summary>
         /// Reaming the file name in the Link attribute is ignored.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RenamedLinkedFile(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -638,8 +598,6 @@ namespace ProjectUITests {
         /// <summary>
         /// A link path outside of our project dir will result in the link being ignored.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void BadLinkPath(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -655,8 +613,6 @@ namespace ProjectUITests {
         /// <summary>
         /// A rooted link path is ignored.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RootedLinkIgnored(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -669,8 +625,6 @@ namespace ProjectUITests {
         /// <summary>
         /// A rooted link path is ignored.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void RootedIncludeIgnored(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs(app)) {
@@ -684,8 +638,6 @@ namespace ProjectUITests {
         /// Test linked files with a project home set (done by save as in this test)
         /// https://nodejstools.codeplex.com/workitem/1511
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
         public void TestLinkedWithProjectHome(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 using (var solution = MultiProjectLinkedFiles(projectType).ToVs(app)) {

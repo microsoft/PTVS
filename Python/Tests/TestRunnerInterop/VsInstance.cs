@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
@@ -223,6 +224,9 @@ namespace TestRunnerInterop {
                 var r = dte.GetObject(container).Execute(name, arguments);
                 cts?.Cancel();
                 if (!r.IsSuccess) {
+                    if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException") {
+                        throw new AssertInconclusiveException(r.ExceptionMessage);
+                    }
                     throw new TestFailedException(
                         r.ExceptionType,
                         r.ExceptionMessage,

@@ -132,6 +132,11 @@
       <Name>MockVsTests</Name>
       <IncludeInVsix>true</IncludeInVsix>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Common\Tests\SccPackage\TestSccPackage.csproj">
+      <Project>{e75e5db1-0ea0-4247-a830-fe467c016816}</Project>
+      <Name>TestSccPackage</Name>
+      <IncludeInVsix>true</IncludeInVsix>
+    </ProjectReference>
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Analysis</Name>

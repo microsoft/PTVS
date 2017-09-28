@@ -864,6 +864,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             UIShell.CheckMessageBox(button, text);
         }
 
+        public void MaybeCheckMessageBox(MessageBoxButton button, params string[] text) {
+            UIShell.MaybeCheckMessageBox(button, text);
+        }
+
         public void Sleep(int ms) {
         }
 
