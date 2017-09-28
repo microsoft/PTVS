@@ -1728,7 +1728,8 @@ Connect anyway?</value>
     <comment>{0} is the name of the script that is being run</comment>
   </data>
   <data name="ImportCoverageCommandFileFilter" xml:space="preserve">
-    <value>Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*</value>
+    <value>coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*</value>
+    <comment>Do not translate coverage.py, it's the name of a library.</comment>
   </data>
   <data name="RenameVariable_NewName" xml:space="preserve">
     <value>_New name:</value>
