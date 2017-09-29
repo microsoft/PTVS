@@ -853,6 +853,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";CookiecutterComponentInstallInstructions" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[These tools are an installable component for your version of Visual Studio that allow you to create projects from Cookiecutter templates.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Questi strumenti possono essere installati nella versione di Visual Studio usata e consentono di creare progetti dai modelli Cookiecutter.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CookiecutterComponentRequired" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[This project requires Cookiecutter template support for Visual Studio.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Questo progetto richiede il supporto del modello Cookiecutter per Visual Studio.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CookiecutterWizardUnresolvedTemplate" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The Cookiecutter template at '{0}' was not found.]D;]A;]D;]A;Please check your internet connection.]D;]A;]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è stato trovato il modello Cookiecutter in '{0}'.]D;]A;]D;]A;Controllare la connessione Internet.]D;]A;]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";CurrentInterpreterDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[your current environment]]></Val>
@@ -5293,7 +5320,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17241.2]]></Val>
+        <Val><![CDATA[3.0.17270.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5329,7 +5356,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17241.2]]></Val>
+        <Val><![CDATA[3.0.17270.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
