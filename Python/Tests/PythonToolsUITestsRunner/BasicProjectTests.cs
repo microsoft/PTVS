@@ -178,7 +178,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DotNetProjectReferences() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetProjectReferences));

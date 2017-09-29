@@ -57,7 +57,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAsyncDocument));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void FormatSelection() {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelection));
