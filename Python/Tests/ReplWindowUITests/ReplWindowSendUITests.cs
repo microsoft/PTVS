@@ -14,31 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace ReplWindowUITests {
-    [TestClass]
-    public class SendToReplTests {
-        static SendToReplTests() {
-            AssertListener.Initialize();
-        }
+    public class ReplWindowSendUITests {
+        #region Test Cases
 
         /// <summary>
         /// Simple line-by-line tests which verify we submit when we get to
         /// the next statement.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public virtual void SendToInteractiveLineByLine(PythonVisualStudioApp app) {
+        public void SendToInteractiveLineByLine(PythonVisualStudioApp app) {
             RunOne(app, "Program.py",
                 Input("if True:"),
                 Input("    x = 1"),
@@ -66,9 +57,7 @@ namespace ReplWindowUITests {
         /// Simple cell-by-cell tests which verify we submit when we get to
         /// the next statement.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public virtual void SendToInteractiveCellByCell(PythonVisualStudioApp app) {
+        public void SendToInteractiveCellByCell(PythonVisualStudioApp app) {
             RunOne(app, "Cells.py",
                 Input(@"#%% cell 1
 ... x = 1
@@ -97,9 +86,7 @@ namespace ReplWindowUITests {
         /// Line-by-line tests that verify we work with buffering code
         /// while it's executing.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public virtual void SendToInteractiveDelayed(PythonVisualStudioApp app) {
+        public void SendToInteractiveDelayed(PythonVisualStudioApp app) {
             RunOne(app, "Delayed.py",
                Input("import time").Complete,
                Input("if True:"),
@@ -116,9 +103,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Mixed line-by-line and selection, no buffering
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public virtual void SendToInteractiveSelection(PythonVisualStudioApp app) {
+        public void SendToInteractiveSelection(PythonVisualStudioApp app) {
             RunOne(app, "Delayed.py",
                Input("import time").Complete,
                Selection(@"if True:
@@ -139,9 +124,7 @@ namespace ReplWindowUITests {
         /// Mixed line-by-line and selection, buffering while the selection
         /// is submitted.
         /// </summary>
-        //[TestMethod, Priority(0)]
-        //[TestCategory("Installed")]
-        public virtual void SendToInteractiveSelectionNoWait(PythonVisualStudioApp app) {
+        public void SendToInteractiveSelectionNoWait(PythonVisualStudioApp app) {
             RunOne(app, "Delayed.py",
                Input("import time").Complete,
                Selection(@"if True:
@@ -158,9 +141,15 @@ namespace ReplWindowUITests {
            );
         }
 
+        #endregion
+
+        #region Helpers
 
         private void RunOne(PythonVisualStudioApp app, string filename, params SendToStep[] inputs) {
-            var project = app.OpenProject(@"TestData\SendToInteractive.sln");
+            // SendToInteractive.pyproj uses Python 3.5 32-bit
+            var settings = ReplWindowSettings.FindSettingsForInterpreter("Python35");
+            var sln = app.CopyProjectForTest(@"TestData\SendToInteractive.sln");
+            var project = app.OpenProject(sln);
             var program = project.ProjectItems.Item(filename);
             var window = program.Open();
 
@@ -169,7 +158,7 @@ namespace ReplWindowUITests {
             var doc = app.GetDocument(program.Document.FullName);
             doc.MoveCaret(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, 0));
 
-            var interactive = ReplWindowProxy.Prepare(app, new ReplWindowPython35Tests().Settings, useIPython: false);
+            var interactive = ReplWindowProxy.Prepare(app, settings, useIPython: false);
 
             interactive.ExecuteText("42").Wait();
             interactive.ClearScreen();
@@ -184,7 +173,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        public static void WaitForText(ITextView view, string text) {
+        private static void WaitForText(ITextView view, string text) {
             for (int i = 0; i < 100; i++) {
                 if (view.TextBuffer.CurrentSnapshot.GetText().Replace("\r\n", "\n") != text.Replace("\r\n", "\n")) {
                     System.Threading.Thread.Sleep(100);
@@ -504,5 +493,7 @@ namespace ReplWindowUITests {
                 state.CheckOutput();
             }
         }
+
+        #endregion
     }
 }
