@@ -39,7 +39,7 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void FromImport1() {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImport1));
@@ -105,7 +105,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import5));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void Import6() {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import6));
@@ -117,7 +117,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.ImportComment));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void FromImportComment() {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportComment));
@@ -129,13 +129,13 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.ImportDup));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void FromImportDup() {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportDup));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void Import() {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import));

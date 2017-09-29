@@ -57,7 +57,7 @@ namespace ReplWindowUITests {
             return ReplWindowProxy.Prepare(app, s, useIPython: useIPython);
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgv(PythonVisualStudioApp app) {
             using (app.SelectDefaultInterpreter(Settings.Version)) {
@@ -73,7 +73,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgvScriptArgs(PythonVisualStudioApp app) {
             using (app.SelectDefaultInterpreter(Settings.Version)) {
@@ -89,7 +89,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ExecuteInReplUnicodeFilename(PythonVisualStudioApp app) {
             using (app.SelectDefaultInterpreter(Settings.Version)) {
@@ -108,7 +108,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CwdImport(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -139,7 +139,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void QuitAndReset(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -154,7 +154,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void PrintAllCharacters(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {

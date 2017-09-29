@@ -35,7 +35,7 @@ namespace AnalysisTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task LogFileEncoding() {
             // Ensure that log messages round-trip correctly.
 
@@ -103,7 +103,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TemporaryLibTest() {
             string libPath, dbPath;
 
@@ -188,7 +188,7 @@ namespace AnalysisTests {
             "site-packages\\B\\b.py"
         };
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task NoFilesOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -204,7 +204,7 @@ namespace AnalysisTests {
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task AllFilesOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -220,7 +220,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task FileInStdLibMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -243,7 +243,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task FileInSitePackageMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -258,7 +258,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task FileInStdLibOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -275,7 +275,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task FileInSitePackageOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -291,7 +291,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task IdbInStdLibMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -308,7 +308,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task IdbInSitePackageMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -324,7 +324,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task SitePackageAdded() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -344,7 +344,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task SitePackageRemoved() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -362,7 +362,7 @@ namespace AnalysisTests {
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ConflictingPyAndPyd() {
             var files = new[] {
                 "a.py",
@@ -382,7 +382,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ChangeAllToTrueOnSecondGroup() {
             var files = new[] {
                 "a.py",
@@ -401,7 +401,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task SitePackagesInPthFile() {
             var files = new[] {
                 "a.py",
@@ -423,7 +423,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task GetDatabasePaths() {
             foreach (var version in PythonPaths.Versions) {
                 var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(version.InterpreterPath);
@@ -443,7 +443,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task GetVirtualEnvDatabasePaths() {
             var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
@@ -485,7 +485,7 @@ namespace AnalysisTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task GetVirtualEnvDatabasePathsWithSystemSitePackages() {
             var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
@@ -524,7 +524,7 @@ namespace AnalysisTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task GetVEnvDatabasePaths() {
             var version = PythonPaths.Python35 ?? PythonPaths.Python35_x64;
@@ -565,7 +565,7 @@ namespace AnalysisTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task GetVEnvDatabasePathsWithSystemSitePackage() {
             var version = PythonPaths.Python35 ?? PythonPaths.Python35_x64;

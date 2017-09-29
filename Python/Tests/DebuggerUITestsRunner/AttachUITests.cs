@@ -57,13 +57,13 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachUserSetsBreakpoint));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void AttachThreadsBreakAllAndSetExitFlag() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachThreadsBreakAllAndSetExitFlag));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void AttachThreadsBreakOneAndSetExitFlag() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachThreadsBreakOneAndSetExitFlag));

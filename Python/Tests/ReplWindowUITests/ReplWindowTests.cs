@@ -51,7 +51,7 @@ namespace ReplWindowUITests {
 
         #region Miscellaneous tests
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ClearInputHelper(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -73,7 +73,7 @@ namespace ReplWindowUITests {
         /// f( should bring signature help up
         /// 
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void SimpleSignatureHelp(PythonVisualStudioApp app) {
@@ -99,7 +99,7 @@ namespace ReplWindowUITests {
         /// 
         /// </summary>
         [Ignore] // https://github.com/Microsoft/PTVS/issues/2689
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void SignatureHelpDefaultValue(PythonVisualStudioApp app) {
@@ -127,7 +127,7 @@ namespace ReplWindowUITests {
         /// "x = 42"
         /// "x." should bring up intellisense completion
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void SimpleCompletion(PythonVisualStudioApp app) {
@@ -164,7 +164,7 @@ namespace ReplWindowUITests {
         /// "x = 42"
         /// "x " should not bring up any completions.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void SimpleCompletionSpaceNoCompletion(PythonVisualStudioApp app) {
@@ -185,7 +185,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// x = 42; x.car[enter] – should type "car" not complete to "conjugate"
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void CompletionWrongText(PythonVisualStudioApp app) {
@@ -215,7 +215,7 @@ namespace ReplWindowUITests {
         /// and should respect enter at end of word completes option.  When it
         /// does execute the text the output should be on the next line.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void CompletionFullTextWithoutNewLine(PythonVisualStudioApp app) {
@@ -240,7 +240,7 @@ namespace ReplWindowUITests {
         /// does execute the text the output should be on the next line.
         /// </summary>
         [Ignore] // https://github.com/Microsoft/PTVS/issues/2755
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void CompletionFullTextWithNewLine(PythonVisualStudioApp app) {
@@ -265,7 +265,7 @@ namespace ReplWindowUITests {
         /// With AutoListIdentifiers on, all [a-zA-Z_] should bring up
         /// completions
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void AutoListIdentifierCompletions(PythonVisualStudioApp app) {
@@ -303,7 +303,7 @@ namespace ReplWindowUITests {
 
         #region Input/output redirection tests
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void TestStdOutRedirected(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -326,7 +326,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Calling input while executing user code.  This should let the user start typing.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void TestRawInput(PythonVisualStudioApp app) {
@@ -344,7 +344,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void OnlyTypeInRawInput(PythonVisualStudioApp app) {
@@ -368,7 +368,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void DeleteCharactersInRawInput(PythonVisualStudioApp app) {
@@ -390,7 +390,7 @@ namespace ReplWindowUITests {
         /// Calling ReadInput while no code is running - this should remove the
         /// prompt and let the user type input
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void TestIndirectInput(PythonVisualStudioApp app) {
@@ -415,7 +415,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Enter in a middle of a line should insert new line
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void EnterInMiddleOfLine(PythonVisualStudioApp app) {
@@ -437,7 +437,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// LineBreak should insert a new line and not submit.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void LineBreak(PythonVisualStudioApp app) {
@@ -465,7 +465,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests entering a single line of text, moving to the middle, and pressing enter.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void LineBreakInMiddleOfLine(PythonVisualStudioApp app) {
@@ -487,7 +487,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// "x=42" left left ctrl-enter should commit assignment
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void CtrlEnterCommits(PythonVisualStudioApp app) {
@@ -505,7 +505,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Escape should clear both lines
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void EscapeClearsMultipleLines(PythonVisualStudioApp app) {
@@ -529,7 +529,7 @@ namespace ReplWindowUITests {
         /// Ctrl-Enter on previous input should paste input to end of buffer 
         /// (doing it again should paste again – appending onto previous input)
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void CtrlEnterOnPreviousInput(PythonVisualStudioApp app) {
@@ -556,7 +556,7 @@ namespace ReplWindowUITests {
         /// Type some text, hit Ctrl-Enter, should execute current line and not
         /// require a secondary prompt.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void CtrlEnterForceCommit(PythonVisualStudioApp app) {
@@ -576,7 +576,7 @@ namespace ReplWindowUITests {
         /// Type a function definition, go to next line, type pass, navigate
         /// left, hit ctrl-enter, should immediately execute func def.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void CtrlEnterMultiLineForceCommit(PythonVisualStudioApp app) {
@@ -597,7 +597,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests backspacing pass the prompt to the previous line
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void BackspacePrompt(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -617,7 +617,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(">def f():", ".    pass");
             }
         }
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void BackspaceSmartDedent(PythonVisualStudioApp app) {
@@ -643,7 +643,7 @@ namespace ReplWindowUITests {
         /// secondary prompt.  The secondary prompt should be removed and the
         /// lines should be joined.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void BackspaceSecondaryPrompt(PythonVisualStudioApp app) {
@@ -664,7 +664,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests deleting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void BackspaceSecondaryPromptSelected(PythonVisualStudioApp app) {
@@ -685,7 +685,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests deleting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void DeleteSecondaryPromptSelected(PythonVisualStudioApp app) {
@@ -706,7 +706,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests typing when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void EditTypeSecondaryPromptSelected(PythonVisualStudioApp app) {
@@ -727,7 +727,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void TestDelNoTextSelected(PythonVisualStudioApp app) {
@@ -742,7 +742,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void TestDelAtEndOfLine(PythonVisualStudioApp app) {
@@ -762,7 +762,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void TestDelAtEndOfBuffer(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -774,7 +774,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void TestDelInOutput(PythonVisualStudioApp app) {
@@ -797,7 +797,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// while True: pass / Right Click -> Break Execution (or Ctrl-Break) should break execution
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CtrlBreakInterrupts(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -820,7 +820,7 @@ namespace ReplWindowUITests {
         /// 
         /// This version runs for 1/2 second which kicks in the running UI.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CtrlBreakInterruptsLongRunning(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -842,7 +842,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Ctrl-Break while running should result in a new prompt
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CtrlBreakNotRunning(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -861,7 +861,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Enter "while True: pass", then hit up/down arrow, should move the caret in the edit buffer
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CursorWhileCodeIsRunning(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -898,7 +898,7 @@ namespace ReplWindowUITests {
         #region History tests
 
         [Ignore] // https://github.com/Microsoft/PTVS/issues/2757
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void HistoryUpdateDef(PythonVisualStudioApp app) {
@@ -935,7 +935,7 @@ namespace ReplWindowUITests {
         }
 
         [Ignore] // https://github.com/Microsoft/PTVS/issues/2757
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Interactive")]
         //[TestCategory("Installed")]
         public virtual void HistoryAppendDef(PythonVisualStudioApp app) {
@@ -966,7 +966,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void HistoryBackForward(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -992,7 +992,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that maximum length of history is enforced and stores correct items.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void HistoryMaximumLength(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1025,7 +1025,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that we remember a partially typed input when we move to the history.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void HistoryUncommittedInput1(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1053,7 +1053,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that we don't restore on submit an uncomitted input saved for history.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void HistoryUncommittedInput2(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1076,7 +1076,7 @@ namespace ReplWindowUITests {
         /// history, add print "hello" to 2nd line, enter, scroll back through
         /// both function definitions
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void HistorySearch(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1117,7 +1117,7 @@ namespace ReplWindowUITests {
         #region Clipboard tests
 
         [Ignore] // https://github.com/Microsoft/PTVS/issues/2682
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CommentPaste(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1144,7 +1144,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CsvPaste(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1174,7 +1174,7 @@ namespace ReplWindowUITests {
         /// Tests cut when the secondary prompt is highlighted as part of the
         /// selection
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void EditCutIncludingPrompt(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1198,7 +1198,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests pasting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void EditPasteSecondaryPromptSelected(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1232,7 +1232,7 @@ namespace ReplWindowUITests {
         /// Same as EditPasteSecondaryPromptSelected, but the selection is reversed so that the
         /// caret is in the prompt.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void EditPasteSecondaryPromptSelectedInPromptMargin(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1261,7 +1261,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests entering an unknown repl commmand
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ReplCommandUnknown(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1274,7 +1274,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests entering an unknown repl commmand
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ReplCommandComment(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1287,7 +1287,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests using the $cls clear screen command
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ClearScreenCommand(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1302,7 +1302,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command help
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ReplCommandHelp(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1320,7 +1320,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with a simple script.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CommandsLoadScript(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1343,7 +1343,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with a simple script.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CommandsLoadScriptWithQuotes(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1366,7 +1366,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with multiple statements including a class definition.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CommandsLoadScriptWithClass(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1397,7 +1397,7 @@ c = C()
         /// <summary>
         /// Tests $load command with file that includes multiple submissions.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CommandsLoadScriptMultipleSubmissions(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1431,7 +1431,7 @@ fob()
         /// <summary>
         /// Tests that ClearScreen doesn't cancel pending submissions queue.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void CommandsLoadScriptMultipleSubmissionsWithClearScreen(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1460,7 +1460,7 @@ $cls
         /// <summary>
         /// Inserts code to REPL while input is accepted. 
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void InsertCode(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -1485,7 +1485,7 @@ $cls
         /// Inserts code to REPL while submission execution is in progress. 
         /// The inserted input should be appended to uncommitted input and show up when the execution is finished/aborted.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void InsertCodeWhileRunning(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {

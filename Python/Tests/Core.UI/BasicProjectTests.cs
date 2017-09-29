@@ -1291,7 +1291,7 @@ namespace PythonToolsUITests {
             CountIs(itemCount, "HelloWorld.py", 0);     // not included because the actual name is Program.py
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void EnvironmentVariablesWithDebugging(VisualStudioApp app, PythonProjectGenerator p) {
             var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
@@ -1327,7 +1327,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void EnvironmentVariablesWithoutDebugging(VisualStudioApp app, PythonProjectGenerator p) {
             var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
@@ -1413,7 +1413,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(0, app.OpenDocumentWindows.Count());
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         //public void CopyFullPath() {
         //    foreach (var projectType in ProjectTypes) {

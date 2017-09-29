@@ -52,74 +52,74 @@ namespace IpcJsonTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ValidPackets() {
             await TestValidPacketAsync(PacketProvider.GetValidPacket1());
             await TestValidPacketAsync(PacketProvider.GetValidPacket2());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ValidUnicodePackets() {
             await TestValidPacketAsync(PacketProvider.GetValidUnicodePacket1());
             await TestValidPacketAsync(PacketProvider.GetValidUnicodePacket2());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task TruncatedJson() {
             foreach (var packet in PacketProvider.GetTruncatedJsonPackets()) {
                 await TestInvalidPacketAsync(packet);
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task IncorrectContentLengthUnderread() {
             foreach (var packet in PacketProvider.GetIncorrectContentLengthUnderreadPackets()) {
                 await TestInvalidPacketAsync(packet);
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task IncorrectContentLengthOverread() {
             foreach (var packet in PacketProvider.GetIncorrectContentLengthOverreadPackets()) {
                 await TestInvalidPacketAsync(packet);
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task IncorrectContentLengthOverreadEndOfStream() {
             foreach (var packet in PacketProvider.GetIncorrectContentLengthOverreadEndOfStreamPackets()) {
                 await TestInvalidPacketAsync(packet);
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task InvalidContentLengthType() {
             await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthIntegerTooLargePacket());
             await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthNegativeIntegerPacket());
             await TestInvalidPacketAsync(PacketProvider.GetInvalidContentLengthNotIntegerPacket());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task MissingContentLength() {
             await TestInvalidPacketAsync(PacketProvider.GetMissingContentLengthPacket());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task MalformedHeader() {
             await TestInvalidPacketAsync(PacketProvider.GetMalformedHeaderPacket());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task AdditionalHeaders() {
             await TestValidPacketAsync(PacketProvider.GetAdditionalHeadersPacket());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task EmptyStream() {
             await TestNoPacketAsync(PacketProvider.GetNoPacket());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task UnterminatedHeader() {
             await TestNoPacketAsync(PacketProvider.GetUnterminatedPacket());
             await TestNoPacketAsync(PacketProvider.GetIncorrectlyTerminatedPacket());

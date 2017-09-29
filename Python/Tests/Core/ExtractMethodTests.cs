@@ -50,7 +50,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestGlobalNonLocalVars() {
             SuccessTest("ABC = 42",
 @"def f():
@@ -102,7 +102,7 @@ def f():
 
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestDefinitions() {
             SuccessTest("x = .. = h()",
 @"def f():
@@ -161,7 +161,7 @@ def f(): pass",
 f = g()");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestLeadingComment() {
             SuccessTest("x = 41",
 @"# fob
@@ -174,7 +174,7 @@ def g():
 x = g()");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AssignInIfStatementReadAfter() {
             ExtractMethodTest(@"class C:
     def fob(self):
@@ -238,11 +238,11 @@ x = g()");
 
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ExtractMethodIndexExpr() {
             ExtractMethodTest(@"class C:
     def process_kinect_event(self, e):
-        for skeleton in e.skeletons:         
+        for skeleton in e.skeletons:
             fob[skeleton.dwTrackingID] = Player()
 ", "fob[skeleton.dwTrackingID] = Player()", TestResult.Success(
  @"class C:
@@ -250,13 +250,13 @@ x = g()");
         fob[skeleton.dwTrackingID] = Player()
 
     def process_kinect_event(self, e):
-        for skeleton in e.skeletons:         
+        for skeleton in e.skeletons:
             self.g(skeleton)
 "
  ), scopeName: "C");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractLambda() {
             // lambda is present in the code
             ExtractMethodTest(
@@ -285,7 +285,7 @@ def f():
     abc = g()"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractGenerator() {
             var code = @"def f(imp = imp):
     yield 42";
@@ -299,7 +299,7 @@ def f(imp = g()):
     yield 42"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractDefaultValue() {
             var code = @"def f(imp = imp):
     pass";
@@ -313,14 +313,14 @@ def f(imp = g()):
     pass"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestFromImportStar() {
             ExtractMethodTest(
 @"def f():
     from sys import *", "from sys import *", TestResult.Error(ErrorImportStar));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfter() {
             SuccessTest("x = 42",
 @"def f():
@@ -338,7 +338,7 @@ def f():
         print x, y");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfterStmtList() {
             SuccessTest("x = 42",
 @"def f():
@@ -359,7 +359,7 @@ def f():
 
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfterStmtListRead() {
             SuccessTest("x = 100",
 @"def f():
@@ -378,7 +378,7 @@ def f():
         print (x, y)");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestAllNodes() {
             var prefixes = new string[] { " # fob\r\n", "" };
@@ -498,7 +498,7 @@ def f():
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfterStmtListMultipleAssign() {
             SuccessTest("x = 100; x = 200",
 @"def f():
@@ -519,7 +519,7 @@ def f():
 
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractFromClass() {
             ExtractMethodTest(
 @"class C:
@@ -527,7 +527,7 @@ def f():
     oar = 100", "abc .. 100", TestResult.Error(ErrorExtractFromClass));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExtractSuiteWhiteSpace() {
             SuccessTest("x .. 200",
 @"def f():
@@ -563,7 +563,7 @@ def f():
         /// <summary>
         /// Test cases that verify we correctly identify when not all paths contain return statements.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestNotAllCodePathsReturn() {            
             TestMissingReturn("for i .. 23", @"def f(x):
     for i in xrange(100):
@@ -623,7 +623,7 @@ def f():
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestReturnWithOutputVars() {
             TestReturnWithOutputs("if x .. 100", @"def f(x):
     if x:
@@ -635,7 +635,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCannotRefactorYield() {
             TestBadYield("yield 42", @"def f(x):
     yield 42
@@ -647,7 +647,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestContinueWithoutLoop() {
             TestBadContinue("continue", @"def f(x):
     for i in xrange(100):
@@ -655,7 +655,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestBreakWithoutLoop() {
             TestBadBreak("break", @"def f(x):
     for i in xrange(100):
@@ -667,7 +667,7 @@ def f():
         /// Test cases which make sure we have the right ranges for each statement when doing extract method
         /// and that we don't mess up the code before/after the statement.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void StatementTests() {
             SuccessTest("b",
 @"def f():
@@ -1106,7 +1106,7 @@ class C:
         g()");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ClassTests() {
             SuccessTest("x = fob",
 @"class C(object):
@@ -1216,7 +1216,7 @@ class C:
 
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestComprehensions() {
             SuccessTest("i % 2 == 0", @"def f():
     x = [i for i in range(100) if i % 2 == 0]", @"def g(i):
@@ -1247,7 +1247,7 @@ def f():
     x = {k:v for k,v in range(100) if g(k, v)}", version: new Version(3, 2));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SuccessfulTests() {
             SuccessTest("x .. 100",
 @"def f():
@@ -1601,7 +1601,7 @@ def f(x):
     return (g())");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ExtractAsyncFunction() {
             // Ensure extracted bodies that use await generate async functions
 

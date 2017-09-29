@@ -37,7 +37,7 @@ namespace ReplWindowUITests {
             return Prepare(app, useIPython: true, addNewLineAtEndOfFullyTypedWord: addNewLineAtEndOfFullyTypedWord);
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void IPythonMode(PythonVisualStudioApp app) {
             using (var interactive = PrepareIPython(app)) {
@@ -53,7 +53,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void IPythonCtrlBreakAborts(PythonVisualStudioApp app) {
             using (var interactive = PrepareIPython(app)) {
@@ -76,7 +76,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void IPythonSimpleCompletion(PythonVisualStudioApp app) {
             using (var interactive = PrepareIPython(app, addNewLineAtEndOfFullyTypedWord: false)) {
@@ -103,7 +103,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void IPythonSimpleSignatureHelp(PythonVisualStudioApp app) {
             using (var interactive = PrepareIPython(app)) {
@@ -128,7 +128,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void IPythonInlineGraph(PythonVisualStudioApp app) {
             using (var interactive = PrepareIPython(app)) {
@@ -144,7 +144,7 @@ plot(x, x)");
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void IPythonStartInInteractive(PythonVisualStudioApp app) {
             using (var interactive = PrepareIPython(app))
@@ -156,7 +156,7 @@ plot(x, x)");
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ExecuteInIPythonReplSysArgv(PythonVisualStudioApp app) {
             using (var interactive = PrepareIPython(app))
@@ -168,7 +168,7 @@ plot(x, x)");
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ExecuteInIPythonReplSysArgvScriptArgs(PythonVisualStudioApp app) {
             using (var interactive = PrepareIPython(app))

@@ -36,7 +36,7 @@ namespace ReplWindowUITests {
         /// Simple line-by-line tests which verify we submit when we get to
         /// the next statement.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void SendToInteractiveLineByLine(PythonVisualStudioApp app) {
             RunOne(app, "Program.py",
@@ -66,7 +66,7 @@ namespace ReplWindowUITests {
         /// Simple cell-by-cell tests which verify we submit when we get to
         /// the next statement.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void SendToInteractiveCellByCell(PythonVisualStudioApp app) {
             RunOne(app, "Cells.py",
@@ -97,7 +97,7 @@ namespace ReplWindowUITests {
         /// Line-by-line tests that verify we work with buffering code
         /// while it's executing.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void SendToInteractiveDelayed(PythonVisualStudioApp app) {
             RunOne(app, "Delayed.py",
@@ -116,7 +116,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Mixed line-by-line and selection, no buffering
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void SendToInteractiveSelection(PythonVisualStudioApp app) {
             RunOne(app, "Delayed.py",
@@ -139,7 +139,7 @@ namespace ReplWindowUITests {
         /// Mixed line-by-line and selection, buffering while the selection
         /// is submitted.
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void SendToInteractiveSelectionNoWait(PythonVisualStudioApp app) {
             RunOne(app, "Delayed.py",

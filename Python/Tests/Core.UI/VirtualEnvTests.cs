@@ -100,7 +100,7 @@ namespace PythonToolsUITests {
             return project;
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void InstallUninstallPackage(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
@@ -134,7 +134,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CreateInstallRequirementsTxt(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
@@ -156,7 +156,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void InstallGenerateRequirementsTxt(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
@@ -202,7 +202,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadVirtualEnv(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
@@ -226,7 +226,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ActivateVirtualEnv(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
@@ -259,7 +259,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void RemoveVirtualEnv(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
@@ -286,7 +286,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeleteVirtualEnv(PythonVisualStudioApp app) {
             using (var procs = new ProcessScope("Microsoft.PythonTools.Analyzer"))
@@ -334,7 +334,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DefaultBaseInterpreterSelection(PythonVisualStudioApp app) {
             // The project that will be loaded references these environments.
@@ -365,7 +365,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void NoGlobalSitePackages(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
@@ -398,7 +398,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CreateVEnv(PythonVisualStudioApp app) {
             using (var dis = Init3(app)) {
@@ -425,7 +425,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingVEnv(PythonVisualStudioApp app) {
             var python = PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
@@ -449,7 +449,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             );
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void LaunchUnknownEnvironment(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\Environments\Unknown.sln");
@@ -590,7 +590,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void EnvironmentReplWorkingDirectory(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {
@@ -609,7 +609,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void VirtualEnvironmentReplWorkingDirectory(PythonVisualStudioApp app) {
             using (var dis = Init(app)) {

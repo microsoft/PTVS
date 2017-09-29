@@ -33,7 +33,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void UpgradeCheckToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -65,7 +65,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void UpgradeToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -118,7 +118,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void UpgradeCheckUserToolsVersion() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -161,7 +161,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void OldWebProjectUpgrade() {
             // PTVS 2.1 Beta 1 shipped with separate .targets files for Bottle
             // and Flask. In PTVS 2.1 Beta 2 these were removed. This test
@@ -224,7 +224,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void CommonPropsProjectUpgrade() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -261,7 +261,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void CommonTargetsProjectUpgrade() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -307,7 +307,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void PythonTargetsProjectUpgrade() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
@@ -353,7 +353,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void InterpreterIdUpgrade() {
             // PTVS 3.0 changed interpreter ID format.
             var factory = new PythonProjectFactory(null);
@@ -407,7 +407,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void InterpreterReferenceUpgrade() {
             // PTVS 3.0 changed interpreter ID format.
             var factory = new PythonProjectFactory(null);
@@ -454,7 +454,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void BaseInterpreterUpgrade() {
             // PTVS 3.0 changed interpreter ID format.
             var factory = new PythonProjectFactory(null);
@@ -497,7 +497,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void WebBrowserUrlUpgrade() {
             // PTVS 3.0 changed interpreter ID format.
             var factory = new PythonProjectFactory(null);

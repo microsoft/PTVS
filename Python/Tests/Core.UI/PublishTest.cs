@@ -238,7 +238,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPublishFilesImpersonateNoMachineName(VisualStudioApp app) {
             WNetCancelConnection2(TestSharePrivate, 0, true);

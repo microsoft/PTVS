@@ -29,7 +29,7 @@ namespace AnalysisTests {
     /// </summary>
     [TestClass]
     public class ParserRoundTripTest {
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCodeFormattingOptions() {
             /* Function Definitions */
             // SpaceAroundDefaultValueEquals
@@ -291,7 +291,7 @@ namespace AnalysisTests {
             TestOneString(PythonLanguageVersion.V27, "def f():\r\n    x = 42; y = 100", new CodeFormattingOptions() { BreakMultipleStatementsPerLine = true, RemoveTrailingSemicolons = true }, "def f():\r\n    x = 42\r\n    y = 100");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestReflowComment() {
             var commentTestCases = new[] { 
                 new {
@@ -397,7 +397,7 @@ def f ( ):
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestReflowComment2() {
             foreach (var optionValue in new bool?[] { true, false, null }) {
                 var options = new CodeFormattingOptions() {
@@ -439,7 +439,7 @@ def f ( ):
          /// <summary>
         /// Verify trailing \ at the end a file round trips
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestBackslashThenEof() {
             var code = @"x = 100
 \";
@@ -458,7 +458,7 @@ def f ( ):
         /// <summary>
         /// Verify trailing \ doesn't mess up comments
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestReflowComment3() {
             var code = @"def f():
     if a and \
@@ -479,7 +479,7 @@ def f ( ):
         /// <summary>
         /// Verify reflowing comment doesn't introduce extra new line
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestReflowComment4() {
             var code = @"def f(): # fob
     pass";
@@ -538,7 +538,7 @@ def f ( ):
         /// <summary>
         /// Verifies that the proceeding white space is consistent across all nodes.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestStartWhiteSpace() {
             foreach (var preceedingText in new[] { "#fob\r\n" }) {
                 var allSnippets = 
@@ -568,8 +568,8 @@ def f ( ):
             }
         }
 
-        [TestMethod, Priority(1)]
-        public void ExpressionsTest() {            
+        [TestMethod, Priority(0)]
+        public void ExpressionsTest() {
             // TODO: Trailing white space tests
             // Unary Expressions
             TestOneString(PythonLanguageVersion.V27, "x=~42");
@@ -789,7 +789,7 @@ def f ( ):
             //TestOneString(PythonLanguageVersion.V27, "{1:2, 2 :3, 3: 4]");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestMangledPrivateName() {
             TestOneString(PythonLanguageVersion.V27, @"class C:
     def f(__a):
@@ -821,7 +821,7 @@ def f ( ):
 ");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestComments() {
 
             TestOneString(PythonLanguageVersion.V27, @"x = fob(
@@ -839,7 +839,7 @@ def f ( ):
 
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestWhiteSpaceAfterDocString() {
             TestOneString(PythonLanguageVersion.V27, @"'''hello
 
@@ -849,13 +849,13 @@ this is some documentation
 import fob");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestBinaryFiles() {
             var filename = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.System), "kernel32.dll");
             TestOneString(PythonLanguageVersion.V27, filename);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestErrors() {
             TestOneString(PythonLanguageVersion.V30, ":   ...");
 
@@ -1099,18 +1099,18 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V36, "p: 1=optimized | 2=newlocals | 4=*arg | 8=**arg");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestExplicitLineJoin() {
             TestOneString(PythonLanguageVersion.V27, @"fob(4 + \
                     5)");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestTrailingComment() {
             TestOneString(PythonLanguageVersion.V27, "def f(): pass\r\n#fob");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestStatements() {
             // TODO: Vary all of these tests by putting the test case in a function def
             // TODO: Vary all of these tests by adding trailing comments                        
@@ -1527,7 +1527,7 @@ def f(): pass");
 
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void StdLibTest() {
             var versions = new[] { 
                 new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
@@ -1568,7 +1568,7 @@ def f(): pass");
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void GroupingRecovery() {
             // The exact text below hit an issue w/ grouping recovery where the buffer wrapped
             // and our grouping recovery was invalid, but we thought it was valid due to the

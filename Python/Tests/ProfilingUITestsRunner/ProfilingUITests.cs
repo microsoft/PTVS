@@ -40,97 +40,97 @@ namespace ProfilingUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DefaultInterpreterSelected() {
             _vs.RunTest(nameof(PUIT.DefaultInterpreterSelected));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartupProjectSelected() {
             _vs.RunTest(nameof(PUIT.StartupProjectSelected));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void NewProfilingSession() {
             _vs.RunTest(nameof(PUIT.NewProfilingSession));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DeleteMultipleSessions() {
             _vs.RunTest(nameof(PUIT.DeleteMultipleSessions));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void NewProfilingSessionOpenSolution() {
             _vs.RunTest(nameof(PUIT.NewProfilingSessionOpenSolution));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchPythonProfilingWizard() {
             _vs.RunTest(nameof(PUIT.LaunchPythonProfilingWizard));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchProject() {
             _vs.RunTest(nameof(PUIT.LaunchProject));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchProjectWithSpaceInFilename() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithSpaceInFilename));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchProjectWithSearchPath() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithSearchPath));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchProjectWithPythonPathSet() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithPythonPathSet));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchProjectWithPythonPathClear() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithPythonPathClear));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchProjectWithEnvironment() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithEnvironment));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SaveDirtySession() {
             _vs.RunTest(nameof(PUIT.SaveDirtySession));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DeleteReport() {
             _vs.RunTest(nameof(PUIT.DeleteReport));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void CompareReports() {
             _vs.RunTest(nameof(PUIT.CompareReports));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void RemoveReport() {
             _vs.RunTest(nameof(PUIT.RemoveReport));
@@ -144,181 +144,181 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.OpenReport));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void OpenReportCtxMenu() {
             _vs.RunTest(nameof(PUIT.OpenReportCtxMenu));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void TargetPropertiesForProject() {
             _vs.RunTest(nameof(PUIT.TargetPropertiesForProject));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void TargetPropertiesForInterpreter() {
             _vs.RunTest(nameof(PUIT.TargetPropertiesForInterpreter));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void TargetPropertiesForExecutable() {
             _vs.RunTest(nameof(PUIT.TargetPropertiesForExecutable));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StopProfiling() {
             _vs.RunTest(nameof(PUIT.StopProfiling));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void MultipleTargets() {
             _vs.RunTest(nameof(PUIT.MultipleTargets));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void MultipleTargetsWithProjectHome() {
             _vs.RunTest(nameof(PUIT.MultipleTargetsWithProjectHome));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void MultipleReports() {
             _vs.RunTest(nameof(PUIT.MultipleReports));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchExecutable() {
             _vs.RunTest(nameof(PUIT.LaunchExecutable));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void ClassProfile() {
             _vs.RunTest(nameof(PUIT.ClassProfile));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void OldClassProfile() {
             _vs.RunTest(nameof(PUIT.OldClassProfile));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DerivedProfile() {
             _vs.RunTest(nameof(PUIT.DerivedProfile));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void Pystone() {
             _vs.RunTest(nameof(PUIT.Pystone));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython26() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython26));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython27() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython27));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython27x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython27x64));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython31() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython31));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython32() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython32));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython32x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython32x64));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython33() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython33));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython33x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython33x64));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython34() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython34));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython34x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython34x64));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython35() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython35));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython35x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython35x64));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython36() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython36));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython36x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython36x64));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython37() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython37));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython37x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython37x64));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LaunchExecutableUsingInterpreterGuid() {
             _vs.RunTest(nameof(PUIT.LaunchExecutableUsingInterpreterGuid));

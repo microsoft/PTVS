@@ -39,14 +39,14 @@ namespace ProjectUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         // Currently Fails: https://pytools.codeplex.com/workitem/2609
         public void MoveFolderWithItem() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.MoveFolderWithItem));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void AddNewItem() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.AddNewItem));
@@ -56,13 +56,13 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.AddExistingItem));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void IncludeInProject() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.IncludeInProject));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void RemoveItem() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.RemoveItem));
@@ -71,7 +71,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void BasicSourceControl() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.BasicSourceControl));
@@ -80,7 +80,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Verify the glyph change APIs update the glyphs appropriately
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SourceControlGlyphChanged() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.SourceControlGlyphChanged));
@@ -89,7 +89,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Verify we don't get called for a project which doesn't have source control enabled.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SourceControlNoControl() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.SourceControlNoControl));
@@ -100,7 +100,7 @@ namespace ProjectUITestsRunner {
         /// 
         /// https://pytools.codeplex.com/workitem/1417
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SourceControlExcludedFilesNotPresent() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.SourceControlExcludedFilesNotPresent));
@@ -109,7 +109,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SourceControlRenameFolder() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.SourceControlRenameFolder));

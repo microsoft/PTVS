@@ -37,7 +37,7 @@ namespace PythonToolsTests {
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void MergeRequirements() {
             // Comments should be preserved, only package specs should change.
             AssertUtil.AreEqual(
@@ -104,7 +104,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void MergeRequirementsMismatchedCase() {
             AssertUtil.AreEqual(
                 PythonProjectNode.MergeRequirements(new[] {
@@ -144,7 +144,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void FindRequirementsRegexTest() {
             var r = PythonProjectNode.FindRequirementRegex;
             AssertUtil.AreEqual(r.Matches("aaaa bbbb cccc").Cast<Match>().Select(m => m.Value),
@@ -195,7 +195,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void UpdateWorkerRoleServiceDefinitionTest() {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -233,7 +233,7 @@ namespace PythonToolsTests {
 </ServiceDefinition>", doc);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void UpdateWebRoleServiceDefinitionTest() {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -261,7 +261,7 @@ namespace PythonToolsTests {
 </ServiceDefinition>", doc);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void LoadAndUnloadModule() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
@@ -321,7 +321,7 @@ namespace PythonToolsTests {
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();

@@ -314,19 +314,19 @@ R_A3 = R_A1.r_A()");
         #region Black-box sanity tests
         // "Do we crash?"
 
-        [TestMethod, TestCategory("10s"), Priority(1)]
+        [TestMethod, TestCategory("60s"), Priority(0)]
         public void FullStdLibV35() {
             var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V35);
             FullStdLibTest(v);
         }
 
-        [TestMethod, TestCategory("10s"), Priority(1)]
+        [TestMethod, TestCategory("60s"), Priority(0)]
         public void FullStdLibV36() {
             var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V36);
             FullStdLibTest(v);
         }
 
-        [TestMethod, TestCategory("10s"), Priority(1)]
+        [TestMethod, TestCategory("60s"), Priority(0)]
         public void FullStdLibV27() {
             var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V27);
             FullStdLibTest(v);

@@ -78,7 +78,7 @@ namespace PythonToolsUITests {
             return new InterpreterConfiguration($"Mock|{path}", path, Path.GetDirectoryName(path), path, "", "", InterpreterArchitecture.Unknown, new Version(2, 7));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void HasInterpreters() {
             var sp = new MockServiceProvider();
@@ -114,7 +114,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void InterpretersWithSameNames() {
             var sp = new MockServiceProvider();
@@ -147,7 +147,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task InterpretersRaceCondition() {
             var container = CreateCompositionContainer();
@@ -228,7 +228,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void NonDefaultInterpreter() {
             var mockProvider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
                 new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7))),
@@ -273,7 +273,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AddFactories() {
             var mockService = new MockInterpreterOptionsService();
             using (var wpf = new WpfProxy())
@@ -300,7 +300,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void FactoryWithInvalidPath() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -339,7 +339,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void FactoryWithValidPath() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -364,7 +364,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RefreshDBStates() {
             using (var fact = new MockPythonInterpreterFactory(
                 MockInterpreterConfiguration(
@@ -428,7 +428,7 @@ namespace PythonToolsUITests {
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void InstalledFactories() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -461,8 +461,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
-        [TestCategory("10s")]
+        [TestMethod, Priority(0)]
         public void AddUpdateRemoveConfigurableFactory() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -573,7 +572,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
+        [TestCategory("60s")]
         public async Task AddUpdateRemoveConfigurableFactoryThroughUI() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -629,7 +629,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ChangeDefault() {
             var container = CreateCompositionContainer();
             var service = container.GetExportedValue<IInterpreterOptionsService>();
@@ -678,7 +678,7 @@ namespace PythonToolsUITests {
             return tcs.Task;
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task PipExtension() {
             var service = MakeEmptyVEnv(usePipPackageManager: true);
@@ -721,7 +721,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task SaveLoadCache() {
             var cachePath = Path.Combine(TestData.GetTempPath(), "pip.cache");
             using (var cache = new TestPipPackageCache(cachePath)) {
@@ -751,7 +751,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task UpdatePackageInfo() {
             var pm = new MockPackageManager();
             
@@ -778,7 +778,7 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void VendorInfo() {
             var sp = new MockServiceProvider();
@@ -819,7 +819,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void FileNameEllipsis() {
             TestFileNameEllipsis("C:\\Python\\python.exe", "C:\\", "Python", "\\python.exe");
             TestFileNameEllipsis("C:\\Python\\lib\\", "C:\\", "Python", "\\lib\\");

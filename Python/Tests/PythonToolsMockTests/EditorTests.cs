@@ -34,7 +34,7 @@ namespace PythonToolsMockTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void BuiltinFunctionSigHelp() {
             using (var view = new PythonEditor()) {
                 view.TypeAndWaitForAnalysis("min");
@@ -54,7 +54,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SigHelpInClass() {
             using (var view = new PythonEditor()) {
                 view.TypeAndWaitForAnalysis("class C(): pass");
@@ -66,7 +66,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void BuiltinFunctionCompletions() {
             using (var view = new PythonEditor()) {
                 view.TypeAndWaitForAnalysis("min");
@@ -78,7 +78,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void FilterCompletions() {
             using (var view = new PythonEditor()) {
                 view.TypeAndWaitForAnalysis("min");
@@ -94,7 +94,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void DotCompletes() {
             using (var view = new PythonEditor()) {
                 view.TypeAndWaitForAnalysis("min");
@@ -110,7 +110,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void NonIdentifierDismisses() {
             using (var view = new PythonEditor()) {
                 view.TypeAndWaitForAnalysis("min");
@@ -128,7 +128,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void EnterCommits() {
             using (var view = new PythonEditor()) {
                 view.TypeAndWaitForAnalysis("min");
@@ -143,7 +143,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void EnterDismisses() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.EnterCommitsIntellisense = false;
@@ -161,7 +161,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void EnterCommitsCompleteNoNewLine() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
@@ -180,7 +180,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TabCommits() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.EnterCommitsIntellisense = false;
@@ -200,7 +200,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void DecoratorCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("@");
@@ -211,7 +211,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void DecoratorNonCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("a = b @");
@@ -220,7 +220,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListIdentifierCompletions() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AutoListIdentifiers = true;
@@ -312,32 +312,32 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListInDef() {
             AutoListTest("def fn(p:a, q=b) -> x", 9, 14, 20);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListInAssignment() {
             AutoListTest("a, b, c = a, b, c", 10, 13, 16);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListInClass() {
             AutoListTest("class F(o, p):", 8, 11);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListInLambda() {
             AutoListTest("a = lambda x, y: p", 4, 17);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListInWith() {
             AutoListTest("with a as b, c(x) as d:", 5, 13, -22);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListInLiterals() {
             AutoListTest("[a, b, c]", 1, 4, 7);
             AutoListTest("{a, b, c}", 1, 4, 7);
@@ -345,7 +345,7 @@ namespace PythonToolsMockTests {
             AutoListTest("{a: b, c: d, e: f}", 1, 4, 7, 10, 13, 16);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListInComprehensions() {
             // TODO: Make completions trigger after spaces
             // eg: AutoListTest("[a for a in b]", 1, 3, 9, 12);
@@ -357,7 +357,7 @@ namespace PythonToolsMockTests {
             AutoListTest("x = [a for a in b for c in d if x]", 0, 5, -11, 16, -22, 27, 32);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AutoListInStatements() {
             AutoListTest("assert a", 0, -6, 7);
             AutoListTest("a += b", 0, 5);
@@ -373,7 +373,7 @@ namespace PythonToolsMockTests {
             AutoListTest("yield a", -5, 6);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void DisableAutoCompletions() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AutoListMembers = false;
@@ -390,7 +390,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void CompletionsAtEndOfLastChildScope() {
             using (var view = new PythonEditor(@"class A:
     def f(param1, param2):
@@ -410,7 +410,7 @@ class B:
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void NewlineWithinComment() {
             using (var view = new PythonEditor(@"# comment")) {
                 view.MoveCaret(1, 1);

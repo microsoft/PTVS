@@ -49,7 +49,7 @@ namespace TestAdapterTests {
 
         protected virtual string ImportErrorFormat => OldImportErrorFormat;
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void FromCommandLineArgsRaceCondition() {
             // https://pytools.codeplex.com/workitem/1429
 
@@ -219,7 +219,7 @@ namespace TestAdapterTests {
             )), testCases);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestRun() {
             var executor = new TestExecutor();
@@ -240,7 +240,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestRunAll() {
             var executor = new TestExecutor();
@@ -261,7 +261,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCancel() {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
@@ -295,7 +295,7 @@ namespace TestAdapterTests {
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestMultiprocessing() {
             if (Version.Version <= PythonLanguageVersion.V26 ||
@@ -320,7 +320,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestInheritance() {
             // TODO: Figure out the proper fix to make this test pass.
@@ -343,7 +343,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestLoadError() {
             // A load error is when unittest module fails to load the test (prior to running it)
@@ -377,7 +377,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestStackTrace() {
             var executor = new TestExecutor();
@@ -460,7 +460,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestEnvironment() {
             var executor = new TestExecutor();
@@ -480,7 +480,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestDuration() {
             var executor = new TestExecutor();
@@ -507,7 +507,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestTeardown() {
             var executor = new TestExecutor();
@@ -602,7 +602,7 @@ namespace TestAdapterTests {
 
         protected override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestExtensionReference() {
             // This test uses a 32-bit Python 2.7 .pyd

@@ -37,7 +37,7 @@ namespace ReplWindowUITests {
     /// </summary>
     //[TestClass, Ignore]
     public abstract class ReplWindowPythonTests : ReplWindowPythonSmokeTests {
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void RegressionImportSysBackspace(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -58,7 +58,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void RegressionImportMultipleModules(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app, addNewLineAtEndOfFullyTypedWord: true)) {
@@ -79,7 +79,7 @@ namespace ReplWindowUITests {
         /// appropriate syntax color highlighting.
         /// </summary>
         //[Ignore] // https://github.com/Microsoft/PTVS/issues/2762
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void SyntaxHighlightingRaiseException(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app))
@@ -122,7 +122,7 @@ namespace ReplWindowUITests {
         /// also outputs, make sure the auto indent is gone before we do the
         /// input. (regression for http://pytools.codeplex.com/workitem/92)
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void PrintWithParens(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -149,7 +149,7 @@ namespace ReplWindowUITests {
         /// Make sure that we can successfully delete an autoindent inputted span
         /// (regression for http://pytools.codeplex.com/workitem/93)
         /// </summary>
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void UndeletableIndent(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -168,7 +168,7 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void InlineImage(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -205,7 +205,7 @@ repl is not None");
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void ImportCompletions(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -238,7 +238,7 @@ repl is not None");
         }
 
         [Ignore] // https://github.com/Microsoft/PTVS/issues/2682
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void Comments(PythonVisualStudioApp app) {
             using (var interactive = Prepare(app)) {
@@ -257,7 +257,7 @@ repl is not None");
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void NoSnippets(PythonVisualStudioApp app) {
             // https://pytools.codeplex.com/workitem/2945 is the reason for
@@ -277,7 +277,7 @@ repl is not None");
             }
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public virtual void TestPydocRedirected(PythonVisualStudioApp app) {
             // We run this test on multiple interpreters because pydoc
