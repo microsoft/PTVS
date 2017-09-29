@@ -27,34 +27,498 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
-    //[TestClass, Ignore]
-    public abstract class ReplWindowTests {
-        internal abstract ReplWindowProxySettings Settings { get; }
+    public class ReplWindowUITests {
+        #region Smoke tests
 
-        private ReplWindowProxy Prepare(PythonVisualStudioApp app, bool addNewLineAtEndOfFullyTypedWord = false) {
-            var s = Settings;
-            if (addNewLineAtEndOfFullyTypedWord != s.AddNewLineAtEndOfFullyTypedWord) {
-                s = s.Clone();
-                s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
+        public void ExecuteInReplSysArgv(PythonVisualStudioApp app, string interpreter) {
+            Settings = ReplWindowSettings.FindSettingsForInterpreter(interpreter);
+            using (app.SelectDefaultInterpreter(Settings.Version)) {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
+                });
+
+                var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
+
+                using (var interactive = app.ExecuteInInteractive(project, Settings)) {
+                    interactive.WaitForTextEnd("Program.py']", ">");
+                }
             }
-
-            return ReplWindowProxy.Prepare(app, s);
         }
 
-        #region Miscellaneous tests
+        public void ExecuteInReplSysArgvScriptArgs(PythonVisualStudioApp app, string interpreter) {
+            Settings = ReplWindowSettings.FindSettingsForInterpreter(interpreter);
+            using (app.SelectDefaultInterpreter(Settings.Version)) {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
+                });
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void ClearInputHelper(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+                var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
+
+                using (var interactive = app.ExecuteInInteractive(project, Settings)) {
+                    interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ">");
+                }
+            }
+        }
+
+        public void ExecuteInReplUnicodeFilename(PythonVisualStudioApp app, string interpreter) {
+            Settings = ReplWindowSettings.FindSettingsForInterpreter(interpreter);
+            using (app.SelectDefaultInterpreter(Settings.Version)) {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
+                });
+
+                var sln = TestData.GetTempPath();
+                File.Copy(TestData.GetPath("TestData", "UnicodePath.sln"), Path.Combine(sln, "UnicodePathä.sln"));
+                FileUtils.CopyDirectory(TestData.GetPath("TestData", "UnicodePath"), Path.Combine(sln, "UnicodePathä"));
+                var project = app.OpenProject(Path.Combine(sln, "UnicodePathä.sln"));
+
+                using (var interactive = app.ExecuteInInteractive(project, Settings)) {
+                    interactive.WaitForTextEnd("hello world from unicode path", ">");
+                }
+            }
+        }
+
+        public void CwdImport(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                interactive.SubmitCode("import sys\nsys.path");
+                interactive.SubmitCode("import os\nos.chdir(r'" + TestData.GetPath("TestData\\ReplCwd") + "')");
+
+                var importErrorFormat = ((ReplWindowProxySettings)interactive.Settings).ImportError;
+                interactive.SubmitCode("import module1");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat + "\n>", "module1").Split('\n'));
+
+                interactive.SubmitCode("import module2");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat + "\n>", "module2").Split('\n'));
+
+                interactive.SubmitCode("os.chdir('A')");
+                interactive.WaitForTextEnd(">os.chdir('A')", ">");
+
+                interactive.SubmitCode("import module1");
+                interactive.WaitForTextEnd(">import module1", ">");
+
+                interactive.SubmitCode("import module2");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat + "\n>", "module2").Split('\n'));
+
+                interactive.SubmitCode("os.chdir('..\\B')");
+                interactive.WaitForTextEnd(">os.chdir('..\\B')", ">");
+
+                interactive.SubmitCode("import module2");
+                interactive.WaitForTextEnd(">import module2", ">");
+            }
+        }
+
+        public void QuitAndReset(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                interactive.SubmitCode("quit()");
+                interactive.WaitForText(">quit()", "The interactive Python process has exited.", ">");
+                interactive.Reset();
+
+                interactive.WaitForText(">quit()", "The interactive Python process has exited.", "Resetting Python state.", ">");
+                interactive.SubmitCode("42");
+
+                interactive.WaitForTextEnd(">42", "42", ">");
+            }
+        }
+
+        public void PrintAllCharacters(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                interactive.SubmitCode("print(\"" +
+                    string.Join("", Enumerable.Range(0, 256).Select(i => string.Format("\\x{0:X2}", i))) +
+                    "\\nDONE\")",
+                    timeout: TimeSpan.FromSeconds(10.0)
+                );
+
+                interactive.WaitForTextEnd("DONE", ">");
+            }
+        }
+
+        #endregion
+
+        #region Basic tests
+
+        public void RegressionImportSysBackspace(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                const string importCode = ">import sys";
+                interactive.SubmitCode(importCode.Substring(1));
+                interactive.WaitForText(importCode, ">");
+
+                interactive.Type("sys", commitLastLine: false);
+
+                interactive.WaitForText(importCode, ">sys");
+
+                interactive.Backspace(2);
+
+                interactive.WaitForText(importCode, ">s");
+                interactive.Backspace();
+
+                interactive.WaitForText(importCode, ">");
+            }
+        }
+
+        public void RegressionImportMultipleModules(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter, addNewLineAtEndOfFullyTypedWord: true)) {
+                Keyboard.Type("import ");
+
+                using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                    Assert.IsNotNull(sh.Session.SelectedCompletionSet, "No selected completion set");
+                    var names = sh.Session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
+                    var nameset = new HashSet<string>(names);
+
+                    Assert.AreEqual(names.Count, nameset.Count, "Module names were duplicated");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Type "raise Exception()", hit enter, raise Exception() should have
+        /// appropriate syntax color highlighting.
+        /// </summary>
+        public void SyntaxHighlightingRaiseException(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter))
+            using (var newClassifications = new AutoResetEvent(false)) {
+                const string code = "raise Exception()";
+                interactive.Classifier.ClassificationChanged += (s, e) => newClassifications.SetIfNotDisposed();
+
+                interactive.SubmitCode(code);
+
+                interactive.WaitForText(
+                    ">" + code,
+                    "Traceback (most recent call last):",
+                    "  File \"<" + ((ReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
+                    "Exception",
+                    ">"
+                );
+
+                var snapshot = interactive.TextView.TextBuffer.CurrentSnapshot;
+                var span = new SnapshotSpan(snapshot, new Span(0, snapshot.Length));
+                Assert.IsTrue(newClassifications.WaitOne(10000), "Timed out waiting for classification");
+                var classifications = interactive.Classifier.GetClassificationSpans(span);
+                Console.WriteLine("Classifications:");
+                foreach (var c in classifications) {
+                    Console.WriteLine("{0} ({1})", c.Span.GetText(), c.ClassificationType.Classification);
+                }
+
+                Assert.AreEqual(3, classifications.Count());
+                Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
+                Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
+                Assert.AreEqual(classifications[2].ClassificationType.Classification, "Python grouping");
+
+                Assert.AreEqual(classifications[0].Span.GetText(), "raise");
+                Assert.AreEqual(classifications[1].Span.GetText(), "Exception");
+                Assert.AreEqual(classifications[2].Span.GetText(), "()");
+            }
+        }
+
+        /// <summary>
+        /// Type some text that leaves auto-indent at the end of the input and
+        /// also outputs, make sure the auto indent is gone before we do the
+        /// input. (regression for http://pytools.codeplex.com/workitem/92)
+        /// </summary>
+        public void PrintWithParens(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                const string inputCode = ">print ('a',";
+                const string autoIndent = ".       ";
+                interactive.Type(inputCode.Substring(1));
+                interactive.WaitForText(inputCode, ".");
+                const string b = "'b',";
+                interactive.Type(b);
+                interactive.WaitForText(inputCode, autoIndent + b, ".");
+                const string c = "'c')";
+                interactive.Type(c);
+                interactive.WaitForText(
+                    inputCode,
+                    autoIndent + b,
+                    autoIndent + c,
+                    Settings.Version.Configuration.Version.Major == 2 ? "('a', 'b', 'c')" : "a b c",
+                    ">"
+                );
+            }
+        }
+
+        /// <summary>
+        /// Make sure that we can successfully delete an autoindent inputted span
+        /// (regression for http://pytools.codeplex.com/workitem/93)
+        /// </summary>
+        public void UndeletableIndent(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                const string inputCode = ">print (('a',";
+                const string autoIndent = ".        ";
+                interactive.Type(inputCode.Substring(1));
+                interactive.WaitForText(inputCode, ".");
+                const string b = "'b',";
+                interactive.Type(b);
+                interactive.WaitForText(inputCode, autoIndent + b, ".");
+                const string c = "'c'))";
+                interactive.Type(c);
+                interactive.WaitForText(inputCode, autoIndent + b, autoIndent + c, "('a', 'b', 'c')", ">");
+                interactive.SubmitCurrentText();
+                interactive.WaitForText(inputCode, autoIndent + b, autoIndent + c, "('a', 'b', 'c')", ">", ">");
+            }
+        }
+
+        public void InlineImage(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                interactive.SubmitCode(@"import sys
+repl = sys.modules['ptvsd.repl'].BACKEND
+repl is not None");
+                interactive.WaitForTextEnd(
+                    ">import sys",
+                    ">repl = sys.modules['ptvsd.repl'].BACKEND",
+                    ">repl is not None",
+                    "True",
+                    ">"
+                );
+
+                Thread.Sleep(500);
+                interactive.ClearScreen();
+                interactive.WaitForText(">");
+
+                // load a 600 x 600 at 96dpi image
+                string loadImage = string.Format(
+                    "repl.send_image(\"{0}\")",
+                    TestData.GetPath(@"TestData\TestImage.png").Replace("\\", "\\\\")
+                );
+                interactive.SubmitCode(loadImage);
+                interactive.WaitForText(">" + loadImage, ">");
+
+                // check that we got a tag inserted
+                var tags = WaitForTags(interactive);
+                Assert.AreEqual(1, tags.Length);
+
+                var size = tags[0].Tag.Adornment.RenderSize;
+                Assert.IsTrue(size.Width > 0 && size.Width <= 600);
+                Assert.IsTrue(size.Height > 0 && size.Height <= 600);
+            }
+        }
+
+        public void ImportCompletions(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                if (((ReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
+                    interactive.SubmitCode("import clr");
+                    interactive.WaitForText(">import clr", ">");
+                }
+
+                Keyboard.Type("import ");
+                List<string> names;
+                using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                    Assert.IsNotNull(sh.Session.SelectedCompletionSet, "No selected completion set");
+                    names = sh.Session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
+                }
+
+                Console.WriteLine(string.Join(Environment.NewLine, names));
+
+                foreach (var name in names) {
+                    Assert.IsFalse(name.Contains('.'), name + " contained a dot");
+                }
+
+                Keyboard.Type("os.");
+                using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                    Assert.IsNotNull(sh.Session.SelectedCompletionSet, "No selected completion set");
+                    names = sh.Session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
+                    AssertUtil.ContainsExactly(names, "path");
+                }
+                interactive.ClearInput();
+            }
+        }
+
+        public void Comments(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
+                const string code = "# fob";
+                Keyboard.Type(code + "\r");
+
+                interactive.WaitForText(">" + code, ".");
+
+                const string code2 = "# oar";
+                Keyboard.Type(code2 + "\r");
+
+                interactive.WaitForText(">" + code, "." + code2, ".");
+
+                Keyboard.Type("\r");
+                interactive.WaitForText(">" + code, "." + code2, ".", ">");
+            }
+        }
+
+        public void NoSnippets(PythonVisualStudioApp app, string interpreter) {
+            // https://pytools.codeplex.com/workitem/2945 is the reason for
+            // disabling snippets; https://pytools.codeplex.com/workitem/2947 is
+            // where we will re-enable them when they work properly.
+            using (var interactive = Prepare(app, interpreter)) {
+                int spaces = interactive.TextView.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId);
+                int textWidth = interactive.CurrentPrimaryPrompt.Length + 3;
+
+                int totalChars = spaces;
+                while (totalChars < textWidth) {
+                    totalChars += spaces;
+                }
+
+                Keyboard.Type("def\t");
+                interactive.WaitForText(">def" + new string(' ', totalChars - textWidth));
+            }
+        }
+
+        public void TestPydocRedirected(PythonVisualStudioApp app, string interpreter) {
+            // We run this test on multiple interpreters because pydoc
+            // output redirection has changed on Python 3.x
+            // https://github.com/Microsoft/PTVS/issues/2531
+            using (var interactive = Prepare(app, interpreter)) {
+                interactive.SubmitCode("help(exit)");
+                interactive.WaitForText(
+                    ">help(exit)",
+                    Settings.ExitHelp,
+                    ">"
+                );
+            }
+        }
+
+        #endregion
+
+        #region IPython tests
+
+        public void IPythonMode(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = PrepareIPython(app, interpreter)) {
+                interactive.SubmitCode("x = 42\n?x");
+
+                interactive.WaitForText(
+                    ">x = 42",
+                    ">?x",
+                    ((ReplWindowProxySettings)interactive.Settings).IPythonIntDocumentation,
+                    "",
+                    ">"
+                );
+            }
+        }
+
+        public void IPythonCtrlBreakAborts(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = PrepareIPython(app, interpreter)) {
+                var code = "while True: pass";
+                interactive.Type(code + "\n", waitForLastLine: false);
+                interactive.WaitForText(">" + code, ".", "");
+
+                Thread.Sleep(2000);
+
+                interactive.CancelExecution();
+
+                // we can potentially get different output depending on where the Ctrl-C gets caught.
+                try {
+                    interactive.WaitForTextStart(">while True: pass", ".", "KeyboardInterrupt caught in kernel");
+                } catch {
+                    interactive.WaitForTextStart(">while True: pass", ".",
+                        "---------------------------------------------------------------------------",
+                        "KeyboardInterrupt                         Traceback (most recent call last)");
+                }
+            }
+        }
+
+        public void IPythonSimpleCompletion(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = PrepareIPython(app, interpreter, addNewLineAtEndOfFullyTypedWord: false)) {
+                interactive.SubmitCode("x = 42");
+                interactive.WaitForText(">x = 42", ">");
+                interactive.ClearScreen();
+
+                Keyboard.Type("x.");
+
+                using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                    // commit entry
+                    sh.Commit();
+                    sh.WaitForSessionDismissed();
+                }
+
+                interactive.WaitForText(">x." + ((ReplWindowProxySettings)interactive.Settings).IntFirstMember);
+
+                // clear input at repl
+                interactive.ClearInput();
+
+                // try it again, and dismiss the session
+                Keyboard.Type("x.");
+                using (interactive.WaitForSession<ICompletionSession>()) { }
+            }
+        }
+
+        public void IPythonSimpleSignatureHelp(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = PrepareIPython(app, interpreter)) {
+                Assert.IsNotNull(interactive);
+
+                interactive.SubmitCode("def f(): pass");
+                interactive.WaitForText(">def f(): pass", ">");
+
+                Keyboard.Type("f(");
+
+                using (var sh = interactive.WaitForSession<ISignatureHelpSession>()) {
+                    var parts = new string[] {
+                        "Signature: f()",
+                        "Source:    def f(): pass",
+                        "File:      ",
+                        "Type:      function",
+                    };
+                    foreach (var expected in parts) {
+                        Assert.IsTrue(sh.Session.SelectedSignature.Documentation.Contains(expected));
+                    }
+                }
+            }
+        }
+
+        public void IPythonInlineGraph(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = PrepareIPython(app, interpreter)) {
+                interactive.SubmitCode(@"from pylab import *
+x = linspace(0, 4*pi)
+plot(x, x)");
+                interactive.WaitForAnyLineContainsText("matplotlib.lines.Line2D");
+
+                Thread.Sleep(2000);
+
+                var tags = WaitForTags(interactive);
+                Assert.AreEqual(1, tags.Length);
+            }
+        }
+
+        public void IPythonStartInInteractive(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = PrepareIPython(app, interpreter))
+            using (app.SelectDefaultInterpreter(interactive.Settings.Version)) {
+                var project = interactive.App.OpenProject(@"TestData\InteractiveFile.sln");
+
+                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
+                interactive.WaitForAnyLineContainsText("Program.pyabcdef");
+            }
+        }
+
+        public void ExecuteInIPythonReplSysArgv(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = PrepareIPython(app, interpreter))
+            using (app.SelectDefaultInterpreter(interactive.Settings.Version)) {
+                var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
+
+                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
+                interactive.WaitForAnyLineContainsText("Program.py']");
+            }
+        }
+
+        public void ExecuteInIPythonReplSysArgvScriptArgs(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = PrepareIPython(app, interpreter))
+            using (app.SelectDefaultInterpreter(interactive.Settings.Version)) {
+                var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
+
+                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
+                interactive.WaitForAnyLineContainsText(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']");
+            }
+        }
+
+        #endregion
+
+        #region Advanced Miscellaneous tests
+
+        public void ClearInputHelper(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("1 + ", commitLastLine: false);
                 interactive.WaitForText(">1 + ");
                 interactive.ClearInput();
@@ -66,18 +530,15 @@ namespace ReplWindowUITests {
 
         #endregion
 
-        #region Signature Help tests
+        #region Advanced Signature Help tests
 
         /// <summary>
         /// "def f(): pass" + 2 ENTERS
         /// f( should bring signature help up
         /// 
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void SimpleSignatureHelp(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void SimpleSignatureHelp(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "def f(): pass";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
@@ -98,12 +559,8 @@ namespace ReplWindowUITests {
         /// f( should bring signature help up and show default values and types
         /// 
         /// </summary>
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2689
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void SignatureHelpDefaultValue(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void SignatureHelpDefaultValue(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "def f(a, b=1, c=\"d\"): pass";
                 interactive.SubmitCode(code + "\n");
                 interactive.WaitForText(">" + code, ">");
@@ -121,17 +578,14 @@ namespace ReplWindowUITests {
 
         #endregion
 
-        #region Completion tests
+        #region Advanced Completion tests
 
         /// <summary>
         /// "x = 42"
         /// "x." should bring up intellisense completion
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void SimpleCompletion(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void SimpleCompletion(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "x = 42";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
@@ -164,11 +618,8 @@ namespace ReplWindowUITests {
         /// "x = 42"
         /// "x " should not bring up any completions.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void SimpleCompletionSpaceNoCompletion(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void SimpleCompletionSpaceNoCompletion(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "x = 42";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
@@ -185,11 +636,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// x = 42; x.car[enter] – should type "car" not complete to "conjugate"
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void CompletionWrongText(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CompletionWrongText(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "x = 42";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
@@ -215,11 +663,8 @@ namespace ReplWindowUITests {
         /// and should respect enter at end of word completes option.  When it
         /// does execute the text the output should be on the next line.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void CompletionFullTextWithoutNewLine(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app, addNewLineAtEndOfFullyTypedWord: false)) {
+        public void CompletionFullTextWithoutNewLine(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter, addNewLineAtEndOfFullyTypedWord: false)) {
                 const string code = "x = 42";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
@@ -239,12 +684,8 @@ namespace ReplWindowUITests {
         /// and should respect enter at end of word completes option.  When it
         /// does execute the text the output should be on the next line.
         /// </summary>
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2755
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void CompletionFullTextWithNewLine(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app, addNewLineAtEndOfFullyTypedWord: true)) {
+        public void CompletionFullTextWithNewLine(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter, addNewLineAtEndOfFullyTypedWord: true)) {
 
                 const string code = "x = 42";
                 interactive.SubmitCode(code);
@@ -265,11 +706,8 @@ namespace ReplWindowUITests {
         /// With AutoListIdentifiers on, all [a-zA-Z_] should bring up
         /// completions
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void AutoListIdentifierCompletions(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void AutoListIdentifierCompletions(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 // the App instance preserves this property for us already
                 ((PythonVisualStudioApp)interactive.App).Options.Intellisense.AutoListIdentifiers = true;
                 Keyboard.Type("x = ");
@@ -301,12 +739,10 @@ namespace ReplWindowUITests {
 
         #endregion
 
-        #region Input/output redirection tests
+        #region Advanced Input/output redirection tests
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void TestStdOutRedirected(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void TestStdOutRedirected(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 // Spaces after the module name prevent autocomplete from changing them.
                 // In particular, 'subprocess' does not appear in the default database,
                 // but '_subprocess' does.
@@ -326,11 +762,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Calling input while executing user code.  This should let the user start typing.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void TestRawInput(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void TestRawInput(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 EnsureInputFunction(interactive);
 
                 interactive.SubmitCode("x = input()");
@@ -344,11 +777,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void OnlyTypeInRawInput(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void OnlyTypeInRawInput(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 EnsureInputFunction(interactive);
 
                 interactive.SubmitCode("input()");
@@ -368,11 +798,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void DeleteCharactersInRawInput(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void DeleteCharactersInRawInput(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 EnsureInputFunction(interactive);
 
                 interactive.Type("input()");
@@ -390,11 +817,8 @@ namespace ReplWindowUITests {
         /// Calling ReadInput while no code is running - this should remove the
         /// prompt and let the user type input
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void TestIndirectInput(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void TestIndirectInput(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 var t = Task.Run(() => interactive.Window.ReadStandardInput());
 
                 // prompt should disappear
@@ -410,16 +834,13 @@ namespace ReplWindowUITests {
 
         #endregion
 
-        #region Keyboard tests
+        #region Advanced Keyboard tests
 
         /// <summary>
         /// Enter in a middle of a line should insert new line
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void EnterInMiddleOfLine(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void EnterInMiddleOfLine(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "def f(): #fob";
                 // This is a keyboard test, so use Keyboard.Type directly
                 Keyboard.Type(code);
@@ -437,11 +858,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// LineBreak should insert a new line and not submit.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void LineBreak(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void LineBreak(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string quotes = "\"\"\"";
                 // This is a keyboard test, so use Keyboard.Type directly
                 Keyboard.Type(quotes);
@@ -465,11 +883,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests entering a single line of text, moving to the middle, and pressing enter.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void LineBreakInMiddleOfLine(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void LineBreakInMiddleOfLine(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 Keyboard.Type("def f(): print('hello')");
                 interactive.WaitForText(">def f(): print('hello')");
 
@@ -487,11 +902,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// "x=42" left left ctrl-enter should commit assignment
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void CtrlEnterCommits(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CtrlEnterCommits(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "x = 42";
                 // This is a keyboard test, so use Keyboard.Type directly
                 Keyboard.Type(code);
@@ -505,11 +917,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Escape should clear both lines
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void EscapeClearsMultipleLines(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void EscapeClearsMultipleLines(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "def f(): #fob";
                 // This is a keyboard test, so use Keyboard.Type directly
                 Keyboard.Type(code);
@@ -529,11 +938,8 @@ namespace ReplWindowUITests {
         /// Ctrl-Enter on previous input should paste input to end of buffer 
         /// (doing it again should paste again – appending onto previous input)
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void CtrlEnterOnPreviousInput(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CtrlEnterOnPreviousInput(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "def f(): pass";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
@@ -556,11 +962,8 @@ namespace ReplWindowUITests {
         /// Type some text, hit Ctrl-Enter, should execute current line and not
         /// require a secondary prompt.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void CtrlEnterForceCommit(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CtrlEnterForceCommit(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "def f(): pass";
                 Keyboard.Type(code);
 
@@ -576,11 +979,8 @@ namespace ReplWindowUITests {
         /// Type a function definition, go to next line, type pass, navigate
         /// left, hit ctrl-enter, should immediately execute func def.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void CtrlEnterMultiLineForceCommit(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CtrlEnterMultiLineForceCommit(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 Keyboard.Type("def f():\rpass");
 
                 interactive.WaitForText(">def f():", ".    pass");
@@ -597,10 +997,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests backspacing pass the prompt to the previous line
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void BackspacePrompt(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void BackspacePrompt(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\npass", commitLastLine: false);
                 interactive.WaitForText(">def f():", ".    pass");
 
@@ -617,11 +1015,9 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(">def f():", ".    pass");
             }
         }
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void BackspaceSmartDedent(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+
+        public void BackspaceSmartDedent(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("   ", commitLastLine: false);
                 interactive.WaitForText(">   ");
 
@@ -643,11 +1039,8 @@ namespace ReplWindowUITests {
         /// secondary prompt.  The secondary prompt should be removed and the
         /// lines should be joined.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void BackspaceSecondaryPrompt(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void BackspaceSecondaryPrompt(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nx = 42\ny = 100", commitLastLine: false);
 
                 interactive.WaitForText(">def f():", ".    x = 42", ".    y = 100");
@@ -664,11 +1057,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests deleting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void BackspaceSecondaryPromptSelected(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void BackspaceSecondaryPromptSelected(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nprint('hi')", commitLastLine: false);
                 interactive.WaitForText(">def f():", ".    print('hi')");
 
@@ -685,11 +1075,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests deleting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void DeleteSecondaryPromptSelected(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void DeleteSecondaryPromptSelected(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nprint('hi')", commitLastLine: false);
                 interactive.WaitForText(">def f():", ".    print('hi')");
 
@@ -706,11 +1093,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests typing when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void EditTypeSecondaryPromptSelected(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void EditTypeSecondaryPromptSelected(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nprint('hi')", commitLastLine: false);
                 interactive.WaitForText(">def f():", ".    print('hi')");
 
@@ -727,11 +1111,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void TestDelNoTextSelected(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void TestDelNoTextSelected(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("abc", commitLastLine: false);
                 interactive.WaitForText(">abc");
 
@@ -742,11 +1123,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void TestDelAtEndOfLine(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void TestDelAtEndOfLine(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nprint('hello')", commitLastLine: false);
                 interactive.WaitForText(">def f():", ".    print('hello')");
 
@@ -762,10 +1140,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void TestDelAtEndOfBuffer(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void TestDelAtEndOfBuffer(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nprint('hello')", commitLastLine: false);
                 interactive.WaitForText(">def f():", ".    print('hello')");
 
@@ -774,11 +1150,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void TestDelInOutput(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void TestDelInOutput(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.SubmitCode("print('hello')");
                 interactive.WaitForText(">print('hello')", "hello", ">");
 
@@ -792,15 +1165,13 @@ namespace ReplWindowUITests {
 
         #endregion
 
-        #region Cancel tests
+        #region Advanced Cancel tests
 
         /// <summary>
         /// while True: pass / Right Click -> Break Execution (or Ctrl-Break) should break execution
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CtrlBreakInterrupts(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CtrlBreakInterrupts(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 var code = "while True: pass";
                 interactive.Type(code + "\n", waitForLastLine: false);
                 interactive.WaitForText(">" + code, ".", "");
@@ -820,10 +1191,8 @@ namespace ReplWindowUITests {
         /// 
         /// This version runs for 1/2 second which kicks in the running UI.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CtrlBreakInterruptsLongRunning(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CtrlBreakInterruptsLongRunning(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 var code = "while True: pass";
                 interactive.Type(code + "\n", waitForLastLine: false);
                 interactive.WaitForText(">" + code, ".", "");
@@ -842,10 +1211,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Ctrl-Break while running should result in a new prompt
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CtrlBreakNotRunning(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CtrlBreakNotRunning(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.WaitForText(">");
 
                 try {
@@ -861,10 +1228,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Enter "while True: pass", then hit up/down arrow, should move the caret in the edit buffer
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CursorWhileCodeIsRunning(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CursorWhileCodeIsRunning(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 var code = "while True: pass";
                 interactive.Type(code + "\n", waitForLastLine: false);
                 interactive.WaitForText(">" + code, ".", "");
@@ -895,14 +1260,10 @@ namespace ReplWindowUITests {
 
         #endregion
 
-        #region History tests
+        #region Advanced History tests
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2757
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void HistoryUpdateDef(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void HistoryUpdateDef(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nprint('hi')\n");
                 interactive.WaitForText(">def f():", ".    print('hi')", ".", ">");
 
@@ -934,12 +1295,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2757
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Interactive")]
-        //[TestCategory("Installed")]
-        public virtual void HistoryAppendDef(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void HistoryAppendDef(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 Keyboard.Type("def f():\rprint('hi')\r\r");
 
                 interactive.WaitForText(
@@ -966,10 +1323,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void HistoryBackForward(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void HistoryBackForward(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code1 = "x = 23";
                 const string code2 = "y = 5";
                 interactive.SubmitCode(code1);
@@ -992,10 +1347,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that maximum length of history is enforced and stores correct items.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void HistoryMaximumLength(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void HistoryMaximumLength(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const int historyMax = 50;
 
                 var expected = new List<string>();
@@ -1025,10 +1378,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that we remember a partially typed input when we move to the history.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void HistoryUncommittedInput1(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void HistoryUncommittedInput1(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code1 = "x = 42", code2 = "y = 100";
                 interactive.Type(code1);
                 interactive.WaitForText(">" + code1, ">");
@@ -1053,10 +1404,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that we don't restore on submit an uncomitted input saved for history.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void HistoryUncommittedInput2(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void HistoryUncommittedInput2(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.SubmitCode("1");
                 interactive.WaitForText(">1", "1", ">");
 
@@ -1076,10 +1425,8 @@ namespace ReplWindowUITests {
         /// history, add print "hello" to 2nd line, enter, scroll back through
         /// both function definitions
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void HistorySearch(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void HistorySearch(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code1 = ">x = 42";
                 const string code2 = ">x = 10042";
                 const string code3 = ">x = 300";
@@ -1114,13 +1461,10 @@ namespace ReplWindowUITests {
 
         #endregion
 
-        #region Clipboard tests
+        #region Advanced Clipboard tests
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2682
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CommentPaste(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CommentPaste(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string comment = "# fob oar baz";
                 interactive.ClearInput();
                 interactive.Paste(comment);
@@ -1144,10 +1488,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CsvPaste(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CsvPaste(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Invoke(() => {
                     var dataObject = new DataObject();
                     dataObject.SetText("fob");
@@ -1174,10 +1516,8 @@ namespace ReplWindowUITests {
         /// Tests cut when the secondary prompt is highlighted as part of the
         /// selection
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void EditCutIncludingPrompt(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void EditCutIncludingPrompt(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nprint('hi')", commitLastLine: false);
                 interactive.WaitForText(">def f():", ".    print('hi')");
 
@@ -1198,10 +1538,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests pasting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void EditPasteSecondaryPromptSelected(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void EditPasteSecondaryPromptSelected(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Invoke((Action)(() => {
                     Clipboard.SetText("    pass", TextDataFormat.Text);
                 }));
@@ -1232,10 +1570,8 @@ namespace ReplWindowUITests {
         /// Same as EditPasteSecondaryPromptSelected, but the selection is reversed so that the
         /// caret is in the prompt.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void EditPasteSecondaryPromptSelectedInPromptMargin(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void EditPasteSecondaryPromptSelectedInPromptMargin(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("def f():\nprint('hi')", commitLastLine: false);
                 interactive.WaitForText(">def f():", ".    print('hi')");
 
@@ -1256,15 +1592,13 @@ namespace ReplWindowUITests {
 
         #endregion
 
-        #region Command tests
+        #region Advanced Command tests
 
         /// <summary>
         /// Tests entering an unknown repl commmand
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void ReplCommandUnknown(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void ReplCommandUnknown(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "$unknown";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, "Unknown command '$unknown', use '$help' for a list of commands.", ">");
@@ -1274,10 +1608,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests entering an unknown repl commmand
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void ReplCommandComment(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void ReplCommandComment(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string code = "$$ quox oar baz";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
@@ -1287,10 +1619,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests using the $cls clear screen command
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void ClearScreenCommand(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void ClearScreenCommand(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Type("$cls", commitLastLine: false);
                 interactive.WaitForText(">$cls");
 
@@ -1302,10 +1632,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command help
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void ReplCommandHelp(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void ReplCommandHelp(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.SubmitCode("$help");
 
                 interactive.WaitForTextStart(
@@ -1320,10 +1648,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with a simple script.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CommandsLoadScript(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CommandsLoadScript(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string content = "print('hello world')";
                 string path;
 
@@ -1343,10 +1669,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with a simple script.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CommandsLoadScriptWithQuotes(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CommandsLoadScriptWithQuotes(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string content = "print('hello world')";
                 string path;
 
@@ -1366,10 +1690,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with multiple statements including a class definition.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CommandsLoadScriptWithClass(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CommandsLoadScriptWithClass(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 // http://pytools.codeplex.com/workitem/632
                 const string content = @"class C(object):
     pass
@@ -1397,10 +1719,8 @@ c = C()
         /// <summary>
         /// Tests $load command with file that includes multiple submissions.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CommandsLoadScriptMultipleSubmissions(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CommandsLoadScriptMultipleSubmissions(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string content = @"def fob():
     print('hello')
 $wait 10
@@ -1431,10 +1751,8 @@ fob()
         /// <summary>
         /// Tests that ClearScreen doesn't cancel pending submissions queue.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void CommandsLoadScriptMultipleSubmissionsWithClearScreen(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void CommandsLoadScriptMultipleSubmissionsWithClearScreen(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 const string content = @"def fob():
     print('hello')
 %% blah
@@ -1455,15 +1773,13 @@ $cls
 
         #endregion
 
-        #region Insert Code tests
+        #region Advanced Insert Code tests
 
         /// <summary>
         /// Inserts code to REPL while input is accepted. 
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void InsertCode(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void InsertCode(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 interactive.Window.InsertCode("1");
                 interactive.Window.InsertCode("+");
                 interactive.Window.InsertCode("2");
@@ -1485,10 +1801,8 @@ $cls
         /// Inserts code to REPL while submission execution is in progress. 
         /// The inserted input should be appended to uncommitted input and show up when the execution is finished/aborted.
         /// </summary>
-        //[TestMethod, Priority(1)]
-        //[TestCategory("Installed")]
-        public virtual void InsertCodeWhileRunning(PythonVisualStudioApp app) {
-            using (var interactive = Prepare(app)) {
+        public void InsertCodeWhileRunning(PythonVisualStudioApp app, string interpreter) {
+            using (var interactive = Prepare(app, interpreter)) {
                 var code = "while True: pass";
                 interactive.Type(code + "\n", waitForLastLine: false);
                 interactive.WaitForText(">" + code, ".", "");
@@ -1520,7 +1834,38 @@ $cls
 
         #region Helper methods
 
-        static void EnsureInputFunction(ReplWindowProxy interactive) {
+        private ReplWindowProxySettings Settings { get; set; }
+
+        private ReplWindowProxy PrepareIPython(
+            PythonVisualStudioApp app,
+            string interpreter,
+            bool addNewLineAtEndOfFullyTypedWord = false
+        ) {
+            return Prepare(app, interpreter, useIPython: true, addNewLineAtEndOfFullyTypedWord: addNewLineAtEndOfFullyTypedWord);
+        }
+
+        private ReplWindowProxy Prepare(
+            PythonVisualStudioApp app,
+            string interpreter,
+            bool enableAttach = false,
+            bool useIPython = false,
+            bool addNewLineAtEndOfFullyTypedWord = false
+        ) {
+            Settings = ReplWindowSettings.FindSettingsForInterpreter(interpreter);
+            var s = Settings;
+            if (s.Version == null) {
+                Assert.Inconclusive("Interpreter missing for " + GetType().Name);
+            }
+
+            if (addNewLineAtEndOfFullyTypedWord != s.AddNewLineAtEndOfFullyTypedWord) {
+                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
+                s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
+            }
+
+            return ReplWindowProxy.Prepare(app, s, useIPython: useIPython);
+        }
+
+        private static void EnsureInputFunction(ReplWindowProxy interactive) {
             var settings = (ReplWindowProxySettings)interactive.Settings;
             if (settings.RawInput != "input") {
                 interactive.SubmitCode("input = " + settings.RawInput);
@@ -1528,7 +1873,7 @@ $cls
             }
         }
 
-        static void WaitForAnalysis(ReplWindowProxy interactive) {
+        private static void WaitForAnalysis(ReplWindowProxy interactive) {
             var stopAt = DateTime.Now.Add(TimeSpan.FromSeconds(60));
             interactive.GetAnalyzer().WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
             if (DateTime.Now >= stopAt) {
@@ -1539,18 +1884,28 @@ $cls
             Thread.Sleep(500);
         }
 
-        #endregion
-    }
+        private static IMappingTagSpan<IntraTextAdornmentTag>[] WaitForTags(ReplWindowProxy interactive) {
+            var aggFact = interactive.App.ComponentModel.GetService<IViewTagAggregatorFactoryService>();
+            var textView = interactive.TextView;
+            var aggregator = aggFact.CreateTagAggregator<IntraTextAdornmentTag>(textView);
+            var snapshot = textView.TextBuffer.CurrentSnapshot;
 
-    [TestClass]
-    public class ReplWindowTestsDefaultPrompt : ReplWindowTests {
-        internal override ReplWindowProxySettings Settings {
-            get {
-                return new ReplWindowProxySettings {
-                    Version = PythonPaths.Python27 ?? PythonPaths.Python27_x64
-                };
-            }
+            IMappingTagSpan<IntraTextAdornmentTag>[] tags = null;
+            ((UIElement)textView).Dispatcher.Invoke((Action)(() => {
+                for (int i = 0; i < 100; i++) {
+                    tags = aggregator.GetTags(new SnapshotSpan(snapshot, new Span(0, snapshot.Length))).ToArray();
+                    if (tags.Length > 0) {
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
+            }));
+
+            Assert.IsNotNull(tags, "Unable to find tags");
+            return tags;
         }
+
+        #endregion
     }
 
     static class ReplWindowProxyExtensions {

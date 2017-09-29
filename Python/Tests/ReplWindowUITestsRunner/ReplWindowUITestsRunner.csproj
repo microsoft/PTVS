@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\TestProjectBefore.settings" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2015A9CC-95F0-419E-86C7-87772561B03C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ReplWindowUITestsRunner</RootNamespace>
+    <AssemblyName>ReplWindowUITestsRunner</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ReplWindowIPythonUITests.cs" />
+    <Compile Include="ReplWindowAdvancedUITests.cs" />
+    <Compile Include="ReplWindowBasicUITests.cs" />
+    <Compile Include="ReplWindowSendUITests.cs" />
+    <Compile Include="ReplWindowSmokeUITests.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ReplWindowUITests\ReplWindowUITests.csproj">
+      <Project>{78d9866b-add1-45de-a85e-d51e23f5906d}</Project>
+      <Name>ReplWindowUITests</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestRunnerInterop\TestRunnerInterop.csproj">
+      <Project>{3e8c485b-905a-4dbc-b059-161ccb1ad591}</Project>
+      <Name>TestRunnerInterop</Name>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="..\TestProjectAfter.settings" />
+</Project>
