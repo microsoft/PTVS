@@ -45,7 +45,15 @@ namespace TestRunnerInterop {
             if (_vs == null) {
                 throw new InvalidOperationException("TestInitialize was not called");
             }
-            _vs.RunTest(container, fullTestName, timeout, arguments);
+            int retries = 3;
+            while (retries >= 0) {
+                if (!_vs.IsRunning) {
+                    _vs.Restart();
+                }
+                if (_vs.RunTest(container, fullTestName, timeout, arguments, ref retries)) {
+                    return;
+                }
+            }
         }
 
         public void Dispose() {
