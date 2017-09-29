@@ -129,21 +129,25 @@ namespace TestRunnerInterop {
         private void CloseCurrentInstance(bool hard = false) {
             lock (_lock) {
                 if (_vs != null) {
-                    if (hard) {
-                        _vs.Kill();
-                    } else {
-                        if (!_vs.CloseMainWindow()) {
-                            try {
-                                _vs.Kill();
-                            } catch (Exception) {
+                    try {
+                        if (hard) {
+                            _vs.Kill();
+                        } else {
+                            if (!_vs.CloseMainWindow()) {
+                                try {
+                                    _vs.Kill();
+                                } catch (Exception) {
+                                }
+                            }
+                            if (!_vs.WaitForExit(10000)) {
+                                try {
+                                    _vs.Kill();
+                                } catch (Exception) {
+                                }
                             }
                         }
-                        if (!_vs.WaitForExit(10000)) {
-                            try {
-                                _vs.Kill();
-                            } catch (Exception) {
-                            }
-                        }
+                    } catch (ObjectDisposedException) {
+                    } catch (InvalidOperationException) {
                     }
                     _vs.Dispose();
                     _vs = null;
