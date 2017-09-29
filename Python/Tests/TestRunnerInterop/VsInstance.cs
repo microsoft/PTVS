@@ -53,6 +53,18 @@ namespace TestRunnerInterop {
             }
         }
 
+        public void Restart() {
+            if (string.IsNullOrEmpty(_currentSettings)) {
+                throw new InvalidOperationException("No current settings to restart VS with");
+            }
+            var args = _currentSettings.Split(';');
+            if (args.Length != 4) {
+                throw new InvalidOperationException($"Current settings are not valid: {_currentSettings}");
+            }
+
+            StartOrRestart(args[0], args[1], args[2], args[3]);
+        }
+
         public void StartOrRestart(
             string devenvExe,
             string devenvArguments,
@@ -60,7 +72,7 @@ namespace TestRunnerInterop {
             string tempRoot
         ) {
             lock (_lock) {
-                var settings = $"{devenvExe};{devenvArguments};{testDataRoot};{tempRoot}";
+                var settings = $"{devenvExe ?? ""};{devenvArguments ?? ""};{testDataRoot ?? ""};{tempRoot ?? ""}";
                 if (_vs != null && _app != null && _dte == null) {
                     if (_currentSettings == settings) {
                         return;
@@ -129,21 +141,25 @@ namespace TestRunnerInterop {
         private void CloseCurrentInstance(bool hard = false) {
             lock (_lock) {
                 if (_vs != null) {
-                    if (hard) {
-                        _vs.Kill();
-                    } else {
-                        if (!_vs.CloseMainWindow()) {
-                            try {
-                                _vs.Kill();
-                            } catch (Exception) {
+                    try {
+                        if (hard) {
+                            _vs.Kill();
+                        } else {
+                            if (!_vs.CloseMainWindow()) {
+                                try {
+                                    _vs.Kill();
+                                } catch (Exception) {
+                                }
+                            }
+                            if (!_vs.WaitForExit(10000)) {
+                                try {
+                                    _vs.Kill();
+                                } catch (Exception) {
+                                }
                             }
                         }
-                        if (!_vs.WaitForExit(10000)) {
-                            try {
-                                _vs.Kill();
-                            } catch (Exception) {
-                            }
-                        }
+                    } catch (ObjectDisposedException) {
+                    } catch (InvalidOperationException) {
                     }
                     _vs.Dispose();
                     _vs = null;
@@ -195,7 +211,7 @@ namespace TestRunnerInterop {
 
         }
 
-        public void RunTest(string container, string name, TimeSpan timeout, object[] arguments) {
+        public bool RunTest(string container, string name, TimeSpan timeout, object[] arguments, ref int retryCount) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().Name);
             }
@@ -233,16 +249,26 @@ namespace TestRunnerInterop {
                         r.ExceptionTraceback
                     );
                 }
-                return;
+                retryCount = 0;
+                return true;
+            } catch (InvalidComObjectException) {
+                CloseCurrentInstance();
+                if (--retryCount <= 0) {
+                    throw;
+                }
             } catch (COMException ex) {
+                CloseCurrentInstance();
                 if (timedOut) {
                     throw new TimeoutException($"Terminating {container}.{name}() after {timeout}", ex);
                 }
-                // A COMException probably needs VS to restart, so close it.
-                CloseCurrentInstance();
+                if (--retryCount <= 0) {
+                    throw;
+                }
             } catch (ThreadAbortException) {
                 CloseCurrentInstance(hard: true);
+                throw;
             }
+            return false;
         }
 
         void Dispose(bool disposing) {
