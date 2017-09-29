@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
+using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal static class AnalysisProtocol {
@@ -63,7 +64,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class InitializeResponse : Response {
             public string[] failedLoads;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public string error;
+
+            public bool ShouldSerializefailedLoads() => (failedLoads?.Length ?? 0) > 0;
         }
 
         public sealed class ExitRequest : GenericRequest {
@@ -251,11 +255,18 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public class BufferParseInfo {
-            public int bufferId, version;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public int bufferId;
+            public int version;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public bool hasErrors;
             public Error[] errors;
             public Error[] warnings;
             public TaskItem[] tasks;
+
+            public bool ShouldSerializeerrors() => (errors?.Length ?? 0) > 0;
+            public bool ShouldSerializewarnings() => (warnings?.Length ?? 0) > 0;
+            public bool ShouldSerializetasks() => (tasks?.Length ?? 0) > 0;
         }
 
         public sealed class FormatCodeRequest : Request<FormatCodeResponse> {
@@ -288,8 +299,12 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "addFile";
 
             public string path;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public string addingFromDir;
-            public bool isTemporaryFile, suppressErrorLists;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public bool isTemporaryFile;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public bool suppressErrorLists;
 
             public override string command => Command;
         }
@@ -586,6 +601,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public int fileId;
 
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public bool isTemporaryFile, suppressErrorList;
 
             public override string name => Name;
@@ -682,7 +698,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class BufferVersion {
-            public int bufferId, version;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public int bufferId;
+            public int version;
         }
 
         public sealed class ExtensionAddedEvent : Event {

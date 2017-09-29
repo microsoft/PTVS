@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
@@ -170,10 +169,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             private readonly object _containersLock = new object();
             private ProjectAnalyzer _analyzer;
 
+            private List<string> _pendingRequests;
+
             public ProjectInfo(TestContainerDiscoverer discoverer, PythonProject project) {
                 _project = project;
                 _discoverer = discoverer;
                 _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
+                _pendingRequests = new List<string>();
 
                 project.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
                 RegisterWithAnalyzer();
@@ -212,82 +214,85 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _analyzer.RegisterExtension(typeof(TestAnalyzer).Assembly.Location);
                 _analyzer.AnalysisComplete += AnalysisComplete;
 
-                await UpdateTestCasesAsync(_analyzer.Files).HandleAllExceptions(_discoverer._serviceProvider, GetType());
+                await UpdateTestCasesAsync(_analyzer.Files, false).HandleAllExceptions(_discoverer._serviceProvider, GetType());
             }
 
             private async void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
-                await UpdateTestCasesAsync(e.Path, true).HandleAllExceptions(_discoverer._serviceProvider, GetType());
+                await PendOrSubmitRequests(e.Path)
+                    .HandleAllExceptions(_discoverer._serviceProvider, GetType())
+                    .ConfigureAwait(false);
             }
 
-            private async Task UpdateTestCasesAsync(IEnumerable<string> paths) {
-                var pathList = paths.ToList();
-                bool notify = false;
-                foreach(var p in pathList) {
-                    notify |= await UpdateTestCasesAsync(p, false);
+            private async Task PendOrSubmitRequests(string path) {
+                List<string> pendingRequests;
+                int originalCount;
+                lock (_containersLock) {
+                    pendingRequests = _pendingRequests;
+                    _pendingRequests.Add(path);
+                    originalCount = _pendingRequests.Count;
+
+                    if (originalCount > 50) {
+                        _pendingRequests = new List<string>();
+                    }
                 }
-                if (notify) {
-                    ContainersChanged();
+
+                await Task.Delay(100).ConfigureAwait(false);
+
+                lock (_containersLock) {
+                    if (pendingRequests.Count != originalCount) {
+                        return;
+                    }
+                    if (_pendingRequests == pendingRequests) {
+                        _pendingRequests = new List<string>();
+                    }
                 }
+
+                await UpdateTestCasesAsync(pendingRequests, true).ConfigureAwait(false);
             }
 
-            private async Task<bool> UpdateTestCasesAsync(string path, bool notify) {
+            private async Task UpdateTestCasesAsync(IEnumerable<string> paths, bool notify) {
                 var testCaseData = await _project.Analyzer.SendExtensionCommandAsync(
-                    TestAnalyzer.Name, 
+                    TestAnalyzer.Name,
                     TestAnalyzer.GetTestCasesCommand,
-                    path
+                    string.Join(";", paths)
                 );
 
                 if (testCaseData == null) {
-                    return false;
+                    return;
                 }
 
-                var testCases = TestAnalyzer.GetTestCases(testCaseData);
+                var testCaseGroups = TestAnalyzer.GetTestCases(testCaseData).GroupBy(tc => tc.Filename);
 
-                if (testCases.Length != 0) {
-                    TestContainer existing;
-                    bool changed = true;
-                    if (TryGetContainer(path, out existing)) {
-                        // we have an existing entry, let's see if any of the tests actually changed.
-                        if (existing.TestCases.Length == testCases.Length) {
-                            changed = false;
+                bool anythingToNotify = false;
 
-                            for (int i = 0; i < existing.TestCases.Length; i++) {
-                                if (!existing.TestCases[i].Equals(testCases[i])) {
-                                    changed = true;
-                                    break;
-                                }
+                foreach (var testCases in testCaseGroups) {
+                    var path = testCases.Key;
+                    if (testCases.Any()) {
+                        if (!TryGetContainer(path, out TestContainer existing) || !existing.TestCases.SequenceEqual(testCases)) {
+                            // we have a new entry or some of the tests changed
+                            int version = (existing?.Version ?? 0) + 1;
+                            lock (_containersLock) {
+                                _containers[path] = new TestContainer(
+                                    _discoverer,
+                                    path,
+                                    _project,
+                                    version,
+                                    Architecture,
+                                    testCases.ToArray()
+                                );
                             }
-                        }
-                    }
 
-                    if (changed) {
-                        // we have a new entry or some of the tests changed
-                        int version = (existing?.Version ?? 0) + 1;
-                        lock (_containersLock) {
-                            _containers[path] = new TestContainer(
-                                _discoverer,
-                                path,
-                                _project,
-                                version,
-                                Architecture,
-                                testCases
-                            );
+                            anythingToNotify = true;
                         }
-
-                        if (notify) {
-                            ContainersChanged();
-                        }
-                        return true;
+                    } else if (RemoveContainer(path)) {
+                        // Raise containers changed event...
+                        anythingToNotify = true;
                     }
-                } else if (RemoveContainer(path)) {
-                    // Raise containers changed event...
-                    if (notify) {
-                        ContainersChanged();
-                    }
-                    return true;
                 }
 
-                return false;
+                if (notify && anythingToNotify) {
+                    ContainersChanged();
+                }
             }
 
             private Architecture Architecture => Architecture.Default;

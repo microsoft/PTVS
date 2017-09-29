@@ -1353,7 +1353,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // Update the warn-on-launch state for this entry
             foreach (var buffer in parsedEvent.buffers) {
-                hasErrors |= buffer.errors.Any();
+                hasErrors |= buffer.errors?.Any() ?? false;
 
                 Debug.WriteLine("Received updated parse {0} {1}", parsedEvent.fileId, buffer.version);
 
@@ -1381,15 +1381,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 // Update the parser warnings/errors.
                 if (!entry.SuppressErrorList && _services.ErrorTaskProvider != null) {
-                    if (buffer.errors.Any() || buffer.warnings.Any()) {
+                    if ((buffer.errors?.Any() ?? false) || (buffer.warnings?.Any() ?? false)) {
                         var factory = new TaskProviderItemFactory(translator);
-                        var warningItems = buffer.warnings.Select(er => factory.FromErrorResult(
+                        var warningItems = buffer.warnings?.Select(er => factory.FromErrorResult(
                             _services.Site,
                             er,
                             VSTASKPRIORITY.TP_NORMAL,
                             VSTASKCATEGORY.CAT_BUILDCOMPILE
                         ));
-                        var errorItems = buffer.errors.Select(er => factory.FromErrorResult(
+                        var errorItems = buffer.errors?.Select(er => factory.FromErrorResult(
                             _services.Site,
                             er,
                             VSTASKPRIORITY.TP_HIGH,
@@ -1400,7 +1400,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _services.ErrorTaskProvider.ReplaceItems(
                             entry.Path,
                             ParserTaskMoniker,
-                            errorItems.Concat(warningItems).ToList()
+                            errorItems.MaybeEnumerate().Concat(warningItems.MaybeEnumerate()).ToList()
                         );
                     } else {
                         _services.ErrorTaskProvider.Clear(entry.Path, ParserTaskMoniker);
@@ -1408,7 +1408,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (!entry.SuppressErrorList && _services.CommentTaskProvider != null) {
-                    if (buffer.tasks.Any()) {
+                    if (buffer.tasks?.Any() ?? false) {
                         var taskItems = buffer.tasks.Select(x => new TaskProviderItem(
                             _services.Site,
                             x.message,
