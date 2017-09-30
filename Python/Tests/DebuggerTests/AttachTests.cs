@@ -1287,7 +1287,7 @@ int main(int argc, char* argv[]) {
         }
 
         [TestMethod, Priority(2)]
-        public override Task AttachWithOutputRedirection() => base.AttachWithOutputRedirection();
+        public override async Task AttachWithOutputRedirection() => await base.AttachWithOutputRedirection();
     }
 
     [TestClass]
@@ -1457,7 +1457,7 @@ int main(int argc, char* argv[]) {
         public override async Task AttachAndStepWithBlankSysPrefix() { }
 
         [TestMethod, Priority(2)]
-        public override Task AttachPtvsdAndStopDebugging() => base.AttachPtvsdAndStopDebugging();
+        public override async Task AttachPtvsdAndStopDebugging() => await base.AttachPtvsdAndStopDebugging();
 
         protected override string PtvsdInterpreterArguments {
             get { return "-X:Tracing -X:Frames"; }

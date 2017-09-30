@@ -555,12 +555,12 @@ NameError: name 'does_not_exist' is not defined
         }
 
         [TestMethod, Priority(2)]
-        public override Task ChangeFrame() => base.ChangeFrame();
+        public override async Task ChangeFrame() => await base.ChangeFrame();
 
         [TestMethod, Priority(2)]
-        public override Task ChangeModule() => base.ChangeModule();
+        public override async Task ChangeModule() => await base.ChangeModule();
 
         [TestMethod, Priority(2)]
-        public override Task ChangeProcess() => base.ChangeProcess();
+        public override async Task ChangeProcess() => await base.ChangeProcess();
     }
 }
