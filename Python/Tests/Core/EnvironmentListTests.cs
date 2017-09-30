@@ -147,7 +147,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("10s")]
         public async Task InterpretersRaceCondition() {
             var container = CreateCompositionContainer();
