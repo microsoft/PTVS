@@ -82,16 +82,15 @@ namespace AnalysisTests {
         public void Errors35() {
             ParseErrors("Errors35.py",
                 PythonLanguageVersion.V35,
-                new ErrorInfo("iterable unpacking cannot be used in comprehension", 5, 1, 6, 8, 1, 9),
-                new ErrorInfo("invalid syntax", 39, 3, 12, 40, 3, 13),
-                new ErrorInfo("can't use starred expression here", 48, 4, 5, 49, 4, 6),
-                new ErrorInfo("invalid syntax", 59, 5, 9, 60, 5, 10),
-                new ErrorInfo("invalid syntax", 59, 5, 9, 61, 5, 11),
-                new ErrorInfo("invalid syntax", 72, 6, 9, 73, 6, 10),
-                new ErrorInfo("iterable argument unpacking follows keyword argument unpacking", 85, 7, 9, 88, 7, 12),
-                new ErrorInfo("invalid syntax", 98, 8, 8, 100, 8, 10),
-                new ErrorInfo("invalid syntax", 110, 9, 8, 112, 9, 10),
-                new ErrorInfo("invalid syntax", 119, 10, 5, 122, 10, 8)
+                    new ErrorInfo("iterable unpacking cannot be used in comprehension", 1, 1, 2, 4, 1, 5),
+                    new ErrorInfo("invalid syntax", 38, 3, 11, 41, 3, 14),
+                    new ErrorInfo("can't use starred expression here", 45, 4, 2, 48, 4, 5),
+                    new ErrorInfo("invalid syntax", 57, 5, 7, 61, 5, 11),
+                    new ErrorInfo("invalid syntax", 71, 6, 8, 74, 6, 11),
+                    new ErrorInfo("iterable argument unpacking follows keyword argument unpacking", 85, 7, 9, 88, 7, 12),
+                    new ErrorInfo("invalid syntax", 98, 8, 8, 100, 8, 10),
+                    new ErrorInfo("invalid syntax", 108, 9, 6, 112, 9, 10),
+                    new ErrorInfo("invalid syntax", 116, 10, 2, 122, 10, 8)
             );
         }
 
@@ -136,19 +135,17 @@ namespace AnalysisTests {
                                 CheckConstant("x"),
                                 One
                             ),
-                            CheckSlice(
-                                null,
-                                CheckDictionaryExpr(
+                            CheckDictValueOnly(
+                                CheckStarExpr(CheckDictionaryExpr(
                                     CheckSlice(CheckConstant("y"), Two)
-                                )
+                                ), 2)
                             )
                         ),
                         CheckDictionaryStmt(
-                            CheckSlice(
-                                null,
-                                CheckDictionaryExpr(
+                            CheckDictValueOnly(
+                                CheckStarExpr(CheckDictionaryExpr(
                                     CheckSlice(CheckConstant("x"), Two)
-                                )
+                                ), 2)
                             ),
                             CheckSlice(
                                 CheckConstant("x"),
@@ -2857,47 +2854,43 @@ namespace AnalysisTests {
             ParseErrors(filename, version, Severity.Ignore, errors);
         }
 
+        private static string FormatError(ErrorResult r) {
+            var s = r.Span.Start;
+            var e = r.Span.End;
+            return $"new ErrorInfo(\"{r.Message}\", {s.Index}, {s.Line}, {s.Column}, {e.Index}, {e.Line}, {e.Column})";
+        }
+
+        private static string FormatError(ErrorInfo r) {
+            var s = r.Span.Start;
+            var e = r.Span.End;
+            return $"new ErrorInfo(\"{r.Message}\", {s.Index}, {s.Line}, {s.Column}, {e.Index}, {e.Line}, {e.Column})";
+        }
+
         private void ParseErrors(string filename, PythonLanguageVersion version, Severity indentationInconsistencySeverity, params ErrorInfo[] errors) {
             var sink = new CollectingErrorSink();
             ParseFile(filename, sink, version, indentationInconsistencySeverity);
 
             StringBuilder foundErrors = new StringBuilder();
             for (int i = 0; i < sink.Errors.Count; i++) {
-                foundErrors.AppendFormat("new ErrorInfo(\"{0}\", {1}, {2}, {3}, {4}, {5}, {6})," + Environment.NewLine,
-                    sink.Errors[i].Message,
-                    sink.Errors[i].Span.Start.Index,
-                    sink.Errors[i].Span.Start.Line,
-                    sink.Errors[i].Span.Start.Column,
-                    sink.Errors[i].Span.End.Index,
-                    sink.Errors[i].Span.End.Line,
-                    sink.Errors[i].Span.End.Column
+                foundErrors.AppendFormat("{0}{1}{2}",
+                    FormatError(sink.Errors[i]),
+                    i == sink.Errors.Count - 1 ? "" : ",",
+                    Environment.NewLine
                 );
             }
 
             string finalErrors = foundErrors.ToString();
             Console.WriteLine(finalErrors);
-            Assert.AreEqual(errors.Length, sink.Errors.Count, "Version: " + version + Environment.NewLine + "Unexpected errors: " + Environment.NewLine + finalErrors);
 
             for (int i = 0; i < errors.Length; i++) {
+                if (sink.Errors.Count <= i) {
+                    Assert.Fail("No error {0}: {1}", i, FormatError(errors[i]));
+                }
                 if (sink.Errors[i].Message != errors[i].Message) {
-                    Assert.Fail("Wrong msg for error {0}: expected {1}, got {2}", i, errors[i].Message, sink.Errors[i].Message);
+                    Assert.Fail("Wrong msg for error {0}: expected {1}, got {2}", i, FormatError(errors[i]), FormatError(sink.Errors[i]));
                 }
                 if (sink.Errors[i].Span != errors[i].Span) {
-                    Assert.Fail("Wrong span for error {0}: expected ({1}, {2}, {3} - {4}, {5}, {6}), got ({7}, {8}, {9}, {10}, {11}, {12})",
-                        i,
-                        errors[i].Span.Start.Index,
-                        errors[i].Span.Start.Line,
-                        errors[i].Span.Start.Column,
-                        errors[i].Span.End.Index,
-                        errors[i].Span.End.Line,
-                        errors[i].Span.End.Column,
-                        sink.Errors[i].Span.Start.Index,
-                        sink.Errors[i].Span.Start.Line,
-                        sink.Errors[i].Span.Start.Column,
-                        sink.Errors[i].Span.End.Index,
-                        sink.Errors[i].Span.End.Line,
-                        sink.Errors[i].Span.End.Column
-                    );
+                    Assert.Fail("Wrong span for error {0}: expected {1}, got {2}", i, FormatError(errors[i]), FormatError(sink.Errors[i]));
                 }
             }
         }
@@ -3552,6 +3545,20 @@ namespace AnalysisTests {
             };
         }
 
+        private static Action<SliceExpression> CheckDictKeyOnly(Action<Expression> key) {
+            return expr => {
+                Assert.AreEqual(typeof(DictKeyOnlyExpression), expr.GetType());
+                key(((DictKeyOnlyExpression)expr).Key);
+            };
+        }
+
+        private static Action<SliceExpression> CheckDictValueOnly(Action<Expression> value) {
+            return expr => {
+                Assert.AreEqual(typeof(DictValueOnlyExpression), expr.GetType());
+                value(((DictValueOnlyExpression)expr).Value);
+            };
+        }
+
         private static Action<Statement> CheckTupleStmt(params Action<Expression>[] items) {
             return CheckExprStmt(CheckTupleExpr(items));
         }
@@ -3746,10 +3753,11 @@ namespace AnalysisTests {
             };
         }
 
-        private Action<Expression> CheckStarExpr(Action<Expression> value) {
+        private Action<Expression> CheckStarExpr(Action<Expression> value, int starCount = 1) {
             return expr => {
                 Assert.AreEqual(typeof(StarredExpression), expr.GetType());
                 var starred = (StarredExpression)expr;
+                Assert.AreEqual(starCount, starred.StarCount);
 
                 value(starred.Expression);
             };

@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     res.Append(kwOnlyText);
                 }
             }
-            res.Append(leadingWhiteSpace ?? this.GetProceedingWhiteSpace(ast));
+            res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpace(ast));
             res.Append('(');
             Tuple.AppendCodeString(res, ast, format);
             if (!this.IsMissingCloseGrouping(ast)) {

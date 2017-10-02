@@ -3831,17 +3831,17 @@ namespace Microsoft.PythonTools.Parsing {
             return l;
         }
 
-        // 3.x: star_expr: ['*'] expr
+        // 3.x: star_expr: ['*' | '**'] expr
         private Expression ParseStarExpression() {
-            
-            if (MaybeEat(TokenKind.Multiply)) {
+            var token = PeekToken().Kind;
+            if ((token == TokenKind.Multiply || token == TokenKind.Power) && Eat(token)) {
                 string whitespace = _tokenWhiteSpace;
                 if (_langVersion.Is2x()) {
                     ReportSyntaxError("invalid syntax");
                 }
                 var start = GetStart();
                 var expr = ParseExpr();
-                var res = new StarredExpression(expr);
+                var res = new StarredExpression(expr, token == TokenKind.Power ? 2 : 1);
                 if (_verbatim) {
                     AddPreceedingWhiteSpace(res, whitespace);
                 }
@@ -3979,14 +3979,14 @@ namespace Microsoft.PythonTools.Parsing {
                     } else if (PeekTokenForOrAsyncFor) {
                         // "(" expression "for" ...
                         if (expr is StarredExpression) {
-                            ReportSyntaxError("iterable unpacking cannot be used in comprehension");
+                            ReportSyntaxError(expr.StartIndex, expr.EndIndex, "iterable unpacking cannot be used in comprehension");
                         }
                         ret = ParseGeneratorExpression(expr, startingWhiteSpace);
                     } else {
                         // "(" expression ")"
                         ret = new ParenthesisExpression(expr);
                         if (expr is StarredExpression) {
-                            ReportSyntaxError("can't use starred expression here");
+                            ReportSyntaxError(expr.StartIndex, expr.EndIndex, "can't use starred expression here");
                         }
                     }
                     hasRightParenthesis = Eat(TokenKind.RightParenthesis);
@@ -4093,23 +4093,19 @@ namespace Microsoft.PythonTools.Parsing {
                         break;
                     }
 
-                    bool isUnpack = false;
-                    if (MaybeEat(TokenKind.Multiply)) {
-                        if (hasDictUnpack || _langVersion < PythonLanguageVersion.V35) {
-                            ReportSyntaxError("invalid syntax");
-                        }
-                        isUnpack = true;
-                        hasSequenceUnpack = true;
-                    } else if (MaybeEat(TokenKind.Power)) {
-                        if (hasSequenceUnpack || _langVersion < PythonLanguageVersion.V35) {
-                            ReportSyntaxError("invalid syntax");
-                        }
-                        isUnpack = true;
-                        hasDictUnpack = true;
-                    }
-
+                    bool isSequenceUnpack = false, isDictUnpack = false;
                     bool first = false;
                     Expression e1 = ParseExpression();
+                    if (e1 is StarredExpression s) {
+                        if (s.StarCount == 1) {
+                            isSequenceUnpack = true;
+                            hasSequenceUnpack = true;
+                        } else if (s.StarCount == 2) {
+                            isDictUnpack = true;
+                            hasDictUnpack = true;
+                        }
+                    }
+
                     if (MaybeEat(TokenKind.Colon)) { // dict literal
                         string colonWhiteSpace = _tokenWhiteSpace;
                         if (setMembers == null && dictMembers == null) {
@@ -4118,9 +4114,10 @@ namespace Microsoft.PythonTools.Parsing {
                         }
                         Expression e2 = ParseExpression();
 
-                        if (setMembers != null || hasSequenceUnpack || isUnpack) {
-                            if (!reportedError) {
+                        if (!reportedError) {
+                            if (setMembers != null || hasSequenceUnpack || isSequenceUnpack || isDictUnpack) {
                                 ReportSyntaxError(e1.StartIndex, e2.EndIndex, "invalid syntax");
+                                reportedError = true;
                             }
                         }
 
@@ -4159,7 +4156,7 @@ namespace Microsoft.PythonTools.Parsing {
                             reportedError = true;
                         }
 
-                        if (isUnpack && hasDictUnpack) {
+                        if (isDictUnpack && hasDictUnpack) {
                             // **{}, we don't have a colon and a value...
                             if (setMembers != null && !reportedError) {
                                 ReportSyntaxError(e1.StartIndex, e1.EndIndex, "invalid syntax");
@@ -4169,7 +4166,7 @@ namespace Microsoft.PythonTools.Parsing {
                             if (dictMembers == null) {
                                 dictMembers = new List<SliceExpression>();
                             }
-                            dictMembers.Add(new SliceExpression(null, e1, null, false));
+                            dictMembers.Add(new DictValueOnlyExpression(e1));
                         } else {
                             if (dictMembers != null) {
                                 if (!reportedError) {
@@ -4199,13 +4196,9 @@ namespace Microsoft.PythonTools.Parsing {
 
                             // error recovery
                             if (setMembers != null) {
-                                if (isUnpack) {
-                                    e1 = new StarredExpression(e1);
-                                }
-
                                 setMembers.Add(e1);
                             } else {
-                                var slice = new SliceExpression(e1, null, null, false);
+                                var slice = new DictKeyOnlyExpression(e1);
                                 if (_verbatim) {
                                     AddErrorIsIncompleteNode(slice);
                                 }

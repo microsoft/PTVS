@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             } else {
                 if (Items.Count == 0 && 
                     format.SpaceWithinEmptyTupleExpression != null) {
-                    format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+                    format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
                     res.Append('(');
                     if (String.IsNullOrWhiteSpace(this.GetSecondWhiteSpace(ast))) {
                         res.Append(format.SpaceWithinEmptyTupleExpression.Value ? " " : "");

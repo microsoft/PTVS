@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             _left.AppendCodeString(res, ast, format);
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(this.GetPreceedingWhiteSpace(ast));
             res.Append(_op.ToCodeString());
             res.Append('=');
             _right.AppendCodeString(res, ast, format);
