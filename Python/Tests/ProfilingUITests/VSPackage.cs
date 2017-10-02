@@ -26,7 +26,10 @@ namespace ProfilingUITests {
         public const string AutomationObject = "Microsoft.PythonTools.Tests.ProfilingUITests";
 
         private readonly Lazy<IVsHostedPythonToolsTest> _testRunner = new Lazy<IVsHostedPythonToolsTest>(() =>
-            new HostedPythonToolsTestRunner(typeof(VSPackage).Assembly)
+            new HostedPythonToolsTestRunner(
+                typeof(VSPackage).Assembly,
+                new Guid("F4A63B2A-49AB-4b2d-AA59-A10F01026C89") // Profiling
+            )
         );
 
         protected override object GetAutomationObject(string name) {
