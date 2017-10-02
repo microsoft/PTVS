@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -193,7 +194,12 @@ namespace TestUtilities {
                 var lib8 = Path.Combine(rootPath, "Lib", "win8", "um", isX64 ? "x64" : "x86");
                 var libv63 = Path.Combine(rootPath, "Lib", "winv6.3", "um", isX64 ? "x64" : "x86");
 
-                if (!Directory.Exists(includeShared) || !Directory.Exists(includeum)) {
+                if (!Directory.Exists(includeShared)) {
+                    Trace.TraceWarning($"Did not find {includeShared}");
+                    continue;
+                }
+                if (!Directory.Exists(includeum)) {
+                    Trace.TraceWarning($"Did not find {includeum}");
                     continue;
                 }
 
@@ -240,6 +246,7 @@ namespace TestUtilities {
                 var rootPath = regValue.ToString();
                 var include = Path.Combine(rootPath, "Include");
                 if (!Directory.Exists(include)) {
+                    Trace.TraceWarning($"Did not find {include}");
                     continue;
                 }
                 // We want a subfolder that is a version number - get the latest
@@ -254,7 +261,12 @@ namespace TestUtilities {
                 include = Path.Combine(include, crtVersion, "ucrt");
                 var lib = Path.Combine(rootPath, "Lib", crtVersion, "ucrt", isX64 ? "x64" : "x86");
 
-                if (!Directory.Exists(include) || !Directory.Exists(lib)) {
+                if (!Directory.Exists(include)) {
+                    Trace.TraceWarning($"Did not find {include}");
+                    continue;
+                }
+                if (!Directory.Exists(lib)) {
+                    Trace.TraceWarning($"Did not find {lib}");
                     continue;
                 }
 

@@ -33,6 +33,7 @@ namespace TestUtilities {
 
         void CheckMessageBox(params string[] text);
         void CheckMessageBox(MessageBoxButton button, params string[] text);
+        void MaybeCheckMessageBox(MessageBoxButton button, params string[] text);
 
         ITreeNode WaitForItem(params string[] items);
 

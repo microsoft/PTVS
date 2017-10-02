@@ -35,7 +35,6 @@ namespace IronPythonTests {
     public class IronPythonReplEvaluatorTests {
         static IronPythonReplEvaluatorTests() {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         protected virtual PythonVersion PythonVersion {

@@ -28,17 +28,21 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(1)]
         public void TestSimpleDeserialize() {
-            var obj = Unpickle.Load(TestData.Open(@"TestData\empty_dict.pickle"));
+            object obj;
+            using (var stream = new FileStream(TestData.GetPath(@"TestData\empty_dict.pickle"), FileMode.Open, FileAccess.Read)) {
+                obj = Unpickle.Load(stream);
+            }
 
             Assert.AreEqual(obj.GetType(), typeof(Dictionary<string, object>));
             Assert.AreEqual(((Dictionary<string, object>)obj).Count, 0);
 
-            obj = Unpickle.Load(TestData.Open(@"TestData\simple_dict.pickle"));
+            using (var stream = new FileStream(TestData.GetPath(@"TestData\simple_dict.pickle"), FileMode.Open, FileAccess.Read)) {
+                obj = Unpickle.Load(stream);
+            }
 
             Assert.AreEqual(obj.GetType(), typeof(Dictionary<string, object>));
             var dict = ((Dictionary<string, object>)obj);
@@ -53,7 +57,9 @@ namespace AnalysisTests {
             Assert.AreEqual(dict["emptylist"].GetType(), typeof(List<object>));
             Assert.AreEqual(dict["list"].GetType(), typeof(List<object>));
 
-            obj = Unpickle.Load(TestData.Open(@"TestData\simple_dict2.pickle"));
+            using (var stream = new FileStream(TestData.GetPath(@"TestData\simple_dict2.pickle"), FileMode.Open, FileAccess.Read)) {
+                obj = Unpickle.Load(stream);
+            }
 
             Assert.AreEqual(obj.GetType(), typeof(Dictionary<string, object>));
             dict = ((Dictionary<string, object>)obj);

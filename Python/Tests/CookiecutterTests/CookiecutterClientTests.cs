@@ -23,7 +23,6 @@ using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace CookiecutterTests {
     [TestClass]
@@ -88,7 +87,6 @@ namespace CookiecutterTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestInitialize]
@@ -179,7 +177,7 @@ namespace CookiecutterTests {
             var original = new byte[32768 * 3 + 1024];
             rnd.NextBytes(original);
 
-            var tempFolder = TestData.GetTempPath("FileComparison", true);
+            var tempFolder = TestData.GetTempPath();
             var originalPath = Path.Combine(tempFolder, "original.dat");
             var identicalPath = Path.Combine(tempFolder, "identical.dat");
             var largerPath = Path.Combine(tempFolder, "larger.dat");
@@ -207,7 +205,7 @@ namespace CookiecutterTests {
         private async Task<Dictionary<string, string>> GenerateFromLocalTemplate(string userConfigFilePath) {
             var context = await _client.LoadUnrenderedContextAsync(LocalTemplatePath, userConfigFilePath);
 
-            var output = TestData.GetTempPath("Cookiecutter", true);
+            var output = TestData.GetTempPath();
             var outputProjectFolder = Path.Combine(output, "project");
             var contextFilePath = Path.Combine(output, "context.json");
 

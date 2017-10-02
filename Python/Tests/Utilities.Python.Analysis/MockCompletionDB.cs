@@ -119,7 +119,7 @@ namespace TestUtilities.Mocks {
             Assert.IsTrue(Directory.Exists(source1), "Cannot find " + source1);
             Assert.IsTrue(Directory.Exists(source2), "Cannot find " + source2);
 
-            var db = new MockCompletionDB(TestData.GetTempPath(randomSubPath: true), version);
+            var db = new MockCompletionDB(TestData.GetTempPath(), version);
             Assert.IsNotNull(db, "Unable to create DB path");
             Console.WriteLine("Creating temporary database at {0}", db.DBPath);
 

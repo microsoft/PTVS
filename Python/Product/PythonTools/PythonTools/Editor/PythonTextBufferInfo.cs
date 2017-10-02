@@ -289,30 +289,28 @@ namespace Microsoft.PythonTools.Editor {
         public ITextVersion LastParseReceivedVersion { get; private set; }
         public ITextVersion LastAnalysisReceivedVersion { get; private set; }
 
-        public bool UpdateLastReceivedParse(int version) {
-            var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-            if (ver == null || ver.VersionNumber >= version) {
-                return false;
+        public ITextVersion UpdateLastReceivedParse(int version) {
+            lock (_lock) {
+                var ver = LastParseReceivedVersion ?? Buffer.CurrentSnapshot.Version;
+                while (ver?.Next != null && ver.VersionNumber < version) {
+                    ver = ver.Next;
+                }
+                var r = ver != null && ver.VersionNumber >= version;
+                LastParseReceivedVersion = ver;
+                return r ? ver : null;
             }
-
-            while (ver != null && ver.VersionNumber < version) {
-                ver = ver.Next;
-            }
-            LastParseReceivedVersion = ver;
-            return true;
         }
 
-        public bool UpdateLastReceivedAnalysis(int version) {
-            var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-            if (ver == null || ver.VersionNumber >= version) {
-                return false;
+        public ITextVersion UpdateLastReceivedAnalysis(int version) {
+            lock (_lock) {
+                var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
+                while (ver?.Next != null && ver.VersionNumber < version) {
+                    ver = ver.Next;
+                }
+                var r = ver != null && ver.VersionNumber >= version;
+                LastAnalysisReceivedVersion = ver;
+                return r ? ver : null;
             }
-
-            while (ver != null && ver.VersionNumber < version) {
-                ver = ver.Next;
-            }
-            LastAnalysisReceivedVersion = ver;
-            return true;
         }
 
         public SourceLocation GetSourceLocation(SnapshotPoint start) {

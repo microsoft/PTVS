@@ -44,7 +44,6 @@ namespace AnalysisTests {
             AnalysisLog.Reset();
             AnalysisLog.ResetTime();
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         public void StartAnalysisLog() {

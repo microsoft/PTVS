@@ -102,12 +102,13 @@ namespace TestUtilities {
             foreach (var frame in trace.GetFrames()) {
                 var mi = frame.GetMethod();
                 if (!seenDebugAssert) {
-                    seenDebugAssert = (mi.DeclaringType == typeof(Debug) && mi.Name == "Assert");
+                    seenDebugAssert = (mi.DeclaringType == typeof(Debug) && 
+                        (mi.Name == "Assert" || mi.Name == "Fail"));
                 } else if (mi.DeclaringType == typeof(System.RuntimeMethodHandle)) {
                     break;
                 } else {
                     var filename = frame.GetFileName();
-                    Trace.WriteLine(string.Format(
+                    Console.WriteLine(string.Format(
                         " at {0}.{1}({2}) in {3}:line {4}",
                         mi.DeclaringType.FullName,
                         mi.Name,
@@ -115,9 +116,9 @@ namespace TestUtilities {
                         filename ?? "<unknown>",
                         frame.GetFileLineNumber()
                     ));
-                    if (!string.IsNullOrEmpty(filename)) {
+                    if (File.Exists(filename)) {
                         try {
-                            Trace.WriteLine(
+                            Console.WriteLine(
                                 "    " +
                                 File.ReadLines(filename).ElementAt(frame.GetFileLineNumber() - 1).Trim()
                             );
@@ -131,6 +132,7 @@ namespace TestUtilities {
             if (Debugger.IsAttached) {
                 Debugger.Break();
             }
+
             Console.WriteLine(message);
 
             if (_testContext == null) {

@@ -36,6 +36,11 @@ namespace Microsoft.PythonTools.Interpreter {
         private int _ignoreNotifications;
         private bool _initialized;
 
+        private static readonly Version[] ExcludedVersions = new[] {
+            new Version(2, 5),
+            new Version(3, 0)
+        };
+
         [ImportingConstructor]
         public CPythonInterpreterFactoryProvider(
             [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
@@ -165,7 +170,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            var found = search.Interpreters.ToList();
+            var found = search.Interpreters
+                .Where(i => !ExcludedVersions.Contains(i.Configuration.Version))
+                .ToList();
             var uniqueIds = new HashSet<string>(found.Select(i => i.Configuration.Id));
 
             // Then update our cached state with the lock held.

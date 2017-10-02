@@ -26,7 +26,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace AnalysisTests {
     [TestClass]
@@ -34,7 +33,6 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         [TestMethod, Priority(1)]
@@ -451,7 +449,7 @@ namespace AnalysisTests {
             var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
             version.AssertInstalled();
 
-            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+            var env = Path.Combine(TestData.GetTempPath(), "env");
 
             using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "virtualenv", env)) {
                 if ((await p) != 0) {
@@ -493,7 +491,7 @@ namespace AnalysisTests {
             var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
             version.AssertInstalled();
 
-            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+            var env = Path.Combine(TestData.GetTempPath(), "env");
 
             using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "virtualenv", "--system-site-packages", env)) {
                 if ((await p) != 0) {
@@ -531,7 +529,7 @@ namespace AnalysisTests {
         public async Task GetVEnvDatabasePaths() {
             var version = PythonPaths.Python35 ?? PythonPaths.Python35_x64;
 
-            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+            var env = Path.Combine(TestData.GetTempPath(), "env");
 
             using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "venv", env)) {
                 if ((await p) != 0) {
@@ -572,7 +570,7 @@ namespace AnalysisTests {
         public async Task GetVEnvDatabasePathsWithSystemSitePackage() {
             var version = PythonPaths.Python35 ?? PythonPaths.Python35_x64;
 
-            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+            var env = Path.Combine(TestData.GetTempPath(), "env");
 
             using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "venv", "--system-site-packages", env)) {
                 if ((await p) != 0) {

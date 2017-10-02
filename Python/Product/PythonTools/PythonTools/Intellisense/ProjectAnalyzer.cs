@@ -44,6 +44,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
+using Microsoft.Win32.SafeHandles;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -257,10 +258,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 task => {
                     var result = task.Result;
                     if (result == null) {
+                        _conn.Dispose();
                         _conn = null;
                     } else if (!String.IsNullOrWhiteSpace(result.error)) {
                         Debug.Fail("Analyzer initialization failed with " + result.error);
                         _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, "Initialization: " + result.error);
+                        _conn.Dispose();
                         _conn = null;
                     } else {
                         SendEvent(
@@ -438,8 +441,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 VsProjectAnalyzer vsAnalyzer,
                 Thread thread,
                 CancellationTokenSource onKill,
-                string stdOutClientHandle,
-                string stdInClientHandle
+                SafePipeHandle stdOutClientHandle,
+                SafePipeHandle stdInClientHandle
             ) {
                 VsAnalyzer = vsAnalyzer;
                 _thread = thread;
@@ -560,7 +563,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var thread = new Thread(ThreadConnectionWorker);
             var cts = new CancellationTokenSource();
-            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.GetClientHandleAsString(), writer.GetClientHandleAsString());
+            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.ClientSafePipeHandle, writer.ClientSafePipeHandle);
             thread.Start(info);
 
             var conn = new Connection(
@@ -659,7 +662,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 var bp = entry.TryGetBufferParser();
                 if (bp != null) {
                     foreach (var version in analysisComplete.versions) {
-                        bp.Analyzed(version.bufferId, version.version);
+                        var buffer = bp.GetBuffer(version.bufferId);
+                        if (buffer == null) {
+                            continue;
+                        }
+
+                        buffer.UpdateLastReceivedAnalysis(version.version);
                     }
                 };
 
@@ -724,17 +732,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 await AddReferenceAsync(reference);
             }
 
-            var entries = (await AnalyzeFileAsync(oldBulkEntries)).MaybeEnumerate().ToList();
+            var entries = (await AnalyzeFileAsync(oldBulkEntries)).ToList();
             foreach (var e in oldEntries) {
                 if (e.IsTemporaryFile || e.SuppressErrorList) {
-                    AnalysisEntry entry;
-                    try {
+                    var entry = await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList);
+                    for (int retries = 3; retries > 0 && entry == null; --retries) {
+                        // Likely in the process of changing analyzer, so we'll delay slightly and retry.
+                        await Task.Delay(100);
                         entry = await AnalyzeFileAsync(e.Path, null, e.IsTemporaryFile, e.SuppressErrorList);
-                    } catch (InvalidOperationException ex) {
-                        // Occurs when we cannot analyze the file.
-                        // Report the error quietly, but since it is now likely to happen
-                        // for every other file
-                        ex.ReportUnhandledException(_services.Site, GetType(), allowUI: false);
+                    }
+                    if (entry == null) {
+                        Debug.Fail($"Failed to analyze file {e.Path}");
                         continue;
                     }
                     entries.Add(entry);
@@ -780,8 +788,13 @@ namespace Microsoft.PythonTools.Intellisense {
             var bufferParser = entry.GetOrCreateBufferParser(_services);
 
             if (oldSnapshots != null && oldSnapshots.Length > 0) {
+                var buffers = new HashSet<ITextBuffer>();
                 foreach (var snapshot in oldSnapshots) {
-                    PythonTextBufferInfo.MarkForReplacement(snapshot.TextBuffer);
+                    if (buffers.Add(snapshot.TextBuffer)) {
+                        PythonTextBufferInfo.MarkForReplacement(snapshot.TextBuffer);
+                        var bi = _services.GetBufferInfo(snapshot.TextBuffer);
+                        bi.TrySetAnalysisEntry(entry, null);
+                    }
                     bufferParser.AddBuffer(snapshot.TextBuffer);
                 }
                 await BufferParser.ParseBuffersAsync(_services, this, oldSnapshots);
@@ -876,13 +889,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (response == null || response.fileId == -1) {
                 Interlocked.Decrement(ref _parsePending);
-                if (_conn == null) {
-                    // Cannot analyze code because we have closed while working
+                if (_conn == null || response == null) {
+                    // Cannot analyze code because we have closed while working,
+                    // or some other unhandleable error occurred and was logged.
                     // Return null rather than raising an exception
                     return null;
                 }
                 // TODO: Get SendRequestAsync to return more useful information
-                throw new InvalidOperationException("Failed to create entry for file");
+                Debug.Fail("Failed to create entry for file");
+                return null;
             }
 
             // we awaited between the check and the AddFileRequest, another add could
@@ -905,7 +920,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<IReadOnlyList<AnalysisEntry>> AnalyzeFileAsync(string[] paths, string addingFromDirectory = null) {
             if (_conn == null) {
                 // We aren't able to analyze code, so don't create an entry.
-                return null;
+                return Array.Empty<AnalysisEntry>();
             }
 
             var req = new AP.AddBulkFileRequest { path = new string[paths.Length], addingFromDir = addingFromDirectory };
@@ -940,7 +955,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            return res;
+            return res.Where(n => n != null).ToArray();
         }
 
 
@@ -1278,7 +1293,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal bool IsAnalyzing {
             get {
-
                 return _parsePending > 0 || !_analysisComplete;
             }
         }
@@ -1339,26 +1353,27 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // Update the warn-on-launch state for this entry
             foreach (var buffer in parsedEvent.buffers) {
-                hasErrors |= buffer.errors.Any();
+                hasErrors |= buffer.errors?.Any() ?? false;
 
                 Debug.WriteLine("Received updated parse {0} {1}", parsedEvent.fileId, buffer.version);
 
                 LocationTracker translator = null;
                 if (bufferParser != null) {
-                    if (!bufferParser.Parsed(buffer.bufferId, buffer.version)) {
-                        // ignore receiving responses out of order...
-                        Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
-                        continue;
-                    }
-
                     var textBuffer = bufferParser.GetBuffer(buffer.bufferId);
                     if (textBuffer == null) {
                         // ignore unexpected buffer ID
                         continue;
                     }
 
+                    var newVersion = textBuffer.UpdateLastReceivedParse(buffer.version);
+                    if (newVersion == null) {
+                        // ignore receiving responses out of order...
+                        Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
+                        continue;
+                    }
+
                     translator = new LocationTracker(
-                        textBuffer.LastAnalysisReceivedVersion,
+                        newVersion,
                         textBuffer.Buffer,
                         buffer.version
                     );
@@ -1366,15 +1381,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 // Update the parser warnings/errors.
                 if (!entry.SuppressErrorList && _services.ErrorTaskProvider != null) {
-                    if (buffer.errors.Any() || buffer.warnings.Any()) {
+                    if ((buffer.errors?.Any() ?? false) || (buffer.warnings?.Any() ?? false)) {
                         var factory = new TaskProviderItemFactory(translator);
-                        var warningItems = buffer.warnings.Select(er => factory.FromErrorResult(
+                        var warningItems = buffer.warnings?.Select(er => factory.FromErrorResult(
                             _services.Site,
                             er,
                             VSTASKPRIORITY.TP_NORMAL,
                             VSTASKCATEGORY.CAT_BUILDCOMPILE
                         ));
-                        var errorItems = buffer.errors.Select(er => factory.FromErrorResult(
+                        var errorItems = buffer.errors?.Select(er => factory.FromErrorResult(
                             _services.Site,
                             er,
                             VSTASKPRIORITY.TP_HIGH,
@@ -1385,7 +1400,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _services.ErrorTaskProvider.ReplaceItems(
                             entry.Path,
                             ParserTaskMoniker,
-                            errorItems.Concat(warningItems).ToList()
+                            errorItems.MaybeEnumerate().Concat(warningItems.MaybeEnumerate()).ToList()
                         );
                     } else {
                         _services.ErrorTaskProvider.Clear(entry.Path, ParserTaskMoniker);
@@ -1393,7 +1408,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (!entry.SuppressErrorList && _services.CommentTaskProvider != null) {
-                    if (buffer.tasks.Any()) {
+                    if (buffer.tasks?.Any() ?? false) {
                         var taskItems = buffer.tasks.Select(x => new TaskProviderItem(
                             _services.Site,
                             x.message,

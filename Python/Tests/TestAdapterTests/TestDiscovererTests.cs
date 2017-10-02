@@ -39,7 +39,6 @@ namespace TestAdapterTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>C:\Visual Studio 2015\Projects\PythonApplication107\TestResults</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases><Project path=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\PythonApplication107.pyproj"" home=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" interpreter=""C:\Python35-32\python.exe"" pathEnv=""PYTHONPATH""><Environment /><SearchPaths><Search value=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" /></SearchPaths>

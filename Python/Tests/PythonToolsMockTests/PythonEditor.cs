@@ -107,10 +107,19 @@ namespace PythonToolsMockTests {
 
                         try {
                             entry.AnalysisComplete += evt;
-                            while (!mre.Wait(50, cancel) && !vs.HasPendingException) { }
+                            while (!mre.Wait(50, cancel) && !vs.HasPendingException && !entry.IsAnalyzed) {
+                                if (!analyzer.IsAnalyzing && !entry.IsAnalyzed) {
+                                    var bp = entry.TryGetBufferParser();
+                                    Assert.IsNotNull(bp, "No buffer parser was ever created");
+                                    var bi = PythonTextBufferInfo.TryGetForBuffer(view.TextView.TextBuffer);
+                                    Assert.IsNotNull(bi, "No BufferInfo was ever created");
+                                    bi.LastSentSnapshot = null;
+                                    bp.EnsureCodeSyncedAsync(view.TextView.TextBuffer).WaitAndUnwrapExceptions();
+                                }
+                            }
                         } catch (OperationCanceledException) {
                         } finally {
-                            analyzer.AnalysisStarted -= evt;
+                            entry.AnalysisComplete -= evt;
                         }
                     }
                     if (cancel.IsCancellationRequested) {
@@ -233,8 +242,14 @@ namespace PythonToolsMockTests {
                 }
             }
 
-            public Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            public async Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
                 if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
+                    for (int retries = 100; retries > 0 && _info.LastAnalysisReceivedVersion == null; --retries) {
+                        await Task.Delay(100);
+                    }
+                    if (_info.LastAnalysisReceivedVersion == null) {
+                        throw new NullReferenceException("LastAnalysisReceivedVersion was not set");
+                    }
                     if (_info.LastAnalysisReceivedVersion.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
                         try {
                             _event.Set();
@@ -243,7 +258,6 @@ namespace PythonToolsMockTests {
                         _info.RemoveSink(this);
                     }
                 }
-                return Task.CompletedTask;
             }
         }
 

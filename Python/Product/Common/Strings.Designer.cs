@@ -2704,7 +2704,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*.
+        ///   Looks up a localized string similar to coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*.
         /// </summary>
         public static string ImportCoverageCommandFileFilter {
             get {

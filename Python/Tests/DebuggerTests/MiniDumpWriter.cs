@@ -56,7 +56,7 @@ namespace DebuggerTests {
                 return;
             }
 
-            var dumpDir = TestData.GetTempPath(randomSubPath: true);
+            var dumpDir = TestData.GetTempPath();
             var dumpPath = Path.Combine(dumpDir, "dump.dmp");
             Console.WriteLine("Writing minidump to {0}", dumpPath);
 

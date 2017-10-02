@@ -127,8 +127,7 @@ namespace Microsoft.PythonTools.Analysis {
             } else if (comparer is ObjectComparer) {
                 return Create(set);
             } else if (comparer is UnionComparer) {
-                bool dummy;
-                return set.AsUnion((UnionComparer)comparer, out dummy);
+                return set.AsUnion((UnionComparer)comparer, out _);
             }
 
             throw new InvalidOperationException(string.Format("cannot use {0} as a comparer", comparer));
@@ -181,9 +180,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="ns">The namespaces to contain in the set.</param>
         /// <param name="comparer">The comparer to use for the set.</param>
         internal static IAnalysisSet CreateUnion(IEnumerable<AnalysisValue> ns, UnionComparer comparer) {
-            bool dummy;
             // TODO: Replace Trim() call with more intelligent enumeration.
-            return new AnalysisSetDetails.AnalysisHashSet(ns.UnionIter(comparer, out dummy), comparer).Trim();
+            return new AnalysisSetDetails.AnalysisHashSet(ns.UnionIter(comparer, out _), comparer).Trim();
         }
 
         /// <summary>
@@ -237,8 +235,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="set">The set to convert to a union.</param>
         /// <param name="strength">The strength of the union.</param>
         public static IAnalysisSet AsUnion(this IAnalysisSet set, int strength) {
-            bool dummy;
-            return set.AsUnion(strength, out dummy);
+            return set.AsUnion(strength, out _);
         }
 
         /// <summary>
@@ -292,8 +289,7 @@ namespace Microsoft.PythonTools.Analysis {
             var ns2 = set as AnalysisSetDetails.AnalysisSetTwoObject;
             if (ns2 != null) {
                 if (comparer.Equals(ns2.Value1, ns2.Value2)) {
-                    bool dummy;
-                    return new AnalysisSetDetails.AnalysisSetOneUnion(comparer.MergeTypes(ns2.Value1, ns2.Value2, out dummy), comparer);
+                    return new AnalysisSetDetails.AnalysisSetOneUnion(comparer.MergeTypes(ns2.Value1, ns2.Value2, out _), comparer);
                 } else {
                     return new AnalysisSetDetails.AnalysisSetTwoUnion(ns2.Value1, ns2.Value2, comparer);
                 }
@@ -403,21 +399,26 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            var uc = (UnionComparer)set.Comparer;
             switch (set.Count) {
                 case 0:
-                    return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[((UnionComparer)set.Comparer).Strength];
+                    return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
                 case 1:
-                    return new AnalysisSetDetails.AnalysisSetOneUnion(set.First(), (UnionComparer)set.Comparer);
+                    return new AnalysisSetDetails.AnalysisSetOneUnion(set.First(), uc);
                 case 2: {
-                        var tup = AnalysisSetDetails.AnalysisSetTwoUnion.FromEnumerable(set, (UnionComparer)set.Comparer);
+                        var tup = AnalysisSetDetails.AnalysisSetTwoUnion.FromEnumerable(set, uc);
                         if (tup == null) {
                             return set;
                         } else if (tup.Item1 == null && tup.Item2 == null) {
-                            return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[((UnionComparer)set.Comparer).Strength];
+                            return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[uc.Strength];
                         } else if (tup.Item2 == null) {
-                            return new AnalysisSetDetails.AnalysisSetOneUnion(tup.Item1, (UnionComparer)set.Comparer);
+                            return new AnalysisSetDetails.AnalysisSetOneUnion(tup.Item1, uc);
+                        } else if (set.Comparer.Equals(tup.Item1, tup.Item2)) {
+                            Debug.Fail($"Item {tup.Item1} ({uc.GetHashCode(tup.Item1)}) and {tup.Item2} ({uc.GetHashCode(tup.Item2)}) " +
+                                "should have been combined already by comparer {set.Comparer}");
+                            return new AnalysisSetDetails.AnalysisSetOneUnion(uc.MergeTypes(tup.Item1, tup.Item2, out _), uc);
                         } else {
-                            return new AnalysisSetDetails.AnalysisSetTwoUnion(tup.Item1, tup.Item2, (UnionComparer)set.Comparer);
+                            return new AnalysisSetDetails.AnalysisSetTwoUnion(tup.Item1, tup.Item2, uc);
                         }
                     }
                 default:
@@ -431,8 +432,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="sets">The sets to merge into this set.</param>
         /// <param name="canMutate">True if this set may be modified.</param>
         public static IAnalysisSet UnionAll(this IAnalysisSet set, IEnumerable<IAnalysisSet> sets, bool canMutate = true) {
-            bool dummy;
-            return set.UnionAll(sets, out dummy, canMutate);
+            return set.UnionAll(sets, out _, canMutate);
         }
 
         /// <summary>
@@ -1112,8 +1112,7 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                     var value2 = e.Current;
                     if (comparer.Equals(e.Current, value1)) {
-                        bool dummy;
-                        return new Tuple<AnalysisValue, AnalysisValue>(comparer.MergeTypes(value1, value2, out dummy), null);
+                        return new Tuple<AnalysisValue, AnalysisValue>(comparer.MergeTypes(value1, value2, out _), null);
                     }
                     if (e.MoveNext()) {
                         return null;
@@ -1133,12 +1132,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
-                bool dummy;
-                return Add(item, out dummy, canMutate);
+                return Add(item, out _, canMutate);
             }
 
             public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
-                bool dummy;
                 if (Object.ReferenceEquals(Value1, item) || Object.ReferenceEquals(Value2, item)) {
                     wasChanged = false;
                     return this;
@@ -1148,7 +1145,7 @@ namespace Microsoft.PythonTools.Analysis {
                         return this;
                     }
                     if (Comparer.Equals(Value2, newValue)) {
-                        return new AnalysisSetOneUnion(Comparer.MergeTypes(Value2, newValue, out dummy), Comparer);
+                        return new AnalysisSetOneUnion(Comparer.MergeTypes(Value2, newValue, out _), Comparer);
                     } else {
                         return new AnalysisSetTwoUnion(newValue, Value2, Comparer);
                     }
@@ -1158,7 +1155,7 @@ namespace Microsoft.PythonTools.Analysis {
                         return this;
                     }
                     if (Comparer.Equals(Value1, newValue)) {
-                        return new AnalysisSetOneUnion(Comparer.MergeTypes(Value1, newValue, out dummy), Comparer);
+                        return new AnalysisSetOneUnion(Comparer.MergeTypes(Value1, newValue, out _), Comparer);
                     } else {
                         return new AnalysisSetTwoUnion(Value1, newValue, Comparer);
                     }

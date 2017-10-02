@@ -15,9 +15,7 @@ extern alias pythontools;
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Input;
 using Microsoft.PythonTools;
@@ -36,21 +34,14 @@ using TestUtilities.SharedProject;
 
 namespace PythonToolsMockTests {
     [TestClass]
-    public class ProjectTests : SharedProjectTest {
-        public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
-
-        [ClassInitialize]
-        public static void Initialize(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
-        }
+    public class ProjectTests {
+        static PythonProjectGenerator Generator = PythonProjectGenerator.CreateStatic();
 
         [TestMethod, Priority(1)]
         public void BasicProjectTest() {
-            var sln = new ProjectDefinition(
+            var sln = Generator.Project(
                 "HelloWorld",
-                PythonProject,
-                Compile("server", "")
+                ProjectGenerator.Compile("server", "")
             ).Generate();
 
             using (var vs = sln.ToMockVs()) {
@@ -70,42 +61,38 @@ namespace PythonToolsMockTests {
 
         [TestMethod, Priority(1)]
         public void CutRenamePaste() {
-            foreach (var projectType in ProjectTypes) {
-                var testDef = new ProjectDefinition("DragDropCopyCutPaste",
-                    projectType,
-                    ItemGroup(
-                        Folder("CutRenamePaste"),
-                        Compile("CutRenamePaste\\CutRenamePaste")
-                    )
-                );
+            var testDef = Generator.Project("DragDropCopyCutPaste",
+                ProjectGenerator.ItemGroup(
+                    ProjectGenerator.Folder("CutRenamePaste"),
+                    ProjectGenerator.Compile("CutRenamePaste\\CutRenamePaste")
+                )
+            );
 
-                using (var solution = testDef.Generate().ToMockVs()) {
-                    var project = solution.WaitForItem("DragDropCopyCutPaste");
-                    var file = solution.WaitForItem("DragDropCopyCutPaste", "CutRenamePaste", "CutRenamePaste" + projectType.CodeExtension);
+            using (var solution = testDef.Generate().ToMockVs()) {
+                var project = solution.WaitForItem("DragDropCopyCutPaste");
+                var file = solution.WaitForItem("DragDropCopyCutPaste", "CutRenamePaste", $"CutRenamePaste{testDef.ProjectType.CodeExtension}");
 
-                    file.Select();
-                    solution.ControlX();
+                file.Select();
+                solution.ControlX();
 
-                    file.Select();
-                    solution.Type(Key.F2);
-                    solution.Type("CutRenamePasteNewName");
-                    solution.Type(Key.Enter);
+                file.Select();
+                solution.Type(Key.F2);
+                solution.Type("CutRenamePasteNewName");
+                solution.Type(Key.Enter);
 
-                    solution.Sleep(1000);
-                    project.Select();
-                    solution.ControlV();
+                solution.Sleep(1000);
+                project.Select();
+                solution.ControlV();
 
-                    solution.CheckMessageBox("The source URL 'CutRenamePaste" + projectType.CodeExtension + "' could not be found.");
-                }
+                solution.CheckMessageBox($"The source URL 'CutRenamePaste{testDef.ProjectType.CodeExtension}' could not be found.");
             }
         }
 
         [TestMethod, Priority(1)]
         public void ShouldWarnOnRun() {
-            var sln = new ProjectDefinition(
+            var sln = Generator.Project(
                 "HelloWorld",
-                PythonProject,
-                Compile("app", "print \"hello\"")
+                ProjectGenerator.Compile("app", "print \"hello\"")
             ).Generate();
 
             using (var vs = sln.ToMockVs())
@@ -144,12 +131,12 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("Installed")] // Requires .targets file to be installed
         public void OAProjectMustBeRightType() {
-            var sln = new ProjectDefinition(
+            var sln = Generator.Project(
                 "HelloWorld",
-                PythonProject,
-                Compile("server", "")
+                ProjectGenerator.Compile("server", "")
             ).Generate();
 
             using (var vs = sln.ToMockVs()) {

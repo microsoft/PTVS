@@ -5,24 +5,31 @@
   <ItemGroup>
     <ProjectFile Include="$(BuildRoot)\Python\Product\dirs.proj"/>
     <ProjectFile Include="$(BuildRoot)\Common\Tests\dirs.proj"/>
+    <ProjectFile Include="TestRunnerInterop\TestRunnerInterop.csproj" />
     <ProjectFile Include="Analysis\AnalysisTests.csproj" />
-    <ProjectFile Include="AzurePublishingUITests\AzurePublishingUITests.csproj" />
     <ProjectFile Include="CookiecutterTests\CookiecutterTests.csproj" />
     <ProjectFile Include="DebuggerTests\DebuggerTests.csproj" />
     <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />
-    <ProjectFile Include="Django\DjangoTests.csproj" />
-    <ProjectFile Include="Django.UI\DjangoUITests.csproj" />
+    <ProjectFile Include="DebuggerUITestsRunner\DebuggerUITestsRunner.csproj" />
+    <ProjectFile Include="DjangoTests\DjangoTests.csproj" />
+    <ProjectFile Include="DjangoUITests\DjangoUITests.csproj" />
+    <ProjectFile Include="DjangoUITestsRunner\DjangoUITestsRunner.csproj" />
     <ProjectFile Include="FastCgi\FastCgiTest.csproj" />
     <ProjectFile Include="IpcJsonTests\IpcJsonTests.csproj" />
     <ProjectFile Include="TestAdapterTests\TestAdapterTests.csproj" />
     <ProjectFile Include="VSInterpretersTests\VSInterpretersTests.csproj" />
+    <ProjectFile Include="ProfilingTests\ProfilingTests.csproj" />
     <ProjectFile Include="ProfilingUITests\ProfilingUITests.csproj" />
+    <ProjectFile Include="ProfilingUITestsRunner\ProfilingUITestsRunner.csproj" />
     <ProjectFile Include="Core\PythonToolsTests.csproj" />
     <ProjectFile Include="Core.UI\PythonToolsUITests.csproj" />
+    <ProjectFile Include="PythonToolsUITestsRunner\PythonToolsUITestsRunner.csproj" />
     <ProjectFile Include="IronPython\IronPythonTests.csproj" Condition="'$(IncludeIronPython)' == 'True'" />
     <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
     <ProjectFile Include="PythonToolsMockTests\PythonToolsMockTests.csproj" />
+    <ProjectFile Include="ProjectUITests\ProjectUITests.csproj" />
+    <ProjectFile Include="ProjectUITestsRunner\ProjectUITestsRunner.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

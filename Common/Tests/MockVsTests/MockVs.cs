@@ -471,14 +471,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         private static CachedVsInfo CreateCachedVsInfo() {
             var runningLoc = Path.GetDirectoryName(typeof(MockVs).Assembly.Location);
-            // we want to pick up all of the MEF exports which are available, but they don't
-            // depend upon us.  So if we're just running some tests in the IDE when the deployment
-            // happens it won't have the DLLS with the MEF exports.  So we copy them here.
-#if USE_PYTHON_TESTDATA
-            TestUtilities.Python.PythonTestData.Deploy(includeTestData: false);
-#else
-            TestData.Deploy(null, includeTestData: false);
-#endif
 
             // load all of the available DLLs that depend upon TestUtilities into our catalog
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
@@ -487,11 +479,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             try {
                 var _excludedAssemblies = new HashSet<string>(new string[] {
-#if DEV14
-                    "Microsoft.PythonTools.Workspace.dll",
-                    "Microsoft.VisualStudio.Workspace.dll",
-                    "Microsoft.VisualStudio.Workspace.Extensions.VS.dll",
-#endif
                 }, StringComparer.OrdinalIgnoreCase);
 
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
@@ -875,6 +862,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public void CheckMessageBox(MessageBoxButton button, params string[] text) {
             UIShell.CheckMessageBox(button, text);
+        }
+
+        public void MaybeCheckMessageBox(MessageBoxButton button, params string[] text) {
+            UIShell.MaybeCheckMessageBox(button, text);
         }
 
         public void Sleep(int ms) {

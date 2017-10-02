@@ -38,7 +38,6 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: true);
         }
 
         private static PythonAnalysis CreateAnalysis(PythonVersion version) {

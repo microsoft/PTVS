@@ -49,7 +49,7 @@ using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
 #endif
 
 namespace TestUtilities.UI.Python {
-    internal sealed class ReplWindowProxy : IDisposable {
+    public sealed class ReplWindowProxy : IDisposable {
         private readonly VisualStudioApp _app;
         private readonly ToolWindowPane _toolWindow;
         private readonly IInteractiveWindow _window;
@@ -127,13 +127,13 @@ namespace TestUtilities.UI.Python {
         }
 
         public static ReplWindowProxy Prepare(
+            PythonVisualStudioApp app,
             ReplWindowProxySettings settings,
             string projectName = null,
             bool useIPython = false
         ) {
             settings.AssertValid();
 
-            var app = new PythonVisualStudioApp();
             ReplWindowProxy result = null;
             try {
                 result = OpenInteractive(app, settings, projectName, useIPython ? IPythonBackend : StandardBackend);
@@ -707,7 +707,7 @@ namespace TestUtilities.UI.Python {
                     sb.AppendLine();
                 }
                 sb.Append(line);
-                
+
             }
             if (sb.Length > 0) {
                 yield return sb.ToString();
@@ -898,7 +898,7 @@ namespace TestUtilities.UI.Python {
             Assert.IsTrue(t.Wait(TimeSpan.FromSeconds(15)), "Timed out resetting the window");
             Assert.IsTrue(t.Result.IsSuccessful, "Window failed to reset");
         }
-        
+
         public void CancelExecution(int attempts = 100) {
             Console.WriteLine("REPL Cancelling Execution");
             var rfi = _replWindowInfo.ReadyForInput;

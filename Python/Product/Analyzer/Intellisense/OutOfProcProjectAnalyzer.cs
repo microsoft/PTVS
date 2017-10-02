@@ -1906,7 +1906,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (Path.GetExtension(path).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
                 item = _pyAnalyzer.AddXamlFile(path, null);
 
-            } else if (ModulePath.IsPythonSourceFile(path)) {
+            } else {
                 // assume it's a Python file...
                 string modName;
                 try {

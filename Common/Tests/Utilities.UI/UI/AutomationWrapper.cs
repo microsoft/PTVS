@@ -19,8 +19,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Automation;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI {
     public class AutomationWrapper {
@@ -259,13 +259,7 @@ namespace TestUtilities.UI {
         }
 
         public static void Select(ITreeNode selectionItem) {
-            if (selectionItem == null) {
-                if (!VSTestContext.IsMock) {
-                    CheckNullElement(selectionItem);
-                } else {
-                    throw new InvalidOperationException("Cannot select null element");
-                }
-            }
+            CheckNullElement(selectionItem);
             selectionItem.Select();
         }
 
@@ -343,13 +337,18 @@ namespace TestUtilities.UI {
         /// Dumps the current top-level window in VS
         /// </summary>
         public static void DumpVS() {
-            IVsUIShell uiShell = VSTestContext.ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
+            var sp = ServiceProvider.GlobalProvider;
+            if (sp == null) {
+                return;
+            }
+
+            IVsUIShell uiShell = sp.GetService(typeof(IVsUIShell)) as IVsUIShell;
             IntPtr hwnd;
             uiShell.GetDialogOwnerHwnd(out hwnd);
             AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
 
             // if we have a dialog open dump the main VS window too
-            var mainHwnd = new IntPtr(VSTestContext.DTE.MainWindow.HWnd);
+            var mainHwnd = new IntPtr(((EnvDTE.DTE)sp.GetService(typeof(EnvDTE.DTE))).MainWindow.HWnd);
             if (mainHwnd != hwnd) {
                 Console.WriteLine("VS: ");
                 AutomationWrapper.DumpElement(AutomationElement.FromHandle(mainHwnd));

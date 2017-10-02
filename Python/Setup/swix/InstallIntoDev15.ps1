@@ -1,4 +1,4 @@
-param($vs, [switch] $uninstall, [switch] $nodeps)
+param($vs, $tests, [switch] $uninstall, [switch] $nodeps)
 
 if (-not $vs) {
     throw "Missing -vs [path] parameter"
@@ -88,6 +88,13 @@ if (-not $uninstall) {
     
     popd
     rmdir $tmp -Recurse -Force
+
+    if ($tests) {
+        gci -Directory $tests | %{
+            "Copying from $($_.FullName)"
+            copy -Recurse -Force "$($_.FullName)\*" (mkdir "$vs\Common7\IDE\Extensions\Microsoft\Python\Tests\$($_.Name)" -Force)
+        }
+    }
 }
 
 "Running devenv.exe /setup..."

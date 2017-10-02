@@ -23,25 +23,15 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.MockVsTests;
 using Microsoft.VisualStudioTools.Project;
-using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities.SharedProject;
 
 namespace TestUtilities.UI {
     public static class TestExtensions {
-        public static IVisualStudioInstance ToVs(this SolutionFile self) {
-            return ToVs(self, null, true);
-        }
-
-        public static IVisualStudioInstance ToVs(this SolutionFile self, Func<VisualStudioApp> app, bool disposeApp = false) {
-            if (VSTestContext.IsMock) {
+        public static IVisualStudioInstance ToVs(this SolutionFile self, VisualStudioApp app) {
+            if (app == null) {
                 return self.ToMockVs();
             }
-            var appInst = app?.Invoke();
-            return new VisualStudioInstance(
-                self,
-                appInst ?? new VisualStudioApp(),
-                appInst == null || disposeApp
-            );
+            return new VisualStudioInstance(self, app);
         }
 
         public static string[] GetDisplayTexts(this ICompletionSession completionSession) {
@@ -86,7 +76,7 @@ namespace TestUtilities.UI {
 
             // make sure we're still expanded.
             var solutionWindow = UIHierarchyUtilities.GetUIHierarchyWindow(
-                VSTestContext.ServiceProvider,
+                ServiceProvider.GlobalProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)
             );
 

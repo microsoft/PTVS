@@ -59,6 +59,10 @@ namespace TestUtilities.SharedProject {
             _isUserProject  = isUserProject;
         }
 
+        public ProjectDefinition(ProjectType newProjectType, ProjectDefinition wrap)
+            : this(wrap.Name, newProjectType, wrap._isUserProject, wrap.Items) {
+        }
+
         /// <summary>
         /// Helper function which generates the project and solution with just this 
         /// project in the solution.
@@ -109,20 +113,18 @@ namespace TestUtilities.SharedProject {
             return project;
         }
 
-        public Guid TypeGuid {
-            get { return ProjectType.ProjectTypeGuid; }
-        }
+        public Guid TypeGuid => ProjectType.ProjectTypeGuid;
 
         public SolutionElementFlags Flags {
             get {
                 if (ProjectType == ProjectType.Generic) {
-                    return SolutionElementFlags.ExcludeFromConfiguration | 
+                    return SolutionElementFlags.ExcludeFromConfiguration |
                         SolutionElementFlags.ExcludeFromSolution;
                 } else if (_isUserProject) {
                     return SolutionElementFlags.ExcludeFromSolution;
                 }
 
-                return SolutionElementFlags.None; 
+                return SolutionElementFlags.None;
             }
         }
 

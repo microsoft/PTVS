@@ -226,10 +226,12 @@ namespace Microsoft.PythonTools.Project {
             if (res != null) {
                 // Analyzer has not changed, but because the filename has we need to
                 // do a transfer.
-                var oldEntry = GetAnalysisEntry();
-                oldEntry.Analyzer.TransferFileFromOldAnalyzer(oldEntry, GetMkDocument())
-                    .HandleAllExceptions(ProjectMgr.Site, GetType())
-                    .DoNotWait();
+                var oldEntry = GetAnalyzer()?.GetAnalysisEntryFromPath(oldFileName);
+                if (oldEntry != null) {
+                    oldEntry.Analyzer.TransferFileFromOldAnalyzer(oldEntry, GetMkDocument())
+                        .HandleAllExceptions(ProjectMgr.Site, GetType())
+                        .DoNotWait();
+                }
             }
             return res;
         }

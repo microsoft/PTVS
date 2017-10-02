@@ -85,7 +85,7 @@ namespace TestUtilities.Python {
             _entries = new Dictionary<string, IPythonProjectEntry>(StringComparer.OrdinalIgnoreCase);
             _tasks = new ConcurrentDictionary<IPythonProjectEntry, TaskCompletionSource<CollectingErrorSink>>();
             _cachedMembers = new Dictionary<BuiltinTypeId, string[]>();
-            _root = TestData.GetTempPath(randomSubPath: true);
+            _root = TestData.GetTempPath();
         }
 
         public void Dispose() {
@@ -313,7 +313,7 @@ namespace TestUtilities.Python {
         }
 
         public IEnumerable<string> GetAllNames(IPythonProjectEntry module, int index = 0) {
-            return module.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name);
+            return module.Analysis.GetAllAvailableMembers(SourceLocation.MinValue).Select(m => m.Name);
         }
 
         public IEnumerable<string> GetNamesNoBuiltins(int index = 0) {

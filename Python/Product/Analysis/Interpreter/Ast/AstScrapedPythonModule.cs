@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         code.Seek(0, SeekOrigin.Begin);
                     } else {
                         using (var sw = new StringWriter()) {
-                            sw.WriteLine("Error scraping builtins.");
+                            sw.WriteLine("Error scraping {0}", Name);
                             foreach (var line in p.StandardErrorLines) {
                                 sw.WriteLine(line);
                             }

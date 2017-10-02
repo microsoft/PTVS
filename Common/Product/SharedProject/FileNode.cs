@@ -343,13 +343,59 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // Build the relative path by looking at folder names above us as one scenarios
             // where we get called is when a folder above us gets renamed (in which case our path is invalid)
-            HierarchyNode parent = this.Parent;
-            while (parent != null && (parent is FolderNode)) {
-                strRelPath = Path.Combine(parent.Caption, strRelPath);
+            strRelPath = Path.Combine(GetRelativePathToParent(Parent), Name);
+
+            return SetEditLabel(label, strRelPath);
+        }
+
+        private static string GetFullPathToParent(HierarchyNode parent) {
+            while (parent is FileNode) {
+                if (parent == parent.Parent) {
+                    break;
+                }
+                parent = parent.Parent;
+            }
+            if (parent != null) {
+                try {
+                    return parent.FullPathToChildren;
+                } catch (InvalidOperationException) {
+                    return parent.Url;
+                }
+            }
+
+            throw new InvalidOperationException("Node is not parented correctly");
+        }
+
+        private static string GetRelativePathToParent(HierarchyNode parent) {
+            var parts = new List<string>();
+            while (parent is FileNode) {
+                if (parent == parent.Parent) {
+                    break;
+                }
+                parent = parent.Parent;
+            }
+            while (parent is FolderNode) {
+                parts.Add(parent.Name);
+                if (parent == parent.Parent) {
+                    break;
+                }
                 parent = parent.Parent;
             }
 
-            return SetEditLabel(label, strRelPath);
+            parts.Reverse();
+            return Path.Combine(parts.ToArray());
+        }
+
+        public override void Reparent(HierarchyNode newParent) {
+            var oldUrl = Url;
+            var newUrl = CommonUtils.GetAbsoluteFilePath(
+                GetFullPathToParent(newParent),
+                CommonUtils.GetFileOrDirectoryName(oldUrl)
+            );
+
+            RenameDocument(oldUrl, newUrl);
+
+            base.Reparent(newParent);
         }
 
         public override string GetMkDocument() {
@@ -717,6 +763,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 renamedNode = this.ProjectMgr.CreateFileNode(this.ItemNode);
 
                 renamedNode.ItemNode.RefreshProperties();
+                renamedNode.IsVisible = this.IsVisible;
                 renamedNode.UpdateCaption();
                 newParent.AddChild(renamedNode);
                 renamedNode.Parent = newParent;
@@ -892,7 +939,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     }
 
                     this.RenameFileNode(oldName, newName);
-                } else {
+                } else if (!oldName.Equals(newName, StringComparison.Ordinal)) {
                     this.RenameCaseOnlyChange(oldName, newName);
                 }
 
@@ -914,14 +961,10 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         internal virtual FileNode RenameFileNode(string oldFileName, string newFileName) {
-            string newFolder = Path.GetDirectoryName(newFileName) + Path.DirectorySeparatorChar;
-            var parentFolder = ProjectMgr.FindNodeByFullPath(newFolder);
+            string newFolder = CommonUtils.GetParent(newFileName);
+            var parentFolder = ProjectMgr.CreateFolderNodes(newFolder);
             if (parentFolder == null) {
-                Debug.Assert(
-                    CommonUtils.IsSameDirectory(newFolder, ProjectMgr.ProjectHome),
-                    string.Format("Expected {0} == {1}", newFolder, ProjectMgr.ProjectHome)
-                );
-                parentFolder = ProjectMgr;
+                throw new InvalidOperationException("Invalid parent path: " + newFolder);
             }
 
             return this.RenameFileNode(oldFileName, newFileName, parentFolder);

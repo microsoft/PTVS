@@ -37,7 +37,6 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0)]
@@ -84,7 +83,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ImportFromSearchPath() {
             var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
             analyzer.AddModule("test-module", "from test_package import *");
@@ -97,7 +96,7 @@ namespace PythonToolsTests {
             AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ImportPydFromSearchPath() {
             PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
             try {
@@ -148,7 +147,7 @@ namespace PythonToolsTests {
             Assert.IsNotNull(factory, "no factory found");
 
             analyzer = PythonAnalyzer.CreateSynchronously(factory);
-            var path = Path.Combine(TestData.GetTempPath(randomSubPath: true), module.Replace('.', '\\'));
+            var path = Path.Combine(TestData.GetTempPath(), module.Replace('.', '\\'));
             Directory.CreateDirectory(PathUtils.GetParent(path));
             File.WriteAllText(path, code);
 

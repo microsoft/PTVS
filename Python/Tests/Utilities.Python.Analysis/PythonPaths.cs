@@ -51,6 +51,8 @@ namespace TestUtilities {
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python37_x64 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Anaconda27 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Anaconda27_x64 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
         public static readonly PythonVersion Anaconda36_x64 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
@@ -230,6 +232,22 @@ namespace TestUtilities {
             Configuration = config;
             IsCPython = cPython;
             IsIronPython = ironPython;
+        }
+
+        public PythonVersion(string version) {
+            var v = System.Version.Parse(version).ToLanguageVersion();
+            var candididates = PythonPaths.Versions.Where(pv => pv.IsCPython && pv.Version == v).ToArray();
+            PythonVersion selected;
+            if (candididates.Length > 1) {
+                selected = candididates.FirstOrDefault(c => c.Isx64) ?? candididates.First();
+            } else {
+                selected = candididates.FirstOrDefault();
+            }
+            selected.AssertInstalled();
+
+            Configuration = selected.Configuration;
+            IsCPython = selected.IsCPython;
+            IsIronPython = selected.IsIronPython;
         }
 
         public override string ToString() => Configuration.Description;

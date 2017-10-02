@@ -17,7 +17,6 @@
 extern alias analysis;
 extern alias pythontools;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -25,7 +24,6 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Xml;
@@ -45,202 +43,185 @@ using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
-using InterpreterExt = analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions;
-using Process = System.Diagnostics.Process;
 using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {
-    [TestClass]
+    //[TestClass]
     public class WebProjectTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
         public TestContext TestContext { get; set; }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void LoadWebFlavoredProject() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\EmptyWebProject.sln");
-                Assert.AreEqual("EmptyWebProject.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
+        public void LoadWebFlavoredProject(PythonVisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\EmptyWebProject.sln");
+            Assert.AreEqual("EmptyWebProject.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
 
-                var catids = app.Dte.ObjectExtenders.GetContextualExtenderCATIDs();
-                dynamic extender = project.Extender["WebApplication"];
-                Assert.IsNotNull(extender, "No WebApplication extender");
-                extender.StartWebServerOnDebug = true;
-                extender.StartWebServerOnDebug = false;
+            var catids = app.Dte.ObjectExtenders.GetContextualExtenderCATIDs();
+            dynamic extender = project.Extender["WebApplication"];
+            Assert.IsNotNull(extender, "No WebApplication extender");
+            extender.StartWebServerOnDebug = true;
+            extender.StartWebServerOnDebug = false;
 
-                var proj = project.GetCommonProject();
-                var ccp = proj as IPythonProject;
-                Assert.IsNotNull(ccp);
-                Assert.IsNotNull(ccp.FindCommand("PythonRunWebServerCommand"), "No PythonRunWebServerCommand");
-                Assert.IsNotNull(ccp.FindCommand("PythonDebugWebServerCommand"), "No PythonDebugWebServerCommand");
-            }
+            var proj = project.GetCommonProject();
+            var ccp = proj as IPythonProject;
+            Assert.IsNotNull(ccp);
+            Assert.IsNotNull(ccp.FindCommand("PythonRunWebServerCommand"), "No PythonRunWebServerCommand");
+            Assert.IsNotNull(ccp.FindCommand("PythonDebugWebServerCommand"), "No PythonDebugWebServerCommand");
         }
 
-        private static void CheckCommandLineArgs(string setValue, string expectedValue = null) {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
+        private static void CheckCommandLineArgs(PythonVisualStudioApp app, string setValue, string expectedValue = null) {
+            var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
 
-                var proj = project.GetCommonProject() as IPythonProject;
-                Assert.IsNotNull(proj);
+            var proj = project.GetCommonProject() as IPythonProject;
+            Assert.IsNotNull(proj);
 
-                var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
+            var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
 
-                foreach (var cmdName in new[] { "PythonRunWebServerCommand", "PythonDebugWebServerCommand" }) {
-                    Console.WriteLine("Testing {0}, writing to {1}", cmdName, outFile);
+            foreach (var cmdName in new[] { "PythonRunWebServerCommand", "PythonDebugWebServerCommand" }) {
+                Console.WriteLine("Testing {0}, writing to {1}", cmdName, outFile);
 
-                    if (File.Exists(outFile)) {
-                        File.Delete(outFile);
-                    }
-
-                    app.ServiceProvider.GetUIThread().Invoke(() => {
-                        proj.SetProperty("CommandLineArguments", string.Format("\"{0}\" \"{1}\"", setValue, outFile));
-                        proj.FindCommand(cmdName).Execute(proj);
-                    });
-
-                    for (int retries = 10; retries > 0 && !File.Exists(outFile); --retries) {
-                        Thread.Sleep(100);
-                    }
-
-                    Assert.AreEqual(expectedValue ?? setValue, File.ReadAllText(outFile).Trim());
-                }
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WebProjectCommandLineArgs() {
-            CheckCommandLineArgs(Guid.NewGuid().ToString("N"));
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WebProjectStartupModuleArgs() {
-            CheckCommandLineArgs("{StartupModule}", "CheckCommandLineArgs");
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WebProjectEnvironment() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\CheckEnvironment.sln");
-
-                var proj = project.GetCommonProject() as IPythonProject;
-                Assert.IsNotNull(proj);
-
-                var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
-                                if (File.Exists(outFile)) {
+                if (File.Exists(outFile)) {
                     File.Delete(outFile);
                 }
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
-                    proj.SetProperty("CommandLineArguments", '"' + outFile + '"');
-                    proj.SetProperty("Environment", "FOB=123\nOAR=456\r\nBAZ=789");
+                    proj.SetProperty("CommandLineArguments", string.Format("\"{0}\" \"{1}\"", setValue, outFile));
+                    proj.FindCommand(cmdName).Execute(proj);
                 });
-
-                app.ExecuteCommand("Debug.StartWithoutDebugging");
 
                 for (int retries = 10; retries > 0 && !File.Exists(outFile); --retries) {
-                    Thread.Sleep(300);
+                    Thread.Sleep(100);
                 }
 
-                Assert.AreEqual("FOB=123\r\nOAR=456\r\nBAZ=789", File.ReadAllText(outFile).Trim());
+                Assert.AreEqual(expectedValue ?? setValue, File.ReadAllText(outFile).Trim());
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WebProjectStaticUri() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.CreateProject(
-                    PythonVisualStudioApp.TemplateLanguageName,
-                    PythonVisualStudioApp.EmptyWebProjectTemplate,
-                    TestData.GetTempPath(),
-                    "WebProjectStaticUri"
-                );
-
-                var proj = project.GetCommonProject();
-                Assert.IsNotNull(proj);
-
-                app.ServiceProvider.GetUIThread().Invoke(() => {
-                    proj.SetProjectProperty("PythonWsgiHandler", "NoHandler");
-
-                    proj.SetProjectProperty("StaticUriPattern", "");
-                    proj.SetProjectProperty("StaticUriRewrite", "");
-                });
-                app.ExecuteCommand("Build.RebuildSolution");
-                app.WaitForOutputWindowText("Build", "1 succeeded");
-
-                var webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
-                if (!webConfig.Contains(@"<add input=""true"" pattern=""false"" />")) {
-                    Assert.Fail(string.Format("Did not find Static Files condition in:{0}{0}{1}",
-                        Environment.NewLine,
-                        webConfig
-                    ));
-                }
-
-                app.ServiceProvider.GetUIThread().Invoke(() => {
-                    proj.SetProjectProperty("StaticUriPattern", "^static/.*$");
-                });
-                app.ExecuteCommand("Build.RebuildSolution");
-                app.WaitForOutputWindowText("Build", "1 succeeded");
-
-                webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
-                if (!webConfig.Contains(@"<add input=""{REQUEST_URI}"" pattern=""^static/.*$"" ignoreCase=""true"" negate=""true"" />")) {
-                    Assert.Fail(string.Format("Did not find rewrite condition in:{0}{0}{1}",
-                        Environment.NewLine,
-                        webConfig
-                    ));
-                }
-                if (!webConfig.Contains(@"<add input=""true"" pattern=""false"" />")) {
-                    Assert.Fail(string.Format("Did not find Static Files condition in:{0}{0}{1}",
-                        Environment.NewLine,
-                        webConfig
-                    ));
-                }
-
-                app.ServiceProvider.GetUIThread().Invoke(() => {
-                    proj.SetProjectProperty("StaticUriRewrite", "static_files/{R:1}");
-                });
-                app.ExecuteCommand("Build.RebuildSolution");
-                app.WaitForOutputWindowText("Build", "1 succeeded");
-
-                webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
-                if (webConfig.Contains(@"<add input=""{REQUEST_URI}"" pattern=""^static/.*$"" ignoreCase=""true"" negate=""true"" />")) {
-                    Assert.Fail(string.Format("Found old rewrite condition in:{0}{0}{1}",
-                        Environment.NewLine,
-                        webConfig
-                    ));
-                }
-                if (!webConfig.Contains(@"<action type=""Rewrite"" url=""static_files/{R:1}"" appendQueryString=""true"" />")) {
-                    Assert.Fail(string.Format("Did not find rewrite action in:{0}{0}{1}",
-                        Environment.NewLine,
-                        webConfig
-                    ));
-                }
-                if (webConfig.Contains(@"<add input=""true"" pattern=""false"" />")) {
-                    Assert.Fail(string.Format("Should not have found Static Files condition in:{0}{0}{1}",
-                        Environment.NewLine,
-                        webConfig
-                    ));
-                }
-
-                app.ServiceProvider.GetUIThread().Invoke(() => {
-                    proj.SetProjectProperty("StaticUriPattern", "invalid[pattern");
-                });
-                app.ExecuteCommand("Build.RebuildSolution");
-                app.WaitForOutputWindowText("Build", "1 failed");
-            }
+        public void WebProjectCommandLineArgs(PythonVisualStudioApp app) {
+            CheckCommandLineArgs(app, Guid.NewGuid().ToString("N"));
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WebProjectBuildWarnings() {
-            using (var app = new PythonVisualStudioApp())
+        public void WebProjectStartupModuleArgs(PythonVisualStudioApp app) {
+            CheckCommandLineArgs(app, "{StartupModule}", "CheckCommandLineArgs");
+        }
+
+        //[TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void WebProjectEnvironment(PythonVisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\CheckEnvironment.sln");
+
+            var proj = project.GetCommonProject() as IPythonProject;
+            Assert.IsNotNull(proj);
+
+            var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
+            if (File.Exists(outFile)) {
+                File.Delete(outFile);
+            }
+
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                proj.SetProperty("CommandLineArguments", '"' + outFile + '"');
+                proj.SetProperty("Environment", "FOB=123\nOAR=456\r\nBAZ=789");
+            });
+
+            app.ExecuteCommand("Debug.StartWithoutDebugging");
+
+            for (int retries = 10; retries > 0 && !File.Exists(outFile); --retries) {
+                Thread.Sleep(300);
+            }
+
+            Assert.AreEqual("FOB=123\r\nOAR=456\r\nBAZ=789", File.ReadAllText(outFile).Trim());
+        }
+
+        //[TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void WebProjectStaticUri(PythonVisualStudioApp app) {
+            var project = app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                PythonVisualStudioApp.EmptyWebProjectTemplate,
+                TestData.GetTempPath(),
+                "WebProjectStaticUri"
+            );
+
+            var proj = project.GetCommonProject();
+            Assert.IsNotNull(proj);
+
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                proj.SetProjectProperty("PythonWsgiHandler", "NoHandler");
+
+                proj.SetProjectProperty("StaticUriPattern", "");
+                proj.SetProjectProperty("StaticUriRewrite", "");
+            });
+            app.ExecuteCommand("Build.RebuildSolution");
+            app.WaitForOutputWindowText("Build", "1 succeeded");
+
+            var webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
+            if (!webConfig.Contains(@"<add input=""true"" pattern=""false"" />")) {
+                Assert.Fail(string.Format("Did not find Static Files condition in:{0}{0}{1}",
+                    Environment.NewLine,
+                    webConfig
+                ));
+            }
+
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                proj.SetProjectProperty("StaticUriPattern", "^static/.*$");
+            });
+            app.ExecuteCommand("Build.RebuildSolution");
+            app.WaitForOutputWindowText("Build", "1 succeeded");
+
+            webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
+            if (!webConfig.Contains(@"<add input=""{REQUEST_URI}"" pattern=""^static/.*$"" ignoreCase=""true"" negate=""true"" />")) {
+                Assert.Fail(string.Format("Did not find rewrite condition in:{0}{0}{1}",
+                    Environment.NewLine,
+                    webConfig
+                ));
+            }
+            if (!webConfig.Contains(@"<add input=""true"" pattern=""false"" />")) {
+                Assert.Fail(string.Format("Did not find Static Files condition in:{0}{0}{1}",
+                    Environment.NewLine,
+                    webConfig
+                ));
+            }
+
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                proj.SetProjectProperty("StaticUriRewrite", "static_files/{R:1}");
+            });
+            app.ExecuteCommand("Build.RebuildSolution");
+            app.WaitForOutputWindowText("Build", "1 succeeded");
+
+            webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
+            if (webConfig.Contains(@"<add input=""{REQUEST_URI}"" pattern=""^static/.*$"" ignoreCase=""true"" negate=""true"" />")) {
+                Assert.Fail(string.Format("Found old rewrite condition in:{0}{0}{1}",
+                    Environment.NewLine,
+                    webConfig
+                ));
+            }
+            if (!webConfig.Contains(@"<action type=""Rewrite"" url=""static_files/{R:1}"" appendQueryString=""true"" />")) {
+                Assert.Fail(string.Format("Did not find rewrite action in:{0}{0}{1}",
+                    Environment.NewLine,
+                    webConfig
+                ));
+            }
+            if (webConfig.Contains(@"<add input=""true"" pattern=""false"" />")) {
+                Assert.Fail(string.Format("Should not have found Static Files condition in:{0}{0}{1}",
+                    Environment.NewLine,
+                    webConfig
+                ));
+            }
+
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                proj.SetProjectProperty("StaticUriPattern", "invalid[pattern");
+            });
+            app.ExecuteCommand("Build.RebuildSolution");
+            app.WaitForOutputWindowText("Build", "1 failed");
+        }
+
+        //[TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void WebProjectBuildWarnings(PythonVisualStudioApp app) {
             using (app.SelectDefaultInterpreter(PythonPaths.Python33 ?? PythonPaths.Python33_x64)) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -316,139 +297,131 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WebProjectAddSupportFiles() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.CreateProject(
-                    PythonVisualStudioApp.TemplateLanguageName,
-                    PythonVisualStudioApp.EmptyWebProjectTemplate,
-                    TestData.GetTempPath(),
-                    "WebProjectAddSupportFiles"
-                );
+        public void WebProjectAddSupportFiles(PythonVisualStudioApp app) {
+            var project = app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                PythonVisualStudioApp.EmptyWebProjectTemplate,
+                TestData.GetTempPath(),
+                "WebProjectAddSupportFiles"
+            );
 
-                var proj = project.GetCommonProject();
-                Assert.IsNotNull(proj);
+            var proj = project.GetCommonProject();
+            Assert.IsNotNull(proj);
 
-                var previousItems = project.ProjectItems.Cast<ProjectItem>().Select(p => p.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
+            var previousItems = project.ProjectItems.Cast<ProjectItem>().Select(p => p.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
 
-                // Add the items
-                app.AddItem(project, PythonVisualStudioApp.TemplateLanguageName, PythonVisualStudioApp.WebRoleSupportTemplate, "bin");
+            // Add the items
+            app.AddItem(project, PythonVisualStudioApp.TemplateLanguageName, PythonVisualStudioApp.WebRoleSupportTemplate, "bin");
 
-                var newItems = project.ProjectItems.Cast<ProjectItem>().Where(p => !previousItems.Contains(p.Name)).ToList();
-                AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
+            var newItems = project.ProjectItems.Cast<ProjectItem>().Where(p => !previousItems.Contains(p.Name)).ToList();
+            AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
 
-                var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
-                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "ps.cmd", "readme.html");
-            }
+            var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
+            AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "ps.cmd", "readme.html");
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WorkerProjectAddSupportFiles() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.CreateProject(
-                    PythonVisualStudioApp.TemplateLanguageName,
-                    PythonVisualStudioApp.PythonApplicationTemplate,
-                    TestData.GetTempPath(),
-                    "WorkerProjectAddSupportFiles"
-                );
+        public void WorkerProjectAddSupportFiles(PythonVisualStudioApp app) {
+            var project = app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                PythonVisualStudioApp.PythonApplicationTemplate,
+                TestData.GetTempPath(),
+                "WorkerProjectAddSupportFiles"
+            );
 
-                // Ensure the bin directory already exists
-                Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(project.FullName), "bin"));
+            // Ensure the bin directory already exists
+            Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(project.FullName), "bin"));
 
-                var previousItems = project.ProjectItems.Cast<ProjectItem>().Select(p => p.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
+            var previousItems = project.ProjectItems.Cast<ProjectItem>().Select(p => p.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
 
-                // Add the items
-                app.AddItem(project, PythonVisualStudioApp.TemplateLanguageName, PythonVisualStudioApp.WorkerRoleSupportTemplate, "bin");
+            // Add the items
+            app.AddItem(project, PythonVisualStudioApp.TemplateLanguageName, PythonVisualStudioApp.WorkerRoleSupportTemplate, "bin");
 
-                var newItems = project.ProjectItems.Cast<ProjectItem>().Where(p => !previousItems.Contains(p.Name)).ToList();
-                AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
+            var newItems = project.ProjectItems.Cast<ProjectItem>().Where(p => !previousItems.Contains(p.Name)).ToList();
+            AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
 
-                var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
-                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "LaunchWorker.ps1", "ps.cmd", "readme.html");
-            }
+            var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
+            AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "LaunchWorker.ps1", "ps.cmd", "readme.html");
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WebProjectCreateVirtualEnvOnNew() {
-            using (var app = new PythonVisualStudioApp()) {
-                var t = Task.Run(() => app.CreateProject(
-                    PythonVisualStudioApp.TemplateLanguageName,
-                    PythonVisualStudioApp.FlaskWebProjectTemplate,
-                    TestData.GetTempPath(),
-                    "WebProjectCreateVirtualEnvOnNew",
-                    suppressUI: false
-                ));
+        public void WebProjectCreateVirtualEnvOnNew(PythonVisualStudioApp app) {
+            var t = Task.Run(() => app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                PythonVisualStudioApp.FlaskWebProjectTemplate,
+                TestData.GetTempPath(),
+                "WebProjectCreateVirtualEnvOnNew",
+                suppressUI: false
+            ));
 
-                using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
-                    // Create a virtual environment
-                    dlg.ClickButtonAndClose("CommandLink_1000", nameIsAutomationId: true);
-                }
-
-                using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
-                    dlg.ClickButtonByAutomationId("Create");
-                    dlg.ClickButtonAndClose("Close", nameIsAutomationId: true);
-                }
-                
-                var project = t.WaitAndUnwrapExceptions();
-
-                var contextProvider = app.ComponentModel.GetService<VsProjectContextProvider>();
-                for (int retries = 20; retries > 0; --retries) {
-                    if (contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration)) {
-                        break;
-                    }
-                    Thread.Sleep(1000);
-                }
-                Assert.IsTrue(contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration), "Did not have virtualenv");
-                
-                for (int retries = 60; retries > 0; --retries) {
-                    if (project.GetPythonProject().ActiveInterpreter.FindModules("flask").Any()) {
-                        break;
-                    }
-                    Thread.Sleep(1000);
-                }
-                AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("flask"), "flask");
+            using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
+                // Create a virtual environment
+                dlg.ClickButtonAndClose("CommandLink_1000", nameIsAutomationId: true);
             }
+
+            using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
+                dlg.ClickButtonByAutomationId("Create");
+                dlg.ClickButtonAndClose("Close", nameIsAutomationId: true);
+            }
+
+            var project = t.WaitAndUnwrapExceptions();
+
+            var contextProvider = app.ComponentModel.GetService<VsProjectContextProvider>();
+            for (int retries = 20; retries > 0; --retries) {
+                if (contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration)) {
+                    break;
+                }
+                Thread.Sleep(1000);
+            }
+            Assert.IsTrue(contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration), "Did not have virtualenv");
+
+            for (int retries = 60; retries > 0; --retries) {
+                if (project.GetPythonProject().ActiveInterpreter.FindModules("flask").Any()) {
+                    break;
+                }
+                Thread.Sleep(1000);
+            }
+            AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("flask"), "flask");
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void WebProjectInstallOnNew() {
-            using (var app = new PythonVisualStudioApp()) {
-                app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
+        public void WebProjectInstallOnNew(PythonVisualStudioApp app) {
+            app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
 
-                var t = Task.Run(() => app.CreateProject(
-                    PythonVisualStudioApp.TemplateLanguageName,
-                    PythonVisualStudioApp.BottleWebProjectTemplate,
-                    TestData.GetTempPath(),
-                    "WebProjectInstallOnNew",
-                    suppressUI: false
-                ));
+            var t = Task.Run(() => app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                PythonVisualStudioApp.BottleWebProjectTemplate,
+                TestData.GetTempPath(),
+                "WebProjectInstallOnNew",
+                suppressUI: false
+            ));
 
-                using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
-                    // Install to active environment
-                    dlg.ClickButtonAndClose("CommandLink_1001", nameIsAutomationId: true);
-                }
-
-                var project = t.WaitAndUnwrapExceptions();
-
-                Assert.AreSame(app.OptionsService.DefaultInterpreter, project.GetPythonProject().ActiveInterpreter);
-
-                for (int retries = 60; retries > 0; --retries) {
-                    if (project.GetPythonProject().ActiveInterpreter.FindModules("bottle").Any()) {
-                        break;
-                    }
-                    Thread.Sleep(1000);
-                }
-                AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("bottle"), "bottle");
-
-                app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
+            using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog(t)))) {
+                // Install to active environment
+                dlg.ClickButtonAndClose("CommandLink_1001", nameIsAutomationId: true);
             }
+
+            var project = t.WaitAndUnwrapExceptions();
+
+            Assert.AreSame(app.OptionsService.DefaultInterpreter, project.GetPythonProject().ActiveInterpreter);
+
+            for (int retries = 60; retries > 0; --retries) {
+                if (project.GetPythonProject().ActiveInterpreter.FindModules("bottle").Any()) {
+                    break;
+                }
+                Thread.Sleep(1000);
+            }
+            AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("bottle"), "bottle");
+
+            app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
         }
 
-        private static void CloudProjectTest(string roleType, bool openServiceDefinition) {
+        private static void CloudProjectTest(PythonVisualStudioApp app, string roleType, bool openServiceDefinition) {
             Assert.IsTrue(roleType == "Web" || roleType == "Worker", "Invalid roleType: " + roleType);
 
             Assembly asm = null;
@@ -457,7 +430,7 @@ namespace PythonToolsUITests {
             } catch {
                 // Failed to load - we'll skip the test below
             }
-            
+
             if (asm != null && asm.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false)
                 .OfType<AssemblyFileVersionAttribute>()
                 .Any(a => {
@@ -468,7 +441,6 @@ namespace PythonToolsUITests {
                 Assert.Inconclusive("Test requires Microsoft Azure Tools 2.5 or later");
             }
 
-            using (var app = new PythonVisualStudioApp())
             using (FileUtils.Backup(TestData.GetPath(@"TestData\CloudProject\ServiceDefinition.csdef"))) {
                 app.OpenProject("TestData\\CloudProject.sln", expectedProjects: 3);
 
@@ -534,28 +506,28 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void UpdateWebRoleServiceDefinitionInVS() {
-            CloudProjectTest("Web", false);
+        public void UpdateWebRoleServiceDefinitionInVS(PythonVisualStudioApp app) {
+            CloudProjectTest(app, "Web", false);
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void UpdateWorkerRoleServiceDefinitionInVS() {
-            CloudProjectTest("Worker", false);
+        public void UpdateWorkerRoleServiceDefinitionInVS(PythonVisualStudioApp app) {
+            CloudProjectTest(app, "Worker", false);
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void UpdateWebRoleServiceDefinitionInVSDocumentOpen() {
-            CloudProjectTest("Web", true);
+        public void UpdateWebRoleServiceDefinitionInVSDocumentOpen(PythonVisualStudioApp app) {
+            CloudProjectTest(app, "Web", true);
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void UpdateWorkerRoleServiceDefinitionInVSDocumentOpen() {
-            CloudProjectTest("Worker", true);
+        public void UpdateWorkerRoleServiceDefinitionInVSDocumentOpen(PythonVisualStudioApp app) {
+            CloudProjectTest(app, "Worker", true);
         }
 
         #region EndToEndTest
@@ -570,6 +542,7 @@ namespace PythonToolsUITests {
         }
 
         private void EndToEndTest(
+            PythonVisualStudioApp app,
             string templateName,
             string moduleName,
             string textInResponse,
@@ -577,50 +550,48 @@ namespace PythonToolsUITests {
             string packageName = null
         ) {
             EndToEndLog("Starting {0} {1}", templateName, pythonVersion);
-            using (var app = new PythonVisualStudioApp()) {
-                var pyProj = app.CreateProject(
-                    PythonVisualStudioApp.TemplateLanguageName,
-                    templateName,
-                    TestData.GetTempPath(),
-                    TestContext.TestName
-                ).GetPythonProject();
+            var pyProj = app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                templateName,
+                TestData.GetTempPath(),
+                TestContext.TestName
+            ).GetPythonProject();
 
-                EndToEndLog("Created project {0}", pyProj.ProjectFile);
+            EndToEndLog("Created project {0}", pyProj.ProjectFile);
 
-                Assert.IsInstanceOfType(pyProj.GetLauncher(), typeof(PythonWebLauncher));
+            Assert.IsInstanceOfType(pyProj.GetLauncher(), typeof(PythonWebLauncher));
 
-                IPythonInterpreterFactory factory;
+            IPythonInterpreterFactory factory;
 
-                // Abort analysis so we don't have too many python.exe processes
-                // floating around.
-                using (new ProcessScope("Microsoft.PythonTools.Analyzer")) {
-                    factory = CreateVirtualEnvironment(pythonVersion, app, pyProj);
+            // Abort analysis so we don't have too many python.exe processes
+            // floating around.
+            using (new ProcessScope("Microsoft.PythonTools.Analyzer")) {
+                factory = CreateVirtualEnvironment(pythonVersion, app, pyProj);
 
-                    EndToEndLog("Created virtual environment {0}", factory.Configuration.Description);
+                EndToEndLog("Created virtual environment {0}", factory.Configuration.Description);
 
-                    InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
+                InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
 
-                    EndToEndLog("Installed framework {0}", moduleName);
-                }
-
-                EndToEndLog("Aborted analysis");
-
-                app.ServiceProvider.GetUIThread().Invoke(() => {
-                    pyProj.SetProjectProperty("WebBrowserUrl", "");
-                    pyProj.SetProjectProperty("WebBrowserPort", "23457");
-                });
-                EndToEndLog("Set WebBrowserPort to 23457");
-                LaunchAndVerifyNoDebug(app, 23457, textInResponse);
-                EndToEndLog("Verified without debugging");
-
-                app.ServiceProvider.GetUIThread().Invoke(() => {
-                    pyProj.SetProjectProperty("WebBrowserUrl", "");
-                    pyProj.SetProjectProperty("WebBrowserPort", "23456");
-                });
-                EndToEndLog("Set WebBrowserPort to 23456");
-                LaunchAndVerifyDebug(app, 23456, textInResponse);
-                EndToEndLog("Verified with debugging");
+                EndToEndLog("Installed framework {0}", moduleName);
             }
+
+            EndToEndLog("Aborted analysis");
+
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                pyProj.SetProjectProperty("WebBrowserUrl", "");
+                pyProj.SetProjectProperty("WebBrowserPort", "23457");
+            });
+            EndToEndLog("Set WebBrowserPort to 23457");
+            LaunchAndVerifyNoDebug(app, 23457, textInResponse);
+            EndToEndLog("Verified without debugging");
+
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                pyProj.SetProjectProperty("WebBrowserUrl", "");
+                pyProj.SetProjectProperty("WebBrowserPort", "23456");
+            });
+            EndToEndLog("Set WebBrowserPort to 23456");
+            LaunchAndVerifyDebug(app, 23456, textInResponse);
+            EndToEndLog("Verified with debugging");
         }
 
 
@@ -792,34 +763,35 @@ namespace PythonToolsUITests {
 
         #endregion
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void FlaskEndToEndV34() {
-            EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "3.4");
+        public void FlaskEndToEndV34(PythonVisualStudioApp app) {
+            EndToEndTest(app, PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "3.4");
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void FlaskEndToEndV27() {
-            EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "2.7");
+        public void FlaskEndToEndV27(PythonVisualStudioApp app) {
+            EndToEndTest(app, PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "2.7");
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void BottleEndToEndV34() {
-            EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "3.4");
+        public void BottleEndToEndV34(PythonVisualStudioApp app) {
+            EndToEndTest(app, PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "3.4");
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void BottleEndToEndV27() {
-            EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "2.7");
+        public void BottleEndToEndV27(PythonVisualStudioApp app) {
+            EndToEndTest(app, PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "2.7");
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DjangoEndToEndV27() {
+        public void DjangoEndToEndV27(PythonVisualStudioApp app) {
             EndToEndTest(
+                app,
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
                 "django",
                 "Congratulations on your first Django-powered page.",
@@ -827,10 +799,11 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        //[TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void DjangoEndToEndV34() {
+        public void DjangoEndToEndV34(PythonVisualStudioApp app) {
             EndToEndTest(
+                app,
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
                 "django",
                 "Congratulations on your first Django-powered page.",

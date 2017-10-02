@@ -45,5 +45,9 @@
     <Compile Include="Assignments.py" />
     <Compile Include="ImportWithError.py" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="test_package\" />
+    <Folder Include="test_package\sub_package\" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

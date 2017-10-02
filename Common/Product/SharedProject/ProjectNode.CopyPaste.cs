@@ -595,7 +595,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         false
                     );
                     dialog.Owner = Application.Current.MainWindow;
-                    var res = dialog.ShowDialog();
+                    var res = dialog.ShowModal();
                     if (res == null) {
                         // cancel, abort the whole copy
                         return null;
@@ -790,8 +790,9 @@ namespace Microsoft.VisualStudioTools.Project {
                         // Rename the folder & reparent our existing FolderNode w/ potentially w/ a new ID,
                         // but don't update the children as we'll handle that w/ our file additions...
                         wasExpanded = sourceFolder.GetIsExpanded();
-                        Directory.CreateDirectory(NewFolderPath);
-                        sourceFolder.ReparentFolder(NewFolderPath);
+
+                        var newFolderParent = Project.CreateFolderNodes(CommonUtils.GetParent(NewFolderPath));
+                        sourceFolder.Reparent(newFolderParent);
 
                         sourceFolder.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
                         newNode = sourceFolder;
@@ -1103,7 +1104,7 @@ namespace Microsoft.VisualStudioTools.Project {
             private static bool PromptOverwriteFile(string filename, out OverwriteFileDialog dialog) {
                 dialog = new OverwriteFileDialog(SR.GetString(SR.FileAlreadyExists, Path.GetFileName(filename)), true);
                 dialog.Owner = Application.Current.MainWindow;
-                bool? dialogResult = dialog.ShowDialog();
+                bool? dialogResult = dialog.ShowModal();
 
                 if (dialogResult != null && !dialogResult.Value) {
                     // user cancelled
@@ -1269,11 +1270,13 @@ namespace Microsoft.VisualStudioTools.Project {
                         // hierarchy move if the user answers no to any of the items none of the items
                         // are removed from the source hierarchy.
                         var fileNode = Project.FindNodeByFullPath(SourceMoniker);
-                        Debug.Assert(fileNode is FileNode);
+                        Debug.Assert(fileNode is FileNode, $"<{fileNode?.GetType().FullName ?? "null"}>");
 
-                        Project.ItemsDraggedOrCutOrCopied.Remove(fileNode); // we don't need to remove the file after Paste                        
+                        if (fileNode != null) {
+                            Project.ItemsDraggedOrCutOrCopied.Remove(fileNode); // we don't need to remove the file after Paste                        
+                        }
 
-                        if (File.Exists(newPath)) {
+                        if (fileNode != null && File.Exists(newPath)) {
                             // we checked before starting the copy, but somehow a file has snuck in.  Could be a race,
                             // or the user could have cut and pasted 2 files from different folders into the same folder.
                             bool shouldOverwrite;
@@ -1308,8 +1311,11 @@ namespace Microsoft.VisualStudioTools.Project {
                         }
 
                         FileNode file = fileNode as FileNode;
-                        file.RenameInStorage(fileNode.Url, newPath);
-                        file.RenameFileNode(fileNode.Url, newPath);
+                        Debug.Assert(file != null, $"<{fileNode?.GetType().FullName ?? "null"}>");
+                        if (file != null) {
+                            file.RenameInStorage(fileNode.Url, newPath);
+                            file.RenameFileNode(fileNode.Url, newPath);
+                        }
 
                         Project.Tracker.OnItemRenamed(SourceMoniker, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_NoFlags);
                     } else {
