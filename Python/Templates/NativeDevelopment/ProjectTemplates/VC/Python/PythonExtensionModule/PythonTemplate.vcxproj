@@ -70,10 +70,12 @@
     <PythonDebugSuffix Condition="$(PythonCoreDVersion) != ''">_d</PythonDebugSuffix>
     <PythonDExe Condition="$(PythonExe) != '' and $(PythonDExe) == ''">$([System.IO.Path]::GetDirectoryName($(PythonExe)))\python$(PythonDebugSuffix).exe</PythonDExe>
     <PythonDExe Condition="!Exists($(PythonDExe))">$(PythonExe)</PythonDExe>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
     <DefaultDebuggerFlavor>WindowsLocalDebugger</DefaultDebuggerFlavor>
     <DefaultDebuggerFlavor Condition="$(HasPythonDebugLaunchProvider) == 'true'">PythonDebugLaunchProvider</DefaultDebuggerFlavor>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
