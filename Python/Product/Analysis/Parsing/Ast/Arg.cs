@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 } else {
                     // keyword arg
                     _name.AppendCodeString(res, ast, format);
-                    res.Append(this.GetProceedingWhiteSpace(ast));
+                    res.Append(this.GetPreceedingWhiteSpace(ast));
                     res.Append('=');
                     _expression.AppendCodeString(res, ast, format);
                 }

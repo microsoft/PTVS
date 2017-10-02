@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
             if (format.ReplaceMultipleImportsWithMultipleStatements) {
-                var proceeding = this.GetProceedingWhiteSpace(ast);
+                var proceeding = this.GetPreceedingWhiteSpace(ast);
                 var additionalProceeding = format.GetNextLineProceedingText(proceeding);
                 
                 for (int i = 0, asIndex = 0; i < _names.Length; i++) {
@@ -149,7 +149,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
                 return;
             } else {
-                format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+                format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
                 res.Append("import");
 
                 var itemWhiteSpace = this.GetListWhiteSpace(ast);

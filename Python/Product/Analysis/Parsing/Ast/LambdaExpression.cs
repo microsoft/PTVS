@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+            format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
             res.Append("lambda");
             var commaWhiteSpace = this.GetListWhiteSpace(ast);
 

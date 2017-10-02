@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(this.GetThirdWhiteSpace(ast));
                 res.Append("async");
             }
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(this.GetPreceedingWhiteSpace(ast));
             res.Append("for");
             _lhs.AppendCodeString(res, ast, format);
             if (!this.IsIncompleteNode(ast)) {
