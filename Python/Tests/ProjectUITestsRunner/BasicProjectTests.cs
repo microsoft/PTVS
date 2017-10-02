@@ -73,7 +73,7 @@ namespace ProjectUITestsRunner {
         /// Checks various combinations of item visibility from within the users project
         /// and from imported projects and how it's controlled by the Visible metadata.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ItemVisibility() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.ItemVisibility));

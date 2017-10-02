@@ -86,7 +86,7 @@ Closed Key: Projects\{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}
 ", mockCtx._result.ToString());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void ProvideEditorExtension2AttributeTests() {
             var attr = new ProvideEditorExtension2Attribute(
                     typeof(DjangoEditorFactory),

@@ -1151,7 +1151,7 @@ int main(int argc, char* argv[]) {
         }
 
         // https://github.com/Microsoft/PTVS/issues/2842
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public virtual async Task AttachPtvsdAndStopDebugging() {
             if (!HasPtvsdCommandLine) {
                 return;

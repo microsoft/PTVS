@@ -219,7 +219,7 @@ namespace ProjectUITestsRunner {
         /// Test linked files with a project home set (done by save as in this test)
         /// https://nodejstools.codeplex.com/workitem/1511
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestLinkedWithProjectHome() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.TestLinkedWithProjectHome));

@@ -51,7 +51,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveToMissingFolderMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveExcludedFolderKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveExcludedFolderKeyboard));

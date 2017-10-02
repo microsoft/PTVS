@@ -519,7 +519,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void TypelessForVariable() {
             RefactorTest("baz", "abc",
                 new[] { 
@@ -537,7 +537,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("10s")]
         public void TupleForVariable() {
             RefactorTest("baz", "abc",
@@ -817,7 +817,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityLocal() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -878,7 +878,7 @@ def h(abc):
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityClosure() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -1332,7 +1332,7 @@ abc = 100
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("10s")]
         public void SanityRenameClass() {
             RefactorTest("fob", "abc",
@@ -1488,7 +1488,7 @@ class x(metaclass=fob):
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityRenameFunction() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -1624,7 +1624,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityDelGlobal() {
             RefactorTest("fob", "abc",
             new[] { 
@@ -2007,7 +2007,7 @@ exec('abc = 1', fob, fob)
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void IsInstanceScope() {
             RefactorTest("abc", "fob", version: new Version(3, 2),
             inputs: new[] { 
@@ -2065,7 +2065,7 @@ def a():
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void KeywordParameter() {
             RefactorTest("fob", "abc", 
             new[] { 

@@ -285,7 +285,9 @@ namespace PythonToolsMockTests {
                 if (sh == null) {
                     return new List<Completion>();
                 }
-                return sh.Session.CompletionSets.SelectMany(cs => cs.Completions).ToList();
+                return sh.Session.CompletionSets.SelectMany(cs => cs.Completions)
+                    .Where(c => !string.IsNullOrEmpty(c.InsertionText))
+                    .ToList();
             }
         }
 

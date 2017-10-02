@@ -90,13 +90,13 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ClassificationMultiLineStringTest2));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void SignaturesTest() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.SignaturesTest));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MultiLineSignaturesTest() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.MultiLineSignaturesTest));

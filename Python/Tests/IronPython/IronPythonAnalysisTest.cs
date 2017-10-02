@@ -317,7 +317,7 @@ asm = AppDomain.CurrentDomain.DefineDynamicAssembly()
 mod = asm.DefineDynamicModule()
 mod.
 ";
-            var entry = ProcessText(text);
+            var entry = ProcessText(text, allowParseErrors: true);
             var tooltips = entry.GetMember("mod", "CreateGlobalFunctions", text.IndexOf("mod ="))
                 .Select(m => m.Documentation)
                 .ToArray();

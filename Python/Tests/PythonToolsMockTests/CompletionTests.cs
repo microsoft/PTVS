@@ -605,9 +605,9 @@ f(1, 2, 3, 4,")) {
             return GetCompletionNames(analysis.GetCompletions(new MockGlyphService()));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("10s")]
-        public void Scenario_CompletionInTripleQuotedString() {
+        public void CompletionInTripleQuotedString() {
             string code = @"
 '''
 import 
@@ -620,6 +620,7 @@ sys.
 
             using (var view = new PythonEditor(code)) {
                 for (int i = code.IndexOfEnd("'''"); i < code.LastIndexOf("'''"); ++i) {
+                    Console.WriteLine(code.Substring(0, i).Replace("\r", "\\r").Replace("\n", "\\n"));
                     AssertUtil.ContainsExactly(view.GetCompletions(i));
                 }
             }
@@ -650,7 +651,7 @@ C().fff";
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void QuickInfo() {
             string code = @"
 x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
@@ -929,7 +930,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void CompletionWithLongDocString() {
             using (var vs = new MockVs()) {
                 var docString = GenerateText(100, 72, "    ").ToArray();

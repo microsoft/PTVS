@@ -52,7 +52,7 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.StartupProjectSelected));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void NewProfilingSession() {
             _vs.RunTest(nameof(PUIT.NewProfilingSession));

@@ -69,25 +69,25 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutDeletePaste));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void CopyFileToFolderTooLongKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CopyFileToFolderTooLongKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void CopyFileToFolderTooLongMouse() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CopyFileToFolderTooLongMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void CutFileToFolderTooLongKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutFileToFolderTooLongKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void CutFileToFolderTooLongMouse() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutFileToFolderTooLongMouse));
@@ -141,7 +141,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutFileReplace));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void CutFolderAndFile() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutFolderAndFile));
@@ -219,7 +219,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveCrossHierarchyMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveReverseCrossHierarchyKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveReverseCrossHierarchyKeyboard));
@@ -333,7 +333,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveFolderExistingFile));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveFolderWithContents() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveFolderWithContents));

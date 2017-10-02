@@ -129,7 +129,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.MainThread));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ExpressionEvaluation() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.ExpressionEvaluation));
@@ -165,7 +165,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.Breakpoints));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void BreakpointsDisable() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BreakpointsDisable));

@@ -69,13 +69,13 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesIncludeExclude));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ShowAllFilesChanges() {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesChanges));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ShowAllFilesHiddenFiles() {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesHiddenFiles));
@@ -111,7 +111,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesDefault));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ShowAllMoveNotInProject() {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllMoveNotInProject));

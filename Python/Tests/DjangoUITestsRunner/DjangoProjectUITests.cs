@@ -51,7 +51,7 @@ namespace DjangoUITestsRunner {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.NewDjangoProjectSafeProjectName));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DjangoCollectStaticFilesCommand() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCollectStaticFilesCommand));
@@ -63,7 +63,7 @@ namespace DjangoUITestsRunner {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCommandsNonDjangoApp));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void StartNewApp() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.StartNewApp));
@@ -88,7 +88,7 @@ namespace DjangoUITestsRunner {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DebugProjectProperties));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DjangoProjectWithSubdirectory() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoProjectWithSubdirectory));

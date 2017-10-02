@@ -147,10 +147,12 @@ namespace PythonToolsUITests {
         }
 
         public void SaveProjectAs(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+            var sln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var slnDir = PathUtils.GetParent(sln);
+            var project = app.OpenProject(sln);
 
             AssertError<ArgumentNullException>(() => project.SaveAs(null));
-            project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
+            project.SaveAs(Path.Combine(slnDir, "TempFile.pyproj"));
             project.Save("");   // empty string means just save
 
             // try too long of a file
@@ -257,7 +259,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(5, project.ProjectItems.Count);
 
             // add an existing item
-            project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\HelloWorld\Program.py"));
+            project.ProjectItems.AddFromFileCopy(Path.Combine(PathUtils.GetParent(sln), "HelloWorld", "Program.py"));
 
             Assert.AreEqual(5, project.ProjectItems.Count);
         }

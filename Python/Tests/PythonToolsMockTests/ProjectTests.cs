@@ -89,6 +89,7 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
         public void ShouldWarnOnRun() {
             var sln = Generator.Project(
                 "HelloWorld",

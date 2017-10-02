@@ -300,7 +300,7 @@ namespace PythonToolsTests {
             ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg", false);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("10s")]
         public void ImportWizardBrokenVirtualEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>

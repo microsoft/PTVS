@@ -52,7 +52,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.UserProjectFile));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void SetDefaultInterpreter() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.SetDefaultInterpreter));
@@ -70,7 +70,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.LoadPythonProjectWithNoConfigurations));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void SaveProjectAs() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.SaveProjectAs));
@@ -190,7 +190,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetAssemblyReferences));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MultipleDotNetAssemblyReferences() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultipleDotNetAssemblyReferences));

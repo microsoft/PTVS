@@ -39,7 +39,7 @@ namespace ProjectUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         // Currently Fails: https://pytools.codeplex.com/workitem/2609
         public void MoveFolderWithItem() {
@@ -52,11 +52,13 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.AddNewItem));
         }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
         public void AddExistingItem() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.AddExistingItem));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void IncludeInProject() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.IncludeInProject));
