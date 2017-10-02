@@ -234,6 +234,10 @@ R_A3 = R_A1.r_A()");
                 var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
                 var mod = interp.ImportModule(interp.BuiltinModuleName);
+                var modPath = fact.GetCacheFilePath(fact.Configuration.InterpreterPath);
+                if (File.Exists(modPath)) {
+                    Console.WriteLine(File.ReadAllText(modPath));
+                }
                 Assert.IsInstanceOfType(mod, typeof(AstBuiltinsPythonModule));
 
                 // Ensure we can get all the builtin types

@@ -115,8 +115,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override bool Walk(ReturnStatement node) {
-            var type = _scope.GetTypeFromValue(_scope.GetValueFromExpression(node.Expression));
-            if (type != null) {
+            foreach (var type in _scope.GetTypesFromValue(_scope.GetValueFromExpression(node.Expression))) {
                 _returnTypes.Add(type);
             }
 

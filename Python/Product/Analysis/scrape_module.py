@@ -375,18 +375,22 @@ class MemberInfo(object):
             self.name = self.name.replace('-', '_')
 
         if isinstance(value, type):
-            self.need_imports, self.literal = self._get_typename(value, module)
-            try:
-                bases = getattr(value, '__bases__', ())
-            except Exception:
-                pass
+            self.need_imports, type_name = self._get_typename(value, module)
+            if '.' in type_name:
+                self.literal = type_name
             else:
-                self.bases = []
-                self.need_imports = list(self.need_imports)
-                for ni, t in (self._get_typename(b, module) for b in bases):
-                    if t:
-                        self.bases.append(t)
-                        self.need_imports.extend(ni)
+                self.type_name = type_name
+                try:
+                    bases = getattr(value, '__bases__', ())
+                except Exception:
+                    pass
+                else:
+                    self.bases = []
+                    self.need_imports = list(self.need_imports)
+                    for ni, t in (self._get_typename(b, module) for b in bases):
+                        if t:
+                            self.bases.append(t)
+                            self.need_imports.extend(ni)
 
         elif hasattr(value, '__call__'):
             self.signature = Signature(name, value, scope, scope_alias=alias)

@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (mc != null) {
                     return mc.GetMember(Context, me.Name);
                 }
-                return null;
+                return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Unknown), GetLoc(expr));
             }
 
             IMember m;
@@ -190,8 +190,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     if (fn.Overloads.Count > 0 && fn.Overloads[0].ReturnType.Count > 0) {
                         return new AstPythonConstant(fn.Overloads[0].ReturnType[0]);
                     }
-                    return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.NoneType), GetLoc(expr));
                 }
+
+                return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Unknown), GetLoc(expr));
             }
 
             m = GetConstantFromLiteral(expr);
@@ -200,6 +201,23 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             return null;
+        }
+
+        public IEnumerable<IPythonType> GetTypesFromValue(IMember value) {
+            if (value is IPythonMultipleMembers mm) {
+                var seen = new HashSet<IPythonType>();
+                foreach (var m in mm.Members) {
+                    var t = GetTypeFromValue(m);
+                    if (seen.Add(t)) {
+                        yield return t;
+                    }
+                }
+            } else {
+                var t = GetTypeFromValue(value);
+                if (t != null) {
+                    yield return t;
+                }
+            }
         }
 
         public IPythonType GetTypeFromValue(IMember value) {
@@ -222,6 +240,21 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             if (value is IPythonModule) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Module);
+            }
+
+            if (value is IPythonMultipleMembers) {
+                type = null;
+                foreach (var t in GetTypesFromValue(value)) {
+                    if (type == null) {
+                        type = t;
+                    } else if (t == null) {
+                    } else if (t.MemberType == PythonMemberType.Module ||
+                        (t.MemberType == PythonMemberType.Class && type.MemberType != PythonMemberType.Module) ||
+                        (t.MemberType == PythonMemberType.Function && type.MemberType != PythonMemberType.Class)) {
+                        type = t;
+                    }
+                }
+                return type;
             }
 
             Debug.Fail("Unhandled type() value: " + value.GetType().FullName);
@@ -299,8 +332,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return null;
         }
 
-        public void SetInScope(string name, IMember value) {
-            _scopes.Peek()[name] = value;
+        public void SetInScope(string name, IMember value, bool mergeWithExisting = true) {
+            var s = _scopes.Peek();
+            if (mergeWithExisting && s.TryGetValue(name, out IMember existing) && existing != null) {
+                s[name] = AstPythonMultipleMembers.Combine(existing, value);
+            } else {
+                s[name] = value;
+            }
         }
 
         [Flags]

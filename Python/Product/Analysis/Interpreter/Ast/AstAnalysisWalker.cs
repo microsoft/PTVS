@@ -156,7 +156,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         if (node.Names[i].Name == "*") {
                             foreach (var member in mod.GetMemberNames(ctxt)) {
                                 var mem = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
-                                    _interpreter.GetBuiltinType(BuiltinTypeId.Object),
+                                    _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
                                     mod.Locations.ToArray()
                                 );
                                 _scope.SetInScope(member, mem);
@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         var n = node.AsNames?[i] ?? node.Names[i];
                         if (n != null) {
                             var mem = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Object),
+                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
                                 GetLoc(n)
                             );
                             _scope.SetInScope(n.Name, mem);
@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private void CollectAllClasses(IEnumerable<Statement> stmts) {
             foreach (var node in stmts.MaybeEnumerate().OfType<ClassDefinition>()) {
-                _scope.SetInScope(node.Name, CreateType(node));
+                _scope.SetInScope(node.Name, CreateType(node), false);
             }
             foreach (var node in stmts.MaybeEnumerate().OfType<AssignmentStatement>()) {
                 var rhs = node.Right as NameExpression;
