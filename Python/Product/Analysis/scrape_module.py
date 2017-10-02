@@ -55,10 +55,9 @@ def _triple_quote(s):
     return "''' " + s.replace("'''", "\\'\\'\\'") + " '''"
 
 
-SKIP_TYPENAME_FOR_TYPES = bool, str, bytes, int, float, list, tuple, dict
+SKIP_TYPENAME_FOR_TYPES = bool, str, bytes, int, float
 if sys.version_info[0] < 3:
     SKIP_TYPENAME_FOR_TYPES += unicode, long
-
 
 class Signature(object):
     # These two dictionaries start with Python 3 values.
@@ -363,6 +362,7 @@ class MemberInfo(object):
         self.value = value
         self.literal = literal
         self.members = []
+        self.values = []
         self.need_imports = ()
         self.type_name = None
         self.bases = ()
@@ -375,7 +375,7 @@ class MemberInfo(object):
             self.name = self.name.replace('-', '_')
 
         if isinstance(value, type):
-            self.need_imports, self.type_name = self._get_typename(value, module)
+            self.need_imports, self.literal = self._get_typename(value, module)
             try:
                 bases = getattr(value, '__bases__', ())
             except Exception:
@@ -467,7 +467,7 @@ CLASS_MEMBER_SUBSTITUTE = {
     '__bases__': MemberInfo('__bases__', ()),
     '__mro__': MemberInfo('__mro__', ()),
     '__dict__': MemberInfo('__dict__', {}),
-    '__doc__': None
+    '__doc__': None,
 }
 
 class ScrapeState(object):
@@ -512,10 +512,18 @@ class ScrapeState(object):
         if mod is MemberInfo.NO_VALUE:
             return
         
+        mod_scope = (self.module_name + '.' + scope) if scope else self.module_name
         mro = (getattr(mod, '__mro__', None) or ())[1:]
         for name in dir(mod):
             try:
                 m = substitutes[name]
+                if m:
+                    members.append(m)
+                continue
+            except LookupError:
+                pass
+            try:
+                m = substitutes[mod_scope + '.' + name]
                 if m:
                     members.append(m)
                 continue
