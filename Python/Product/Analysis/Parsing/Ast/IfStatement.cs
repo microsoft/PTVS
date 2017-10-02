@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             if (_else != null) {
-                format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+                format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
                 res.Append("else");
                 _else.AppendCodeString(res, ast, format);
             }

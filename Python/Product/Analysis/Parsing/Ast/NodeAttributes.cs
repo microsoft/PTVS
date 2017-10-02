@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 
+using System;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     internal static class NodeAttributes {
         /// <summary>
@@ -100,11 +102,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public static string GetProceedingWhiteSpace(this Node node, PythonAst ast) {
+        [Obsolete("Use correct spelling: GetPreceedingWhiteSpace")]
+        public static string GetProceedingWhiteSpace(this Node node, PythonAst ast) => GetPreceedingWhiteSpace(node, ast);
+
+        public static string GetPreceedingWhiteSpace(this Node node, PythonAst ast) {
             return GetWhiteSpace(node, ast, NodeAttributes.PreceedingWhiteSpace);
         }
 
-        public static string GetProceedingWhiteSpaceDefaultNull(this Node node, PythonAst ast) {
+        [Obsolete("Use correct spelling: GetPreceedingWhiteSpaceDefaultNull")]
+        public static string GetProceedingWhiteSpaceDefaultNull(this Node node, PythonAst ast) => GetPreceedingWhiteSpaceDefaultNull(node, ast);
+
+        public static string GetPreceedingWhiteSpaceDefaultNull(this Node node, PythonAst ast) {
             return GetWhiteSpace(node, ast, NodeAttributes.PreceedingWhiteSpace, null);
         }
 

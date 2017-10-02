@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(this.GetPreceedingWhiteSpace(ast));
             res.Append("if");
             _test.AppendCodeString(res, ast, format);
         }

@@ -281,7 +281,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (Decorators != null) {
                 Decorators.AppendCodeString(res, ast, format);
             }
-            format.ReflowComment(res, this.GetProceedingWhiteSpaceDefaultNull(ast));
+            format.ReflowComment(res, this.GetPreceedingWhiteSpaceDefaultNull(ast));
             if (IsCoroutine) {
                 res.Append("async");
                 res.Append(NodeAttributes.GetWhiteSpace(this, ast, WhitespaceAfterAsync));

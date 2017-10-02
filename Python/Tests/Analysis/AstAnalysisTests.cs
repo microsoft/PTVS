@@ -16,13 +16,10 @@
 
 extern alias analysis;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using analysis::Microsoft.PythonTools.Interpreter;
 using analysis::Microsoft.PythonTools.Interpreter.Ast;
 using analysis::Microsoft.PythonTools.Parsing;
@@ -334,7 +331,10 @@ R_A3 = R_A1.r_A()");
 
         private static void FullStdLibTest(PythonVersion v) {
             v.AssertInstalled();
-            var factory = new AstPythonInterpreterFactory(v.Configuration, null);
+            var factory = new AstPythonInterpreterFactory(v.Configuration, new InterpreterFactoryCreationOptions {
+                DatabasePath = TestData.GetTempPath(),
+                UseExistingCache = false
+            });
             var modules = ModulePath.GetModulesInLib(v.PrefixPath).ToList();
 
             bool anySuccess = false;

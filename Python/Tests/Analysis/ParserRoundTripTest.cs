@@ -18,9 +18,11 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 using TestUtilities.Mocks;
 
 namespace AnalysisTests {
@@ -29,7 +31,7 @@ namespace AnalysisTests {
     /// </summary>
     [TestClass]
     public class ParserRoundTripTest {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingOptions() {
             /* Function Definitions */
             // SpaceAroundDefaultValueEquals
@@ -291,7 +293,7 @@ namespace AnalysisTests {
             TestOneString(PythonLanguageVersion.V27, "def f():\r\n    x = 42; y = 100", new CodeFormattingOptions() { BreakMultipleStatementsPerLine = true, RemoveTrailingSemicolons = true }, "def f():\r\n    x = 42\r\n    y = 100");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestReflowComment() {
             var commentTestCases = new[] { 
                 new {
@@ -397,7 +399,7 @@ def f ( ):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestReflowComment2() {
             foreach (var optionValue in new bool?[] { true, false, null }) {
                 var options = new CodeFormattingOptions() {
@@ -439,7 +441,7 @@ def f ( ):
          /// <summary>
         /// Verify trailing \ at the end a file round trips
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestBackslashThenEof() {
             var code = @"x = 100
 \";
@@ -458,7 +460,7 @@ def f ( ):
         /// <summary>
         /// Verify trailing \ doesn't mess up comments
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestReflowComment3() {
             var code = @"def f():
     if a and \
@@ -479,7 +481,7 @@ def f ( ):
         /// <summary>
         /// Verify reflowing comment doesn't introduce extra new line
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestReflowComment4() {
             var code = @"def f(): # fob
     pass";
@@ -538,7 +540,7 @@ def f ( ):
         /// <summary>
         /// Verifies that the proceeding white space is consistent across all nodes.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestStartWhiteSpace() {
             foreach (var preceedingText in new[] { "#fob\r\n" }) {
                 var allSnippets = 
@@ -568,8 +570,8 @@ def f ( ):
             }
         }
 
-        [TestMethod, Priority(0)]
-        public void ExpressionsTest() {
+        [TestMethod, Priority(1)]
+        public void ExpressionsTest() {            
             // TODO: Trailing white space tests
             // Unary Expressions
             TestOneString(PythonLanguageVersion.V27, "x=~42");
@@ -789,7 +791,7 @@ def f ( ):
             //TestOneString(PythonLanguageVersion.V27, "{1:2, 2 :3, 3: 4]");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestMangledPrivateName() {
             TestOneString(PythonLanguageVersion.V27, @"class C:
     def f(__a):
@@ -821,7 +823,7 @@ def f ( ):
 ");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestComments() {
 
             TestOneString(PythonLanguageVersion.V27, @"x = fob(
@@ -839,7 +841,7 @@ def f ( ):
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestWhiteSpaceAfterDocString() {
             TestOneString(PythonLanguageVersion.V27, @"'''hello
 
@@ -849,13 +851,13 @@ this is some documentation
 import fob");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestBinaryFiles() {
             var filename = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.System), "kernel32.dll");
             TestOneString(PythonLanguageVersion.V27, filename);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestErrors() {
             TestOneString(PythonLanguageVersion.V30, ":   ...");
 
@@ -1099,18 +1101,18 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V36, "p: 1=optimized | 2=newlocals | 4=*arg | 8=**arg");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExplicitLineJoin() {
             TestOneString(PythonLanguageVersion.V27, @"fob(4 + \
                     5)");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestTrailingComment() {
             TestOneString(PythonLanguageVersion.V27, "def f(): pass\r\n#fob");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestStatements() {
             // TODO: Vary all of these tests by putting the test case in a function def
             // TODO: Vary all of these tests by adding trailing comments                        
@@ -1527,46 +1529,55 @@ def f(): pass");
 
         }
 
-        [TestMethod, Priority(0)]
-        public void StdLibTest() {
-            var versions = new[] { 
-                new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
-                new { Path = "C:\\Python26\\Lib", Version = PythonLanguageVersion.V26 },
-                new { Path = "C:\\Python27\\Lib", Version = PythonLanguageVersion.V27 },
-                
-                new { Path = "C:\\Python30\\Lib", Version = PythonLanguageVersion.V30 },
-                new { Path = "C:\\Python31\\Lib", Version = PythonLanguageVersion.V31 },
-                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 },
-                new { Path = "C:\\Python33\\Lib", Version = PythonLanguageVersion.V33 } 
-            };
+        private static void RoundTripStdLibTest(PythonVersion version) {
+            version.AssertInstalled();
 
-            foreach (var version in versions) {
-                Console.WriteLine("Testing version {0} {1}", version.Version, version.Path);
-                int ran = 0, succeeded = 0;
-                string[] files;
+            Console.WriteLine("Testing version {0} {1}", version.Version, version.InterpreterPath);
+
+            int ran = 0, succeeded = 0;
+            foreach(var file in ModulePath.GetModulesInLib(version.Configuration)) {
                 try {
-                    files = Directory.GetFiles(version.Path);
-                } catch (DirectoryNotFoundException) {
-                    continue;
-                }
-
-                foreach (var file in files) {
-                    try {
-                        if (file.EndsWith(".py")) {
-                            ran++;
-                            TestOneFile(file, version.Version);
-                            succeeded++;
-                        }
-                    } catch (Exception e) {
-                        Console.WriteLine(e);
-                        Console.WriteLine("Failed: {0}", file);
-                        break;
+                    if (!file.IsCompiled && !file.IsNativeExtension) {
+                        ran++;
+                        TestOneFile(file.SourceFile, version.Version);
+                        succeeded++;
                     }
+                } catch (Exception e) {
+                    Console.WriteLine(e);
+                    Console.WriteLine("Failed: {0}", file);
+                    break;
                 }
-
-                Assert.AreEqual(ran, succeeded);
             }
+
+            Assert.AreEqual(ran, succeeded);
         }
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib26() => RoundTripStdLibTest(PythonPaths.Python26 ?? PythonPaths.Python26_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib27() => RoundTripStdLibTest(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib31() => RoundTripStdLibTest(PythonPaths.Python31 ?? PythonPaths.Python31_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib32() => RoundTripStdLibTest(PythonPaths.Python32 ?? PythonPaths.Python32_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib33() => RoundTripStdLibTest(PythonPaths.Python33 ?? PythonPaths.Python33_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib34() => RoundTripStdLibTest(PythonPaths.Python34 ?? PythonPaths.Python34_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib35() => RoundTripStdLibTest(PythonPaths.Python35 ?? PythonPaths.Python35_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib36() => RoundTripStdLibTest(PythonPaths.Python36 ?? PythonPaths.Python36_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib37() => RoundTripStdLibTest(PythonPaths.Python37 ?? PythonPaths.Python37_x64);
 
         [TestMethod, Priority(0)]
         public void GroupingRecovery() {
@@ -1643,13 +1654,29 @@ class BaseSet(object):
     """"""Common base class for mutable and immutable sets.");
         }
 
+        [TestMethod, Priority(0)]
+        public void GeneralizedUnpacking() {
+            TestOneString(PythonLanguageVersion.V35, "list_ = [  *a, *b, c,*d]");
+            TestOneString(PythonLanguageVersion.V35, "tuple_ =   *a, *b, c,*d");
+            TestOneString(PythonLanguageVersion.V35, "paren_tuple = (  *a, *b, c,*d)");
+            TestOneString(PythonLanguageVersion.V35, "set_ = {  *a, *b, c,*d}");
+            TestOneString(PythonLanguageVersion.V35, "dict_ = {  **a, **b, c: 'c',**d}");
+        }
+
         private static void TestOneFile(string filename, PythonLanguageVersion version) {
             var originalText = File.ReadAllText(filename);
 
-            TestOneString(version, originalText);
+            TestOneString(version, originalText, filename: filename);
         }
 
-        internal static void TestOneString(PythonLanguageVersion version, string originalText, CodeFormattingOptions format = null, string expected = null, bool recurse = true) {
+        internal static void TestOneString(
+            PythonLanguageVersion version,
+            string originalText,
+            CodeFormattingOptions format = null,
+            string expected = null,
+            bool recurse = true,
+            string filename = null
+        ) {
             bool hadExpected = true;
             if (expected == null) {
                 expected = originalText;
@@ -1671,6 +1698,7 @@ class BaseSet(object):
                 return;
             }
 
+            bool shownFilename = false;
             const int contextSize = 50;
             for (int i = 0; i < expected.Length && i < output.Length; i++) {
                 if (expected[i] != output[i]) {
@@ -1692,6 +1720,12 @@ class BaseSet(object):
                         }
                     }
 
+                    if (!shownFilename) {
+                        shownFilename = true;
+                        if (!string.IsNullOrEmpty(filename)) {
+                            Console.WriteLine("In file: {0}", filename);
+                        }
+                    }
                     Console.WriteLine("Mismatch context at {0}:", i);
                     Console.WriteLine("Expected: {0}", x.ToString());
                     Console.WriteLine("Got     : {0}", y.ToString());

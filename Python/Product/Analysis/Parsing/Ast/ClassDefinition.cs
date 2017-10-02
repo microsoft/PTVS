@@ -187,7 +187,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 Decorators.AppendCodeString(res, ast, format);
             }
 
-            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+            format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
             res.Append("class");
             res.Append(this.GetSecondWhiteSpace(ast));
             res.Append(this.GetVerbatimImage(ast) ?? Name);

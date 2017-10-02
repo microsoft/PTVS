@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// New in 1.1.
         /// </summary>
         public virtual string GetLeadingWhiteSpace(PythonAst ast) {
-            return this.GetProceedingWhiteSpaceDefaultNull(ast) ?? "";
+            return this.GetPreceedingWhiteSpaceDefaultNull(ast) ?? "";
         }
 
         /// <summary>
