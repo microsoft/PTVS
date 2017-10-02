@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -46,6 +47,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private int Launch(LaunchConfiguration config, bool debug) {
+            // Most configuration is validated or inferred later, but while the
+            // helper class supports launching without a script, this launcher
+            // does not. So we validate script name now.
+            if (!File.Exists(config.ScriptName)) {
+                throw new ArgumentException(Strings.DebugLaunchScriptNameMissing);
+            }
+
             if (debug) {
                 StartWithDebugger(config);
             } else {
@@ -67,6 +75,7 @@ namespace Microsoft.PythonTools.Project {
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
+
             return Process.Start(DebugLaunchHelper.CreateProcessStartInfo(_serviceProvider, config));
         }
 

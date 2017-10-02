@@ -2480,6 +2480,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to launch debugger.
+        /// </summary>
+        public static string FailedToLaunchDebugger {
+            get {
+                return ResourceManager.GetString("FailedToLaunchDebugger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not get resource {1}.{2} from {0}.
         ///
         ///{3}.

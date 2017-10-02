@@ -2114,4 +2114,7 @@ Expand selection to the full expression?</value>
   <data name="Test_NotRun" xml:space="preserve">
     <value>Test could not be run. Check the Tests Output Pane for details.</value>
   </data>
+  <data name="FailedToLaunchDebugger" xml:space="preserve">
+    <value>Failed to launch debugger</value>
+  </data>
 </root>

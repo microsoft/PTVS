@@ -15,11 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Linq;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
     public class AutomationDialog  : AutomationWrapper, IDisposable {
         private bool _isDisposed;
+        private bool _isTaskDialog;
 
         public VisualStudioApp App { get; private set; }
         public TimeSpan DefaultTimeout { get; set; }
@@ -28,6 +30,7 @@ namespace TestUtilities.UI {
             : base(element) {
             App = app;
             DefaultTimeout = TimeSpan.FromSeconds(10.0);
+            _isTaskDialog = element.Current.ClassName == "#32770";
         }
 
         public static AutomationDialog FromDte(VisualStudioApp app, string commandName, string commandArgs = "") {
@@ -67,12 +70,24 @@ namespace TestUtilities.UI {
 
         #endregion
 
-        public void ClickButtonAndClose(string buttonName, bool nameIsAutomationId = false) {
+        public bool ClickButtonAndClose(string buttonName, bool nameIsAutomationId = false) {
             WaitForInputIdle();
             if (nameIsAutomationId) {
-                WaitForClosed(DefaultTimeout, () => ClickButtonByAutomationId(buttonName));
+                return WaitForClosed(DefaultTimeout, () => ClickButtonByAutomationId(buttonName));
+            } else if (_isTaskDialog && buttonName == "Cancel") {
+                return WaitForClosed(DefaultTimeout, () => {
+                    var btn = Element.FindFirst(TreeScope.Descendants, new AndCondition(
+                        new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button),
+                        new OrCondition(
+                            new PropertyCondition(AutomationElement.NameProperty, "Cancel"),
+                            new PropertyCondition(AutomationElement.NameProperty, "Close")
+                        )
+                    ));
+                    CheckNullElement(btn);
+                    Invoke(btn);
+                });
             } else {
-                WaitForClosed(DefaultTimeout, () => ClickButtonByName(buttonName));
+                return WaitForClosed(DefaultTimeout, () => ClickButtonByName(buttonName));
             }
         }
 
@@ -86,11 +101,15 @@ namespace TestUtilities.UI {
 
         public virtual string Text {
             get {
-                var label = FindByAutomationId("65535");
-                if (label != null) {
-                    return label.Current.Name;
+                string label = null;
+                if (!_isTaskDialog) {
+                    label = FindByAutomationId("65535")?.Current.Name;
+                } else {
+                    label = string.Join(Environment.NewLine,
+                        FindAllByControlType(ControlType.Text).Cast<AutomationElement>().Select(a => a.Current.Name ?? "")
+                    );
                 }
-                return "";
+                return label ?? "";
             }
         }
     }
