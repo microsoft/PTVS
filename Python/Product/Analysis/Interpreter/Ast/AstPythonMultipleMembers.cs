@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var old = Members;
             if (!old.Contains(member)) {
                 Members = old.Concat(Enumerable.Repeat(member, 1)).ToArray();
-            } else {
+            } else if (!old.Any()) {
                 Members = new[] { member };
             }
         }
