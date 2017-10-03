@@ -64,7 +64,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.IncludeInProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void RemoveItem() {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.RemoveItem));

@@ -82,19 +82,19 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestInsertSnippetEmptySelectionNonEmptyLine));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestTestClassSnippet() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippet));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestTestClassSnippetBadImport() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippetBadImport));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestTestClassSnippetImportAs() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippetImportAs));

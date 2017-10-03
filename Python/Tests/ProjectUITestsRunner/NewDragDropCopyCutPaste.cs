@@ -93,7 +93,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNamesSkipOneKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNamesSkipOneMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNamesSkipOneMouse));

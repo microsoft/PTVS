@@ -123,7 +123,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllExcludeSelected));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ShowAllFilesRapidChanges() {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesRapidChanges));

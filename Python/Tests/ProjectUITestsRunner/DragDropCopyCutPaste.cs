@@ -237,7 +237,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameOverwriteKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameOverwriteMouse() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameOverwriteMouse));
@@ -249,7 +249,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameOverwriteAllItemsKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameOverwriteAllItemsMouse() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameOverwriteAllItemsMouse));
@@ -261,7 +261,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameDontOverwriteKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwriteMouse() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameDontOverwriteMouse));
@@ -273,7 +273,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameDontOverwrite2Keyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwrite2Mouse() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameDontOverwrite2Mouse));
@@ -285,7 +285,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameDontOverwriteAllItemsKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameDontOverwriteAllItemsMouse() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameDontOverwriteAllItemsMouse));
@@ -297,7 +297,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameCancelKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameCancelMouse() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveDuplicateFileNameCancelMouse));

@@ -75,7 +75,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.PendingBreakPointLocation));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void BoundBreakpoint() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BoundBreakpoint));
@@ -105,7 +105,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.Step5));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void SetNextLine() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.SetNextLine));
@@ -171,7 +171,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BreakpointsDisable));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void BreakpointsDisableReenable() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BreakpointsDisableReenable));
@@ -183,7 +183,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.LaunchWithErrorsDontRun));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void StartWithDebuggingNoProject() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingNoProject));
@@ -213,7 +213,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingInProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void StartWithDebuggingSubfolderInProject() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithDebuggingSubfolderInProject));

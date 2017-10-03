@@ -70,55 +70,55 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.NewProfilingSessionOpenSolution));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void LaunchPythonProfilingWizard() {
             _vs.RunTest(nameof(PUIT.LaunchPythonProfilingWizard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void LaunchProject() {
             _vs.RunTest(nameof(PUIT.LaunchProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void LaunchProjectWithSpaceInFilename() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithSpaceInFilename));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void LaunchProjectWithSearchPath() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithSearchPath));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void LaunchProjectWithPythonPathSet() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithPythonPathSet));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void LaunchProjectWithPythonPathClear() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithPythonPathClear));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void LaunchProjectWithEnvironment() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithEnvironment));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void SaveDirtySession() {
             _vs.RunTest(nameof(PUIT.SaveDirtySession));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DeleteReport() {
             _vs.RunTest(nameof(PUIT.DeleteReport));
@@ -130,7 +130,7 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.CompareReports));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void RemoveReport() {
             _vs.RunTest(nameof(PUIT.RemoveReport));
@@ -144,13 +144,13 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.OpenReport));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void OpenReportCtxMenu() {
             _vs.RunTest(nameof(PUIT.OpenReportCtxMenu));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TargetPropertiesForProject() {
             _vs.RunTest(nameof(PUIT.TargetPropertiesForProject));
@@ -174,13 +174,13 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.StopProfiling));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MultipleTargets() {
             _vs.RunTest(nameof(PUIT.MultipleTargets));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MultipleTargetsWithProjectHome() {
             _vs.RunTest(nameof(PUIT.MultipleTargetsWithProjectHome));

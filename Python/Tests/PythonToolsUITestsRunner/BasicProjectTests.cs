@@ -196,7 +196,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultipleDotNetAssemblyReferences));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MultiProjectAnalysis() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.MultiProjectAnalysis));
