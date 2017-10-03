@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return new AstPythonInterpreter(this);
         }
 
-        private string GetCacheFilePath(string filePath) {
+        internal string GetCacheFilePath(string filePath) {
             if (string.IsNullOrEmpty(_databasePath)) {
                 return null;
             }
