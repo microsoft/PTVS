@@ -286,7 +286,7 @@ permissions and limitations under the License.
           <ButtonText>Send to &amp;Interactive</ButtonText>
           <ToolTipText>Sends the current editor selection to a Python Interactive window.</ToolTipText>
           <CanonicalName>.Python.Send Selection To Interactive</CanonicalName>
-          <LocCanonicalName>.Python.Send Selection To Interactive</LocCanonicalName>
+          <LocCanonicalName>Send Selection To Interactive</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -298,7 +298,7 @@ permissions and limitations under the License.
           <ButtonText>&amp;Fill Comment Paragraph</ButtonText>
           <ToolTipText>Reflows the selected paragraph to adjust its width.</ToolTipText>
           <CanonicalName>.Python.Fill Comment Paragraph</CanonicalName>
-          <LocCanonicalName>.Python.Fill Comment Paragraph</LocCanonicalName>
+          <LocCanonicalName>Fill Comment Paragraph</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -655,7 +655,7 @@ permissions and limitations under the License.
           <ButtonText>Open Command &amp;Prompt Here...</ButtonText>
           <ToolTipText>Opens Command Prompt at the selected file or directory.</ToolTipText>
           <CanonicalName>.Python.Open Command Prompt Here</CanonicalName>
-          <LocCanonicalName>.Python.Open Command Prompt Here</LocCanonicalName>
+          <LocCanonicalName>Open Command Prompt Here</LocCanonicalName>
         </Strings>
       </Button>
 
