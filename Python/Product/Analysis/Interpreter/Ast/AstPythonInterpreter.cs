@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             // Return any existing module
             if (_modules.TryGetValue(name, out mod) && mod != null) {
                 if (mod is EmptyModule) {
-                    Trace.TraceWarning($"Recursively importing {name}");
+                    _factory.Log(TraceLevel.Warning, "RecursiveImport", name);
                 }
                 return mod;
             }
@@ -207,8 +207,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
+            _factory.Log(TraceLevel.Info, "ImportBuiltins", name, Factory.Configuration.InterpreterPath);
+
             try {
-                return new AstBuiltinPythonModule(name, Factory?.Configuration.InterpreterPath);
+                return new AstBuiltinPythonModule(name, Factory.Configuration.InterpreterPath);
             } catch (ArgumentNullException) {
                 Debug.Fail("No factory means cannot import builtin modules");
                 return null;
@@ -236,9 +238,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var mp = mmp.Value;
 
             if (mp.IsCompiled) {
+                _factory.Log(TraceLevel.Verbose, "ImportScraped", mp.FullName, _factory.FastRelativePath(mp.SourceFile));
                 return new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
             }
 
+            _factory.Log(TraceLevel.Verbose, "Import", mp.FullName, _factory.FastRelativePath(mp.SourceFile));
             return AstPythonModule.FromFile(this, mp.SourceFile, _factory.LanguageVersion, mp.FullName);
         }
 

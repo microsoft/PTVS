@@ -35,6 +35,12 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
+            AstPythonInterpreterFactory.LogToConsole = true;
+        }
+
+        [ClassCleanup]
+        public static void DoCleanup() {
+            AstPythonInterpreterFactory.LogToConsole = false;
         }
 
         private static PythonAnalysis CreateAnalysis(PythonVersion version) {
