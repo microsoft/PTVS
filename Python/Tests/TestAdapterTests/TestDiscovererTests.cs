@@ -138,7 +138,7 @@ class MyTest(unittest.TestCase):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void TestCaseSubclasses() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var entry1 = AddModule(analyzer, "Pkg.SubPkg", @"import unittest

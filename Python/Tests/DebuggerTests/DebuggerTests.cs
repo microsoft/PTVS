@@ -143,7 +143,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public async Task EnumChildrenTestPrevFrame() {
             const int breakLine = 3;
 

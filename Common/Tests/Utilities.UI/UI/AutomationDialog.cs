@@ -85,6 +85,10 @@ namespace TestUtilities.UI {
                     Invoke(btn);
                 });
             } else {
+                if (buttonName == "Ok") {
+                    // Need a case-sensitive match, even with the IgnoreCase flags
+                    buttonName = "OK";
+                }
                 return WaitForClosed(DefaultTimeout, () => ClickButtonByName(buttonName));
             }
         }

@@ -72,10 +72,7 @@ namespace TestUtilities.UI {
         public AutomationElement FindByName(string name) {
             return FindFirstWithRetry(
                 TreeScope.Descendants,
-                new PropertyCondition(
-                    AutomationElement.NameProperty,
-                    name
-                )
+                new PropertyCondition(AutomationElement.NameProperty, name)
             );
         }
 

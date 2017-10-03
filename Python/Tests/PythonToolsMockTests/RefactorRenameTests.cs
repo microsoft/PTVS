@@ -267,7 +267,7 @@ namespace PythonToolsMockTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityClassField() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -938,7 +938,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityLambda() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -992,7 +992,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityInlineIf() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -1172,7 +1172,7 @@ x = y[fob-1:fob:fob+1]
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityGlobal() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -1671,7 +1671,7 @@ fob = 100
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void DelNonLocal() {
             RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
@@ -1893,7 +1893,7 @@ finally:
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void RaiseStatement() {
             RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 
@@ -1928,7 +1928,7 @@ raise Exception() from fob
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void ExecStatement() {
             RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 

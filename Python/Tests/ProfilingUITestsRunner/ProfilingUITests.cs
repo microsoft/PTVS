@@ -186,7 +186,7 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.MultipleTargetsWithProjectHome));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MultipleReports() {
             _vs.RunTest(nameof(PUIT.MultipleReports));

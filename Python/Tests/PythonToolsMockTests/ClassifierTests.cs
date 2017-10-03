@@ -192,7 +192,7 @@ def f(a = A, b : B):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void AsyncAwaitClassification() {
             var code = @"
 await f
