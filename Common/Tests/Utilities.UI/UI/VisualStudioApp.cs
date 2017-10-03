@@ -567,7 +567,7 @@ namespace TestUtilities.UI {
         }
 
         public void CheckMessageBox(params string[] text) {
-            CheckMessageBox(MessageBoxButton.Cancel, text);
+            CheckMessageBox(MessageBoxButton.Close, text);
         }
 
         public void CheckMessageBox(MessageBoxButton button, params string[] text) {
@@ -618,7 +618,9 @@ namespace TestUtilities.UI {
                 }
             } finally {
                 if (!closed) {
-                    if (!dlg.ClickButtonAndClose(buttonId)) {
+                    if (buttonId == MessageBoxButton.Close.ToString()) {
+                        dlg.WaitForClosed(TimeSpan.FromSeconds(10.0), dlg.CloseWindow);
+                    } else if (!dlg.ClickButtonAndClose(buttonId)) {
                         dlg.CloseWindow();
                     }
                 }

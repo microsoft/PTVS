@@ -232,23 +232,20 @@ namespace TestRunnerInterop {
             var dte = _app.GetDTE();
             bool timedOut = false;
             CancellationTokenSource cts = null;
+            var startTime = DateTime.UtcNow;
 
             if (!Debugger.IsAttached && timeout < TimeSpan.MaxValue) {
                 cts = new CancellationTokenSource();
                 Task.Delay(timeout, cts.Token).ContinueWith(t => {
-                    cts.Dispose();
-                    if (!t.IsCanceled) {
-                        timedOut = true;
-                        Console.WriteLine($"Terminating {container}.{name}() after {timeout}");
-                        // Terminate VS to unblock the Execute() call below
-                        CloseCurrentInstance(hard: true);
-                    }
-                });
+                    timedOut = true;
+                    Console.WriteLine($"Terminating {container}.{name}() after {DateTime.UtcNow - startTime}");
+                    // Terminate VS to unblock the Execute() call below
+                    CloseCurrentInstance(hard: true);
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
             }
 
             try {
                 var r = dte.GetObject(container).Execute(name, arguments);
-                cts?.Cancel();
                 if (!r.IsSuccess) {
                     if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException") {
                         throw new AssertInconclusiveException(r.ExceptionMessage);
@@ -270,7 +267,7 @@ namespace TestRunnerInterop {
                 Console.WriteLine(ex);
                 CloseCurrentInstance();
                 if (timedOut) {
-                    throw new TimeoutException($"Terminating {container}.{name}() after {timeout}", ex);
+                    throw new TimeoutException($"Terminating {container}.{name}() after {DateTime.UtcNow - startTime}", ex);
                 }
                 if (!allowRetry) {
                     throw;
@@ -279,6 +276,11 @@ namespace TestRunnerInterop {
                 Console.WriteLine(ex);
                 CloseCurrentInstance(hard: true);
                 throw;
+            } finally {
+                if (cts != null) {
+                    cts.Cancel();
+                    cts.Dispose();
+                }
             }
             return false;
         }
