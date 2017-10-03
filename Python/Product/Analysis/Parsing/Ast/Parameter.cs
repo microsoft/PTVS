@@ -29,6 +29,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal readonly ParameterKind _kind;
         internal Expression _defaultValue, _annotation;
 
+        internal static readonly object WhitespacePrecedingAssign = new object();
+
         public Parameter(string name, ParameterKind kind) {
             _name = name ?? "";
             _kind = kind;
@@ -169,7 +171,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     format.SpaceAroundDefaultValueEquals,
                     " ",
                     "",
-                    this.GetSecondWhiteSpace(ast)
+                    NodeAttributes.GetWhiteSpace(this, ast, WhitespacePrecedingAssign)
                 );
 
                 res.Append('=');

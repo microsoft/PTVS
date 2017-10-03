@@ -1529,6 +1529,24 @@ def f(): pass");
 
         }
 
+        [TestMethod, Priority(0)]
+        public void RoundTripSublistParameterWithDefault() {
+            TestOneString(PythonLanguageVersion.V27, "def f((a, b) = (1, 2)):\r\n    pass");
+        }
+
+        [TestMethod, Priority(0)]
+        public void RoundTripDoubleAwait() {
+            TestOneString(PythonLanguageVersion.V35, "async def f(x):\r\n    await await x");
+        }
+
+        [TestMethod, Priority(0)]
+        public void RoundTripExecTupleIn() {
+            TestOneString(PythonLanguageVersion.V27, "exec(f, g, h) in i, j");
+            TestOneString(PythonLanguageVersion.V27, "exec f in g");
+            TestOneString(PythonLanguageVersion.V27, "exec(f,g)");
+        }
+
+
         private static void RoundTripStdLibTest(PythonVersion version) {
             version.AssertInstalled();
 

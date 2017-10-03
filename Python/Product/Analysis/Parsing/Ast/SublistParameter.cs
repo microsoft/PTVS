@@ -56,8 +56,23 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append('(');
             Tuple.AppendCodeString(res, ast, format);
             if (!this.IsMissingCloseGrouping(ast)) {
-                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(this.GetSecondWhiteSpaceDefaultNull(ast) ?? "");
                 res.Append(')');
+                if (_defaultValue != null) {
+                    format.Append(
+                        res,
+                        format.SpaceAroundDefaultValueEquals,
+                        " ",
+                        "",
+                        NodeAttributes.GetWhiteSpace(this, ast, WhitespacePrecedingAssign)
+                    );
+                    res.Append('=');
+                    if (format.SpaceAroundDefaultValueEquals != null) {
+                        _defaultValue.AppendCodeString(res, ast, format, format.SpaceAroundDefaultValueEquals.Value ? " " : "");
+                    } else {
+                        _defaultValue.AppendCodeString(res, ast, format);
+                    }
+                }
             }
         }
     }

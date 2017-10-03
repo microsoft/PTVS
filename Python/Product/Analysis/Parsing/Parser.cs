@@ -1401,26 +1401,12 @@ namespace Microsoft.PythonTools.Parsing {
                     locals = ParseExpression();
                 }
             }
-            var codeTuple = code as TupleExpression;
-            if (_langVersion.Is2x() && codeTuple != null) {
-                if (codeTuple.Items != null) {
-                    if (codeTuple.Items.Count >= 3) {
-                        locals = codeTuple.Items[2];
-                    }
-                    if (codeTuple.Items.Count >= 2) {
-                        globals = codeTuple.Items[1];
-                    }
-                    if (codeTuple.Items.Count >= 1) {
-                        code = codeTuple.Items[0];
-                    }
-                }
-            }
-            ExecStatement ret = new ExecStatement(code, locals, globals);
+
+            ExecStatement ret = new ExecStatement(code, locals, globals, code as TupleExpression);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, execWhiteSpace);
                 AddSecondPreceedingWhiteSpace(ret, inWhiteSpace);
                 AddThirdPreceedingWhiteSpace(ret, commaWhiteSpace);
-                ret.CodeTuple = codeTuple;
             }
             ret.SetLoc(start, GetEnd());
             return ret;
@@ -2143,7 +2129,7 @@ namespace Microsoft.PythonTools.Parsing {
                 pl.Add(parameter);
                 if (MaybeEat(TokenKind.Assign)) {
                     if (_verbatim) {
-                        AddSecondPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
+                        GetNodeAttributes(parameter)[Parameter.WhitespacePrecedingAssign] = _tokenWhiteSpace;
                     }
                     needDefault = true;
                     parameter.DefaultValue = ParseExpression();
@@ -3152,7 +3138,7 @@ namespace Microsoft.PythonTools.Parsing {
                 if (AllowAsyncAwaitSyntax && MaybeEat(TokenKind.KeywordAwait)) {
                     var start = GetStart();
                     string whitespace = _tokenWhiteSpace;
-                    var res = new AwaitExpression(ParsePower());
+                    var res = new AwaitExpression(ParseAwaitExpr());
                     if (_verbatim) {
                         AddPreceedingWhiteSpace(res, whitespace);
                     }
