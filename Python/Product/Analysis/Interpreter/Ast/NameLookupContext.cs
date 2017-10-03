@@ -205,19 +205,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IEnumerable<IPythonType> GetTypesFromValue(IMember value) {
             if (value is IPythonMultipleMembers mm) {
-                var seen = new HashSet<IPythonType>();
-                foreach (var m in mm.Members) {
-                    var t = GetTypeFromValue(m);
-                    if (seen.Add(t)) {
-                        yield return t;
-                    }
-                }
+                return mm.Members.Select(GetTypeFromValue).Distinct();
             } else {
                 var t = GetTypeFromValue(value);
                 if (t != null) {
-                    yield return t;
+                    return Enumerable.Repeat(t, 1);
                 }
             }
+            return Enumerable.Empty<IPythonType>();
         }
 
         public IPythonType GetTypeFromValue(IMember value) {

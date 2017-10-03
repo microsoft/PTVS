@@ -98,10 +98,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private IPythonType CurrentClass => _scope.GetInScope("__class__") as IPythonType;
 
+        private IMember Clone(IMember member) {
+            if (member is IPythonMultipleMembers mm) {
+                return new AstPythonMultipleMembers(mm.Members);
+            }
+
+            return member;
+        }
+
         public override bool Walk(AssignmentStatement node) {
             var value = _scope.GetValueFromExpression(node.Right);
             foreach (var ne in node.Left.OfType<NameExpression>()) {
-                _scope.SetInScope(ne.Name, value);
+                _scope.SetInScope(ne.Name, Clone(value));
             }
 
             return base.Walk(node);
