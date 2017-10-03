@@ -16,11 +16,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using TestRunnerInterop;
 using Task = System.Threading.Tasks.Task;
 
@@ -36,11 +37,13 @@ namespace TestUtilities.UI {
     [ComVisible(true)]
     public sealed class HostedPythonToolsTestRunner : IVsHostedPythonToolsTest {
         private readonly Assembly _assembly;
+        private readonly Guid[] _dependentPackageGuids;
 
         private readonly Dictionary<Type, object> _activeInstances;
 
-        public HostedPythonToolsTestRunner(Assembly assembly) {
+        public HostedPythonToolsTestRunner(Assembly assembly, params Guid[] dependentPackageGuids) {
             _assembly = assembly;
+            _dependentPackageGuids = dependentPackageGuids ?? new Guid[0];
             _activeInstances = new Dictionary<Type, object>();
         }
 
@@ -81,6 +84,28 @@ namespace TestUtilities.UI {
             var sp = ServiceProvider.GlobalProvider;
             var dte = ServiceProvider.GlobalProvider.GetService(typeof(EnvDTE.DTE));
             try {
+                try {
+                    var shell = (IVsShell)ServiceProvider.GlobalProvider.GetService(typeof(SVsShell));
+                    foreach (var guid in _dependentPackageGuids) {
+                        int installed;
+                        var pkgGuid = guid;
+                        ErrorHandler.ThrowOnFailure(
+                            shell.IsPackageInstalled(ref pkgGuid, out installed)
+                        );
+                        if (installed == 0) {
+                            throw new NotSupportedException($"Package {pkgGuid} is not installed");
+                        }
+                        ErrorHandler.ThrowOnFailure(shell.LoadPackage(pkgGuid, out _));
+                    }
+                } catch (Exception ex) {
+                    return new HostedPythonToolsTestResult {
+                        IsSuccess = false,
+                        ExceptionType = ex.GetType().FullName,
+                        ExceptionMessage = "Failed to load a dependent VS package." + Environment.NewLine + ex.Message,
+                        ExceptionTraceback = ex.StackTrace
+                    };
+                }
+
                 foreach (var a in method.GetParameters()) {
                     if (a.ParameterType.IsAssignableFrom(typeof(IServiceProvider))) {
                         args.Add(sp);
