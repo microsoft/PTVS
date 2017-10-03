@@ -20,8 +20,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Django;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;

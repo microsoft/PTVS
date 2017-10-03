@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 using TestRunnerInterop;
 using TestUtilities.UI;
@@ -22,6 +23,7 @@ using TestUtilities.UI;
 namespace PythonToolsUITests {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideAutomationObject(AutomationObject)]
+    [Guid("8b24f93b-b3c8-33b8-8425-3af897ab50a4")]
     public sealed class VSPackage : Package {
         public const string AutomationObject = "Microsoft.PythonTools.Tests.DebuggerUITests";
 

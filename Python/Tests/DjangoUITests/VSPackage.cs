@@ -26,7 +26,11 @@ namespace PythonToolsUITests {
         public const string AutomationObject = "Microsoft.PythonTools.Tests.DjangoUITests";
 
         private readonly Lazy<IVsHostedPythonToolsTest> _testRunner = new Lazy<IVsHostedPythonToolsTest>(() =>
-            new HostedPythonToolsTestRunner(typeof(VSPackage).Assembly)
+            new HostedPythonToolsTestRunner(
+                typeof(VSPackage).Assembly,
+                new Guid("a8637c34-aa55-46e2-973c-9c3e09afc17b"), // Django
+                new Guid("8b24f93b-b3c8-33b8-8425-3af897ab50a4")  // DebuggerUITests
+            )
         );
 
         protected override object GetAutomationObject(string name) {
