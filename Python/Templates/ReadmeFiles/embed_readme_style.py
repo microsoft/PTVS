@@ -17,7 +17,6 @@ SOURCE_CSS = BUILD_ROOT / 'Python' / 'Product' / 'PythonTools' / 'ReadmeStyle.cs
 HTML_FILES = [
     BUILD_ROOT / 'Python' / 'Product' / 'IronPython' / 'NoIronPython.htmlsrc',
     BUILD_ROOT / 'Python' / 'Product' / 'PythonTools' / 'NoInterpreters.htmlsrc',
-    BUILD_ROOT / 'Python' / 'Product' / 'PythonTools' / 'NoSurveyNewsFeed.htmlsrc',
     BUILD_ROOT / 'Python' / 'Templates' / 'ReadmeFiles' / 'KinectGame' / 'readme.htmlsrc',
     BUILD_ROOT / 'Python' / 'Templates' / 'ReadmeFiles' / 'PollsDjango' / 'readme.htmlsrc',
     BUILD_ROOT / 'Python' / 'Templates' / 'ReadmeFiles' / 'PyvotProject' / 'readme.htmlsrc',
