@@ -1529,6 +1529,24 @@ def f(): pass");
 
         }
 
+        [TestMethod, Priority(0)]
+        public void RoundTripSublistParameterWithDefault() {
+            TestOneString(PythonLanguageVersion.V27, "def f((a, b) = (1, 2)):\r\n    pass");
+        }
+
+        [TestMethod, Priority(0)]
+        public void RoundTripDoubleAwait() {
+            TestOneString(PythonLanguageVersion.V35, "async def f(x):\r\n    await await x");
+        }
+
+        [TestMethod, Priority(0)]
+        public void RoundTripExecTupleIn() {
+            TestOneString(PythonLanguageVersion.V27, "exec(f, g, h) in i, j");
+            TestOneString(PythonLanguageVersion.V27, "exec f in g");
+            TestOneString(PythonLanguageVersion.V27, "exec(f,g)");
+        }
+
+
         private static void RoundTripStdLibTest(PythonVersion version) {
             version.AssertInstalled();
 
@@ -1579,7 +1597,7 @@ def f(): pass");
         [TestMethod, Priority(0)]
         public void RoundTripStdLib37() => RoundTripStdLibTest(PythonPaths.Python37 ?? PythonPaths.Python37_x64);
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void GroupingRecovery() {
             // The exact text below hit an issue w/ grouping recovery where the buffer wrapped
             // and our grouping recovery was invalid, but we thought it was valid due to the

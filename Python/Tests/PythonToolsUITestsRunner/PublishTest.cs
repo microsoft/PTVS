@@ -57,31 +57,31 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesControlled));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestPublishFilesImpersonate() {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesImpersonate));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestPublishFilesImpersonateNoMachineName() {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesImpersonateNoMachineName));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestPublishFilesImpersonateWrongCredentials() {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesImpersonateWrongCredentials));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestPublishFilesImpersonateCancelCredentials() {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFilesImpersonateCancelCredentials));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void TestPublishFtp() {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFtp));

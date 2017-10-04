@@ -46,7 +46,7 @@ namespace TestAdapterTests {
 <Test className=""Test_test1"" file=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py"" line=""21"" column=""9"" method=""test_B"" />
 <Test className=""Test_test2"" file=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py"" line=""48"" column=""9"" method=""test_C"" /></Project></TestCases></Python></RunSettings>";
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestDiscover() {
             var ctx = new MockDiscoveryContext(new MockRunSettings(_runSettings));
@@ -98,7 +98,7 @@ namespace TestAdapterTests {
             return TestAnalyzer.GetTestCasesFromAst(m, null);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void DecoratedTests() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest
@@ -138,7 +138,7 @@ class MyTest(unittest.TestCase):
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void TestCaseSubclasses() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var entry1 = AddModule(analyzer, "Pkg.SubPkg", @"import unittest
@@ -186,7 +186,7 @@ class MyTest3(TestBase):
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCaseRunTests() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest
@@ -213,7 +213,7 @@ class TestBase(unittest.TestCase):
         /// <summary>
         /// If we have test* and runTest we shouldn't discover runTest
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCaseRunTestsWithTest() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest

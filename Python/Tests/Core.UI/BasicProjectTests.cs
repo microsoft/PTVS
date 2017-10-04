@@ -147,10 +147,12 @@ namespace PythonToolsUITests {
         }
 
         public void SaveProjectAs(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+            var sln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var slnDir = PathUtils.GetParent(sln);
+            var project = app.OpenProject(sln);
 
             AssertError<ArgumentNullException>(() => project.SaveAs(null));
-            project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
+            project.SaveAs(Path.Combine(slnDir, "TempFile.pyproj"));
             project.Save("");   // empty string means just save
 
             // try too long of a file
@@ -257,7 +259,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(5, project.ProjectItems.Count);
 
             // add an existing item
-            project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\HelloWorld\Program.py"));
+            project.ProjectItems.AddFromFileCopy(Path.Combine(PathUtils.GetParent(sln), "HelloWorld", "Program.py"));
 
             Assert.AreEqual(5, project.ProjectItems.Count);
         }
@@ -1291,7 +1293,7 @@ namespace PythonToolsUITests {
             CountIs(itemCount, "HelloWorld.py", 0);     // not included because the actual name is Program.py
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void EnvironmentVariablesWithDebugging(VisualStudioApp app, PythonProjectGenerator p) {
             var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
@@ -1327,7 +1329,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void EnvironmentVariablesWithoutDebugging(VisualStudioApp app, PythonProjectGenerator p) {
             var filename = Path.Combine(TestData.GetTempPath(), Path.GetRandomFileName());
@@ -1413,7 +1415,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(0, app.OpenDocumentWindows.Count());
         }
 
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         //public void CopyFullPath() {
         //    foreach (var projectType in ProjectTypes) {

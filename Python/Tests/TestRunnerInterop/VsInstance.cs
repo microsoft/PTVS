@@ -28,7 +28,6 @@ namespace TestRunnerInterop {
         private readonly SafeFileHandle _jobObject;
         private Process _vs;
         private VisualStudioApp _app;
-        private EnvDTE.DTE _dte;
 
         private bool _isDisposed = false;
 
@@ -73,7 +72,7 @@ namespace TestRunnerInterop {
         ) {
             lock (_lock) {
                 var settings = $"{devenvExe ?? ""};{devenvArguments ?? ""};{testDataRoot ?? ""};{tempRoot ?? ""}";
-                if (_vs != null && _app != null && _dte == null) {
+                if (_vs != null && _app != null) {
                     if (_currentSettings == settings) {
                         return;
                     }
@@ -123,14 +122,15 @@ namespace TestRunnerInterop {
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
                 var stopAt = DateTime.Now.AddSeconds(60);
-                while (DateTime.Now < stopAt && _dte == null) {
+                EnvDTE.DTE dte = null;
+                while (DateTime.Now < stopAt && dte == null) {
                     try {
-                        _dte = _app.GetDTE();
+                        dte = _app.GetDTE();
                     } catch (InvalidOperationException) {
                         Thread.Sleep(1000);
                     }
                 }
-                if (_dte == null) {
+                if (dte == null) {
                     throw new InvalidOperationException("Failed to start VS");
                 }
 
@@ -165,11 +165,24 @@ namespace TestRunnerInterop {
                     _vs = null;
                 }
                 _app = null;
-                _dte = null;
             }
         }
 
-        public bool IsRunning => !_isDisposed && _dte != null && !_vs.HasExited;
+        public bool IsRunning {
+            get {
+                if (_isDisposed || _vs == null || _vs.HasExited || _app == null) {
+                    return false;
+                }
+
+                try {
+                    _app.GetDTE();
+                } catch (InvalidOperationException) {
+                    return false;
+                }
+
+                return true;
+            }
+        }
 
         private static void AttachIfDebugging(Process targetVs) {
             if (!Debugger.IsAttached) {
@@ -211,34 +224,28 @@ namespace TestRunnerInterop {
 
         }
 
-        public bool RunTest(string container, string name, TimeSpan timeout, object[] arguments, ref int retryCount) {
+        public bool RunTest(string container, string name, TimeSpan timeout, object[] arguments, bool allowRetry) {
             if (_isDisposed) {
                 throw new ObjectDisposedException(GetType().Name);
             }
-            var dte = _dte;
-            if (dte == null) {
-                throw new InvalidOperationException("VS has not started");
-            }
 
+            var dte = _app.GetDTE();
             bool timedOut = false;
             CancellationTokenSource cts = null;
+            var startTime = DateTime.UtcNow;
 
             if (!Debugger.IsAttached && timeout < TimeSpan.MaxValue) {
                 cts = new CancellationTokenSource();
                 Task.Delay(timeout, cts.Token).ContinueWith(t => {
-                    cts.Dispose();
-                    if (!t.IsCanceled) {
-                        timedOut = true;
-                        Console.WriteLine($"Terminating {container}.{name}() after {timeout}");
-                        // Terminate VS to unblock the Execute() call below
-                        CloseCurrentInstance(hard: true);
-                    }
-                });
+                    timedOut = true;
+                    Console.WriteLine($"Terminating {container}.{name}() after {DateTime.UtcNow - startTime}");
+                    // Terminate VS to unblock the Execute() call below
+                    CloseCurrentInstance(hard: true);
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
             }
 
             try {
                 var r = dte.GetObject(container).Execute(name, arguments);
-                cts?.Cancel();
                 if (!r.IsSuccess) {
                     if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException") {
                         throw new AssertInconclusiveException(r.ExceptionMessage);
@@ -249,24 +256,31 @@ namespace TestRunnerInterop {
                         r.ExceptionTraceback
                     );
                 }
-                retryCount = 0;
                 return true;
-            } catch (InvalidComObjectException) {
+            } catch (InvalidComObjectException ex) {
+                Console.WriteLine(ex);
                 CloseCurrentInstance();
-                if (--retryCount <= 0) {
+                if (!allowRetry) {
                     throw;
                 }
             } catch (COMException ex) {
+                Console.WriteLine(ex);
                 CloseCurrentInstance();
                 if (timedOut) {
-                    throw new TimeoutException($"Terminating {container}.{name}() after {timeout}", ex);
+                    throw new TimeoutException($"Terminating {container}.{name}() after {DateTime.UtcNow - startTime}", ex);
                 }
-                if (--retryCount <= 0) {
+                if (!allowRetry) {
                     throw;
                 }
-            } catch (ThreadAbortException) {
+            } catch (ThreadAbortException ex) {
+                Console.WriteLine(ex);
                 CloseCurrentInstance(hard: true);
                 throw;
+            } finally {
+                if (cts != null) {
+                    cts.Cancel();
+                    cts.Dispose();
+                }
             }
             return false;
         }

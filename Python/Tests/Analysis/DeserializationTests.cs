@@ -30,7 +30,7 @@ namespace AnalysisTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestSimpleDeserialize() {
             object obj;
             using (var stream = new FileStream(TestData.GetPath(@"TestData\empty_dict.pickle"), FileMode.Open, FileAccess.Read)) {

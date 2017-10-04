@@ -261,7 +261,7 @@ namespace DebuggerTests {
         }
 
         [TestMethod, Priority(2)]
-        [TestCategory("10s"), TestCategory("60s")]
+        [TestCategory("10s")]
         public virtual async Task AttachReattachThreadingInited() {
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
             try {
@@ -774,7 +774,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public virtual async Task AttachWithOutputRedirection() {
             var expectedOutput = new[] { "stdout", "stderr" };
@@ -1011,22 +1011,22 @@ int main(int argc, char* argv[]) {
             AssertUtil.ArrayEquals(expectedOutput, actualOutput);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         public async Task AttachPtvsdImport() {
             await TestPtvsdImport("secret=None", new Uri("tcp://localhost"));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         public async Task AttachPtvsdCommandLine() {
             await TestPtvsdCommandLine("--wait", new Uri("tcp://localhost"));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         public async Task AttachPtvsdImportSecret() {
             await TestPtvsdImport("secret='secret'", new Uri("tcp://secret@localhost"));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         public async Task AttachPtvsdCommandLineSecret() {
             await TestPtvsdCommandLine("--wait --secret secret", new Uri("tcp://secret@localhost"));
         }
@@ -1047,18 +1047,18 @@ int main(int argc, char* argv[]) {
             return ip;
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         public async Task AttachPtvsdImportAddress() {
             var ip = GetNetworkInterface();
             await TestPtvsdImport("secret=None, address=('" + ip + "', 8765)", new Uri("tcp://" + ip + ":8765"));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         public async Task AttachPtvsdCommandLinePort() {
             await TestPtvsdCommandLine("--wait --port 8765", new Uri("tcp://localhost:8765"));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         public async Task AttachPtvsdCommandLineInterface() {
             var ip = GetNetworkInterface();
             await TestPtvsdCommandLine("--wait --interface " + ip, new Uri("tcp://" + ip));
@@ -1152,7 +1152,7 @@ int main(int argc, char* argv[]) {
 
         // https://github.com/Microsoft/PTVS/issues/2842
         [TestMethod, Priority(2)]
-        public async Task AttachPtvsdAndStopDebugging() {
+        public virtual async Task AttachPtvsdAndStopDebugging() {
             if (!HasPtvsdCommandLine) {
                 return;
             }
@@ -1285,6 +1285,9 @@ int main(int argc, char* argv[]) {
                 return PythonPaths.Python31 ?? PythonPaths.Python31_x64;
             }
         }
+
+        [TestMethod, Priority(2)]
+        public override async Task AttachWithOutputRedirection() => await base.AttachWithOutputRedirection();
     }
 
     [TestClass]
@@ -1452,6 +1455,9 @@ int main(int argc, char* argv[]) {
         public override async Task AttachTimeout() { }
         public override async Task AttachWithOutputRedirection() { }
         public override async Task AttachAndStepWithBlankSysPrefix() { }
+
+        [TestMethod, Priority(2)]
+        public override async Task AttachPtvsdAndStopDebugging() => await base.AttachPtvsdAndStopDebugging();
 
         protected override string PtvsdInterpreterArguments {
             get { return "-X:Tracing -X:Frames"; }

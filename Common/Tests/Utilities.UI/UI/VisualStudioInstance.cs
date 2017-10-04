@@ -187,6 +187,7 @@ namespace TestUtilities.UI {
             // point.
             _solutionExplorer = _app.OpenSolutionExplorer();
             var item = SolutionExplorer.WaitForItem(SolutionNodeText);
+            Assert.IsNotNull(item, "Failed to find {0}", SolutionNodeText);
             SolutionExplorer.CenterInView(item);
             Mouse.MoveTo(item.GetClickablePoint());
             Mouse.Click(MouseButton.Left);

@@ -51,7 +51,7 @@ namespace PythonToolsMockTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void KeywordClassification27() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
@@ -74,7 +74,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
@@ -96,7 +96,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ModuleClassification() {
             var code = @"import abc
 import os
@@ -116,7 +116,7 @@ abc = True
             return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ImportClassifications() {
             var code = @"import abc as x
 from os import fdopen
@@ -132,7 +132,7 @@ fdopen
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void TypeClassification() {
             var code = @"class MyClass(object):
     pass
@@ -148,7 +148,7 @@ MyClassType = type(mc)
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ParameterClassification() {
             var code = @"def f(a, b, c):
     a = b
@@ -165,7 +165,7 @@ b = c
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ParameterAnnotationClassification() {
             var code = @"class A: pass
 class B: pass
@@ -179,7 +179,7 @@ def f(a = A, b : B):
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TrueFalseClassification() {
             var code = "True False";
 
@@ -192,7 +192,7 @@ def f(a = A, b : B):
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void AsyncAwaitClassification() {
             var code = @"
 await f
@@ -223,7 +223,7 @@ async def f():
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ReturnAnnotationClassifications() {
             var code = @"
 def f() -> int:

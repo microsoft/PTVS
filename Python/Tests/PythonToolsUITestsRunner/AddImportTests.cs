@@ -39,25 +39,25 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DocString() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.DocString));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void UnicodeDocString() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.UnicodeDocString));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DocStringFuture() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.DocStringFuture));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void ImportFunctionFrom() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFrom));
@@ -69,13 +69,13 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromSubpackage));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void ImportWithErrors() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportWithErrors));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ImportBuiltinFunction() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportBuiltinFunction));
@@ -129,7 +129,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportSubPackage));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void Parameters() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.Parameters));

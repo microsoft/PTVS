@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Linq;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
@@ -67,12 +68,28 @@ namespace TestUtilities.UI {
 
         #endregion
 
-        public void ClickButtonAndClose(string buttonName, bool nameIsAutomationId = false) {
+        public bool ClickButtonAndClose(string buttonName, bool nameIsAutomationId = false) {
             WaitForInputIdle();
             if (nameIsAutomationId) {
-                WaitForClosed(DefaultTimeout, () => ClickButtonByAutomationId(buttonName));
+                return WaitForClosed(DefaultTimeout, () => ClickButtonByAutomationId(buttonName));
+            } else if (buttonName == "Cancel") {
+                return WaitForClosed(DefaultTimeout, () => {
+                    var btn = Element.FindFirst(TreeScope.Descendants, new AndCondition(
+                        new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button),
+                        new OrCondition(
+                            new PropertyCondition(AutomationElement.NameProperty, "Cancel"),
+                            new PropertyCondition(AutomationElement.NameProperty, "Close")
+                        )
+                    ));
+                    CheckNullElement(btn);
+                    Invoke(btn);
+                });
             } else {
-                WaitForClosed(DefaultTimeout, () => ClickButtonByName(buttonName));
+                if (buttonName == "Ok") {
+                    // Need a case-sensitive match, even with the IgnoreCase flags
+                    buttonName = "OK";
+                }
+                return WaitForClosed(DefaultTimeout, () => ClickButtonByName(buttonName));
             }
         }
 
@@ -86,11 +103,10 @@ namespace TestUtilities.UI {
 
         public virtual string Text {
             get {
-                var label = FindByAutomationId("65535");
-                if (label != null) {
-                    return label.Current.Name;
-                }
-                return "";
+                string label = string.Join(Environment.NewLine,
+                    FindAllByControlType(ControlType.Text).Cast<AutomationElement>().Select(a => a.Current.Name ?? "")
+                );
+                return label ?? "";
             }
         }
     }

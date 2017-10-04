@@ -132,7 +132,7 @@ namespace DebuggerUITests {
                 "Python Environments window and ensure the version of Python is installed and has all settings specified.",
                 interpreterPath);
             var dialog = app.WaitForDialog();
-            app.CheckMessageBox(MessageBoxButton.Ok, expectedMissingInterpreterText);
+            app.CheckMessageBox(expectedMissingInterpreterText);
         }
 
         public void PendingBreakPointLocation(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
@@ -304,7 +304,7 @@ namespace DebuggerUITests {
         }
 
         /*
-        //[TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         //[TestCategory("Installed")]
         public void TestBreakAll() {
             var project = OpenDebuggerProjectAndBreak("BreakAllTest.py", 1);

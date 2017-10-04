@@ -72,10 +72,7 @@ namespace TestUtilities.UI {
         public AutomationElement FindByName(string name) {
             return FindFirstWithRetry(
                 TreeScope.Descendants,
-                new PropertyCondition(
-                    AutomationElement.NameProperty,
-                    name
-                )
+                new PropertyCondition(AutomationElement.NameProperty, name)
             );
         }
 
@@ -233,7 +230,7 @@ namespace TestUtilities.UI {
             }
         }
 
-        private static void CheckNullElement(AutomationElement element) {
+        internal static void CheckNullElement(AutomationElement element) {
             if (element == null) {
                 Console.WriteLine("Attempting to invoke pattern on null element");
                 AutomationWrapper.DumpVS();
@@ -365,8 +362,8 @@ namespace TestUtilities.UI {
                 "{0} {1}\t{2}\t{3}\t{4}", 
                 new string(' ', depth * 4), 
                 element.Current.Name, 
-                element.Current.ControlType.ProgrammaticName, 
                 element.Current.ClassName,
+                element.Current.ControlType.ProgrammaticName, 
                 element.Current.AutomationId
             ));
 
@@ -411,7 +408,7 @@ namespace TestUtilities.UI {
             }
         }
 
-        public void WaitForClosed(TimeSpan timeout, Action closeCommand = null) {
+        public bool WaitForClosed(TimeSpan timeout, Action closeCommand = null) {
             using (var closed = new AutoResetEvent(false)) {
                 AutomationEventHandler handler = (s, e) => {
                     closed.Set();
@@ -425,20 +422,22 @@ namespace TestUtilities.UI {
                     );
                 } catch (ElementNotAvailableException) {
                     // Already closed
-                    return;
+                    return true;
                 }
 
                 if (closeCommand != null) {
                     closeCommand();
                 }
 
-                closed.WaitOne(timeout);
+                bool r = closed.WaitOne(timeout);
 
                 Automation.RemoveAutomationEventHandler(
                     WindowPattern.WindowClosedEvent,
                     Element,
                     handler
                 );
+
+                return r;
             }
         }
     }

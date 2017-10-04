@@ -39,7 +39,7 @@ namespace DebuggerUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AttachBasic() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachBasic));
@@ -57,13 +57,13 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachUserSetsBreakpoint));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AttachThreadsBreakAllAndSetExitFlag() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachThreadsBreakAllAndSetExitFlag));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AttachThreadsBreakOneAndSetExitFlag() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachThreadsBreakOneAndSetExitFlag));

@@ -39,7 +39,7 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void LoadRelativeProjects() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.LoadRelativeProjects));
@@ -51,13 +51,13 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteItem));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void AddDeleteItem2() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteItem2));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void AddDeleteFolder() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteFolder));
@@ -69,19 +69,19 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteSubfolder));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void SaveProjectAndCheckProjectHome() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.SaveProjectAndCheckProjectHome));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DragDropRelocatedTest() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.DragDropRelocatedTest));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void CutPasteRelocatedTest() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.CutPasteRelocatedTest));

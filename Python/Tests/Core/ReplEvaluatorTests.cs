@@ -40,7 +40,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
@@ -83,7 +83,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCanExecute() {
             using (var evaluator = MakeEvaluator()) {
                 Assert.IsTrue(evaluator.CanExecuteCode("print 'hello'"));
@@ -129,7 +129,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ReplSplitCodeTest() {
             // http://pytools.codeplex.com/workitem/606
 
@@ -318,7 +318,7 @@ f()",
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task NoInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
@@ -335,7 +335,7 @@ f()",
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void BadInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 

@@ -45,13 +45,13 @@ namespace DjangoUITestsRunner {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.NewDjangoProject));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void NewDjangoProjectSafeProjectName() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.NewDjangoProjectSafeProjectName));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DjangoCollectStaticFilesCommand() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCollectStaticFilesCommand));
@@ -63,32 +63,32 @@ namespace DjangoUITestsRunner {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCommandsNonDjangoApp));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void StartNewApp() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.StartNewApp));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartNewAppDuplicateName() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.StartNewAppDuplicateName));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void StartNewAppSameAsProjectName() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.StartNewAppSameAsProjectName));
         }
 
         [Ignore] // https://devdiv.visualstudio.com/DevDiv/_workitems?id=433488
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void DebugProjectProperties() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DebugProjectProperties));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void DjangoProjectWithSubdirectory() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoProjectWithSubdirectory));

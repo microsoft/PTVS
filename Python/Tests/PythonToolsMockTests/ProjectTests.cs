@@ -37,7 +37,7 @@ namespace PythonToolsMockTests {
     public class ProjectTests {
         static PythonProjectGenerator Generator = PythonProjectGenerator.CreateStatic();
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void BasicProjectTest() {
             var sln = Generator.Project(
                 "HelloWorld",
@@ -59,7 +59,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void CutRenamePaste() {
             var testDef = Generator.Project("DragDropCopyCutPaste",
                 ProjectGenerator.ItemGroup(
@@ -88,7 +88,8 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
         public void ShouldWarnOnRun() {
             var sln = Generator.Project(
                 "HelloWorld",
@@ -131,7 +132,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")] // Requires .targets file to be installed
         public void OAProjectMustBeRightType() {
             var sln = Generator.Project(

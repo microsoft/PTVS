@@ -69,7 +69,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void DiscoverRegistryRace() {
             // https://github.com/Microsoft/PTVS/issues/558
 
@@ -83,7 +83,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void ImportFromSearchPath() {
             var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
             analyzer.AddModule("test-module", "from test_package import *");
@@ -96,7 +96,7 @@ namespace PythonToolsTests {
             AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void ImportPydFromSearchPath() {
             PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
             try {

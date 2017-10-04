@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case BuiltinTypeId.CallableIterator:
                     return klass;
                 default:
-                    Debug.Fail($"No iterator type for {klass}");
+                    Debug.Fail($"No iterator type for {klass.PythonType} ({klass.PythonType.Name}::{klass.PythonType.TypeId}");
                     return null;
             }
         }

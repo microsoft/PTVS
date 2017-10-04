@@ -35,7 +35,7 @@ namespace AnalysisTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void Invalid2xDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
                 // __bad_builtin__ is missing str
@@ -53,7 +53,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void Invalid3xDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V33,
                 // bad_builtins is missing str
@@ -77,7 +77,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void LayeredDatabase() {
             using (var db1 = MockCompletionDB.Create(PythonLanguageVersion.V27, "os"))
             using (var db2 = MockCompletionDB.Create(PythonLanguageVersion.V27, "posixpath")) {
@@ -138,7 +138,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void PropertyOfUnknownType() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V34, "property_of_unknown_type")) {
                 var ptd = db.Database;
@@ -176,7 +176,7 @@ namespace AnalysisTests {
             get { return PythonPaths.Python27 ?? PythonPaths.Python27_x64; }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task GetSearchPaths() {
             Python.AssertInstalled();
 
@@ -219,7 +219,7 @@ namespace AnalysisTests {
             });
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task GetExpectedDatabaseModules() {
             Python.AssertInstalled();
 

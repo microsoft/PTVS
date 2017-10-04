@@ -39,7 +39,7 @@ namespace DjangoUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddCloudProject() {
             _vs.RunTest(nameof(DjangoUITests.DjangoAzureProjectUITests.AddCloudProject));

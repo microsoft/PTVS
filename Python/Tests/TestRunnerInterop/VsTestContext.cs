@@ -45,12 +45,12 @@ namespace TestRunnerInterop {
             if (_vs == null) {
                 throw new InvalidOperationException("TestInitialize was not called");
             }
-            int retries = 3;
-            while (retries >= 0) {
+            for (int retries = 3;  retries >= 0; --retries) {
                 if (!_vs.IsRunning) {
+                    Console.WriteLine("Restarting VS because it is not running!");
                     _vs.Restart();
                 }
-                if (_vs.RunTest(container, fullTestName, timeout, arguments, ref retries)) {
+                if (_vs.RunTest(container, fullTestName, timeout, arguments, retries > 0)) {
                     return;
                 }
             }

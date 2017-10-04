@@ -48,7 +48,7 @@ namespace PythonToolsMockTests {
             VsProjectAnalyzer.SuppressTaskProvider = false;
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ModuleDefinition() {
             var code = @"import os
 ";
@@ -58,7 +58,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ModuleImportDefinition() {
             var code = @"import sys
 
@@ -73,7 +73,7 @@ sys.version
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ClassDefinition() {
             var code = @"class ClassBase(object):
     pass
@@ -102,7 +102,7 @@ obj
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ParameterDefinition() {
             var code = @"def my_func(param1, param2 = True):
     print(param1)
@@ -129,7 +129,7 @@ my_func(2, param2=False)
         }
 
         [Ignore] // https://github.com/Microsoft/PTVS/issues/2869
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task NamedArgumentDefinition() {
             var code = @"class MyClass(object):
     def my_class_func1(self, param2 = True):
@@ -161,7 +161,7 @@ obj.my_class_func2(param3=False)
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task PropertyDefinition() {
             var code = @"class MyClass(object):
     _my_attr_val = 0
@@ -205,7 +205,7 @@ print(obj._my_attr_val)
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task VariableDefinition() {
             var code = @"my_var = 0
 my_var = 1

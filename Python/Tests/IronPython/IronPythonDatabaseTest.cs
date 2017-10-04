@@ -32,7 +32,7 @@ namespace IronPythonTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void InvalidIronPythonDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
                 // __bad_builtin__ is missing str

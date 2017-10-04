@@ -1149,7 +1149,7 @@ namespace ProjectUITests {
                         folder = solution.WaitForItem("HelloWorld", "Folder");
                     }
                     AutomationWrapper.Select(folder);
-                    solution.ExecuteCommand("File.OpenCommandPromptHere");
+                    solution.ExecuteCommand("Python.OpenCommandPromptHere");
 
                     var after = System.Diagnostics.Process.GetProcesses();
                     var newProcs = after.Where(x => !existing.Contains(x.Id) && x.ProcessName == "cmd");
@@ -1158,7 +1158,7 @@ namespace ProjectUITests {
 
                     var project = solution.WaitForItem("HelloWorld");
                     AutomationWrapper.Select(folder);
-                    solution.ExecuteCommand("File.OpenCommandPromptHere");
+                    solution.ExecuteCommand("Python.OpenCommandPromptHere");
 
                     after = System.Diagnostics.Process.GetProcesses();
                     newProcs = after.Where(x => !existing.Contains(x.Id) && x.ProcessName == "cmd");

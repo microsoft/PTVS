@@ -51,7 +51,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void IronPythonModuleName() {
             using (var replEval = Evaluator) {
                 var replWindow = new MockReplWindow(replEval);
@@ -65,7 +65,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void IronPythonSignatures() {
             using (var replEval = Evaluator) {
                 var replWindow = new MockReplWindow(replEval);
@@ -84,7 +84,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void IronPythonCommentInput() {
             // http://pytools.codeplex.com/workitem/649
             using (var replEval = Evaluator) {
@@ -96,7 +96,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ConsoleWriteLineTest() {
             // http://pytools.codeplex.com/workitem/649
             using (var replEval = Evaluator) {
@@ -123,7 +123,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void GenericMethodCompletions() {
             // http://pytools.codeplex.com/workitem/661
             using (var replEval = Evaluator) {
@@ -157,7 +157,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task NoTraceFunction() {
             // http://pytools.codeplex.com/workitem/662
             using (var replEval = Evaluator) {
@@ -173,7 +173,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void CommentFollowedByBlankLine() {
             // http://pytools.codeplex.com/workitem/659
             using (var replEval = Evaluator) {
@@ -188,7 +188,7 @@ namespace IronPythonTests {
 
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
             using (var replEval = Evaluator) {
