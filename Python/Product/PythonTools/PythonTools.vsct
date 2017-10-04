@@ -436,16 +436,6 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidSurveyNews" priority="0x0200" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
-        <Strings>
-          <ButtonText>Survey/&amp;News...</ButtonText>
-          <ToolTipText>Displays recent news and surveys from the Python tools team.</ToolTipText>
-          <CanonicalName>Survey News</CanonicalName>
-          <LocCanonicalName>Survey News</LocCanonicalName>
-        </Strings>
-      </Button>
-
       <Button guid="guidPythonToolsCmdSet" id="cmdidImportWizard" priority="0x0300" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -1124,7 +1114,6 @@ permissions and limitations under the License.
       <IDSymbol name="cmdidRefactorRename" value ="0x0109" />
       <IDSymbol name="cmdidExtractMethod" value ="0x010a" />
       <IDSymbol name="cmdidImportWizard" value ="0x010d" />
-      <IDSymbol name="cmdidSurveyNews" value ="0x010e" />
       <IDSymbol name="cmdidImportCoverage" value ="0x010f" />
 
       <IDSymbol name="cmdidReplWindow" value="0x0201" />

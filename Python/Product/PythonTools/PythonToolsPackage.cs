@@ -423,7 +423,6 @@ namespace Microsoft.PythonTools {
                 new RemoveImportsCommand(this, false),
                 new OpenInterpreterListCommand(this),
                 new ImportWizardCommand(this),
-                new SurveyNewsCommand(this),
                 new ImportCoverageCommand(this),
                 new ShowPythonViewCommand(this),
                 new ShowCppViewCommand(this),

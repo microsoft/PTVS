@@ -717,12 +717,6 @@ namespace Microsoft.PythonTools.Project {
             ReanalyzeProject()
                 .HandleAllExceptions(Site, GetType(), allowUI: false)
                 .DoNotWait();
-
-            try {
-                Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
-            } catch (Exception ex) {
-                Debug.Fail($"Error checking news: {ex}");
-            }
         }
 
         private void RefreshCurrentWorkingDirectory() {

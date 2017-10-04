@@ -59,7 +59,6 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<PythonInteractiveOptions> _debugInteractiveOptions;
         private readonly Lazy<PythonInteractiveOptions> _interactiveOptions;
         private readonly Lazy<SuppressDialogOptions> _suppressDialogOptions;
-        private readonly Lazy<SurveyNewsService> _surveyNews;
         private readonly AnalysisEntryService _entryService;
         private readonly IdleManager _idleManager;
         private readonly DiagnosticsProvider _diagnosticsProvider;
@@ -98,7 +97,6 @@ namespace Microsoft.PythonTools {
             _experimentalOptions = new Lazy<Options.ExperimentalOptions>(CreateExperimentalOptions);
             _diagnosticsOptions = new Lazy<DiagnosticsOptions>(CreateDiagnosticsOptions);
             _generalOptions = new Lazy<GeneralOptions>(CreateGeneralOptions);
-            _surveyNews = new Lazy<SurveyNewsService>(() => new SurveyNewsService(this));
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
@@ -158,7 +156,6 @@ namespace Microsoft.PythonTools {
                     });
                 }
 
-                _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck.ToString());
                 _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
                     { "NoDatabaseFactory", ExperimentalOptions.NoDatabaseFactory }
                 });
@@ -227,7 +224,6 @@ namespace Microsoft.PythonTools {
         }
 
         internal PythonToolsLogger Logger => _logger;
-        internal SurveyNewsService SurveyNews => _surveyNews.Value;
 
         #region Public API
 
