@@ -132,7 +132,7 @@ fdopen
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void TypeClassification() {
             var code = @"class MyClass(object):
     pass

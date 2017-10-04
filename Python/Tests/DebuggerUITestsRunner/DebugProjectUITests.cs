@@ -117,13 +117,13 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.TerminateProcess));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void EnumModules() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.EnumModules));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void MainThread() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.MainThread));
