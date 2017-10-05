@@ -61,7 +61,7 @@ namespace TestUtilities.Python {
         /// VS but is suitable for simple test cases which need just some base functionality.
         /// </summary>
         public static MockServiceProvider CreateMockServiceProvider(
-            bool suppressTaskProvider = false
+            bool suppressTaskProvider = true
         ) {
             var serviceProvider = new MockServiceProvider();
 
