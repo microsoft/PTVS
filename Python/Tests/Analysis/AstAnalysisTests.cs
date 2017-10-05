@@ -326,6 +326,12 @@ R_A3 = R_A1.r_A()");
                 }
                 Assert.IsInstanceOfType(mod, typeof(AstBuiltinsPythonModule));
 
+                var errors = ((AstScrapedPythonModule)mod).ParseErrors ?? Enumerable.Empty<string>();
+                foreach (var err in errors) {
+                    Console.WriteLine(err);
+                }
+                Assert.AreEqual(0, errors.Count(), "Parse errors occurred");
+
                 // Ensure we can get all the builtin types
                 foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
                     var type = interp.GetBuiltinType(v);
@@ -379,11 +385,22 @@ R_A3 = R_A1.r_A()");
                     anyExtensionSeen |= modName.IsNativeExtension;
                     var mod = analyzer.Analyzer.Interpreter.ImportModule(modName.ModuleName);
                     if (mod == null) {
-                        Trace.TraceWarning("failed to import {0} from {1}".FormatInvariant(modName.ModuleName, modName.SourceFile));
+                        Trace.TraceWarning("failed to import {0} from {1}", modName.ModuleName, modName.SourceFile);
+                    } else if (mod is AstScrapedPythonModule smod) {
+                        if (smod.ParseErrors?.Any() ?? false) {
+                            Trace.TraceError("Parse errors in {0}", modName.SourceFile);
+                            foreach (var e in smod.ParseErrors) {
+                                Trace.TraceError(e);
+                            }
+                        } else {
+                            anySuccess = true;
+                            anyExtensionSuccess |= modName.IsNativeExtension;
+                            mod.GetMemberNames(analyzer.ModuleContext).ToList();
+                        }
+                    } else if (mod is AstPythonModule) {
+                        // pass
                     } else {
-                        anySuccess = true;
-                        anyExtensionSuccess |= modName.IsNativeExtension;
-                        mod.GetMemberNames(analyzer.ModuleContext).ToList();
+                        Trace.TraceError("imported {0} as type {1}", modName.ModuleName, mod.GetType().FullName);
                     }
                 }
             }

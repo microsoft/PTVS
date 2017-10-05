@@ -26,8 +26,6 @@ import re
 import sys
 import warnings
 
-from collections import OrderedDict
-
 try:
     import builtins
 except ImportError:
@@ -59,7 +57,7 @@ def _triple_quote(s):
 
 SKIP_TYPENAME_FOR_TYPES = bool, str, bytes, int, float
 STATICMETHOD_TYPES = ()
-CLASSMETHOD_TYPES = type(int.from_bytes),
+CLASSMETHOD_TYPES = type(float.fromhex),
 PROPERTY_TYPES = type(int.real), type(property.fget)
 
 if sys.version_info[0] < 3:
@@ -522,7 +520,7 @@ class MemberInfo(object):
     @classmethod
     def _get_typename(cls, value_type, in_module):
         try:
-            type_name = value_type.__name__
+            type_name = value_type.__name__.replace('-', '_')
             module = getattr(value_type, '__module__', None)
             if module and module != '<unknown>':
                 if module != in_module:

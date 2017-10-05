@@ -61,6 +61,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
+        public IEnumerable<string> ParseErrors { get; private set; }
+
         protected virtual List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
             var args = new List<string> { "-B", "-E" };
 
@@ -133,12 +135,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         }
                         code.Seek(0, SeekOrigin.Begin);
                     } else {
+                        var err = new List<string>();
                         using (var sw = new StringWriter()) {
                             sw.WriteLine("Error scraping {0}", Name);
                             foreach (var line in p.StandardErrorLines) {
                                 sw.WriteLine(line);
+                                err.Add(line);
                             }
                             Debug.Fail(sw.ToString());
+                            ParseErrors = err;
+                            code = null;
                         }
                     }
                 }
@@ -155,9 +161,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 using (var parser = Parser.CreateParser(sr, fact.GetLanguageVersion(), new ParserOptions { ErrorSink = sink })) {
                     ast = parser.ParseFile();
                 }
-                foreach (var err in sink.Errors) {
-                    Trace.TraceError($"{_filePath ?? "(builtins)"} ({err.Span}): {err.Message}");
-                }
+
+                ParseErrors = sink.Errors.Select(e => $"{_filePath ?? "(builtins)"} ({e.Span}): {e.Message}").ToArray();
 
                 if (needCache) {
                     // We know we created the stream, so it's safe to seek here

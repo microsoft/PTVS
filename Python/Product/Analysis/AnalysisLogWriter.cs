@@ -133,6 +133,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static IEnumerable<string> AsNormalStrings(IEnumerable<object> items) {
+            if (items == null) {
+                yield break;
+            }
+
             foreach (var item in items) {
                 if (item is DateTime dt) {
                     yield return dt.ToString("s");
