@@ -56,7 +56,7 @@ namespace PythonToolsMockTests {
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void PrivateMemberMangling() {
             RefactorTest("fob", "__f",
                 new[] { 
