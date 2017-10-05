@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            _factory.Log(TraceLevel.Info, "ImportBuiltins", name, Factory.Configuration.InterpreterPath);
+            _factory.Log(TraceLevel.Info, "ImportBuiltins", name, _factory.FastRelativePath(Factory.Configuration.InterpreterPath));
 
             try {
                 return new AstBuiltinPythonModule(name, Factory.Configuration.InterpreterPath);

@@ -14,12 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Diagnostics;
+
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
     /// Specifies creation options for an interpreter factory.
     /// </summary>
     public sealed class InterpreterFactoryCreationOptions {
         public InterpreterFactoryCreationOptions() {
+#if DEBUG
+            TraceLevel = TraceLevel.Verbose;
+#endif
         }
 
         public InterpreterFactoryCreationOptions Clone() {
@@ -35,5 +40,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public bool NoDatabase { get; set; }
 
         public bool UseExistingCache { get; set; } = true;
+
+        public TraceLevel TraceLevel { get; set; } = TraceLevel.Info;
     }
 }

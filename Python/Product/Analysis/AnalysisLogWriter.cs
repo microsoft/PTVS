@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Analysis {
         private List<LogItem> _items;
         private readonly bool _csv, _console;
         private readonly int _cache;
+        private readonly SemaphoreSlim _dumping = new SemaphoreSlim(1);
 
         public struct LogItem {
             public TimeSpan Time;
@@ -42,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis {
             _csv = csv;
             _console = logToConsole;
             _cache = cacheSize;
-            _items = new List<LogItem>(_cache);
+            _items = new List<LogItem>(_cache + 2);
             _items.Add(new LogItem { Event = "Start", Time = TimeSpan.Zero, Args = new object[] { _startTime } });
         }
 
@@ -84,6 +85,10 @@ namespace Microsoft.PythonTools.Analysis {
                 return;
             }
 
+            if (_dumping.CurrentCount == 0) {
+                return;
+            }
+
             if (synchronous) {
                 Dump();
             } else {
@@ -92,29 +97,42 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private void Dump() {
-            var newList = new List<LogItem>(_cache);
-            var items = Interlocked.Exchange(ref _items, newList);
-            lock (items) {
-                // Mark this list as complete, so new events will not go there
-                items.Add(new LogItem());
+            if (!_dumping.Wait(0)) {
+                return;
             }
+            try {
+                // Once triggered, allow any more immediate messages to be added.
+                Thread.Sleep(50);
 
-            using (var output = OpenLogFile()) {
-                foreach (var item in items) {
-                    var s = SafeFormat(_csv ? "{0},{1},{2}" : "[{0}] {1}: {2}",
-                        item.Time,
-                        item.Event,
-                        _csv ? string.Join(",", AsCsvStrings(item.Args)) : string.Join(", ", AsNormalStrings(item.Args))
-                    ) + Environment.NewLine;
-                    if (output != null) {
-                        output.Write(s);
-                        output.Flush();
-                    }
-                    if (_console) {
-                        Console.Out.Write(s);
-                        Console.Out.Flush();
+                var newList = new List<LogItem>(_cache + 2);
+                var items = Interlocked.Exchange(ref _items, newList);
+                lock (items) {
+                    // Mark this list as complete, so new events will not go there
+                    items.Add(new LogItem());
+                }
+
+                using (var output = OpenLogFile()) {
+                    foreach (var item in items) {
+                        if (string.IsNullOrEmpty(item.Event)) {
+                            continue;
+                        }
+                        var s = SafeFormat(_csv ? "{0},{1},{2}" : "[{0}] {1}: {2}",
+                            item.Time,
+                            item.Event,
+                            _csv ? string.Join(",", AsCsvStrings(item.Args)) : string.Join(", ", AsNormalStrings(item.Args))
+                        ) + Environment.NewLine;
+                        if (output != null) {
+                            output.Write(s);
+                            output.Flush();
+                        }
+                        if (_console) {
+                            Console.Out.Write(s);
+                            Console.Out.Flush();
+                        }
                     }
                 }
+            } finally {
+                _dumping.Release();
             }
         }
 

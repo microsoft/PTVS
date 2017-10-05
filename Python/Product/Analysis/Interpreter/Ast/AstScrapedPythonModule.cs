@@ -135,17 +135,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         }
                         code.Seek(0, SeekOrigin.Begin);
                     } else {
-                        var err = new List<string>();
-                        using (var sw = new StringWriter()) {
-                            sw.WriteLine("Error scraping {0}", Name);
-                            foreach (var line in p.StandardErrorLines) {
-                                sw.WriteLine(line);
-                                err.Add(line);
+                        if (fact is AstPythonInterpreterFactory f) {
+                            f.Log(TraceLevel.Error, "Scrape", p.Arguments);
+                            foreach (var e in p.StandardErrorLines) {
+                                f.Log(TraceLevel.Error, "Scrape", Name, e);
                             }
-                            Debug.Fail(sw.ToString());
-                            ParseErrors = err;
-                            code = null;
                         }
+
+                        var err = new List<string> { $"Error scraping {Name}", p.Arguments };
+                        err.AddRange(p.StandardErrorLines);
+                        Debug.Fail(string.Join(Environment.NewLine, err));
+                        ParseErrors = err;
                     }
                 }
             }
@@ -163,6 +163,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
 
                 ParseErrors = sink.Errors.Select(e => $"{_filePath ?? "(builtins)"} ({e.Span}): {e.Message}").ToArray();
+                if (ParseErrors.Any() && fact is AstPythonInterpreterFactory f) {
+                    f.Log(TraceLevel.Error, "Parse", _filePath ?? "(builtins)");
+                    foreach (var e in ParseErrors) {
+                        f.Log(TraceLevel.Error, "Parse", e);
+                    }
+                }
 
                 if (needCache) {
                     // We know we created the stream, so it's safe to seek here

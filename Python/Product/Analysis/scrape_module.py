@@ -1042,8 +1042,12 @@ def add_builtin_objects(state):
         state.members.append(mi)
         state.members.append(MemberInfo(alias, None, literal=mi.name))
 
-    add_simple('__Unknown', '<unknown type>', MemberInfo.NO_VALUE)
+    add_simple('__Unknown', '<unknown type>', MemberInfo("__name__", None, literal='"<unknown type>"'))
     add_simple('__NoneType', 'the type of the None object', MemberInfo.NO_VALUE)
+
+    # NoneType and None are explicitly defined to avoid parser errors
+    # because of None being a keyword.
+    #add_literal('NoneType', '__NoneType')
     #add_literal('None', '__NoneType()')
 
     add_type('__Object', object)
