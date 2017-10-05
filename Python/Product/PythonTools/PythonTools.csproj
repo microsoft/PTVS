@@ -715,7 +715,6 @@
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <None Include="Theme\contrast.vstheme" />
     <None Include="NoInterpreters.htmlsrc" />
-    <None Include="ptvsd\attach_server.py" />
     <None Include="Theme\Microsoft.PythonTools.theme.v14.0.pkgdef" />
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
@@ -734,8 +733,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="ptvsd\__init__.py" />
-    <None Include="ptvsd\__main__.py" />
     <Content Include="pip_downloader.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -814,21 +811,45 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ReadmeStyle.css" />
+    <Content Include="ptvsd\__init__.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
+    </Content>
+    <Content Include="ptvsd\__main__.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
+    </Content>
+    <Content Include="ptvsd\attach_server.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
+    </Content>
     <Content Include="ptvsd\ipcjson.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
     </Content>
     <Content Include="ptvsd\debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
     </Content>
     <Content Include="ptvsd\repl\__init__.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd\repl</VSIXSubPath>
+    </Content>
+    <Content Include="ptvsd\repl\ipython.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd\repl</VSIXSubPath>
     </Content>
     <Content Include="ptvsd\util.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
     </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -853,10 +874,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="NewFileItems\module.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="ptvsd\repl\ipython.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -1014,21 +1031,6 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="_DeployPTVSDFiles" AfterTargets="PrepareForBuild" Returns="@(_PTVSDFiles)">
-    <ItemGroup>
-      <_PTVSDSourceFiles Include="visualstudio_py_*.py;ptvsd\*.py" />
-      <_PTVSDFiles Include="@(_PTVSDSourceFiles->'$(IntermediateOutputPath)ptvsd\%(Filename)%(Extension)')" />
-      <Content Include="@(_PTVSDFiles)">
-        <IncludeInVSIX>true</IncludeInVSIX>
-        <VSIXSubPath>ptvsd</VSIXSubPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <Link>ptvsd\%(Filename)%(Extension)</Link>
-      </Content>
-    </ItemGroup>
-    <Copy SourceFiles="@(_PTVSDSourceFiles)" DestinationFiles="@(_PTVSDFiles)" SkipUnchangedFiles="true">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
-    </Copy>
-  </Target>
   <!-- We build these assemblies into separate folders to avoid incremental cleaning issues,
        but then CreatePkgDef can't find them for the ProvideCodeBase attributes. So we copy
        into the PythonTools output folder temporarily to generate the pkgdef file. -->

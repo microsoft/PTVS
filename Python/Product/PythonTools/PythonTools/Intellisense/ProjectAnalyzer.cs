@@ -491,6 +491,7 @@ namespace Microsoft.PythonTools.Intellisense {
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
 
+            Trace.TraceInformation("Starting analyzer process: {0} {1}", psi.FileName, psi.Arguments);
             var process = Process.Start(psi);
 
             var conn = new Connection(
@@ -561,6 +562,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var writer = new AnonymousPipeServerStream(PipeDirection.Out);
             var reader = new AnonymousPipeServerStream(PipeDirection.In);
 
+            Trace.TraceInformation("Starting analyzer thread");
             var thread = new Thread(ThreadConnectionWorker);
             var cts = new CancellationTokenSource();
             info = new AnalysisProcessThreadInfo(this, thread, cts, reader.ClientSafePipeHandle, writer.ClientSafePipeHandle);
