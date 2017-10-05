@@ -1699,7 +1699,7 @@ async def f():
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
-            var services = PythonToolsTestUtilities.CreateMockServiceProvider(suppressTaskProvider: true).GetEditorServices();
+            var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
             using (var analyzer = new VsProjectAnalyzer(services, fact)) {
                 var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
