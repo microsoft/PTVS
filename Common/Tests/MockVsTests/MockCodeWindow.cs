@@ -22,7 +22,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockCodeWindow : IVsCodeWindow, Microsoft.VisualStudio.OLE.Interop.IConnectionPointContainer {
+    class MockCodeWindow : IVsCodeWindow, IVsDropdownBarManager, Microsoft.VisualStudio.OLE.Interop.IConnectionPointContainer {
         private readonly IServiceProvider _serviceProvider;
         private readonly ITextView _view;
 
@@ -81,6 +81,19 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public void FindConnectionPoint(ref Guid riid, out VisualStudio.OLE.Interop.IConnectionPoint ppCP) {
             ppCP = null;
+        }
+
+        public int AddDropdownBar(int cCombos, IVsDropdownBarClient pClient) {
+            return VSConstants.E_FAIL;
+        }
+
+        public int GetDropdownBar(out IVsDropdownBar ppDropdownBar) {
+            ppDropdownBar = null;
+            return VSConstants.E_FAIL;
+        }
+
+        public int RemoveDropdownBar() {
+            return VSConstants.E_FAIL;
         }
     }
 }
