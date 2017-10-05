@@ -109,7 +109,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void HandledImportSquiggle() {
             var testCases = new List<Tuple<string, string[]>>();
             testCases.AddRange(

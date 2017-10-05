@@ -462,7 +462,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void FromImportCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = "from ";
@@ -876,7 +876,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void HideAdvancedMembers() {
             using (var view = new PythonEditor()) {
                 // No text - expect all non-advanced members

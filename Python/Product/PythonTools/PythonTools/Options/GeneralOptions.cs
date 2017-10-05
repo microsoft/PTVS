@@ -33,10 +33,6 @@ namespace Microsoft.PythonTools.Options {
         private const string ShowOutputWindowForVirtualEnvCreateSetting = "ShowOutputWindowForVirtualEnvCreate";
         private const string ShowOutputWindowForPackageInstallationSetting = "ShowOutputWindowForPackageInstallation";
         private const string ElevatePipSetting = "ElevatePip";
-        private const string SurveyNewsCheckSetting = "SurveyNewsCheck";
-        private const string SurveyNewsLastCheckSetting = "SurveyNewsLastCheck";
-        private const string SurveyNewsFeedUrlSetting = "SurveyNewsFeedUrl";
-        private const string SurveyNewsIndexUrlSetting = "SurveyNewsIndexUrl";
         private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
         private const string ClearGlobalPythonPathSetting = "ClearGlobalPythonPath";
 
@@ -48,10 +44,6 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Load() {
-            SurveyNewsCheck = _pyService.LoadEnum<SurveyNewsPolicy>(SurveyNewsCheckSetting, GeneralCategory) ?? SurveyNewsPolicy.CheckOnceWeek;
-            SurveyNewsLastCheck = _pyService.LoadDateTime(SurveyNewsLastCheckSetting, GeneralCategory) ?? DateTime.MinValue;
-            SurveyNewsFeedUrl = _pyService.LoadString(SurveyNewsFeedUrlSetting, GeneralCategory) ?? DefaultSurveyNewsFeedUrl;
-            SurveyNewsIndexUrl = _pyService.LoadString(SurveyNewsIndexUrlSetting, GeneralCategory) ?? DefaultSurveyNewsIndexUrl;
             ShowOutputWindowForVirtualEnvCreate = _pyService.LoadBool(ShowOutputWindowForVirtualEnvCreateSetting, GeneralCategory) ?? true;
             ShowOutputWindowForPackageInstallation = _pyService.LoadBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory) ?? true;
             ElevatePip = _pyService.LoadBool(ElevatePipSetting, GeneralCategory) ?? false;
@@ -74,8 +66,6 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Save() {
-            _pyService.SaveEnum(SurveyNewsCheckSetting, GeneralCategory, SurveyNewsCheck);
-            _pyService.SaveDateTime(SurveyNewsLastCheckSetting, GeneralCategory, SurveyNewsLastCheck);
             _pyService.SaveBool(ShowOutputWindowForVirtualEnvCreateSetting, GeneralCategory, ShowOutputWindowForVirtualEnvCreate);
             _pyService.SaveBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory, ShowOutputWindowForPackageInstallation);
             _pyService.SaveBool(ElevatePipSetting, GeneralCategory, ElevatePip);
@@ -94,10 +84,6 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Reset() {
-            SurveyNewsCheck = SurveyNewsPolicy.CheckOnceWeek;
-            SurveyNewsLastCheck = DateTime.MinValue;
-            SurveyNewsFeedUrl = DefaultSurveyNewsFeedUrl;
-            SurveyNewsIndexUrl = DefaultSurveyNewsIndexUrl;
             ShowOutputWindowForVirtualEnvCreate = true;
             ShowOutputWindowForPackageInstallation = true;
             ElevatePip = false;
@@ -161,6 +147,7 @@ namespace Microsoft.PythonTools.Options {
         /// per week.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete]
         public SurveyNewsPolicy SurveyNewsCheck {
             get;
             set;
@@ -170,6 +157,7 @@ namespace Microsoft.PythonTools.Options {
         /// The date/time when the last check for news occurred.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete]
         public DateTime SurveyNewsLastCheck {
             get;
             set;
@@ -179,6 +167,7 @@ namespace Microsoft.PythonTools.Options {
         /// The url of the news feed.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete]
         public string SurveyNewsFeedUrl {
             get;
             set;
@@ -188,6 +177,7 @@ namespace Microsoft.PythonTools.Options {
         /// The url of the news index page.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
+        [Obsolete]
         public string SurveyNewsIndexUrl {
             get;
             set;

@@ -11,4 +11,5 @@ XYZ = XY
 D = l
 D = t
 D = s
+D = s   # ensure multiple assignments do not clear it
 from Values import D

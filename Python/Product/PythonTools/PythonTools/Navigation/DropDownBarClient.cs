@@ -66,10 +66,9 @@ namespace Microsoft.PythonTools.Navigation {
         private const int NavigationLevels = 2;
         private int[] _curSelection = new int[NavigationLevels];
 
-        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView, AnalysisEntry analysisEntry) {
+        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView) {
             Utilities.ArgumentNotNull(nameof(serviceProvider), serviceProvider);
             Utilities.ArgumentNotNull(nameof(textView), textView);
-            Utilities.ArgumentNotNull(nameof(analysisEntry), analysisEntry);
 
             _serviceProvider = serviceProvider;
             _uiThread = _serviceProvider.GetUIThread();
@@ -479,7 +478,6 @@ namespace Microsoft.PythonTools.Navigation {
 
         #region Implementation Details
 
-
         /// <summary>
         /// Moves the caret to the specified index in the current snapshot.  Then updates the view port
         /// so that caret will be centered.  Finally moves focus to the text view so the user can 
@@ -502,32 +500,37 @@ namespace Microsoft.PythonTools.Navigation {
         /// </summary>
         async Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
             if (e.Event == PythonTextBufferInfoEvents.NewParseTree) {
-                var dropDownBar = _dropDownBar;
-                if (dropDownBar == null) {
-                    return;
-                }
+                AnalysisEntry analysisEntry = e.AnalysisEntry;
+                await RefreshNavigationsFromAnalysisEntry(analysisEntry);
+            }
+        }
 
-                var navigations = await _uiThread.InvokeTask(() => e.AnalysisEntry.Analyzer.GetNavigationsAsync(_textView));
-                lock (_navigationsLock) {
-                    _navigations = navigations;
-                    for (int i = 0; i < _curSelection.Length; i++) {
-                        _curSelection[i] = -1;
-                    }
-                }
+        internal async Task RefreshNavigationsFromAnalysisEntry(AnalysisEntry analysisEntry) {
+            var dropDownBar = _dropDownBar;
+            if (dropDownBar == null) {
+                return;
+            }
 
-                Action callback = () => CaretPositionChanged(
-                    this,
-                    new CaretPositionChangedEventArgs(
-                        _textView,
-                        _textView.Caret.Position,
-                        _textView.Caret.Position
-                    )
-                );
-
-                try {
-                    await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
-                } catch (TaskCanceledException) {
+            var navigations = await _uiThread.InvokeTask(() => analysisEntry.Analyzer.GetNavigationsAsync(_textView));
+            lock (_navigationsLock) {
+                _navigations = navigations;
+                for (int i = 0; i < _curSelection.Length; i++) {
+                    _curSelection[i] = -1;
                 }
+            }
+
+            Action callback = () => CaretPositionChanged(
+                this,
+                new CaretPositionChangedEventArgs(
+                    _textView,
+                    _textView.Caret.Position,
+                    _textView.Caret.Position
+                )
+            );
+
+            try {
+                await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
+            } catch (TaskCanceledException) {
             }
         }
 

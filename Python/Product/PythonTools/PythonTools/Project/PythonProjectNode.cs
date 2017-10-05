@@ -717,12 +717,6 @@ namespace Microsoft.PythonTools.Project {
             ReanalyzeProject()
                 .HandleAllExceptions(Site, GetType(), allowUI: false)
                 .DoNotWait();
-
-            try {
-                Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
-            } catch (Exception ex) {
-                Debug.Fail($"Error checking news: {ex}");
-            }
         }
 
         private void RefreshCurrentWorkingDirectory() {
@@ -1359,8 +1353,14 @@ namespace Microsoft.PythonTools.Project {
             try {
                 if ((statusBar = Site.GetService(typeof(SVsStatusbar)) as IVsStatusbar) != null) {
                     statusBar.SetText(Strings.AnalyzingProject);
-                    object index = (short)0;
-                    statusBar.Animation(1, ref index);
+                    try {
+                        object index = (short)0;
+                        statusBar.Animation(1, ref index);
+                    } catch (ArgumentNullException) {
+                        // Issue in status bar implementation
+                        // https://github.com/Microsoft/PTVS/issues/3064
+                        // Silently suppress since animation is not critical.
+                    }
                     statusBar.FreezeOutput(1);
                     statusBarConfigured = true;
                 }

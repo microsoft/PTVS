@@ -352,7 +352,6 @@
     <Compile Include="PythonTools\Repl\ResizingAdorner.cs" />
     <Compile Include="PythonTools\Repl\SelectableReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
-    <Compile Include="PythonTools\SurveyNewsService.cs" />
     <Compile Include="PythonTools\Options\GeneralOptions.cs" />
     <Compile Include="PythonTools\Options\DebuggerOptions.cs" />
     <Compile Include="PythonTools\Options\AdvancedEditorOptions.cs" />
@@ -388,7 +387,6 @@
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
-    <Compile Include="PythonTools\Commands\SurveyNewsCommand.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
     <Compile Include="PythonTools\InterpreterView.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplay.cs" />
@@ -716,7 +714,6 @@
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <None Include="Theme\contrast.vstheme" />
-    <None Include="NoSurveyNewsFeed.htmlsrc" />
     <None Include="NoInterpreters.htmlsrc" />
     <None Include="ptvsd\attach_server.py" />
     <None Include="Theme\Microsoft.PythonTools.theme.v14.0.pkgdef" />
@@ -734,10 +731,6 @@
     <None Include="Theme\Repl\additionalcontrast.vstheme" />
     <None Include="Theme\Repl\make_theme_pkgdef.py" />
     <Content Include="NoInterpreters.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="NoSurveyNewsFeed.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
