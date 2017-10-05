@@ -1,4 +1,4 @@
-﻿# Python Tools for Visual Studio
+# Python Tools for Visual Studio
 # Copyright(c) Microsoft Corporation
 # All rights reserved.
 # 
@@ -25,6 +25,8 @@ import io
 import re
 import sys
 import warnings
+
+from collections import OrderedDict
 
 try:
     import builtins
@@ -56,6 +58,10 @@ def _triple_quote(s):
 
 
 SKIP_TYPENAME_FOR_TYPES = bool, str, bytes, int, float
+STATICMETHOD_TYPES = ()
+CLASSMETHOD_TYPES = type(int.from_bytes),
+PROPERTY_TYPES = type(int.real), type(property.fget)
+
 if sys.version_info[0] < 3:
     SKIP_TYPENAME_FOR_TYPES += unicode, long
 
@@ -182,18 +188,42 @@ class Signature(object):
     }
 
 
-    def __init__(self, name, callable, scope=None, defaults=None, scope_alias=None):
+    def __init__(self,
+        name,
+        callable,
+        scope=None,
+        defaults=None,
+        scope_alias=None,
+        decorators=None,
+        module_doc=None,
+    ):
         self.callable = callable
         self.name = name
         self.scope = scope
+        self.decorators = decorators or ()
         self._signature = None
-        self._defaults = defaults or (('self',) if scope else ())
+        self._defaults = defaults or ()
 
+        if scope and '@staticmethod' not in self.decorators:
+            def_arg = 'cls' if '@classmethod' in self.decorators else 'self'
+            if len(self._defaults) == 0 or self._defaults[0] != def_arg:
+                self._defaults = (def_arg,) + self._defaults
+        
+        self.fullsig = None
+        if self.name in ('__init__', '__new__') and module_doc:
+            self.fullsig = self._init_argspec_fromdocstring(self._defaults, module_doc)
+        elif not hasattr(self.callable, '__call__') and hasattr(self.callable, '__get__'):
+            # We have a property
+            self.decorators = '@property',
+            self.fullsig = self.name + "(" + ", ".join(self._defaults) + ")"
+        
         self.fullsig = (
-            self._init_argspec_fromsignature() or
-            self._init_argspec_fromargspec() or
-            self._init_argspec_fromdocstring() or
-            self._init_argspec_fromknown(scope_alias) or
+            self.fullsig or
+            # Disable fromsignature() because it doesn't work as well as argspec
+            #self._init_argspec_fromsignature(self._defaults) or
+            self._init_argspec_fromargspec(self._defaults) or
+            self._init_argspec_fromdocstring(self._defaults) or
+            self._init_argspec_fromknown(self._defaults, scope_alias) or
             (self.name + "(" + ", ".join(self._defaults) + ")")
         )
         self.restype = (
@@ -205,13 +235,26 @@ class Signature(object):
     def __str__(self):
         return self.fullsig
 
-    def _init_argspec_fromsignature(self):
+    def _init_argspec_fromsignature(self, defaults):
         try:
             sig = inspect.signature(self.callable)
         except Exception:
             return
 
-        return self.name + str(sig).replace(', /', '')
+        new_args = []
+        for arg in sig.parameters:
+            p = sig.parameters[arg]
+            if p.default != inspect.Signature.empty:
+                try:
+                    ast.literal_eval(repr(p.default))
+                except Exception:
+                    p = p.replace(default=None)
+            if p.kind == inspect.Parameter.POSITIONAL_ONLY:
+                p = p.replace(kind=inspect.Parameter.POSITIONAL_OR_KEYWORD)
+            new_args.append(p)
+        sig = sig.replace(parameters=new_args)
+
+        return self.name + str(sig)
 
     def _init_restype_fromsignature(self):
         try:
@@ -223,7 +266,7 @@ class Signature(object):
         # full signature and we don't need it from here.
         return 'pass'
 
-    def _init_argspec_fromargspec(self):
+    def _init_argspec_fromargspec(self, defaults):
         try:
             args = (getattr(inspect, 'getfullargspec', None) or inspect.getargspec)(self.callable)
         except Exception:
@@ -235,9 +278,10 @@ class Signature(object):
         if getattr(args, 'varkw', None):
             argn.append('**' + args.varkw)
 
+        self._insert_default_arguments(argn, defaults)
         return self.name + '(' + ', '.join(argn) + ')'
 
-    def _init_argspec_fromknown(self, scope_alias):
+    def _init_argspec_fromknown(self, defaults, scope_alias):
         spec = None
         if scope_alias and not spec:
             spec = self.KNOWN_ARGSPECS.get(scope_alias + '.' + self.name)
@@ -265,8 +309,11 @@ class Signature(object):
             return "return " + "; return ".join(restype)
         return "return " + restype
 
-    def _init_argspec_fromdocstring(self):
-        doc = getattr(self.callable, '__doc__', None)
+    def _init_argspec_fromdocstring(self, defaults, doc=None):
+        allow_name_mismatch = True
+        if not doc:
+            doc = getattr(self.callable, '__doc__', None)
+            allow_name_mismatch = False
         if not doc:
             return
 
@@ -274,21 +321,32 @@ class Signature(object):
         if not doc:
             return
 
-        call = self._parse_funcdef(doc)
+        call = self._parse_funcdef(doc, allow_name_mismatch)
         if not call:
             doc = re.sub(r'[\[\]]', '', doc)
-            call = self._parse_funcdef(doc)
+            call = self._parse_funcdef(doc, allow_name_mismatch)
         if not call:
             doc = re.sub(r'\=.+?([,\)])', r'\1', doc)
-            call = self._parse_funcdef(doc)
+            call = self._parse_funcdef(doc, allow_name_mismatch)
         if not call:
             return
 
-        return self.name + '(' + ', '.join(
-            self._ast_arg_to_str(a) for a in call.args.args
-        ) + ')'
+        args = self._ast_args_to_list(call.args)
+        self._insert_default_arguments(args, defaults)
+        return self.name + '(' + ', '.join(args) + ')'
 
-    def _parse_funcdef(self, expr):
+    def _insert_default_arguments(self, args, defaults):
+        if len(args) < len(defaults):
+            args[:0] = defaults
+        else:
+            for i, (x, y) in enumerate(zip(defaults, args)):
+                if x == 'cls' and y == 'type':
+                    continue
+                if x != y:
+                    args[:i] = defaults
+                    break
+
+    def _parse_funcdef(self, expr, allow_name_mismatch):
         '''Takes a call expression that was part of a docstring
         and parses the AST as if it were a definition. If the parsed
         AST matches the callable we are wrapping, returns the node.
@@ -296,7 +354,7 @@ class Signature(object):
         try:
             node = ast.parse("def " + expr + ": pass").body[0]
             if isinstance(node, ast.FunctionDef):
-                if node.name == self.name:
+                if allow_name_mismatch or node.name == self.name:
                     return node
                 warnings.warn('function ' + self.name + ' had call to ' + node.name + ' in docstring', InspectWarning)
         except SyntaxError:
@@ -308,6 +366,7 @@ class Signature(object):
         an example call at the start of the docstring.'''
         if not expr or ')' not in expr:
             return
+        expr = expr.lstrip('\r\n\t ')
         n = 0
         for i, c in enumerate(expr):
             if c == ')':
@@ -317,11 +376,53 @@ class Signature(object):
             elif c == '(':
                 n += 1
 
+    def _ast_args_to_list(self, node):
+        args = node.args
+        defaults = list(getattr(node, 'defaults', ()))
+        defaults[:0] = [None for _ in range(len(args) - len(defaults))]
+
+        return [self._ast_arg_to_str(a, d) for a, d in zip(args, defaults)]
+
     _AST_ARG_TYPES = tuple(getattr(ast, n) for n in (
         'arg', 'keyword', 'Name'
     ) if hasattr(ast, n))
 
-    def _ast_arg_to_str(self, arg):
+    class DefaultValueWriter(object):
+        def walk(self, node):
+            try:
+                op = getattr(self, 'walk_' + type(node).__name__)
+            except AttributeError:
+                print('walk_' + type(node).__name__, vars(node), file=sys.stderr)
+                return None
+            else:
+                return op(node)
+
+        def walk_Name(self, node):          return node.id
+        def walk_NameConstant(self, node):  return repr(node.value)
+        def walk_Num(self, node):           return str(node.n)
+        def walk_Str(self, node):           return repr(node.s)
+        def walk_USub(self, node):          return '-'
+
+        def walk_List(self, node):
+            elts = [self.walk(n) for n in node.elts]
+            if any(n is None for n in elts):
+                return '[]'
+            return '[' + ', '.join(elts) + ']'
+
+        def walk_Tuple(self, node):
+            elts = [self.walk(n) for n in node.elts]
+            if any(n is None for n in elts):
+                return '()'
+            return '(' + ', '.join(elts) + ')'
+
+        def walk_UnaryOp(self, node):
+            op = self.walk(node.op)
+            value = self.walk(node.operand)
+            if op and value:
+                return op + value
+            return None
+
+    def _ast_arg_to_str(self, arg, default):
         '''Converts an AST argument object into a string.'''
         arg_id = None
         default_value = ''
@@ -335,6 +436,11 @@ class Signature(object):
             except AttributeError:
                 pass
             arg_id = arg.arg
+
+        if default:
+            v = self.DefaultValueWriter().walk(default)
+            if v is not None:
+                default_value = '=' + v
 
         if isinstance(arg, ast.Tuple):
             arg_id = '(' + ', '.join(a.id for a in arg.elts) + ')'
@@ -356,8 +462,8 @@ class Signature(object):
 
 class MemberInfo(object):
     NO_VALUE = object()
-    
-    def __init__(self, name, value, literal=None, scope=None, module=None, alias=None):
+
+    def __init__(self, name, value, literal=None, scope=None, module=None, alias=None, module_doc=None):
         self.name = name
         self.value = value
         self.literal = literal
@@ -365,6 +471,7 @@ class MemberInfo(object):
         self.values = []
         self.need_imports = ()
         self.type_name = None
+        self.scope_name = None
         self.bases = ()
         self.signature = None
         self.documentation = getattr(value, '__doc__', None)
@@ -374,12 +481,13 @@ class MemberInfo(object):
         if self.name:
             self.name = self.name.replace('-', '_')
 
-        if isinstance(value, type):
+        value_type = type(value)
+        if issubclass(value_type, type):
             self.need_imports, type_name = self._get_typename(value, module)
             if '.' in type_name:
                 self.literal = type_name
             else:
-                self.type_name = type_name
+                self.scope_name = self.type_name = type_name
                 try:
                     bases = getattr(value, '__bases__', ())
                 except Exception:
@@ -388,23 +496,35 @@ class MemberInfo(object):
                     self.bases = []
                     self.need_imports = list(self.need_imports)
                     for ni, t in (self._get_typename(b, module) for b in bases):
-                        if t:
-                            self.bases.append(t)
-                            self.need_imports.extend(ni)
+                        if not t:
+                            continue
+                        if t == type_name and module in ni:
+                            continue
+                        self.bases.append(t)
+                        self.need_imports.extend(ni)
 
         elif hasattr(value, '__call__'):
-            self.signature = Signature(name, value, scope, scope_alias=alias)
+            dec = ()
+            if scope:
+                if value_type in STATICMETHOD_TYPES:
+                    dec += '@staticmethod',
+                elif value_type in CLASSMETHOD_TYPES:
+                    dec += '@classmethod',
+            self.signature = Signature(name, value, scope, scope_alias=alias, decorators=dec, module_doc=module_doc)
         elif value is not None:
-            # Do not use type names for values that have a good repr
-            if type(value) not in SKIP_TYPENAME_FOR_TYPES:
-                self.need_imports, self.type_name = self._get_typename(type(value), module)
+            if value_type in PROPERTY_TYPES:
+                self.signature = Signature(name, value, scope, scope_alias=alias)
+            if value_type not in SKIP_TYPENAME_FOR_TYPES:
+                self.need_import, self.type_name = self._get_typename(value_type, module)
+        elif not self.literal:
+            self.literal = 'None'
 
     @classmethod
     def _get_typename(cls, value_type, in_module):
         try:
             type_name = value_type.__name__
             module = getattr(value_type, '__module__', None)
-            if module:
+            if module and module != '<unknown>':
                 if module != in_module:
                     type_name = module + '.' + type_name
                 return (module,), type_name
@@ -412,6 +532,8 @@ class MemberInfo(object):
         except Exception:
             warnings.warn('could not get type of ' + repr(value), InspectWarning)
             return (), None
+        
+        return self.type_name
 
     def _str_from_literal(self, lit):
         return self.name + ' = ' + lit
@@ -435,12 +557,20 @@ class MemberInfo(object):
                     yield mi.as_str('    ')
         else:
             yield '    pass'
+        yield ''
 
     def _lines_with_signature(self):
+        seen_decorators = set()
+        for d in self.signature.decorators:
+            d = str(d)
+            if d not in seen_decorators:
+                seen_decorators.add(d)
+                yield d
         yield 'def ' + str(self.signature) + ':'
         if self.documentation:
             yield '    ' + repr(self.documentation)
         yield '    pass'
+        yield ''
 
     def as_str(self, indent=''):
         if self.literal:
@@ -463,7 +593,7 @@ class MemberInfo(object):
 
 MODULE_MEMBER_SUBSTITUTE = {
     '__builtins__': MemberInfo('__builtins__', {}),
-    '__spec__': MemberInfo('__spec__', None),
+    '__spec__': None,
     '__loader__': None,
 }
 
@@ -501,12 +631,35 @@ class ScrapeState(object):
     def collect_top_level_members(self):
         self._collect_members(self.module, self.members, MODULE_MEMBER_SUBSTITUTE, None)
 
+        m_names = set(m.name for m in self.members)
+        undeclared = []
+        for m in self.members:
+            if m.value and m.type_name and '.' not in m.type_name and m.type_name not in m_names:
+                undeclared.append(MemberInfo(m.type_name, type(m.value), module=self.module_name))
+
+        self.members[:0] = undeclared
+
+    def _should_collect_members(self, member):
+        if self.module_name in member.need_imports and member.name == member.type_name:
+            return True
+        # Support cffi libs
+        if member.type_name == builtins.__name__ + '.CompiledLib':
+            return True
+
     def collect_second_level_members(self):
         for mi in self.members:
-            if self.module_name in sorted(set(mi.need_imports)):
+            if self._should_collect_members(mi):
                 substitutes = dict(CLASS_MEMBER_SUBSTITUTE)
                 substitutes['__class__'] = MemberInfo('__class__', None, literal=mi.type_name)
-                self._collect_members(mi.value, mi.members, substitutes, mi.type_name)
+                self._collect_members(mi.value, mi.members, substitutes, mi.scope_name)
+
+                if mi.scope_name != mi.type_name:
+                    # When the scope and type names are different, we have a static
+                    # class. To emulate this, we add '@staticmethod' decorators to
+                    # all members.
+                    for mi2 in mi.members:
+                        if mi2.signature:
+                            mi2.signature.decorators += '@staticmethod',
 
     def _collect_members(self, mod, members, substitutes, scope):
         '''Fills the members attribute with a dictionary containing
@@ -517,6 +670,7 @@ class ScrapeState(object):
             return
         
         mod_scope = (self.module_name + '.' + scope) if scope else self.module_name
+        mod_doc = getattr(mod, '__doc__', None)
         mro = (getattr(mod, '__mro__', None) or ())[1:]
         for name in dir(mod):
             try:
@@ -541,11 +695,31 @@ class ScrapeState(object):
             except Exception:
                 warnings.warn("error getting " + name + " for " + repr(mod), InspectWarning)
             else:
-                if isinstance(value, (type(sys), type(inspect))):
+                if not self._should_add_value(value):
                     continue
                 if self._mro_contains(mro, name, value):
                     continue
-                members.append(MemberInfo(name, value, scope=scope, module=self.module_name))
+                members.append(MemberInfo(name, value, scope=scope, module=self.module_name, module_doc=mod_doc))
+
+    def _should_add_value(self, value):
+        try:
+            value_type = type(value)
+            mod = getattr(value_type, '__module__', None)
+            name = value_type.__name__
+        except Exception:
+            warnings.warn("error getting typename", InspectWarning)
+            return
+
+        if (mod, name) == (builtins.__name__, 'CompiledLib'):
+            # Always allow CFFI lib
+            return True
+
+        if issubclass(value_type, (type(sys), type(inspect))):
+            # Disallow nested modules
+            return
+
+        # By default, include all values
+        return True
 
     def _mro_contains(self, mro, name, value):
         for m in mro:
