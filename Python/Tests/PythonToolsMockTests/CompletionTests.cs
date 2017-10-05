@@ -486,11 +486,10 @@ f(1, 2, 3, 4,")) {
                     "api_version"           // Contains data members
                 );
 
-                view.Text = "from sys.";
-                // There will be one completion saying that there are no completions
-                Assert.AreEqual(1, view.GetCompletions(-1).Count());
-
                 // Error case - no completions
+                view.Text = "from sys.";
+                AssertUtil.ContainsExactly(view.GetCompletions(-1));
+
                 view.Text = "from sys. import ";
                 AssertUtil.ContainsExactly(view.GetCompletions(-1));
 
@@ -675,7 +674,7 @@ while True:
 lambda larg1, larg2: None";
 
 
-            using (var view = new PythonEditor(code)) {
+            using (var view = new PythonEditor(code, filename:"file.py")) {
                 // we get the appropriate subexpression
                 TestQuickInfo(view, code.IndexOf("cls."), code.IndexOf("cls.") + 4, "cls: <unknown type>");
                 TestQuickInfo(view, code.IndexOf("cls.") + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11, "cls._parse_block: <unknown type>");
