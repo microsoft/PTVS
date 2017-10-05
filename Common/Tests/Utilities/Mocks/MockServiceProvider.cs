@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 namespace TestUtilities.Mocks {
     public class MockServiceProvider : IServiceProvider, IServiceContainer {
         public readonly Dictionary<Guid, object> Services = new Dictionary<Guid, object>();
+        private readonly Dictionary<Guid, Func<object>> _serviceCreators = new Dictionary<Guid, Func<object>>();
         public readonly MockComponentModel ComponentModel = new MockComponentModel();
 
         public MockServiceProvider() {
@@ -31,16 +32,29 @@ namespace TestUtilities.Mocks {
         public object GetService(Type serviceType) {
             object service;
             Console.WriteLine("MockServiceProvider.GetService({0})", serviceType.Name);
-            Services.TryGetValue(serviceType.GUID, out service);
-            return service;
+            if (Services.TryGetValue(serviceType.GUID, out service)) {
+                return service;
+            }
+            Func<object> serviceCreator;
+            if (_serviceCreators.TryGetValue(serviceType.GUID, out serviceCreator)) {
+                Console.WriteLine("Creating service {0} lazily", serviceType.Name);
+                _serviceCreators.Remove(serviceType.GUID);
+                Services[serviceType.GUID] = service = serviceCreator();
+                return service;
+            }
+            return null;
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote) {
-            Services[serviceType.GUID] = callback != null ? callback(this, serviceType) : null;
+            if (callback == null) {
+                Services[serviceType.GUID] = null;
+            } else {
+                _serviceCreators[serviceType.GUID] = () => callback(this, serviceType);
+            }
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback) {
-            Services[serviceType.GUID] = callback != null ? callback(this, serviceType) : null;
+            AddService(serviceType, callback, true);
         }
 
         public void AddService(Type serviceType, object serviceInstance, bool promote) {
@@ -48,7 +62,7 @@ namespace TestUtilities.Mocks {
         }
 
         public void AddService(Type serviceType, object serviceInstance) {
-            Services[serviceType.GUID] = serviceInstance;
+            AddService(serviceType, serviceInstance, true);
         }
 
         public void RemoveService(Type serviceType, bool promote) {
@@ -56,7 +70,7 @@ namespace TestUtilities.Mocks {
         }
 
         public void RemoveService(Type serviceType) {
-            Services.Remove(serviceType.GUID);
+            RemoveService(serviceType, true);
         }
     }
 }
