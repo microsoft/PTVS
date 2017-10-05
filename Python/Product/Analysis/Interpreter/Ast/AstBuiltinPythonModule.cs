@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            return new List<string> { "-B", "-E", sm, Name };
+            return new List<string> { "-B", "-E", sm, "-u8", Name };
         }
     }
 }

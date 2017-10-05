@@ -63,6 +63,12 @@ PROPERTY_TYPES = type(int.real), type(property.fget)
 if sys.version_info[0] < 3:
     SKIP_TYPENAME_FOR_TYPES += unicode, long
 
+def safe_callable(v):
+    try:
+        return hasattr(v, '__call__')
+    except Exception:
+        return False
+
 class Signature(object):
     # These two dictionaries start with Python 3 values.
     # There is an update below for Python 2 differences.
@@ -312,7 +318,7 @@ class Signature(object):
         if not doc:
             doc = getattr(self.callable, '__doc__', None)
             allow_name_mismatch = False
-        if not doc:
+        if not isinstance(doc, str):
             return
 
         doc = self._get_first_function_call(doc)
@@ -379,7 +385,8 @@ class Signature(object):
         defaults = list(getattr(node, 'defaults', ()))
         defaults[:0] = [None for _ in range(len(args) - len(defaults))]
 
-        return [self._ast_arg_to_str(a, d) for a, d in zip(args, defaults)]
+        seen_names = set()
+        return [self._ast_arg_to_str(a, d, seen_names) for a, d in zip(args, defaults)]
 
     _AST_ARG_TYPES = tuple(getattr(ast, n) for n in (
         'arg', 'keyword', 'Name'
@@ -395,11 +402,18 @@ class Signature(object):
             else:
                 return op(node)
 
+        def walk_BitOr(self, node):         return '|'
+        def walk_Call(self, node):          pass    # Do not generate defaults from calls
         def walk_Name(self, node):          return node.id
         def walk_NameConstant(self, node):  return repr(node.value)
         def walk_Num(self, node):           return str(node.n)
         def walk_Str(self, node):           return repr(node.s)
         def walk_USub(self, node):          return '-'
+
+        def walk_Attribute(self, node):
+            v = self.walk(node.value)
+            if v:
+                return v + '.' + node.attr
 
         def walk_List(self, node):
             elts = [self.walk(n) for n in node.elts]
@@ -413,14 +427,20 @@ class Signature(object):
                 return '()'
             return '(' + ', '.join(elts) + ')'
 
+        def walk_BinOp(self, node):
+            v1 = self.walk(node.left)
+            op = self.walk(node.op)
+            v2 = self.walk(node.right)
+            if v1 and op and v2:
+                return v1 + op + v2
+
         def walk_UnaryOp(self, node):
             op = self.walk(node.op)
             value = self.walk(node.operand)
             if op and value:
                 return op + value
-            return None
 
-    def _ast_arg_to_str(self, arg, default):
+    def _ast_arg_to_str(self, arg, default, seen_names):
         '''Converts an AST argument object into a string.'''
         arg_id = None
         default_value = ''
@@ -451,12 +471,29 @@ class Signature(object):
             if arg_id is None:
                 arg_id = arg.id
 
-        for final_arg in [arg_id + default_value, arg_id]:
+        if arg_id in seen_names:
+            i = 2
+            new_arg_id = arg_id + str(i)
+            while new_arg_id in seen_names:
+                i += 1
+                new_arg_id = arg_id + str(i)
+            arg_id = new_arg_id
+        seen_names.add(arg_id)
+
+        if default_value:
+            final_arg = arg_id + default_value
             try:
                 ast.parse(final_arg)
-                return final_arg
             except SyntaxError:
                 pass
+            else:
+                seen_names.add(' default_value')
+                return final_arg
+        
+        if ' default_value' in seen_names:
+            return arg_id + '=None'
+
+        return arg_id
 
 class MemberInfo(object):
     NO_VALUE = object()
@@ -501,7 +538,7 @@ class MemberInfo(object):
                         self.bases.append(t)
                         self.need_imports.extend(ni)
 
-        elif hasattr(value, '__call__'):
+        elif safe_callable(value):
             dec = ()
             if scope:
                 if value_type in STATICMETHOD_TYPES:
@@ -617,11 +654,48 @@ class ScrapeState(object):
 
         if search_path:
             sys.path.insert(0, search_path)
-        self.root_module = mod = __import__(self.module_name)
-        if search_path:
-            del sys.path[0]
 
-        for bit in self.module_name.split('.')[1:]:
+        try:
+            try:
+                mod = __import__(self.module_name)
+            except Exception:
+                ex_msg = str(sys.exc_info()[1])
+                warnings.warn("Working around " + ex_msg, InspectWarning)
+                if ex_msg == "This must be an MFC application - try 'import win32ui' first":
+                    import win32ui
+                elif ex_msg == "Could not find TCL routines" or self.module_name == 'matplotlib.backends._tkagg':
+                    if sys.version_info[0] == 2:
+                        import Tkinter
+                    else:
+                        import tkinter
+                else:
+                    raise
+                mod = None
+            if not mod:
+                # Try the import again, either fixed or without chaining the
+                # previous exception.
+                mod = __import__(self.module_name)
+        finally:
+            if search_path:
+                del sys.path[0]
+        self.root_module = mod
+
+        # __import__ gives us the topmost module. We should generally use
+        # getattr() from here to find the child module. However, sometimes
+        # this is unsuccessful. So we work backwards through the full name
+        # to see what is in sys.modules, then getattr() to go forwards.
+        mod_name = self.module_name
+        bits = []
+        while mod_name and mod_name not in sys.modules:
+            mod_name, _, bit = self.module_name.rpartition('.')[0]
+            bits.insert(0, bit)
+
+        if mod_name:
+            self.root_module = mod = sys.modules[mod_name]
+        else:
+            bits = self.module_name.split('.')[1:]
+
+        for bit in bits:
             mod = getattr(mod, bit)
 
         self.module = mod
@@ -632,7 +706,7 @@ class ScrapeState(object):
         m_names = set(m.name for m in self.members)
         undeclared = []
         for m in self.members:
-            if m.value and m.type_name and '.' not in m.type_name and m.type_name not in m_names:
+            if m.value is not None and m.type_name and '.' not in m.type_name and m.type_name not in m_names:
                 undeclared.append(MemberInfo(m.type_name, type(m.value), module=self.module_name))
 
         self.members[:0] = undeclared
@@ -689,7 +763,7 @@ class ScrapeState(object):
             try:
                 value = getattr(mod, name)
             except AttributeError:
-                warnings.warn("failed to find attribute " + name + " for " + repr(mod), InspectWarning)
+                warnings.warn("attribute " + name + " on " + repr(mod) + " was in dir() but not getattr()", InspectWarning)
             except Exception:
                 warnings.warn("error getting " + name + " for " + repr(mod), InspectWarning)
             else:
@@ -745,7 +819,12 @@ class ScrapeState(object):
             print("", file=out)
 
         for value in self.members:
-            print(value.as_str(''), file=out)
+            s = value.as_str('')
+            try:
+                print(s, file=out)
+            except TypeError:
+                print(repr(s), file=sys.stderr)
+                raise
 
 def add_builtin_objects(state):
     T = "__Type(self)()"
@@ -1120,7 +1199,19 @@ def add_builtin_objects(state):
 
 if __name__ == '__main__':
     EXCLUDED_MEMBERS = ()
-    
+
+    outfile = sys.stdout
+    if '-u8' in sys.argv:
+        sys.argv.remove('-u8')
+        try:
+            b_outfile = outfile.buffer
+        except AttributeError:
+            warnings.warn("cannot enable UTF-8 output", InspectWarning)
+            pass    # on Python 2, so hopefully everything is valid ASCII...
+        else:
+            import io
+            outfile = io.TextIOWrapper(b_outfile, encoding='utf-8', errors='replace')
+
     if len(sys.argv) == 1:
         state = ScrapeState(builtins.__name__, builtins)
         add_builtin_objects(state)
@@ -1143,6 +1234,6 @@ if __name__ == '__main__':
 
     state.collect_second_level_members()
 
-    state.dump(sys.stdout)
+    state.dump(outfile)
     #import io
     #state.dump(io.BytesIO())

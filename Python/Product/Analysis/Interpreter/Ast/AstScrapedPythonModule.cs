@@ -77,6 +77,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             args.Add(sm);
+            args.Add("-u8");
             args.Add(mp.ModuleName);
             args.Add(mp.LibraryPath);
 
@@ -123,7 +124,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return;
                 }
 
-                using (var p = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, args.ToArray())) {
+                using (var p = ProcessOutput.Run(
+                    fact.Configuration.InterpreterPath,
+                    args.ToArray(),
+                    fact.Configuration.PrefixPath,
+                    null,
+                    visible: false,
+                    redirector: null,
+                    outputEncoding: Encoding.UTF8,
+                    errorEncoding: Encoding.UTF8
+                )) {
                     p.Wait();
                     if (p.ExitCode == 0) {
                         var ms = new MemoryStream();

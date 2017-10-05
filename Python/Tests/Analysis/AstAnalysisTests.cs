@@ -16,10 +16,12 @@
 
 extern alias analysis;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using analysis::Microsoft.PythonTools.Interpreter;
 using analysis::Microsoft.PythonTools.Interpreter.Ast;
 using analysis::Microsoft.PythonTools.Parsing;
@@ -352,24 +354,78 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, TestCategory("60s"), Priority(0)]
-        public void FullStdLibV35() {
-            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V35);
-            FullStdLibTest(v);
-        }
-
-        [TestMethod, TestCategory("60s"), Priority(0)]
-        public void FullStdLibV36() {
+        public async Task FullStdLibV36() {
             var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V36);
-            FullStdLibTest(v);
+            await FullStdLibTest(v);
+        }
+
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibV35() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V35);
+            await FullStdLibTest(v);
         }
 
         [TestMethod, TestCategory("60s"), Priority(0)]
-        public void FullStdLibV27() {
-            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V27);
-            FullStdLibTest(v);
+        public async Task FullStdLibV34() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V34);
+            await FullStdLibTest(v);
         }
 
-        private static void FullStdLibTest(PythonVersion v) {
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibV33() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V33);
+            await FullStdLibTest(v);
+        }
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibV32() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V32);
+            await FullStdLibTest(v);
+        }
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibV31() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V31);
+            await FullStdLibTest(v);
+        }
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibV27() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V27);
+            await FullStdLibTest(v);
+        }
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibV26() {
+            var v = PythonPaths.Versions.FirstOrDefault(pv => pv.Version == PythonLanguageVersion.V26);
+            await FullStdLibTest(v);
+        }
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        [Timeout(10 * 60 * 1000)]
+        public async Task FullStdLibAnaconda3() {
+            var v = PythonPaths.Anaconda36_x64 ?? PythonPaths.Anaconda36;
+            await FullStdLibTest(v,
+                // Crashes Python on import
+                "sklearn.linear_model.cd_fast",
+                // Crashes Python on import
+                "sklearn.cluster._k_means_elkan"
+            );
+        }
+
+        [TestMethod, TestCategory("60s"), Priority(0)]
+        public async Task FullStdLibAnaconda2() {
+            var v = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
+            await FullStdLibTest(v,
+                // Fails to import due to SxS manifest issues
+                "dde",
+                // Generates invalid Python 2.x code ("def exec(...)")
+                "PyQt5.QtGui"
+            );
+        }
+
+        private static async Task FullStdLibTest(PythonVersion v, params string[] skipModules) {
             v.AssertInstalled();
             var factory = new AstPythonInterpreterFactory(v.Configuration, new InterpreterFactoryCreationOptions {
                 DatabasePath = TestData.GetTempPath(),
@@ -379,15 +435,25 @@ R_A3 = R_A1.r_A()");
 
             bool anySuccess = false;
             bool anyExtensionSuccess = false, anyExtensionSeen = false;
+            bool anyParseError = false;
 
             using (var analyzer = new PythonAnalysis(factory)) {
-                foreach (var modName in modules) {
+                var tasks = new List<Task<Tuple<ModulePath, IPythonModule>>>();
+
+                var interp = analyzer.Analyzer.Interpreter;
+                foreach(var r in modules.AsParallel()
+                    .Where(m => !skipModules.Contains(m.ModuleName))
+                    .Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName)))
+                ) {
+                    var modName = r.Item1;
+                    var mod = r.Item2;
+
                     anyExtensionSeen |= modName.IsNativeExtension;
-                    var mod = analyzer.Analyzer.Interpreter.ImportModule(modName.ModuleName);
                     if (mod == null) {
                         Trace.TraceWarning("failed to import {0} from {1}", modName.ModuleName, modName.SourceFile);
                     } else if (mod is AstScrapedPythonModule smod) {
                         if (smod.ParseErrors?.Any() ?? false) {
+                            anyParseError = true;
                             Trace.TraceError("Parse errors in {0}", modName.SourceFile);
                             foreach (var e in smod.ParseErrors) {
                                 Trace.TraceError(e);
@@ -406,6 +472,7 @@ R_A3 = R_A1.r_A()");
             }
             Assert.IsTrue(anySuccess, "failed to import any modules at all");
             Assert.IsTrue(anyExtensionSuccess || !anyExtensionSeen, "failed to import all extension modules");
+            Assert.IsFalse(anyParseError, "parse errors occurred");
         }
 
         #endregion
