@@ -100,11 +100,20 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Translates a position back in time from the current position inside of VS to a 
         /// version from the out of proc analysis version.
         /// </summary>
-        public int TranslateBack(int position) {
+        public int TranslateBack(int position, ITextVersion currentVersion) {
+            if (currentVersion != null && currentVersion.TextBuffer != _buffer) {
+                Debug.Fail("mismatched buffer");
+                return position < _fromVersion.Length ? position : _fromVersion.Length - 1;
+            }
+            var version = currentVersion ?? _buffer.CurrentSnapshot.Version;
+            if (position >= version.Length) {
+                position = version.Length;
+            }
+
             return Tracking.TrackPositionBackwardInTime(
                 PointTrackingMode.Positive,
                 position,
-                _buffer.CurrentSnapshot.Version,
+                version,
                 _fromVersion
             );
         }
