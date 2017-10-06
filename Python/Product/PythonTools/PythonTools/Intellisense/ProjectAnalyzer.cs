@@ -976,7 +976,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal static async Task<string[]> GetValueDescriptionsAsync(AnalysisEntry file, string expr, SnapshotPoint point) {
-            var analysis = GetApplicableExpression(file, point);
+            var analysis = GetApplicableExpression(file, point, checkLeftAndRightOfPoint: false);
 
             if (analysis != null) {
                 return await GetValueDescriptionsAsync(file, analysis.Text, analysis.Location).ConfigureAwait(false);
@@ -1040,7 +1040,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point) {
             Debug.Assert(entry.Analyzer == this);
 
-            var analysis = GetApplicableExpression(entry, point);
+            var analysis = GetApplicableExpression(entry, point, checkLeftAndRightOfPoint: true);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -2376,7 +2376,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<QuickInfo> GetQuickInfoAsync(AnalysisEntry entry, ITextView view, SnapshotPoint point) {
             Debug.Assert(entry.Analyzer == this);
 
-            var analysis = GetApplicableExpression(entry, point);
+            var analysis = GetApplicableExpression(entry, point, checkLeftAndRightOfPoint: false);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -2429,7 +2429,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (entryService == null || !entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return Task.FromResult<string>(null);
             }
-            var analysis = GetApplicableExpression(entry, span.Start);
+            var analysis = GetApplicableExpression(entry, span.Start, checkLeftAndRightOfPoint: false);
             if (analysis == null) {
                 return Task.FromResult<string>(null);
             }
@@ -2473,45 +2473,70 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static ApplicableExpression GetApplicableExpression(AnalysisEntry entry, SnapshotPoint point) {
+        private static ApplicableExpression GetApplicableExpression(AnalysisEntry entry, SnapshotPoint point, bool checkLeftAndRightOfPoint) {
             if (entry != null) {
                 var snapshot = point.Snapshot;
                 var buffer = snapshot.TextBuffer;
-                var span = snapshot.CreateTrackingSpan(
-                    point.Position == snapshot.Length ?
-                        new Span(point.Position, 0) :
-                        new Span(point.Position, 1),
-                    SpanTrackingMode.EdgeInclusive
-                );
+                var spans = new List<ITrackingSpan>();
 
-                ReverseExpressionParser parser;
-                try {
-                    parser = new ReverseExpressionParser(snapshot, buffer, span);
-                } catch (ArgumentException) {
-                    return null;
+                if (checkLeftAndRightOfPoint) {
+                    // Covers the point after and in middle of identifier
+                    spans.Add(snapshot.CreateTrackingSpan(
+                        new Span(point.Position, 0),
+                        SpanTrackingMode.EdgeInclusive
+                    ));
+
+                    // Covers the point before and in middle of identifier
+                    if (point.Position < snapshot.Length) {
+                        spans.Add(snapshot.CreateTrackingSpan(
+                            new Span(point.Position, 1),
+                            SpanTrackingMode.EdgeInclusive
+                        ));
+                    }
+                } else {
+                    spans.Add(snapshot.CreateTrackingSpan(
+                        point.Position == snapshot.Length ?
+                            new Span(point.Position, 0) :
+                            new Span(point.Position, 1),
+                        SpanTrackingMode.EdgeInclusive
+                    ));
                 }
 
-                var exprRange = parser.GetExpressionRange(false);
-                if (exprRange != null) {
-                    string text = exprRange.Value.GetText();
+                SnapshotSpan? exprRange = null;
+                ReverseExpressionParser parser = null;
+                string exprText = null;
+                foreach (var span in spans) {
+                    try {
+                        parser = new ReverseExpressionParser(snapshot, buffer, span);
+                    } catch (ArgumentException) {
+                        continue;
+                    }
 
+                    exprRange = parser.GetExpressionRange(forCompletion: false);
+                    if (exprRange != null) {
+                        exprText = exprRange.Value.GetText();
+                        if (exprText.Length > 0) {
+                            break;
+                        }
+                    }
+                }
+
+                if (exprRange != null) {
                     var applicableTo = parser.Snapshot.CreateTrackingSpan(
                         exprRange.Value.Span,
                         SpanTrackingMode.EdgeExclusive
                     );
 
-                    if (text.Length > 0) {
-                        var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-                        var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
+                    var loc = parser.Span.GetSpan(parser.Snapshot.Version);
+                    var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
 
-                        var location = TranslateIndex(loc.Start, parser.Snapshot, entry);
-                        return new ApplicableExpression(
-                            entry,
-                            text,
-                            applicableTo,
-                            location
-                        );
-                    }
+                    var location = TranslateIndex(loc.Start, parser.Snapshot, entry);
+                    return new ApplicableExpression(
+                        entry,
+                        exprText,
+                        applicableTo,
+                        location
+                    );
                 }
             }
 

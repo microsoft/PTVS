@@ -631,22 +631,17 @@ sys.
                 string code = @"
 class C:
     def fff(self): pass
-
+i=1+2
 C().fff";
 
-                //var emptyAnalysis = AnalyzeExpression(0, code);
-                //AreEqual(emptyAnalysis.Expression, "");
-
-                for (int i = -1; i >= -3; i--) {
-                    var analysis = AnalyzeExpression(vs, i, code);
-                    Assert.AreEqual("C().fff", analysis.Expression);
-                }
-
-                var classAnalysis = AnalyzeExpression(vs, -6, code);
-                Assert.AreEqual("C()", classAnalysis.Expression);
-
-                var defAnalysis = AnalyzeExpression(vs, code.IndexOf("def fff") + 4, code);
-                Assert.AreEqual("fff", defAnalysis.Expression);
+                AnalyzeAndValidateExpression(vs, code.IndexOf("fff("), 3, code, "fff");
+                AnalyzeAndValidateExpression(vs, code.IndexOf("self)"), 4, code, "self");
+                AnalyzeAndValidateExpression(vs, code.IndexOf("C:"), 1, code, "C");
+                AnalyzeAndValidateExpression(vs, code.IndexOf("1"), 1, code, "1");
+                AnalyzeAndValidateExpression(vs, code.IndexOf("2"), 1, code, "2");
+                AnalyzeAndValidateExpression(vs, code.IndexOf("C()."), 1, code, "C");
+                AnalyzeAndValidateExpression(vs, code.IndexOf("C().") + 2, 2, code, "C()");
+                AnalyzeAndValidateExpression(vs, code.IndexOf(".fff") + 2, 2, code, "C().fff");
             }
         }
 
@@ -1158,6 +1153,15 @@ async def g():
                 for (int j = 0; j < expected.Length; j++) {
                     Assert.AreEqual(expected[j], quickInfo[j]);
                 }
+            }
+        }
+
+        private static void AnalyzeAndValidateExpression(MockVs vs, int start, int charCount, string code, string expectedExpr) {
+            // We check charCount + 1 positions to ensure that go to definition
+            // works when caret is on the left AND right of identifier (and in between)
+            for (int i = 0; i <= charCount; i++) {
+                var defAnalysis = AnalyzeExpression(vs, start + i, code);
+                Assert.AreEqual(expectedExpr, defAnalysis.Expression);
             }
         }
 
