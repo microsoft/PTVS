@@ -331,7 +331,7 @@ namespace PythonToolsTests {
 
                 // Analysis result must contain the module for the filename inside the egg that is a valid identifier,
                 // and no entries for the other filename which is not. 
-                var moduleNames = analyzer.GetModulesResult(true).Result.Select(x => x.Name);
+                var moduleNames = analyzer.GetModulesAsync(null, null).Result.Select(x => x.Name);
                 AssertUtil.Contains(moduleNames, "module");
                 AssertUtil.DoesntContain(moduleNames, "42");
             }

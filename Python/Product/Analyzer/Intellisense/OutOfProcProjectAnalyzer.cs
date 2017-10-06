@@ -175,7 +175,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
                 case AP.GetAllMembersRequest.Command: response = GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = GetModules(request); break;
-                case AP.GetModuleMembersRequest.Command: response = GeModuleMembers(request); break;
                 case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
                 case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
@@ -1452,27 +1451,13 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private Response GeModuleMembers(Request request) {
-            var getModuleMembers = (AP.GetModuleMembersRequest)request;
-
-            return new AP.CompletionsResponse() {
-                completions = ToCompletions(
-                    Analyzer.GetModuleMembers(
-                        _projectFiles[getModuleMembers.fileId].AnalysisContext,
-                        getModuleMembers.package,
-                        getModuleMembers.includeMembers
-                    ),
-                    GetMemberOptions.None
-                )
-            };
-        }
-
         private Response GetModules(Request request) {
             var getModules = (AP.GetModulesRequest)request;
+            var prefix = getModules.package == null ? null : string.Join(".", getModules.package);
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(
-                    Analyzer.GetModules(getModules.topLevelOnly),
+                    Analyzer.GetModules(prefix),
                     GetMemberOptions.None
                 )
             };

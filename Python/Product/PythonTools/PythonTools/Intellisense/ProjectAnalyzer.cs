@@ -1808,24 +1808,17 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async Task<IEnumerable<CompletionResult>> GetModulesResult(bool topLevelOnly) {
-            var members = await SendRequestAsync(new AP.GetModulesRequest() {
-                topLevelOnly = topLevelOnly
-            }).ConfigureAwait(false);
+        internal Task<IEnumerable<CompletionResult>> GetModulesAsync() => GetModulesAsync(null, null);
 
-            if (members != null) {
-                return ConvertMembers(members.completions);
+        internal async Task<IEnumerable<CompletionResult>> GetModulesAsync(AnalysisEntry entry, string[] package) {
+            var req = new AP.GetModulesRequest {
+                package = package
+            };
+            if (entry != null) {
+                req.fileId = entry.FileId;
             }
 
-            return Enumerable.Empty<CompletionResult>();
-        }
-
-        internal async Task<IEnumerable<CompletionResult>> GetModuleMembersAsync(AnalysisEntry entry, string[] package, bool includeMembers) {
-            var members = await SendRequestAsync(new AP.GetModuleMembersRequest() {
-                fileId = entry.FileId,
-                package = package,
-                includeMembers = includeMembers
-            }).ConfigureAwait(false);
+            var members = await SendRequestAsync(req).ConfigureAwait(false);
 
             if (members != null) {
                 return ConvertMembers(members.completions);

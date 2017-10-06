@@ -41,10 +41,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// New in 1.1.
         /// </summary>
         public static Expression GetExpression(Statement statement) {
-            if (statement is ExpressionStatement) {
-                return ((ExpressionStatement)statement).Expression;
-            } else if (statement is ReturnStatement) {
-                return ((ReturnStatement)statement).Expression;
+            if (statement is ExpressionStatement exprStmt) {
+                return exprStmt.Expression;
+            } else if (statement is ReturnStatement retStmt) {
+                return retStmt.Expression;
             } else {
                 return null;
             }

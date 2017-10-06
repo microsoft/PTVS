@@ -620,19 +620,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public class GetModulesRequest : Request<CompletionsResponse> {
             public const string Command = "getModules";
 
-            public bool topLevelOnly;
-
-            public override string command => Command;
-        }
-
-        public class GetModuleMembersRequest : Request<CompletionsResponse> {
-            public const string Command = "getModuleMembers";
-
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public int fileId;
             public string[] package;
-            public bool includeMembers;
 
             public override string command => Command;
+
+            public bool ShouldSerializepackage() => (package?.Length ?? 0) > 0;
         }
 
         public class GetAllMembersRequest : Request<CompletionsResponse> {

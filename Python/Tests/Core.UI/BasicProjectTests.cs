@@ -1000,7 +1000,7 @@ namespace PythonToolsUITests {
                 var modules = new string[0];
                 for (int retries = 10; retries > 0 && !modules.Contains("native_module"); --retries) {
                     Thread.Sleep(1000);
-                    modules = (await analyzer.GetModulesResult(true)).Select(x => x.Name).OrderBy(k => k).ToArray();
+                    modules = (await analyzer.GetModulesAsync()).Select(x => x.Name).OrderBy(k => k).ToArray();
                 }
                 AssertUtil.ContainsAtLeast(modules, "native_module");
 
@@ -1011,7 +1011,7 @@ namespace PythonToolsUITests {
                 analyzer = pyproj.GetAnalyzer();
                 for (int retries = 10; retries > 0 && !modules.Contains("native_module"); --retries) {
                     Thread.Sleep(1000);
-                    modules = (await analyzer.GetModulesResult(true)).Select(x => x.Name).OrderBy(k => k).ToArray();
+                    modules = (await analyzer.GetModulesAsync()).Select(x => x.Name).OrderBy(k => k).ToArray();
                 }
                 AssertUtil.ContainsAtLeast(modules, "native_module");
             }

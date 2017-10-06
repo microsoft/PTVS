@@ -529,28 +529,26 @@ namespace Microsoft.PythonTools.Analysis {
 
 
         /// <summary>
-        /// Looks up the specified module by name.
-        /// </summary>
-        public MemberResult[] GetModule(string name) {
-            return GetModules(modName => modName != name);
-        }
-
-        /// <summary>
         /// Gets a top-level list of all the available modules as a list of MemberResults.
         /// </summary>
         /// <returns></returns>
-        public MemberResult[] GetModules(bool topLevelOnly = false) {
-            return GetModules(modName => topLevelOnly && modName.IndexOf('.') != -1);
-        }
+        public MemberResult[] GetModules(string prefix) {
+            if (!string.IsNullOrEmpty(prefix) && !prefix.EndsWith(".")) {
+                prefix += ".";
+            }
 
-        private MemberResult[] GetModules(Func<string, bool> excludedPredicate) {
             var d = new Dictionary<string, List<ModuleLoadState>>();
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (String.IsNullOrWhiteSpace(modName) ||
-                    excludedPredicate(modName)) {
+                if (string.IsNullOrWhiteSpace(modName) ||
+                    (!string.IsNullOrEmpty(prefix) && !modName.StartsWith(prefix))) {
+                    continue;
+                }
+
+                modName = modName.Substring(prefix.Length);
+                if (modName.Contains(".")) {
                     continue;
                 }
 

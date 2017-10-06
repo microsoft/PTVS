@@ -21,6 +21,7 @@ using System.Linq;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -139,10 +140,16 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 var analyzer = analysis.Analyzer;
                 IEnumerable<CompletionResult> result;
-                if (package.Length > 0) {
-                    result = analyzer.WaitForRequest(analyzer.GetModuleMembersAsync(analysis, package, !modulesOnly), "GetSubmodules");
+
+                if (modulesOnly || package.Length == 0) {
+                    result = analyzer.WaitForRequest(analyzer.GetModulesAsync(analysis, package), "GetModules");
                 } else {
-                    result = analyzer.WaitForRequest(analyzer.GetModulesResult(true), "GetModules");
+                    result = analyzer.WaitForRequest(analyzer.GetMembersAsync(
+                        analysis,
+                        $"__import__('{string.Join(".", package)}')",
+                        SourceLocation.MinValue,
+                        Analysis.GetMemberOptions.DeclaredOnly
+                    ), "GetMembers");
                 }
 
                 if (result != null) {
