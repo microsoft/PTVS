@@ -3374,10 +3374,13 @@
         </Item>
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
-            <Val><![CDATA[.Python.Open Command Prompt Here]]></Val>
+            <Val><![CDATA[Open Command Prompt Here]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[.Python.Hier Eingabeaufforderung öffnen]]></Val>
+              <Val><![CDATA[Eingabeaufforderung hier öffnen]]></Val>
             </Tgt>
+            <Prev Cat="Button">
+              <Val><![CDATA[.Python.Open Command Prompt Here]]></Val>
+            </Prev>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -6673,7 +6676,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17272.1]]></Val>
+        <Val><![CDATA[3.0.17276.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6709,7 +6712,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17272.1]]></Val>
+        <Val><![CDATA[3.0.17276.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
