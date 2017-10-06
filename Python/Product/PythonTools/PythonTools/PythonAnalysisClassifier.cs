@@ -136,8 +136,8 @@ namespace Microsoft.PythonTools {
 
             // find where in the spans we should start scanning from (they're sorted by
             // starting position in the old buffer)
-            var start = spanTranslator.TranslateBack(span.Start);
-            var end = spanTranslator.TranslateBack(span.End);
+            var start = spanTranslator.TranslateBack(span.Start, span.Snapshot.Version);
+            var end = spanTranslator.TranslateBack(span.End, span.Snapshot.Version);
             var startIndex = Array.BinarySearch(spans, start, IndexComparer.Instance);
             if (startIndex < 0) {
                 startIndex = ~startIndex - 1;

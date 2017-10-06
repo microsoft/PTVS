@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -68,7 +69,14 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
             public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
-                return _classifiers.SelectMany(c => c.GetClassificationSpans(span)).ToList();
+                return _classifiers.SelectMany(c => {
+                    try {
+                        return c.GetClassificationSpans(span);
+                    } catch (Exception ex) {
+                        Debug.WriteLine("Error getting classification spans.\r\n{0}", ex);
+                        return Enumerable.Empty<ClassificationSpan>();
+                    }
+                }).ToList();
             }
         }
     }
