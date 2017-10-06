@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
     class AnalysisLogWriter {
@@ -141,13 +142,22 @@ namespace Microsoft.PythonTools.Analysis {
                 return null;
             }
 
-            while (true) {
+            // Retry for up to one second
+            for (int retries = 100; retries > 0; --retries) {
                 try {
                     return new StreamWriter(new FileStream(_outputFile, FileMode.Append, FileAccess.Write, FileShare.Read), new UTF8Encoding(false));
                 } catch (IOException) {
+                    var dir = PathUtils.GetParent(_outputFile);
+                    try {
+                        Directory.CreateDirectory(dir);
+                    } catch (IOException) {
+                        // Cannot create directory for DB, so just bail out
+                        return null;
+                    }
                     Thread.Sleep(10);
                 }
             }
+            return null;
         }
 
         private static IEnumerable<string> AsNormalStrings(IEnumerable<object> items) {
