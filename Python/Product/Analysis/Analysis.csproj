@@ -80,6 +80,7 @@
     <Compile Include="Interpreter\Ast\NameLookupContext.cs" />
     <Compile Include="Interpreter\EmptyModule.cs" />
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
+    <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
     <Compile Include="Interpreter\IPackageManager.cs" />
     <Compile Include="Interpreter\IPackageManagerUI.cs" />

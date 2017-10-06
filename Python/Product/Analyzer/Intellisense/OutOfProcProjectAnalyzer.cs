@@ -1437,7 +1437,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var pyEntry = _projectFiles[topLevelCompletions.fileId] as IPythonProjectEntry;
             IEnumerable<MemberResult> members;
             if (pyEntry.Analysis != null) {
-
                 members = pyEntry.Analysis.GetAllAvailableMembers(
                     new SourceLocation(topLevelCompletions.location, 1, topLevelCompletions.column),
                     topLevelCompletions.options
@@ -1455,11 +1454,19 @@ namespace Microsoft.PythonTools.Intellisense {
             var getModules = (AP.GetModulesRequest)request;
             var prefix = getModules.package == null ? null : string.Join(".", getModules.package);
 
-            return new AP.CompletionsResponse() {
-                completions = ToCompletions(
-                    Analyzer.GetModules(prefix),
-                    GetMemberOptions.None
-                )
+            if (getModules.package == null || getModules.package.Length == 0) {
+                return new AP.CompletionsResponse {
+                    completions = ToCompletions(Analyzer.GetModules(), GetMemberOptions.None)
+                };
+            }
+
+            IModuleContext context = null;
+            if (getModules.fileId >= 0) {
+                context = (_projectFiles[getModules.fileId] as IPythonProjectEntry)?.AnalysisContext;
+            }
+
+            return new AP.CompletionsResponse {
+                completions = ToCompletions(Analyzer.GetModuleMembers(context, getModules.package), GetMemberOptions.None)
             };
         }
 

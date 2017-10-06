@@ -43,7 +43,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public PythonMemberType MemberType => PythonMemberType.Module;
         public IEnumerable<LocationInfo> Locations => ((MaybeModule as ILocatedMember)?.Locations).MaybeEnumerate();
 
+        public bool IsLoaded => MaybeModule != null;
         private IPythonModule MaybeModule => Volatile.Read(ref _module);
+
         private IPythonModule GetModule() {
             var mod = Volatile.Read(ref _module);
             if (mod != null) {

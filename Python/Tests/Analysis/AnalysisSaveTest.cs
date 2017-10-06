@@ -78,7 +78,7 @@ def Aliased(fob):
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules(null).Select(x => x.Name), "test");
+                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
 import test
@@ -160,7 +160,7 @@ def Overloaded(a, b):
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules(null).Select(x => x.Name), "test");
+                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
 import test
@@ -206,7 +206,7 @@ class MultipleInheritance(WithInstanceMembers, WithMemberFunctions):
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules(null).Select(x => x.Name), "test");
+                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
 import test
@@ -242,7 +242,7 @@ def ReturningMultiplyDefinedClass():
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules(null).Select(x => x.Name), "test");
+                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
 import test

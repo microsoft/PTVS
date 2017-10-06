@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         analysis,
                         $"__import__('{string.Join(".", package)}')",
                         SourceLocation.MinValue,
-                        Analysis.GetMemberOptions.DeclaredOnly
+                        Analysis.GetMemberOptions.None
                     ), "GetMembers");
                 }
 

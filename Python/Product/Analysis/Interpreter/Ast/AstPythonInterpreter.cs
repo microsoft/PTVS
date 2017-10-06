@@ -24,7 +24,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreter : IPythonInterpreter, IModuleContext {
+    class AstPythonInterpreter : IPythonInterpreter, IModuleContext, ICanFindModuleMembers {
         private readonly AstPythonInterpreterFactory _factory;
         private readonly Dictionary<BuiltinTypeId, IPythonType> _builtinTypes;
         private PythonAnalyzer _analyzer;
@@ -164,6 +164,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
+            Debug.Assert(!name.EndsWith("."), $"{name} should not end with '.'");
+
             // Handle builtins explicitly
             if (name == BuiltinModuleName) {
                 if (_builtinModule == null) {
@@ -278,6 +280,34 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _userSearchPaths = _analyzer.GetSearchPaths();
             }
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public IEnumerable<string> GetModulesNamed(string name) {
+            var usp = GetUserSearchPathPackages();
+            var ssp = _factory.GetImportableModules();
+
+            var dotName = "." + name;
+
+            IEnumerable<string> res;
+            if (usp == null) {
+                if (ssp == null) {
+                    res = Enumerable.Empty<string>();
+                } else {
+                    res = ssp.Keys;
+                }
+            } else if (ssp == null) {
+                res = usp.Keys;
+            } else {
+                res = usp.Keys.Union(ssp.Keys);
+            }
+
+            return res.Where(m => m == name || m.EndsWith(dotName));
+        }
+
+        public IEnumerable<string> GetModulesContainingName(string name) {
+            // TODO: Some efficient way of searching every module
+
+            yield break;
         }
     }
 }

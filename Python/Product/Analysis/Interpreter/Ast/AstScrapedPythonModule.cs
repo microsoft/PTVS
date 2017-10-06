@@ -26,7 +26,12 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstScrapedPythonModule : IPythonModule {
+    class AstScrapedPythonModule : IPythonModule
+#if DEBUG
+        // In debug builds we let you F12 to the scraped file
+        , ILocatedMember
+#endif
+        {
         private readonly string _filePath;
         private string _documentation;
         protected readonly Dictionary<string, IMember> _members;
@@ -62,6 +67,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IEnumerable<string> ParseErrors { get; private set; }
+
+#if DEBUG
+        public IEnumerable<LocationInfo> Locations { get; private set; } = new LocationInfo[0];
+#endif
 
         protected virtual List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
             var args = new List<string> { "-B", "-E" };
@@ -106,7 +115,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _scraped = true;
 
             var interp = context as AstPythonInterpreter;
-            var fact = interp?.Factory;
+            var fact = interp?.Factory as AstPythonInterpreterFactory;
             if (fact == null) {
                 return;
             }
@@ -145,11 +154,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         }
                         code.Seek(0, SeekOrigin.Begin);
                     } else {
-                        if (fact is AstPythonInterpreterFactory f) {
-                            f.Log(TraceLevel.Error, "Scrape", p.Arguments);
-                            foreach (var e in p.StandardErrorLines) {
-                                f.Log(TraceLevel.Error, "Scrape", Name, e);
-                            }
+                        fact.Log(TraceLevel.Error, "Scrape", p.Arguments);
+                        foreach (var e in p.StandardErrorLines) {
+                            fact.Log(TraceLevel.Error, "Scrape", Name, e);
                         }
 
                         var err = new List<string> { $"Error scraping {Name}", p.Arguments };
@@ -173,10 +180,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
 
                 ParseErrors = sink.Errors.Select(e => $"{_filePath ?? "(builtins)"} ({e.Span}): {e.Message}").ToArray();
-                if (ParseErrors.Any() && fact is AstPythonInterpreterFactory f) {
-                    f.Log(TraceLevel.Error, "Parse", _filePath ?? "(builtins)");
+                if (ParseErrors.Any()) {
+                    fact.Log(TraceLevel.Error, "Parse", _filePath ?? "(builtins)");
                     foreach (var e in ParseErrors) {
-                        f.Log(TraceLevel.Error, "Parse", e);
+                        fact.Log(TraceLevel.Error, "Parse", e);
                     }
                 }
 
@@ -186,6 +193,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     SaveCachedCode(interp, code);
                 }
             }
+
+#if DEBUG
+            Locations = new[] { new LocationInfo(fact.GetCacheFilePath(_filePath), 1, 1) };
+#endif
 
             var walker = PrepareWalker(interp, ast);
             lock (_members) {

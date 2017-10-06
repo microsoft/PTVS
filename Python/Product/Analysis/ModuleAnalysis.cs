@@ -298,7 +298,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="topLevelOnly">Only return top-level modules.</param>
         [Obsolete]
         public MemberResult[] GetModules(bool topLevelOnly = false) {
-            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules(null));
+            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules());
 
             var children = GlobalScope.GetChildrenPackages(InterpreterContext);
 

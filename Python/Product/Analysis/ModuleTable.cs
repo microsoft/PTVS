@@ -222,8 +222,13 @@ namespace Microsoft.PythonTools.Analysis {
             var unresolvedNames = _analyzer?.GetAllUnresolvedModuleNames();
 
             foreach (var keyValue in _modules) {
-                unloadedNames.Remove(keyValue.Key);
                 unresolvedNames?.Remove(keyValue.Key);
+
+                if (keyValue.Value.Module is Interpreter.Ast.AstNestedPythonModule anpm && !anpm.IsLoaded) {
+                    continue;
+                }
+
+                unloadedNames.Remove(keyValue.Key);
                 yield return new KeyValuePair<string, ModuleLoadState>(keyValue.Key, new InitializedModuleLoadState(keyValue.Value));
             }
 
@@ -334,11 +339,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             internal override bool ModuleContainsMember(IModuleContext context, string name) {
-                // UNDONE: Causes too many module scrapes right now
-                if (context is Interpreter.Ast.AstPythonInterpreter) {
-                    return false;
-                }
-
                 var mod = _moduleTable._interpreter.ImportModule(_name);
                 if (mod != null) {
                     return BuiltinModuleContainsMember(context, name, mod);
