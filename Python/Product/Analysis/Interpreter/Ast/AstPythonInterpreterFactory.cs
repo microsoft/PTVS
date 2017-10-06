@@ -36,6 +36,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private bool _disposed;
         private readonly bool _skipCache;
 
+        private AnalysisLogWriter _log;
+        private readonly TraceLevel _logLevel;
+        // Available for tests to override
+        internal static bool LogToConsole = false;
+
         public AstPythonInterpreterFactory(
             InterpreterConfiguration config,
             InterpreterFactoryCreationOptions options
@@ -45,7 +50,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             options = options ?? new InterpreterFactoryCreationOptions();
             _databasePath = options.DatabasePath;
+            if (!string.IsNullOrEmpty(_databasePath)) {
+                _log = new AnalysisLogWriter(PathUtils.GetAbsoluteFilePath(_databasePath, "AnalysisLog.txt"), false, LogToConsole,
+#if DEBUG
+                    1   // flush after each message
+#else
+                    20  // flush after a batch
+#endif
+                    );
+            }
             _skipCache = !options.UseExistingCache;
+            _logLevel = options.TraceLevel;
 
             if (!GlobalInterpreterOptions.SuppressPackageManagers) {
                 try {
@@ -72,6 +87,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         protected void Dispose(bool disposing) {
             if (!_disposed) {
                 _disposed = true;
+                _log?.Flush(!disposing);
 
                 if (disposing) {
                     if (PackageManager != null) {
@@ -100,6 +116,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IPythonInterpreter CreateInterpreter() {
             return new AstPythonInterpreter(this);
         }
+
+        internal void Log(TraceLevel level, string eventName, params object[] args) {
+            if (level <= _logLevel) {
+                _log?.Log(eventName, args);
+            }
+        }
+
+        internal string FastRelativePath(string fullPath) {
+            if (!fullPath.StartsWith(Configuration.PrefixPath, StringComparison.OrdinalIgnoreCase)) {
+                return fullPath;
+            }
+            var p = fullPath.Substring(Configuration.PrefixPath.Length);
+            if (p.StartsWith("\\")) {
+                return p.Substring(1);
+            }
+            return p;
+        }
+
 
         internal string GetCacheFilePath(string filePath) {
             if (string.IsNullOrEmpty(_databasePath)) {
@@ -156,6 +190,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (!fileIsOkay) {
                     file.Dispose();
                     file = null;
+
+                    Log(TraceLevel.Info, "InvalidateCachedModule", path);
+
                     try {
                         File.Delete(path);
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -219,6 +256,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (string.IsNullOrEmpty(cache)) {
                 return;
             }
+
+            Log(TraceLevel.Info, "WriteCachedModule", cache);
 
             try {
                 using (var stream = OpenAndOverwrite(cache)) {
@@ -329,6 +368,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         _searchPaths = sp = GetCurrentSearchPaths().MaybeEnumerate().ToArray();
                     }
                 }
+                Debug.Assert(sp != null, "Should have search paths");
+                Log(TraceLevel.Info, "SearchPaths", sp);
             }
             return sp;
         }

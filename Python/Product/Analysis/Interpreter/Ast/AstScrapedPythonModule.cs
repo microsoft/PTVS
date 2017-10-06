@@ -61,6 +61,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
+        public IEnumerable<string> ParseErrors { get; private set; }
+
         protected virtual List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
             var args = new List<string> { "-B", "-E" };
 
@@ -75,6 +77,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             args.Add(sm);
+            args.Add("-u8");
             args.Add(mp.ModuleName);
             args.Add(mp.LibraryPath);
 
@@ -121,7 +124,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return;
                 }
 
-                using (var p = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, args.ToArray())) {
+                using (var p = ProcessOutput.Run(
+                    fact.Configuration.InterpreterPath,
+                    args.ToArray(),
+                    fact.Configuration.PrefixPath,
+                    null,
+                    visible: false,
+                    redirector: null,
+                    outputEncoding: Encoding.UTF8,
+                    errorEncoding: Encoding.UTF8
+                )) {
                     p.Wait();
                     if (p.ExitCode == 0) {
                         var ms = new MemoryStream();
@@ -133,13 +145,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         }
                         code.Seek(0, SeekOrigin.Begin);
                     } else {
-                        using (var sw = new StringWriter()) {
-                            sw.WriteLine("Error scraping {0}", Name);
-                            foreach (var line in p.StandardErrorLines) {
-                                sw.WriteLine(line);
+                        if (fact is AstPythonInterpreterFactory f) {
+                            f.Log(TraceLevel.Error, "Scrape", p.Arguments);
+                            foreach (var e in p.StandardErrorLines) {
+                                f.Log(TraceLevel.Error, "Scrape", Name, e);
                             }
-                            Debug.Fail(sw.ToString());
                         }
+
+                        var err = new List<string> { $"Error scraping {Name}", p.Arguments };
+                        err.AddRange(p.StandardErrorLines);
+                        Debug.Fail(string.Join(Environment.NewLine, err));
+                        ParseErrors = err;
                     }
                 }
             }
@@ -155,8 +171,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 using (var parser = Parser.CreateParser(sr, fact.GetLanguageVersion(), new ParserOptions { ErrorSink = sink })) {
                     ast = parser.ParseFile();
                 }
-                foreach (var err in sink.Errors) {
-                    Trace.TraceError($"{_filePath ?? "(builtins)"} ({err.Span}): {err.Message}");
+
+                ParseErrors = sink.Errors.Select(e => $"{_filePath ?? "(builtins)"} ({e.Span}): {e.Message}").ToArray();
+                if (ParseErrors.Any() && fact is AstPythonInterpreterFactory f) {
+                    f.Log(TraceLevel.Error, "Parse", _filePath ?? "(builtins)");
+                    foreach (var e in ParseErrors) {
+                        f.Log(TraceLevel.Error, "Parse", e);
+                    }
                 }
 
                 if (needCache) {

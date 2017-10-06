@@ -42,18 +42,17 @@ namespace AnalysisTests {
 
         static BaseAnalysisTest() {
             AnalysisLog.Reset();
-            AnalysisLog.ResetTime();
             AssertListener.Initialize();
         }
 
         public void StartAnalysisLog() {
             AnalysisLog.Reset();
-            AnalysisLog.Output = Console.Out;
+            AnalysisLog.OutputToConsole = true;
         }
 
         public void EndAnalysisLog() {
             AnalysisLog.Flush();
-            AnalysisLog.Output = null;
+            AnalysisLog.OutputToConsole = false;
             foreach (var d in _toDispose.MaybeEnumerate()) {
                 d.Dispose();
             }

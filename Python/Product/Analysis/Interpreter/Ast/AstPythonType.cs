@@ -23,13 +23,14 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonType : IPythonType, IMemberContainer, ILocatedMember {
+        private readonly string _name;
         protected readonly Dictionary<string, IMember> _members;
 
         private static readonly IPythonModule NoDeclModule = new AstPythonModule();
 
         public AstPythonType(string name) {
             _members = new Dictionary<string, IMember>();
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            _name = name ?? throw new ArgumentNullException(nameof(name));
             DeclaringModule = NoDeclModule;
             Mro = Array.Empty<IPythonType>();
             Locations = Array.Empty<LocationInfo>();
@@ -44,7 +45,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         ) {
             _members = new Dictionary<string, IMember>();
 
-            Name = def?.Name ?? throw new ArgumentNullException(nameof(def));
+            _name = def?.Name ?? throw new ArgumentNullException(nameof(def));
             Documentation = doc;
             DeclaringModule = declModule ?? throw new ArgumentNullException(nameof(declModule));
             Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
@@ -71,7 +72,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Mro = mro.MaybeEnumerate().ToArray();
         }
 
-        public string Name { get; }
+        public string Name {
+            get {
+                lock (_members) {
+                    IMember nameMember;
+                    if (_members.TryGetValue("__name__", out nameMember) && nameMember is AstPythonStringLiteral lit) {
+                        return lit.Value;
+                    }
+                }
+                return _name;
+            }
+        }
         public string Documentation { get; }
         public IPythonModule DeclaringModule {get;}
         public IList<IPythonType> Mro { get; private set; }

@@ -34,7 +34,6 @@ namespace AnalysisTests {
         [TestInitialize]
         public void TestInitialize() {
             AnalysisLog.Reset();
-            AnalysisLog.ResetTime();
             AssertListener.Initialize();
         }
 

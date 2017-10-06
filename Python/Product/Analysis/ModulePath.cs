@@ -664,6 +664,14 @@ namespace Microsoft.PythonTools.Analysis {
             return FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
         }
 
+        private static bool IsModuleNameMatch(Regex regex, string path, string mod) {
+            var m = regex.Match(PathUtils.GetFileOrDirectoryName(path));
+            if (!m.Success) {
+                return false;
+            }
+            return m.Groups["name"].Value == mod;
+        }
+
         internal static bool FromBasePathAndName_NoThrow(
             string basePath,
             string moduleName,
@@ -692,8 +700,8 @@ namespace Microsoft.PythonTools.Analysis {
                         return pack;
                     }
                     var mods = PathUtils.EnumerateFiles(dir, mod + "*", recurse: false).ToArray();
-                    return mods.FirstOrDefault(p => PythonBinaryRegex.IsMatch(PathUtils.GetFileOrDirectoryName(p))) ??
-                        mods.FirstOrDefault(p => PythonFileRegex.IsMatch(PathUtils.GetFileOrDirectoryName(p)));
+                    return mods.FirstOrDefault(p => IsModuleNameMatch(PythonBinaryRegex, p, mod)) ??
+                        mods.FirstOrDefault(p => IsModuleNameMatch(PythonFileRegex, p, mod));
                 };
             }
 
