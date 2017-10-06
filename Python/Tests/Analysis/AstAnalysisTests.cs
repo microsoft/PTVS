@@ -433,6 +433,12 @@ R_A3 = R_A1.r_A()");
             });
             var modules = ModulePath.GetModulesInLib(v.PrefixPath).ToList();
 
+            var skip = new HashSet<string>(skipModules);
+            skip.UnionWith(new[] {
+                "matplotlib.backends._backend_gdk",
+                "matplotlib.backends._backend_gtkagg",
+            });
+
             bool anySuccess = false;
             bool anyExtensionSuccess = false, anyExtensionSeen = false;
             bool anyParseError = false;
@@ -442,7 +448,7 @@ R_A3 = R_A1.r_A()");
 
                 var interp = analyzer.Analyzer.Interpreter;
                 foreach(var r in modules.AsParallel()
-                    .Where(m => !skipModules.Contains(m.ModuleName))
+                    .Where(m => !skip.Contains(m.ModuleName))
                     .Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName)))
                 ) {
                     var modName = r.Item1;

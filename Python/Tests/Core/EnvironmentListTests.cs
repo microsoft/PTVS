@@ -387,7 +387,7 @@ namespace PythonToolsUITests {
                 Assert.IsFalse(fact.IsCurrent);
                 Assert.AreEqual(MockPythonInterpreterFactory.NoDatabaseReason, fact.GetIsCurrentReason(null));
 
-                list.Execute(DBExtension.StartRefreshDB, view).GetAwaiter().GetResult();
+                list.Execute(DBExtension.StartRefreshDB, view, CancellationTokens.After15s).GetAwaiter().GetResult();
                 for (int retries = 10; retries > 0 && !wpf.Invoke(() => view.IsRefreshingDB); --retries) {
                     Thread.Sleep(200);
                 }
@@ -407,7 +407,7 @@ namespace PythonToolsUITests {
                 Assert.IsFalse(fact.IsCurrent);
                 Assert.AreEqual(MockPythonInterpreterFactory.MissingModulesReason, fact.GetIsCurrentReason(null));
 
-                list.Execute(DBExtension.StartRefreshDB, view).GetAwaiter().GetResult();
+                list.Execute(DBExtension.StartRefreshDB, view, CancellationTokens.After15s).GetAwaiter().GetResult();
 
                 Assert.IsTrue(wpf.Invoke(() => view.IsRefreshingDB));
                 Assert.IsFalse(list.CanExecute(DBExtension.StartRefreshDB, view));
@@ -611,7 +611,7 @@ namespace PythonToolsUITests {
                         extView.DataContext = view;
                         return (ConfigurationEnvironmentView)((System.Windows.Controls.Grid)extView.FindName("Subcontext")).DataContext;
                     });
-                    await wpf.Execute((RoutedCommand)ConfigurationExtension.Remove, extView, confView);
+                    await wpf.Execute((RoutedCommand)ConfigurationExtension.Remove, extView, confView, CancellationTokens.After15s);
                     await Task.Delay(500);
 
                     var afterRemove = wpf.Invoke(() => new HashSet<string>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
@@ -637,7 +637,7 @@ namespace PythonToolsUITests {
             using (var defaultChanged = new AutoResetEvent(false))
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                service.DefaultInterpreterChanged += (s, e) => { defaultChanged.Set(); };
+                service.DefaultInterpreterChanged += (s, e) => { defaultChanged.SetIfNotDisposed(); };
                 list.Service = service;
                 list.Interpreters = interpreters;
                 var originalDefault = service.DefaultInterpreter;
@@ -648,14 +648,20 @@ namespace PythonToolsUITests {
                         );
                         Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Configuration.Description));
 
-                        list.Execute(EnvironmentView.MakeGlobalDefault, environment);
+                        if (!list.CanExecute(EnvironmentView.MakeGlobalDefault, environment)) {
+                            Console.WriteLine("Skipping {0} because it cannot be made the default", interpreter.Configuration.Id);
+                            continue;
+                        }
+                        var before = service.DefaultInterpreter;
+                        Console.WriteLine("Changing default from {0} to {1}", before.Configuration.Id, interpreter.Configuration.Id);
+                        list.Execute(EnvironmentView.MakeGlobalDefault, environment, CancellationTokens.After15s);
                         Assert.IsTrue(defaultChanged.WaitOne(TimeSpan.FromSeconds(10.0)), "Setting default took too long");
 
                         Assert.AreEqual(interpreter, service.DefaultInterpreter,
                             string.Format(
                                 "Failed to change default from {0} to {1}",
-                                service.DefaultInterpreter.Configuration.Description,
-                                interpreter.Configuration.Description
+                                service.DefaultInterpreter.Configuration.Id,
+                                interpreter.Configuration.Id
                         ));
                     }
                 } finally {
@@ -978,8 +984,8 @@ namespace PythonToolsUITests {
                 return _proxy.CanExecute(command, _window, parameter);
             }
 
-            public Task Execute(RoutedCommand command, object parameter) {
-                return _proxy.Execute(command, _window, parameter);
+            public Task Execute(RoutedCommand command, object parameter, CancellationToken token) {
+                return _proxy.Execute(command, _window, parameter, token);
             }
 
             public T GetExtensionOrDefault<T>(EnvironmentView view) where T : IEnvironmentViewExtension {

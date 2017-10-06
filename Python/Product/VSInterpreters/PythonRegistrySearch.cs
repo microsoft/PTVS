@@ -148,10 +148,16 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             if (pythonCoreCompatibility && !string.IsNullOrEmpty(prefixPath)) {
                 if (string.IsNullOrEmpty(exePath)) {
-                    exePath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
+                    try {
+                        exePath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
+                    } catch (ArgumentException) {
+                    }
                 }
                 if (string.IsNullOrEmpty(exewPath)) {
-                    exewPath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.WindowsExecutable);
+                    try {
+                        exewPath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.WindowsExecutable);
+                    } catch (ArgumentException) {
+                    }
                 }
             }
 
