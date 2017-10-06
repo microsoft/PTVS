@@ -3180,8 +3180,8 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Import coverage.py XML file...]]></Val>
-            <Tgt Cat="Button" IgnoreHK="true" Stat="Update" Orig="New">
-              <Val><![CDATA[&Importar archivo de cobertura…]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Importar archivo XML coverage.py...]]></Val>
             </Tgt>
             <Prev Cat="Button" IgnoreHK="true">
               <Val><![CDATA[&Import coverage file...]]></Val>
@@ -3201,8 +3201,8 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Imports an XML file produced by coverage.py.]]></Val>
-            <Tgt Cat="Button" Stat="Update" Orig="New">
-              <Val><![CDATA[Importa un archivo coverage.xml producido por coverage.py.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Importa un archivo XML producido por coverage.py.]]></Val>
             </Tgt>
             <Prev Cat="Button">
               <Val><![CDATA[Imports a coverage.xml file produced by coverage.py.]]></Val>
