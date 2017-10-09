@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>argparse switch argument</Title>
+      <Shortcut>arg_switch</Shortcut>
+      <Description>Code snippet for a switch argument for an argparse parser.</Description>
+      <Author>Microsoft Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Imports />
+      <Declarations>
+        <Literal>
+          <ID>shortname</ID>
+          <ToolTip>Short argument name, typically only a single letter.</ToolTip>
+          <Default>a</Default>
+        </Literal>
+        <Literal>
+          <ID>longname</ID>
+          <ToolTip>Long argument name, typically one or two words separated by a hyphen.</ToolTip>
+          <Default>arg-name</Default>
+        </Literal>
+        <Literal>
+          <ID>help</ID>
+          <ToolTip>Description of the argument to display when called with --help/-h.</ToolTip>
+          <Default>Argument help.</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="Python"><![CDATA[parser.add_argument("-$shortname$", "--$longname$", action="store_true",
+                    help="$help$")
+$end$]]></Code>
+    </Snippet>  
+  </CodeSnippet>
+</CodeSnippets>
