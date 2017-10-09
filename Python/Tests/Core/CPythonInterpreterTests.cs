@@ -59,7 +59,10 @@ namespace PythonToolsTests {
                     var sysVersion = factory.Configuration.Version;
                     var sysArch = factory.Configuration.Architecture;
 
-                    AssertUtil.Contains(description, "Python", sysVersion.ToString(), sysArch.ToString());
+                    // Tests are not yet using a regular install of 3.7
+                    if (sysVersion != new Version(3, 7)) {
+                        AssertUtil.Contains(description, "Python", sysVersion.ToString(), sysArch.ToString());
+                    }
 
                     Assert.IsTrue(sysVersion.Major == 2 || sysVersion.Major == 3, "unknown SysVersion '{0}'".FormatInvariant(sysVersion));
 

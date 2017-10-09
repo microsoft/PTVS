@@ -749,7 +749,10 @@ namespace Microsoft.PythonTools.Intellisense {
             public string doc;
             public PythonMemberType memberType;
 
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public CompletionValue[] detailedValues;
+
+            public bool ShouldSerializedetailedValues() => (detailedValues?.Length ?? 0) > 0;
         }
 
         public sealed class CompletionValue {

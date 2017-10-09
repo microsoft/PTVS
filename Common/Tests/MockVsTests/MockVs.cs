@@ -479,6 +479,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             try {
                 var _excludedAssemblies = new HashSet<string>(new string[] {
+                    "Microsoft.VisualStudio.Text.Internal.dll",
+                    "Microsoft.VisualStudio.Utilities.dll",
+                    "Microsoft.VisualStudio.Workspace.dll"
                 }, StringComparer.OrdinalIgnoreCase);
 
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {

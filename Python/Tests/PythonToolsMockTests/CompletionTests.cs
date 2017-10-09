@@ -572,25 +572,25 @@ f(1, 2, 3, 4,")) {
 
         [TestMethod, Priority(0)]
         public void FromImportMultilineCompletions() {
-            using (var vs = new MockVs()) {
-                var code = "from sys import (";
-                var completions = GetCompletions(vs, -1, code);
+            using (var editor = new PythonEditor()) {
+                editor.Text = "from sys import (";
+                var completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "settrace", "api_version");
                 AssertUtil.DoesntContain(completions, "*");
 
-                code = "from nt import (\r\n    ";
-                completions = GetCompletions(vs, -1, code);
+                editor.Text = "from nt import (\r\n    ";
+                completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "abort", "W_OK");
                 AssertUtil.DoesntContain(completions, "*");
 
-                code = "from nt import (getfilesystemencoding,\r\n    ";
-                completions = GetCompletions(vs, -1, code);
+                editor.Text = "from nt import (getfilesystemencoding,\r\n    ";
+                completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "abort", "W_OK");
                 AssertUtil.DoesntContain(completions, "*");
 
                 // Need a comma for more completions
-                code = "from sys import (settrace\r\n    ";
-                AssertUtil.ContainsExactly(GetCompletions(vs, -1, code), "as");
+                editor.Text = "from sys import (settrace\r\n    ";
+                AssertUtil.ContainsExactly(editor.GetCompletions(-1), "as");
             }
         }
 

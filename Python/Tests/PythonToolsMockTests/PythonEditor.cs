@@ -66,8 +66,19 @@ namespace PythonToolsMockTests {
                 AdvancedOptions = advancedOptions;
 
                 if (factory == null) {
-                    _disposeFactory = true;
-                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+                    vs.InvokeSync(() => {
+                        factory = vs.ComponentModel.GetService<IInterpreterRegistryService>()
+                            .Interpreters
+                            .FirstOrDefault(c => c.GetLanguageVersion() == version);
+                        if (factory != null) {
+                            Console.WriteLine($"Using interpreter {factory.Configuration.InterpreterPath}");
+                        }
+                    });
+                    if (factory == null) {
+                        _disposeFactory = true;
+                        factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+                        Console.WriteLine("Using analysis-only interpreter");
+                    }
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
@@ -285,6 +296,7 @@ namespace PythonToolsMockTests {
                 if (sh == null) {
                     return new List<Completion>();
                 }
+                Assert.AreNotEqual(0, sh.Session.CompletionSets.Count);
                 return sh.Session.CompletionSets.SelectMany(cs => cs.Completions)
                     .Where(c => !string.IsNullOrEmpty(c.InsertionText))
                     .ToList();

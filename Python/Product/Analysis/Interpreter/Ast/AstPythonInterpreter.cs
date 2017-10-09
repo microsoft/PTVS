@@ -174,9 +174,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (name == BuiltinModuleName) {
                 if (_builtinModule == null) {
                     _modules[BuiltinModuleName] = _builtinModule = new AstBuiltinsPythonModule(_factory.LanguageVersion);
+                    _builtinModuleNames = null;
                     _builtinModule.Imported(this);
                     var bmn = ((AstBuiltinsPythonModule)_builtinModule).GetAnyMember("__builtin_module_names") as AstPythonStringLiteral;
-                    _builtinModuleNames = bmn?.Value?.Split(',');
+                    _builtinModuleNames = bmn?.Value?.Split(',') ?? Array.Empty<string>();
                 }
                 return _builtinModule;
             }
@@ -211,7 +212,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             // Replace our sentinel, or if we raced, get the current
             // value and abandon the one we just created.
-            if (!_modules.TryUpdate(name, mod, sentinalValue)) {
+            if (mod == null || !_modules.TryUpdate(name, mod, sentinalValue)) {
                 mod = _modules[name];
             }
 

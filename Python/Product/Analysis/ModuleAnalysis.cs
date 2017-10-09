@@ -433,14 +433,16 @@ namespace Microsoft.PythonTools.Analysis {
                 ce.Target is NameExpression ne &&
                 ne.Name == "__import__" &&
                 ce.Args?.Count == 1 &&
-                ce.Args[0].Expression is ConstantExpression modNameExpr &&
-                modNameExpr.Value is string modName
+                ce.Args[0].Expression is ConstantExpression modNameExpr
             ) {
-                ModuleReference modRef;
-                if (_unit.ProjectState.Modules.TryImport(modName, out modRef)) {
-                    var am = modRef.AnalysisModule;
-                    if (am != null) {
-                        lookup = lookup.Add(am);
+                string modName = modNameExpr.Value as string ?? (modNameExpr.Value as AsciiString)?.String;
+                if (!string.IsNullOrEmpty(modName)) {
+                    ModuleReference modRef;
+                    if (_unit.ProjectState.Modules.TryImport(modName, out modRef)) {
+                        var am = modRef.AnalysisModule;
+                        if (am != null) {
+                            lookup = lookup.Add(am);
+                        }
                     }
                 }
             }

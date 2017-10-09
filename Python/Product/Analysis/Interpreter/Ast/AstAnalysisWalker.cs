@@ -54,6 +54,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public bool CreateBuiltinTypes { get; set; }
+        public bool SuppressImports { get; set; }
 
         private IPythonInterpreter _interpreter => _scope.Interpreter;
         private PythonAst _ast => _scope.Ast;
@@ -116,7 +117,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override bool Walk(ImportStatement node) {
-            if (node.Names == null) {
+            if (node.Names == null || SuppressImports) {
                 return false;
             }
 
@@ -142,7 +143,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
-            if (node.Names == null) {
+            if (node.Names == null || SuppressImports) {
                 return false;
             }
 

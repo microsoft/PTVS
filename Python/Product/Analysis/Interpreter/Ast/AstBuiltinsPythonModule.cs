@@ -86,6 +86,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         protected override PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
             var walker = new AstAnalysisWalker(interpreter, ast, this, null, _members, false);
             walker.CreateBuiltinTypes = true;
+            walker.SuppressImports = true;
             walker.Scope.SuppressBuiltinLookup = true;
             return walker;
         }

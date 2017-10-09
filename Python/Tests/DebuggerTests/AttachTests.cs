@@ -35,9 +35,7 @@ namespace DebuggerTests {
     public abstract class AttachTests : BaseDebuggerTests {
         [TestInitialize]
         public void CheckVersion() {
-            if (Version == null) {
-                Assert.Inconclusive("Required version of Python is not installed");
-            }
+            Version.AssertInstalled();
         }
 
         internal override PythonVersion Version {
@@ -777,8 +775,6 @@ int main(int argc, char* argv[]) {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public virtual async Task AttachWithOutputRedirection() {
-            Version.AssertInstalled();
-
             var expectedOutput = new[] { "stdout", "stderr" };
 
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");
