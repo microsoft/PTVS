@@ -447,8 +447,9 @@ R_A3 = R_A1.r_A()");
                 var tasks = new List<Task<Tuple<ModulePath, IPythonModule>>>();
 
                 var interp = analyzer.Analyzer.Interpreter;
-                foreach(var r in modules.AsParallel()
+                foreach(var r in modules
                     .Where(m => !skip.Contains(m.ModuleName))
+                    .AsParallel()
                     .Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName)))
                 ) {
                     var modName = r.Item1;

@@ -777,6 +777,8 @@ int main(int argc, char* argv[]) {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public virtual async Task AttachWithOutputRedirection() {
+            Version.AssertInstalled();
+
             var expectedOutput = new[] { "stdout", "stderr" };
 
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");

@@ -2171,7 +2171,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public async Task TestInputFunction() {
             // 845 Python 3.3 Bad argument type for the debugger output wrappers
             // A change to the Python 3.3 implementation of input() now requires

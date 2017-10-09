@@ -20,6 +20,7 @@ __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.2"
 
 import ast
+import keyword
 import inspect
 import io
 import re
@@ -745,6 +746,8 @@ class ScrapeState(object):
         mod_doc = getattr(mod, '__doc__', None)
         mro = (getattr(mod, '__mro__', None) or ())[1:]
         for name in dir(mod):
+            if keyword.iskeyword(name):
+                continue
             try:
                 m = substitutes[name]
                 if m:
