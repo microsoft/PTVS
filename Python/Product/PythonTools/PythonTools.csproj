@@ -810,6 +810,42 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Snippets\Python\arg_path.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_path_positional.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_str.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_str_positional.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_switch.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\argparse.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="ReadmeStyle.css" />
     <Content Include="ptvsd\__init__.py">
       <IncludeInVSIX>true</IncludeInVSIX>
