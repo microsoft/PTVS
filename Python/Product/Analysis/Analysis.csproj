@@ -78,7 +78,7 @@
     <Compile Include="Interpreter\Ast\AstPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstScrapedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\NameLookupContext.cs" />
-    <Compile Include="Interpreter\EmptyModule.cs" />
+    <Compile Include="Interpreter\SentinelModule.cs" />
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />

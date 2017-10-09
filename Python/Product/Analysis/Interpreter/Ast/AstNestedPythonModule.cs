@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -60,7 +61,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
             if (mod == null) {
-                mod = new EmptyModule();
+                mod = new SentinelModule(_importNames.FirstOrDefault() ?? "<unknown>", false);
             }
 
             return Interlocked.CompareExchange(ref _module, mod, null) ?? mod;

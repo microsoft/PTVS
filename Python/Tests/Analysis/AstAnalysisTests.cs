@@ -419,9 +419,7 @@ R_A3 = R_A1.r_A()");
             var v = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
             await FullStdLibTest(v,
                 // Fails to import due to SxS manifest issues
-                "dde",
-                // Generates invalid Python 2.x code ("def exec(...)")
-                "PyQt5.QtGui"
+                "dde"
             );
         }
 
@@ -446,11 +444,19 @@ R_A3 = R_A1.r_A()");
             using (var analyzer = new PythonAnalysis(factory)) {
                 var tasks = new List<Task<Tuple<ModulePath, IPythonModule>>>();
 
-                var interp = analyzer.Analyzer.Interpreter;
+                var interp = (AstPythonInterpreter)analyzer.Analyzer.Interpreter;
+                foreach (var m in skip) {
+                    interp.AddUnimportableModule(m);
+                }
+
                 foreach(var r in modules
                     .Where(m => !skip.Contains(m.ModuleName))
+                    .GroupBy(m => {
+                        int i = m.FullName.IndexOf('.');
+                        return i <= 0 ? m.FullName : m.FullName.Remove(i);
+                    })
                     .AsParallel()
-                    .Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName)))
+                    .SelectMany(g => g.Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName))))
                 ) {
                     var modName = r.Item1;
                     var mod = r.Item2;
