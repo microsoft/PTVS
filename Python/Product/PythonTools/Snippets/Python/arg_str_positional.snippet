@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>argparse positional string argument</Title>
+      <Shortcut>arg_str_positional</Shortcut>
+      <Description>Code snippet for a positional string argument for an argparse parser.</Description>
+      <Author>Microsoft Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Imports />
+      <Declarations>
+        <Literal>
+          <ID>name</ID>
+          <ToolTip>Argument name. Start with a hyphen to require a switch, or omit to make it positional.</ToolTip>
+          <Default>arg</Default>
+        </Literal>
+        <Literal>
+          <ID>help</ID>
+          <ToolTip>Description of the argument to display when called with --help/-h.</ToolTip>
+          <Default>Argument help.</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="Python"><![CDATA[parser.add_argument("$name$", type=str,
+                    help="$help$")
+$end$]]></Code>
+    </Snippet>  
+  </CodeSnippet>
+</CodeSnippets>
