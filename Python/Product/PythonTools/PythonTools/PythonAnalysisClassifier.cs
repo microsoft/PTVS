@@ -160,12 +160,7 @@ namespace Microsoft.PythonTools {
                 IClassificationType classificationType;
                 if (typeName != null &&
                     _provider.CategoryMap.TryGetValue(typeName, out classificationType)) {
-                    classifications.Add(
-                        new ClassificationSpan(
-                            new SnapshotSpan(snapshot, cs),
-                            classificationType
-                        )
-                    );
+                    classifications.Add(new ClassificationSpan(cs, classificationType));
                 }
             }
 

@@ -89,6 +89,7 @@ namespace Microsoft.PythonTools.Interpreter {
             Task.Delay(100).ContinueWith(async t => {
                 try {
                     await UpdateIsReadyAsync(false, CancellationToken.None);
+                } catch (OperationCanceledException) {
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 }
@@ -164,7 +165,14 @@ namespace Microsoft.PythonTools.Interpreter {
             var args = _extraInterpreterArgs
                 .Concat(new[] { "-c", "import pip" });
 
-            var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
+            IDisposable workingLock = null;
+            if (!alreadyHasLock) {
+                try {
+                    workingLock = await _working.LockAsync(cancellationToken);
+                } catch (ObjectDisposedException ex) {
+                    throw new OperationCanceledException("Package manager has already closed", ex);
+                }
+            }
             try {
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -32,6 +33,18 @@ namespace PythonToolsMockTests {
         [ClassInitialize]
         public static void Initialize(TestContext context) {
             AssertListener.Initialize();
+            VsProjectAnalyzer.DefaultTimeout = 10000;
+            VsProjectAnalyzer.AssertOnRequestFailure = true;
+        }
+
+        [TestInitialize]
+        public void OnTestInitialized() {
+            MockPythonToolsPackage.SuppressTaskProvider = true;
+        }
+
+        [TestCleanup]
+        public void OnTestCleanup() {
+            MockPythonToolsPackage.SuppressTaskProvider = false;
         }
 
         [TestMethod, Priority(0)]
@@ -47,7 +60,7 @@ namespace PythonToolsMockTests {
                             view.VS.Sleep(100);
                             continue;
                         }
-                        AssertUtil.AreEqual(new Regex(@"^min\(.+\).+?"), doc);
+                        AssertUtil.AreEqual(new Regex(@".*min\([^)]+\).*"), doc);
                         break;
                     }
                 }

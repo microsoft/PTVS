@@ -758,7 +758,10 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class CompletionValue {
             public DescriptionComponent[] description;
             public string doc;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public AnalysisReference[] locations;
+
+            public bool ShouldSerializelocations() => (locations?.Length ?? 0) > 0;
         }
 
         public sealed class DescriptionComponent {

@@ -144,12 +144,8 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
-            if (result == null) {
-                if (AssertOnRequestFailure) {
-                    Debug.Fail($"{requestName} {(timeout ? "timed out" : "failed")}");
-                } else {
-                    Debug.WriteLine($"{requestName} {(timeout ? "timed out" : "failed")}");
-                }
+            if (timeout && AssertOnRequestFailure) {
+                Debug.Fail($"{requestName} timed out");
             }
             return result;
         }
@@ -543,7 +539,7 @@ namespace Microsoft.PythonTools.Intellisense {
             OutOfProcProjectAnalyzer analyzer;
             int exitCode = 0;
             try {
-                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput);
+                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput, false);
                 info.CancellationToken.Register(() => {
                     analyzer.Cancel();
                     analyzer.Dispose();

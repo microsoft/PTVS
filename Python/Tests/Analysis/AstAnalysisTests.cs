@@ -436,6 +436,7 @@ R_A3 = R_A1.r_A()");
             skip.UnionWith(new[] {
                 "matplotlib.backends._backend_gdk",
                 "matplotlib.backends._backend_gtkagg",
+                "matplotlib.backends._gtkagg",
             });
 
             bool anySuccess = false;

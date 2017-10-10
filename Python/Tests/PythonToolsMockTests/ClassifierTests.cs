@@ -97,7 +97,7 @@ abc = True
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
-                helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<ntpath>m<abc>m<abc>");
+                helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<path>m<ntpath>m<abc>m<abc>");
             }
         }
 
@@ -107,17 +107,20 @@ abc = True
 
         [TestMethod, Priority(0)]
         public void ImportClassifications() {
+            // We import a name that is not in os, because otherwise
+            // its classification may depend on the current DB for the
+            // module.
             var code = @"import abc as x
-from os import fdopen
+from os import name_not_in_os
 
 abc
 x
 os
-fdopen
+name_not_in_os
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("kiki kiki i i i i");
-                helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>f<fdopen>m<x>f<fdopen>");
+                helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>m<x>");
             }
         }
 

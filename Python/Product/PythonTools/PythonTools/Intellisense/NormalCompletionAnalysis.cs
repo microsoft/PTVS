@@ -95,6 +95,8 @@ namespace Microsoft.PythonTools.Intellisense {
             } else if (string.IsNullOrEmpty(text)) {
                 if (analysis != null) {
                     var analyzer = analysis.Analyzer;
+                    Task<IEnumerable<CompletionResult>> expansionCompletionsTask = pyReplEval == null ? EditorServices.Python?.GetExpansionCompletionsAsync() : null;
+
                     lock (analyzer) {
                         var location = VsProjectAnalyzer.TranslateIndex(
                             statementRange.Start.Position,
@@ -116,7 +118,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     if (pyReplEval == null) {
-                        var expansions = analyzer.WaitForRequest(EditorServices.Python?.GetExpansionCompletionsAsync(), "GetCompletions.GetExpansionCompletions");
+                        var expansions = analyzer.WaitForRequest(expansionCompletionsTask, "GetCompletions.GetExpansionCompletions", null, 5);
                         if (expansions != null) {
                             // Expansions should come first, so that they replace our keyword
                             // completions with the more detailed snippets.
