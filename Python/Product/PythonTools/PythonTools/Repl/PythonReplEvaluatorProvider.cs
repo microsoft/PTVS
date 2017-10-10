@@ -143,6 +143,8 @@ namespace Microsoft.PythonTools.Repl {
                 Configuration = new LaunchConfiguration(config)
             };
 
+            eval.Configuration.SearchPaths = _serviceProvider.GetPythonToolsService().GetGlobalPythonSearchPaths(config).ToList();
+
             return eval;
         }
 
