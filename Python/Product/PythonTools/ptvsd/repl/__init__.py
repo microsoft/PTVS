@@ -573,6 +573,9 @@ class BasicReplBackend(ReplBackend):
             f.close()
         sys.argv = [filename]
         sys.argv.extend(_command_line_to_args_list(args))
+        script_dir = os.path.dirname(os.path.abspath(filename))
+        if script_dir not in sys.path:
+            sys.path.insert(0, script_dir)
         self.exec_mod.__file__ = filename
         if sys.platform == 'cli':
             code = python_context.CreateSnippet(contents, None, SourceCodeKind.File)
