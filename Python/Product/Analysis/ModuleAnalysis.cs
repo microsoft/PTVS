@@ -437,13 +437,7 @@ namespace Microsoft.PythonTools.Analysis {
             ) {
                 string modName = modNameExpr.Value as string ?? (modNameExpr.Value as AsciiString)?.String;
                 if (!string.IsNullOrEmpty(modName)) {
-                    ModuleReference modRef;
-                    if (_unit.ProjectState.Modules.TryImport(modName, out modRef)) {
-                        var am = modRef.AnalysisModule;
-                        if (am != null) {
-                            lookup = lookup.Add(am);
-                        }
-                    }
+                    lookup = ResolveModule(expr, _unit.CopyForEval(), modName);
                 }
             }
 
@@ -458,6 +452,40 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             return GetMemberResults(lookup, scope, options);
+        }
+
+        private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {
+            ModuleReference modRef;
+            var modules = unit.ProjectState.Modules;
+
+            if (modules.TryImport(moduleName, out modRef)) {
+                return modRef.AnalysisModule ?? AnalysisSet.Empty;
+            }
+
+            var attrs = new List<string>();
+
+            var modName = moduleName;
+            int i;
+            while ((i = modName.LastIndexOf('.')) > 0) {
+                attrs.Add(modName.Substring(i + 1));
+                modName = modName.Remove(i);
+
+                if (modules.TryImport(modName, out modRef)) {
+                    break;
+                }
+            }
+
+            IAnalysisSet mod = modRef?.AnalysisModule;
+            foreach (var attr in attrs.Reverse<string>()) {
+                if (mod == null || !mod.Any()) {
+                    return AnalysisSet.Empty;
+                }
+
+                mod = AnalysisSet.Create(mod.Where(m => m.MemberType == PythonMemberType.Module || m.MemberType == PythonMemberType.Multiple))
+                    .GetMember(node, unit, attr);
+            }
+
+            return mod ?? AnalysisSet.Empty;
         }
 
         /// <summary>

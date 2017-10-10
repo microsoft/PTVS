@@ -105,7 +105,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// This has been adjusted based on telemetry to minimize the "never
         /// responsive" time.
         /// </remarks>
-        private static int DefaultTimeout => 250;
+        internal static int DefaultTimeout = 250;
+
+        internal static bool AssertOnRequestFailure = false;
 
         public T WaitForRequest<T>(Task<T> request, string requestName) {
             return WaitForRequest(request, requestName, default(T), 1);
@@ -141,6 +143,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+            if (result == null) {
+                if (AssertOnRequestFailure) {
+                    Debug.Fail($"{requestName} {(timeout ? "timed out" : "failed")}");
+                } else {
+                    Debug.WriteLine($"{requestName} {(timeout ? "timed out" : "failed")}");
+                }
             }
             return result;
         }

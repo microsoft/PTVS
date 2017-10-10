@@ -47,7 +47,7 @@ namespace PythonToolsMockTests {
                             view.VS.Sleep(100);
                             continue;
                         }
-                        AssertUtil.AreEqual(new Regex(@"^min\(x\: object\).+?"), doc);
+                        AssertUtil.AreEqual(new Regex(@"^min\(.+\).+?"), doc);
                         break;
                     }
                 }

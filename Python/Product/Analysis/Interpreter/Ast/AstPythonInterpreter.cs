@@ -212,7 +212,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             // Replace our sentinel, or if we raced, get the current
             // value and abandon the one we just created.
-            if (mod == null || !_modules.TryUpdate(name, mod, sentinalValue)) {
+            if (!_modules.TryUpdate(name, mod, sentinalValue)) {
                 mod = _modules[name];
             }
 

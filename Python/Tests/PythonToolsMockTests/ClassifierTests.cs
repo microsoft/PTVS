@@ -16,32 +16,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition.Hosting;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
-using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
     [TestClass]
@@ -128,7 +117,7 @@ fdopen
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("kiki kiki i i i i");
-                helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>m<x>");
+                helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>f<fdopen>m<x>f<fdopen>");
             }
         }
 
@@ -300,7 +289,11 @@ def f() -> int:
 
             public IEnumerable<ClassificationSpan> AnalysisClassifierSpans {
                 get {
+                    // Force the spans to be recalculated
+                    _classificationsReady2.Reset();
+                    ((AnalysisEntry)_view.GetAnalysisEntry()).TryGetBufferParser().Requeue();
                     _classificationsReady2.Wait();
+
                     return AnalysisClassifier.GetClassificationSpans(
                         new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
                     ).OrderBy(s => s.Span.Start.Position);

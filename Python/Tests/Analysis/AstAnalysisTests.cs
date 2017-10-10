@@ -258,7 +258,7 @@ R_A3 = R_A1.r_A()");
 
         [TestMethod, Priority(0)]
         public void AstSearchPathsThroughAnalyzer() {
-            using (var evt = new ManualResetEvent(false))
+            using (var evt = new AutoResetEvent(false))
             using (var analysis = CreateAnalysis()) {
                 var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                 var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
@@ -415,6 +415,7 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, TestCategory("60s"), Priority(0)]
+        [Timeout(10 * 60 * 1000)]
         public async Task FullStdLibAnaconda2() {
             var v = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
             await FullStdLibTest(v,

@@ -931,6 +931,17 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var name in names) {
                 result[name] = GetAnalysisValueFromObjects(container.GetMember(moduleContext, name));
             }
+            var children = (container as IModule)?.GetChildrenPackages(moduleContext);
+            if (children?.Any() ?? false) {
+                foreach (var child in children) {
+                    IAnalysisSet existing;
+                    if (result.TryGetValue(child.Key, out existing)) {
+                        result[child.Key] = existing.Add(child.Value);
+                    } else {
+                        result[child.Key] = child.Value;
+                    }
+                }
+            }
 
             return result;
         }

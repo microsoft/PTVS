@@ -69,7 +69,7 @@ namespace PythonToolsMockTests {
                     vs.InvokeSync(() => {
                         factory = vs.ComponentModel.GetService<IInterpreterRegistryService>()
                             .Interpreters
-                            .FirstOrDefault(c => c.GetLanguageVersion() == version);
+                            .FirstOrDefault(c => c.GetLanguageVersion() == version && c.Configuration.Id.StartsWith("Global|PythonCore"));
                         if (factory != null) {
                             Console.WriteLine($"Using interpreter {factory.Configuration.InterpreterPath}");
                         }
@@ -205,10 +205,10 @@ namespace PythonToolsMockTests {
                         }
 
                         if (!mre1.Wait(0)) {
+                            mre2.Reset();
                             if (!mre1.Wait(10000)) {
                                 throw new TimeoutException("Failed to see buffer start analyzer");
                             }
-                            mre2.Reset();
                         }
 
                         if (!mre2.Wait(10000)) {

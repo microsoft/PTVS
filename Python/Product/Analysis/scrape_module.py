@@ -560,6 +560,8 @@ class MemberInfo(object):
         try:
             type_name = value_type.__name__.replace('-', '_')
             module = getattr(value_type, '__module__', None)
+            if sys.version_info[0] == 2 and module == 'exceptions' and in_module == builtins.__name__:
+                module = builtins.__name__
             if module and module != '<unknown>':
                 if module != in_module:
                     type_name = module + '.' + type_name
