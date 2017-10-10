@@ -24,6 +24,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -5468,6 +5469,36 @@ b2 = r2.b[0]
             entry.AssertIsInstance("r2.b", BuiltinTypeId.Type, BuiltinTypeId.Tuple);
             entry.AssertIsInstance("b2", BuiltinTypeId.Type);
             entry.AssertIsInstance("r2.c", BuiltinTypeId.Str);
+        }
+
+        private static IEnumerable<string> DumpScopesToStrings(InterpreterScope scope) {
+            yield return scope.Name;
+            foreach (var child in scope.Children) {
+                foreach (var s in DumpScopesToStrings(child)) {
+                    yield return "  " + s;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void IsInstanceAndLambdaScopes() {
+            // https://github.com/Microsoft/PTVS/issues/2801
+            var text = @"if isinstance(p, dict):
+    v = [i for i in (lambda x: x)()]";
+
+            var entry = ProcessTextV3(text);
+            var scope = entry.Modules[entry.DefaultModule].Analysis.Scope;
+            var dump = string.Join(Environment.NewLine, DumpScopesToStrings(scope));
+
+            Console.WriteLine($"Actual:{Environment.NewLine}{dump}");
+
+            Assert.AreEqual(entry.DefaultModule + @"
+  <statements>
+  <isinstance scope>
+    <comprehension scope>
+      <lambda>
+        <statements>
+  <statements>", dump);
         }
 
         [TestMethod, Priority(0)]
