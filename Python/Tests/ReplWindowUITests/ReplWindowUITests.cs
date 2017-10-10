@@ -34,6 +34,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
@@ -68,6 +69,22 @@ namespace ReplWindowUITests {
 
                 using (var interactive = app.ExecuteInInteractive(project, Settings)) {
                     interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ">");
+                }
+            }
+        }
+
+        public void ExecuteInReplSysPath(PythonVisualStudioApp app, string interpreter) {
+            Settings = ReplWindowSettings.FindSettingsForInterpreter(interpreter);
+            using (app.SelectDefaultInterpreter(Settings.Version)) {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
+                });
+
+                var sln = app.CopyProjectForTest(@"TestData\ReplSysPath.sln");
+                var project = app.OpenProject(sln);
+
+                using (var interactive = app.ExecuteInInteractive(project, Settings)) {
+                    interactive.WaitForTextEnd("DONE", ">");
                 }
             }
         }
@@ -1827,6 +1844,64 @@ $cls
 
                 interactive.SubmitCurrentText();
                 interactive.WaitForTextEnd(">1+1", "2", ">");
+            }
+        }
+
+        #endregion
+
+        #region Advanced Launch Configuration Tests
+
+        public void PythonPathIgnored(PythonVisualStudioApp app, string interpreter) {
+            var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
+            using (new PythonServiceGeneralOptionsSetter(pyService, clearGlobalPythonPath: true))
+            using (new EnvironmentVariableSetter("PYTHONPATH", @"C:\MyPythonPath1;C:\MyPythonPath2"))
+            using (var interactive = Prepare(app, interpreter)) {
+                interactive.SubmitCode(@"import sys");
+                interactive.SubmitCode(@"import os");
+                interactive.SubmitCode(@"[p for p in sys.path if 'MyPythonPath' in p]");
+                interactive.WaitForTextEnd(
+                    @"[]",
+                    ">"
+                );
+                interactive.SubmitCode("os.environ.get('PYTHONPATH')");
+                interactive.WaitForTextEnd(
+                    "''",
+                    ">"
+                );
+            }
+        }
+
+        public void PythonPathNotIgnored(PythonVisualStudioApp app, string interpreter) {
+            var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
+            using (new PythonServiceGeneralOptionsSetter(pyService, clearGlobalPythonPath: false))
+            using (new EnvironmentVariableSetter("PYTHONPATH", @"C:\MyPythonPath1;C:\MyPythonPath2"))
+            using (var interactive = Prepare(app, interpreter)) {
+                interactive.SubmitCode(@"import sys");
+                interactive.SubmitCode(@"import os");
+                interactive.SubmitCode(@"[p for p in sys.path if 'MyPythonPath' in p]");
+                interactive.WaitForTextEnd(
+                    @"['C:\\MyPythonPath1', 'C:\\MyPythonPath2']",
+                    ">"
+                );
+                interactive.SubmitCode("os.environ.get('PYTHONPATH')");
+                interactive.WaitForTextEnd(
+                    @"'C:\\MyPythonPath1;C:\\MyPythonPath2'",
+                    ">"
+                );
+            }
+        }
+
+        public void PythonPathNotIgnoredButMissing(PythonVisualStudioApp app, string interpreter) {
+            var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
+            using (new PythonServiceGeneralOptionsSetter(pyService, clearGlobalPythonPath: false))
+            using (new EnvironmentVariableSetter("PYTHONPATH", null))
+            using (var interactive = Prepare(app, interpreter)) {
+                interactive.SubmitCode("import os");
+                interactive.SubmitCode("os.environ.get('PYTHONPATH')");
+                interactive.WaitForTextEnd(
+                    "''",
+                    ">"
+                );
             }
         }
 

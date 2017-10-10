@@ -876,7 +876,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void TriggerCompletionSession(bool completeWord, bool? commitByDefault = null) {
-            Dismiss();
+            DismissCompletionSession();
 
             var session = _services.CompletionBroker.TriggerCompletion(_textView);
 
@@ -948,10 +948,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void Dismiss() {
-            if (_activeSession != null) {
-                _activeSession.Dismiss();
+        internal bool DismissCompletionSession() {
+            var session = Volatile.Read(ref _activeSession);
+            if (session != null && !session.IsDismissed) {
+                session.Dismiss();
+                return true;
             }
+            return false;
         }
 
         #region IOleCommandTarget Members
