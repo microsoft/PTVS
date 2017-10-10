@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -633,6 +634,19 @@ namespace Microsoft.PythonTools {
                 );
             }
             return env;
+        }
+
+        public IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
+            if (!GeneralOptions.ClearGlobalPythonPath) {
+                string pythonPath = Environment.GetEnvironmentVariable(interpreter.PathEnvironmentVariable) ?? string.Empty;
+                return pythonPath
+                    .Split(Path.PathSeparator)
+                    // Just ensure the string is not empty - if people are passing
+                    // through invalid paths this option is meant to allow it
+                    .Where(p => !string.IsNullOrEmpty(p));
+            }
+
+            return Enumerable.Empty<string>();
         }
     }
 }

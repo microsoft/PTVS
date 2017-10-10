@@ -471,6 +471,28 @@ namespace ReplWindowUITestsRunner {
         }
 
         #endregion
+
+        #region Advanced Launch Configuration Tests
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void PythonPathIgnored() {
+            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PythonPathIgnored), Interpreter);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void PythonPathNotIgnored() {
+            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PythonPathNotIgnored), Interpreter);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void PythonPathNotIgnoredButMissing() {
+            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PythonPathNotIgnoredButMissing), Interpreter);
+        }
+
+        #endregion
     }
 
     [TestClass]

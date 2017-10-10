@@ -1302,16 +1302,7 @@ namespace Microsoft.PythonTools.Project {
 
             // Ensure working directory is a search path.
             config.SearchPaths.Insert(0, config.WorkingDirectory);
-
-            if (!Site.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
-                string pythonPath = Environment.GetEnvironmentVariable(config.Interpreter.PathEnvironmentVariable) ?? string.Empty;
-                config.SearchPaths.AddRange(pythonPath
-                    .Split(Path.PathSeparator)
-                    // Just ensure the string is not empty - if people are passing
-                    // through invalid paths this option is meant to allow it
-                    .Where(p => !string.IsNullOrEmpty(p))
-                );
-            }
+            config.SearchPaths.AddRange(Site.GetPythonToolsService().GetGlobalPythonSearchPaths(config.Interpreter));
 
             return config;
         }
