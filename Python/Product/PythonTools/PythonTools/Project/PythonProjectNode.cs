@@ -1304,7 +1304,8 @@ namespace Microsoft.PythonTools.Project {
             config.SearchPaths.Insert(0, config.WorkingDirectory);
 
             if (!Site.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
-                config.SearchPaths.AddRange(Environment.GetEnvironmentVariable(config.Interpreter.PathEnvironmentVariable)
+                string pythonPath = Environment.GetEnvironmentVariable(config.Interpreter.PathEnvironmentVariable) ?? string.Empty;
+                config.SearchPaths.AddRange(pythonPath
                     .Split(Path.PathSeparator)
                     // Just ensure the string is not empty - if people are passing
                     // through invalid paths this option is meant to allow it
