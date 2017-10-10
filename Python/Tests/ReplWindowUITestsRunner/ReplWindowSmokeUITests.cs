@@ -57,6 +57,12 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(2)]
         [TestCategory("Installed")]
+        public void ExecuteInReplSysPath() {
+            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplSysPath), Interpreter);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
         public void ExecuteInReplUnicodeFilename() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplUnicodeFilename), Interpreter);
         }

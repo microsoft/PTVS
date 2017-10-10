@@ -72,6 +72,22 @@ namespace ReplWindowUITests {
             }
         }
 
+        public void ExecuteInReplSysPath(PythonVisualStudioApp app, string interpreter) {
+            Settings = ReplWindowSettings.FindSettingsForInterpreter(interpreter);
+            using (app.SelectDefaultInterpreter(Settings.Version)) {
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
+                });
+
+                var sln = app.CopyProjectForTest(@"TestData\ReplSysPath.sln");
+                var project = app.OpenProject(sln);
+
+                using (var interactive = app.ExecuteInInteractive(project, Settings)) {
+                    interactive.WaitForTextEnd("DONE", ">");
+                }
+            }
+        }
+
         public void ExecuteInReplUnicodeFilename(PythonVisualStudioApp app, string interpreter) {
             Settings = ReplWindowSettings.FindSettingsForInterpreter(interpreter);
             using (app.SelectDefaultInterpreter(Settings.Version)) {
