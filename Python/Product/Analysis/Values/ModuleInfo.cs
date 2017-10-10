@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
@@ -349,6 +350,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IEnumerable<string> GetModuleMemberNames(IModuleContext context) {
             return Scope.AllVariables.Keys();
+        }
+
+        public bool IsMemberDefined(IModuleContext context, string member) {
+            if (Scope.TryGetVariable(member, out VariableDef v)) {
+                return v.TypesNoCopy.Any(m => m.DeclaringModule == _projectEntry);
+            }
+            return false;
         }
 
         public void Imported(AnalysisUnit unit) {

@@ -2099,7 +2099,7 @@ namespace DebuggerTests {
                 processRunInfo.ProcessLoaded.Set();
             };
             processRunInfo.Process.DebuggerOutput += (sender, args) => {
-                Console.WriteLine(args.Output);
+                Console.Write(args.Output);
             };
 
             return processRunInfo;

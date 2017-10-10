@@ -787,6 +787,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             fromName = x.FromName
                         }
                     )
+                    .Distinct()
                     .ToArray()
             };
         }

@@ -417,6 +417,19 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ImportInfo {
             public string fromName, importName;
 
+
+            // Provide Equals so we can easily uniquify sequences of ImportInfo
+
+            public override bool Equals(object obj) {
+                if (obj is ImportInfo ii) {
+                    return fromName == ii.fromName && importName == ii.importName;
+                }
+                return false;
+            }
+
+            public override int GetHashCode() {
+                return ((fromName ?? "") + "." + (importName ?? "")).GetHashCode();
+            }
         }
 
         public sealed class FileUpdate {

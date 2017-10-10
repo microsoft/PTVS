@@ -614,6 +614,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="name"></param>
         public IEnumerable<ExportedMemberInfo> FindNameInAllModules(string name) {
+            string pkgName;
+
             if (_interpreter is ICanFindModuleMembers finder) {
                 foreach (var modName in finder.GetModulesNamed(name)) {
                     int dot = modName.LastIndexOf('.');
@@ -627,7 +629,19 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var modName in finder.GetModulesContainingName(name)) {
                     yield return new ExportedMemberInfo(modName, name);
                 }
-                yield break;
+
+                // Scan added modules directly
+                foreach (var mod in _modulesByFilename.Values) {
+                    if (mod.Name == name) {
+                        yield return new ExportedMemberInfo(null, mod.Name);
+                    } else if (GetPackageNameIfMatch(name, mod.Name, out pkgName)) {
+                        yield return new ExportedMemberInfo(pkgName, name);
+                    }
+
+                    if (mod.IsMemberDefined(_defaultContext, name)) {
+                        yield return new ExportedMemberInfo(mod.Name, name);
+                    }
+                }
             }
             
             // provide module names first
@@ -637,7 +651,6 @@ namespace Microsoft.PythonTools.Analysis {
             
                 if (moduleRef.IsValid) {
                     // include modules which can be imported
-                    string pkgName;
                     if (modName == name) {
                         yield return new ExportedMemberInfo(null, modName);
                     } else if (GetPackageNameIfMatch(name, modName, out pkgName)) {
@@ -647,7 +660,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             foreach (var modName in _interpreter.GetModuleNames()) {
-                string pkgName;
                 if (modName == name) {
                     yield return new ExportedMemberInfo(null, modName);
                 } else if (GetPackageNameIfMatch(name, modName, out pkgName)) {

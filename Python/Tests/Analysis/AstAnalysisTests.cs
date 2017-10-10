@@ -402,7 +402,7 @@ R_A3 = R_A1.r_A()");
             await FullStdLibTest(v);
         }
 
-        [TestMethod, TestCategory("60s"), Priority(0)]
+        [TestMethod, TestCategory("60s"), Priority(1)]
         [Timeout(10 * 60 * 1000)]
         public async Task FullStdLibAnaconda3() {
             var v = PythonPaths.Anaconda36_x64 ?? PythonPaths.Anaconda36;
@@ -414,13 +414,14 @@ R_A3 = R_A1.r_A()");
             );
         }
 
-        [TestMethod, TestCategory("60s"), Priority(0)]
+        [TestMethod, TestCategory("60s"), Priority(1)]
         [Timeout(10 * 60 * 1000)]
         public async Task FullStdLibAnaconda2() {
             var v = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
             await FullStdLibTest(v,
                 // Fails to import due to SxS manifest issues
-                "dde"
+                "dde",
+                "win32ui"
             );
         }
 
