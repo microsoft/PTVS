@@ -1286,7 +1286,7 @@ plot(x, x)");
 
                 interactive.PreviousHistoryItem();
                 // delete i')
-                interactive.Backspace(3);
+                interactive.Backspace(4);
 
                 interactive.Type("ello')\n");
 
@@ -1300,14 +1300,14 @@ plot(x, x)");
                 interactive.WaitForText(
                     ">def f():", ".    print('hi')", ".",
                     ">def f():", ".    print('hello')", ".",
-                    ">def f():", ".    print('hello')"
+                    ">def f():", ".    print('hello')", "."
                 );
 
                 interactive.PreviousHistoryItem();
                 interactive.WaitForText(
                     ">def f():", ".    print('hi')", ".",
                     ">def f():", ".    print('hello')", ".",
-                    ">def f():", ".    print('hi')"
+                    ">def f():", ".    print('hi')", "."
                 );
             }
         }
@@ -1324,8 +1324,7 @@ plot(x, x)");
                 );
 
                 interactive.PreviousHistoryItem();
-                Keyboard.Type("\r");
-                Keyboard.Type("print('hello')\r\r");
+                Keyboard.Type("    print('hello')\r\r");
 
                 interactive.WaitForText(
                     ">def f():",
