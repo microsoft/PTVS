@@ -141,6 +141,24 @@ namespace ReplWindowUITests {
            );
         }
 
+        /// <summary>
+        /// Submit when read-only text is selected in REPL.
+        /// </summary>
+        public void SendToInteractiveOutputSelected(PythonVisualStudioApp app) {
+            RunOne(app, "SelectOutput.py",
+                Input("print('first')").Complete.Outputs("first"),
+                SelectReplLine(1),
+                Input("print('second')").Complete.Outputs("second"),
+                SelectReplLine(2),
+                Input("if True:"),
+                Input("    x = 1"),
+                SelectReplLine(2),
+                Input("    y = 2"),
+                Input("print('hi')").Complete.Outputs("hi").SubmitsPrevious,
+                EndOfInput
+            );
+        }
+
         #endregion
 
         #region Helpers
@@ -214,6 +232,14 @@ namespace ReplWindowUITests {
             return new OutputStep(text);
         }
 
+        /// <summary>
+        /// Select a whole line in the REPL.
+        /// </summary>
+        private static SelectReplLineStep SelectReplLine(int line) {
+            return new SelectReplLineStep(line);
+        }
+
+        /// <summary>
         /// Checks that we've skipped blank lines after executing a previous input.
         /// </summary>
         private static SendToStep Skipped(int targetLine) {
@@ -491,6 +517,23 @@ namespace ReplWindowUITests {
                 Assert.AreEqual(_targetLine, curLine.LineNumber + 1);
 
                 state.CheckOutput();
+            }
+        }
+
+        class SelectReplLineStep : SendToStep {
+            private readonly int _targetLine;
+
+            public SelectReplLineStep(int targetLine) {
+                _targetLine = targetLine;
+            }
+
+            public override void Execute(StepState state) {
+                state.Editor.Invoke(() => {
+                    var view = state.Interactive.TextView;
+                    var line = view.TextSnapshot.GetLineFromLineNumber(_targetLine - 1);
+                    var span = new SnapshotSpan(line.Start, line.End);
+                    view.Selection.Select(span, false);
+                });
             }
         }
 

@@ -68,5 +68,11 @@ namespace ReplWindowUITestsRunner {
         public void SendToInteractiveSelectionNoWait() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveSelectionNoWait));
         }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void SendToInteractiveOutputSelected() {
+            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveOutputSelected));
+        }
     }
 }
