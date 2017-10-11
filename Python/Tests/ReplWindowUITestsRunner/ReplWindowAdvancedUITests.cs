@@ -315,7 +315,6 @@ namespace ReplWindowUITestsRunner {
 
         #region Advanced History tests
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2757
         [TestMethod, Priority(2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
@@ -323,7 +322,6 @@ namespace ReplWindowUITestsRunner {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.HistoryUpdateDef), Interpreter);
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2757
         [TestMethod, Priority(2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
