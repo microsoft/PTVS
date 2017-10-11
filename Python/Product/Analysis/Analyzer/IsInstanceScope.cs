@@ -42,6 +42,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return ast.IndexToLocation(_endIndex).Index;
         }
 
+        public override InterpreterScope AddNodeScope(Node node, InterpreterScope scope) {
+            return OuterScope.AddNodeScope(node, scope);
+        }
+
+        internal override void ClearNodeScopes() {
+            OuterScope.ClearNodeScopes();
+        }
+
+        internal override bool RemoveNodeScope(Node node) {
+            return OuterScope.RemoveNodeScope(node);
+        }
+
         public override bool AssignVariable(string name, Node location, AnalysisUnit unit, IAnalysisSet values) {
             var vars = CreateVariable(location, unit, name, false);
 
