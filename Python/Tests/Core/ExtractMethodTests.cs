@@ -1700,7 +1700,7 @@ async def f():
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = new VsProjectAnalyzer(services, fact, outOfProcAnalyzer: false)) {
+            using (var analyzer = new VsProjectAnalyzer(services, fact, outOfProcAnalyzer: false, comment: "PTVS_TEST")) {
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, Path.Combine(TestData.GetTempPath(), "fob.py"));
                 var view = new MockTextView(buffer);
                 buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);

@@ -293,9 +293,12 @@ def f() -> int:
             public IEnumerable<ClassificationSpan> AnalysisClassifierSpans {
                 get {
                     // Force the spans to be recalculated
-                    _classificationsReady2.Reset();
-                    ((AnalysisEntry)_view.GetAnalysisEntry()).TryGetBufferParser().Requeue();
-                    _classificationsReady2.Wait();
+                    var bp = ((AnalysisEntry)_view.GetAnalysisEntry()).TryGetBufferParser();
+                    if (bp != null) {
+                        _classificationsReady2.Reset();
+                        bp.Requeue();
+                        _classificationsReady2.Wait();
+                    }
 
                     return AnalysisClassifier.GetClassificationSpans(
                         new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)

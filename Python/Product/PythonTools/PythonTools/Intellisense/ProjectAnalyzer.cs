@@ -98,83 +98,6 @@ namespace Microsoft.PythonTools.Intellisense {
         // Used by tests to avoid creating TaskProvider objects
         internal static bool SuppressTaskProvider = false;
 
-        /// <summary>
-        /// The recommended timeout to use when waiting on analysis information.
-        /// </summary>
-        /// <remarks>
-        /// This has been adjusted based on telemetry to minimize the "never
-        /// responsive" time.
-        /// </remarks>
-        internal static int DefaultTimeout = 250;
-
-        internal static bool AssertOnRequestFailure = false;
-
-        public T WaitForRequest<T>(Task<T> request, string requestName) {
-            return WaitForRequest(request, requestName, default(T), 1);
-        }
-
-        public T WaitForRequest<T>(Task<T> request, string requestName, T defaultValue) {
-            return WaitForRequest(request, requestName, defaultValue, 1);
-        }
-
-        public T WaitForRequest<T>(Task<T> request, string requestName, T defaultValue, int timeoutScale) {
-            bool timeout = true;
-            var start = Stopwatch.GetTimestamp();
-            T result = defaultValue;
-            try {
-                if (request.Wait(DefaultTimeout * timeoutScale)) {
-                    result = request.Result;
-                    timeout = false;
-                }
-            } catch (AggregateException ae) {
-                if (ae.InnerException != null) {
-                    ExceptionDispatchInfo.Capture(ae.InnerException).Throw();
-                }
-                throw;
-            }
-            try {
-                int waitTime = (int)Math.Min((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency, (long)int.MaxValue);
-                if (waitTime >= 10) {
-                    _logger?.LogEvent(PythonLogEvent.AnalysisRequestTiming, new AnalysisTimingInfo {
-                        RequestName = requestName,
-                        Milliseconds = waitTime,
-                        Timeout = timeout
-                    });
-                }
-            } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-            }
-            if (timeout && AssertOnRequestFailure) {
-                Debug.Fail($"{requestName} timed out");
-            }
-            return result;
-        }
-
-        internal Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(AnalysisEntry analysisEntry, ITextBuffer textBuffer) {
-            var lastVersion = analysisEntry.GetAnalysisVersion(textBuffer);
-
-            return EnsureSingleRequest(
-                typeof(AP.UnresolvedImportsRequest),
-                lastVersion,
-                n => n == lastVersion,
-                async () => {
-                    var resp = await SendRequestAsync(
-                        new AP.UnresolvedImportsRequest() {
-                            fileId = analysisEntry.FileId,
-                            bufferId = analysisEntry.GetBufferId(textBuffer)
-                        },
-                        null
-                    ).ConfigureAwait(false);
-
-                    if (resp != null) {
-                        return VersionedResponse(resp, textBuffer, lastVersion);
-                    }
-
-                    return null;
-                }
-            );
-        }
-
         internal VsProjectAnalyzer(
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
@@ -183,17 +106,9 @@ namespace Microsoft.PythonTools.Intellisense {
             string comment = null,
             bool outOfProcAnalyzer = true
         ) {
-            if (services == null) {
-                throw new ArgumentNullException(nameof(services));
-            }
-            if (factory == null) {
-                throw new ArgumentNullException(nameof(factory));
-            }
-
-            _services = services;
-
+            _services = services ?? throw new ArgumentNullException(nameof(services));
             _implicitProject = implicitProject;
-            _interpreterFactory = factory;
+            _interpreterFactory = factory ?? throw new ArgumentNullException(nameof(factory));
             var withDb = _interpreterFactory as IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 withDb.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
@@ -292,6 +207,60 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal IServiceProvider Site => _services.Site;
+
+        #region Asynchronous request handling
+        /// <summary>
+        /// The recommended timeout to use when waiting on analysis information.
+        /// </summary>
+        /// <remarks>
+        /// This has been adjusted based on telemetry to minimize the "never
+        /// responsive" time.
+        /// </remarks>
+        internal static int DefaultTimeout = 250;
+
+        internal static bool AssertOnRequestFailure = false;
+
+        public T WaitForRequest<T>(Task<T> request, string requestName) {
+            return WaitForRequest(request, requestName, default(T), 1);
+        }
+
+        public T WaitForRequest<T>(Task<T> request, string requestName, T defaultValue) {
+            return WaitForRequest(request, requestName, defaultValue, 1);
+        }
+
+        public T WaitForRequest<T>(Task<T> request, string requestName, T defaultValue, int timeoutScale) {
+            bool timeout = true;
+            var start = Stopwatch.GetTimestamp();
+            T result = defaultValue;
+            try {
+                if (request.Wait(DefaultTimeout * timeoutScale)) {
+                    result = request.Result;
+                    timeout = false;
+                }
+            } catch (AggregateException ae) {
+                if (ae.InnerException != null) {
+                    ExceptionDispatchInfo.Capture(ae.InnerException).Throw();
+                }
+                throw;
+            }
+            try {
+                int waitTime = (int)Math.Min((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency, (long)int.MaxValue);
+                if (waitTime >= 10) {
+                    _logger?.LogEvent(PythonLogEvent.AnalysisRequestTiming, new AnalysisTimingInfo {
+                        RequestName = requestName,
+                        Milliseconds = waitTime,
+                        Timeout = timeout
+                    });
+                }
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+            if (timeout && AssertOnRequestFailure) {
+                Debug.Fail($"{requestName} timed out");
+            }
+            return result;
+        }
+        #endregion
 
         #region ProjectAnalyzer overrides
 
@@ -466,6 +435,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public Stream StandardOutput => _stdOut;
             public Stream StandardInput => _stdIn;
 
+            public bool IsUnitTest { get; set; }
+
             public override bool HasExited => !_thread.IsAlive;
 
             public override int ExitCode => _exitCode;
@@ -539,7 +510,7 @@ namespace Microsoft.PythonTools.Intellisense {
             OutOfProcProjectAnalyzer analyzer;
             int exitCode = 0;
             try {
-                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput, false);
+                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput, info.IsUnitTest);
                 info.CancellationToken.Register(() => {
                     analyzer.Cancel();
                     analyzer.Dispose();
@@ -570,7 +541,9 @@ namespace Microsoft.PythonTools.Intellisense {
             Trace.TraceInformation("Starting analyzer thread");
             var thread = new Thread(ThreadConnectionWorker);
             var cts = new CancellationTokenSource();
-            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.ClientSafePipeHandle, writer.ClientSafePipeHandle);
+            info = new AnalysisProcessThreadInfo(this, thread, cts, reader.ClientSafePipeHandle, writer.ClientSafePipeHandle) {
+                IsUnitTest = comment?.Contains("PTVS_TEST") ?? false
+            };
             thread.Start(info);
 
             var conn = new Connection(
@@ -701,6 +674,31 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static void SetPathInZipFile(AnalysisEntry entry, string value) {
             entry.Properties[_pathInZipFile] = value;
+        }
+
+        internal Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(AnalysisEntry analysisEntry, ITextBuffer textBuffer) {
+            var lastVersion = analysisEntry.GetAnalysisVersion(textBuffer);
+
+            return EnsureSingleRequest(
+                typeof(AP.UnresolvedImportsRequest),
+                lastVersion,
+                n => n == lastVersion,
+                async () => {
+                    var resp = await SendRequestAsync(
+                        new AP.UnresolvedImportsRequest() {
+                            fileId = analysisEntry.FileId,
+                            bufferId = analysisEntry.GetBufferId(textBuffer)
+                        },
+                        null
+                    ).ConfigureAwait(false);
+
+                    if (resp != null) {
+                        return VersionedResponse(resp, textBuffer, lastVersion);
+                    }
+
+                    return null;
+                }
+            );
         }
 
         internal async Task<AP.ModuleInfo[]> GetEntriesThatImportModuleAsync(string moduleName, bool includeUnresolved) {

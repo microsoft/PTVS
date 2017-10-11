@@ -83,7 +83,7 @@ namespace PythonToolsMockTests {
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
                     vs.InvokeSync(() => {
-                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory, outOfProcAnalyzer: false);
+                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory, outOfProcAnalyzer: false, comment: "PTVS_TEST");
                     });
                     var task = analyzer.ReloadTask;
                     if (task != null) {
@@ -342,14 +342,8 @@ namespace PythonToolsMockTests {
         }
 
         public object GetAnalysisEntry(ITextBuffer buffer = null) {
-            var entryService = VS.ComponentModel.GetService<AnalysisEntryService>();
-            AnalysisEntry entry;
-            if (buffer == null) {
-                entryService.TryGetAnalysisEntry(View.TextView, out entry);
-            } else {
-                entryService.TryGetAnalysisEntry(buffer, out entry);
-            }
-            return entry ?? throw new ArgumentException("no AnalysisEntry available");
+            return EditorServices.GetBufferInfo(buffer ?? View.TextView.TextBuffer).AnalysisEntry
+                ?? throw new ArgumentException("no AnalysisEntry available");
         }
 
         public void Dispose() {
