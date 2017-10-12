@@ -17,13 +17,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -315,30 +316,41 @@ namespace Microsoft.PythonTools.Commands {
             private void MoveCaretToEndOfCurrentInput() {
                 var textView = _window.TextView;
                 var curLangBuffer = _window.CurrentLanguageBuffer;
+                SnapshotPoint? curLangPoint = null;
 
-                // Sending to the interactive window is like appending the input to the end, we don't
-                // respect the current caret position or selection.  We use InsertCode which uses the
-                // current caret position, so first we need to ensure the caret is in the input buffer, 
-                // otherwise inserting code does nothing.
-                SnapshotPoint? viewPoint = textView.BufferGraph.MapUpToBuffer(
-                    new SnapshotPoint(curLangBuffer.CurrentSnapshot, curLangBuffer.CurrentSnapshot.Length),
-                    PointTrackingMode.Positive,
-                    PositionAffinity.Successor,
-                    textView.TextBuffer
-                );
+                // If anything is selected we need to clear it before inserting new code
+                textView.Selection.Clear();
 
-                if (!viewPoint.HasValue) {
-                    // Unable to map language buffer to view.
-                    // Try moving caret to the end of the view then.
-                    viewPoint = new SnapshotPoint(
-                        textView.TextBuffer.CurrentSnapshot,
-                        textView.TextBuffer.CurrentSnapshot.Length
-                    );
+                // Find out if caret position is where code can be inserted.
+                // Caret must be in the area mappable to the language buffer.
+                if (!textView.Caret.InVirtualSpace) {
+                    curLangPoint = textView.MapDownToBuffer(textView.Caret.Position.BufferPosition, curLangBuffer);
                 }
 
-                textView.Caret.MoveTo(viewPoint.Value);
+                if (curLangPoint == null) {
+                    // Sending to the interactive window is like appending the input to the end, we don't
+                    // respect the current caret position or selection.  We use InsertCode which uses the
+                    // current caret position, so first we need to ensure the caret is in the input buffer, 
+                    // otherwise inserting code does nothing.
+                    SnapshotPoint? viewPoint = textView.BufferGraph.MapUpToBuffer(
+                        new SnapshotPoint(curLangBuffer.CurrentSnapshot, curLangBuffer.CurrentSnapshot.Length),
+                        PointTrackingMode.Positive,
+                        PositionAffinity.Successor,
+                        textView.TextBuffer
+                    );
+
+                    if (!viewPoint.HasValue) {
+                        // Unable to map language buffer to view.
+                        // Try moving caret to the end of the view then.
+                        viewPoint = new SnapshotPoint(
+                            textView.TextBuffer.CurrentSnapshot,
+                            textView.TextBuffer.CurrentSnapshot.Length
+                        );
+                    }
+
+                    textView.Caret.MoveTo(viewPoint.Value);
+                }
             }
         }
-
     }
 }

@@ -10,11 +10,9 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <AssemblyName>HelloWorld</AssemblyName>
-    <Name>HelloWorld</Name>
+    <Name>ProfileTestSolutionFolder</Name>
     <RootNamespace>HelloWorld</RootNamespace>
-    <IsWindowsApplication>False</IsWindowsApplication>
     <OutputPath>.</OutputPath>
-    <InterpreterId>Global|PythonCore|3.5-32</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,12 +24,6 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="Program.py" />
-    <None Include="Delayed.py" />
-    <None Include="Cells.py" />
-    <None Include="SelectOutput.py" />
-  </ItemGroup>
-  <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|3.5-32" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

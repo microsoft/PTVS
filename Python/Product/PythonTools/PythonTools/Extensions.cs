@@ -231,6 +231,26 @@ namespace Microsoft.PythonTools {
             return project.GetCommonProject() as PythonProjectNode;
         }
 
+        internal static string GetNameProperty(this IVsHierarchy project) {
+            object value;
+            ErrorHandler.ThrowOnFailure(project.GetProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_Name,
+                out value
+            ));
+            return value as string;
+        }
+
+        internal static Guid GetProjectIDGuidProperty(this IVsHierarchy project) {
+            Guid guid;
+            ErrorHandler.ThrowOnFailure(project.GetGuidProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
+                out guid
+            ));
+            return guid;
+        }
+
         internal static AnalysisEntry GetAnalysisEntry(this FileNode node) {
             return ((PythonProjectNode)node.ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(node.Url);
         }
