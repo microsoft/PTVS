@@ -24,9 +24,6 @@ using System.Threading;
 using System.Windows.Automation;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Profiling;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;
@@ -37,38 +34,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace ProfilingUITests {
     public class ProfilingUITests {
-
-        public class DotNotWaitOnExit : PythonDebuggingGeneralOptionsSetter {
-            public DotNotWaitOnExit(EnvDTE.DTE dte) :
-                base(dte, waitOnNormalExit: false, waitOnAbnormalExit: false) {
-            }
-        }
-
-        public class ProfileCleanup : IDisposable {
-            public ProfileCleanup() {
-            }
-
-            public void Dispose() {
-                try {
-                    foreach (var file in Directory.EnumerateFiles(Path.GetTempPath(), "*.vsp", SearchOption.TopDirectoryOnly)) {
-                        try {
-                            File.Delete(file);
-                        } catch {
-                            // Weak attempt only
-                        }
-                    }
-                } catch {
-                }
-            }
-        }
-
-        private string SaveDirectory {
-            get {
-                var p = TestData.GetTempPath();
-                Console.WriteLine($"Saving to {p}");
-                return p;
-            }
-        }
+        #region Test Cases
 
         public void DefaultInterpreterSelected(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
             var service = app.InterpreterService;
@@ -103,110 +69,6 @@ namespace ProfilingUITests {
                 }
                 app.WaitForDialogDismissed();
             }
-        }
-
-        private IPythonProfileSession LaunchSession(
-            PythonVisualStudioApp app,
-            Func<IPythonProfileSession> creator
-        ) {
-            // Ensure the performance window has been opened, which will make
-            // the app clean up all sessions when it is disposed.
-            app.OpenPythonPerformance();
-
-            IPythonProfileSession session = null;
-            ExceptionDispatchInfo edi = null;
-            var task = Task.Factory.StartNew(() => {
-                try {
-                    session = creator();
-                } catch (Exception ex) {
-                    edi = ExceptionDispatchInfo.Capture(ex);
-                }
-                // Must fault the task to abort the wait
-                throw new Exception();
-            });
-            var dialog = app.WaitForDialog(task);
-            if (dialog != IntPtr.Zero) {
-                using (var saveDialog = new SaveDialog(app, AutomationElement.FromHandle(dialog))) {
-
-                    var originalDestName = Path.Combine(SaveDirectory, Path.GetFileName(saveDialog.FileName));
-                    var destName = originalDestName;
-
-                    while (File.Exists(destName)) {
-                        destName = string.Format("{0} {1}{2}",
-                            Path.GetFileNameWithoutExtension(originalDestName),
-                            Guid.NewGuid(),
-                            Path.GetExtension(originalDestName)
-                        );
-                    }
-
-                    saveDialog.FileName = destName;
-                    saveDialog.Save();
-                    try {
-                        task.Wait(TimeSpan.FromSeconds(5.0));
-                        Assert.Fail("Task did not fault");
-                    } catch (AggregateException) {
-                    }
-                }
-            } else {
-                // Ensure the exception is observed
-                var ex = task.Exception;
-            }
-            edi?.Throw();
-            Assert.IsNotNull(session, "Session was not correctly initialized");
-            return session;
-        }
-
-        private IPythonProfileSession LaunchProcess(
-            PythonVisualStudioApp app,
-            IPythonProfiling profiling,
-            string interpreterPath,
-            string filename,
-            string directory,
-            string arguments,
-            bool openReport
-        ) {
-            return LaunchSession(app,
-                () => profiling.LaunchProcess(
-                    interpreterPath,
-                    filename,
-                    directory,
-                    "",
-                    openReport
-                )
-            );
-        }
-
-        private IPythonProfileSession LaunchProject(
-            PythonVisualStudioApp app,
-            IPythonProfiling profiling,
-            EnvDTE.Project project,
-            string directory,
-            bool openReport
-        ) {
-            return LaunchSession(app, () => profiling.LaunchProject(project, openReport));
-        }
-
-        private void CopyAndOpenProject(
-            PythonVisualStudioApp app,
-            out EnvDTE.Project project,
-            out IPythonProfiling profiling,
-            string projectFile = @"TestData\ProfileTest.sln"
-        ) {
-            profiling = GetProfiling(app);
-
-            Assert.IsNotNull(projectFile);
-
-            var sln = app.CopyProjectForTest(projectFile);
-            project = app.OpenProject(sln);
-        }
-
-        private IPythonProfiling GetProfiling(PythonVisualStudioApp app) {
-            var profiling = (IPythonProfiling)app.Dte.GetObject("PythonProfiling");
-
-            // no sessions yet
-            Assert.IsNull(profiling.GetSession(1));
-
-            return profiling;
         }
 
         public void NewProfilingSession(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
@@ -357,53 +219,30 @@ namespace ProfilingUITests {
         }
 
         public void LaunchProject(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            CopyAndOpenProject(app, out project, out profiling);
-            var projDir = PathUtils.GetParent(project.FullName);
-            var session = LaunchProject(app, profiling, project, projDir, false);
-            try {
-                while (profiling.IsProfiling) {
-                    Thread.Sleep(100);
-                }
-
-                var report = session.GetReport(1);
-                var filename = report.Filename;
-                Assert.IsTrue(filename.Contains("HelloWorld"));
-
-                Assert.IsNull(session.GetReport(2));
-
-                Assert.IsNotNull(session.GetReport(report.Filename));
-
-                VerifyReport(report, true, "Program.f", "time.sleep");
-            } finally {
-                profiling.RemoveSession(session, true);
-            }
+            LaunchProjectAndVerifyReport(
+                app,
+                @"TestData\ProfileTest.sln",
+                "HelloWorld",
+                new[] { "Program.f", "time.sleep" }
+            );
         }
 
         public void LaunchProjectWithSpaceInFilename(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            CopyAndOpenProject(app, out project, out profiling, @"TestData\Profile Test.sln");
-            var projDir = PathUtils.GetParent(project.FullName);
-            var session = LaunchProject(app, profiling, project, projDir, false);
-            try {
-                while (profiling.IsProfiling) {
-                    Thread.Sleep(100);
-                }
+            LaunchProjectAndVerifyReport(
+                app,
+                @"TestData\Profile Test.sln",
+                "Profile Test",
+                new[] { "Program.f", "time.sleep" }
+            );
+        }
 
-                var report = session.GetReport(1);
-                var filename = report.Filename;
-                Assert.IsTrue(filename.Contains("Profile Test"));
-
-                Assert.IsNull(session.GetReport(2));
-
-                Assert.IsNotNull(session.GetReport(report.Filename));
-
-                VerifyReport(report, true, "Program.f", "time.sleep");
-            } finally {
-                profiling.RemoveSession(session, true);
-            }
+        public void LaunchProjectWithSolutionFolder(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            LaunchProjectAndVerifyReport(
+                app,
+                @"TestData\ProfileTestSolutionFolder.sln",
+                "ProfileTestSolutionFolder",
+                new[] { "Program.f", "time.sleep" }
+            );
         }
 
         public void LaunchProjectWithSearchPath(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
@@ -496,26 +335,12 @@ namespace ProfilingUITests {
         }
 
         public void LaunchProjectWithEnvironment(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
-            EnvDTE.Project project;
-            IPythonProfiling profiling;
-            CopyAndOpenProject(app, out project, out profiling, @"TestData\ProfileTestEnvironment.sln");
-            var projDir = PathUtils.GetParent(project.FullName);
-            var session = LaunchProject(app, profiling, project, projDir, false);
-            try {
-                while (profiling.IsProfiling) {
-                    Thread.Sleep(100);
-                }
-
-                var report = session.GetReport(1);
-                var filename = report.Filename;
-                Assert.IsTrue(filename.Contains("HelloWorld"));
-                Assert.IsNull(session.GetReport(2));
-                Assert.IsNotNull(session.GetReport(report.Filename));
-
-                VerifyReport(report, true, "Program.user_env_var_valid");
-            } finally {
-                profiling.RemoveSession(session, true);
-            }
+            LaunchProjectAndVerifyReport(
+                app,
+                @"TestData\ProfileTestEnvironment.sln",
+                "HelloWorld",
+                new[] { "Program.user_env_var_valid" }
+            );
         }
 
         public void SaveDirtySession(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
@@ -860,30 +685,6 @@ namespace ProfilingUITests {
             }
         }
 
-        private static void WaitForReport(IPythonProfiling profiling, IPythonProfileSession session, PythonVisualStudioApp app, out string reportFilename) {
-            while (profiling.IsProfiling) {
-                Thread.Sleep(100);
-            }
-
-            var report = session.GetReport(1);
-            var filename = report.Filename;
-            Assert.IsTrue(filename.Contains("HelloWorld"));
-
-            app.OpenPythonPerformance();
-            var pyPerf = app.PythonPerformanceExplorerTreeView;
-            Assert.IsNotNull(pyPerf);
-
-            var item = pyPerf.FindItem("HelloWorld *", "Reports");
-            var child = item.FindFirst(System.Windows.Automation.TreeScope.Descendants, Condition.TrueCondition);
-            var childName = child.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
-
-            reportFilename = report.Filename;
-            Assert.IsTrue(childName.StartsWith("HelloWorld"));
-
-            child.SetFocus();
-            Keyboard.PressAndRelease(System.Windows.Input.Key.Delete);
-        }
-
         public void MultipleTargets(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
             EnvDTE.Project project;
             IPythonProfiling profiling;
@@ -1207,43 +1008,6 @@ namespace ProfilingUITests {
             VerifyReport(report, true, "test.pystone.Proc1");
         }
 
-        private void BuiltinsProfile(PythonVisualStudioApp app, PythonVersion interp, string[] expectedFunctions, string[] expectedNonFunctions) {
-            interp.AssertInstalled();
-
-            IPythonProfiling profiling = GetProfiling(app);
-            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
-            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
-            var session = LaunchProcess(app, profiling, interp.Id,
-                Path.Combine(projDir, "BuiltinsProfile.py"),
-                projDir,
-                "",
-                false
-            );
-            try {
-                while (profiling.IsProfiling) {
-                    Thread.Sleep(100);
-                }
-
-                var report = session.GetReport(1);
-                var filename = report.Filename;
-                Assert.IsTrue(filename.Contains("BuiltinsProfile"));
-
-                Assert.IsNull(session.GetReport(2));
-
-                Assert.IsNotNull(session.GetReport(report.Filename));
-                Assert.IsTrue(File.Exists(filename));
-
-                if (expectedFunctions != null && expectedFunctions.Length > 0) {
-                    VerifyReport(report, true, expectedFunctions);
-                }
-                if (expectedNonFunctions != null && expectedNonFunctions.Length > 0) {
-                    VerifyReport(report, false, expectedNonFunctions);
-                }
-            } finally {
-                profiling.RemoveSession(session, false);
-            }
-        }
-
         public void BuiltinsProfilePython26(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
             BuiltinsProfile(
                 app,
@@ -1418,6 +1182,193 @@ namespace ProfilingUITests {
             VerifyReport(report, true, "Program.f", "time.sleep");
         }
 
+        #endregion
+
+        #region Helpers
+
+        public class DotNotWaitOnExit : PythonDebuggingGeneralOptionsSetter {
+            public DotNotWaitOnExit(EnvDTE.DTE dte) :
+                base(dte, waitOnNormalExit: false, waitOnAbnormalExit: false) {
+            }
+        }
+
+        public class ProfileCleanup : IDisposable {
+            public ProfileCleanup() {
+            }
+
+            public void Dispose() {
+                try {
+                    foreach (var file in Directory.EnumerateFiles(Path.GetTempPath(), "*.vsp", SearchOption.TopDirectoryOnly)) {
+                        try {
+                            File.Delete(file);
+                        } catch {
+                            // Weak attempt only
+                        }
+                    }
+                } catch {
+                }
+            }
+        }
+
+        private string SaveDirectory {
+            get {
+                var p = TestData.GetTempPath();
+                Console.WriteLine($"Saving to {p}");
+                return p;
+            }
+        }
+
+        private IPythonProfileSession LaunchSession(
+            PythonVisualStudioApp app,
+            Func<IPythonProfileSession> creator
+        ) {
+            // Ensure the performance window has been opened, which will make
+            // the app clean up all sessions when it is disposed.
+            app.OpenPythonPerformance();
+
+            IPythonProfileSession session = null;
+            ExceptionDispatchInfo edi = null;
+            var task = Task.Factory.StartNew(() => {
+                try {
+                    session = creator();
+                } catch (Exception ex) {
+                    edi = ExceptionDispatchInfo.Capture(ex);
+                }
+                // Must fault the task to abort the wait
+                throw new Exception();
+            });
+            var dialog = app.WaitForDialog(task);
+            if (dialog != IntPtr.Zero) {
+                using (var saveDialog = new SaveDialog(app, AutomationElement.FromHandle(dialog))) {
+
+                    var originalDestName = Path.Combine(SaveDirectory, Path.GetFileName(saveDialog.FileName));
+                    var destName = originalDestName;
+
+                    while (File.Exists(destName)) {
+                        destName = string.Format("{0} {1}{2}",
+                            Path.GetFileNameWithoutExtension(originalDestName),
+                            Guid.NewGuid(),
+                            Path.GetExtension(originalDestName)
+                        );
+                    }
+
+                    saveDialog.FileName = destName;
+                    saveDialog.Save();
+                    try {
+                        task.Wait(TimeSpan.FromSeconds(5.0));
+                        Assert.Fail("Task did not fault");
+                    } catch (AggregateException) {
+                    }
+                }
+            } else {
+                // Ensure the exception is observed
+                var ex = task.Exception;
+            }
+            edi?.Throw();
+            Assert.IsNotNull(session, "Session was not correctly initialized");
+            return session;
+        }
+
+        private IPythonProfileSession LaunchProcess(
+            PythonVisualStudioApp app,
+            IPythonProfiling profiling,
+            string interpreterPath,
+            string filename,
+            string directory,
+            string arguments,
+            bool openReport
+        ) {
+            return LaunchSession(app,
+                () => profiling.LaunchProcess(
+                    interpreterPath,
+                    filename,
+                    directory,
+                    "",
+                    openReport
+                )
+            );
+        }
+
+        private IPythonProfileSession LaunchProject(
+            PythonVisualStudioApp app,
+            IPythonProfiling profiling,
+            EnvDTE.Project project,
+            string directory,
+            bool openReport
+        ) {
+            return LaunchSession(app, () => profiling.LaunchProject(project, openReport));
+        }
+
+        private void CopyAndOpenProject(
+            PythonVisualStudioApp app,
+            out EnvDTE.Project project,
+            out IPythonProfiling profiling,
+            string projectFile = @"TestData\ProfileTest.sln"
+        ) {
+            profiling = GetProfiling(app);
+
+            Assert.IsNotNull(projectFile);
+
+            var sln = app.CopyProjectForTest(projectFile);
+            project = app.OpenProject(sln);
+        }
+
+        private IPythonProfiling GetProfiling(PythonVisualStudioApp app) {
+            var profiling = (IPythonProfiling)app.Dte.GetObject("PythonProfiling");
+
+            // no sessions yet
+            Assert.IsNull(profiling.GetSession(1));
+
+            return profiling;
+        }
+
+        private void LaunchProjectAndVerifyReport(PythonVisualStudioApp app, string solutionPath, string expectedFileNameContains, string[] expectedFunctions) {
+            EnvDTE.Project project;
+            IPythonProfiling profiling;
+            CopyAndOpenProject(app, out project, out profiling, solutionPath);
+            var projDir = PathUtils.GetParent(project.FullName);
+            var session = LaunchProject(app, profiling, project, projDir, false);
+            try {
+                while (profiling.IsProfiling) {
+                    Thread.Sleep(100);
+                }
+
+                var report = session.GetReport(1);
+                var filename = report.Filename;
+                Assert.IsTrue(filename.Contains(expectedFileNameContains));
+                Assert.IsNull(session.GetReport(2));
+                Assert.IsNotNull(session.GetReport(report.Filename));
+
+                VerifyReport(report, true, expectedFunctions);
+            } finally {
+                profiling.RemoveSession(session, true);
+            }
+        }
+
+        private static void WaitForReport(IPythonProfiling profiling, IPythonProfileSession session, PythonVisualStudioApp app, out string reportFilename) {
+            while (profiling.IsProfiling) {
+                Thread.Sleep(100);
+            }
+
+            var report = session.GetReport(1);
+            var filename = report.Filename;
+            Assert.IsTrue(filename.Contains("HelloWorld"));
+
+            app.OpenPythonPerformance();
+            var pyPerf = app.PythonPerformanceExplorerTreeView;
+            Assert.IsNotNull(pyPerf);
+
+            var item = pyPerf.FindItem("HelloWorld *", "Reports");
+            var child = item.FindFirst(System.Windows.Automation.TreeScope.Descendants, Condition.TrueCondition);
+            var childName = child.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
+
+            reportFilename = report.Filename;
+            Assert.IsTrue(childName.StartsWith("HelloWorld"));
+
+            child.SetFocus();
+            Keyboard.PressAndRelease(System.Windows.Input.Key.Delete);
+        }
+
         private void VerifyReport(IPythonPerformanceReport report, bool includesFunctions, params string[] expectedFunctions) {
             var expected = expectedFunctions.ToSet(StringComparer.Ordinal);
 
@@ -1518,5 +1469,44 @@ namespace ProfilingUITests {
             perfToolsPath = Path.Combine(shFolder, perfToolsPath);
             return perfToolsPath;
         }
+
+        private void BuiltinsProfile(PythonVisualStudioApp app, PythonVersion interp, string[] expectedFunctions, string[] expectedNonFunctions) {
+            interp.AssertInstalled();
+
+            IPythonProfiling profiling = GetProfiling(app);
+            var sln = app.CopyProjectForTest(@"TestData\ProfileTest.sln");
+            var projDir = Path.Combine(PathUtils.GetParent(sln), "ProfileTest");
+            var session = LaunchProcess(app, profiling, interp.Id,
+                Path.Combine(projDir, "BuiltinsProfile.py"),
+                projDir,
+                "",
+                false
+            );
+            try {
+                while (profiling.IsProfiling) {
+                    Thread.Sleep(100);
+                }
+
+                var report = session.GetReport(1);
+                var filename = report.Filename;
+                Assert.IsTrue(filename.Contains("BuiltinsProfile"));
+
+                Assert.IsNull(session.GetReport(2));
+
+                Assert.IsNotNull(session.GetReport(report.Filename));
+                Assert.IsTrue(File.Exists(filename));
+
+                if (expectedFunctions != null && expectedFunctions.Length > 0) {
+                    VerifyReport(report, true, expectedFunctions);
+                }
+                if (expectedNonFunctions != null && expectedNonFunctions.Length > 0) {
+                    VerifyReport(report, false, expectedNonFunctions);
+                }
+            } finally {
+                profiling.RemoveSession(session, false);
+            }
+        }
+
+        #endregion
     }
 }

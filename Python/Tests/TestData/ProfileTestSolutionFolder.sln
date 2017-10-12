@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27009.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "ProfileTestSolutionFolder", "ProfileTestSolutionFolder\ProfileTestSolutionFolder.pyproj", "{12535E18-06DA-4F15-B99E-8F492FE721E2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{9580E030-550B-4506-B192-5F5081DF97DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{12535E18-06DA-4F15-B99E-8F492FE721E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12535E18-06DA-4F15-B99E-8F492FE721E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{12535E18-06DA-4F15-B99E-8F492FE721E2} = {9580E030-550B-4506-B192-5F5081DF97DB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1D9EF26D-647D-4C34-A78B-7EE800D9CD0F}
+	EndGlobalSection
+EndGlobal
