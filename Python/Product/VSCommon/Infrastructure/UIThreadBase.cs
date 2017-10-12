@@ -38,6 +38,8 @@ namespace Microsoft.VisualStudioTools {
         public abstract Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken);
         public abstract Task InvokeTask(Func<Task> func);
         public abstract Task<T> InvokeTask<T>(Func<Task<T>> func);
+        public abstract void InvokeTaskSync(Func<Task> func, CancellationToken cancellationToken);
+        public abstract T InvokeTaskSync<T>(Func<Task<T>> func, CancellationToken cancellationToken);
         public abstract void MustBeCalledFromUIThreadOrThrow();
 
         public abstract bool InvokeRequired {
@@ -118,6 +120,13 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public override void MustBeCalledFromUIThreadOrThrow() { }
+
+        public override void InvokeTaskSync(Func<Task> func, CancellationToken cancellationToken) {
+        }
+
+        public override T InvokeTaskSync<T>(Func<Task<T>> func, CancellationToken cancellationToken) {
+            return default(T);
+        }
 
         public override bool InvokeRequired {
             get { return false; }

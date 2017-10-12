@@ -162,8 +162,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IEnumerable<EncodedLocation> Definitions {
             get {
-
-                yield return new EncodedLocation(_location, null);
+                if (_location != null) {
+                    yield return new EncodedLocation(_location, null);
+                }
             }
         }
 

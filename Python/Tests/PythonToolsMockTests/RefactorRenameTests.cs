@@ -153,6 +153,7 @@ namespace PythonToolsMockTests {
                 },
                 false,
                 null,
+                null,
                 new ExpectedPreviewItem("test.py",
                     new ExpectedPreviewItem("def __f(self):"),
                     new ExpectedPreviewItem("self.__f()"),
@@ -187,6 +188,7 @@ namespace PythonToolsMockTests {
                     )
                 },
                 false,
+                null,
                 null,
                 new ExpectedPreviewItem("test.py",
                     new ExpectedPreviewItem("def __f(self):"),
@@ -223,6 +225,7 @@ namespace PythonToolsMockTests {
                 },
                 false,
                 null,
+                null,
                 new ExpectedPreviewItem("test.py",
                     new ExpectedPreviewItem("def __longname(self):"),
                     new ExpectedPreviewItem("self.__longname()"),
@@ -258,6 +261,7 @@ namespace PythonToolsMockTests {
                     )
                 },
                 false,
+                null,
                 null,
                 new ExpectedPreviewItem("test.py",
                     new ExpectedPreviewItem("def __f(self):"),
@@ -2371,36 +2375,38 @@ def g(a, b, c):
         class FileInput {
             public readonly string Input, Output, Filename;
 
-            public FileInput(string input, string output, string filename = "C:\\test.py") {
+            static string DefaultFilename = TestData.GetTempPath() + "\\test.py";
+
+            public FileInput(string input, string output, string filename = null) {
                 Input = input;
                 Output = output;
-                Filename = filename;
+                Filename = filename ?? DefaultFilename;
             }
         }
 
         private void RefactorTest(string newName, string caretText, FileInput[] inputs, params ExpectedPreviewItem[] items) {
-            RefactorTest(newName, caretText, inputs, true, null, items);
+            RefactorTest(newName, caretText, inputs, true, null, null, items);
         }
 
-        private void RefactorTest(string newName, string caretText, FileInput[] inputs, bool mutateTest = true, Version version = null, params ExpectedPreviewItem[] items) {
+        private void RefactorTest(string newName, string caretText, FileInput[] inputs, bool mutateTest = true, Version version = null, string expectedSelectedText = null, params ExpectedPreviewItem[] items) {
             for (int i = 0; i < inputs.Length; ++i) {
                 Console.WriteLine("Test code {0} {1}:\r\n{2}\r\n", i, inputs[i].Filename, inputs[i].Input);
             }
             
             foreach(bool preview in new[] { true, false } ) {
-                OneRefactorTest(newName, caretText, inputs, version, preview, null, items);
+                OneRefactorTest(newName, caretText, inputs, version, preview, null, items, expectedSelectedText);
 
                 if (mutateTest) {
                     // try again w/ a longer name
-                    MutateTest(newName, caretText, inputs, version, newName + newName, preview);
+                    MutateTest(newName, caretText, inputs, version, newName + newName, preview, expectedSelectedText);
 
                     // and a shorter name
-                    MutateTest(newName, caretText, inputs, version, new string(newName[0], 1), preview);
+                    MutateTest(newName, caretText, inputs, version, new string(newName[0], 1), preview, expectedSelectedText);
                 }
             }
         }
 
-        private void MutateTest(string newName, string caretText, FileInput[] inputs, Version version, string altNewName, bool preview) {
+        private void MutateTest(string newName, string caretText, FileInput[] inputs, Version version, string altNewName, bool preview, string expectedSelectedText) {
             FileInput[] moreInputs = new FileInput[inputs.Length];
             for (int i = 0; i < moreInputs.Length; i++) {
                 moreInputs[i] = new FileInput(
@@ -2410,7 +2416,7 @@ def g(a, b, c):
                 );
             }
 
-            OneRefactorTest(altNewName, caretText, moreInputs, version, preview, null);
+            OneRefactorTest(altNewName, caretText, moreInputs, version, preview, null, expectedSelectedText: expectedSelectedText);
         }
 
         class ExpectedPreviewItem {
@@ -2427,14 +2433,14 @@ def g(a, b, c):
             OneRefactorTest("fob", caretText, new[] { new FileInput(text, null), new FileInput("def oar(): pass", "", "C:\\abc.py") }, null, false, error, null);
         }
 
-        private void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
+        private void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null, string expectedSelectedText = null) {
             Console.WriteLine("Replacing {0} with {1}", caretText, newName);
             version = version ?? new Version(2, 7);
 
             for (int loops = 0; loops < 2; loops++) {
                 var views = new List<PythonEditor>();
                 try {
-                    var mainView = new PythonEditor(inputs[0].Input, version.ToLanguageVersion(), _vs, filename: inputs[0].Filename);
+                    var mainView = new PythonEditor(inputs[0].Input, version.ToLanguageVersion(), _vs, filename: inputs[0].Filename, inProcAnalyzer: true);
                     var analyzer = mainView.Analyzer;
 
                     views.Add(mainView);
@@ -2454,13 +2460,20 @@ def g(a, b, c):
                         mainView.Text = mainView.Text;
                     }
 
-                    var caretPos = inputs[0].Input.IndexOf(caretText);
-                    mainView.View.MoveCaret(new SnapshotPoint(mainView.CurrentSnapshot, caretPos));
 
-                    var extractInput = new RenameVariableTestInput(newName, bufferTable, preview);
+                    var extractInput = new RenameVariableTestInput(expectedSelectedText ?? caretText, newName, bufferTable, preview);
                     var previewChangesService = new TestPreviewChanges(expected);
 
-                    new VariableRenamer(views[0].View.View, _vs.ServiceProvider).RenameVariable(extractInput, previewChangesService).Wait();
+                    var uiThread = _vs.ServiceProvider.GetUIThread();
+                    uiThread.InvokeTask(async () => {
+                        var snap = mainView.CurrentSnapshot;
+                        var caretPos = snap.GetText().IndexOf(caretText);
+                        mainView.View.MoveCaret(new SnapshotPoint(snap, caretPos));
+                        Assert.AreEqual(caretText, snap.GetText(caretPos, caretText.Length));
+
+                        var vr = new VariableRenamer(mainView.View.View, _vs.ServiceProvider);
+                        await vr.RenameVariable(extractInput, previewChangesService);
+                    }).Wait();
                     if (error != null) {
                         Assert.AreEqual(error, extractInput.Failure);
                         return;
@@ -2478,13 +2491,21 @@ def g(a, b, c):
         }
 
         class RenameVariableTestInput : IRenameVariableInput {
-            private readonly string _name;
+            private readonly string _originalName, _name;
             private readonly bool _preview, _searchInStrings, _searchInComments;
             internal readonly List<string> Log = new List<string>();
             private readonly Dictionary<string, ITextBuffer> _buffers;
             internal string Failure;
 
-            public RenameVariableTestInput(string name, Dictionary<string, ITextBuffer> buffers, bool preview = true, bool searchInStrings = false, bool searchInComments = false) {
+            public RenameVariableTestInput(
+                string expectedOriginalName,
+                string name,
+                Dictionary<string, ITextBuffer> buffers,
+                bool preview = true,
+                bool searchInStrings = false,
+                bool searchInComments = false
+            ) {
+                _originalName = expectedOriginalName;
                 _name = name;
                 _preview = preview;
                 _searchInComments = searchInComments;
@@ -2493,6 +2514,8 @@ def g(a, b, c):
             }
 
             public RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion) {
+                Assert.IsTrue(_originalName.StartsWith(originalName), $"Selected text {originalName} did not match {_originalName}");
+
                 var requestView = new RenameVariableRequestView(originalName, languageVersion);
                 requestView.Name = _name;
                 requestView.PreviewChanges = _preview;

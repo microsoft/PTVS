@@ -104,7 +104,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal AnalysisEntry GetAnalysisEntry() {
-            var bi = _services.GetBufferInfo(TextBuffer);
+            var bi = PythonTextBufferInfo.TryGetForBuffer(TextBuffer);
+            Debug.Assert(bi != null, "Getting completions from uninitialized buffer " + TextBuffer.ToString());
             Debug.Assert(bi?.AnalysisEntry != null, "Failed to get project entry for buffer " + TextBuffer.ToString());
             return bi?.AnalysisEntry;
         }

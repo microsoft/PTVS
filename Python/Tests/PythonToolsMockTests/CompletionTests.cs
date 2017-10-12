@@ -1074,16 +1074,16 @@ def g():
 
             using (var view = new PythonEditor(code, PythonLanguageVersion.V35)) {
                 AssertUtil.CheckCollection(view.GetCompletionsAfter("f()."),
-                    new[] { "next", "send", "throw" },
+                    new[] { "send", "throw" },
                     new[] { "real", "imag" }
                 );
                 AssertUtil.CheckCollection(view.GetCompletionsAfter("yield from f()."),
-                    new[] { "next", "send", "throw" },
+                    new[] { "send", "throw" },
                     new[] { "real", "imag" }
                 );
                 AssertUtil.CheckCollection(view.GetCompletionsAfter("(yield from f())."),
                     new[] { "real", "imag" },
-                    new[] { "next", "send", "throw" }
+                    new[] { "send", "throw" }
                 );
             }
         }
@@ -1101,16 +1101,16 @@ async def g():
 
             using (var view = new PythonEditor(code, PythonLanguageVersion.V35)) {
                 AssertUtil.CheckCollection(view.GetCompletionsAfter("f()."),
-                    new[] { "next", "send", "throw" },
+                    new[] { "send", "throw" },
                     new[] { "real", "imag" }
                 );
                 AssertUtil.CheckCollection(view.GetCompletionsAfter("await f()."),
-                    new[] { "next", "send", "throw" },
+                    new[] { "send", "throw" },
                     new[] { "real", "imag" }
                 );
                 AssertUtil.CheckCollection(view.GetCompletionsAfter("(await f())."),
                     new[] { "real", "imag" },
-                    new[] { "next", "send", "throw" }
+                    new[] { "send", "throw" }
                 );
             }
         }

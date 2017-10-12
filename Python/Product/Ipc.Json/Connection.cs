@@ -361,6 +361,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             } catch (Exception e) {
                 success = false;
                 message = e.ToString();
+                Trace.TraceError(message);
                 await SendResponseAsync(seq.Value, command, success, message, null, CancellationToken.None).ConfigureAwait(false);
             }
         }

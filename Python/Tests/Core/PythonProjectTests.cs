@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
@@ -262,19 +263,15 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
-        public void LoadAndUnloadModule() {
+        public async Task LoadAndUnloadModule() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = new VsProjectAnalyzer(services, factories[0], outOfProcAnalyzer: false, comment: "PTVS_TEST")) {
+            using (var analyzer = await VsProjectAnalyzer.CreateForTests(services, factories[0])) {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
-                var taskEntry1 = analyzer.AnalyzeFileAsync(m1Path);
-                var taskEntry2 = analyzer.AnalyzeFileAsync(m2Path);
-                taskEntry1.Wait(CancellationTokens.After5s);
-                taskEntry2.Wait(CancellationTokens.After5s);
-                var entry1 = taskEntry1.Result;
-                var entry2 = taskEntry2.Result;
+                var entry1 = await analyzer.AnalyzeFileAsync(m1Path);
+                var entry2 = await analyzer.AnalyzeFileAsync(m2Path);
 
                 var cancel = CancellationTokens.After60s;
                 analyzer.WaitForCompleteAnalysis(_ => !cancel.IsCancellationRequested);
@@ -291,7 +288,7 @@ namespace PythonToolsTests {
                     "int"
                 );
 
-                analyzer.UnloadFileAsync(entry1).Wait();
+                await analyzer.UnloadFileAsync(entry1);
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 // Even though module1 has been unloaded, we still know that
@@ -305,7 +302,7 @@ namespace PythonToolsTests {
                     analyzer.GetValueDescriptions(entry2, "x", loc)
                 );
 
-                analyzer.AnalyzeFileAsync(m1Path).Wait();
+                await analyzer.AnalyzeFileAsync(m1Path);
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 AssertUtil.ContainsExactly(
@@ -322,16 +319,16 @@ namespace PythonToolsTests {
 
 
         [TestMethod, Priority(2)]
-        public void AnalyzeBadEgg() {
+        public async Task AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = new VsProjectAnalyzer(services, factories[0], outOfProcAnalyzer: false, comment: "PTVS_TEST")) {
-                analyzer.SetSearchPathsAsync(new[] { TestData.GetPath(@"TestData\BadEgg.egg") }).Wait();
+            using (var analyzer = await VsProjectAnalyzer.CreateForTests(services, factories[0])) {
+                await analyzer.SetSearchPathsAsync(new[] { TestData.GetPath(@"TestData\BadEgg.egg") });
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 // Analysis result must contain the module for the filename inside the egg that is a valid identifier,
                 // and no entries for the other filename which is not. 
-                var moduleNames = analyzer.GetModulesAsync(null, null).Result.Select(x => x.Name);
+                var moduleNames = (await analyzer.GetModulesAsync(null, null)).Select(x => x.Name);
                 AssertUtil.Contains(moduleNames, "module");
                 AssertUtil.DoesntContain(moduleNames, "42");
             }
