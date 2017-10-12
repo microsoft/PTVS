@@ -520,8 +520,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-
-
         private object SafeGetValue(DependencyProperty property) {
             if (Dispatcher.CheckAccess()) {
                 return GetValue(property);
