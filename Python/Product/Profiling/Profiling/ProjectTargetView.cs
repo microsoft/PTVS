@@ -30,18 +30,8 @@ namespace Microsoft.PythonTools.Profiling {
         /// Create a ProjectTargetView with values from an EnvDTE.Project.
         /// </summary>
         public ProjectTargetView(IVsHierarchy project) {
-            object value;
-            ErrorHandler.ThrowOnFailure(project.GetProperty(
-                (uint)VSConstants.VSITEMID.Root,
-                (int)__VSHPROPID.VSHPROPID_Name,
-                out value
-            ));
-            _name = value as string ?? Strings.ProjectTargetUnknownName;
-            ErrorHandler.ThrowOnFailure(project.GetGuidProperty(
-                (uint)VSConstants.VSITEMID.Root,
-                (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
-                out _guid
-            ));
+            _name = project.GetNameProperty() ?? Strings.ProjectTargetUnknownName;
+            _guid = project.GetProjectIDGuidProperty();
         }
 
         /// <summary>
