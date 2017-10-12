@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Navigation {
             _value = value;
             bool hasLocation = false;
             foreach (var completion in value.Values) {
-                if (completion.locations.Any()) {
+                if (completion.locations.MaybeEnumerate().Any()) {
                     hasLocation = true;
                 }
             }
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Navigation {
             }
 
             foreach (var completion in _value.Values) {
-                foreach (var location in completion.locations) {
+                foreach (var location in completion.locations.MaybeEnumerate()) {
                     if (File.Exists(location.file)) {
                         PythonToolsPackage.NavigateTo(
                             Site,
@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Navigation {
             List<AnalysisVariable> vars = new List<AnalysisVariable>();
             if (analyzer != null) {
                 foreach (var value in _value.Values) {
-                    foreach (var reference in value.locations) {
+                    foreach (var reference in value.locations.MaybeEnumerate()) {
                         var entry = analyzer.GetAnalysisEntryFromPath(reference.file);
                         var analysis = analyzer.WaitForRequest(analyzer.AnalyzeExpressionAsync(
                             entry, 

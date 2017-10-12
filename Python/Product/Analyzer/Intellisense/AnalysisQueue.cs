@@ -180,7 +180,15 @@ namespace Microsoft.PythonTools.Intellisense {
             AnalysisStarted?.Invoke(this, EventArgs.Empty);
             _isAnalyzing = true;
 
-            while (!_cancel.IsCancellationRequested) {
+            CancellationToken cancel;
+            try {
+                cancel = _cancel.Token;
+            } catch (ObjectDisposedException) {
+                AnalysisAborted?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+
+            while (!cancel.IsCancellationRequested) {
                 IAnalyzable workItem;
 
                 AnalysisPriority pri;
@@ -197,9 +205,9 @@ namespace Microsoft.PythonTools.Intellisense {
                                 Enqueue(new GroupAnalysis(groupable.AnalysisGroup, this), pri);
                             }
 
-                            groupable.Analyze(_cancel.Token, true);
+                            groupable.Analyze(cancel, true);
                         } else {
-                            workItem.Analyze(_cancel.Token);
+                            workItem.Analyze(cancel);
                         }
                     } catch (Exception ex) {
                         if (ex.IsCriticalException() || System.Diagnostics.Debugger.IsAttached) {
@@ -219,7 +227,11 @@ namespace Microsoft.PythonTools.Intellisense {
                         WaitHandle.SignalAndWait(_analyzer.QueueActivityEvent, _workEvent);
                     } catch (ApplicationException) {
                         // No idea where this is coming from...
-                        _cancel.Cancel();
+                        try {
+                            _cancel.Cancel();
+                        } catch (ObjectDisposedException) {
+                            // Doesn't matter - we're breaking out anyway
+                        }
                         break;
                     }
                     var evt2 = AnalysisStarted;
@@ -231,7 +243,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             _isAnalyzing = false;
 
-            if (_cancel.IsCancellationRequested) {
+            if (cancel.IsCancellationRequested) {
                 AnalysisAborted?.Invoke(this, EventArgs.Empty);
             }
         }

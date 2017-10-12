@@ -180,7 +180,8 @@ namespace Microsoft.PythonTools.Analysis {
             if (_interactive) {
                 var analyzer = new OutOfProcProjectAnalyzer(
                     Console.OpenStandardOutput(),
-                    Console.OpenStandardInput()
+                    Console.OpenStandardInput(),
+                    true
                 );
 
                 await analyzer.ProcessMessages();

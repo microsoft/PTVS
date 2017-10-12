@@ -46,6 +46,8 @@ namespace PythonToolsMockTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
+            VsProjectAnalyzer.DefaultTimeout = 10000;
+            VsProjectAnalyzer.AssertOnRequestFailure = true;
         }
 
         [TestInitialize]
@@ -263,59 +265,63 @@ print
         [TestMethod, Priority(0)]
         public void ExceptionCompletions() {
             using (var vs = new MockVs()) {
-                foreach (string code in new[] { 
-                @"import sys
-raise |", 
-                @"import sys
-raise (|", 
-                @"import sys
+                foreach (var ver in new[] { PythonLanguageVersion.V36, PythonLanguageVersion.V27 }) {
+                    foreach (string code in new[] {
+@"import sys
+raise |",
+@"import sys
+raise (|",
+@"import sys
 try:
     pass
 except |",
-                @"import sys
+@"import sys
 try:
     pass
 except (|",
-            @"import sys
+@"import sys
 try:
     pass
 except (ValueError, |"}) {
-                    var completionList = GetCompletions(vs, code.IndexOf("|"), code.Replace("|", "")).ToArray();
+                        Console.WriteLine($"{ver}:: {code}");
 
-                    AssertUtil.ContainsAtLeast(completionList,
-                        "Exception",
-                        "KeyboardInterrupt",
-                        "GeneratorExit",
-                        "StopIteration",
-                        "SystemExit",
-                        "sys"
-                    );
+                        var completionList = GetCompletions(vs, code.IndexOf("|"), code.Replace("|", ""), ver).ToArray();
 
-                    AssertUtil.DoesntContain(completionList, "Warning");
-                    AssertUtil.DoesntContain(completionList, "str");
-                    AssertUtil.DoesntContain(completionList, "int");
-                }
+                        AssertUtil.ContainsAtLeast(completionList,
+                            "Exception",
+                            "KeyboardInterrupt",
+                            "GeneratorExit",
+                            "StopIteration",
+                            "SystemExit",
+                            "sys"
+                        );
 
-                foreach (string code in new[] { 
-                @"import sys
-raise (sys.", 
-                @"import sys
+                        AssertUtil.DoesntContain(completionList, "Warning");
+                        AssertUtil.DoesntContain(completionList, "str");
+                        AssertUtil.DoesntContain(completionList, "int");
+                    }
+
+                    foreach (string code in new[] {
+@"import sys
+raise (sys.",
+@"import sys
 try:
     pass
 except (sys."}) {
-                    var completionList = GetCompletions(vs, code.IndexOfEnd("sys."), code).ToArray();
+                        var completionList = GetCompletions(vs, code.IndexOfEnd("sys."), code, ver).ToArray();
 
-                    AssertUtil.DoesntContain(completionList, "Exception");
-                    AssertUtil.DoesntContain(completionList, "KeyboardInterrupt");
-                    AssertUtil.DoesntContain(completionList, "GeneratorExit");
-                    AssertUtil.DoesntContain(completionList, "StopIteration");
-                    AssertUtil.DoesntContain(completionList, "SystemExit");
+                        AssertUtil.DoesntContain(completionList, "Exception");
+                        AssertUtil.DoesntContain(completionList, "KeyboardInterrupt");
+                        AssertUtil.DoesntContain(completionList, "GeneratorExit");
+                        AssertUtil.DoesntContain(completionList, "StopIteration");
+                        AssertUtil.DoesntContain(completionList, "SystemExit");
 
-                    AssertUtil.ContainsAtLeast(completionList,
-                        "modules",
-                        "path",
-                        "version"
-                    );
+                        AssertUtil.ContainsAtLeast(completionList,
+                            "modules",
+                            "path",
+                            "version"
+                        );
+                    }
                 }
             }
         }
@@ -539,58 +545,62 @@ f(1, 2, 3, 4,")) {
         }
 
         private static void OSPathImportTest(MockVs vs, MockCompletionDB db) {
-            var code = "from ";
-            AssertUtil.ContainsAtLeast(GetCompletions(vs, -1, code, db.Factory), "os", "sys");
+            using (var editor = new PythonEditor(vs: vs, factory: db.Factory)) {
+                editor.Text = "from ";
+                AssertUtil.ContainsAtLeast(editor.GetCompletions(-1), "os", "sys");
 
-            code = "from o";
-            var completions = GetCompletions(vs, -1, code, db.Factory);
-            AssertUtil.ContainsAtLeast(completions, "os");
-            AssertUtil.DoesntContain(completions, "sys");
+                editor.Text = "from o";
+                var completions = editor.GetCompletions(-1);
+                AssertUtil.ContainsAtLeast(completions, "os");
+                AssertUtil.DoesntContain(completions, "sys");
 
-            code = "from os ";
-            AssertUtil.ContainsExactly(GetCompletions(vs, -1, code, db.Factory), "import");
+                editor.Text = "from os ";
+                AssertUtil.ContainsExactly(editor.GetCompletions(-1), "import");
 
-            code = "from os import";
-            AssertUtil.ContainsExactly(GetCompletions(vs, -1, code, db.Factory), "import");
+                editor.Text = "from os import";
+                AssertUtil.ContainsExactly(editor.GetCompletions(-1), "import");
 
-            code = "from os import ";
-            AssertUtil.ContainsAtLeast(GetCompletions(vs, -1, code, db.Factory), "path");
+                editor.Text = "from os import ";
+                AssertUtil.ContainsAtLeast(editor.GetCompletions(-1), "path");
 
-            code = "from os.";
-            AssertUtil.ContainsExactly(GetCompletions(vs, -1, code, db.Factory), "path");
+                editor.Text = "from os.";
+                AssertUtil.ContainsExactly(editor.GetCompletions(-1), "path");
 
-            code = "from os.path import ";
-            AssertUtil.ContainsAtLeast(GetCompletions(vs, -1, code, db.Factory), "abspath", "relpath");
+                editor.Text = "from os.path import ";
+                AssertUtil.ContainsAtLeast(editor.GetCompletions(-1), "abspath", "relpath");
 
-            var allNames = new HashSet<string>();
-            allNames.UnionWith(GetCompletions(vs, -1, "from ntpath import ", db.Factory));
-            allNames.UnionWith(GetCompletions(vs, -1, "from posixpath import ", db.Factory));
+                var allNames = new HashSet<string>();
+                editor.Text = "from ntpath import ";
+                allNames.UnionWith(editor.GetCompletions(-1));
+                editor.Text = "from posixpath import ";
+                allNames.UnionWith(editor.GetCompletions(-1));
 
-            code = "from os.path import ";
-            AssertUtil.ContainsAtLeast(GetCompletions(vs, -1, code, db.Factory), allNames);
+                editor.Text = "from os.path import ";
+                AssertUtil.ContainsAtLeast(editor.GetCompletions(-1), allNames);
+            }
         }
 
         [TestMethod, Priority(0)]
         public void FromImportMultilineCompletions() {
-            using (var vs = new MockVs()) {
-                var code = "from sys import (";
-                var completions = GetCompletions(vs, -1, code);
+            using (var editor = new PythonEditor()) {
+                editor.Text = "from sys import (";
+                var completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "settrace", "api_version");
                 AssertUtil.DoesntContain(completions, "*");
 
-                code = "from nt import (\r\n    ";
-                completions = GetCompletions(vs, -1, code);
+                editor.Text = "from nt import (\r\n    ";
+                completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "abort", "W_OK");
                 AssertUtil.DoesntContain(completions, "*");
 
-                code = "from nt import (getfilesystemencoding,\r\n    ";
-                completions = GetCompletions(vs, -1, code);
+                editor.Text = "from nt import (getfilesystemencoding,\r\n    ";
+                completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "abort", "W_OK");
                 AssertUtil.DoesntContain(completions, "*");
 
                 // Need a comma for more completions
-                code = "from sys import (settrace\r\n    ";
-                AssertUtil.ContainsExactly(GetCompletions(vs, -1, code), "as");
+                editor.Text = "from sys import (settrace\r\n    ";
+                AssertUtil.ContainsExactly(editor.GetCompletions(-1), "as");
             }
         }
 
@@ -795,15 +805,15 @@ class Baz(Fob, Oar):
                     view2.GetCompletionListAfter("def ").Select(c => c.InsertionText),
                 @"capitalize(self):
         return super(Fob, self).capitalize()",
-                @"index(self, sub, start, end):
-        return super(Fob, self).index(sub, start, end)"
+                @"index(self, v):
+        return super(Fob, self).index(v)"
                 );
                 AssertUtil.ContainsAtLeast(
                     view3.GetCompletionListAfter("def ").Select(x => x.InsertionText),
                 @"capitalize(self):
         return super().capitalize()",
-                @"index(self, sub, start, end):
-        return super().index(sub, start, end)"
+                @"index(self, v):
+        return super().index(v)"
                 );
 
                 view2.Text = view3.Text = @"class Fob(str, list):
@@ -812,13 +822,13 @@ class Baz(Fob, Oar):
 
                 AssertUtil.Contains(
                     view2.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, sub, start, end):
-        return super(Fob, self).index(sub, start, end)"
+                    @"index(self, v):
+        return super(Fob, self).index(v)"
                 );
                 AssertUtil.Contains(
                     view3.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, sub, start, end):
-        return super().index(sub, start, end)"
+                    @"index(self, v):
+        return super().index(v)"
                 );
 
                 view2.Text = view3.Text = @"class Fob(list, str):
@@ -826,13 +836,13 @@ class Baz(Fob, Oar):
 ";
                 AssertUtil.Contains(
                     view2.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, item, start, stop):
-        return super(Fob, self).index(item, start, stop)"
+                    @"index(self, v):
+        return super(Fob, self).index(v)"
                 );
                 AssertUtil.Contains(
                     view3.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, item, start, stop):
-        return super().index(item, start, stop)"
+                    @"index(self, v):
+        return super().index(v)"
                 );
             }
         }

@@ -258,7 +258,7 @@ R_A3 = R_A1.r_A()");
 
         [TestMethod, Priority(0)]
         public void AstSearchPathsThroughAnalyzer() {
-            using (var evt = new ManualResetEvent(false))
+            using (var evt = new AutoResetEvent(false))
             using (var analysis = CreateAnalysis()) {
                 var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
                 var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
@@ -402,7 +402,7 @@ R_A3 = R_A1.r_A()");
             await FullStdLibTest(v);
         }
 
-        [TestMethod, TestCategory("60s"), Priority(0)]
+        [TestMethod, TestCategory("60s"), Priority(1)]
         [Timeout(10 * 60 * 1000)]
         public async Task FullStdLibAnaconda3() {
             var v = PythonPaths.Anaconda36_x64 ?? PythonPaths.Anaconda36;
@@ -414,14 +414,14 @@ R_A3 = R_A1.r_A()");
             );
         }
 
-        [TestMethod, TestCategory("60s"), Priority(0)]
+        [TestMethod, TestCategory("60s"), Priority(1)]
+        [Timeout(10 * 60 * 1000)]
         public async Task FullStdLibAnaconda2() {
             var v = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
             await FullStdLibTest(v,
                 // Fails to import due to SxS manifest issues
                 "dde",
-                // Generates invalid Python 2.x code ("def exec(...)")
-                "PyQt5.QtGui"
+                "win32ui"
             );
         }
 
@@ -437,6 +437,7 @@ R_A3 = R_A1.r_A()");
             skip.UnionWith(new[] {
                 "matplotlib.backends._backend_gdk",
                 "matplotlib.backends._backend_gtkagg",
+                "matplotlib.backends._gtkagg",
             });
 
             bool anySuccess = false;
@@ -446,10 +447,19 @@ R_A3 = R_A1.r_A()");
             using (var analyzer = new PythonAnalysis(factory)) {
                 var tasks = new List<Task<Tuple<ModulePath, IPythonModule>>>();
 
-                var interp = analyzer.Analyzer.Interpreter;
-                foreach(var r in modules.AsParallel()
+                var interp = (AstPythonInterpreter)analyzer.Analyzer.Interpreter;
+                foreach (var m in skip) {
+                    interp.AddUnimportableModule(m);
+                }
+
+                foreach(var r in modules
                     .Where(m => !skip.Contains(m.ModuleName))
-                    .Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName)))
+                    .GroupBy(m => {
+                        int i = m.FullName.IndexOf('.');
+                        return i <= 0 ? m.FullName : m.FullName.Remove(i);
+                    })
+                    .AsParallel()
+                    .SelectMany(g => g.Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName))))
                 ) {
                     var modName = r.Item1;
                     var mod = r.Item2;

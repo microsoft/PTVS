@@ -631,7 +631,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityInstanceField() {
             RefactorTest("fob", "abc",
                 new[] { 
@@ -1564,7 +1564,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void SanityDelInstanceMember() {
             RefactorTest("fob", "abc",
             new[] { 

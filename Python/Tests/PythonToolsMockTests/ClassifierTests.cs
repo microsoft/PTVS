@@ -16,32 +16,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition.Hosting;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
-using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
     [TestClass]
@@ -108,7 +97,7 @@ abc = True
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
-                helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<ntpath>m<abc>m<abc>");
+                helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<path>m<ntpath>m<abc>m<abc>");
             }
         }
 
@@ -118,13 +107,16 @@ abc = True
 
         [TestMethod, Priority(0)]
         public void ImportClassifications() {
+            // We import a name that is not in os, because otherwise
+            // its classification may depend on the current DB for the
+            // module.
             var code = @"import abc as x
-from os import fdopen
+from os import name_not_in_os
 
 abc
 x
 os
-fdopen
+name_not_in_os
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("kiki kiki i i i i");
@@ -300,7 +292,14 @@ def f() -> int:
 
             public IEnumerable<ClassificationSpan> AnalysisClassifierSpans {
                 get {
-                    _classificationsReady2.Wait();
+                    // Force the spans to be recalculated
+                    var bp = ((AnalysisEntry)_view.GetAnalysisEntry()).TryGetBufferParser();
+                    if (bp != null) {
+                        _classificationsReady2.Reset();
+                        bp.Requeue();
+                        _classificationsReady2.Wait();
+                    }
+
                     return AnalysisClassifier.GetClassificationSpans(
                         new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
                     ).OrderBy(s => s.Span.Start.Position);

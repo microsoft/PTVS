@@ -35,9 +35,7 @@ namespace DebuggerTests {
     public abstract class AttachTests : BaseDebuggerTests {
         [TestInitialize]
         public void CheckVersion() {
-            if (Version == null) {
-                Assert.Inconclusive("Required version of Python is not installed");
-            }
+            Version.AssertInstalled();
         }
 
         internal override PythonVersion Version {
@@ -782,8 +780,12 @@ int main(int argc, char* argv[]) {
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");
             var p = Process.Start(Version.InterpreterPath, "-B \"" + script + "\"");
             try {
+                Thread.Sleep(1000);
+                if (p.HasExited) {
+                    Assert.Fail($"Failed to start process: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
+                }
+
                 using (var dumpWriter = new MiniDumpWriter(p)) {
-                    Thread.Sleep(1000);
                     var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput);
                     try {
                         var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -66,13 +66,24 @@ namespace PythonToolsMockTests {
                 AdvancedOptions = advancedOptions;
 
                 if (factory == null) {
-                    _disposeFactory = true;
-                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+                    vs.InvokeSync(() => {
+                        factory = vs.ComponentModel.GetService<IInterpreterRegistryService>()
+                            .Interpreters
+                            .FirstOrDefault(c => c.GetLanguageVersion() == version && c.Configuration.Id.StartsWith("Global|PythonCore"));
+                        if (factory != null) {
+                            Console.WriteLine($"Using interpreter {factory.Configuration.InterpreterPath}");
+                        }
+                    });
+                    if (factory == null) {
+                        _disposeFactory = true;
+                        factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+                        Console.WriteLine("Using analysis-only interpreter");
+                    }
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
                     vs.InvokeSync(() => {
-                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory, outOfProcAnalyzer: false);
+                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory, outOfProcAnalyzer: false, comment: "PTVS_TEST");
                     });
                     var task = analyzer.ReloadTask;
                     if (task != null) {
@@ -194,10 +205,10 @@ namespace PythonToolsMockTests {
                         }
 
                         if (!mre1.Wait(0)) {
+                            mre2.Reset();
                             if (!mre1.Wait(10000)) {
                                 throw new TimeoutException("Failed to see buffer start analyzer");
                             }
-                            mre2.Reset();
                         }
 
                         if (!mre2.Wait(10000)) {
@@ -285,6 +296,7 @@ namespace PythonToolsMockTests {
                 if (sh == null) {
                     return new List<Completion>();
                 }
+                Assert.AreNotEqual(0, sh.Session.CompletionSets.Count);
                 return sh.Session.CompletionSets.SelectMany(cs => cs.Completions)
                     .Where(c => !string.IsNullOrEmpty(c.InsertionText))
                     .ToList();
@@ -330,14 +342,8 @@ namespace PythonToolsMockTests {
         }
 
         public object GetAnalysisEntry(ITextBuffer buffer = null) {
-            var entryService = VS.ComponentModel.GetService<AnalysisEntryService>();
-            AnalysisEntry entry;
-            if (buffer == null) {
-                entryService.TryGetAnalysisEntry(View.TextView, out entry);
-            } else {
-                entryService.TryGetAnalysisEntry(buffer, out entry);
-            }
-            return entry ?? throw new ArgumentException("no AnalysisEntry available");
+            return EditorServices.GetBufferInfo(buffer ?? View.TextView.TextBuffer).AnalysisEntry
+                ?? throw new ArgumentException("no AnalysisEntry available");
         }
 
         public void Dispose() {

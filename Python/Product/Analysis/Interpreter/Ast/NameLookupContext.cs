@@ -260,6 +260,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (expr is ConstantExpression ce) {
                 if (ce.Value is string s) {
                     return new AstPythonStringLiteral(s, Interpreter.GetBuiltinType(BuiltinTypeId.Unicode), GetLoc(expr));
+                } else if (ce.Value is AsciiString b) {
+                    return new AstPythonStringLiteral(b.String, Interpreter.GetBuiltinType(BuiltinTypeId.Bytes), GetLoc(expr));
                 }
             }
 

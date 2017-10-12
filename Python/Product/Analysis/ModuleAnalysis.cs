@@ -150,14 +150,14 @@ namespace Microsoft.PythonTools.Analysis {
 
             foreach (var reference in referenceable.Definitions) {
                 yield return new AnalysisVariable(
-                    VariableType.Definition, 
+                    VariableType.Definition,
                     reference.GetLocationInfo()
                 );
             }
 
             foreach (var reference in referenceable.References) {
                 yield return new AnalysisVariable(
-                    VariableType.Reference, 
+                    VariableType.Reference,
                     reference.GetLocationInfo()
                 );
             }
@@ -296,8 +296,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// Gets the list of modules known by the current analysis.
         /// </summary>
         /// <param name="topLevelOnly">Only return top-level modules.</param>
+        [Obsolete]
         public MemberResult[] GetModules(bool topLevelOnly = false) {
-            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules(topLevelOnly));
+            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules());
 
             var children = GlobalScope.GetChildrenPackages(InterpreterContext);
 
@@ -314,6 +315,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="names">The dotted name parts to match</param>
         /// <param name="includeMembers">Include module members that match as
         /// well as just modules.</param>
+        [Obsolete]
         public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
             var res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
             var children = GlobalScope.GetChildrenPackages(InterpreterContext);
@@ -407,28 +409,83 @@ namespace Microsoft.PythonTools.Analysis {
             var scope = FindScope(location);
             var privatePrefix = GetPrivatePrefixClassName(scope);
 
-            var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
+            var ast = GetAstFromText(exprText, privatePrefix).Body;
+
+            var expr = Statement.GetExpression(ast);
             if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
                 // no completions on integer ., the user is typing a float
                 return Enumerable.Empty<MemberResult>();
             }
 
+            if (expr == null) {
+                return Enumerable.Empty<MemberResult>();
+            }
+
+            var lookup = AnalysisSet.Create();
             var errorWalker = new ErrorWalker();
             expr.Walk(errorWalker);
             if (errorWalker.HasError) {
                 return null;
             }
 
-            var unit = GetNearestEnclosingAnalysisUnit(scope);
-            var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
-            IAnalysisSet lookup;
-            if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
-                lookup = eval.EvaluateNoMemberRecursion(expr);
-            } else {
-                lookup = eval.Evaluate(expr);
+            // Special handling for `__import__('module.name')`
+            if (expr is CallExpression ce &&
+                ce.Target is NameExpression ne &&
+                ne.Name == "__import__" &&
+                ce.Args?.Count == 1 &&
+                ce.Args[0].Expression is ConstantExpression modNameExpr
+            ) {
+                string modName = modNameExpr.Value as string ?? (modNameExpr.Value as AsciiString)?.String;
+                if (!string.IsNullOrEmpty(modName)) {
+                    lookup = ResolveModule(expr, _unit.CopyForEval(), modName);
+                }
+            }
+
+            if (!lookup.Any()) {
+                var unit = GetNearestEnclosingAnalysisUnit(scope);
+                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+                if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
+                    lookup = eval.EvaluateNoMemberRecursion(expr);
+                } else {
+                    lookup = eval.Evaluate(expr);
+                }
             }
 
             return GetMemberResults(lookup, scope, options);
+        }
+
+        private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {
+            ModuleReference modRef;
+            var modules = unit.ProjectState.Modules;
+
+            if (modules.TryImport(moduleName, out modRef)) {
+                return modRef.AnalysisModule ?? AnalysisSet.Empty;
+            }
+
+            var attrs = new List<string>();
+
+            var modName = moduleName;
+            int i;
+            while ((i = modName.LastIndexOf('.')) > 0) {
+                attrs.Add(modName.Substring(i + 1));
+                modName = modName.Remove(i);
+
+                if (modules.TryImport(modName, out modRef)) {
+                    break;
+                }
+            }
+
+            IAnalysisSet mod = modRef?.AnalysisModule;
+            foreach (var attr in attrs.Reverse<string>()) {
+                if (mod == null || !mod.Any()) {
+                    return AnalysisSet.Empty;
+                }
+
+                mod = AnalysisSet.Create(mod.Where(m => m.MemberType == PythonMemberType.Module || m.MemberType == PythonMemberType.Multiple))
+                    .GetMember(node, unit, attr);
+            }
+
+            return mod ?? AnalysisSet.Empty;
         }
 
         /// <summary>

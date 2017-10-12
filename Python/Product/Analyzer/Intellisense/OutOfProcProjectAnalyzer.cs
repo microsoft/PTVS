@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly Connection _connection;
 
-        internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
+        internal OutOfProcProjectAnalyzer(Stream writer, Stream reader, bool inOwnProcess) {
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
@@ -96,8 +96,10 @@ namespace Microsoft.PythonTools.Intellisense {
             );
             _connection.EventReceived += ConectionReceivedEvent;
 
-            GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
-            GlobalInterpreterOptions.SuppressPackageManagers = true;
+            if (inOwnProcess) {
+                GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
+                GlobalInterpreterOptions.SuppressPackageManagers = true;
+            }
 
             _catalog = new AggregateCatalog();
             _container = new CompositionContainer(_catalog);
@@ -175,7 +177,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
                 case AP.GetAllMembersRequest.Command: response = GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = GetModules(request); break;
-                case AP.GetModuleMembersRequest.Command: response = GeModuleMembers(request); break;
                 case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
                 case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
@@ -786,6 +787,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             fromName = x.FromName
                         }
                     )
+                    .Distinct()
                     .ToArray()
             };
         }
@@ -1213,6 +1215,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     return new AP.AnalyzeExpressionResponse {
                         variables = modRef.AnalysisModule.Locations
                             .Select(l => MakeReference(l, VariableType.Definition))
+                            .Where(r => r != null)
                             .ToArray(),
                         memberName = w.ImportedName
                     };
@@ -1241,7 +1244,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 privatePrefix = variables.Ast.PrivatePrefix;
-                references = variables.Select(MakeReference).ToArray();
+                references = variables.Select(MakeReference).Where(r => r != null).ToArray();
             } else {
                 references = new AP.AnalysisReference[0];
             }
@@ -1255,27 +1258,32 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private AP.AnalysisReference MakeReference(IAnalysisVariable arg) {
             var reference = MakeReference(arg.Location, arg.Type);
-            reference.definitionStartLine = arg.DefinitionLocation.StartLine;
-            reference.definitionStartColumn = arg.DefinitionLocation.StartColumn;
-            if (arg.DefinitionLocation.EndLine.HasValue) {
-                reference.definitionEndLine = arg.DefinitionLocation.EndLine.Value;
-            } else {
-                reference.definitionEndLine = arg.DefinitionLocation.StartLine;
-            }
-            if (arg.DefinitionLocation.EndColumn.HasValue) {
-                reference.definitionEndColumn = arg.DefinitionLocation.EndColumn.Value;
-            } else {
-                reference.definitionEndColumn = arg.DefinitionLocation.StartColumn;
+            if (reference != null && arg.DefinitionLocation != null) {
+                reference.definitionStartLine = arg.DefinitionLocation.StartLine;
+                reference.definitionStartColumn = arg.DefinitionLocation.StartColumn;
+                if (arg.DefinitionLocation.EndLine.HasValue) {
+                    reference.definitionEndLine = arg.DefinitionLocation.EndLine.Value;
+                } else {
+                    reference.definitionEndLine = arg.DefinitionLocation.StartLine;
+                }
+                if (arg.DefinitionLocation.EndColumn.HasValue) {
+                    reference.definitionEndColumn = arg.DefinitionLocation.EndColumn.Value;
+                } else {
+                    reference.definitionEndColumn = arg.DefinitionLocation.StartColumn;
+                }
             }
             return reference;
         }
 
         private AP.AnalysisReference MakeReference(LocationInfo location, VariableType type) {
+            if (location == null) {
+                return null;
+            }
             return new AP.AnalysisReference() {
                 column = location.StartColumn,
                 line = location.StartLine,
                 kind = GetVariableType(type),
-                file = location?.FilePath
+                file = location.FilePath
             };
         }
 
@@ -1438,7 +1446,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var pyEntry = _projectFiles[topLevelCompletions.fileId] as IPythonProjectEntry;
             IEnumerable<MemberResult> members;
             if (pyEntry.Analysis != null) {
-
                 members = pyEntry.Analysis.GetAllAvailableMembers(
                     new SourceLocation(topLevelCompletions.location, 1, topLevelCompletions.column),
                     topLevelCompletions.options
@@ -1452,29 +1459,23 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private Response GeModuleMembers(Request request) {
-            var getModuleMembers = (AP.GetModuleMembersRequest)request;
-
-            return new AP.CompletionsResponse() {
-                completions = ToCompletions(
-                    Analyzer.GetModuleMembers(
-                        _projectFiles[getModuleMembers.fileId].AnalysisContext,
-                        getModuleMembers.package,
-                        getModuleMembers.includeMembers
-                    ),
-                    GetMemberOptions.None
-                )
-            };
-        }
-
         private Response GetModules(Request request) {
             var getModules = (AP.GetModulesRequest)request;
+            var prefix = getModules.package == null ? null : string.Join(".", getModules.package);
 
-            return new AP.CompletionsResponse() {
-                completions = ToCompletions(
-                    Analyzer.GetModules(getModules.topLevelOnly),
-                    GetMemberOptions.None
-                )
+            if (getModules.package == null || getModules.package.Length == 0) {
+                return new AP.CompletionsResponse {
+                    completions = ToCompletions(Analyzer.GetModules(), GetMemberOptions.None)
+                };
+            }
+
+            IModuleContext context = null;
+            if (getModules.fileId >= 0) {
+                context = (_projectFiles[getModules.fileId] as IPythonProjectEntry)?.AnalysisContext;
+            }
+
+            return new AP.CompletionsResponse {
+                completions = ToCompletions(Analyzer.GetModuleMembers(context, getModules.package), GetMemberOptions.None)
             };
         }
 
@@ -1548,7 +1549,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             optional = param.IsOptional,
                             doc = param.Documentation,
                             type = param.Type,
-                            variables = param.Variables != null ? param.Variables.Select(MakeReference).ToArray() : null
+                            variables = param.Variables?.Select(MakeReference).Where(r => r != null).ToArray()
                         }
                     ).ToArray()
                 }
@@ -1583,7 +1584,10 @@ namespace Microsoft.PythonTools.Intellisense {
                             new AP.CompletionValue() {
                                 description = descComps,
                                 doc = value.Documentation,
-                                locations = value.Locations.Select(x => MakeReference(x, VariableType.Definition)).ToArray()
+                                locations = value.Locations
+                                    .Select(x => MakeReference(x, VariableType.Definition))
+                                    .Where(r => r != null)
+                                    .ToArray()
                             }
                         );
                     }

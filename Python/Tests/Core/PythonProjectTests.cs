@@ -265,7 +265,7 @@ namespace PythonToolsTests {
         public void LoadAndUnloadModule() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = new VsProjectAnalyzer(services, factories[0], outOfProcAnalyzer: false)) {
+            using (var analyzer = new VsProjectAnalyzer(services, factories[0], outOfProcAnalyzer: false, comment: "PTVS_TEST")) {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
@@ -325,13 +325,13 @@ namespace PythonToolsTests {
         public void AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = new VsProjectAnalyzer(services, factories[0], outOfProcAnalyzer: false)) {
+            using (var analyzer = new VsProjectAnalyzer(services, factories[0], outOfProcAnalyzer: false, comment: "PTVS_TEST")) {
                 analyzer.SetSearchPathsAsync(new[] { TestData.GetPath(@"TestData\BadEgg.egg") }).Wait();
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 // Analysis result must contain the module for the filename inside the egg that is a valid identifier,
                 // and no entries for the other filename which is not. 
-                var moduleNames = analyzer.GetModulesResult(true).Result.Select(x => x.Name);
+                var moduleNames = analyzer.GetModulesAsync(null, null).Result.Select(x => x.Name);
                 AssertUtil.Contains(moduleNames, "module");
                 AssertUtil.DoesntContain(moduleNames, "42");
             }

@@ -15,16 +15,11 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
-    class EmptyModule : IPythonModule {
-        public string Name => null;
-        public string Documentation => null;
-        public PythonMemberType MemberType => PythonMemberType.Module;
-        public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
-        public IMember GetMember(IModuleContext context, string name) => null;
-        public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) => Enumerable.Empty<string>();
-        public void Imported(IModuleContext context) { }
+    public interface ICanFindModuleMembers {
+        IEnumerable<string> GetModulesNamed(string name);
+
+        IEnumerable<string> GetModulesContainingName(string name);
     }
 }

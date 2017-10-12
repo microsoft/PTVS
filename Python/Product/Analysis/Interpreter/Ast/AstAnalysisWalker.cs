@@ -153,8 +153,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 modName,
                 PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
             );
-            var ctxt = _interpreter.CreateModuleContext();
-            mod.Imported(ctxt);
+            mod.Imported(_scope.Context);
             // Ensure child modules have been loaded
             mod.GetChildrenModules();
 
@@ -162,24 +161,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 for (int i = 0; i < node.Names.Count; ++i) {
                     if (!onlyImportModules) {
                         if (node.Names[i].Name == "*") {
-                            foreach (var member in mod.GetMemberNames(ctxt)) {
-                                var mem = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
+                            foreach (var member in mod.GetMemberNames(_scope.Context)) {
+                                var mem = mod.GetMember(_scope.Context, member) ?? new AstPythonConstant(
                                     _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
                                     mod.Locations.ToArray()
                                 );
                                 _scope.SetInScope(member, mem);
-                                (mem as IPythonModule)?.Imported(ctxt);
+                                (mem as IPythonModule)?.Imported(_scope.Context);
                             }
                             continue;
                         }
                         var n = node.AsNames?[i] ?? node.Names[i];
                         if (n != null) {
-                            var mem = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
+                            var mem = mod.GetMember(_scope.Context, node.Names[i].Name) ?? new AstPythonConstant(
                                 _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
                                 GetLoc(n)
                             );
                             _scope.SetInScope(n.Name, mem);
-                            (mem as IPythonModule)?.Imported(ctxt);
+                            (mem as IPythonModule)?.Imported(_scope.Context);
                         }
                     }
                 }

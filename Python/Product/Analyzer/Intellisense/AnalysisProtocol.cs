@@ -417,6 +417,19 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ImportInfo {
             public string fromName, importName;
 
+
+            // Provide Equals so we can easily uniquify sequences of ImportInfo
+
+            public override bool Equals(object obj) {
+                if (obj is ImportInfo ii) {
+                    return fromName == ii.fromName && importName == ii.importName;
+                }
+                return false;
+            }
+
+            public override int GetHashCode() {
+                return ((fromName ?? "") + "." + (importName ?? "")).GetHashCode();
+            }
         }
 
         public sealed class FileUpdate {
@@ -620,19 +633,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public class GetModulesRequest : Request<CompletionsResponse> {
             public const string Command = "getModules";
 
-            public bool topLevelOnly;
-
-            public override string command => Command;
-        }
-
-        public class GetModuleMembersRequest : Request<CompletionsResponse> {
-            public const string Command = "getModuleMembers";
-
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public int fileId;
             public string[] package;
-            public bool includeMembers;
 
             public override string command => Command;
+
+            public bool ShouldSerializepackage() => (package?.Length ?? 0) > 0;
         }
 
         public class GetAllMembersRequest : Request<CompletionsResponse> {
@@ -755,13 +762,19 @@ namespace Microsoft.PythonTools.Intellisense {
             public string doc;
             public PythonMemberType memberType;
 
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public CompletionValue[] detailedValues;
+
+            public bool ShouldSerializedetailedValues() => (detailedValues?.Length ?? 0) > 0;
         }
 
         public sealed class CompletionValue {
             public DescriptionComponent[] description;
             public string doc;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public AnalysisReference[] locations;
+
+            public bool ShouldSerializelocations() => (locations?.Length ?? 0) > 0;
         }
 
         public sealed class DescriptionComponent {

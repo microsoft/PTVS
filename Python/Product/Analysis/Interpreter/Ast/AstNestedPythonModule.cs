@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -43,7 +44,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public PythonMemberType MemberType => PythonMemberType.Module;
         public IEnumerable<LocationInfo> Locations => ((MaybeModule as ILocatedMember)?.Locations).MaybeEnumerate();
 
+        public bool IsLoaded => MaybeModule != null;
         private IPythonModule MaybeModule => Volatile.Read(ref _module);
+
         private IPythonModule GetModule() {
             var mod = Volatile.Read(ref _module);
             if (mod != null) {
@@ -58,7 +61,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
             if (mod == null) {
-                mod = new EmptyModule();
+                mod = new SentinelModule(_importNames.FirstOrDefault() ?? "<unknown>", false);
             }
 
             return Interlocked.CompareExchange(ref _module, mod, null) ?? mod;

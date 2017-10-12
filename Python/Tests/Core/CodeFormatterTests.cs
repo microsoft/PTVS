@@ -171,7 +171,7 @@ class Oar(object):
         private static void CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = new VsProjectAnalyzer(services, fact, outOfProcAnalyzer: false)) {
+            using (var analyzer = new VsProjectAnalyzer(services, fact, outOfProcAnalyzer: false, comment: "PTVS_TEST")) {
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, Path.Combine(TestData.GetTempPath(), "fob.py"));
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var view = new MockTextView(buffer);

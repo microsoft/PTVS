@@ -24,7 +24,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreter : IPythonInterpreter, IModuleContext {
+    class AstPythonInterpreter : IPythonInterpreter, IModuleContext, ICanFindModuleMembers {
         private readonly AstPythonInterpreterFactory _factory;
         private readonly Dictionary<BuiltinTypeId, IPythonType> _builtinTypes;
         private PythonAnalyzer _analyzer;
@@ -55,6 +55,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private void Factory_ImportableModulesChanged(object sender, EventArgs e) {
             _modules.Clear();
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void AddUnimportableModule(string moduleName) {
+            _modules[moduleName] = new SentinelModule(moduleName, false);
         }
 
         public event EventHandler ModuleNamesChanged;
@@ -164,13 +168,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
+            Debug.Assert(!name.EndsWith("."), $"{name} should not end with '.'");
+
             // Handle builtins explicitly
             if (name == BuiltinModuleName) {
                 if (_builtinModule == null) {
                     _modules[BuiltinModuleName] = _builtinModule = new AstBuiltinsPythonModule(_factory.LanguageVersion);
+                    _builtinModuleNames = null;
                     _builtinModule.Imported(this);
                     var bmn = ((AstBuiltinsPythonModule)_builtinModule).GetAnyMember("__builtin_module_names") as AstPythonStringLiteral;
-                    _builtinModuleNames = bmn?.Value?.Split(',');
+                    _builtinModuleNames = bmn?.Value?.Split(',') ?? Array.Empty<string>();
                 }
                 return _builtinModule;
             }
@@ -178,14 +185,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IPythonModule mod;
             // Return any existing module
             if (_modules.TryGetValue(name, out mod) && mod != null) {
-                if (mod is EmptyModule) {
-                    _factory.Log(TraceLevel.Warning, "RecursiveImport", name);
+                if (mod is SentinelModule smod) {
+                    // If we are importing this module on another thread, allow
+                    // time for it to complete. This does not block if we are
+                    // importing on the current thread or the module is not
+                    // really being imported.
+                    var newMod = smod.WaitForImport(5000);
+                    if (newMod is SentinelModule) {
+                        _factory.Log(TraceLevel.Warning, "RecursiveImport", name);
+                        mod = newMod;
+                    } else if (newMod == null) {
+                        _factory.Log(TraceLevel.Warning, "ImportTimeout", name);
+                    }
                 }
                 return mod;
             }
 
             // Set up a sentinel so we can detect recursive imports
-            var sentinalValue = new EmptyModule();
+            var sentinalValue = new SentinelModule(name, true);
             if (!_modules.TryAdd(name, sentinalValue)) {
                 return _modules[name];
             }
@@ -199,6 +216,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 mod = _modules[name];
             }
 
+            sentinalValue.Complete(mod);
+            sentinalValue.Dispose();
             return mod;
         }
 
@@ -278,6 +297,34 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _userSearchPaths = _analyzer.GetSearchPaths();
             }
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public IEnumerable<string> GetModulesNamed(string name) {
+            var usp = GetUserSearchPathPackages();
+            var ssp = _factory.GetImportableModules();
+
+            var dotName = "." + name;
+
+            IEnumerable<string> res;
+            if (usp == null) {
+                if (ssp == null) {
+                    res = Enumerable.Empty<string>();
+                } else {
+                    res = ssp.Keys;
+                }
+            } else if (ssp == null) {
+                res = usp.Keys;
+            } else {
+                res = usp.Keys.Union(ssp.Keys);
+            }
+
+            return res.Where(m => m == name || m.EndsWith(dotName));
+        }
+
+        public IEnumerable<string> GetModulesContainingName(string name) {
+            // TODO: Some efficient way of searching every module
+
+            yield break;
         }
     }
 }

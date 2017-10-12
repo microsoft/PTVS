@@ -20,6 +20,7 @@ __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.2"
 
 import ast
+import keyword
 import inspect
 import io
 import re
@@ -559,6 +560,8 @@ class MemberInfo(object):
         try:
             type_name = value_type.__name__.replace('-', '_')
             module = getattr(value_type, '__module__', None)
+            if sys.version_info[0] == 2 and module == 'exceptions' and in_module == builtins.__name__:
+                module = builtins.__name__
             if module and module != '<unknown>':
                 if module != in_module:
                     type_name = module + '.' + type_name
@@ -745,6 +748,8 @@ class ScrapeState(object):
         mod_doc = getattr(mod, '__doc__', None)
         mro = (getattr(mod, '__mro__', None) or ())[1:]
         for name in dir(mod):
+            if keyword.iskeyword(name):
+                continue
             try:
                 m = substitutes[name]
                 if m:
