@@ -124,6 +124,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async void Save_Executed(object sender, ExecutedRoutedEventArgs e) {
+            await _view.WaitForReady();
+
             Debug.Assert(_currentOperation == null);
             _currentOperation = _view.Create().HandleAllExceptions(_site, GetType());
             
