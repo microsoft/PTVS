@@ -104,6 +104,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app()");
 
             project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets");
+
+            GenericWebProjectCustomization.AddWebProjectExtensions(project);
         }
     }
 
@@ -133,6 +135,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             AddOrSetProperty(globals, "WebBrowserUrl", "http://localhost");
 
             project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Django.targets");
+
+            GenericWebProjectCustomization.AddWebProjectExtensions(project);
         }
     }
 
@@ -162,6 +166,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app");
 
             project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets");
+
+            GenericWebProjectCustomization.AddWebProjectExtensions(project);
         }
     }
 
@@ -190,6 +196,46 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             AddOrSetProperty(globals, "WebBrowserUrl", "http://localhost");
 
             project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets");
+
+            GenericWebProjectCustomization.AddWebProjectExtensions(project);
+        }
+
+        internal static void AddWebProjectExtensions(ProjectRootElement project) {
+            // Adding this section prevents IIS Express required error message
+            var projExt = project.CreateProjectExtensionsElement();
+            project.AppendChild(projExt);
+
+            projExt["VisualStudio"] = @"
+    <FlavorProperties GUID=""{349c5851-65df-11da-9384-00065b846f21}"">
+    <WebProjectProperties>
+        <AutoAssignPort>True</AutoAssignPort>
+        <UseCustomServer>True</UseCustomServer>
+        <CustomServerUrl>http://localhost</CustomServerUrl>
+        <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+    </WebProjectProperties>
+    </FlavorProperties>
+    <FlavorProperties GUID=""{349c5851-65df-11da-9384-00065b846f21}"" User="""">
+    <WebProjectProperties>
+        <StartPageUrl>
+        </StartPageUrl>
+        <StartAction>CurrentPage</StartAction>
+        <AspNetDebugging>True</AspNetDebugging>
+        <SilverlightDebugging>False</SilverlightDebugging>
+        <NativeDebugging>False</NativeDebugging>
+        <SQLDebugging>False</SQLDebugging>
+        <ExternalProgram>
+        </ExternalProgram>
+        <StartExternalURL>
+        </StartExternalURL>
+        <StartCmdLineArguments>
+        </StartCmdLineArguments>
+        <StartWorkingDirectory>
+        </StartWorkingDirectory>
+        <EnableENC>False</EnableENC>
+        <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+    </WebProjectProperties>
+    </FlavorProperties>
+";
         }
     }
 
