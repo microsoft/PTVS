@@ -87,6 +87,29 @@ namespace Microsoft.PythonTools.Editor.Core {
         }
 
         /// <summary>
+        /// Maps down to the buffer using positive point tracking and successor position affinity
+        /// </summary>
+        public static SnapshotPoint? MapDownToBuffer(this ITextView textView, int position, ITextBuffer buffer)
+        {
+            if (textView.BufferGraph == null) {
+                // Unit test case
+                if (position <= buffer.CurrentSnapshot.Length) {
+                    return new SnapshotPoint(buffer.CurrentSnapshot, position);
+                }
+                return null;
+            }
+            if (position <= textView.TextBuffer.CurrentSnapshot.Length) {
+                return textView.BufferGraph.MapDownToBuffer(
+                    new SnapshotPoint(textView.TextBuffer.CurrentSnapshot, position),
+                    PointTrackingMode.Positive,
+                    buffer,
+                    PositionAffinity.Successor
+                );
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Adds comment characters (#) to the start of each line.  If there is a selection the comment is applied
         /// to each selected line.  Otherwise the comment is applied to the current line.
         /// </summary>
