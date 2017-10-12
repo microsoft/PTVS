@@ -15,16 +15,17 @@
 // permissions and limitations under the License.
 
 using System;
-using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -229,34 +230,17 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private void ProfileProjectTarget(SessionNode session, ProjectTarget projectTarget, bool openReport) {
-            var targetGuid = projectTarget.TargetProject;
+            var project = Solution.EnumerateLoadedPythonProjects()
+                .SingleOrDefault(p => p.GetProjectIDGuidProperty() == projectTarget.TargetProject);
 
-            var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
-            EnvDTE.Project projectToProfile = null;
-            foreach (EnvDTE.Project project in dte.Solution.Projects) {
-                var kind = project.Kind;
-
-                if (String.Equals(kind, PythonProfilingPackage.PythonProjectGuid, StringComparison.OrdinalIgnoreCase)) {
-                    var guid = project.Properties.Item("Guid").Value as string;
-
-                    Guid guidVal;
-                    if (Guid.TryParse(guid, out guidVal) && guidVal == projectTarget.TargetProject) {
-                        projectToProfile = project;
-                        break;
-                    }
-                }
-            }
-
-            if (projectToProfile != null) {
-                ProfileProject(session, projectToProfile, openReport);
+            if (project != null) {
+                ProfileProject(session, project, openReport);
             } else {
                 MessageBox.Show(Strings.ProjectNotFoundInSolution, Strings.ProductTitle);
             }
         }
 
-        private static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
-            var project = projectToProfile.GetPythonProject();
-
+        private static void ProfileProject(SessionNode session, PythonProjectNode project, bool openReport) {
             LaunchConfiguration config = null;
             try {
                 config = project?.GetLaunchConfigurationOrThrow();
@@ -271,7 +255,7 @@ namespace Microsoft.PythonTools.Profiling {
                 return;
             }
             if (config == null) {
-                MessageBox.Show(Strings.ProjectInterpreterNotFound.FormatUI(projectToProfile.Name), Strings.ProductTitle);
+                MessageBox.Show(Strings.ProjectInterpreterNotFound.FormatUI(project.GetNameProperty()), Strings.ProductTitle);
                 return;
             }
 

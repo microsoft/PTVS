@@ -90,6 +90,12 @@ namespace ProfilingUITestsRunner {
 
         [TestMethod, Priority(2)]
         [TestCategory("Installed")]
+        public void LaunchProjectWithSolutionFolder() {
+            _vs.RunTest(nameof(PUIT.LaunchProjectWithSolutionFolder));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
         public void LaunchProjectWithSearchPath() {
             _vs.RunTest(nameof(PUIT.LaunchProjectWithSearchPath));
         }
