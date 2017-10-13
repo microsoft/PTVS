@@ -231,7 +231,7 @@ namespace Microsoft.PythonTools {
         public VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {
-                    _analyzer = _container.GetUIThread().InvokeTask(() => CreateAnalyzerAsync()).WaitAndUnwrapExceptions();
+                    _analyzer = _container.GetUIThread().InvokeTaskSync(() => CreateAnalyzerAsync(), CancellationToken.None);
                 }
                 return _analyzer;
             }
