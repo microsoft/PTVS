@@ -48,11 +48,16 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void ImportWizardSimple() {
             using (var wpf = new WpfProxy()) {
+                var root = TestData.GetTempPath();
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld"), Path.Combine(root, "HelloWorld"));
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\SearchPath1"), Path.Combine(root, "SearchPath1"));
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\SearchPath2"), Path.Combine(root, "SearchPath2"));
+
                 var settings = wpf.Create(() => new ImportSettings(null, null));
-                settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+                settings.SourcePath = PathUtils.GetAbsoluteDirectoryPath(root, "HelloWorld");
                 settings.Filters = "*.py;*.pyproj";
-                settings.SearchPaths = TestData.GetPath("TestData\\SearchPath1\\") + Environment.NewLine + TestData.GetPath("TestData\\SearchPath2\\");
-                settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
+                settings.SearchPaths = PathUtils.GetAbsoluteDirectoryPath(root, "SearchPath1") + Environment.NewLine + PathUtils.GetAbsoluteDirectoryPath(root, "SearchPath2");
+                settings.ProjectPath = PathUtils.GetAbsoluteFilePath(root, @"TestDestination\Subdirectory\ProjectName.pyproj");
 
                 string path = CreateRequestedProject(settings);
 
@@ -72,11 +77,16 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void ImportWizardFiltered() {
             using (var wpf = new WpfProxy()) {
+                var root = TestData.GetTempPath();
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld"), Path.Combine(root, "HelloWorld"));
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\SearchPath1"), Path.Combine(root, "SearchPath1"));
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\SearchPath2"), Path.Combine(root, "SearchPath2"));
+
                 var settings = wpf.Create(() => new ImportSettings(null, null));
-                settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+                settings.SourcePath = PathUtils.GetAbsoluteDirectoryPath(root, "HelloWorld");
                 settings.Filters = "*.py";
-                settings.SearchPaths = TestData.GetPath("TestData\\SearchPath1\\") + Environment.NewLine + TestData.GetPath("TestData\\SearchPath2\\");
-                settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
+                settings.SearchPaths = PathUtils.GetAbsoluteDirectoryPath(root, "SearchPath1") + Environment.NewLine + PathUtils.GetAbsoluteDirectoryPath(root, "SearchPath2");
+                settings.ProjectPath = PathUtils.GetAbsoluteFilePath(root, @"TestDestination\Subdirectory\ProjectName.pyproj");
 
                 string path = CreateRequestedProject(settings);
 
@@ -94,10 +104,13 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void ImportWizardFolders() {
             using (var wpf = new WpfProxy()) {
+                var root = TestData.GetTempPath();
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld2"), Path.Combine(root, "HelloWorld2"));
+
                 var settings = wpf.Create(() => new ImportSettings(null, null));
-                settings.SourcePath = TestData.GetPath("TestData\\HelloWorld2\\");
+                settings.SourcePath = PathUtils.GetAbsoluteDirectoryPath(root, "HelloWorld2");
                 settings.Filters = "*";
-                settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
+                settings.ProjectPath = PathUtils.GetAbsoluteFilePath(root, @"TestDestination\Subdirectory\ProjectName.pyproj");
 
                 string path = CreateRequestedProject(settings);
 
@@ -122,15 +135,18 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void ImportWizardInterpreter() {
             using (var wpf = new WpfProxy()) {
+                var root = TestData.GetTempPath();
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld"), Path.Combine(root, "HelloWorld"));
+
                 var settings = wpf.Create(() => new ImportSettings(null, null));
-                settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+                settings.SourcePath = PathUtils.GetAbsoluteDirectoryPath(root, "HelloWorld");
                 settings.Filters = "*.py;*.pyproj";
+                settings.ProjectPath = PathUtils.GetAbsoluteFilePath(root, @"TestDestination\Subdirectory\ProjectName.pyproj");
 
                 var interpreter = new PythonInterpreterView("Test", "Test|Blah", null);
                 settings.Dispatcher.Invoke((Action)(() => settings.AvailableInterpreters.Add(interpreter)));
                 //settings.AddAvailableInterpreter(interpreter);
                 settings.SelectedInterpreter = interpreter;
-                settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
 
                 string path = CreateRequestedProject(settings);
 
@@ -148,11 +164,14 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void ImportWizardStartupFile() {
             using (var wpf = new WpfProxy()) {
+                var root = TestData.GetTempPath();
+                FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld"), Path.Combine(root, "HelloWorld"));
+
                 var settings = wpf.Create(() => new ImportSettings(null, null));
-                settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+                settings.SourcePath = PathUtils.GetAbsoluteDirectoryPath(root, "HelloWorld");
                 settings.Filters = "*.py;*.pyproj";
                 settings.StartupFile = "Program.py";
-                settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
+                settings.ProjectPath = PathUtils.GetAbsoluteFilePath(root, @"TestDestination\Subdirectory\ProjectName.pyproj");
 
                 string path = CreateRequestedProject(settings);
 
