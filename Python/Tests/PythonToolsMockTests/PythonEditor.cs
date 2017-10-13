@@ -49,7 +49,8 @@ namespace PythonToolsMockTests {
             MockVs vs = null,
             IPythonInterpreterFactory factory = null,
             VsProjectAnalyzer analyzer = null,
-            string filename = null
+            string filename = null,
+            bool inProcAnalyzer = true
         ) {
             if (vs == null) {
                 _disposeVS = true;
@@ -82,13 +83,7 @@ namespace PythonToolsMockTests {
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
-                    vs.InvokeSync(() => {
-                        analyzer = new VsProjectAnalyzer(vs.ComponentModel.GetService<PythonEditorServices>(), factory, outOfProcAnalyzer: false, comment: "PTVS_TEST");
-                    });
-                    var task = analyzer.ReloadTask;
-                    if (task != null) {
-                        task.WaitAndUnwrapExceptions();
-                    }
+                    analyzer = vs.InvokeTask(() => VsProjectAnalyzer.CreateForTestsAsync(vs.ComponentModel.GetService<PythonEditorServices>(), factory, inProcAnalyzer));
                 }
                 if (string.IsNullOrEmpty(filename)) {
                     do {

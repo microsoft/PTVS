@@ -27,6 +27,7 @@ namespace TestUtilities.Python {
         public void PreProcess(MSBuild.Project project) {
             project.SetProperty("ProjectHome", ".");
             project.SetProperty("WorkingDirectory", ".");
+            project.SetProperty("_InProcessPythonAnalyzer", "true");
 
             var installPath = PathUtils.GetParent(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.dll", typeof(PythonToolsPackage).Assembly));
             project.SetProperty("_PythonToolsPath", installPath);

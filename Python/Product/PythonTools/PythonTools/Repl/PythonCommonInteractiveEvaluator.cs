@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
@@ -157,12 +158,12 @@ namespace Microsoft.PythonTools.Repl {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
                     var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
-                    _analyzer = new VsProjectAnalyzer(
+                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(() => VsProjectAnalyzer.CreateForInteractiveAsync(
                         _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
                         factory,
-                        projectFile: projectFile,
-                        comment: "{0} Interactive".FormatInvariant(DisplayName.IfNullOrEmpty("Unnamed"))
-                    );
+                        DisplayName.IfNullOrEmpty("Unnamed"),
+                        projectFile
+                    ), CancellationToken.None);
                 }
                 return _analyzer;
             }

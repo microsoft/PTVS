@@ -282,7 +282,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FormatCodeResponse : Response {
             public ChangeInfo[] changes;
 
-            public int startIndex, endIndex, version;
+            public int startIndex, endIndex;
+            public int version = -1;
         }
 
         public struct CodeSpan {
@@ -386,7 +387,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class AddImportResponse : Response {
             public ChangeInfo[] changes;
-            public int version;
+            public int version = -1;
         }
 
         public sealed class IsMissingImportRequest : Request<IsMissingImportResponse> {
@@ -455,7 +456,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class UnresolvedImportsResponse : Response {
-            public int version;
+            public int version = -1;
             public UnresolvedImport[] unresolved;
         }
 
@@ -543,7 +544,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class RemoveImportsResponse : Response {
             public ChangeInfo[] changes;
-            public int version;
+            public int version = -1;
         }
 
         public sealed class ExtractMethodRequest : Request<ExtractMethodResponse> {
@@ -865,7 +866,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class OutliningRegionsResponse : Response {
-            public int version;
+            public int version = -1;
             public OutliningTag[] tags;
         }
 

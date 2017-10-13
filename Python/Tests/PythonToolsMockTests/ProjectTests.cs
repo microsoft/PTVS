@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using Microsoft.VisualStudioTools.Project.Automation;
+using pythontools::Microsoft.PythonTools.Editor;
 using pythontools::Microsoft.PythonTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
@@ -51,7 +52,13 @@ namespace PythonToolsMockTests {
                 Assert.IsNotNull(vs.WaitForItem("HelloWorld", "server.py"));
                 var view = vs.OpenItem("HelloWorld", "server.py");
 
-                view.Invoke(() => view.Type("import "));
+                var bi = PythonTextBufferInfo.TryGetForBuffer(view.TextView.TextBuffer);
+                for (int retries = 20; retries > 0 && bi.AnalysisEntry == null; --retries) {
+                    Thread.Sleep(500);
+                }
+
+                view.Invoke(() => view.Type("import"));
+                view.Invoke(() => view.Type(" "));
 
                 using (var sh = view.WaitForSession<ICompletionSession>()) {
                     AssertUtil.Contains(sh.Session.Completions(), "sys");

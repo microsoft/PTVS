@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools {
             }
 
             _container.GetUIThread().InvokeTask(async () => {
-                var analyzer = CreateAnalyzer();
+                var analyzer = await CreateAnalyzerAsync();
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
                 if (oldAnalyzer != null) {
                     await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
@@ -211,17 +211,17 @@ namespace Microsoft.PythonTools {
             return service;
         }
 
-        private VsProjectAnalyzer CreateAnalyzer() {
+        private Task<VsProjectAnalyzer> CreateAnalyzerAsync() {
             var interpreters = _interpreterOptionsService.Value;
 
             // may not available in some test cases
             if (interpreters == null) {
-                return new VsProjectAnalyzer(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+                return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
             }
 
             var defaultFactory = interpreters.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
-            return new VsProjectAnalyzer(EditorServices, defaultFactory);
+            return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, defaultFactory);
         }
 
         internal PythonToolsLogger Logger => _logger;
@@ -231,7 +231,7 @@ namespace Microsoft.PythonTools {
         public VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {
-                    _analyzer = _container.GetUIThread().Invoke(() => CreateAnalyzer());
+                    _analyzer = _container.GetUIThread().InvokeTaskSync(() => CreateAnalyzerAsync(), CancellationToken.None);
                 }
                 return _analyzer;
             }

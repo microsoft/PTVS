@@ -1109,7 +1109,7 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
-                _analyzer = CreateAnalyzer();
+                _analyzer = Site.GetUIThread().InvokeTaskSync(CreateAnalyzerAsync, CancellationToken.None);
             }
             return _analyzer;
         }
@@ -1118,7 +1118,7 @@ namespace Microsoft.PythonTools.Project {
             return _analyzer;
         }
 
-        private VsProjectAnalyzer CreateAnalyzer() {
+        private async Task<VsProjectAnalyzer> CreateAnalyzerAsync() {
             var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterRegistryService>();
             var factory = GetInterpreterFactory();
@@ -1131,12 +1131,11 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var res = new VsProjectAnalyzer(
+            var res = await VsProjectAnalyzer.CreateForProjectAsync(
                 model.GetService<PythonEditorServices>(),
                 factory,
-                false,
                 BuildProject,
-                outOfProcAnalyzer: !inProc
+                inProcess: inProc
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
             res.AnalyzerNeedsRestart += OnActiveInterpreterChanged;
@@ -1362,7 +1361,7 @@ namespace Microsoft.PythonTools.Project {
                 if (_analyzer != null) {
                     UnHookErrorsAndWarnings(_analyzer);
                 }
-                var analyzer = CreateAnalyzer();
+                var analyzer = await CreateAnalyzerAsync();
                 Debug.Assert(analyzer != null);
 
                 ProjectAnalyzerChanging?.Invoke(this, new AnalyzerChangingEventArgs(_analyzer, analyzer));

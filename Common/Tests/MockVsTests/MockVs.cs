@@ -27,6 +27,7 @@ using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using EnvDTE;
 using Microsoft.VisualStudio;
@@ -50,31 +51,31 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public CompositionContainer Container;
         private IContentTypeRegistryService _contentTypeRegistry;
         private Dictionary<Guid, Package> _packages = new Dictionary<Guid, Package>();
-        internal readonly MockVsTextManager TextManager;
+        internal MockVsTextManager TextManager;
         internal readonly MockActivityLog ActivityLog = new MockActivityLog();
         internal readonly MockSettingsManager SettingsManager = new MockSettingsManager();
         internal readonly MockLocalRegistry LocalRegistry = new MockLocalRegistry();
         internal readonly MockVsDebugger Debugger = new MockVsDebugger();
         internal readonly MockVsTrackProjectDocuments TrackDocs = new MockVsTrackProjectDocuments();
         internal readonly MockVsShell Shell = new MockVsShell();
-        internal readonly MockVsUIShell UIShell;
+        internal MockVsUIShell UIShell;
         public readonly MockVsSolution Solution = new MockVsSolution();
-        private readonly MockVsServiceProvider _serviceProvider;
+        private MockVsServiceProvider _serviceProvider;
         private readonly List<MockVsTextView> _views = new List<MockVsTextView>();
         private readonly MockVsProfferCommands _proferredCommands = new MockVsProfferCommands();
         private readonly MockOleComponentManager _compManager = new MockOleComponentManager();
         private readonly MockOutputWindow _outputWindow = new MockOutputWindow();
         private readonly MockVsBuildManagerAccessor _buildManager = new MockVsBuildManagerAccessor();
         private readonly MockUIHierWinClipboardHelper _hierClipHelper = new MockUIHierWinClipboardHelper();
-        internal readonly MockVsMonitorSelection _monSel;
-        internal readonly uint _monSelCookie;
-        internal readonly MockVsUIHierarchyWindow _uiHierarchy;
+        internal MockVsMonitorSelection _monSel;
+        internal uint _monSelCookie;
+        internal MockVsUIHierarchyWindow _uiHierarchy;
         private readonly MockVsQueryEditQuerySave _queryEditSave = new MockVsQueryEditQuerySave();
-        private readonly MockVsRunningDocumentTable _rdt;
+        private MockVsRunningDocumentTable _rdt;
         private readonly MockVsUIShellOpenDocument _shellOpenDoc = new MockVsUIShellOpenDocument();
         private readonly MockVsSolutionBuildManager _slnBuildMgr = new MockVsSolutionBuildManager();
         private readonly MockVsExtensibility _extensibility = new MockVsExtensibility();
-        private readonly MockDTE _dte;
+        private MockDTE _dte;
         private bool _shutdown;
         private AutoResetEvent _uiEvent = new AutoResetEvent(false);
         private readonly List<Action> _uiEvents = new List<Action>();
@@ -93,50 +94,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private readonly Thread UIThread;
 
         public MockVs() {
-            TextManager = new MockVsTextManager(this);
-            Container = CreateCompositionContainer();
-            var serviceProvider = _serviceProvider = Container.GetExportedValue<MockVsServiceProvider>();
-            UIShell = new MockVsUIShell(this);
-            _monSel = new MockVsMonitorSelection(this);
-            _uiHierarchy = new MockVsUIHierarchyWindow(this);
-            _rdt = new MockVsRunningDocumentTable(this);
-            _dte = new MockDTE(this);
-            _serviceProvider.AddService(typeof(SVsTextManager), TextManager);
-            _serviceProvider.AddService(typeof(SVsActivityLog), ActivityLog);
-            _serviceProvider.AddService(typeof(SVsSettingsManager), SettingsManager);
-            _serviceProvider.AddService(typeof(SLocalRegistry), LocalRegistry);
-            _serviceProvider.AddService(typeof(SComponentModel), this);
-            _serviceProvider.AddService(typeof(IVsDebugger), Debugger);
-            _serviceProvider.AddService(typeof(SVsSolution), Solution);
-            _serviceProvider.AddService(typeof(SVsRegisterProjectTypes), Solution);
-            _serviceProvider.AddService(typeof(SVsCreateAggregateProject), Solution);
-            _serviceProvider.AddService(typeof(SVsTrackProjectDocuments), TrackDocs);
-            _serviceProvider.AddService(typeof(SVsShell), Shell);
-            _serviceProvider.AddService(typeof(SOleComponentManager), _compManager);
-            _serviceProvider.AddService(typeof(SVsProfferCommands), _proferredCommands);
-            _serviceProvider.AddService(typeof(SVsOutputWindow), _outputWindow);
-            _serviceProvider.AddService(typeof(SVsBuildManagerAccessor), _buildManager);
-            _serviceProvider.AddService(typeof(SVsUIHierWinClipboardHelper), _hierClipHelper);
-            _serviceProvider.AddService(typeof(IVsUIShell), UIShell);
-            _serviceProvider.AddService(typeof(IVsMonitorSelection), _monSel);
-            _serviceProvider.AddService(typeof(SVsQueryEditQuerySave), _queryEditSave);
-            _serviceProvider.AddService(typeof(SVsRunningDocumentTable), _rdt);
-            _serviceProvider.AddService(typeof(SVsUIShellOpenDocument), _shellOpenDoc);
-            _serviceProvider.AddService(typeof(SVsSolutionBuildManager), _slnBuildMgr);
-            _serviceProvider.AddService(typeof(EnvDTE.IVsExtensibility), _extensibility);
-            _serviceProvider.AddService(typeof(EnvDTE.DTE), _dte);
-
-            Shell.SetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, true);
-
-            UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(_uiHierarchy));
-
-            ErrorHandler.ThrowOnFailure(
-                _monSel.AdviseSelectionEvents(
-                    new SelectionEvents(this),
-                    out _monSelCookie
-                )
-            );
-
 #if DEV15_OR_LATER
             // If we are not in Visual Studio, we need to set MSBUILD_EXE_PATH
             // to use any project support.
@@ -166,6 +123,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             using (var e = new AutoResetEvent(false)) {
                 UIThread = new Thread(UIThreadWorker);
+                UIThread.SetApartmentState(ApartmentState.STA);
                 UIThread.Name = "Mock UI Thread";
                 UIThread.Start((object)e);
                 // Wait for UI thread to start before returning. This ensures that
@@ -187,17 +145,17 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 package.Dispose();
             }
 
-            _shutdown = true;
+            _monSel.UnadviseSelectionEvents(_monSelCookie);
             Shell.SetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, true);
+            _serviceProvider.Dispose();
+            Container.Dispose();
+            _shutdown = true;
             _uiEvent.Set();
             if (!UIThread.Join(TimeSpan.FromSeconds(30))) {
                 Console.WriteLine("Failed to wait for UI thread to terminate");
             }
             ThrowPendingException();
-            _monSel.UnadviseSelectionEvents(_monSelCookie);
             AssertListener.ThrowUnhandled();
-            _serviceProvider.Dispose();
-            Container.Dispose();
         }
 
 
@@ -243,9 +201,55 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         private void UIThreadWorker(object evt) {
+            Console.WriteLine($"Started UIThreadWorker on {Thread.CurrentThread.ManagedThreadId}");
             try {
                 try {
                     SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
+
+                    TextManager = new MockVsTextManager(this);
+                    Container = CreateCompositionContainer();
+                    var serviceProvider = _serviceProvider = Container.GetExportedValue<MockVsServiceProvider>();
+                    UIShell = new MockVsUIShell(this);
+                    _monSel = new MockVsMonitorSelection(this);
+                    _uiHierarchy = new MockVsUIHierarchyWindow(this);
+                    _rdt = new MockVsRunningDocumentTable(this);
+                    _dte = new MockDTE(this);
+                    _serviceProvider.AddService(typeof(SVsTextManager), TextManager);
+                    _serviceProvider.AddService(typeof(SVsActivityLog), ActivityLog);
+                    _serviceProvider.AddService(typeof(SVsSettingsManager), SettingsManager);
+                    _serviceProvider.AddService(typeof(SLocalRegistry), LocalRegistry);
+                    _serviceProvider.AddService(typeof(SComponentModel), this);
+                    _serviceProvider.AddService(typeof(IVsDebugger), Debugger);
+                    _serviceProvider.AddService(typeof(SVsSolution), Solution);
+                    _serviceProvider.AddService(typeof(SVsRegisterProjectTypes), Solution);
+                    _serviceProvider.AddService(typeof(SVsCreateAggregateProject), Solution);
+                    _serviceProvider.AddService(typeof(SVsTrackProjectDocuments), TrackDocs);
+                    _serviceProvider.AddService(typeof(SVsShell), Shell);
+                    _serviceProvider.AddService(typeof(SOleComponentManager), _compManager);
+                    _serviceProvider.AddService(typeof(SVsProfferCommands), _proferredCommands);
+                    _serviceProvider.AddService(typeof(SVsOutputWindow), _outputWindow);
+                    _serviceProvider.AddService(typeof(SVsBuildManagerAccessor), _buildManager);
+                    _serviceProvider.AddService(typeof(SVsUIHierWinClipboardHelper), _hierClipHelper);
+                    _serviceProvider.AddService(typeof(IVsUIShell), UIShell);
+                    _serviceProvider.AddService(typeof(IVsMonitorSelection), _monSel);
+                    _serviceProvider.AddService(typeof(SVsQueryEditQuerySave), _queryEditSave);
+                    _serviceProvider.AddService(typeof(SVsRunningDocumentTable), _rdt);
+                    _serviceProvider.AddService(typeof(SVsUIShellOpenDocument), _shellOpenDoc);
+                    _serviceProvider.AddService(typeof(SVsSolutionBuildManager), _slnBuildMgr);
+                    _serviceProvider.AddService(typeof(EnvDTE.IVsExtensibility), _extensibility);
+                    _serviceProvider.AddService(typeof(EnvDTE.DTE), _dte);
+
+                    Shell.SetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, true);
+
+                    UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(_uiHierarchy));
+
+                    ErrorHandler.ThrowOnFailure(
+                        _monSel.AdviseSelectionEvents(
+                            new SelectionEvents(this),
+                            out _monSelCookie
+                        )
+                    );
+
                     foreach (var package in Container.GetExportedValues<IMockPackage>()) {
                         _loadedPackages.Add(package);
                         package.Initialize();
@@ -316,6 +320,12 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 action();
                 return 0;
             });
+        }
+
+        public T InvokeTask<T>(Func<Task<T>> taskCreator) {
+            var t = Invoke(taskCreator);
+            t.Wait();
+            return t.Result;
         }
 
         public T Invoke<T>(Func<T> func) {

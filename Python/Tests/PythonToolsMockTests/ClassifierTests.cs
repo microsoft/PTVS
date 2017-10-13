@@ -296,8 +296,12 @@ def f() -> int:
                     var bp = ((AnalysisEntry)_view.GetAnalysisEntry()).TryGetBufferParser();
                     if (bp != null) {
                         _classificationsReady2.Reset();
-                        bp.Requeue();
-                        _classificationsReady2.Wait();
+                        for (int retries = 10; retries > 0; --retries) {
+                            bp.Requeue();
+                            if (_classificationsReady2.Wait(1000)) {
+                                break;
+                            }
+                        }
                     }
 
                     return AnalysisClassifier.GetClassificationSpans(

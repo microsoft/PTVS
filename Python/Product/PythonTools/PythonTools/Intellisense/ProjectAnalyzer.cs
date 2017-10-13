@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
-        internal readonly AnalysisProcessInfo _analysisProcess;
+        private AnalysisProcessInfo _analysisProcess;
         private Connection _conn;
 
         // Enables analyzers to be put directly into ITextBuffer.Properties for the purposes of testing
@@ -92,19 +92,58 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly IPythonToolsLogger _logger;
 
-        internal Task ReloadTask;
         internal int _parsePending;
 
         // Used by tests to avoid creating TaskProvider objects
         internal static bool SuppressTaskProvider = false;
 
-        internal VsProjectAnalyzer(
+        internal static async Task<VsProjectAnalyzer> CreateDefaultAsync(
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
-            bool implicitProject = true,
-            MSBuild.Project projectFile = null,
-            string comment = null,
-            bool outOfProcAnalyzer = true
+            bool inProcess = false
+        ) {
+            var analyzer = new VsProjectAnalyzer(services, factory, true);
+            await analyzer.InitializeAsync(!inProcess, null, null);
+            return analyzer;
+        }
+
+        internal static async Task<VsProjectAnalyzer> CreateForProjectAsync(
+            PythonEditorServices services,
+            IPythonInterpreterFactory factory,
+            MSBuild.Project project,
+            bool inProcess = false
+        ) {
+            var analyzer = new VsProjectAnalyzer(services, factory, false);
+            await analyzer.InitializeAsync(!inProcess, project.FullPath, project);
+            return analyzer;
+        }
+
+        internal static async Task<VsProjectAnalyzer> CreateForInteractiveAsync(
+            PythonEditorServices services,
+            IPythonInterpreterFactory factory,
+            string displayName,
+            MSBuild.Project project = null,
+            bool inProcess = false
+        ) {
+            var analyzer = new VsProjectAnalyzer(services, factory, true);
+            await analyzer.InitializeAsync(!inProcess, $"{displayName} Interactive", project);
+            return analyzer;
+        }
+
+        internal static async Task<VsProjectAnalyzer> CreateForTestsAsync(
+            PythonEditorServices services,
+            IPythonInterpreterFactory factory,
+            bool inProcess = true
+        ) {
+            var analyzer = new VsProjectAnalyzer(services, factory, true);
+            await analyzer.InitializeAsync(!inProcess, "PTVS_TEST", null);
+            return analyzer;
+        }
+
+        private VsProjectAnalyzer(
+            PythonEditorServices services,
+            IPythonInterpreterFactory factory,
+            bool implicitProject
         ) {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _implicitProject = implicitProject;
@@ -122,22 +161,20 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_services.CommentTaskProvider != null) {
                 _services.CommentTaskProvider.TokensChanged += CommentTaskTokensChanged;
             }
+        }
 
-            if (outOfProcAnalyzer) {
-                _conn = StartSubprocessConnection(
-                    comment.IfNullOrEmpty(projectFile?.FullPath).IfNullOrEmpty(implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
-                    out _analysisProcess
-                );
+        private string DefaultComment => _implicitProject ? "Global Analysis" : "Misc. Non Project Analysis";
+
+        private async Task InitializeAsync(bool outOfProc, string comment, MSBuild.Project projectFile) {
+            if (outOfProc) {
+                _conn = StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
             } else {
-                _conn = StartThreadConnection(
-                    comment.IfNullOrEmpty(projectFile?.FullPath).IfNullOrEmpty(implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
-                    out _analysisProcess
-                );
+                _conn = StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
             }
+
+            Task.Run(() => _conn.ProcessMessages()).DoNotWait();
+
             _userCount = 1;
-
-            Task.Run(() => _conn.ProcessMessages());
-
             // load the interpreter factories available inside of VS into the remote process
             var providers = new HashSet<string>(
                 _services.ComponentModel.GetExtensions<IPythonInterpreterFactoryProvider>()
@@ -146,9 +183,8 @@ namespace Microsoft.PythonTools.Intellisense {
             );
             providers.Add(typeof(IInterpreterOptionsService).Assembly.Location);
 
-
             var initialize = new AP.InitializeRequest() {
-                interpreterId = factory.Configuration.Id,
+                interpreterId = _interpreterFactory.Configuration.Id,
                 mefExtensions = providers.ToArray()
             };
 
@@ -174,24 +210,25 @@ namespace Microsoft.PythonTools.Intellisense {
                 ).ToArray();
             }
 
-            SendRequestAsync(initialize).ContinueWith(
-                task => {
-                    var result = task.Result;
-                    if (result == null) {
-                        _conn.Dispose();
-                        _conn = null;
-                    } else if (!String.IsNullOrWhiteSpace(result.error)) {
-                        Debug.Fail("Analyzer initialization failed with " + result.error);
-                        _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, "Initialization: " + result.error);
-                        _conn.Dispose();
-                        _conn = null;
-                    } else {
-                        SendEvent(
-                            new AP.OptionsChangedEvent() {
-                                indentation_inconsistency_severity = _services.Python?.GeneralOptions.IndentationInconsistencySeverity ?? Severity.Ignore
-                            }
-                        );
-                    }
+            var result = await SendRequestAsync(initialize);
+            if (result == null || !string.IsNullOrWhiteSpace(result.error)) {
+                Debug.Fail("Analyzer initialization failed with " + result?.error ?? "(null)");
+                if (result != null) {
+                    _logger?.LogEvent(PythonLogEvent.AnalysisOperationFailed, "Initialization: " + result.error);
+                } else {
+                    _logger?.LogEvent(PythonLogEvent.AnalysisOperationFailed, "Initialization");
+                }
+                _analysisProcess.Kill();
+                _analysisProcess.Dispose();
+                _analysisProcess = null;
+                _conn.Dispose();
+                _conn = null;
+                throw new InvalidOperationException("Failed to initialize analyzer");
+            } 
+
+            SendEvent(
+                new AP.OptionsChangedEvent() {
+                    indentation_inconsistency_severity = _services.Python?.GeneralOptions.IndentationInconsistencySeverity ?? Severity.Ignore
                 }
             );
 
@@ -207,6 +244,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal IServiceProvider Site => _services.Site;
+
+        public bool IsActive => _conn != null;
 
         #region Asynchronous request handling
         /// <summary>
@@ -2509,11 +2548,17 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     exprRange = parser.GetExpressionRange(forCompletion: false);
-                    if (exprRange != null) {
-                        exprText = exprRange.Value.GetText();
-                        if (exprText.Length > 0) {
-                            break;
-                        }
+                    if (!exprRange.HasValue) {
+                        continue;
+                    }
+
+                    if (exprRange.Value.End.Position < point.Position) {
+                        continue;
+                    }
+
+                    exprText = exprRange.Value.GetText();
+                    if (exprText.Length > 0) {
+                        break;
                     }
                 }
 

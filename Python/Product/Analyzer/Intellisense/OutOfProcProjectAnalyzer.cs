@@ -234,6 +234,14 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        private Response IncorrectFileType() {
+            throw new InvalidOperationException("File was not correct type");
+        }
+
+        private Response IncorrectBufferId(int fileId) {
+            throw new InvalidOperationException("Buffer was not valid in file " + _projectFiles[fileId]?.FilePath ?? "(null)");
+        }
+
         private async Task<Response> Initialize(AP.InitializeRequest request) {
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
 
@@ -345,10 +353,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetValueDescriptions(AP.ValueDescriptionRequest request) {
-            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (entry == null) {
+                return IncorrectFileType();
+            }
             string[] descriptions = Array.Empty<string>();
-            if (pyEntry.Analysis != null) {
-                var values = pyEntry.Analysis.GetValues(
+            if (entry.Analysis != null) {
+                var values = entry.Analysis.GetValues(
                     request.expr,
                     new SourceLocation(
                         request.index,
@@ -422,7 +433,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response FindMethods(AP.FindMethodsRequest request) {
-            var analysis = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var analysis = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
 
             List<string> names = new List<string>();
             if (analysis != null) {
@@ -460,45 +471,46 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetMethodInsertionLocation(AP.MethodInsertionLocationRequest request) {
-            var analysis = _projectFiles[request.fileId] as IPythonProjectEntry;
-
-            if (analysis != null) {
-                int version;
-                string code;
-                var ast = analysis.GetVerbatimAstAndCode(
-                    Analyzer.LanguageVersion,
-                    request.bufferId,
-                    out version,
-                    out code
-                );
-
-                if (ast != null) {
-                    foreach (var classDef in FindClassDef(request.className, ast)) {
-                        int end = classDef.Body.EndIndex;
-                        // insert after the newline at the end of the last statement of the class def
-                        if (code[end] == '\r') {
-                            if (end + 1 < code.Length &&
-                                code[end + 1] == '\n') {
-                                end += 2;
-                            } else {
-                                end++;
-                            }
-                        } else if (code[end] == '\n') {
-                            end++;
-                        }
-
-                        return new AP.MethodInsertionLocationResponse() {
-                            indentation = classDef.Body.GetStart(ast).Column - 1,
-                            location = end,
-                            version = version
-                        };
-                    }
-
-                    throw new InvalidOperationException("Failed to find class definition");
-                }
+            var analysis = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (analysis == null) {
+                return IncorrectFileType();
             }
 
-            throw new InvalidOperationException("Analysis not available");
+            int version;
+            string code;
+            var ast = analysis.GetVerbatimAstAndCode(
+                Analyzer.LanguageVersion,
+                request.bufferId,
+                out version,
+                out code
+            );
+
+            if (ast == null) {
+                return new AP.MethodInsertionLocationResponse();
+            }
+
+            foreach (var classDef in FindClassDef(request.className, ast)) {
+                int end = classDef.Body.EndIndex;
+                // insert after the newline at the end of the last statement of the class def
+                if (code[end] == '\r') {
+                    if (end + 1 < code.Length &&
+                        code[end + 1] == '\n') {
+                        end += 2;
+                    } else {
+                        end++;
+                    }
+                } else if (code[end] == '\n') {
+                    end++;
+                }
+
+                return new AP.MethodInsertionLocationResponse() {
+                    indentation = classDef.Body.GetStart(ast).Column - 1,
+                    location = end,
+                    version = version
+                };
+            }
+
+            throw new InvalidOperationException("Failed to find class definition");
         }
 
         private static IEnumerable<ClassDefinition> FindClassDef(string name, PythonAst ast) {
@@ -513,7 +525,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetMethodInfo(AP.MethodInfoRequest request) {
-            var analysis = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var analysis = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
 
             if (analysis != null) {
                 int version;
@@ -554,96 +566,93 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetAnalysisClassifications(AP.AnalysisClassificationsRequest request) {
-            var projEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var projEntry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
 
-            AP.AnalysisClassification[] classifications = Array.Empty<AP.AnalysisClassification>();
-            var bufferVersion = GetBufferVersion(request.fileId, request.bufferId);
-            if (bufferVersion != null && bufferVersion.Ast != null) {
-                var moduleAnalysis = request.colorNames ? projEntry.Analysis : null;
-
-                var walker = new ClassifierWalker(bufferVersion.Ast, moduleAnalysis);
-                bufferVersion.Ast.Walk(walker);
-
-                classifications = walker.Spans.ToArray();
+            if (projEntry == null) {
+                return IncorrectFileType();
             }
 
+            var bufferVersion = GetPythonBufferAndAst(request.fileId, request.bufferId);
+            if (bufferVersion == null) {
+                return new AP.AnalysisClassificationsResponse();
+            }
+
+            var moduleAnalysis = request.colorNames ? projEntry.Analysis : null;
+
+            var walker = new ClassifierWalker(bufferVersion.Ast, moduleAnalysis);
+            bufferVersion.Ast.Walk(walker);
+
             return new AP.AnalysisClassificationsResponse() {
-                version = bufferVersion?.Version ?? -1,
-                classifications = classifications
+                version = bufferVersion.Version,
+                classifications = walker.Spans.ToArray()
             };
         }
 
         private Response GetProximityExpressions(AP.ProximityExpressionsRequest request) {
-            var projEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var projEntry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
 
-            string[] res = Array.Empty<string>();
-            if (projEntry != null) {
-                PythonAst tree = projEntry.Tree;
-                if (tree != null) {
-                    int startLine = Math.Max(request.line - request.lineCount + 1, 0);
-                    if (startLine <= request.line) {
-                        var walker = new ProximityExpressionWalker(tree, startLine, request.line);
-                        tree.Walk(walker);
-                        res = walker.GetExpressions().ToArray();
-                    }
-                }
+            var res = new AP.ProximityExpressionsResponse();
+
+            var tree = projEntry?.Tree;
+            if (tree == null) {
+                return res;
             }
-            return new AP.ProximityExpressionsResponse() {
-                names = res
-            };
+
+            int startLine = Math.Max(request.line - request.lineCount + 1, 0);
+            if (startLine <= request.line) {
+                var walker = new ProximityExpressionWalker(tree, startLine, request.line);
+                tree.Walk(walker);
+                res.names = walker.GetExpressions().ToArray();
+            }
+
+            return res;
         }
 
         private Response GetLocationName(AP.LocationNameRequest request) {
-            var projEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var projEntry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
 
-            string name = "";
-            int column = 0;
-            if (projEntry != null) {
-                PythonAst tree = projEntry.Tree;
-                if (tree != null) {
-                    string foundName = FindNodeInTree(tree, tree.Body as SuiteStatement, request.line);
-                    if (foundName != null) {
-                        name = projEntry.ModuleName + "." + foundName;
-                        column = request.column;
-                    } else {
-                        name = projEntry.ModuleName;
-                        column = request.column;
-                    }
-                }
+            var res = new AP.LocationNameResponse();
+
+            var tree = projEntry?.Tree;
+            if (tree == null) {
+                return res;
             }
 
-            return new AP.LocationNameResponse() {
-                name = name,
-                lineOffset = column
-            };
+            string foundName = FindNodeInTree(tree, tree.Body as SuiteStatement, request.line);
+            if (foundName != null) {
+                res.name = projEntry.ModuleName + "." + foundName;
+                res.lineOffset = request.column;
+            } else {
+                res.name = projEntry.ModuleName;
+                res.lineOffset = request.column;
+            }
+
+            return res;
         }
 
         private static string FindNodeInTree(PythonAst tree, SuiteStatement statement, int line) {
-            if (statement != null) {
-                foreach (var node in statement.Statements) {
-                    FunctionDefinition funcDef = node as FunctionDefinition;
-                    if (funcDef != null) {
-                        var span = funcDef.GetSpan(tree);
-                        if (span.Start.Line <= line && line <= span.End.Line) {
-                            var res = FindNodeInTree(tree, funcDef.Body as SuiteStatement, line);
-                            if (res != null) {
-                                return funcDef.Name + "." + res;
-                            }
-                            return funcDef.Name;
-                        }
-                        continue;
-                    }
+            if (statement == null) {
+                return null;
+            }
 
-                    ClassDefinition classDef = node as ClassDefinition;
-                    if (classDef != null) {
-                        var span = classDef.GetSpan(tree);
-                        if (span.Start.Line <= line && line <= span.End.Line) {
-                            var res = FindNodeInTree(tree, classDef.Body as SuiteStatement, line);
-                            if (res != null) {
-                                return classDef.Name + "." + res;
-                            }
-                            return classDef.Name;
+            foreach (var node in statement.Statements) {
+                if (node is FunctionDefinition funcDef) {
+                    var span = funcDef.GetSpan(tree);
+                    if (span.Start.Line <= line && line <= span.End.Line) {
+                        var res = FindNodeInTree(tree, funcDef.Body as SuiteStatement, line);
+                        if (res != null) {
+                            return funcDef.Name + "." + res;
                         }
+                        return funcDef.Name;
+                    }
+                } else if (node is ClassDefinition classDef) {
+                    var span = classDef.GetSpan(tree);
+                    if (span.Start.Line <= line && line <= span.End.Line) {
+                        var res = FindNodeInTree(tree, classDef.Body as SuiteStatement, line);
+                        if (res != null) {
+                            return classDef.Name + "." + res;
+                        }
+                        return classDef.Name;
                     }
                 }
             }
@@ -660,7 +669,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response ExtractMethod(AP.ExtractMethodRequest request) {
-            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (projectFile == null) {
+                return IncorrectFileType();
+            }
+
             int version;
             string code;
             var ast = projectFile.GetVerbatimAstAndCode(
@@ -677,7 +690,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response RemoveImports(AP.RemoveImportsRequest request) {
-            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (projectFile == null) {
+                return IncorrectFileType();
+            }
+
             int version;
             string code;
             var ast = projectFile.GetVerbatimAstAndCode(
@@ -686,23 +703,22 @@ namespace Microsoft.PythonTools.Intellisense {
                 out version,
                 out code
             );
-            if (ast != null) {
-                var remover = new ImportRemover(ast, code, request.allScopes, request.index);
-
-                return new AP.RemoveImportsResponse() {
-                    changes = remover.RemoveImports(),
-                    version = version
-                };
+            if (ast == null) {
+                return new AP.RemoveImportsResponse();
             }
+            var remover = new ImportRemover(ast, code, request.allScopes, request.index);
 
             return new AP.RemoveImportsResponse() {
-                changes = Array.Empty<AP.ChangeInfo>(),
-                version = -1
+                changes = remover.RemoveImports(),
+                version = version
             };
         }
 
         private Response FormatCode(AP.FormatCodeRequest request) {
-            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (projectFile == null) {
+                return IncorrectFileType();
+            }
 
             int version;
             string code;
@@ -712,69 +728,62 @@ namespace Microsoft.PythonTools.Intellisense {
                 out version,
                 out code
             );
-            if (ast != null) {
-                var walker = new EnclosingNodeWalker(ast, request.startIndex, request.endIndex);
-                ast.Walk(walker);
-
-                if (walker.Target == null || !walker.Target.IsValidSelection) {
-                    return new AP.FormatCodeResponse() {
-                        changes = new AnalysisProtocol.ChangeInfo[0]
-                    };
-                }
-
-                var body = walker.Target.GetNode(ast);
-
-
-                int whitspaceStart = walker.Target.StartIncludingIndentation;
-
-                int start;
-                if (request.startIndex <= walker.Target.StartIncludingLeadingWhiteSpace) {
-                    // we've selected the leading comments, format them too...
-                    start = walker.Target.StartIncludingLeadingWhiteSpace;
-                } else {
-                    // the user didn't have any comments selected, don't reformat them
-                    body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
-
-                    start = walker.Target.StartIncludingIndentation;
-                }
-
-                int length = walker.Target.End - start;
-                if (walker.Target.End < code.Length) {
-                    if (code[walker.Target.End] == '\r') {
-                        length++;
-                        if (walker.Target.End + 1 < code.Length &&
-                            code[walker.Target.End + 1] == '\n') {
-                            length++;
-                        }
-                    } else if (code[walker.Target.End] == '\n') {
-                        length++;
-                    }
-                }
-
-                var selectedCode = code.Substring(start, length);
-
-                return new AP.FormatCodeResponse() {
-                    startIndex = start,
-                    endIndex = walker.Target.End,
-                    version = version,
-                    changes = selectedCode.ReplaceByLines(
-                        body.ToCodeString(ast, request.options),
-                        request.newLine
-                    ).Select(
-                        x => new AP.ChangeInfo() {
-                            start = x.start + start,
-                            length = x.length,
-                            newText = x.newText
-                        }
-                    ).ToArray()
-                };
+            if (ast == null) {
+                return new AP.FormatCodeResponse();
             }
 
+            var walker = new EnclosingNodeWalker(ast, request.startIndex, request.endIndex);
+            ast.Walk(walker);
+
+            if (walker.Target == null || !walker.Target.IsValidSelection) {
+                return new AP.FormatCodeResponse();
+            }
+
+            var body = walker.Target.GetNode(ast);
+
+
+            int whitspaceStart = walker.Target.StartIncludingIndentation;
+
+            int start;
+            if (request.startIndex <= walker.Target.StartIncludingLeadingWhiteSpace) {
+                // we've selected the leading comments, format them too...
+                start = walker.Target.StartIncludingLeadingWhiteSpace;
+            } else {
+                // the user didn't have any comments selected, don't reformat them
+                body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
+
+                start = walker.Target.StartIncludingIndentation;
+            }
+
+            int length = walker.Target.End - start;
+            if (walker.Target.End < code.Length) {
+                if (code[walker.Target.End] == '\r') {
+                    length++;
+                    if (walker.Target.End + 1 < code.Length &&
+                        code[walker.Target.End + 1] == '\n') {
+                        length++;
+                    }
+                } else if (code[walker.Target.End] == '\n') {
+                    length++;
+                }
+            }
+
+            var selectedCode = code.Substring(start, length);
+
             return new AP.FormatCodeResponse() {
-                startIndex = 0,
-                endIndex = 0,
-                version = -1,
-                changes = Array.Empty<AP.ChangeInfo>()
+                startIndex = start,
+                endIndex = walker.Target.End,
+                version = version,
+                changes = selectedCode.ReplaceByLines(
+                    body.ToCodeString(ast, request.options),
+                    request.newLine
+                ).Select(
+                    x => new AP.ChangeInfo() {
+                        start = x.start + start,
+                        length = x.length,
+                        newText = x.newText
+                    }
+                ).ToArray()
             };
         }
 
@@ -793,49 +802,50 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response IsMissingImport(AP.IsMissingImportRequest request) {
-            var entry = _projectFiles[request.fileId] as IPythonProjectEntry;
-            var analysis = entry.Analysis;
-            if (analysis != null) {
-                var location = new SourceLocation(request.index, request.line, request.column);
-                var nameExpr = GetFirstNameExpression(
-                    analysis.GetAstFromText(
-                        request.text,
-                        location
-                    ).Body
-                );
+            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var analysis = entry?.Analysis;
+            if (analysis == null) {
+                return new AP.IsMissingImportResponse();
+            }
 
-                if (nameExpr != null && !IsImplicitlyDefinedName(nameExpr)) {
-                    var name = nameExpr.Name;
-                    var hasVariables = analysis.GetVariables(name, location).Any(IsDefinition);
-                    var hasValues = analysis.GetValues(name, location).Any();
+            var location = new SourceLocation(request.index, request.line, request.column);
+            var nameExpr = GetFirstNameExpression(
+                analysis.GetAstFromText(
+                    request.text,
+                    location
+                ).Body
+            );
 
-                    // if we have type information or an assignment to the variable we won't offer 
-                    // an import smart tag.
-                    if (!hasValues && !hasVariables) {
-                        return new AP.IsMissingImportResponse() {
-                            isMissing = true
-                        };
-                    }
+            if (nameExpr != null && !IsImplicitlyDefinedName(nameExpr)) {
+                var name = nameExpr.Name;
+                var hasVariables = analysis.GetVariables(name, location).Any(IsDefinition);
+                var hasValues = analysis.GetValues(name, location).Any();
+
+                // if we have type information or an assignment to the variable we won't offer 
+                // an import smart tag.
+                if (!hasValues && !hasVariables) {
+                    return new AP.IsMissingImportResponse() {
+                        isMissing = true
+                    };
                 }
             }
 
-            return new AP.IsMissingImportResponse() {
-                isMissing = false
-            };
+            return new AP.IsMissingImportResponse();
         }
 
         private Response AddImportRequest(AP.AddImportRequest request) {
-            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (projectFile == null) {
+                return IncorrectFileType();
+            }
+
             string name = request.name;
             string fromModule = request.fromModule;
 
             int version;
             PythonAst curAst = projectFile.GetVerbatimAst(Project.LanguageVersion, request.bufferId, out version);
             if (curAst == null) {
-                return new AP.AddImportResponse() {
-                    changes = Array.Empty<AP.ChangeInfo>(),
-                    version = -1
-                };
+                return new AP.AddImportResponse();
             }
 
             var suiteBody = curAst.Body as SuiteStatement;
@@ -863,7 +873,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (fromModule != "__future__" && fromImport.Root.MakeString() == fromModule) {
                             // update the existing from ... import statement to include the new name.
                             return new AP.AddImportResponse() {
-                                changes = new[] { UpdateFromImport(curAst, fromImport, name) }
+                                changes = new[] { UpdateFromImport(curAst, fromImport, name) },
+                                version = version
                             };
                         }
 
@@ -946,40 +957,49 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetUnresolvedImports(AP.UnresolvedImportsRequest request) {
-            var bufferVersion = GetBufferVersion(request.fileId, request.bufferId);
-
-            AP.UnresolvedImport[] unresolved = Array.Empty<AP.UnresolvedImport>();
-            if (bufferVersion != null && bufferVersion.Ast != null) {
-                var entry = _projectFiles[request.fileId] as IPythonProjectEntry;
-
-                var walker = new ImportStatementWalker(
-                    bufferVersion.Ast,
-                    entry,
-                    Analyzer
-                );
-
-                bufferVersion.Ast.Walk(walker);
-                unresolved = walker.Imports.ToArray();
+            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (entry == null) {
+                return IncorrectFileType();
             }
 
+            var bufferVersion = GetPythonBufferAndAst(request.fileId, request.bufferId);
+            if (bufferVersion == null) {
+                return IncorrectBufferId(request.fileId);
+            }
+
+            var walker = new ImportStatementWalker(
+                bufferVersion.Ast,
+                entry,
+                Analyzer
+            );
+
+            bufferVersion.Ast.Walk(walker);
+
             return new AP.UnresolvedImportsResponse() {
-                unresolved = unresolved,
-                version = bufferVersion?.Version ?? -1
+                unresolved = walker.Imports.ToArray(),
+                version = bufferVersion.Version
             };
         }
 
-        private BufferVersion GetBufferVersion(int fileId, int bufferId) {
-            var entry = _projectFiles[fileId] as IPythonProjectEntry;
-            if (entry != null) {
-                PythonAst ast;
-                IAnalysisCookie cookie;
-                entry.GetTreeAndCookie(out ast, out cookie);
+        private BufferVersion GetPythonBuffer(int fileId, int bufferId) {
+            var entry = _projectFiles.Get<IPythonProjectEntry>(fileId);
 
-                var versions = cookie as VersionCookie;
-                BufferVersion versionInfo;
-                if (versions != null && versions.Buffers.TryGetValue(bufferId, out versionInfo)) {
-                    return versionInfo;
-                }
+            PythonAst ast;
+            IAnalysisCookie cookie;
+            entry.GetTreeAndCookie(out ast, out cookie);
+
+            var versions = cookie as VersionCookie;
+            BufferVersion versionInfo;
+            if (versions != null && versions.Buffers.TryGetValue(bufferId, out versionInfo)) {
+                return versionInfo;
+            }
+            return null;
+        }
+
+        private BufferVersion GetPythonBufferAndAst(int fileId, int bufferId) {
+            var bufferVersion = GetPythonBuffer(fileId, bufferId);
+            if (bufferVersion?.Ast != null) {
+                return bufferVersion;
             }
             return null;
         }
@@ -1079,61 +1099,59 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetOutliningRegions(AP.OutliningRegionsRequest request) {
-            AP.OutliningTag[] tags = Array.Empty<AP.OutliningTag>();
-            var bufferVersion = GetBufferVersion(request.fileId, request.bufferId);
-            if (bufferVersion != null && bufferVersion.Ast != null) {
-                var walker = new OutliningWalker(bufferVersion.Ast);
-
-                bufferVersion.Ast.Walk(walker);
-
-                tags = walker.GetTags();
+            var bufferVersion = GetPythonBufferAndAst(request.fileId, request.bufferId);
+            if (bufferVersion == null) {
+                return IncorrectBufferId(request.fileId);
             }
 
+            var walker = new OutliningWalker(bufferVersion.Ast);
+            bufferVersion.Ast.Walk(walker);
+
             return new AP.OutliningRegionsResponse() {
-                tags = tags.ToArray(),
-                version = bufferVersion?.Version ?? -1
+                tags = walker.GetTags().ToArray(),
+                version = bufferVersion.Version
             };
         }
 
         private Response GetNavigations(AP.NavigationRequest request) {
             List<AP.Navigation> navs = new List<AP.Navigation>();
-            var bufferVersion = GetBufferVersion(request.fileId, request.bufferId);
+            var bufferVersion = GetPythonBufferAndAst(request.fileId, request.bufferId);
 
-            if (bufferVersion != null && bufferVersion.Ast != null) {
-                var suite = bufferVersion.Ast.Body as SuiteStatement;
-                if (suite != null) {
-                    foreach (var stmt in suite.Statements) {
-                        var classDef = stmt as ClassDefinition;
-                        if (classDef != null) {
-                            // classes have nested defs
-                            var classSuite = classDef.Body as SuiteStatement;
-                            var nestedNavs = new List<AP.Navigation>();
-                            if (classSuite != null) {
-                                foreach (var child in classSuite.Statements) {
-                                    if (child is ClassDefinition || child is FunctionDefinition) {
-                                        nestedNavs.Add(GetNavigation(child));
-                                    }
-                                }
+            var suite = bufferVersion.Ast.Body as SuiteStatement;
+            if (suite == null) {
+                return IncorrectBufferId(request.fileId);
+            }
+
+            foreach (var stmt in suite.Statements) {
+                var classDef = stmt as ClassDefinition;
+                if (classDef != null) {
+                    // classes have nested defs
+                    var classSuite = classDef.Body as SuiteStatement;
+                    var nestedNavs = new List<AP.Navigation>();
+                    if (classSuite != null) {
+                        foreach (var child in classSuite.Statements) {
+                            if (child is ClassDefinition || child is FunctionDefinition) {
+                                nestedNavs.Add(GetNavigation(child));
                             }
-
-                            navs.Add(new AP.Navigation() {
-                                type = "class",
-                                name = classDef.Name,
-                                startIndex = classDef.StartIndex,
-                                endIndex = classDef.EndIndex,
-                                children = nestedNavs.ToArray()
-                            });
-
-                        } else if (stmt is FunctionDefinition) {
-                            navs.Add(GetNavigation(stmt));
                         }
                     }
+
+                    navs.Add(new AP.Navigation() {
+                        type = "class",
+                        name = classDef.Name,
+                        startIndex = classDef.StartIndex,
+                        endIndex = classDef.EndIndex,
+                        children = nestedNavs.ToArray()
+                    });
+
+                } else if (stmt is FunctionDefinition) {
+                    navs.Add(GetNavigation(stmt));
                 }
             }
 
 
             return new AP.NavigationResponse() {
-                version = bufferVersion?.Version ?? -1,
+                version = bufferVersion.Version,
                 navigations = navs.ToArray()
             };
         }
@@ -1174,23 +1192,24 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response ExpressionForDataTip(AP.ExpressionForDataTipRequest request) {
-            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (entry?.Analysis == null) {
+                return IncorrectFileType();
+            }
 
             string dataTipExpression = null;
             var options = new CodeFormattingOptions() {
                 UseVerbatimImage = false
             };
 
-            if (pyEntry != null && pyEntry.Analysis != null) {
-                var ast = pyEntry.Analysis.GetAstFromText(request.expr, new SourceLocation(request.index, request.line, request.column));
-                var expr = Statement.GetExpression(ast.Body);
+            var ast = entry.Analysis.GetAstFromText(request.expr, new SourceLocation(request.index, request.line, request.column));
+            var expr = Statement.GetExpression(ast.Body);
 
-                if (ast != null) {
-                    var walker = new DetectSideEffectsWalker();
-                    ast.Walk(walker);
-                    if (!walker.HasSideEffects) {
-                        dataTipExpression = expr?.ToCodeString(ast, new CodeFormattingOptions() { UseVerbatimImage = false });
-                    }
+            if (ast != null) {
+                var walker = new DetectSideEffectsWalker();
+                ast.Walk(walker);
+                if (!walker.HasSideEffects) {
+                    dataTipExpression = expr?.ToCodeString(ast, new CodeFormattingOptions() { UseVerbatimImage = false });
                 }
             }
 
@@ -1200,14 +1219,18 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response AnalyzeExpression(AP.AnalyzeExpressionRequest request) {
-            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (entry == null) {
+                return IncorrectFileType();
+            }
+
             AP.AnalysisReference[] references;
             string privatePrefix = null;
             string memberName = null;
 
-            if (pyEntry.Tree != null) {
-                var w = new ImportedModuleNameWalker(pyEntry.ModuleName, request.index);
-                pyEntry.Tree.Walk(w);
+            if (entry.Tree != null) {
+                var w = new ImportedModuleNameWalker(entry.ModuleName, request.index);
+                entry.Tree.Walk(w);
                 ModuleReference modRef;
                 if (!string.IsNullOrEmpty(w.ImportedName) &&
                     _pyAnalyzer.Modules.TryImport(w.ImportedName, out modRef)) {
@@ -1222,8 +1245,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if (pyEntry.Analysis != null) {
-                var variables = pyEntry.Analysis.GetVariables(
+            if (entry.Analysis != null) {
+                var variables = entry.Analysis.GetVariables(
                     request.expr,
                     new SourceLocation(
                         request.index,
@@ -1235,11 +1258,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 var ast = variables.Ast;
                 var expr = Statement.GetExpression(ast.Body);
 
-                NameExpression ne = expr as NameExpression;
-                MemberExpression me;
-                if (ne != null) {
+                if (expr is NameExpression ne) {
                     memberName = ne.Name;
-                } else if ((me = expr as MemberExpression) != null) {
+                } else if (expr is MemberExpression me) {
                     memberName = me.Name;
                 }
 
@@ -1297,12 +1318,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetQuickInfo(AP.QuickInfoRequest request) {
-            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (entry == null) {
+                return IncorrectFileType();
+            }
             string text = null;
 
-            if (pyEntry.Tree != null) {
-                var w = new ImportedModuleNameWalker(pyEntry.ModuleName, request.index);
-                pyEntry.Tree.Walk(w);
+            if (entry.Tree != null) {
+                var w = new ImportedModuleNameWalker(entry.ModuleName, request.index);
+                entry.Tree.Walk(w);
                 if (!string.IsNullOrEmpty(w.ImportedName)) {
                     return new AP.QuickInfoResponse {
                         text = w.ImportedName + ": module"
@@ -1310,7 +1334,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if (pyEntry.Analysis != null) {
+            if (entry.Analysis != null) {
                 bool first = true;
                 var result = new StringBuilder();
                 int count = 0;
@@ -1319,12 +1343,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 bool includeExpression = true;
 
                 var loc = new SourceLocation(request.index, request.line, request.column);
-                var exprAst = ModuleAnalysis.GetExpression(pyEntry.Analysis.GetAstFromText(request.expr, loc)?.Body);
+                var exprAst = ModuleAnalysis.GetExpression(entry.Analysis.GetAstFromText(request.expr, loc)?.Body);
                 if (exprAst is ConstantExpression || exprAst is ErrorExpression) {
                     includeExpression = false;
                 }
 
-                var values = pyEntry.Analysis.GetValues(request.expr, loc);
+                var values = entry.Analysis.GetValues(request.expr, loc);
                 var listVars = new List<AnalysisValue>(values);
                 
                 foreach (var v in listVars) {
@@ -1422,11 +1446,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetSignatures(AP.SignaturesRequest request) {
-            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
             IEnumerable<IOverloadResult> sigs;
-            if (pyEntry.Analysis != null) {
+            if (entry.Analysis != null) {
                 using (new DebugTimer("GetSignaturesByIndex")) {
-                    sigs = pyEntry.Analysis.GetSignaturesByIndex(
+                    sigs = entry.Analysis.GetSignaturesByIndex(
                         request.text,
                         request.location
                     );
@@ -1443,10 +1467,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private Response GetTopLevelCompletions(Request request) {
             var topLevelCompletions = (AP.TopLevelCompletionsRequest)request;
 
-            var pyEntry = _projectFiles[topLevelCompletions.fileId] as IPythonProjectEntry;
+            var entry = _projectFiles[topLevelCompletions.fileId] as IPythonProjectEntry;
             IEnumerable<MemberResult> members;
-            if (pyEntry.Analysis != null) {
-                members = pyEntry.Analysis.GetAllAvailableMembers(
+            if (entry?.Analysis != null) {
+                members = entry.Analysis.GetAllAvailableMembers(
                     new SourceLocation(topLevelCompletions.location, 1, topLevelCompletions.column),
                     topLevelCompletions.options
                 );
@@ -1482,10 +1506,14 @@ namespace Microsoft.PythonTools.Intellisense {
         private Response GetCompletions(Request request) {
             var completions = (AP.CompletionsRequest)request;
 
-            var pyEntry = _projectFiles[completions.fileId] as IPythonProjectEntry;
+            var entry = _projectFiles.Get<IPythonProjectEntry>(completions.fileId);
+            if (entry == null) {
+                return IncorrectFileType();
+            }
+
             IEnumerable<MemberResult> members;
-            if (pyEntry.Analysis != null) {
-                members = pyEntry.Analysis.GetMembersByIndex(
+            if (entry.Analysis != null) {
+                members = entry.Analysis.GetMembersByIndex(
                     completions.text,
                     completions.location,
                     completions.options
@@ -1630,12 +1658,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {
-            var entry = _projectFiles[command.fileId];
-            if (entry == null) {
-                throw new InvalidOperationException("Unknown project entry");
-            }
-
-            UnloadFile(entry);
+            UnloadFile(_projectFiles.Get(command.fileId));
             return new Response();
         }
 
@@ -1683,26 +1706,28 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetOverrides(AP.OverridesCompletionRequest request) {
-            var projectFile = _projectFiles[request.fileId] as IPythonProjectEntry;
-            var analysis = projectFile.Analysis;
-            if (analysis != null) {
-
-                var location = new SourceLocation(request.index, request.line, request.column);
-
-                var cls = analysis.GetDefinitionTree(location).LastOrDefault(member => member.MemberType == PythonMemberType.Class);
-                var members = analysis.GetOverrideable(location).ToArray();
-
-                return new AP.OverridesCompletionResponse() {
-                    overrides = members
-                        .Select(member => new AP.Override() {
-                            name = member.Name,
-                            doc = member.Documentation,
-                            completion = MakeCompletionString(request, member, cls.Name)
-                        }).ToArray()
-                };
+            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            if (projectFile == null) {
+                return IncorrectFileType();
             }
+
+            var analysis = projectFile.Analysis;
+            if (analysis == null) {
+                return new AP.OverridesCompletionResponse();
+            }
+
+            var location = new SourceLocation(request.index, request.line, request.column);
+
+            var cls = analysis.GetDefinitionTree(location).LastOrDefault(member => member.MemberType == PythonMemberType.Class);
+            var members = analysis.GetOverrideable(location).ToArray();
+
             return new AP.OverridesCompletionResponse() {
-                overrides = Array.Empty<AP.Override>()
+                overrides = members
+                    .Select(member => new AP.Override() {
+                        name = member.Name,
+                        doc = member.Documentation,
+                        completion = MakeCompletionString(request, member, cls.Name)
+                    }).ToArray()
             };
         }
 
@@ -1760,12 +1785,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response UpdateContent(AP.FileUpdateRequest request) {
-            var entry = _projectFiles[request.fileId];
-            if (entry == null) {
-                return new AP.FileUpdateResponse() {
-                    failed = true
-                };
-            }
+            var entry = _projectFiles.Get(request.fileId);
 
             SortedDictionary<int, CodeInfo> codeByBuffer = new SortedDictionary<int, CodeInfo>();
 #if DEBUG
@@ -1818,10 +1838,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
         internal AP.CompletionsResponse GetCompletions(AP.CompletionsRequest request) {
-            var file = _projectFiles[request.fileId];
-            if (file == null) {
-                throw new InvalidOperationException("Unknown project entry");
-            }
+            var file = _projectFiles.Get(request.fileId);
 
             using (new DebugTimer("GetCompletions")) {
                 return GetNormalCompletions(file, request);
@@ -2138,7 +2155,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 // enqueue analysis of the file
                 if (parseResults.Where(x => x.Value.Ast != null).Any()) {
-                    _analysisQueue.Enqueue(pyEntry, AnalysisPriority.Normal);
+                    _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
                 }
             } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
                 foreach (var keyValue in buffers) {
@@ -2148,7 +2165,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static void UpdateAnalysisTree(IPythonProjectEntry pyEntry, SortedDictionary<int, ParseResult> parseResults) {
+        private static void UpdateAnalysisTree(IPythonProjectEntry entry, SortedDictionary<int, ParseResult> parseResults) {
             IAnalysisCookie cookie = new VersionCookie(
                 parseResults.ToDictionary(
                     x => x.Key,
@@ -2173,10 +2190,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 // we failed to get any sort of AST out, so we can't analyze...
                 // But we need to balance the UpdateTree call, so just fetch the
                 // last valid ast and cookie.
-                pyEntry.GetTreeAndCookie(out finalAst, out cookie);
+                entry.GetTreeAndCookie(out finalAst, out cookie);
             }
 
-            pyEntry.UpdateTree(finalAst, cookie);
+            entry.UpdateTree(finalAst, cookie);
         }
 
         private async void SendParseComplete(IPythonProjectEntry entry, SortedDictionary<int, ParseResult> parseResults) {
@@ -2357,11 +2374,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
-                if (pyEntry != null) {
-                    SendParseComplete(pyEntry, new SortedDictionary<int, ParseResult>());
+                IPythonProjectEntry entry = projEntry as IPythonProjectEntry;
+                if (entry != null) {
+                    SendParseComplete(entry, new SortedDictionary<int, ParseResult>());
                     // failed to parse, keep the UpdateTree calls balanced
-                    pyEntry.UpdateTree(null, null);
+                    entry.UpdateTree(null, null);
                 }
             });
         }

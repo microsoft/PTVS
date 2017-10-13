@@ -182,12 +182,12 @@ namespace PythonToolsMockTests {
                 view.AdvancedOptions.AutoListIdentifiers = false;
                 view.AdvancedOptions.HideAdvancedMembers = false;
 
-                view.Type("min.");
+                view.Type("min.__");
 
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.ContainsAtLeast(sh.Session.Completions(), "__class__");
 
-                    view.Type("__class__\r");
+                    view.Type("class__\r");
                 }
                 Assert.AreEqual("min.__class__\r\n", view.Text);
             }

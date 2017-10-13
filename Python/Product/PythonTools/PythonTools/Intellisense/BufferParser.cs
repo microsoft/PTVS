@@ -286,10 +286,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            analyzer._analysisComplete = false;
-            Interlocked.Increment(ref analyzer._parsePending);
 
             foreach (var update in updates) {
+                if (update.Item1 < 0) {
+                    continue;
+                }
+
+                analyzer._analysisComplete = false;
+                Interlocked.Increment(ref analyzer._parsePending);
+
                 var res = await analyzer.SendRequestAsync(
                     new AP.FileUpdateRequest() {
                         fileId = update.Item1,
