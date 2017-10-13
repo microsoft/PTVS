@@ -83,7 +83,7 @@ namespace PythonToolsMockTests {
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
-                    analyzer = vs.InvokeTask(() => VsProjectAnalyzer.CreateForTests(vs.ComponentModel.GetService<PythonEditorServices>(), factory, inProcAnalyzer));
+                    analyzer = vs.InvokeTask(() => VsProjectAnalyzer.CreateForTestsAsync(vs.ComponentModel.GetService<PythonEditorServices>(), factory, inProcAnalyzer));
                 }
                 if (string.IsNullOrEmpty(filename)) {
                     do {

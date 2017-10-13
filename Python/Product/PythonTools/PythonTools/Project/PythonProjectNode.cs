@@ -1131,7 +1131,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var res = await VsProjectAnalyzer.CreateForProject(
+            var res = await VsProjectAnalyzer.CreateForProjectAsync(
                 model.GetService<PythonEditorServices>(),
                 factory,
                 BuildProject,

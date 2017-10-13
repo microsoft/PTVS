@@ -216,12 +216,12 @@ namespace Microsoft.PythonTools {
 
             // may not available in some test cases
             if (interpreters == null) {
-                return VsProjectAnalyzer.CreateDefault(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+                return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
             }
 
             var defaultFactory = interpreters.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
-            return VsProjectAnalyzer.CreateDefault(EditorServices, defaultFactory);
+            return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, defaultFactory);
         }
 
         internal PythonToolsLogger Logger => _logger;

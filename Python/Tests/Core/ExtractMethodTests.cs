@@ -1701,7 +1701,7 @@ async def f():
         private async Task ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = await VsProjectAnalyzer.CreateForTests(services, fact)) {
+            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact)) {
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, Path.Combine(TestData.GetTempPath(), "fob.py"));
                 var view = new MockTextView(buffer);
                 buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);

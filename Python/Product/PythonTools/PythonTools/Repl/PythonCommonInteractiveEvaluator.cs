@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Repl {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
                     var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
-                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(() => VsProjectAnalyzer.CreateForInteractive(
+                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(() => VsProjectAnalyzer.CreateForInteractiveAsync(
                         _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
                         factory,
                         DisplayName.IfNullOrEmpty("Unnamed"),

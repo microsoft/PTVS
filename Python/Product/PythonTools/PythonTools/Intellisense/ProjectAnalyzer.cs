@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Intellisense {
         // Used by tests to avoid creating TaskProvider objects
         internal static bool SuppressTaskProvider = false;
 
-        internal static async Task<VsProjectAnalyzer> CreateDefault(
+        internal static async Task<VsProjectAnalyzer> CreateDefaultAsync(
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
             bool inProcess = false
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return analyzer;
         }
 
-        internal static async Task<VsProjectAnalyzer> CreateForProject(
+        internal static async Task<VsProjectAnalyzer> CreateForProjectAsync(
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
             MSBuild.Project project,
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return analyzer;
         }
 
-        internal static async Task<VsProjectAnalyzer> CreateForInteractive(
+        internal static async Task<VsProjectAnalyzer> CreateForInteractiveAsync(
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
             string displayName,
@@ -130,7 +130,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return analyzer;
         }
 
-        internal static async Task<VsProjectAnalyzer> CreateForTests(
+        internal static async Task<VsProjectAnalyzer> CreateForTestsAsync(
             PythonEditorServices services,
             IPythonInterpreterFactory factory,
             bool inProcess = true

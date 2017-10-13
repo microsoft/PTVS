@@ -172,7 +172,7 @@ class Oar(object):
         private static async Task CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = await VsProjectAnalyzer.CreateForTests(services, fact)) {
+            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact)) {
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, Path.Combine(TestData.GetTempPath(), "fob.py"));
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var view = new MockTextView(buffer);

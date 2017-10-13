@@ -266,7 +266,7 @@ namespace PythonToolsTests {
         public async Task LoadAndUnloadModule() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = await VsProjectAnalyzer.CreateForTests(services, factories[0])) {
+            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, factories[0])) {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
@@ -322,7 +322,7 @@ namespace PythonToolsTests {
         public async Task AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = await VsProjectAnalyzer.CreateForTests(services, factories[0])) {
+            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, factories[0])) {
                 await analyzer.SetSearchPathsAsync(new[] { TestData.GetPath(@"TestData\BadEgg.egg") });
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
