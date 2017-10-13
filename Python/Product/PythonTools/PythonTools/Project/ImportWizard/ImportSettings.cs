@@ -423,6 +423,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             imports.AddProperty("VisualStudioVersion", "10.0").Condition = " '$(VisualStudioVersion)' == '' ";
 
             (customization ?? DefaultProjectCustomization.Instance).Process(
+                sourcePath,
                 project,
                 new Dictionary<string, ProjectPropertyGroupElement> {
                     { "Globals", globals },

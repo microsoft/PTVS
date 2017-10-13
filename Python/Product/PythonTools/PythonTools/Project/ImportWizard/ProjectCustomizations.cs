@@ -15,8 +15,10 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Build.Construction;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
     abstract class ProjectCustomization {
@@ -29,6 +31,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public abstract void Process(
+            string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
         );
@@ -70,6 +73,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public override void Process(
+            string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
         ) {
@@ -89,6 +93,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public override void Process(
+            string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
         ) {
@@ -121,6 +126,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public override void Process(
+            string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
         ) {
@@ -133,6 +139,12 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             AddOrSetProperty(globals, "ProjectTypeGuids", "{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}");
             AddOrSetProperty(globals, "LaunchProvider", "Django launcher");
             AddOrSetProperty(globals, "WebBrowserUrl", "http://localhost");
+
+            var settingsFilePath = PathUtils.FindFile(sourcePath, "settings.py", depthLimit: 1);
+            if (File.Exists(settingsFilePath)) {
+                var packageName = PathUtils.GetLastDirectoryName(settingsFilePath);
+                AddOrSetProperty(globals, "DjangoSettingsModule", "{0}.settings".FormatInvariant(packageName));
+            }
 
             project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Django.targets");
 
@@ -152,6 +164,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public override void Process(
+            string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
         ) {
@@ -183,6 +196,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public override void Process(
+            string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
         ) {
@@ -251,6 +265,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public override void Process(
+            string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
         ) {
