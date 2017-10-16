@@ -206,6 +206,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
                 case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.ExpressionForDataTipRequest.Command: response = ExpressionForDataTip((AP.ExpressionForDataTipRequest)request); break;
+                case AP.ExpressionAtPointRequest.Command: response = ExpressionAtPoint((AP.ExpressionAtPointRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
                     throw new InvalidOperationException("Unknown command");
@@ -1138,6 +1139,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     navs.Add(new AP.Navigation() {
                         type = "class",
+                        bufferId = bufferVersion.Version,
                         name = classDef.Name,
                         startIndex = classDef.StartIndex,
                         endIndex = classDef.EndIndex,
@@ -1216,6 +1218,40 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.ExpressionForDataTipResponse() {
                 expression = dataTipExpression
             };
+        }
+
+        private Response ExpressionAtPoint(AP.ExpressionAtPointRequest request) {
+            var buffer = GetPythonBufferAndAst(request.fileId, request.bufferId);
+
+            var res = new AP.ExpressionAtPointResponse();
+            if (!GetExpressionAtPoint(buffer.Ast, request.line, request.column, out SourceSpan span, out res.type)) {
+                return null;
+            }
+            res.startLine = span.Start.Line;
+            res.startColumn = span.Start.Column;
+            res.endLine = span.End.Line;
+            res.endColumn = span.End.Column;
+            res.bufferVersion = buffer.Version;
+            return res;
+        }
+
+        private bool GetExpressionAtPoint(PythonAst ast, int line, int column, out SourceSpan span, out string type) {
+            span = default(SourceSpan);
+            type = null;
+
+            if (ast == null) {
+                return false;
+            }
+
+            var exprFinder = new ExpressionFinder(ast, new GetExpressionOptions());
+            var expr = exprFinder.GetExpression(new SourceLocation(0, line, column));
+            if (expr == null) {
+                return false;
+            }
+
+            span = expr.GetSpan(ast);
+            type = expr.NodeName;
+            return true;
         }
 
         private Response AnalyzeExpression(AP.AnalyzeExpressionRequest request) {

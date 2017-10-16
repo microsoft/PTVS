@@ -1,0 +1,166 @@
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using System.IO;
+using System.Linq;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
+
+namespace AnalysisTests {
+    [TestClass]
+    public class ExpressionFinderTests {
+        [TestMethod]
+        public void FindExpressionsForTooltip() {
+            var code = Parse(@"class C(object):
+    def f(a):
+        return a
+
+b = C().f(1)
+", GetExpressionOptions.Hover);
+
+            AssertNoExpr(code, 1, 1);
+            AssertNoExpr(code, 1, 6);
+            AssertExpr(code, 1, 7, "C");
+            AssertExpr(code, 1, 8, "C");
+            AssertExpr(code, 1, 9, "object");
+            AssertExpr(code, 1, 15, "object");
+            AssertNoExpr(code, 1, 16);
+
+            AssertNoExpr(code, 2, 5);
+            AssertNoExpr(code, 2, 8);
+            AssertExpr(code, 2, 9, "f");
+            AssertExpr(code, 2, 10, "f");
+            AssertExpr(code, 2, 11, "a");
+            AssertExpr(code, 2, 12, "a");
+
+            AssertNoExpr(code, 3, 15);
+            AssertExpr(code, 3, 16, "a");
+            AssertExpr(code, 3, 17, "a");
+
+            AssertExpr(code, 5, 5, "C");
+            AssertExpr(code, 5, 6, "C");
+            AssertExpr(code, 5, 7, "C()");
+            AssertExpr(code, 5, 9, "f");
+            AssertExpr(code, 5, 10, "f");
+            AssertExpr(code, 5, 11, "1");
+
+            AssertExpr(code, 5, 10, 5, 12, "C().f(1)");
+        }
+
+        [TestMethod]
+        public void FindExpressionsForEvaluate() {
+            var code = Parse(@"class C(object):
+    def f(a):
+        return a
+
+b = C().f(1)
+", GetExpressionOptions.Evaluate);
+            var clsCode = code.Source.Substring(0, code.Source.IndexOfEnd("return a"));
+            var funcCode = clsCode.Substring(clsCode.IndexOf("def"));
+
+            for (int i = 1; i < 17; ++i) {
+                AssertExpr(code, 1, i, clsCode);
+            }
+            AssertNoExpr(code, 2, 1);
+            AssertExpr(code, 2, 5, funcCode);
+
+            AssertNoExpr(code, 3, 15);
+            AssertExpr(code, 3, 16, "a");
+            AssertExpr(code, 3, 17, "a");
+
+            AssertExpr(code, 5, 5, "C");
+            AssertExpr(code, 5, 6, "C");
+            AssertExpr(code, 5, 7, "C()");
+            AssertExpr(code, 5, 9, "C().f");
+            AssertExpr(code, 5, 10, "C().f");
+            AssertExpr(code, 5, 11, "1");
+        }
+
+        private class PythonAstAndSource {
+            public PythonAst Ast;
+            public string Source;
+            public GetExpressionOptions Options;
+        }
+
+        private static PythonAstAndSource Parse(string code, GetExpressionOptions options) {
+            using (var parser = Parser.CreateParser(new StringReader(code), PythonLanguageVersion.V35, new ParserOptions { Verbatim = true })) {
+                return new PythonAstAndSource { Ast = parser.ParseFile(), Source = code, Options = options };
+            }
+        }
+
+        private static void AssertNoExpr(PythonAstAndSource astAndSource, int line, int column) {
+            var ast = astAndSource.Ast;
+            var code = astAndSource.Source;
+            var options = astAndSource.Options;
+
+            int start = ast.LocationToIndex(new SourceLocation(0, line, 1));
+            var fullLine = code.Substring(start, code.IndexOfAny("\r\n".ToCharArray(), start) - start);
+
+            var finder = new ExpressionFinder(ast, options);
+            var span = finder.GetExpressionSpan(new SourceLocation(0, line, column));
+            if (span == null) {
+                return;
+            }
+
+            start = ast.LocationToIndex(span.Value.Start);
+            int end = ast.LocationToIndex(span.Value.End);
+            var actual = code.Substring(start, end - start);
+            Assert.Fail($"Found unexpected expression <{actual}> at ({line}, {column}) in <{fullLine}>");
+        }
+
+        private static void AssertExpr(PythonAstAndSource astAndSource, int line, int column, string expected) {
+            var ast = astAndSource.Ast;
+            var code = astAndSource.Source;
+            var options = astAndSource.Options;
+
+            int start = ast.LocationToIndex(new SourceLocation(0, line, 1));
+            var fullLine = code.Substring(start, code.IndexOfAny("\r\n".ToCharArray(), start) - start);
+
+            var finder = new ExpressionFinder(ast, options);
+            var span = finder.GetExpressionSpan(new SourceLocation(0, line, column));
+            Assert.IsNotNull(span, $"Did not find any expression at ({line}, {column}) in <{fullLine}>");
+
+            start = ast.LocationToIndex(span.Value.Start);
+            int end = ast.LocationToIndex(span.Value.End);
+            var actual = code.Substring(start, end - start);
+            Assert.AreEqual(expected, actual, $"Mismatched expression from ({line}, {column}) at {span.Value} in <{fullLine}>");
+        }
+
+        private static void AssertExpr(PythonAstAndSource astAndSource, int startLine, int startColumn, int endLine, int endColumn, string expected) {
+            var ast = astAndSource.Ast;
+            var code = astAndSource.Source;
+            var options = astAndSource.Options;
+
+            int start = ast.LocationToIndex(new SourceLocation(0, startLine, 1));
+            int end = ast.LocationToIndex(new SourceLocation(0, endLine + 1, 1));
+            var fullLine = code.Substring(start);
+            fullLine = fullLine.Remove("\r\n".Select(c => fullLine.LastIndexOf(c, end - start - 1)).Where(i => i > 0).Min());
+
+            var finder = new ExpressionFinder(ast, options);
+            var range = new SourceSpan(new SourceLocation(0, startLine, startColumn), new SourceLocation(0, endLine, endColumn));
+            var span = finder.GetExpressionSpan(range);
+            Assert.IsNotNull(span, $"Did not find any expression at {range} in <{fullLine}>");
+
+            start = ast.LocationToIndex(span.Value.Start);
+            end = ast.LocationToIndex(span.Value.End);
+            var actual = code.Substring(start, end - start);
+            Assert.AreEqual(expected, actual, $"Mismatched expression from {range} at {span.Value} in <{fullLine}>");
+        }
+    }
+}

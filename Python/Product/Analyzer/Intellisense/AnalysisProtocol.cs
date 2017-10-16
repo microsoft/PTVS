@@ -932,5 +932,22 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ExpressionForDataTipResponse : Response {
             public string expression;
         }
+
+        public sealed class ExpressionAtPointRequest : Request<ExpressionAtPointResponse> {
+            public const string Command = "exprAtPoint";
+
+            public int fileId, bufferId;
+            public int line, column;
+
+            public override string command => Command;
+        }
+
+        public sealed class ExpressionAtPointResponse : Response {
+            public string expression;
+            public string type;
+            public int bufferVersion;
+            public int startLine, startColumn;
+            public int endLine, endColumn;
+        }
     }
 }

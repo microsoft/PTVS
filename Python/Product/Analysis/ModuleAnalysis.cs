@@ -221,14 +221,18 @@ namespace Microsoft.PythonTools.Analysis {
             string privatePrefix = GetPrivatePrefixClassName(scope);
             var ast = GetAstFromText(exprText, privatePrefix);
             var expr = Statement.GetExpression(ast.Body);
+            var variables = Enumerable.Empty<IAnalysisVariable>();
+
+            if (expr == null) {
+                return new VariablesResult(variables, ast);
+            }
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
-            NameExpression name = expr as NameExpression;
-            IEnumerable<IAnalysisVariable> variables = Enumerable.Empty<IAnalysisVariable>();
-            if (name != null) {
+
+            if (expr is NameExpression name) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
                     s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
-
+            
                 if (defScope == null) {
                     variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name)
                         .SelectMany(ToVariables);
@@ -240,7 +244,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (member != null && !string.IsNullOrEmpty(member.Name)) {
                     var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                     var objects = eval.Evaluate(member.Target);
-
+            
                     foreach (var v in objects) {
                         var container = v as IReferenceableContainer;
                         if (container != null) {

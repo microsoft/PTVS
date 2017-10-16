@@ -79,6 +79,10 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Information about enabled experimental features
         /// </summary>
-        Experiments
+        Experiments,
+        /// <summary>
+        /// Summary info about requests processed by an analyzer
+        /// </summary>
+        AnalysisRequestSummary
     }
 }

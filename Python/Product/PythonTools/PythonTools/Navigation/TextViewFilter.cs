@@ -16,6 +16,7 @@
 
 using System;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -25,6 +26,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Infrastructure;
 using IServiceProvider = System.IServiceProvider;
 
@@ -122,12 +124,18 @@ namespace Microsoft.PythonTools.Language {
             if (exprSpan != null) {
                 SnapshotPointToLineAndColumnNumber(exprSpan.Value.Start, out pSpan[0].iStartLine, out pSpan[0].iStartIndex);
                 SnapshotPointToLineAndColumnNumber(exprSpan.Value.End, out pSpan[0].iEndLine, out pSpan[0].iEndIndex);
-                expr = VsProjectAnalyzer.ExpressionForDataTipAsync(
-                    _serviceProvider,
-                    _wpfTextView,
-                    exprSpan.Value,
-                    TimeSpan.FromSeconds(1.0)
-                ).WaitAndUnwrapExceptions(Dispatcher.CurrentDispatcher);
+                try {
+                    expr = _serviceProvider.GetUIThread().InvokeTaskSync(() =>
+                        VsProjectAnalyzer.ExpressionForDataTipAsync(
+                        _serviceProvider,
+                        _wpfTextView,
+                        exprSpan.Value,
+                        TimeSpan.FromSeconds(1.0)
+                    ), CancellationTokens.After1s);
+                } catch (OperationCanceledException) {
+                    pbstrText = null;
+                    return VSConstants.E_ABORT;
+                }
             } else {
                 // If it's not an expression, suppress the tip.
                 pbstrText = null;

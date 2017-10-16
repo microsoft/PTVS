@@ -90,6 +90,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly ConcurrentDictionary<object, object> _activeRequests = new ConcurrentDictionary<object, object>();
 
+        private readonly ConcurrentDictionary<string, long> _requestCounts = new ConcurrentDictionary<string, long>();
+        private readonly ConcurrentDictionary<string, long> _timeoutCounts = new ConcurrentDictionary<string, long>();
+
         private readonly IPythonToolsLogger _logger;
 
         internal int _parsePending;
@@ -269,7 +272,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public T WaitForRequest<T>(Task<T> request, string requestName, T defaultValue, int timeoutScale) {
             bool timeout = true;
-            var start = Stopwatch.GetTimestamp();
+            var timer = new Stopwatch();
+            timer.Start();
             T result = defaultValue;
             try {
                 if (request.Wait(DefaultTimeout * timeoutScale)) {
@@ -282,26 +286,47 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 throw;
             }
-            try {
-                int waitTime = (int)Math.Min((Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency, (long)int.MaxValue);
-                if (waitTime >= 10) {
-                    _logger?.LogEvent(PythonLogEvent.AnalysisRequestTiming, new AnalysisTimingInfo {
-                        RequestName = requestName,
-                        Milliseconds = waitTime,
-                        Timeout = timeout
-                    });
-                }
-            } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
-            }
+            LogTimingEvent(requestName, timer.ElapsedMilliseconds, DefaultTimeout * timeoutScale);
             if (timeout && AssertOnRequestFailure) {
                 Debug.Fail($"{requestName} timed out");
             }
             return result;
         }
+
+        private static void Increment(ConcurrentDictionary<string, long> dict, string key) {
+            long existing;
+            if (dict.TryGetValue(key, out existing) ||
+                !(dict.TryAdd(key, 1) && dict.TryGetValue(key, out existing))) {
+                // There is already a count, so we need to increment it
+                while (!dict.TryUpdate(key, existing + 1, existing)) {
+                    existing = dict[key];
+                }
+            }
+        }
+
+        private void LogTimingEvent(string requestName, long milliseconds, long timeout) {
+            try {
+                Increment(_requestCounts, requestName);
+                if (milliseconds > timeout) {
+                    Increment(_timeoutCounts, requestName);
+                }
+
+                int elapsed = (int)Math.Min(int.MaxValue, milliseconds);
+                if (elapsed > 100) {
+                    _logger?.LogEvent(PythonLogEvent.AnalysisRequestTiming, new AnalysisTimingInfo {
+                        RequestName = requestName,
+                        Milliseconds = elapsed,
+                        Timeout = (milliseconds > timeout)
+                    });
+                }
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+        }
+
         #endregion
 
-        #region ProjectAnalyzer overrides
+            #region ProjectAnalyzer overrides
 
         public override void RegisterExtension(string path) {
             SendEvent(
@@ -390,6 +415,20 @@ namespace Microsoft.PythonTools.Intellisense {
 
             foreach (var openFile in _projectFiles) {
                 openFile.Value.Dispose();
+            }
+
+            if (_logger != null) {
+                var info = new Dictionary<string, object>();
+                foreach (var entry in _requestCounts) {
+                    info[entry.Key] = entry.Value;
+                    long timeouts;
+                    if (_timeoutCounts.TryGetValue(entry.Key, out timeouts)) {
+                        info[entry.Key + ".Timeouts"] = timeouts;
+                    } else {
+                        info[entry.Key + ".Timeouts"] = 0L;
+                    }
+                }
+                _logger.LogEvent(PythonLogEvent.AnalysisRequestSummary, info);
             }
 
             SendRequestAsync(new AP.ExitRequest()).ContinueWith(t => {
@@ -1017,8 +1056,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static async Task<string[]> GetValueDescriptionsAsync(AnalysisEntry file, string expr, SnapshotPoint point) {
-            var analysis = GetApplicableExpression(file, point, checkLeftAndRightOfPoint: false);
+        internal async Task<string[]> GetValueDescriptionsAsync(AnalysisEntry file, string expr, SnapshotPoint point) {
+            var analysis = await GetApplicableExpressionAsync(point, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
                 return await GetValueDescriptionsAsync(file, analysis.Text, analysis.Location).ConfigureAwait(false);
@@ -1027,7 +1066,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return Array.Empty<string>();
         }
 
-        internal static async Task<string[]> GetValueDescriptionsAsync(AnalysisEntry file, string expr, SourceLocation location) {
+        internal async Task<string[]> GetValueDescriptionsAsync(AnalysisEntry file, string expr, SourceLocation location) {
             var req = new AP.ValueDescriptionRequest() {
                 expr = expr,
                 column = location.Column,
@@ -1036,7 +1075,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 fileId = file.FileId
             };
 
-            var res = await file.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
+            var res = await SendRequestAsync(req).ConfigureAwait(false);
             if (res != null) {
                 return res.descriptions;
             }
@@ -1045,7 +1084,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal string[] GetValueDescriptions(AnalysisEntry entry, string expr, SourceLocation translatedLocation) {
-            return GetValueDescriptionsAsync(
+            return entry.Analyzer.GetValueDescriptionsAsync(
                 entry,
                 expr,
                 translatedLocation
@@ -1082,7 +1121,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point) {
             Debug.Assert(entry.Analyzer == this);
 
-            var analysis = GetApplicableExpression(entry, point, checkLeftAndRightOfPoint: true);
+            var analysis = await GetApplicableExpressionAsync(point, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -2411,7 +2450,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<QuickInfo> GetQuickInfoAsync(AnalysisEntry entry, ITextView view, SnapshotPoint point) {
             Debug.Assert(entry.Analyzer == this);
 
-            var analysis = GetApplicableExpression(entry, point, checkLeftAndRightOfPoint: false);
+            var analysis = await GetApplicableExpressionAsync(point, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -2453,7 +2492,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AnalysisVariable(type, location);
         }
 
-        internal static Task<string> ExpressionForDataTipAsync(
+        internal static async Task<string> ExpressionForDataTipAsync(
             IServiceProvider serviceProvider,
             ITextView view,
             SnapshotSpan span,
@@ -2462,15 +2501,15 @@ namespace Microsoft.PythonTools.Intellisense {
             var entryService = serviceProvider.GetEntryService();
             AnalysisEntry entry;
             if (entryService == null || !entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
-                return Task.FromResult<string>(null);
+                return null;
             }
-            var analysis = GetApplicableExpression(entry, span.Start, checkLeftAndRightOfPoint: false);
+            var analysis = await entry.Analyzer.GetApplicableExpressionAsync(span.Start, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
             if (analysis == null) {
-                return Task.FromResult<string>(null);
+                return null;
             }
 
             var location = analysis.Location;
-            var req = new AP.ExpressionForDataTipRequest() {
+            var req = new AP.ExpressionForDataTipRequest {
                 expr = span.GetText(),
                 column = location.Column,
                 index = location.Index,
@@ -2479,7 +2518,7 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             var v = $"{req.expr}:{req.index}";
-            return analysis.Entry.Analyzer.EnsureSingleRequest(
+            return await analysis.Entry.Analyzer.EnsureSingleRequest(
                 typeof(AP.ExpressionForDataTipRequest),
                 v,
                 v.Equals,
@@ -2508,80 +2547,49 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static ApplicableExpression GetApplicableExpression(AnalysisEntry entry, SnapshotPoint point, bool checkLeftAndRightOfPoint) {
-            if (entry != null) {
-                var snapshot = point.Snapshot;
-                var buffer = snapshot.TextBuffer;
-                var spans = new List<ITrackingSpan>();
+        private async Task<ApplicableExpression> GetApplicableExpressionAsync(SnapshotPoint point, TimeSpan timeout) {
+            var timer = MakeStopWatch();
+            try {
+                return await GetApplicableExpressionAsync_BypassTelemetry(point, timeout);
+            } finally {
+                LogTimingEvent("GetApplicableExpression", timer.ElapsedMilliseconds, (long)timeout.TotalMilliseconds);
+            }
+        }
 
-                if (checkLeftAndRightOfPoint) {
-                    // Covers the point after and in middle of identifier
-                    spans.Add(snapshot.CreateTrackingSpan(
-                        new Span(point.Position, 0),
-                        SpanTrackingMode.EdgeInclusive
-                    ));
-
-                    // Covers the point before and in middle of identifier
-                    if (point.Position < snapshot.Length) {
-                        spans.Add(snapshot.CreateTrackingSpan(
-                            new Span(point.Position, 1),
-                            SpanTrackingMode.EdgeInclusive
-                        ));
-                    }
-                } else {
-                    spans.Add(snapshot.CreateTrackingSpan(
-                        point.Position == snapshot.Length ?
-                            new Span(point.Position, 0) :
-                            new Span(point.Position, 1),
-                        SpanTrackingMode.EdgeInclusive
-                    ));
-                }
-
-                SnapshotSpan? exprRange = null;
-                ReverseExpressionParser parser = null;
-                string exprText = null;
-                foreach (var span in spans) {
-                    try {
-                        parser = new ReverseExpressionParser(snapshot, buffer, span);
-                    } catch (ArgumentException) {
-                        continue;
-                    }
-
-                    exprRange = parser.GetExpressionRange(forCompletion: false);
-                    if (!exprRange.HasValue) {
-                        continue;
-                    }
-
-                    if (exprRange.Value.End.Position < point.Position) {
-                        continue;
-                    }
-
-                    exprText = exprRange.Value.GetText();
-                    if (exprText.Length > 0) {
-                        break;
-                    }
-                }
-
-                if (exprRange != null) {
-                    var applicableTo = parser.Snapshot.CreateTrackingSpan(
-                        exprRange.Value.Span,
-                        SpanTrackingMode.EdgeExclusive
-                    );
-
-                    var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-                    var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
-
-                    var location = TranslateIndex(loc.Start, parser.Snapshot, entry);
-                    return new ApplicableExpression(
-                        entry,
-                        exprText,
-                        applicableTo,
-                        location
-                    );
-                }
+        private static async Task<ApplicableExpression> GetApplicableExpressionAsync_BypassTelemetry(SnapshotPoint point, TimeSpan timeout) {
+            var bi = PythonTextBufferInfo.TryGetForBuffer(point.Snapshot.TextBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
+                return null;
             }
 
-            return null;
+            var line = point.GetContainingLine();
+            var r = await entry.Analyzer.SendRequestAsync(new AP.ExpressionAtPointRequest {
+                fileId = entry.FileId,
+                bufferId = bi.AnalysisBufferId,
+                line = line.LineNumber + 1,
+                column = (point - line.Start) + 1
+            }, timeout: timeout);
+
+            if (r == null) {
+                return null;
+            }
+
+            SnapshotSpan span;
+            try {
+                span = new SnapshotSpan(
+                    point.Snapshot.GetLineFromLineNumber(r.startLine - 1).Start + r.startColumn - 1,
+                    point.Snapshot.GetLineFromLineNumber(r.endLine - 1).Start + r.endColumn - 1
+                );
+            } catch (ArgumentException) {
+                return null;
+            }
+            return new ApplicableExpression(
+                entry,
+                span.GetText(),
+                span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive),
+                new SourceLocation(span.Start.Position, r.startLine, r.startColumn)
+            );
         }
     }
 }
