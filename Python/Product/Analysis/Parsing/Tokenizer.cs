@@ -2635,8 +2635,12 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public static int LocationToIndex(NewLineLocation[] lineLocations, SourceLocation location) {
-            if (lineLocations == null || lineLocations.Length == 0) {
+            if (lineLocations == null) {
                 return 0;
+            }
+            if (lineLocations.Length == 0) {
+                // We have a single line, so the column is the index
+                return location.Column - 1;
             }
             int line = location.Line - 1;
             if (line > lineLocations.Length) {

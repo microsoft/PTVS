@@ -933,11 +933,18 @@ namespace Microsoft.PythonTools.Intellisense {
             public string expression;
         }
 
+        public enum ExpressionAtPointPurpose : int {
+            Hover = 1,
+            Evaluate = 2,
+            EvaluateMembers = 3
+        }
+
         public sealed class ExpressionAtPointRequest : Request<ExpressionAtPointResponse> {
             public const string Command = "exprAtPoint";
 
             public int fileId, bufferId;
             public int line, column;
+            public ExpressionAtPointPurpose purpose;
 
             public override string command => Command;
         }

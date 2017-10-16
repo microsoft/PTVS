@@ -276,7 +276,7 @@ namespace Microsoft.PythonTools.Intellisense {
             timer.Start();
             T result = defaultValue;
             try {
-                if (request.Wait(DefaultTimeout * timeoutScale)) {
+                if (request.Wait(System.Diagnostics.Debugger.IsAttached ? Timeout.Infinite : DefaultTimeout * timeoutScale)) {
                     result = request.Result;
                     timeout = false;
                 }
@@ -288,7 +288,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             LogTimingEvent(requestName, timer.ElapsedMilliseconds, DefaultTimeout * timeoutScale);
             if (timeout && AssertOnRequestFailure) {
-                Debug.Fail($"{requestName} timed out");
+                Debug.Fail($"{requestName} timed out after {timer.ElapsedMilliseconds}ms");
             }
             return result;
         }
@@ -1057,7 +1057,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<string[]> GetValueDescriptionsAsync(AnalysisEntry file, string expr, SnapshotPoint point) {
-            var analysis = await GetApplicableExpressionAsync(point, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
+            var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Evaluate, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
                 return await GetValueDescriptionsAsync(file, analysis.Text, analysis.Location).ConfigureAwait(false);
@@ -1121,7 +1121,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point) {
             Debug.Assert(entry.Analyzer == this);
 
-            var analysis = await GetApplicableExpressionAsync(point, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
+            var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Evaluate, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -2450,7 +2450,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<QuickInfo> GetQuickInfoAsync(AnalysisEntry entry, ITextView view, SnapshotPoint point) {
             Debug.Assert(entry.Analyzer == this);
 
-            var analysis = await GetApplicableExpressionAsync(point, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
+            var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -2503,7 +2503,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (entryService == null || !entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return null;
             }
-            var analysis = await entry.Analyzer.GetApplicableExpressionAsync(span.Start, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
+            var analysis = await entry.Analyzer.GetExpressionAtPointAsync(span.Start, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
             if (analysis == null) {
                 return null;
             }
@@ -2533,30 +2533,16 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        class ApplicableExpression {
-            public readonly string Text;
-            public readonly AnalysisEntry Entry;
-            public readonly ITrackingSpan Span;
-            public readonly SourceLocation Location;
-
-            public ApplicableExpression(AnalysisEntry entry, string text, ITrackingSpan span, SourceLocation location) {
-                Entry = entry;
-                Text = text;
-                Span = span;
-                Location = location;
-            }
-        }
-
-        private async Task<ApplicableExpression> GetApplicableExpressionAsync(SnapshotPoint point, TimeSpan timeout) {
+        internal async Task<ExpressionAtPoint> GetExpressionAtPointAsync(SnapshotPoint point, ExpressionAtPointPurpose purpose, TimeSpan timeout) {
             var timer = MakeStopWatch();
             try {
-                return await GetApplicableExpressionAsync_BypassTelemetry(point, timeout);
+                return await GetExpressionAtPointAsync_BypassTelemetry(point, (AP.ExpressionAtPointPurpose)purpose, timeout).ConfigureAwait(false);
             } finally {
-                LogTimingEvent("GetApplicableExpression", timer.ElapsedMilliseconds, (long)timeout.TotalMilliseconds);
+                LogTimingEvent("GetExpressionAtPoint", timer.ElapsedMilliseconds, (long)timeout.TotalMilliseconds);
             }
         }
 
-        private static async Task<ApplicableExpression> GetApplicableExpressionAsync_BypassTelemetry(SnapshotPoint point, TimeSpan timeout) {
+        private static async Task<ExpressionAtPoint> GetExpressionAtPointAsync_BypassTelemetry(SnapshotPoint point, AP.ExpressionAtPointPurpose purpose, TimeSpan timeout) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(point.Snapshot.TextBuffer);
             var entry = bi?.AnalysisEntry;
             if (entry == null) {
@@ -2565,11 +2551,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var line = point.GetContainingLine();
             var r = await entry.Analyzer.SendRequestAsync(new AP.ExpressionAtPointRequest {
+                purpose = purpose,
                 fileId = entry.FileId,
                 bufferId = bi.AnalysisBufferId,
                 line = line.LineNumber + 1,
                 column = (point - line.Start) + 1
-            }, timeout: timeout);
+            }, timeout: timeout).ConfigureAwait(false);
 
             if (r == null) {
                 return null;
@@ -2584,7 +2571,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (ArgumentException) {
                 return null;
             }
-            return new ApplicableExpression(
+            return new ExpressionAtPoint(
                 entry,
                 span.GetText(),
                 span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive),

@@ -28,31 +28,31 @@ namespace Microsoft.PythonTools.Analysis {
         public GetExpressionOptions Options { get; }
 
         public Node GetExpression(int index) {
-            var walker = new ExpressionWalker(Ast, index, index, Options);
-            Ast.Walk(walker);
-            return walker.Expression;
+            return GetExpression(index, index);
         }
 
         public Node GetExpression(SourceLocation location) {
-            int index = Ast.LocationToIndex(location);
-            return GetExpression(index);
+            return GetExpression(new SourceSpan(location, location));
         }
 
         public SourceSpan? GetExpressionSpan(int index) {
-            var walker = new ExpressionWalker(Ast, index, index, Options);
-            Ast.Walk(walker);
-            return walker.Expression?.GetSpan(Ast);
+            return GetExpression(index, index)?.GetSpan(Ast);
         }
 
         public SourceSpan? GetExpressionSpan(SourceLocation location) {
-            int index = Ast.LocationToIndex(location);
-            return GetExpressionSpan(index);
+            return GetExpression(new SourceSpan(location, location))?.GetSpan(Ast);
         }
 
         public Node GetExpression(int startIndex, int endIndex) {
-            var walker = new ExpressionWalker(Ast, startIndex, endIndex, Options);
-            Ast.Walk(walker);
-            return walker.Expression;
+            if (Options.MemberTarget) {
+                var walker = new MemberExpressionTargetWalker(Ast, startIndex);
+                Ast.Walk(walker);
+                return walker.Target;
+            } else {
+                var walker = new ExpressionWalker(Ast, startIndex, endIndex, Options);
+                Ast.Walk(walker);
+                return walker.Expression;
+            }
         }
 
         public Node GetExpression(SourceSpan range) {
@@ -62,15 +62,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public SourceSpan? GetExpressionSpan(int startIndex, int endIndex) {
-            var walker = new ExpressionWalker(Ast, startIndex, endIndex, Options);
-            Ast.Walk(walker);
-            return walker.Expression?.GetSpan(Ast);
+            return GetExpression(startIndex, endIndex)?.GetSpan(Ast);
         }
 
         public SourceSpan? GetExpressionSpan(SourceSpan range) {
-            int startIndex = Ast.LocationToIndex(range.Start);
-            int endIndex = Ast.LocationToIndex(range.End);
-            return GetExpressionSpan(startIndex, endIndex);
+            return GetExpression(range)?.GetSpan(Ast);
         }
 
         private class ExpressionWalker : PythonWalkerWithLocation {
@@ -117,6 +113,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(CallExpression node) => Save(node, base.Walk(node), _options.Calls);
             public override bool Walk(ConstantExpression node) => Save(node, base.Walk(node), _options.Literals);
+            public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
             public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
             public override bool Walk(Parameter node) => Save(node, base.Walk(node), _options.ParameterNames && Location <= node.StartIndex + node.Name.Length);
             public override void PostWalk(ClassDefinition node) => Save(node, true, _options.ClassDefinition && BeforeBody(node.Body));
@@ -134,23 +131,75 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
         }
+
+        private class MemberExpressionTargetWalker : PythonWalkerWithLocation {
+            private readonly PythonAst _ast;
+
+            public MemberExpressionTargetWalker(PythonAst ast, int location) : base(location) {
+                _ast = ast;
+                Expression = null;
+            }
+
+            public MemberExpression Expression { get; private set; }
+            public Expression Target => Expression?.Target;
+
+            public override bool Walk(CallExpression node) {
+                return base.Walk(node);
+            }
+
+            public override bool Walk(IndexExpression node) {
+                return base.Walk(node);
+            }
+
+            public override bool Walk(MemberExpression node) {
+                if (base.Walk(node)) {
+                    if (Location >= node.NameHeader && Location <= node.EndIndex) {
+                        Expression = node;
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
     }
 
     public sealed class GetExpressionOptions {
-        public static GetExpressionOptions Hover => new GetExpressionOptions();
+        public static GetExpressionOptions Hover => new GetExpressionOptions {
+            Calls = true,
+            Indexing = true,
+            Names = true,
+            Members = true,
+            ParameterNames = true,
+            Literals = true,
+        };
         public static GetExpressionOptions Evaluate => new GetExpressionOptions {
-            MemberName = false,
-            ParameterNames = false,
+            Calls = true,
+            Indexing = true,
+            Names = true,
+            Members = true,
+            ParameterNames = true,
+            Literals = true,
             ClassDefinition = true,
-            FunctionDefinition = true
+            FunctionDefinition = true,
+        };
+        public static GetExpressionOptions EvaluateMembers => new GetExpressionOptions {
+            Members = true,
+            MemberTarget = true,
+        };
+        public static GetExpressionOptions Rename => new GetExpressionOptions {
+            Names = true,
+            MemberName = true,
+            ParameterNames = true,
         };
 
-        public bool Calls { get; set; } = true;
-        public bool Names { get; set; } = true;
-        public bool Members { get; set; } = true;
-        public bool MemberName { get; set; } = true;
-        public bool Literals { get; set; } = true;
-        public bool ParameterNames { get; set; } = true;
+        public bool Calls { get; set; } = false;
+        public bool Indexing { get; set; } = false;
+        public bool Names { get; set; } = false;
+        public bool Members { get; set; } = false;
+        public bool MemberTarget { get; set; } = false;
+        public bool MemberName { get; set; } = false;
+        public bool Literals { get; set; } = false;
+        public bool ParameterNames { get; set; } = false;
         public bool ClassDefinition { get; set; } = false;
         public bool FunctionDefinition { get; set; } = false;
 

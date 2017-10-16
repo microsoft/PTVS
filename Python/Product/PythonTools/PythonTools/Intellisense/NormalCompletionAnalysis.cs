@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
@@ -28,6 +29,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class NormalCompletionAnalysis : CompletionAnalysis {
@@ -42,38 +44,19 @@ namespace Microsoft.PythonTools.Intellisense {
             text = string.Empty;
             expressionExtent = default(SnapshotSpan);
 
-            var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
-            var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
-            using (var e = parser.GetEnumerator()) {
-                if (e.MoveNext() &&
-                    e.Current != null &&
-                    e.Current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Number)) {
-                    return false;
-                }
+            var bi = PythonTextBufferInfo.TryGetForBuffer(_snapshot.TextBuffer);
+            var analyzer = bi?.AnalysisEntry?.Analyzer;
+            if (analyzer == null) {
+                return false;
             }
 
-            var sourceSpan = parser.GetExpressionRange();
-            if (sourceSpan.HasValue && sourceSpan.Value.Length > 0) {
-                text = sourceSpan.Value.GetText();
-                if (text.EndsWith(".")) {
-                    text = text.Substring(0, text.Length - 1);
-                    if (text.Length == 0) {
-                        // don't return all available members on empty dot.
-                        return false;
-                    }
-                } else {
-                    int cut = text.LastIndexOfAny(new[] { '.', ']', ')' });
-                    if (cut != -1) {
-                        text = text.Substring(0, cut);
-                    } else {
-                        text = String.Empty;
-                    }
-                }
-            }
+            var point = Span.GetStartPoint(bi.LastSentSnapshot);
+            var expr = analyzer.WaitForRequest(
+                analyzer.GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.EvaluateMembers, TimeSpan.FromMilliseconds(500)),
+                "GetCompletions.GetExpressionAtPoint"
+            );
 
-
-            expressionExtent = sourceSpan ?? new SnapshotSpan(Span.GetStartPoint(_snapshot), 0);
-
+            text = expr?.Span.GetText(_snapshot) ?? "";
             return true;
         }
 

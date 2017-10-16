@@ -92,6 +92,32 @@ b = C().f(1)
             AssertExpr(code, 5, 11, "1");
         }
 
+        [TestMethod]
+        public void FindExpressionsForEvaluateMembers() {
+            var code = Parse(@"a.b.c.d.", GetExpressionOptions.EvaluateMembers);
+            AssertNoExpr(code, 1, 2);
+            AssertExpr(code, 1, 3, "a");
+            AssertExpr(code, 1, 4, "a");
+            AssertExpr(code, 1, 5, "a.b");
+            AssertExpr(code, 1, 6, "a.b");
+            AssertExpr(code, 1, 7, "a.b.c");
+            AssertExpr(code, 1, 8, "a.b.c");
+            AssertExpr(code, 1, 9, "a.b.c.d");
+
+            code = Parse(@"a[1].b(2).", GetExpressionOptions.EvaluateMembers);
+            AssertNoExpr(code, 1, 2);
+            AssertNoExpr(code, 1, 4);
+            AssertNoExpr(code, 1, 5);
+            AssertExpr(code, 1, 6, "a[1]");
+            AssertExpr(code, 1, 7, "a[1]");
+            AssertNoExpr(code, 1, 8);
+            AssertNoExpr(code, 1, 10);
+            AssertExpr(code, 1, 11, "a[1].b(2)");
+
+            code = Parse(@"x={y:f(a=2).", GetExpressionOptions.EvaluateMembers);
+            AssertExpr(code, 1, 13, "f(a=2)");
+        }
+
         private class PythonAstAndSource {
             public PythonAst Ast;
             public string Source;
@@ -99,6 +125,7 @@ b = C().f(1)
         }
 
         private static PythonAstAndSource Parse(string code, GetExpressionOptions options) {
+            code += "\n";
             using (var parser = Parser.CreateParser(new StringReader(code), PythonLanguageVersion.V35, new ParserOptions { Verbatim = true })) {
                 return new PythonAstAndSource { Ast = parser.ParseFile(), Source = code, Options = options };
             }
@@ -110,11 +137,12 @@ b = C().f(1)
             var options = astAndSource.Options;
 
             int start = ast.LocationToIndex(new SourceLocation(0, line, 1));
+
             var fullLine = code.Substring(start, code.IndexOfAny("\r\n".ToCharArray(), start) - start);
 
             var finder = new ExpressionFinder(ast, options);
             var span = finder.GetExpressionSpan(new SourceLocation(0, line, column));
-            if (span == null) {
+            if (span == null || span.Value.Length == 0) {
                 return;
             }
 

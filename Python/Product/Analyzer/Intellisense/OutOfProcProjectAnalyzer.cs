@@ -1224,7 +1224,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var buffer = GetPythonBufferAndAst(request.fileId, request.bufferId);
 
             var res = new AP.ExpressionAtPointResponse();
-            if (!GetExpressionAtPoint(buffer.Ast, request.line, request.column, out SourceSpan span, out res.type)) {
+            if (!GetExpressionAtPoint(buffer.Ast, request.line, request.column, request.purpose, out SourceSpan span, out res.type)) {
                 return null;
             }
             res.startLine = span.Start.Line;
@@ -1235,7 +1235,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        private bool GetExpressionAtPoint(PythonAst ast, int line, int column, out SourceSpan span, out string type) {
+        private bool GetExpressionAtPoint(PythonAst ast, int line, int column, AP.ExpressionAtPointPurpose purpose, out SourceSpan span, out string type) {
             span = default(SourceSpan);
             type = null;
 
@@ -1243,7 +1243,23 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
 
-            var exprFinder = new ExpressionFinder(ast, new GetExpressionOptions());
+            GetExpressionOptions options;
+            switch (purpose) {
+                case AP.ExpressionAtPointPurpose.Evaluate:
+                    options = GetExpressionOptions.Evaluate;
+                    break;
+                case AP.ExpressionAtPointPurpose.EvaluateMembers:
+                    options = GetExpressionOptions.EvaluateMembers;
+                    break;
+                case AP.ExpressionAtPointPurpose.Hover:
+                    options = GetExpressionOptions.Hover;
+                    break;
+                default:
+                    options = new GetExpressionOptions();
+                    break;
+            }
+
+            var exprFinder = new ExpressionFinder(ast, options);
             var expr = exprFinder.GetExpression(new SourceLocation(0, line, column));
             if (expr == null) {
                 return false;
