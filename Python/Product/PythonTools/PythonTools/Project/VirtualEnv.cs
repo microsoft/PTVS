@@ -252,9 +252,9 @@ namespace Microsoft.PythonTools.Project {
             return basePath;
         }
 
-        public static string FindLibPath(string prefixPath) {
+        private static string FindLibPath(string prefixPath) {
             // Find site.py to find the library
-            var libPath = PathUtils.FindFile(prefixPath, "site.py", firstCheck: new[] { "Lib" });
+            var libPath = PathUtils.FindFile(prefixPath, "site.py", depthLimit: 1, firstCheck: new[] { "Lib" });
             if (!File.Exists(libPath)) {
                 // Python 3.3 venv does not add site.py, but always puts the
                 // library in prefixPath\Lib
