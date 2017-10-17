@@ -48,13 +48,19 @@ namespace Microsoft.PythonTools.Intellisense {
             expressionExtent = default(SnapshotSpan);
 
             var bi = PythonTextBufferInfo.TryGetForBuffer(_snapshot.TextBuffer);
-            var expr = bi?.GetExpressionAtPoint(Span.GetSpan(_snapshot), GetExpressionOptions.EvaluateMembers);
-            if (expr == null) {
-                return false;
+            var span = Span.GetSpan(_snapshot);
+            var expr = bi?.GetExpressionAtPoint(span, GetExpressionOptions.EvaluateMembers);
+            if (expr != null) {
+                text = expr.Value.GetText() ?? "";
+                return true;
             }
 
-            text = expr.Value.GetText() ?? "";
-            return true;
+            if (span.Length > 0) {
+                expressionExtent = span;
+                return true;
+            }
+
+            return false;
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
