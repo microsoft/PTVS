@@ -48,6 +48,9 @@ namespace Microsoft.PythonTools.Intellisense {
             expressionExtent = default(SnapshotSpan);
 
             var bi = PythonTextBufferInfo.TryGetForBuffer(_snapshot.TextBuffer);
+            if (bi == null) {
+                return false;
+            }
             var span = Span.GetSpan(_snapshot);
             var expr = bi?.GetExpressionAtPoint(span, GetExpressionOptions.EvaluateMembers);
             if (expr != null) {
@@ -55,12 +58,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return true;
             }
 
-            if (span.Length > 0) {
-                expressionExtent = span;
-                return true;
-            }
-
-            return false;
+            expressionExtent = span;
+            return true;
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {

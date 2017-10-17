@@ -1843,7 +1843,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var members = await SendRequestAsync(new AP.TopLevelCompletionsRequest() {
                 fileId = entry.FileId,
                 options = options,
-                location = location.Index,
+                line = location.Line,
                 column = location.Column
             }).ConfigureAwait(false);
 

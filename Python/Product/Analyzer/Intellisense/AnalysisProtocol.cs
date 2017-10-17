@@ -625,7 +625,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "topCompletions";
 
             public int fileId;
-            public int location, column;
+            public int line, column;
             public GetMemberOptions options;
 
             public override string command => Command;

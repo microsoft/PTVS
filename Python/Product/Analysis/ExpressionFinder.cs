@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(CallExpression node) {
                 if (base.Walk(node)) {
-                    if (Location == node.EndIndex) {
+                    if (Location == node.EndIndex && !node.IsMissingCloseGrouping(_ast)) {
                         Expression = node;
                     }
                     return true;
@@ -173,7 +173,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override bool Walk(IndexExpression node) {
                 if (base.Walk(node)) {
-                    if (Location == node.EndIndex) {
+                    if (Location == node.EndIndex && !node.IsMissingCloseGrouping(_ast)) {
                         Expression = node;
                     }
                     return true;

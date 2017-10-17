@@ -1523,7 +1523,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IEnumerable<MemberResult> members;
             if (entry?.Analysis != null) {
                 members = entry.Analysis.GetAllAvailableMembers(
-                    new SourceLocation(topLevelCompletions.location, 1, topLevelCompletions.column),
+                    new SourceLocation(0, topLevelCompletions.line, topLevelCompletions.column),
                     topLevelCompletions.options
                 );
             } else {
