@@ -153,37 +153,45 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 modName,
                 PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
             );
-            mod.Imported(_scope.Context);
-            // Ensure child modules have been loaded
-            mod.GetChildrenModules();
+            var interp = _scope.Context as AstPythonInterpreter;
+            if (interp?.BeginNestedImport() ?? true) {
+                mod.Imported(_scope.Context);
+                // Ensure child modules have been loaded
+                mod.GetChildrenModules();
 
-            try {
-                for (int i = 0; i < node.Names.Count; ++i) {
-                    if (!onlyImportModules) {
-                        if (node.Names[i].Name == "*") {
-                            foreach (var member in mod.GetMemberNames(_scope.Context)) {
-                                var mem = mod.GetMember(_scope.Context, member) ?? new AstPythonConstant(
+                try {
+                    for (int i = 0; i < node.Names.Count; ++i) {
+                        if (!onlyImportModules) {
+                            if (node.Names[i].Name == "*") {
+                                foreach (var member in mod.GetMemberNames(_scope.Context)) {
+                                    var mem = mod.GetMember(_scope.Context, member) ?? new AstPythonConstant(
+                                        _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                        mod.Locations.ToArray()
+                                    );
+                                    _scope.SetInScope(member, mem);
+                                    (mem as IPythonModule)?.Imported(_scope.Context);
+                                }
+                                continue;
+                            }
+                            var n = node.AsNames?[i] ?? node.Names[i];
+                            if (n != null) {
+                                var mem = mod.GetMember(_scope.Context, node.Names[i].Name) ?? new AstPythonConstant(
                                     _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                    mod.Locations.ToArray()
+                                    GetLoc(n)
                                 );
-                                _scope.SetInScope(member, mem);
+                                _scope.SetInScope(n.Name, mem);
                                 (mem as IPythonModule)?.Imported(_scope.Context);
                             }
-                            continue;
-                        }
-                        var n = node.AsNames?[i] ?? node.Names[i];
-                        if (n != null) {
-                            var mem = mod.GetMember(_scope.Context, node.Names[i].Name) ?? new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                GetLoc(n)
-                            );
-                            _scope.SetInScope(n.Name, mem);
-                            (mem as IPythonModule)?.Imported(_scope.Context);
                         }
                     }
+                } catch (IndexOutOfRangeException) {
                 }
-            } catch (IndexOutOfRangeException) {
+
+                interp?.EndNestedImport();
+            } else {
+                // TODO: Add AstNestedMember class for imported names
             }
+
             return false;
         }
 
