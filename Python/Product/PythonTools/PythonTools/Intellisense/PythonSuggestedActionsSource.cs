@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var isMissing = await entry.Analyzer.IsMissingImportAsync(
                         entry,
                         t.Span.GetText(),
-                        bi.GetSourceLocation(t.Span.Start)
+                        t.Span.Start.ToSourceLocation()
                     );
 
                     if (isMissing) {

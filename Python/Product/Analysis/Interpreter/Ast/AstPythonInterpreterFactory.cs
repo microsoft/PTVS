@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IDisposable {
+    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, IDisposable {
         private readonly string _databasePath;
         private readonly object _searchPathsLock = new object();
         private PythonLibraryPath[] _searchPaths;
@@ -401,6 +401,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return ModulePath.FromFullPath(filePath);
             } catch (ArgumentException) {
                 return default(ModulePath);
+            }
+        }
+
+        public string GetAnalysisLogContent(IFormatProvider culture) {
+            _log?.Flush(synchronous: true);
+            var logfile = _log?.OutputFile;
+            if (!File.Exists(logfile)) {
+                return null;
+            }
+
+            try {
+                return File.ReadAllText(logfile);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                return ex.ToUnhandledExceptionMessage(GetType());
             }
         }
     }

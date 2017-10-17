@@ -83,6 +83,10 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Summary info about requests processed by an analyzer
         /// </summary>
-        AnalysisRequestSummary
+        AnalysisRequestSummary,
+        /// <summary>
+        /// Info about slow GetExpressionAtPoint events
+        /// </summary>
+        GetExpressionAtPoint
     }
 }

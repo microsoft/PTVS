@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.IO;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -21,6 +22,15 @@ namespace Microsoft.PythonTools.Analysis {
     public sealed class ExpressionFinder {
         public ExpressionFinder(PythonAst ast, GetExpressionOptions options) {
             Ast = ast;
+            Options = options.Clone();
+        }
+
+        public ExpressionFinder(string expression, PythonLanguageVersion version, GetExpressionOptions options) {
+            var parserOpts = new ParserOptions { Verbatim = true };
+            using (var parser = Parser.CreateParser(new StringReader(expression), version, parserOpts)) {
+                Ast = parser.ParseTopExpression();
+                Ast.Body.SetLoc(0, expression.Length);
+            }
             Options = options.Clone();
         }
 
@@ -44,15 +54,14 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public Node GetExpression(int startIndex, int endIndex) {
+            ExpressionWalker walker;
             if (Options.MemberTarget) {
-                var walker = new MemberExpressionTargetWalker(Ast, startIndex);
-                Ast.Walk(walker);
-                return walker.Target;
+                walker = new MemberTargetExpressionWalker(Ast, startIndex);
             } else {
-                var walker = new ExpressionWalker(Ast, startIndex, endIndex, Options);
-                Ast.Walk(walker);
-                return walker.Expression;
+                walker = new NormalExpressionWalker(Ast, startIndex, endIndex, Options);
             }
+            Ast.Walk(walker);
+            return walker.Expression;
         }
 
         public Node GetExpression(SourceSpan range) {
@@ -69,19 +78,21 @@ namespace Microsoft.PythonTools.Analysis {
             return GetExpression(range)?.GetSpan(Ast);
         }
 
-        private class ExpressionWalker : PythonWalkerWithLocation {
+        private abstract class ExpressionWalker : PythonWalkerWithLocation {
+            public ExpressionWalker(int location) : base(location) { }
+            public Node Expression { get; protected set; }
+        }
+
+        private class NormalExpressionWalker : ExpressionWalker {
             private readonly int _endLocation;
             private readonly PythonAst _ast;
             private readonly GetExpressionOptions _options;
 
-            public ExpressionWalker(PythonAst ast, int location, int endLocation, GetExpressionOptions options) : base(location) {
+            public NormalExpressionWalker(PythonAst ast, int location, int endLocation, GetExpressionOptions options) : base(location) {
                 _ast = ast;
                 _endLocation = endLocation;
                 _options = options;
-                Expression = null;
             }
-
-            public Node Expression { get; private set; }
 
             private bool Save(Node node, bool baseWalk, bool ifTrue) {
                 if (baseWalk && !(node.StartIndex <= _endLocation && _endLocation <= node.EndIndex)) {
@@ -116,6 +127,7 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
             public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
             public override bool Walk(Parameter node) => Save(node, base.Walk(node), _options.ParameterNames && Location <= node.StartIndex + node.Name.Length);
+            public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
             public override void PostWalk(ClassDefinition node) => Save(node, true, _options.ClassDefinition && BeforeBody(node.Body));
             public override void PostWalk(FunctionDefinition node) => Save(node, true, _options.FunctionDefinition && BeforeBody(node.Body));
 
@@ -132,29 +144,49 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private class MemberExpressionTargetWalker : PythonWalkerWithLocation {
+        private class MemberTargetExpressionWalker : ExpressionWalker {
             private readonly PythonAst _ast;
 
-            public MemberExpressionTargetWalker(PythonAst ast, int location) : base(location) {
+            public MemberTargetExpressionWalker(PythonAst ast, int location) : base(location) {
                 _ast = ast;
-                Expression = null;
             }
 
-            public MemberExpression Expression { get; private set; }
-            public Expression Target => Expression?.Target;
+            public override bool Walk(NameExpression node) {
+                if (base.Walk(node)) {
+                    if (Location == node.EndIndex) {
+                        Expression = node;
+                    }
+                    return true;
+                }
+                return false;
+            }
 
             public override bool Walk(CallExpression node) {
-                return base.Walk(node);
+                if (base.Walk(node)) {
+                    if (Location == node.EndIndex) {
+                        Expression = node;
+                    }
+                    return true;
+                }
+                return false;
             }
 
             public override bool Walk(IndexExpression node) {
-                return base.Walk(node);
+                if (base.Walk(node)) {
+                    if (Location == node.EndIndex) {
+                        Expression = node;
+                    }
+                    return true;
+                }
+                return false;
             }
 
             public override bool Walk(MemberExpression node) {
                 if (base.Walk(node)) {
-                    if (Location >= node.NameHeader && Location <= node.EndIndex) {
+                    if (Location > node.NameHeader && Location == node.EndIndex) {
                         Expression = node;
+                    } else if (Location >= node.NameHeader && Location <= node.EndIndex) {
+                        Expression = node.Target;
                     }
                     return true;
                 }
@@ -170,6 +202,7 @@ namespace Microsoft.PythonTools.Analysis {
             Names = true,
             Members = true,
             ParameterNames = true,
+            ParenthesisedExpression = true,
             Literals = true,
         };
         public static GetExpressionOptions Evaluate => new GetExpressionOptions {
@@ -179,6 +212,7 @@ namespace Microsoft.PythonTools.Analysis {
             Members = true,
             ParameterNames = true,
             Literals = true,
+            ParenthesisedExpression = true,
             ClassDefinition = true,
             FunctionDefinition = true,
         };
@@ -199,6 +233,7 @@ namespace Microsoft.PythonTools.Analysis {
         public bool MemberTarget { get; set; } = false;
         public bool MemberName { get; set; } = false;
         public bool Literals { get; set; } = false;
+        public bool ParenthesisedExpression { get; set; } = false;
         public bool ParameterNames { get; set; } = false;
         public bool ClassDefinition { get; set; } = false;
         public bool FunctionDefinition { get; set; } = false;

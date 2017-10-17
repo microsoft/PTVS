@@ -14,12 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Infrastructure;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
@@ -69,8 +70,10 @@ namespace Microsoft.PythonTools.Options {
         private void CopyToClipboard(bool includeAnalysisLogs) {
             Cursor.Current = Cursors.WaitCursor;
             try {
-                var log = PyService.GetDiagnosticsLog(includeAnalysisLogs);
-                Clipboard.SetText(log, TextDataFormat.Text);
+                using (var log = new StringWriter()) {
+                    PyService.GetDiagnosticsLog(log, includeAnalysisLogs);
+                    Clipboard.SetText(log.ToString(), TextDataFormat.Text);
+                }
             } finally {
                 Cursor.Current = Cursors.Arrow;
             }
@@ -95,9 +98,12 @@ namespace Microsoft.PythonTools.Options {
             Cursor.Current = Cursors.WaitCursor;
             try {
                 try {
-                    var log = PyService.GetDiagnosticsLog(includeAnalysisLogs);
                     TaskDialog.CallWithRetry(
-                        _ => File.WriteAllText(path, log),
+                        _ => {
+                            using (var log = new StreamWriter(path, false, new UTF8Encoding(false))) {
+                                PyService.GetDiagnosticsLog(log, includeAnalysisLogs);
+                            }
+                        },
                         PyService.Site,
                         Strings.ProductTitle,
                         Strings.FailedToSaveDiagnosticInfo,
@@ -106,7 +112,9 @@ namespace Microsoft.PythonTools.Options {
                         Strings.Cancel
                     );
 
-                    Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path)).Dispose();
+                    if (File.Exists(path)) {
+                        Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path)).Dispose();
+                    }
                 } catch (OperationCanceledException) {
                 }
             } finally {

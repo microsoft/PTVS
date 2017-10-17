@@ -21,9 +21,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Text;
@@ -313,13 +316,108 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
-        public SourceLocation GetSourceLocation(SnapshotPoint start) {
-            // TODO: Translate to the last received analysis?
-            return new SourceLocation(
-                start.Position,
-                start.GetContainingLine().LineNumber + 1,
-                start.Position - start.GetContainingLine().Start.Position + 1
+        /// <summary>
+        /// Gets the smallest expression that fully contains the span.
+        /// </summary>
+        /// <remarks>
+        /// When options specifies the member target, rather than the
+        /// full expression, only the start of the span is used.
+        /// </remarks>
+        public SnapshotSpan? GetExpressionAtPoint(SnapshotSpan span, GetExpressionOptions options) {
+            var timer = new Stopwatch();
+            timer.Start();
+            bool hasError = true, hasResult = false;
+            try {
+                var r = GetExpressionAtPoint(span, LanguageVersion, options);
+                hasResult = r != null;
+                hasError = false;
+                return r;
+            } finally {
+                timer.Stop();
+                try {
+                    int elapsed = (int)Math.Min(timer.ElapsedMilliseconds, int.MaxValue);
+                    if (elapsed > 10) {
+                        Services.Python.Logger.LogEvent(Logging.PythonLogEvent.GetExpressionAtPoint, new Logging.GetExpressionAtPointInfo {
+                            Milliseconds = elapsed,
+                            PartialAstLength = span.End.Position,
+                            ExpressionFound = hasResult,
+                            Success = !hasError
+                        });
+                    }
+                } catch (Exception ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                }
+            }
+        }
+
+        private static IEnumerable<TokenInfo> GetLineTokens(ITextSnapshotLine line, PythonLanguageVersion version) {
+            var sourceSpan = new SnapshotSpanSourceCodeReader(line.Extent);
+            var tokenizer = new Tokenizer(version, options: TokenizerOptions.VerbatimCommentsAndLineJoins);
+            tokenizer.Initialize(sourceSpan);
+            for (var t = tokenizer.ReadToken(); t.Category != TokenCategory.EndOfStream; t = tokenizer.ReadToken()) {
+                yield return t;
+            }
+        }
+
+        internal static bool IsPossibleExpressionAtPoint(SnapshotPoint point, PythonLanguageVersion version) {
+            var line = point.GetContainingLine();
+            int col = point - line.Start + 1;
+            bool anyTokens = false;
+
+            foreach (var t in GetLineTokens(line, version)) {
+                anyTokens = true;
+                if (t.SourceSpan.Start.Column >= col || t.SourceSpan.End.Column < col) {
+                    continue;
+                }
+
+                if (t.Category == TokenCategory.LineComment || t.Category == TokenCategory.Comment) {
+                    // We are in or at the end of a comment
+                    return false;
+                }
+
+                // Tokens after this point are possible expressions if we are looking
+                // at the very end of the token.
+                if (t.SourceSpan.End.Column == col) {
+                    continue;
+                }
+
+                if (t.Category == TokenCategory.StringLiteral) {
+                    // We are in a string literal
+                    return false;
+                }
+            }
+
+            return anyTokens;
+        }
+
+        internal static SnapshotSpan? GetExpressionAtPoint(SnapshotSpan span, PythonLanguageVersion version, GetExpressionOptions options) {
+            // First do some very quick tokenization to save a full analysis
+            if (!IsPossibleExpressionAtPoint(span.Start, version)) {
+                return null;
+            }
+
+            if (span.End.GetContainingLine() != span.Start.GetContainingLine() &&
+                !IsPossibleExpressionAtPoint(span.End, version)) {
+                return null;
+            }
+
+            var sourceSpan = new SnapshotSpanSourceCodeReader(
+                new SnapshotSpan(span.Snapshot, 0, span.End.Position)
             );
+
+            PythonAst ast;
+            using (var parser = Parser.CreateParser(sourceSpan, version)) {
+                ast = parser.ParseFile();
+            }
+
+            var finder = new ExpressionFinder(ast, options);
+            var actualExpr = finder.GetExpressionSpan(span.ToSourceSpan());
+            if (actualExpr == null) {
+                // No expression
+                return null;
+            }
+
+            return actualExpr.Value.ToSnapshotSpan(span.Snapshot);
         }
 
 

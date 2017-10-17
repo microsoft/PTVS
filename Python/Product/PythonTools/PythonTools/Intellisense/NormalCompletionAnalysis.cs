@@ -20,9 +20,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -45,18 +48,12 @@ namespace Microsoft.PythonTools.Intellisense {
             expressionExtent = default(SnapshotSpan);
 
             var bi = PythonTextBufferInfo.TryGetForBuffer(_snapshot.TextBuffer);
-            var analyzer = bi?.AnalysisEntry?.Analyzer;
-            if (analyzer == null) {
+            var expr = bi?.GetExpressionAtPoint(Span.GetSpan(_snapshot), GetExpressionOptions.EvaluateMembers);
+            if (expr == null) {
                 return false;
             }
 
-            var point = Span.GetStartPoint(bi.LastSentSnapshot);
-            var expr = analyzer.WaitForRequest(
-                analyzer.GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.EvaluateMembers, TimeSpan.FromMilliseconds(500)),
-                "GetCompletions.GetExpressionAtPoint"
-            );
-
-            text = expr?.Span.GetText(_snapshot) ?? "";
+            text = expr.Value.GetText() ?? "";
             return true;
         }
 
