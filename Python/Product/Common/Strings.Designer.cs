@@ -5374,6 +5374,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Your project must be saved before adding a virtual environment..
+        /// </summary>
+        public static string VirtualEnvSaveDeferredSolution {
+            get {
+                return ResourceManager.GetString("VirtualEnvSaveDeferredSolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string WaitForCompleteAnalysisDialog_Cancel {
