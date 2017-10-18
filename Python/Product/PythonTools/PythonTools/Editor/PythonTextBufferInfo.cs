@@ -358,7 +358,8 @@ namespace Microsoft.PythonTools.Editor {
             var pt = point.ToSourceLocation();
             return GetLineTokens(line, LanguageVersion)
                 .TakeWhile(t => t.SourceSpan.End >= pt)
-                .FirstOrDefault(t => t.SourceSpan.Start <= pt);
+                .OfType<TokenInfo?>()
+                .FirstOrDefault(t => t.Value.SourceSpan.Start <= pt);
         }
 
         private static IEnumerable<TokenInfo> GetLineTokens(ITextSnapshotLine line, PythonLanguageVersion version) {
