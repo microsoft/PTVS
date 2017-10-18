@@ -100,7 +100,6 @@ namespace ReplWindowUITestsRunner {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionFullTextWithoutNewLine), Interpreter);
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2755
         [TestMethod, Priority(2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
