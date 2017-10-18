@@ -54,14 +54,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public SnapshotSpan? GetExpressionRange(bool forCompletion = true, int nesting = 0) {
-            int dummy;
-            SnapshotPoint? dummyPoint;
-            string lastKeywordArg;
-            bool isParameterName;
-            return GetExpressionRange(nesting, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName, forCompletion);
-        }
-
         internal static IEnumerator<ClassificationSpan> ForwardClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {
             var startLine = startPoint.GetContainingLine();
             int curLine = startLine.LineNumber;
@@ -182,6 +174,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="nesting">1 if we have an opening parenthesis for sig completion</param>
         /// <param name="paramIndex">The current parameter index.</param>
         /// <returns></returns>
+        [Obsolete("Use GetExpressionAtPoint instead")]
         public SnapshotSpan? GetExpressionRange(int nesting, out int paramIndex, out SnapshotPoint? sigStart, out string lastKeywordArg, out bool isParameterName, bool forCompletion = true) {
             SnapshotSpan? start = null;
             paramIndex = 0;

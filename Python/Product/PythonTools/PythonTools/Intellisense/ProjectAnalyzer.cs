@@ -1175,7 +1175,9 @@ namespace Microsoft.PythonTools.Intellisense {
             SnapshotPoint? sigStart;
             string lastKeywordArg;
             bool isParameterName;
+#pragma warning disable CS0618  // See https://github.com/Microsoft/PTVS/issues/3171
             var exprRange = parser.GetExpressionRange(1, out paramIndex, out sigStart, out lastKeywordArg, out isParameterName);
+#pragma warning restore CS0618
             if (exprRange == null || sigStart == null) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
@@ -1261,7 +1263,9 @@ namespace Microsoft.PythonTools.Intellisense {
             SnapshotPoint? dummyPoint;
             string lastKeywordArg;
             bool isParameterName;
+#pragma warning disable CS0618  // See https://github.com/Microsoft/PTVS/issues/3171
             var exprRange = parser.GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName);
+#pragma warning restore CO0618
             if (exprRange == null || isParameterName) {
                 return MissingImportAnalysis.Empty;
             }
