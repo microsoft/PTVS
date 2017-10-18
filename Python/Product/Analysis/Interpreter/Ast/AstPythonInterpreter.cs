@@ -40,8 +40,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyDictionary<string, string> _userSearchPathPackages;
         private HashSet<string> _userSearchPathImported;
 
-        private int _importDepth;
-
         public AstPythonInterpreter(AstPythonInterpreterFactory factory, AnalysisLogWriter log = null) {
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
             _log = log;
@@ -166,26 +164,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Returns true if we can process a "from ... import *".
-        /// <see cref="EndNestedImport"/> must always be called if
-        /// this returns true.
-        /// </summary>
-        public bool BeginNestedImport() {
-            int current = Interlocked.Increment(ref _importDepth);
-            
-            if (current <= 2) {
-                return true;
-            }
-
-            Interlocked.Decrement(ref _importDepth);
-            return false;
-        }
-
-        public void EndNestedImport() {
-            Interlocked.Decrement(ref _importDepth);
         }
 
         public IPythonModule ImportModule(string name) {
