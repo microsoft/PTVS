@@ -28,6 +28,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
@@ -2492,47 +2493,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AnalysisVariable(type, location);
         }
 
-        internal static async Task<string> ExpressionForDataTipAsync(
-            IServiceProvider serviceProvider,
-            ITextView view,
-            SnapshotSpan span,
-            TimeSpan? timeout = null
-        ) {
-            var entryService = serviceProvider.GetEntryService();
-            AnalysisEntry entry;
-            if (entryService == null || !entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
-                return null;
-            }
-            var analysis = await entry.Analyzer.GetExpressionAtPointAsync(span.Start, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
-            if (analysis == null) {
-                return null;
-            }
-
-            var location = analysis.Location;
-            var req = new AP.ExpressionForDataTipRequest {
-                expr = span.GetText(),
-                column = location.Column,
-                index = location.Index,
-                line = location.Line,
-                fileId = analysis.Entry.FileId,
-            };
-
-            var v = $"{req.expr}:{req.index}";
-            return await analysis.Entry.Analyzer.EnsureSingleRequest(
-                typeof(AP.ExpressionForDataTipRequest),
-                v,
-                v.Equals,
-                async () => {
-                    var resp = await analysis.Entry.Analyzer.SendRequestAsync(
-                        req,
-                        timeout: timeout
-                    ).ConfigureAwait(false);
-
-                    return resp?.expression;
-                }
-            );
-        }
-
         internal async Task<ExpressionAtPoint> GetExpressionAtPointAsync(SnapshotPoint point, ExpressionAtPointPurpose purpose, TimeSpan timeout) {
             var timer = MakeStopWatch();
             try {
@@ -2542,41 +2502,62 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        internal async Task<SourceSpan?> GetExpressionSpanAtPointAsync(PythonTextBufferInfo buffer, SourceLocation point, ExpressionAtPointPurpose purpose, TimeSpan timeout) {
+            var timer = MakeStopWatch();
+            try {
+                return await GetExpressionSpanAtPointAsync_BypassTelemetry(buffer, point, (AP.ExpressionAtPointPurpose)purpose, timeout).ConfigureAwait(false);
+            } finally {
+                LogTimingEvent("GetExpressionSpanAtPoint", timer.ElapsedMilliseconds, (long)timeout.TotalMilliseconds);
+            }
+        }
+
         private static async Task<ExpressionAtPoint> GetExpressionAtPointAsync_BypassTelemetry(SnapshotPoint point, AP.ExpressionAtPointPurpose purpose, TimeSpan timeout) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(point.Snapshot.TextBuffer);
-            var entry = bi?.AnalysisEntry;
-            if (entry == null) {
+            var line = point.GetContainingLine();
+
+            var sourceSpan = await GetExpressionSpanAtPointAsync_BypassTelemetry(
+                bi,
+                new SourceLocation(point.Position, line.LineNumber + 1, point - line.Start + 1),
+                purpose,
+                timeout
+            );
+
+            if (!sourceSpan.HasValue) {
                 return null;
             }
 
-            var line = point.GetContainingLine();
-            var r = await entry.Analyzer.SendRequestAsync(new AP.ExpressionAtPointRequest {
+            SnapshotSpan span;
+            try {
+                span = sourceSpan.Value.ToSnapshotSpan(point.Snapshot);
+            } catch (ArgumentException) {
+                return null;
+            }
+            return new ExpressionAtPoint(
+                bi.AnalysisEntry,
+                span.GetText(),
+                span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive),
+                sourceSpan.Value.Start
+            );
+        }
+
+        private static async Task<SourceSpan?> GetExpressionSpanAtPointAsync_BypassTelemetry(PythonTextBufferInfo buffer, SourceLocation point, AP.ExpressionAtPointPurpose purpose, TimeSpan timeout) {
+            if (buffer.AnalysisEntry == null) {
+                return null;
+            }
+
+            var r = await buffer.AnalysisEntry.Analyzer.SendRequestAsync(new AP.ExpressionAtPointRequest {
                 purpose = purpose,
-                fileId = entry.FileId,
-                bufferId = bi.AnalysisBufferId,
-                line = line.LineNumber + 1,
-                column = (point - line.Start) + 1
+                fileId = buffer.AnalysisEntry.FileId,
+                bufferId = buffer.AnalysisBufferId,
+                line = point.Line,
+                column = point.Column
             }, timeout: timeout).ConfigureAwait(false);
 
             if (r == null) {
                 return null;
             }
 
-            SnapshotSpan span;
-            try {
-                span = new SnapshotSpan(
-                    point.Snapshot.GetLineFromLineNumber(r.startLine - 1).Start + (r.startColumn - 1),
-                    point.Snapshot.GetLineFromLineNumber(r.endLine - 1).Start + (r.endColumn - 1)
-                );
-            } catch (ArgumentException) {
-                return null;
-            }
-            return new ExpressionAtPoint(
-                entry,
-                span.GetText(),
-                span.Snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive),
-                new SourceLocation(span.Start.Position, r.startLine, r.startColumn)
-            );
+            return new SourceSpan(new SourceLocation(0, r.startLine, r.startColumn), new SourceLocation(0, r.endLine, r.endColumn));
         }
     }
 }
