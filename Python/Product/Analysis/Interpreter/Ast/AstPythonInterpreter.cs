@@ -164,6 +164,21 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IPythonModule ImportModule(string name) {
+            IPythonModule module = null;
+            bool needRetry = true;
+            for (int retries = 5; retries > 0 && needRetry; --retries) {
+                module = ImportModuleOrRetry(name, out needRetry);
+            }
+            if (needRetry) {
+                // Never succeeded, so just log the error and fail
+                _factory.Log(TraceLevel.Error, "RetryImport", name);
+                return null;
+            }
+            return module;
+        }
+
+        private IPythonModule ImportModuleOrRetry(string name, out bool retry) {
+            retry = false;
             if (string.IsNullOrEmpty(name)) {
                 return null;
             }
@@ -204,7 +219,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             // Set up a sentinel so we can detect recursive imports
             var sentinalValue = new SentinelModule(name, true);
             if (!_modules.TryAdd(name, sentinalValue)) {
-                return _modules[name];
+                // Try to get the new module, in case we raced with a .Clear()
+                if (_modules.TryGetValue(name, out mod) && !(mod is SentinelModule)) {
+                    return mod;
+                }
+                // If we reach here, the race is too complicated to recover
+                // from. Signal the caller to try importing again.
+                _factory.Log(TraceLevel.Warning, "RetryImport", name);
+                retry = true;
+                return null;
             }
 
             // Do normal searches
@@ -213,7 +236,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             // Replace our sentinel, or if we raced, get the current
             // value and abandon the one we just created.
             if (!_modules.TryUpdate(name, mod, sentinalValue)) {
-                mod = _modules[name];
+                // Try to get the new module, in case we raced
+                if (_modules.TryGetValue(name, out mod) && !(mod is SentinelModule)) {
+                    return mod;
+                }
+                // If we reach here, the race is too complicated to recover
+                // from. Signal the caller to try importing again.
+                _factory.Log(TraceLevel.Warning, "RetryImport", name);
+                retry = true;
+                return null;
             }
 
             sentinalValue.Complete(mod);

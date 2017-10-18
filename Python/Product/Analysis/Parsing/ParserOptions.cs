@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         public Severity IndentationInconsistencySeverity { set; get; }
 
-        public bool Verbatim { get; set; }
+        public bool Verbatim { get; set; } = true;
 
         /// <summary>
         /// True if references to variables should be bound in the AST.  The root node must be

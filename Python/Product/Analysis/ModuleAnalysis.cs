@@ -221,14 +221,18 @@ namespace Microsoft.PythonTools.Analysis {
             string privatePrefix = GetPrivatePrefixClassName(scope);
             var ast = GetAstFromText(exprText, privatePrefix);
             var expr = Statement.GetExpression(ast.Body);
+            var variables = Enumerable.Empty<IAnalysisVariable>();
+
+            if (expr == null) {
+                return new VariablesResult(variables, ast);
+            }
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
-            NameExpression name = expr as NameExpression;
-            IEnumerable<IAnalysisVariable> variables = Enumerable.Empty<IAnalysisVariable>();
-            if (name != null) {
+
+            if (expr is NameExpression name) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
                     s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
-
+            
                 if (defScope == null) {
                     variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name)
                         .SelectMany(ToVariables);
@@ -240,7 +244,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (member != null && !string.IsNullOrEmpty(member.Name)) {
                     var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                     var objects = eval.Evaluate(member.Target);
-
+            
                     foreach (var v in objects) {
                         var container = v as IReferenceableContainer;
                         if (container != null) {
@@ -1027,6 +1031,8 @@ namespace Microsoft.PythonTools.Analysis {
         private static InterpreterScope FindScope(InterpreterScope parent, PythonAst tree, SourceLocation location) {
             var children = parent.Children.Where(c => !(c is StatementScope)).ToList();
 
+            var index = tree.LocationToIndex(location);
+
             InterpreterScope candidate = null;
 
             for (int i = 0; i < children.Count; ++i) {
@@ -1038,7 +1044,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 int start = children[i].GetBodyStart(tree);
 
-                if (start > location.Index) {
+                if (start > index) {
                     // We've gone past index completely so our last candidate is
                     // the best one.
                     break;
@@ -1052,7 +1058,7 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
 
-                if (location.Index <= end || (candidate == null && i + 1 == children.Count)) {
+                if (index <= end || (candidate == null && i + 1 == children.Count)) {
                     candidate = children[i];
                 }
             }
@@ -1075,7 +1081,7 @@ namespace Microsoft.PythonTools.Analysis {
             var funcChild = child as FunctionScope;
             if (funcChild != null &&
                 funcChild.Function.FunctionDefinition.IsLambda &&
-                child.GetStop(tree) < location.Index) {
+                child.GetStop(tree) < index) {
                 // Do not want to extend a lambda function's scope to the end of
                 // the parent scope.
                 return parent;

@@ -163,6 +163,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
+                _name?.Walk(walker);
                 if (_decorators != null) {
                     _decorators.Walk(walker);
                 }

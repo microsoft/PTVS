@@ -3462,7 +3462,7 @@ namespace Microsoft.PythonTools.Parsing {
                             var name = ReadNameMaybeNone();
                             string nameWhitespace = _tokenWhiteSpace;
                             MemberExpression fe = MakeMember(ret, name);
-                            fe.SetLoc(ret.StartIndex, GetStart(), GetEnd());
+                            fe.SetLoc(ret.StartIndex, name.HasName ? GetStart() : GetEnd(), GetEnd());
                             if (_verbatim) {
                                 AddPreceedingWhiteSpace(fe, whitespace);
                                 AddSecondPreceedingWhiteSpace(fe, nameWhitespace);
