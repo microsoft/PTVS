@@ -2565,8 +2565,8 @@ namespace Microsoft.PythonTools.Intellisense {
             SnapshotSpan span;
             try {
                 span = new SnapshotSpan(
-                    point.Snapshot.GetLineFromLineNumber(r.startLine - 1).Start + r.startColumn - 1,
-                    point.Snapshot.GetLineFromLineNumber(r.endLine - 1).Start + r.endColumn - 1
+                    point.Snapshot.GetLineFromLineNumber(r.startLine - 1).Start + (r.startColumn - 1),
+                    point.Snapshot.GetLineFromLineNumber(r.endLine - 1).Start + (r.endColumn - 1)
                 );
             } catch (ArgumentException) {
                 return null;

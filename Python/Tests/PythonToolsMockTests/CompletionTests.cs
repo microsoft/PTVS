@@ -1193,7 +1193,7 @@ async def g():
             // works when caret is on the left AND right of identifier (and in between)
             for (int i = 0; i <= charCount; i++) {
                 var defAnalysis = AnalyzeExpression(vs, start + i, code);
-                Assert.AreEqual(expectedExpr, defAnalysis.Expression);
+                Assert.AreEqual(expectedExpr, defAnalysis?.Expression);
             }
         }
 

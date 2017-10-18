@@ -95,7 +95,22 @@ b = C().f(1)
             AssertExpr(code, 5, 7, "C()");
             AssertExpr(code, 5, 9, "C().f");
             AssertExpr(code, 5, 10, "C().f");
+            AssertExpr(code, 5, 9, 5, 10, "C().f");
             AssertExpr(code, 5, 11, "1");
+
+            // Same code as in the GotoDefinition test
+            code = Parse(@"class C:
+    def fff(self): pass
+i=1+2
+C().fff", GetExpressionOptions.Evaluate);
+
+            AssertExpr(code, 2, 9, 2, 12, "fff");
+            AssertExpr(code, 2, 13, 2, 17, "self");
+            AssertExpr(code, 1, 7, 1, 8, "C");
+            AssertExpr(code, 3, 3, 3, 4, "1");
+            AssertExpr(code, 3, 5, 3, 6, "2");
+            AssertExpr(code, 4, 1, 4, 2, "C");
+            AssertExpr(code, 4, 6, 4, 8, "C().fff");
         }
 
         [TestMethod]
