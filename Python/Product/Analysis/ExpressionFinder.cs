@@ -128,12 +128,12 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
             public override bool Walk(Parameter node) => Save(node, base.Walk(node), _options.ParameterNames && Location <= node.StartIndex + node.Name.Length);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
-            public override void PostWalk(ClassDefinition node) => Save(node, true, _options.ClassDefinition && BeforeBody(node.Body));
-            public override void PostWalk(FunctionDefinition node) => Save(node, true, _options.FunctionDefinition && BeforeBody(node.Body));
+            public override bool Walk(ClassDefinition node) => Save(node, base.Walk(node), _options.ClassDefinition && BeforeBody(node.Body));
+            public override bool Walk(FunctionDefinition node) => Save(node, base.Walk(node), _options.FunctionDefinition && BeforeBody(node.Body));
 
             public override bool Walk(MemberExpression node) {
                 if (Save(node, base.Walk(node), _options.Members && Location >= node.NameHeader)) {
-                    if (_options.MemberName) {
+                    if (_options.MemberName && Location >= node.NameHeader) {
                         var nameNode = new NameExpression(node.Name);
                         nameNode.SetLoc(node.NameHeader, node.EndIndex);
                         Expression = nameNode;
@@ -151,41 +151,9 @@ namespace Microsoft.PythonTools.Analysis {
                 _ast = ast;
             }
 
-            public override bool Walk(NameExpression node) {
-                if (base.Walk(node)) {
-                    if (Location == node.EndIndex) {
-                        Expression = node;
-                    }
-                    return true;
-                }
-                return false;
-            }
-
-            public override bool Walk(CallExpression node) {
-                if (base.Walk(node)) {
-                    if (Location == node.EndIndex && !node.IsMissingCloseGrouping(_ast)) {
-                        Expression = node;
-                    }
-                    return true;
-                }
-                return false;
-            }
-
-            public override bool Walk(IndexExpression node) {
-                if (base.Walk(node)) {
-                    if (Location == node.EndIndex && !node.IsMissingCloseGrouping(_ast)) {
-                        Expression = node;
-                    }
-                    return true;
-                }
-                return false;
-            }
-
             public override bool Walk(MemberExpression node) {
                 if (base.Walk(node)) {
-                    if (Location > node.NameHeader && Location == node.EndIndex) {
-                        Expression = node;
-                    } else if (Location >= node.NameHeader && Location <= node.EndIndex) {
+                    if (Location >= node.NameHeader && Location <= node.EndIndex) {
                         Expression = node.Target;
                     }
                     return true;
