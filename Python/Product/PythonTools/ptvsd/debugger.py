@@ -41,6 +41,7 @@ from os import path
 import ntpath
 import runpy
 import datetime
+import itertools
 from codecs import BOM_UTF8
 
 import ptvsd
@@ -942,7 +943,7 @@ class Thread(object):
         if co_name == '<module>' and co_filename not in ['<string>', '<stdin>']:
             probe_stack()
 
-            module = Module(get_code_filename(f_code))
+            module = Module(frame.f_globals.get('__name__') or '', get_code_filename(f_code))
             MODULES.append((co_filename, module))
             if not DETACHED:
                 report_module_load(module)
@@ -1632,12 +1633,11 @@ class Thread(object):
 class Module(object):
     """tracks information about a loaded module"""
 
-    CurrentLoadIndex = 0
+    CurrentLoadIndex = itertools.count()
 
-    def __init__(self, filename):
-        # TODO: Module.CurrentLoadIndex thread safety
-        self.module_id = Module.CurrentLoadIndex
-        Module.CurrentLoadIndex += 1
+    def __init__(self, module_name, filename):
+        self.module_id = next(Module.CurrentLoadIndex)
+        self.module_name = module_name
         self.filename = filename
 
 def get_code(func):
@@ -2180,6 +2180,8 @@ def report_module_load(mod):
         name='legacyModuleLoad',
         moduleId=mod.module_id,
         moduleFileName=mod.filename,
+        moduleName=mod.module_name,
+        isStdLib=1 if is_stdlib(path.normcase(mod.filename)) else 0,
     )
 
 def report_step_finished(tid):
@@ -2413,7 +2415,7 @@ def attach_connected_process(debug_options, report = False, block = False):
                 except:
                     pass
                 else:
-                    MODULES.append((filename, Module(fullpath)))
+                    MODULES.append((filename, Module(mod_name, fullpath)))
         except:
             traceback.print_exc()   
 

@@ -289,17 +289,23 @@ namespace Microsoft.PythonTools.Ipc.Json {
             var name = packet["event"].ToObject<string>();
             var eventBody = packet["body"];
             Event eventObj;
-            if (name != null &&
-                _types != null &&
-                _types.TryGetValue("event." + name, out requestType)) {
-                // We have a strongly typed event type registered, use that.
-                eventObj = eventBody.ToObject(requestType) as Event;
-            } else {
-                // We have no strongly typed event type, so give the user a 
-                // GenericEvent and they can look through the body manually.
-                eventObj = new GenericEvent() {
-                    body = eventBody.ToObject<Dictionary<string, object>>()
-                };
+            try {
+                if (name != null &&
+                    _types != null &&
+                    _types.TryGetValue("event." + name, out requestType)) {
+                    // We have a strongly typed event type registered, use that.
+                    eventObj = eventBody.ToObject(requestType) as Event;
+                } else {
+                    // We have no strongly typed event type, so give the user a 
+                    // GenericEvent and they can look through the body manually.
+                    eventObj = new GenericEvent() {
+                        body = eventBody.ToObject<Dictionary<string, object>>()
+                    };
+                }
+            } catch (Exception e) {
+                // TODO: Notify receiver of invalid message
+                Debug.Fail(e.Message);
+                return;
             }
             try {
                 EventReceived?.Invoke(this, new EventReceivedEventArgs(name, eventObj));

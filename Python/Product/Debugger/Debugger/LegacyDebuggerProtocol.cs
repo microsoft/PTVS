@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Microsoft.PythonTools.Ipc.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -405,6 +406,10 @@ namespace Microsoft.PythonTools.Debugger {
 
             public int moduleId;
             public string moduleFileName;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public string moduleName;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public int isStdLib;
         }
 
         public sealed class StepDoneEvent : Event {
