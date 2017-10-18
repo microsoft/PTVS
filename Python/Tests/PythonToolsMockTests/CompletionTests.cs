@@ -212,6 +212,9 @@ l(42)
             foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {
                 using (var view = new PythonEditor(version: version)) {
                     var completionList = view.GetCompletionList(0);
+                    foreach (var c in completionList) {
+                        Console.WriteLine(c.DisplayText);
+                    }
 
                     var trueItems = completionList.Where(t => t.DisplayText == "True").ToArray();
                     var falseItems = completionList.Where(t => t.DisplayText == "False").ToArray();
@@ -1190,7 +1193,7 @@ async def g():
             // works when caret is on the left AND right of identifier (and in between)
             for (int i = 0; i <= charCount; i++) {
                 var defAnalysis = AnalyzeExpression(vs, start + i, code);
-                Assert.AreEqual(expectedExpr, defAnalysis.Expression);
+                Assert.AreEqual(expectedExpr, defAnalysis?.Expression);
             }
         }
 

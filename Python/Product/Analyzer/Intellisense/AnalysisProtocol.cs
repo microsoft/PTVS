@@ -625,7 +625,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "topCompletions";
 
             public int fileId;
-            public int location, column;
+            public int line, column;
             public GetMemberOptions options;
 
             public override string command => Command;
@@ -917,20 +917,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override string name => Name;
-        }
-
-        public sealed class ExpressionForDataTipRequest : Request<ExpressionForDataTipResponse> {
-            public const string Command = "exprForDataTip";
-
-            public int fileId;
-            public string expr;
-            public int line, column, index;
-
-            public override string command => Command;
-        }
-
-        public sealed class ExpressionForDataTipResponse : Response {
-            public string expression;
         }
 
         public enum ExpressionAtPointPurpose : int {

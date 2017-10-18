@@ -350,6 +350,18 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
+        /// <summary>
+        /// Returns the first token containing or adjacent to the specified point.
+        /// </summary>
+        public TokenInfo? GetTokenAtPoint(SnapshotPoint point) {
+            var line = point.GetContainingLine();
+            var pt = point.ToSourceLocation();
+            return GetLineTokens(line, LanguageVersion)
+                .TakeWhile(t => t.SourceSpan.End >= pt)
+                .OfType<TokenInfo?>()
+                .FirstOrDefault(t => t.Value.SourceSpan.Start <= pt);
+        }
+
         private static IEnumerable<TokenInfo> GetLineTokens(ITextSnapshotLine line, PythonLanguageVersion version) {
             var sourceSpan = new SnapshotSpanSourceCodeReader(line.Extent);
             var tokenizer = new Tokenizer(version, options: TokenizerOptions.VerbatimCommentsAndLineJoins);

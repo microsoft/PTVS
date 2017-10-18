@@ -205,7 +205,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
                 case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
-                case AP.ExpressionForDataTipRequest.Command: response = ExpressionForDataTip((AP.ExpressionForDataTipRequest)request); break;
                 case AP.ExpressionAtPointRequest.Command: response = ExpressionAtPoint((AP.ExpressionAtPointRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
@@ -1193,33 +1192,6 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private Response ExpressionForDataTip(AP.ExpressionForDataTipRequest request) {
-            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
-            if (entry?.Analysis == null) {
-                return IncorrectFileType();
-            }
-
-            string dataTipExpression = null;
-            var options = new CodeFormattingOptions() {
-                UseVerbatimImage = false
-            };
-
-            var ast = entry.Analysis.GetAstFromText(request.expr, new SourceLocation(request.index, request.line, request.column));
-            var expr = Statement.GetExpression(ast.Body);
-
-            if (ast != null) {
-                var walker = new DetectSideEffectsWalker();
-                ast.Walk(walker);
-                if (!walker.HasSideEffects) {
-                    dataTipExpression = expr?.ToCodeString(ast, new CodeFormattingOptions() { UseVerbatimImage = false });
-                }
-            }
-
-            return new AP.ExpressionForDataTipResponse() {
-                expression = dataTipExpression
-            };
-        }
-
         private Response ExpressionAtPoint(AP.ExpressionAtPointRequest request) {
             var buffer = GetPythonBufferAndAst(request.fileId, request.bufferId);
 
@@ -1523,7 +1495,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IEnumerable<MemberResult> members;
             if (entry?.Analysis != null) {
                 members = entry.Analysis.GetAllAvailableMembers(
-                    new SourceLocation(topLevelCompletions.location, 1, topLevelCompletions.column),
+                    new SourceLocation(0, topLevelCompletions.line, topLevelCompletions.column),
                     topLevelCompletions.options
                 );
             } else {
