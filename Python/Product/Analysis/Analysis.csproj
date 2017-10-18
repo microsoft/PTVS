@@ -65,6 +65,7 @@
     <Compile Include="IHasRichDescription.cs" />
     <Compile Include="Interpreter\Ast\AstBuiltinPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstBuiltinsPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstNestedPythonModuleMember.cs" />
     <Compile Include="Interpreter\Ast\AstPythonBuiltinType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
     <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="Interpreter\Ast\AstPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstScrapedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\NameLookupContext.cs" />
+    <Compile Include="Interpreter\ILazyMember.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithLog.cs" />
     <Compile Include="Interpreter\SentinelModule.cs" />
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />

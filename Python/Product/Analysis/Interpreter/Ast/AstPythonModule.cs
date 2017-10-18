@@ -172,6 +172,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             lock (_members) {
                 _members.TryGetValue(name, out member);
             }
+            if (member is ILazyMember lm) {
+                member = lm.Get();
+                lock (_members) {
+                    _members[name] = member;
+                }
+            }
             return member;
         }
 

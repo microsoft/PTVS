@@ -53,11 +53,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
 
         public virtual IMember GetMember(IModuleContext context, string name) {
+            IMember m;
             lock (_members) {
-                IMember m;
                 _members.TryGetValue(name, out m);
-                return m;
             }
+            if (m is ILazyMember lm) {
+                m = lm.Get();
+                lock (_members) {
+                    _members[name] = m;
+                }
+            }
+            return m;
         }
 
         public virtual IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {

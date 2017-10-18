@@ -379,6 +379,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (scopes != null) {
                 foreach (var scope in scopes) {
                     if (scope.TryGetValue(name, out value) && value != null) {
+                        if (value is ILazyMember lm) {
+                            value = lm.Get();
+                            scope[name] = value;
+                        }
                         return value;
                     }
                 }
