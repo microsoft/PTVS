@@ -16,6 +16,8 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -48,6 +50,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_LOADORDER) != 0) {
                 info.m_dwLoadOrder = (uint)this.DebuggedModule.ModuleId;
                 info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_LOADORDER;
+            }
+            if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_URLSYMBOLLOCATION) != 0) {
+                if (ModulePath.IsPythonSourceFile(DebuggedModule.Filename)) {
+                    info.m_bstrUrlSymbolLocation = DebuggedModule.Filename;
+                } else {
+                    info.m_bstrUrlSymbolLocation = string.Empty;
+                }
+                info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_URLSYMBOLLOCATION;
             }
 
             infoArray[0] = info;
@@ -106,11 +116,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-        // Used to support the JustMyCode features of the debugger.
-        // the sample debug engine does not support JustMyCode and therefore all modules
-        // are considered "My Code"
         int IDebugModule3.IsUserCode(out int pfUser) {
-            pfUser = 1;
+            pfUser = DebuggedModule.IsUserCode ? 1 : 0;
             return VSConstants.S_OK;
         }
 
