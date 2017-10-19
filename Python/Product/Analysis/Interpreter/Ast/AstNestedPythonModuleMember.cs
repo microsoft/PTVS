@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 
@@ -28,8 +29,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IModuleContext importContext,
             LocationInfo importLocation
         ) {
-            Name = memberName;
-            Module = module;
+            Name = memberName ?? throw new ArgumentNullException(nameof(memberName));
+            Module = module ?? throw new ArgumentNullException(nameof(module));
             _context = importContext;
             ImportLocation = importLocation;
         }
@@ -57,7 +58,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            m = new AstPythonConstant(interp.GetBuiltinType(BuiltinTypeId.Unknown), ImportLocation);
+            var locs = ImportLocation == null ? Array.Empty<LocationInfo>() : new[] { ImportLocation };
+            m = new AstPythonConstant(interp.GetBuiltinType(BuiltinTypeId.Unknown), locs);
             return Interlocked.CompareExchange(ref _realMember, m, null) ?? m;
         }
     }
