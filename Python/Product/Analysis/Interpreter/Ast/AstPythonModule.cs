@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _foundChildModules = true;
             }
 
-            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true);
+            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true, true);
             ast.Walk(walker);
         }
 
@@ -171,6 +171,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IMember member = null;
             lock (_members) {
                 _members.TryGetValue(name, out member);
+            }
+            if (member is ILazyMember lm) {
+                member = lm.Get();
+                lock (_members) {
+                    _members[name] = member;
+                }
             }
             return member;
         }

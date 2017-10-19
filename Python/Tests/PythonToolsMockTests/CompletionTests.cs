@@ -53,11 +53,15 @@ namespace PythonToolsMockTests {
         [TestInitialize]
         public void OnTestInitialized() {
             MockPythonToolsPackage.SuppressTaskProvider = true;
+            GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
+            GlobalInterpreterOptions.SuppressPackageManagers = true;
         }
 
         [TestCleanup]
         public void OnTestCleanup() {
             MockPythonToolsPackage.SuppressTaskProvider = false;
+            GlobalInterpreterOptions.SuppressFileSystemWatchers = false;
+            GlobalInterpreterOptions.SuppressPackageManagers = false;
         }
 
         [TestMethod, Priority(0)]
@@ -208,6 +212,9 @@ l(42)
             foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {
                 using (var view = new PythonEditor(version: version)) {
                     var completionList = view.GetCompletionList(0);
+                    foreach (var c in completionList) {
+                        Console.WriteLine(c.DisplayText);
+                    }
 
                     var trueItems = completionList.Where(t => t.DisplayText == "True").ToArray();
                     var falseItems = completionList.Where(t => t.DisplayText == "False").ToArray();
@@ -327,10 +334,9 @@ except (sys."}) {
         }
 
         [TestMethod, Priority(0)]
-        public void MemberCompletions() {
+        public async Task MemberCompletions() {
             using (var view = new PythonEditor("x = 2\r\nx.")) {
-                // TODO: Negative tests
-                TestMemberCompletion(view, -1, "x");
+                // See tests in ExpressionFinder
 
                 // combining various partial expressions with previous expressions
                 var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
@@ -354,7 +360,22 @@ except (sys."}) {
                         string test = prefix + expr;
                         Console.WriteLine("   -- {0}", test);
                         view.Text = test;
-                        TestMemberCompletion(view, -1, expr.TrimEnd('.'));
+                        await Task.Delay(100);
+                        var foundExpr = await view.Analyzer.GetExpressionAtPointAsync(
+                            new SnapshotPoint(view.CurrentSnapshot, view.CurrentSnapshot.Length),
+                            ExpressionAtPointPurpose.EvaluateMembers,
+                            TimeSpan.FromSeconds(10.0)
+                        );
+                        if (foundExpr == null && Debugger.IsAttached) {
+                            Debugger.Break();
+                            foundExpr = await view.Analyzer.GetExpressionAtPointAsync(
+                                new SnapshotPoint(view.CurrentSnapshot, view.CurrentSnapshot.Length),
+                                ExpressionAtPointPurpose.EvaluateMembers,
+                                TimeSpan.FromDays(1)
+                            );
+                        }
+                        Assert.IsNotNull(foundExpr, $"Did not find any expression in {test}");
+                        Assert.AreEqual(expr.TrimEnd('.'), foundExpr.Text);
                     }
                 }
             }
@@ -650,7 +671,6 @@ C().fff";
                 AnalyzeAndValidateExpression(vs, code.IndexOf("1"), 1, code, "1");
                 AnalyzeAndValidateExpression(vs, code.IndexOf("2"), 1, code, "2");
                 AnalyzeAndValidateExpression(vs, code.IndexOf("C()."), 1, code, "C");
-                AnalyzeAndValidateExpression(vs, code.IndexOf("C().") + 2, 2, code, "C()");
                 AnalyzeAndValidateExpression(vs, code.IndexOf(".fff") + 2, 2, code, "C().fff");
             }
         }
@@ -702,8 +722,10 @@ lambda larg1, larg2: None";
                 TestQuickInfo(view, code.IndexOf("larg1"), code.IndexOf("larg1") + 5, "larg1: <unknown type>");
                 TestQuickInfo(view, code.IndexOf("larg2"), code.IndexOf("larg2") + 5, "larg2: <unknown type>");
 
-                // multiline function, hover at the close paren
-                TestQuickInfo(view, code.IndexOf("e)") + 1, code.IndexOf("e)") + 2, @"f(a,
+                // multiline function, hover *before* the close paren
+                TestQuickInfo(view, code.IndexOf("e)") + 1, code.IndexOf("e)") + 2, "e: <unknown type>");
+                // multiline function, hover *after* the close paren
+                TestQuickInfo(view, code.IndexOf("e)") + 2, code.IndexOf("e)") + 3, @"f(a,
 (b, c, d),
 e): <unknown type>");
             }
@@ -1171,7 +1193,7 @@ async def g():
             // works when caret is on the left AND right of identifier (and in between)
             for (int i = 0; i <= charCount; i++) {
                 var defAnalysis = AnalyzeExpression(vs, start + i, code);
-                Assert.AreEqual(expectedExpr, defAnalysis.Expression);
+                Assert.AreEqual(expectedExpr, defAnalysis?.Expression);
             }
         }
 
@@ -1182,14 +1204,10 @@ async def g():
 
             using (var view = new PythonEditor(code, version, vs)) {
                 var snapshot = view.CurrentSnapshot;
-                Task<ExpressionAnalysis> task = null;
-                vs.InvokeSync(() => {
-                    task = view.Analyzer.AnalyzeExpressionAsync(
-                        (AnalysisEntry)view.GetAnalysisEntry(),
-                        new SnapshotPoint(snapshot, location)
-                    );
-                });
-                return task.Wait(10000) ? task.Result : null;
+                return vs.InvokeTask(() => view.Analyzer.AnalyzeExpressionAsync(
+                    (AnalysisEntry)view.GetAnalysisEntry(),
+                    new SnapshotPoint(snapshot, location)
+                ));
             }
         }
 

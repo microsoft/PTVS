@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -29,6 +30,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
+using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
@@ -461,6 +463,58 @@ In [3]: if True:
    ...:     print(x)
    ...: 
 1", "\n"));
+        }
+
+        #endregion
+
+        #region Text Buffer tests
+
+        [TestMethod, Priority(0)]
+        public void IsPossibleExpressionAtPoint() {
+            AssertHasExpression("x", true);
+            AssertHasExpression("(x)", true);
+            AssertHasExpression("x + y", true);
+            AssertHasExpression("", false);
+            AssertHasExpression("# comment", false);
+            AssertHasExpression("'str'", false, -2);
+            AssertHasExpression("'str'", true, -1);
+            AssertHasExpression("f()", true);
+            AssertHasExpression("f() #", false);
+            AssertHasExpression("f() #", true, -2);
+            AssertHasExpression("(x + 2 #comment\ny)", true, -2);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ExpressionAtPoint() {
+            AssertExpression("x", "x");
+            AssertExpression("(x)", "x", -2);
+            AssertExpression("(x)", "(x)");
+            AssertExpression("(x + #comment\ny)", "y", -2);
+            AssertExpression("(x + #comment\ny)", "(x + #comment\ny)");
+        }
+
+        private static void AssertHasExpression(string content, bool expectExpression, int index = -1, PythonLanguageVersion version = PythonLanguageVersion.V35) {
+            var buffer = new MockTextBuffer(content);
+            if (index < 0) {
+                index += content.Length + 1;
+            }
+            var pt = new SnapshotPoint(buffer.CurrentSnapshot, index);
+            var actual = PythonTextBufferInfo.IsPossibleExpressionAtPoint(pt, version);
+            if (expectExpression) {
+                Assert.IsTrue(actual, content);
+            } else {
+                Assert.IsFalse(actual, content);
+            }
+        }
+
+        private static void AssertExpression(string content, string expected, int index = -1, PythonLanguageVersion version = PythonLanguageVersion.V35) {
+            var buffer = new MockTextBuffer(content);
+            if (index < 0) {
+                index += content.Length + 1;
+            }
+            var span = new SnapshotSpan(buffer.CurrentSnapshot, index, 0);
+            var actual = PythonTextBufferInfo.GetExpressionAtPoint(span, version, GetExpressionOptions.Hover);
+            Assert.AreEqual(expected, actual?.GetText(), content);
         }
 
         #endregion

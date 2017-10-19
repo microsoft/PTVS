@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -51,8 +52,56 @@ namespace Microsoft.PythonTools.Analysis {
         public bool CSV => _csv;
         public bool LogToConsole => _console;
         public string OutputFile => _outputFile;
+        public TraceLevel MinimumLevel { get; set; } = TraceLevel.Warning;
+
+        public void Rotate(int maxLines = 4096) {
+            var enc = new UTF8Encoding(false);
+            var lines = new string[maxLines];
+            int i = 0;
+            bool hitMaxLines = false;
+
+            using (var log = OpenRawLogFile(appendOnly: false, create: false)) {
+                if (log == null) {
+                    return;
+                }
+
+                using (var reader = new StreamReader(log, enc, false, 4096, true)) {
+                    string line;
+                    while ((line = reader.ReadLine()) != null) {
+                        lines[i++] = line;
+                        while (i >= maxLines) {
+                            hitMaxLines = true;
+                            i -= maxLines;
+                        }
+                    }
+                }
+
+                if (!hitMaxLines) {
+                    return;
+                }
+
+                log.Seek(0, SeekOrigin.Begin);
+                log.SetLength(0);
+
+                using (var writer = new StreamWriter(log, enc, 4096, true)) {
+                    for (int j = (i + 1) % maxLines; j != i; j = (j + 1) % maxLines) {
+                        if (lines[j] != null) {
+                            writer.WriteLine(lines[j]);
+                        }
+                    }
+                }
+            }
+        }
 
         public void Log(string eventName, params object[] args) {
+            Log(TraceLevel.Off, eventName, args);
+        }
+
+        public void Log(TraceLevel level, string eventName, params object[] args) {
+            if (level > MinimumLevel) {
+                return;
+            }
+
             if (!LogToConsole && string.IsNullOrEmpty(OutputFile)) {
                 return;
             }
@@ -112,6 +161,14 @@ namespace Microsoft.PythonTools.Analysis {
                     items.Add(new LogItem());
                 }
 
+                // Never just write a "Start" event
+                if (items.Count == 2 && items[0].Event == "Start") {
+                    lock (newList) {
+                        newList.Insert(0, items[0]);
+                    }
+                    return;
+                }
+
                 using (var output = OpenLogFile()) {
                     foreach (var item in items) {
                         if (string.IsNullOrEmpty(item.Event)) {
@@ -137,15 +194,16 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private TextWriter OpenLogFile() {
-            if (string.IsNullOrEmpty(_outputFile)) {
-                return null;
-            }
-
+        private FileStream OpenRawLogFile(bool appendOnly, bool create) {
             // Retry for up to one second
             for (int retries = 100; retries > 0; --retries) {
                 try {
-                    return new StreamWriter(new FileStream(_outputFile, FileMode.Append, FileAccess.Write, FileShare.Read), new UTF8Encoding(false));
+                    return appendOnly ? new FileStream(_outputFile, FileMode.Append, FileAccess.Write, FileShare.Read)
+                                      : new FileStream(_outputFile, create ? FileMode.OpenOrCreate : FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                } catch (FileNotFoundException) when (!create) {
+                    return null;
+                } catch (DirectoryNotFoundException) when (!create) {
+                    return null;
                 } catch (IOException) {
                     var dir = PathUtils.GetParent(_outputFile);
                     try {
@@ -158,6 +216,15 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
             return null;
+        }
+
+        private TextWriter OpenLogFile() {
+            if (string.IsNullOrEmpty(_outputFile)) {
+                return null;
+            }
+            var enc = new UTF8Encoding(false);
+            var stream = OpenRawLogFile(true, true);
+            return stream == null ? null : new StreamWriter(stream, enc);
         }
 
         private static IEnumerable<string> AsNormalStrings(IEnumerable<object> items) {

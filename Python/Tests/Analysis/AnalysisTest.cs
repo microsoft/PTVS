@@ -2973,15 +2973,15 @@ def m(x = math.atan2(1, 0)): pass
                 new { FuncName = "j", ParamName="x", DefaultValue="[...]" },
                 new { FuncName = "k", ParamName="x", DefaultValue = "()" },
                 new { FuncName = "l", ParamName="x", DefaultValue = "(...)" },
-                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1,0)" },
+                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1, 0)" },
             };
 
             foreach (var test in tests) {
                 var result = entry.GetSignatures(test.FuncName, 1).ToArray();
-                Assert.AreEqual(result.Length, 1);
-                Assert.AreEqual(result[0].Parameters.Length, 1);
-                Assert.AreEqual(result[0].Parameters[0].Name, test.ParamName);
-                Assert.AreEqual(result[0].Parameters[0].DefaultValue, test.DefaultValue);
+                Assert.AreEqual(1, result.Length);
+                Assert.AreEqual(1, result[0].Parameters.Length);
+                Assert.AreEqual(test.ParamName, result[0].Parameters[0].Name);
+                Assert.AreEqual(test.DefaultValue, result[0].Parameters[0].DefaultValue);
             }
         }
 
@@ -6411,7 +6411,7 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "def test-module.A.fn(self) -> lambda : 123 -> int\ndeclared in A",
+                "def test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

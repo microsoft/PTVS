@@ -53,11 +53,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
 
         public virtual IMember GetMember(IModuleContext context, string name) {
+            IMember m;
             lock (_members) {
-                IMember m;
                 _members.TryGetValue(name, out m);
-                return m;
             }
+            if (m is ILazyMember lm) {
+                m = lm.Get();
+                lock (_members) {
+                    _members[name] = m;
+                }
+            }
+            return m;
         }
 
         public virtual IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
@@ -94,7 +100,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected virtual PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
-            return new AstAnalysisWalker(interpreter, ast, this, _filePath, _members, false);
+            return new AstAnalysisWalker(interpreter, ast, this, _filePath, _members, false, true);
         }
 
         protected virtual void PostWalk(PythonWalker walker) {

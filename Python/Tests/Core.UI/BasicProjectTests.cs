@@ -888,15 +888,15 @@ namespace PythonToolsUITests {
         }
 
         private static IEnumerable<string> GetVariableDescriptions(IServiceProvider serviceProvider, ITextView view, string variable, ITextSnapshot snapshot) {
-            return serviceProvider.GetUIThread().Invoke(() => {
+            return serviceProvider.GetUIThread().InvokeTaskSync(async () => {
                 var index = snapshot.GetText().IndexOf(variable + " =");
                 var entryService = serviceProvider.GetEntryService();
                 AnalysisEntry entry;
                 if (!entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                     return Enumerable.Empty<string>();
                 }
-                return VsProjectAnalyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index)).WaitAndUnwrapExceptions();
-            });
+                return await entry.Analyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index));
+            }, CancellationTokens.After5s);
         }
 
         private static SignatureAnalysis GetSignatures(VisualStudioApp app, ITextView textView, string text, ITextSnapshot snapshot) {

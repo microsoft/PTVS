@@ -198,8 +198,8 @@ namespace Microsoft.PythonTools {
 
         internal PythonEditorServices EditorServices => ComponentModel.GetService<PythonEditorServices>();
 
-        internal string GetDiagnosticsLog(bool includeAnalysisLogs) {
-            return _diagnosticsProvider.GetLog(includeAnalysisLogs);
+        internal void GetDiagnosticsLog(TextWriter writer, bool includeAnalysisLogs) {
+            _diagnosticsProvider.WriteLog(writer, includeAnalysisLogs);
         }
 
         private IInterpreterOptionsService CreateInterpreterOptionsService() {

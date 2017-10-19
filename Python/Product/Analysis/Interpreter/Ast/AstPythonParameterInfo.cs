@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public AstPythonParameterInfo(PythonAst ast, Parameter p) {
             Name = p?.Name ?? throw new ArgumentNullException(nameof(p));
             Documentation = "";
-            DefaultValue = p.DefaultValue?.ToCodeString(ast);
+            DefaultValue = p.DefaultValue?.ToCodeString(ast).Trim();
             IsParamArray = p.Kind == ParameterKind.List;
             IsKeywordDict = p.Kind == ParameterKind.Dictionary;
             ParameterTypes = new IPythonType[0];

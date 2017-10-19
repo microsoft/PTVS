@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IDisposable {
+    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, IDisposable {
         private readonly string _databasePath;
         private readonly object _searchPathsLock = new object();
         private PythonLibraryPath[] _searchPaths;
@@ -37,9 +37,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly bool _skipCache;
 
         private AnalysisLogWriter _log;
-        private readonly TraceLevel _logLevel;
         // Available for tests to override
         internal static bool LogToConsole = false;
+
+#if DEBUG
+        const int LogCacheSize = 1;
+        const int LogRotationSize = 16384;
+#else
+        const int LogCacheSize = 20;
+        const int LogRotationSize = 4096;
+#endif
 
         public AstPythonInterpreterFactory(
             InterpreterConfiguration config,
@@ -51,16 +58,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             options = options ?? new InterpreterFactoryCreationOptions();
             _databasePath = options.DatabasePath;
             if (!string.IsNullOrEmpty(_databasePath)) {
-                _log = new AnalysisLogWriter(PathUtils.GetAbsoluteFilePath(_databasePath, "AnalysisLog.txt"), false, LogToConsole,
-#if DEBUG
-                    1   // flush after each message
-#else
-                    20  // flush after a batch
-#endif
-                    );
+                _log = new AnalysisLogWriter(PathUtils.GetAbsoluteFilePath(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
+                _log.Rotate(LogRotationSize);
+                _log.MinimumLevel = options.TraceLevel;
             }
             _skipCache = !options.UseExistingCache;
-            _logLevel = options.TraceLevel;
 
             if (!GlobalInterpreterOptions.SuppressPackageManagers) {
                 try {
@@ -114,13 +116,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IPythonInterpreter CreateInterpreter() {
-            return new AstPythonInterpreter(this);
+            return new AstPythonInterpreter(this, _log);
         }
 
         internal void Log(TraceLevel level, string eventName, params object[] args) {
-            if (level <= _logLevel) {
-                _log?.Log(eventName, args);
-            }
+            _log?.Log(level, eventName, args);
         }
 
         internal string FastRelativePath(string fullPath) {
@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             ), ".pyi");
         }
 
-        #region Cache File Management
+#region Cache File Management
 
         public Stream ReadCachedModule(string filePath) {
             if (_skipCache) {
@@ -275,7 +275,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        #endregion
+#endregion
 
         public IReadOnlyDictionary<string, string> GetImportableModules() {
             var spp = _searchPathPackages;
@@ -401,6 +401,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return ModulePath.FromFullPath(filePath);
             } catch (ArgumentException) {
                 return default(ModulePath);
+            }
+        }
+
+        public string GetAnalysisLogContent(IFormatProvider culture) {
+            _log?.Flush(synchronous: true);
+            var logfile = _log?.OutputFile;
+            if (!File.Exists(logfile)) {
+                return null;
+            }
+
+            try {
+                return File.ReadAllText(logfile);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                return ex.ToUnhandledExceptionMessage(GetType());
             }
         }
     }

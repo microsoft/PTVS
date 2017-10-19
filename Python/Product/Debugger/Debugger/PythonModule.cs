@@ -19,34 +19,30 @@ using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonModule {
-        private readonly int _moduleId;
-        private readonly string _filename;
-
-        public PythonModule(int moduleId, string filename) {
-            _moduleId = moduleId;
-            _filename = filename;
+        public PythonModule(int moduleId, string filename, string moduleName, bool isUserCode) {
+            ModuleId = moduleId;
+            Filename = filename;
+            ModuleName = moduleName;
+            IsUserCode = isUserCode;
         }
 
-        public int ModuleId {
-            get {
-                return _moduleId;
-            }
-        }
+        public int ModuleId { get; }
+        public string Filename { get; }
+        public string ModuleName { get; }
+        public bool IsUserCode { get; }
 
         public string Name {
             get {
-                
-                if (PathUtils.IsValidPath(_filename)) {
-                    return Path.GetFileNameWithoutExtension(_filename);
+                if (!string.IsNullOrEmpty(ModuleName)) {
+                    return ModuleName;
                 }
-                return _filename;
+
+                if (PathUtils.IsValidPath(Filename)) {
+                    return Path.GetFileNameWithoutExtension(Filename);
+                }
+                return Filename;
             }
         }
 
-        public string Filename {
-            get {
-                return _filename;
-            }
-        }
     }
 }

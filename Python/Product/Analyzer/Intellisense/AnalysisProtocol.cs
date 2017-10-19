@@ -625,7 +625,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "topCompletions";
 
             public int fileId;
-            public int location, column;
+            public int line, column;
             public GetMemberOptions options;
 
             public override string command => Command;
@@ -919,18 +919,28 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string name => Name;
         }
 
-        public sealed class ExpressionForDataTipRequest : Request<ExpressionForDataTipResponse> {
-            public const string Command = "exprForDataTip";
+        public enum ExpressionAtPointPurpose : int {
+            Hover = 1,
+            Evaluate = 2,
+            EvaluateMembers = 3
+        }
 
-            public int fileId;
-            public string expr;
-            public int line, column, index;
+        public sealed class ExpressionAtPointRequest : Request<ExpressionAtPointResponse> {
+            public const string Command = "exprAtPoint";
+
+            public int fileId, bufferId;
+            public int line, column;
+            public ExpressionAtPointPurpose purpose;
 
             public override string command => Command;
         }
 
-        public sealed class ExpressionForDataTipResponse : Response {
+        public sealed class ExpressionAtPointResponse : Response {
             public string expression;
+            public string type;
+            public int bufferVersion;
+            public int startLine, startColumn;
+            public int endLine, endColumn;
         }
     }
 }

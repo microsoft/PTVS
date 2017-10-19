@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -50,7 +51,7 @@ namespace PythonToolsMockTests {
             IPythonInterpreterFactory factory = null,
             VsProjectAnalyzer analyzer = null,
             string filename = null,
-            bool inProcAnalyzer = true
+            bool? inProcAnalyzer = null
         ) {
             if (vs == null) {
                 _disposeVS = true;
@@ -83,7 +84,7 @@ namespace PythonToolsMockTests {
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
-                    analyzer = vs.InvokeTask(() => VsProjectAnalyzer.CreateForTestsAsync(vs.ComponentModel.GetService<PythonEditorServices>(), factory, inProcAnalyzer));
+                    analyzer = vs.InvokeTask(() => VsProjectAnalyzer.CreateForTestsAsync(vs.ComponentModel.GetService<PythonEditorServices>(), factory, inProcAnalyzer ?? Debugger.IsAttached));
                 }
                 if (string.IsNullOrEmpty(filename)) {
                     do {
@@ -293,7 +294,7 @@ namespace PythonToolsMockTests {
                 }
                 Assert.AreNotEqual(0, sh.Session.CompletionSets.Count);
                 return sh.Session.CompletionSets.SelectMany(cs => cs.Completions)
-                    .Where(c => !string.IsNullOrEmpty(c.InsertionText))
+                    .Where(c => !string.IsNullOrEmpty(c?.InsertionText))
                     .ToList();
             }
         }

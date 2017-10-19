@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     public class PythonInterpreterFactoryWithDatabase :
         IPythonInterpreterFactoryWithDatabase,
+        IPythonInterpreterFactoryWithLog,
         IDisposable
     {
         private PythonTypeDatabase _typeDb, _typeDbWithoutPackages;

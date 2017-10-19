@@ -592,7 +592,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override bool Walk(NameExpression node) {
                 var reference = node.GetVariableReference(_root);
-                if (!_inputCollector._allReads.Contains(reference) && !_inputCollector._allWrites.Contains(reference)) {
+                if (reference != null && !_inputCollector._allReads.Contains(reference) && !_inputCollector._allWrites.Contains(reference)) {
                     // this variable is referenced outside of the refactored code
                     if (node.StartIndex < _target.StartIncludingIndentation) {
                         // it's read before the extracted code, we don't care...
