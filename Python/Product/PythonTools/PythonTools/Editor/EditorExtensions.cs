@@ -87,6 +87,8 @@ namespace Microsoft.PythonTools.Editor.Core {
             );
         }
 
+        public static SnapshotPoint? MapDownToPythonBuffer(this ITextView view, SnapshotPoint point) => MapPoint(view, point);
+
         /// <summary>
         /// Maps down to the buffer using positive point tracking and successor position affinity
         /// </summary>
