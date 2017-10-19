@@ -408,8 +408,8 @@ namespace Microsoft.PythonTools.Debugger {
             public string moduleFileName;
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string moduleName;
-            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-            public int isStdLib;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore)]
+            public bool isStdLib;
         }
 
         public sealed class StepDoneEvent : Event {

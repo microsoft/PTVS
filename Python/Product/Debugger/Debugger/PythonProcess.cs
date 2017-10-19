@@ -702,7 +702,7 @@ namespace Microsoft.PythonTools.Debugger {
             // module load
             if (e.moduleFileName != null) {
                 Debug.WriteLine(String.Format("Module Loaded ({0}): {2} : {1}", e.moduleId, e.moduleFileName, e.moduleName));
-                var module = new PythonModule(e.moduleId, e.moduleFileName, e.moduleName, e.isStdLib == 0);
+                var module = new PythonModule(e.moduleId, e.moduleFileName, e.moduleName, !e.isStdLib);
 
                 ModuleLoaded?.Invoke(this, new ModuleLoadedEventArgs(module));
             }

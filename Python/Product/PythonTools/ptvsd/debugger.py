@@ -2181,7 +2181,7 @@ def report_module_load(mod):
         moduleId=mod.module_id,
         moduleFileName=mod.filename,
         moduleName=mod.module_name,
-        isStdLib=1 if is_stdlib(path.normcase(mod.filename)) else 0,
+        isStdLib=is_stdlib(path.normcase(mod.filename)),
     )
 
 def report_step_finished(tid):

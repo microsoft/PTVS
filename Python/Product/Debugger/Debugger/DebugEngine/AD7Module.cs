@@ -116,9 +116,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-        // Used to support the JustMyCode features of the debugger.
-        // the sample debug engine does not support JustMyCode and therefore all modules
-        // are considered "My Code"
         int IDebugModule3.IsUserCode(out int pfUser) {
             pfUser = DebuggedModule.IsUserCode ? 1 : 0;
             return VSConstants.S_OK;
