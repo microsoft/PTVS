@@ -35,6 +35,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublishTest.cs" />
     <Compile Include="RemoveImportTests.cs" />
+    <Compile Include="VirtualEnvUITests.cs" />
     <Compile Include="SnippetsTests.cs" />
   </ItemGroup>
   <ItemGroup>
