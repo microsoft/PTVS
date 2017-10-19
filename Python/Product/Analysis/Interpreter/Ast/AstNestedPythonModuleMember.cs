@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 
@@ -47,13 +48,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return m;
             }
 
+            var interp = _context as AstPythonInterpreter;
+
             Module.Imported(_context);
-            m = Module.GetMember(_context, Name);
+            m = Module.GetMember(_context, Name) ?? interp?.ImportModule(Module.Name + "." + Name);
             if (m != null) {
+                (m as IPythonModule)?.Imported(_context);
                 return Interlocked.CompareExchange(ref _realMember, m, null) ?? m;
             }
 
-            var interp = _context as AstPythonInterpreter;
             if (interp == null) {
                 return null;
             }

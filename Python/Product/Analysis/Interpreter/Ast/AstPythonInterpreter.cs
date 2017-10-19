@@ -33,7 +33,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyList<string> _builtinModuleNames;
         private readonly ConcurrentDictionary<string, IPythonModule> _modules;
         private readonly AstPythonBuiltinType _noneType;
-        private readonly AnalysisLogWriter _log;
+
+        internal readonly AnalysisLogWriter _log;
 
         private readonly object _userSearchPathsLock = new object();
         private IReadOnlyList<string> _userSearchPaths;
