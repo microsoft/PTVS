@@ -80,6 +80,11 @@ LIES_ABOUT_MODULE = frozenset([
     "numpy.nditer",
 ])
 
+VALUE_REPR_FIX = {
+    float('inf'): "float('inf')",
+    float('-inf'): "float('-inf')",
+}
+
 if sys.version_info[0] < 3:
     SKIP_TYPENAME_FOR_TYPES += unicode, long
 
@@ -571,6 +576,12 @@ class MemberInfo(object):
                 self.signature = Signature(name, value, scope, scope_alias=alias)
             if value_type not in SKIP_TYPENAME_FOR_TYPES:
                 self.need_imports, self.type_name = self._get_typename(value_type, module)
+            if isinstance(value, float) and repr(value) == 'nan':
+                self.literal = "float('nan')"
+            try:
+                self.literal = VALUE_REPR_FIX[value]
+            except Exception:
+                pass
         elif not self.literal:
             self.literal = 'None'
 
