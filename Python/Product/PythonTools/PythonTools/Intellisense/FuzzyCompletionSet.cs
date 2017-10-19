@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -152,13 +153,14 @@ namespace Microsoft.PythonTools.Intellisense {
     /// <see cref="FuzzyStringMatcher"/>.
     /// </summary>
     public class FuzzyCompletionSet : CompletionSet {
-        BulkObservableCollection<Completion> _completions;
-        FilteredObservableCollection<Completion> _filteredCompletions;
-        Completion _previousSelection;
-        readonly FuzzyStringMatcher _comparer;
-        readonly bool _shouldFilter;
-        readonly bool _shouldHideAdvanced;
-        readonly bool _matchInsertionText;
+        private readonly BulkObservableCollection<Completion> _completions;
+        private readonly FilteredObservableCollection<Completion> _filteredCompletions;
+        private readonly FuzzyStringMatcher _comparer;
+        private readonly bool _shouldFilter;
+        private readonly bool _shouldHideAdvanced;
+        private readonly bool _matchInsertionText;
+
+        private Completion _previousSelection;
 
         public const bool DefaultCommitByDefault = true;
 
@@ -247,11 +249,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <value>
         /// A list of <see cref="Completion"/> objects.
         /// </value>
-        public override IList<Completion> Completions {
-            get {
-                return (IList<Completion>)_filteredCompletions ?? _completions ?? _noCompletions;
-            }
-        }
+        public override IList<Completion> Completions => _filteredCompletions ?? _completions ?? _noCompletions;
 
         private static bool IsVisible(Completion completion) {
             return ((DynamicallyVisibleCompletion)completion).Visible;
@@ -274,38 +272,51 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var text = ApplicableTo.GetText(ApplicableTo.TextBuffer.CurrentSnapshot);
-            if (text.Length > 0) {
-                bool hideAdvanced = _shouldHideAdvanced && !text.StartsWith("__");
-                bool anyVisible = false;
-                foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
-                    if (hideAdvanced && IsAdvanced(c)) {
-                        c.Visible = false;
-                    } else if (_shouldFilter) {
-                        c.Visible = _comparer.IsCandidateMatch(_matchInsertionText ? c.InsertionText : c.DisplayText, text);
-                    } else {
-                        c.Visible = true;
-                    }
-                    anyVisible |= c.Visible;
-                }
-                if (!anyVisible) {
-                    foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
-                        // UndoVisible only works reliably because we always
-                        // set Visible in the previous loop.
-                        c.UndoVisible();
-                    }
-                }
-                _filteredCompletions.Filter(IsVisible);
+
+            if (!string.IsNullOrEmpty(text)) {
+                FilterToText(text);
             } else if (_shouldHideAdvanced) {
-                foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
-                    c.Visible = !IsAdvanced(c);
-                }
-                _filteredCompletions.Filter(IsVisible);
+                FilterToPredicate(c => !IsAdvanced(c));
             } else {
-                foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
+                FilterToPredicate(_ => true);
+            }
+        }
+
+        private void FilterToPredicate(Func<Completion, bool> predicate) {
+            bool allVisible = true;
+            foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
+                bool v = c.Visible = predicate(c);
+                allVisible &= v;
+            }
+
+            if (allVisible) {
+                _filteredCompletions.StopFiltering();
+            } else {
+                _filteredCompletions.Filter(IsVisible);
+            }
+        }
+
+        private void FilterToText(string filterText) {
+            bool hideAdvanced = _shouldHideAdvanced && !filterText.StartsWith("__");
+            bool anyVisible = false;
+            foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
+                if (hideAdvanced && IsAdvanced(c)) {
+                    c.Visible = false;
+                } else if (_shouldFilter) {
+                    c.Visible = _comparer.IsCandidateMatch(_matchInsertionText ? c.InsertionText : c.DisplayText, filterText);
+                } else {
                     c.Visible = true;
                 }
-                _filteredCompletions.StopFiltering();
+                anyVisible |= c.Visible;
             }
+            if (!anyVisible) {
+                foreach (var c in _completions.Cast<DynamicallyVisibleCompletion>()) {
+                    // UndoVisible only works reliably because we always
+                    // set Visible in the previous loop.
+                    c.UndoVisible();
+                }
+            }
+            _filteredCompletions.Filter(IsVisible);
         }
 
         /// <summary>
@@ -341,18 +352,22 @@ namespace Microsoft.PythonTools.Intellisense {
                 isUnique = false;
             }
 
-            if (((DynamicallyVisibleCompletion)bestMatch).Visible) {
-                SelectionStatus = new CompletionSelectionStatus(
-                    bestMatch,
-                    isSelected: allowSelect && bestValue > 0,
-                    isUnique: isUnique
-                );
-            } else {
-                SelectionStatus = new CompletionSelectionStatus(
-                    null,
-                    isSelected: false,
-                    isUnique: false
-                );
+            try {
+                if ((bestMatch as DynamicallyVisibleCompletion)?.Visible == true) {
+                    SelectionStatus = new CompletionSelectionStatus(
+                        bestMatch,
+                        isSelected: allowSelect && bestValue > 0,
+                        isUnique: isUnique
+                    );
+                } else {
+                    SelectionStatus = new CompletionSelectionStatus(
+                        null,
+                        isSelected: false,
+                        isUnique: false
+                    );
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(null, GetType(), allowUI: false);
             }
 
             _previousSelection = bestMatch;
@@ -375,8 +390,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             Completion bestMatch = null;
 
-            // Using the _completions field to search through all completions
-            // and ignore filtering settings.
+            // Unfilter and then search all completions
+            FilterToPredicate(_ => true);
+
             foreach (var comp in _completions) {
                 if (_comparer.IsCandidateMatch(_matchInsertionText ? comp.InsertionText : comp.DisplayText, text)) {
                     if (bestMatch == null) {
@@ -387,16 +403,20 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if (bestMatch != null) {
-                SelectionStatus = new CompletionSelectionStatus(
-                    bestMatch,
-                    isSelected: true,
-                    isUnique: true
-                );
-                return true;
-            } else {
-                return false;
+            try {
+                if (bestMatch != null) {
+                    SelectionStatus = new CompletionSelectionStatus(
+                        bestMatch,
+                        isSelected: true,
+                        isUnique: true
+                    );
+                    return true;
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(null, GetType(), allowUI: false);
             }
+
+            return false;
         }
     }
 }
