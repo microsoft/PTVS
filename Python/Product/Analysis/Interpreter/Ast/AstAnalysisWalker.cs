@@ -136,6 +136,19 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return false;
         }
 
+        private static IEnumerable<KeyValuePair<string, NameExpression>> GetImportNames(IEnumerable<NameExpression> names, IEnumerable<NameExpression> asNames) {
+            if (names == null) {
+                return Enumerable.Empty<KeyValuePair<string, NameExpression>>();
+            }
+            if (asNames == null) {
+                return names.Select(n => new KeyValuePair<string, NameExpression>(n.Name, n)).Where(k => !string.IsNullOrEmpty(k.Key));
+            }
+            return names
+                .Zip(asNames.Concat(Enumerable.Repeat((NameExpression)null, int.MaxValue)),
+                     (n1, n2) => new KeyValuePair<string, NameExpression>(n1?.Name, string.IsNullOrEmpty(n2?.Name) ? n1 : n2))
+                .Where(k => !string.IsNullOrEmpty(k.Key));
+        }
+
         public override bool Walk(FromImportStatement node) {
             var modName = node.Root.MakeString();
             if (modName == "__future__") {
@@ -153,37 +166,38 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 modName,
                 PythonAnalyzer.ResolvePotentialModuleNames(_module.Name, _filePath, modName, true).ToArray()
             );
-            mod.Imported(_scope.Context);
-            // Ensure child modules have been loaded
-            mod.GetChildrenModules();
 
-            try {
-                for (int i = 0; i < node.Names.Count; ++i) {
-                    if (!onlyImportModules) {
-                        if (node.Names[i].Name == "*") {
-                            foreach (var member in mod.GetMemberNames(_scope.Context)) {
-                                var mem = mod.GetMember(_scope.Context, member) ?? new AstPythonConstant(
-                                    _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                    mod.Locations.ToArray()
-                                );
-                                _scope.SetInScope(member, mem);
-                                (mem as IPythonModule)?.Imported(_scope.Context);
-                            }
-                            continue;
-                        }
-                        var n = node.AsNames?[i] ?? node.Names[i];
-                        if (n != null) {
-                            var mem = mod.GetMember(_scope.Context, node.Names[i].Name) ?? new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                GetLoc(n)
-                            );
-                            _scope.SetInScope(n.Name, mem);
-                            (mem as IPythonModule)?.Imported(_scope.Context);
-                        }
+            foreach (var name in GetImportNames(node.Names, node.AsNames)) {
+                if (name.Key == "*") {
+                    mod.Imported(_scope.Context);
+                    // Ensure child modules have been loaded
+                    mod.GetChildrenModules();
+                    foreach (var member in mod.GetMemberNames(_scope.Context)) {
+                        var mem = mod.GetMember(_scope.Context, member) ?? new AstPythonConstant(
+                            _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                            mod.Locations.ToArray()
+                        );
+                        _scope.SetInScope(member, mem);
+                        (mem as IPythonModule)?.Imported(_scope.Context);
                     }
+                } else {
+                    if (!onlyImportModules) {
+                        IMember mem;
+                        if (mod.IsLoaded) {
+                            mem = mod.GetMember(_scope.Context, name.Key) ?? new AstPythonConstant(
+                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                GetLoc(name.Value)
+                            );
+                            (mem as IPythonModule)?.Imported(_scope.Context);
+                        } else {
+                            mem = new AstNestedPythonModuleMember(name.Key, mod, _scope.Context, GetLoc(name.Value));
+                        }
+                        _scope.SetInScope(name.Value.Name, mem);
+                    }
+
                 }
-            } catch (IndexOutOfRangeException) {
             }
+
             return false;
         }
 

@@ -642,6 +642,8 @@ namespace Microsoft.PythonTools.Analysis {
                         yield return new ExportedMemberInfo(mod.Name, name);
                     }
                 }
+
+                yield break;
             }
             
             // provide module names first

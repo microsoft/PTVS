@@ -519,7 +519,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                         return "(...)";
                                     }
                                 } else {
-                                    return curParam.DefaultValue.ToCodeString(tree);
+                                    return curParam.DefaultValue.ToCodeString(tree).Trim();
                                 }
                             }
                         }

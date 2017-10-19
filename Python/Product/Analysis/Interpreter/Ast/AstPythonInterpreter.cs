@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -32,14 +33,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyList<string> _builtinModuleNames;
         private readonly ConcurrentDictionary<string, IPythonModule> _modules;
         private readonly AstPythonBuiltinType _noneType;
+        private readonly AnalysisLogWriter _log;
 
         private readonly object _userSearchPathsLock = new object();
         private IReadOnlyList<string> _userSearchPaths;
         private IReadOnlyDictionary<string, string> _userSearchPathPackages;
         private HashSet<string> _userSearchPathImported;
 
-        public AstPythonInterpreter(AstPythonInterpreterFactory factory) {
+        public AstPythonInterpreter(AstPythonInterpreterFactory factory, AnalysisLogWriter log = null) {
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            _log = log;
             _factory.ImportableModulesChanged += Factory_ImportableModulesChanged;
             _modules = new ConcurrentDictionary<string, IPythonModule>();
             _builtinTypes = new Dictionary<BuiltinTypeId, IPythonType>();
@@ -171,7 +174,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
             if (needRetry) {
                 // Never succeeded, so just log the error and fail
-                _factory.Log(TraceLevel.Error, "RetryImport", name);
+                _log?.Log(TraceLevel.Error, "RetryImport", name);
                 return null;
             }
             return module;
@@ -207,10 +210,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     // really being imported.
                     var newMod = smod.WaitForImport(5000);
                     if (newMod is SentinelModule) {
-                        _factory.Log(TraceLevel.Warning, "RecursiveImport", name);
+                        _log?.Log(TraceLevel.Warning, "RecursiveImport", name);
                         mod = newMod;
                     } else if (newMod == null) {
-                        _factory.Log(TraceLevel.Warning, "ImportTimeout", name);
+                        _log?.Log(TraceLevel.Warning, "ImportTimeout", name);
                     }
                 }
                 return mod;
@@ -225,7 +228,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
                 // If we reach here, the race is too complicated to recover
                 // from. Signal the caller to try importing again.
-                _factory.Log(TraceLevel.Warning, "RetryImport", name);
+                _log?.Log(TraceLevel.Warning, "RetryImport", name);
                 retry = true;
                 return null;
             }
@@ -242,7 +245,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
                 // If we reach here, the race is too complicated to recover
                 // from. Signal the caller to try importing again.
-                _factory.Log(TraceLevel.Warning, "RetryImport", name);
+                _log?.Log(TraceLevel.Warning, "RetryImport", name);
                 retry = true;
                 return null;
             }
@@ -257,7 +260,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            _factory.Log(TraceLevel.Info, "ImportBuiltins", name, _factory.FastRelativePath(Factory.Configuration.InterpreterPath));
+            _log?.Log(TraceLevel.Info, "ImportBuiltins", name, _factory.FastRelativePath(Factory.Configuration.InterpreterPath));
 
             try {
                 return new AstBuiltinPythonModule(name, Factory.Configuration.InterpreterPath);
@@ -288,11 +291,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var mp = mmp.Value;
 
             if (mp.IsCompiled) {
-                _factory.Log(TraceLevel.Verbose, "ImportScraped", mp.FullName, _factory.FastRelativePath(mp.SourceFile));
+                _log?.Log(TraceLevel.Verbose, "ImportScraped", mp.FullName, _factory.FastRelativePath(mp.SourceFile));
                 return new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
             }
 
-            _factory.Log(TraceLevel.Verbose, "Import", mp.FullName, _factory.FastRelativePath(mp.SourceFile));
+            _log?.Log(TraceLevel.Verbose, "Import", mp.FullName, _factory.FastRelativePath(mp.SourceFile));
             return AstPythonModule.FromFile(this, mp.SourceFile, _factory.LanguageVersion, mp.FullName);
         }
 

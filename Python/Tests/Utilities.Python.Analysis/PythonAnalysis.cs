@@ -204,6 +204,7 @@ namespace TestUtilities.Python {
                 return;
             }
             _analyzer.AnalyzeQueuedEntries(cancel ?? CancellationTokens.After5s);
+            AssertListener.ThrowUnhandled();
         }
 
         private void Entry_OnNewAnalysis(object sender, EventArgs e) {

@@ -74,6 +74,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IEnumerable<string> GetMemberNames(IModuleContext context) {
+            // TODO: Make GetMemberNames() faster than Imported()
             return GetModule().GetMemberNames(context);
         }
 

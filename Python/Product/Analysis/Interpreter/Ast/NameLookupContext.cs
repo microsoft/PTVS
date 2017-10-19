@@ -34,7 +34,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IModuleContext context,
             PythonAst ast,
             string filePath,
-            bool includeLocationInfo
+            bool includeLocationInfo, 
+            IPythonModule builtinModule = null
         ) {
             Interpreter = interpreter ?? throw new ArgumentNullException(nameof(interpreter));
             Context = context;
@@ -45,7 +46,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             DefaultLookupOptions = LookupOptions.Normal;
 
             _scopes = new Stack<Dictionary<string, IMember>>();
-            _builtinModule = new Lazy<IPythonModule>(ImportBuiltinModule);
+            _builtinModule = builtinModule == null ? new Lazy<IPythonModule>(ImportBuiltinModule) : new Lazy<IPythonModule>(() => builtinModule);
         }
 
         public IPythonInterpreter Interpreter { get; }
@@ -63,7 +64,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 Context,
                 Ast,
                 FilePath,
-                IncludeLocationInfo
+                IncludeLocationInfo,
+                _builtinModule.IsValueCreated ? _builtinModule.Value : null
             );
 
             ctxt.DefaultLookupOptions = DefaultLookupOptions;
@@ -377,6 +379,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (scopes != null) {
                 foreach (var scope in scopes) {
                     if (scope.TryGetValue(name, out value) && value != null) {
+                        if (value is ILazyMember lm) {
+                            value = lm.Get();
+                            scope[name] = value;
+                        }
                         return value;
                     }
                 }

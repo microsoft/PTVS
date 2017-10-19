@@ -91,6 +91,34 @@ namespace AnalysisTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void LogFileRotation() {
+            var logFile = Path.Combine(TestData.GetTempPath(), "Log.txt");
+            var writer = new AnalysisLogWriter(logFile, false, false);
+            for (int i = 0; i < 100; ++i) {
+                writer.Log("Event", i);
+            }
+            writer.Flush(synchronous: true);
+
+            var lines = File.ReadAllLines(logFile);
+            Assert.AreEqual(101, lines.Length);
+
+            writer.Rotate(11);
+            lines = File.ReadAllLines(logFile);
+            AssertUtil.ContainsExactly(lines.Select(l => l.Substring(l.IndexOf(']') + 1).Trim()), 
+                "Event: 90",
+                "Event: 91",
+                "Event: 92",
+                "Event: 93",
+                "Event: 94",
+                "Event: 95",
+                "Event: 96",
+                "Event: 97",
+                "Event: 98",
+                "Event: 99"
+            );
+        }
+
         private static DateTime LastWeek {
             get {
                 return DateTime.Now.Subtract(TimeSpan.FromDays(7));
