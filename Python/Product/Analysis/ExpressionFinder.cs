@@ -142,6 +142,19 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 return false;
             }
+
+            public override bool Walk(Arg node) {
+                if (!base.Walk(node)) {
+                    return false;
+                }
+                
+                var n = node.NameExpression;
+                if (_options.NamedArgumentNames && n != null && Location >= n.StartIndex && Location <= n.EndIndex) {
+                    Expression = n;
+                }
+
+                return true;
+            }
         }
 
         private class MemberTargetExpressionWalker : ExpressionWalker {
@@ -191,6 +204,7 @@ namespace Microsoft.PythonTools.Analysis {
         public static GetExpressionOptions Rename => new GetExpressionOptions {
             Names = true,
             MemberName = true,
+            NamedArgumentNames = true,
             ParameterNames = true,
         };
 
@@ -202,6 +216,7 @@ namespace Microsoft.PythonTools.Analysis {
         public bool MemberName { get; set; } = false;
         public bool Literals { get; set; } = false;
         public bool ParenthesisedExpression { get; set; } = false;
+        public bool NamedArgumentNames { get; set; } = false;
         public bool ParameterNames { get; set; } = false;
         public bool ClassDefinition { get; set; } = false;
         public bool FunctionDefinition { get; set; } = false;
