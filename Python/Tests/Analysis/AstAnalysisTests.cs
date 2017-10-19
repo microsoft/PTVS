@@ -235,6 +235,37 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, Priority(0)]
+        public void AstInstanceMembers() {
+            using (var entry = CreateAnalysis()) {
+                entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                entry.AddModule("test-module", "from InstanceMethod import f1, f2");
+                entry.WaitForAnalysis();
+
+                entry.AssertHasAttr("", "f1", "f2");
+
+                entry.AssertIsInstance("f1", BuiltinTypeId.BuiltinFunction);
+                entry.AssertIsInstance("f2", BuiltinTypeId.BuiltinMethodDescriptor);
+
+                var func = entry.GetValue<BuiltinFunctionInfo>("f1");
+                var method = entry.GetValue<BoundBuiltinMethodInfo>("f2");
+            }
+        }
+        [TestMethod, Priority(0)]
+        public void AstInstanceMembers_Random() {
+            using (var entry = CreateAnalysis()) {
+                entry.AddModule("test-module", "from random import *");
+                entry.WaitForAnalysis();
+
+                foreach (var fnName in new[] { "seed", "randrange", "gauss" }) {
+                    entry.AssertIsInstance(fnName, BuiltinTypeId.BuiltinMethodDescriptor);
+                    var func = entry.GetValue<BoundBuiltinMethodInfo>(fnName);
+                    Assert.AreNotEqual(0, func.Overloads.Count(), $"{fnName} overloads");
+                    Assert.AreNotEqual(0, func.Overloads.ElementAt(0).Parameters.Length, $"{fnName} parameters");
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void AstSearchPathsThroughFactory() {
             using (var evt = new ManualResetEvent(false))
             using (var analysis = CreateAnalysis()) {

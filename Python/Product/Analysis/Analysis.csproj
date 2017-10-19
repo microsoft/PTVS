@@ -66,6 +66,7 @@
     <Compile Include="Interpreter\Ast\AstBuiltinPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstBuiltinsPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstNestedPythonModuleMember.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonBoundMethod.cs" />
     <Compile Include="Interpreter\Ast\AstPythonBuiltinType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
     <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />

@@ -49,21 +49,32 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             var interp = _context as AstPythonInterpreter;
+            if (interp == null) {
+                return null;
+            }
+
+            // Set an "unknown" value to prevent recursion
+            var locs = ImportLocation == null ? Array.Empty<LocationInfo>() : new[] { ImportLocation };
+            var sentinel = new AstPythonConstant(interp.GetBuiltinType(BuiltinTypeId.Unknown), locs);
+            m = Interlocked.CompareExchange(ref _realMember, sentinel, null);
+            if (m != null) {
+                // We raced and someone else set a value, so just return that
+                return m;
+            }
 
             Module.Imported(_context);
             m = Module.GetMember(_context, Name) ?? interp?.ImportModule(Module.Name + "." + Name);
             if (m != null) {
                 (m as IPythonModule)?.Imported(_context);
-                return Interlocked.CompareExchange(ref _realMember, m, null) ?? m;
+                var current = Interlocked.CompareExchange(ref _realMember, m, sentinel);
+                if (current == sentinel) {
+                    return m;
+                }
+                return current;
             }
 
-            if (interp == null) {
-                return null;
-            }
-
-            var locs = ImportLocation == null ? Array.Empty<LocationInfo>() : new[] { ImportLocation };
-            m = new AstPythonConstant(interp.GetBuiltinType(BuiltinTypeId.Unknown), locs);
-            return Interlocked.CompareExchange(ref _realMember, m, null) ?? m;
+            // Did not find a better member, so keep the sentinel
+            return sentinel;
         }
     }
 }
