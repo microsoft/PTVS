@@ -20,7 +20,9 @@ using System.Linq;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonConstant : IPythonConstant, ILocatedMember {
+    class AstPythonConstant : IPythonConstant, IMemberContainer, ILocatedMember {
+        private readonly Dictionary<string, IMember> _cachedMembers = new Dictionary<string, IMember>();
+
         public AstPythonConstant(IPythonType type, params LocationInfo[] locations) {
             Type = type ?? throw new ArgumentNullException(nameof(type));
             Locations = locations.ToArray();
@@ -30,5 +32,29 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public PythonMemberType MemberType => PythonMemberType.Constant;
         public IPythonType Type { get; }
+
+        public IMember GetMember(IModuleContext context, string name) {
+            IMember m;
+            lock (_cachedMembers) {
+                if (_cachedMembers.TryGetValue(name, out m)) {
+                    return m;
+                }
+            }
+
+            m = Type?.GetMember(context, name);
+
+            if (m is IPythonFunction f && !f.IsStatic) {
+                m = new AstPythonBoundMethod(f, Type);
+                lock (_cachedMembers) {
+                    _cachedMembers[name] = m;
+                }
+            }
+
+            return m;
+        }
+
+        public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
+            return Type?.GetMemberNames(moduleContext);
+        }
     }
 }
