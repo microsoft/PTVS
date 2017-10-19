@@ -867,7 +867,6 @@ namespace Microsoft.PythonTools.Intellisense {
             if (set == null) {
                 return false;
             }
-            set.Filter();
             if (set.SelectSingleBest()) {
                 session.Commit();
                 return true;
