@@ -299,6 +299,20 @@ R_A3 = R_A1.r_A()");
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void ScrapedSpecialFloats() {
+            using (var analysis = CreateAnalysis()) {
+                var entry = analysis.AddModule("test-module", "import math; inf = math.inf; nan = math.nan");
+                analysis.WaitForAnalysis(CancellationTokens.After15s);
+
+                var inf = analysis.GetValue<ConstantInfo>("inf");
+                Assert.AreEqual(BuiltinTypeId.Float, inf.TypeId);
+
+                var nan = analysis.GetValue<ConstantInfo>("nan");
+                Assert.AreEqual(BuiltinTypeId.Float, nan.TypeId);
+            }
+        }
+
         #endregion
 
         #region Black-box sanity tests
