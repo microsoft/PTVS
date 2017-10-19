@@ -16,17 +16,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
@@ -36,13 +34,11 @@ using TestUtilities.UI.Python;
 using Path = System.IO.Path;
 
 namespace PythonToolsUITests {
-    public class VirtualEnvTests {
+    public class VirtualEnvUITests {
         const string TestPackageSpec = "ptvsd==2.2.0";
         const string TestPackageDisplay = "ptvsd (2.2.0)";
 
-        public TestContext TestContext { get; set; }
-
-        static DefaultInterpreterSetter Init(PythonVisualStudioApp app) {
+        static DefaultInterpreterSetter InitPython2(PythonVisualStudioApp app) {
             var dis = app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
             try {
                 dis.CurrentDefault.PipInstall("-U virtualenv");
@@ -54,52 +50,29 @@ namespace PythonToolsUITests {
             }
         }
 
-        static DefaultInterpreterSetter Init(PythonVisualStudioApp app, PythonVersion interp, bool install) {
-            var dis = app.SelectDefaultInterpreter(interp);
-            try {
-                if (install) {
-                    dis.CurrentDefault.PipInstall("-U virtualenv");
-                }
-                var r = dis;
-                dis = null;
-                return r;
-            } finally {
-                dis?.Dispose();
-            }
-        }
-
-        static DefaultInterpreterSetter Init3(PythonVisualStudioApp app, bool installVirtualEnv = false) {
-            var dis = app.SelectDefaultInterpreter(
+        static DefaultInterpreterSetter InitPython3(PythonVisualStudioApp app) {
+            return app.SelectDefaultInterpreter(
+                PythonPaths.Python37 ?? PythonPaths.Python37_x64 ??
+                PythonPaths.Python36 ?? PythonPaths.Python36_x64 ??
                 PythonPaths.Python35 ?? PythonPaths.Python35_x64 ??
                 PythonPaths.Python34 ?? PythonPaths.Python34_x64 ??
                 PythonPaths.Python33 ?? PythonPaths.Python33_x64
             );
-            try {
-                if (installVirtualEnv) {
-                    dis.CurrentDefault.PipInstall("-U virtualenv");
-                }
-                var r = dis;
-                dis = null;
-                return r;
-            } finally {
-                dis?.Dispose();
-            }
         }
 
-        private EnvDTE.Project CreateTemporaryProject(VisualStudioApp app) {
+        static EnvDTE.Project CreateTemporaryProject(VisualStudioApp app, [CallerMemberName] string projectName = null) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.PythonApplicationTemplate,
                 TestData.GetTempPath(),
-                TestContext.TestName
+                projectName ?? Path.GetFileNameWithoutExtension(Path.GetRandomFileName())
             );
-
             Assert.IsNotNull(project, "Project was not created");
             return project;
         }
 
         public void InstallUninstallPackage(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
+            using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName;
@@ -110,6 +83,7 @@ namespace PythonToolsUITests {
 
                 var azure = app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
+                    TimeSpan.FromSeconds(30),
                     Strings.Environments,
                     envName,
                     TestPackageDisplay
@@ -131,7 +105,7 @@ namespace PythonToolsUITests {
         }
 
         public void CreateInstallRequirementsTxt(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
+            using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
                 var projectHome = project.GetPythonProject().ProjectHome;
@@ -151,7 +125,7 @@ namespace PythonToolsUITests {
         }
 
         public void InstallGenerateRequirementsTxt(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
+            using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName;
@@ -173,6 +147,7 @@ namespace PythonToolsUITests {
 
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
+                    TimeSpan.FromSeconds(30),
                     Strings.Environments,
                     envName,
                     TestPackageDisplay
@@ -194,8 +169,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        public void LoadVirtualEnv(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
+        public void LoadVEnv(PythonVisualStudioApp app) {
+            using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
                 var projectName = project.UniqueName;
 
@@ -210,14 +185,15 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer().WaitForChildOfProject(
                     project,
+                    TimeSpan.FromSeconds(60),
                     Strings.Environments,
                     envName
                 );
             }
         }
 
-        public void ActivateVirtualEnv(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
+        public void ActivateVEnv(PythonVisualStudioApp app) {
+            using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
                 Assert.AreNotEqual(null, project.ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
@@ -247,8 +223,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        public void RemoveVirtualEnv(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
+        public void RemoveVEnv(PythonVisualStudioApp app) {
+            using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
@@ -272,9 +248,9 @@ namespace PythonToolsUITests {
             }
         }
 
-        public void DeleteVirtualEnv(PythonVisualStudioApp app) {
+        public void DeleteVEnv(PythonVisualStudioApp app) {
             using (var procs = new ProcessScope("Microsoft.PythonTools.Analyzer"))
-            using (var dis = Init(app)) {
+            using (var dis = InitPython3(app)) {
                 var options = app.GetService<PythonToolsService>().GeneralOptions;
                 var oldAutoAnalyze = options.AutoAnalyzeStandardLibrary;
                 app.OnDispose(() => { options.AutoAnalyzeStandardLibrary = oldAutoAnalyze; options.Save(); });
@@ -323,8 +299,9 @@ namespace PythonToolsUITests {
             PythonPaths.Python27.AssertInstalled();
             PythonPaths.Python33.AssertInstalled();
 
-            using (var dis = Init(app)) {
-                var project = app.OpenProject(@"TestData\Environments.sln");
+            using (var dis = InitPython2(app)) {
+                var sln = app.CopyProjectForTest(@"TestData\Environments.sln");
+                var project = app.OpenProject(sln);
 
                 app.OpenSolutionExplorer().SelectProject(project);
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7 (32-bit)\"");
@@ -347,37 +324,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        public async Task NoGlobalSitePackages(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
-                var project = CreateTemporaryProject(app);
-
-                string envName, envPath;
-                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
-
-                env.Select();
-
-                // Need to wait for analysis to complete before checking database
-                for (int retries = 120;
-                    Process.GetProcessesByName("Microsoft.PythonTools.Analyzer").Any() && retries > 0;
-                    --retries) {
-                    Thread.Sleep(1000);
-                }
-                // Need to wait some more for the database to be loaded.
-                Thread.Sleep(5000);
-
-                // Ensure virtualenv_support is NOT available in the virtual environment.
-                var interp = project.GetPythonProject().GetAnalyzer();
-                var module = (await interp.GetModulesAsync())
-                    .Select(x => x.Name)
-                    .Where(x => x == "virtualenv_support")
-                    .FirstOrDefault();
-
-                Assert.IsNull(module);
-            }
-        }
-
         public void CreateVEnv(PythonVisualStudioApp app) {
-            using (var dis = Init3(app)) {
+            using (var dis = InitPython3(app)) {
                 if (dis.CurrentDefault.FindModules("virtualenv").Contains("virtualenv")) {
                     dis.CurrentDefault.PipUninstall("virtualenv");
                 }
@@ -402,13 +350,14 @@ namespace PythonToolsUITests {
         }
 
         public void AddExistingVEnv(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
+            var python = PythonPaths.Python36 ?? PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
             python.AssertInstalled();
 
             var project = CreateTemporaryProject(app);
 
+            var envPath = TestData.GetTempPath("venv");
+            FileUtils.CopyDirectory(TestData.GetPath(@"TestData\\Environments\\venv"), envPath);
             string envName;
-            var envPath = TestData.GetPath(@"TestData\\Environments\\venv");
             File.WriteAllText(Path.Combine(envPath, "pyvenv.cfg"),
                 string.Format(@"home = {0}
 include-system-site-packages = false
@@ -424,10 +373,11 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void LaunchUnknownEnvironment(PythonVisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\Environments\Unknown.sln");
+            var sln = app.CopyProjectForTest(@"TestData\Environments\Unknown.sln");
+            var project = app.OpenProject(sln);
 
             app.ExecuteCommand("Debug.Start");
-            app.CheckMessageBox(MessageBoxButton.Ok, "Global|PythonCore|2.8|x86", "incorrectly configured");
+            app.CheckMessageBox(MessageBoxButton.Close, "Global|PythonCore|2.8|x86", "incorrectly configured");
         }
 
         class MockProjectContextProvider : IProjectContextProvider {
@@ -562,7 +512,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void EnvironmentReplWorkingDirectory(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
+            using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
@@ -579,7 +529,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void VirtualEnvironmentReplWorkingDirectory(PythonVisualStudioApp app) {
-            using (var dis = Init(app)) {
+            using (var dis = InitPython3(app)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName;

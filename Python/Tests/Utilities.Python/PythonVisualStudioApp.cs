@@ -406,7 +406,7 @@ namespace TestUtilities.UI.Python {
                 new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
                 var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                envName = string.Format("{0} ({1})", Path.GetFileName(envPath), baseInterp);
+                envName = string.Format("{0} ({1})", PathUtils.GetFileOrDirectoryName(envPath), baseInterp);
 
                 Console.WriteLine("Expecting environment named: {0}", envName);
 

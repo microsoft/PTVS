@@ -132,7 +132,7 @@
     </Compile>
     <Compile Include="SnippetsTests.cs" />
     <Compile Include="UITests.cs" />
-    <Compile Include="VirtualEnvTests.cs" />
+    <Compile Include="VirtualEnvUITests.cs" />
     <Compile Include="VSPackage.cs" />
     <Compile Include="WebProjectTests.cs" />
   </ItemGroup>

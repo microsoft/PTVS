@@ -104,7 +104,11 @@ namespace TestUtilities.UI {
         }
 
         public TreeNode WaitForChildOfProject(EnvDTE.Project project, params string[] path) {
-            var item = WaitForItemHelper(p => FindChildOfProjectHelper(project, p, false), path);
+            return WaitForChildOfProject(project, TimeSpan.FromSeconds(10), path);
+        }
+
+        public TreeNode WaitForChildOfProject(EnvDTE.Project project, TimeSpan timeout, params string[] path) {
+            var item = WaitForItemHelper(p => FindChildOfProjectHelper(project, p, false), path, timeout);
             // Check one more time, but now let the assertions be raised.
             return new TreeNode(FindChildOfProjectHelper(project, path, true));
         }
