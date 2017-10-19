@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _foundChildModules = true;
             }
 
-            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true);
+            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true, true);
             ast.Walk(walker);
         }
 

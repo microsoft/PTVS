@@ -61,6 +61,25 @@ STATICMETHOD_TYPES = ()
 CLASSMETHOD_TYPES = type(float.fromhex),
 PROPERTY_TYPES = type(int.real), type(property.fget)
 
+# These full names are known to be lies. When we encounter
+# them while scraping a module, assume that we need to write
+# out the full type rather than including them by reference.
+LIES_ABOUT_MODULE = frozenset([
+    builtins.__name__ + ".weakcallableproxy",
+    builtins.__name__ + ".weakproxy",
+    builtins.__name__ + ".weakref",
+    "os.stat_result",
+    "os.statvfs_result",
+
+    "numpy.broadcast",
+    "numpy.busdaycalendar",
+    "numpy.dtype",
+    "numpy.flagsobj",
+    "numpy.flatiter",
+    "numpy.ndarray",
+    "numpy.nditer",
+])
+
 if sys.version_info[0] < 3:
     SKIP_TYPENAME_FOR_TYPES += unicode, long
 
@@ -551,7 +570,7 @@ class MemberInfo(object):
             if value_type in PROPERTY_TYPES:
                 self.signature = Signature(name, value, scope, scope_alias=alias)
             if value_type not in SKIP_TYPENAME_FOR_TYPES:
-                self.need_import, self.type_name = self._get_typename(value_type, module)
+                self.need_imports, self.type_name = self._get_typename(value_type, module)
         elif not self.literal:
             self.literal = 'None'
 
@@ -560,18 +579,25 @@ class MemberInfo(object):
         try:
             type_name = value_type.__name__.replace('-', '_')
             module = getattr(value_type, '__module__', None)
+
+            # Special workaround for Python 2 exceptions lying about their module
             if sys.version_info[0] == 2 and module == 'exceptions' and in_module == builtins.__name__:
                 module = builtins.__name__
+
             if module and module != '<unknown>':
-                if module != in_module:
-                    type_name = module + '.' + type_name
-                return (module,), type_name
+                if module == in_module:
+                    return (module,), type_name
+
+                fullname = module + '.' + type_name
+                if fullname in LIES_ABOUT_MODULE:
+                    # Treat the type as if it came from the current module
+                    return (in_module,), type_name
+
+                return (module,), fullname
             return (), type_name
         except Exception:
             warnings.warn('could not get type of ' + repr(value), InspectWarning)
             return (), None
-        
-        return self.type_name
 
     def _str_from_literal(self, lit):
         return self.name + ' = ' + lit

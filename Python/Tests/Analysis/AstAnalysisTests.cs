@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,11 +21,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using analysis::Microsoft.PythonTools.Interpreter;
-using analysis::Microsoft.PythonTools.Interpreter.Ast;
-using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -283,6 +283,20 @@ R_A3 = R_A1.r_A()");
                 path = TestData.GetPath(Path.Combine("TestData", "AstAnalysis", path));
             }
             return AstPythonModule.FromFile(interpreter, path, version);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ScrapedTypeWithWrongModule() {
+            var version = PythonPaths.Versions.LastOrDefault(v => Directory.Exists(Path.Combine(v.PrefixPath, "Lib", "site-packages", "numpy")));
+            version.AssertInstalled();
+            Console.WriteLine("Using {0}", version.PrefixPath);
+            using (var analysis = CreateAnalysis(version)) {
+                var entry = analysis.AddModule("test-module", "import numpy.core.numeric as NP; ndarray = NP.ndarray");
+                analysis.WaitForAnalysis(CancellationTokens.After15s);
+
+                var cls = analysis.GetValue<BuiltinClassInfo>("ndarray");
+                Assert.IsNotNull(cls);
+            }
         }
 
         #endregion

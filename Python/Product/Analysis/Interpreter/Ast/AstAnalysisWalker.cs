@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -32,28 +33,37 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private IMember _noneInst;
 
+        private readonly AnalysisLogWriter _log;
+
         public AstAnalysisWalker(
             IPythonInterpreter interpreter,
             PythonAst ast,
             IPythonModule module,
             string filePath,
             Dictionary<string, IMember> members,
-            bool includeLocationInfo
+            bool includeLocationInfo,
+            bool warnAboutUndefinedValues,
+            AnalysisLogWriter log = null
         ) {
+            _log = log ?? (interpreter as AstPythonInterpreter)?._log;
+            _module = module ?? throw new ArgumentNullException(nameof(module));
+            _members = members ?? throw new ArgumentNullException(nameof(members));
             _scope = new NameLookupContext(
                 interpreter ?? throw new ArgumentNullException(nameof(interpreter)),
                 interpreter.CreateModuleContext(),
                 ast ?? throw new ArgumentNullException(nameof(ast)),
+                _module,
                 filePath,
-                includeLocationInfo
+                includeLocationInfo,
+                log: warnAboutUndefinedValues ? _log : null
             );
-            _module = module ?? throw new ArgumentNullException(nameof(module));
-            _members = members ?? throw new ArgumentNullException(nameof(members));
             _noneInst = new AstPythonConstant(_interpreter.GetBuiltinType(BuiltinTypeId.NoneType));
             _postWalkers = new List<AstAnalysisFunctionWalker>();
+            WarnAboutUndefinedValues = warnAboutUndefinedValues;
         }
 
         public bool CreateBuiltinTypes { get; set; }
+        public bool WarnAboutUndefinedValues { get; }
 
         private IPythonInterpreter _interpreter => _scope.Interpreter;
         private PythonAst _ast => _scope.Ast;
@@ -108,6 +118,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override bool Walk(AssignmentStatement node) {
             var value = _scope.GetValueFromExpression(node.Right);
+            if ((value == null || value.MemberType == PythonMemberType.Unknown) && WarnAboutUndefinedValues) {
+                _log?.Log(TraceLevel.Warning, "UndefinedValue", node.Right.ToCodeString(_ast).Trim());
+            }
+
             foreach (var ne in node.Left.OfType<NameExpression>()) {
                 _scope.SetInScope(ne.Name, Clone(value));
             }
@@ -159,8 +173,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
-            bool onlyImportModules = modName.EndsWith(".");
-
             var mod = new AstNestedPythonModule(
                 _interpreter,
                 modName,
@@ -177,24 +189,27 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                             _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
                             mod.Locations.ToArray()
                         );
+                        if (mem.MemberType == PythonMemberType.Unknown && WarnAboutUndefinedValues) {
+                            _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, name);
+                        }
                         _scope.SetInScope(member, mem);
                         (mem as IPythonModule)?.Imported(_scope.Context);
                     }
                 } else {
-                    if (!onlyImportModules) {
-                        IMember mem;
-                        if (mod.IsLoaded) {
-                            mem = mod.GetMember(_scope.Context, name.Key) ?? new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                                GetLoc(name.Value)
-                            );
-                            (mem as IPythonModule)?.Imported(_scope.Context);
-                        } else {
-                            mem = new AstNestedPythonModuleMember(name.Key, mod, _scope.Context, GetLoc(name.Value));
+                    IMember mem;
+                    if (mod.IsLoaded) {
+                        mem = mod.GetMember(_scope.Context, name.Key) ?? new AstPythonConstant(
+                            _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                            GetLoc(name.Value)
+                        );
+                        if (mem.MemberType == PythonMemberType.Unknown && WarnAboutUndefinedValues) {
+                            _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, name);
                         }
-                        _scope.SetInScope(name.Value.Name, mem);
+                        (mem as IPythonModule)?.Imported(_scope.Context);
+                    } else {
+                        mem = new AstNestedPythonModuleMember(name.Key, mod, _scope.Context, GetLoc(name.Value));
                     }
-
+                    _scope.SetInScope(name.Value.Name, mem);
                 }
             }
 
