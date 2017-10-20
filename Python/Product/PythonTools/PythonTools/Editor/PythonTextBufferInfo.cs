@@ -290,12 +290,14 @@ namespace Microsoft.PythonTools.Editor {
         public ITextVersion LastAnalysisReceivedVersion { get; private set; }
 
         public bool UpdateLastReceivedParse(int version) {
-            var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-            if (ver == null || ver.VersionNumber >= version) {
+            var ver = LastParseReceivedVersion;
+            if (ver == null) {
+                ver = Buffer.CurrentSnapshot.Version;
+            } else if (ver.VersionNumber >= version) {
                 return false;
             }
 
-            while (ver != null && ver.VersionNumber < version) {
+            while (ver != null && ver.Next != null && ver.VersionNumber < version) {
                 ver = ver.Next;
             }
             LastParseReceivedVersion = ver;
@@ -303,12 +305,14 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         public bool UpdateLastReceivedAnalysis(int version) {
-            var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-            if (ver == null || ver.VersionNumber >= version) {
+            var ver = LastAnalysisReceivedVersion;
+            if (ver == null) {
+                ver = Buffer.CurrentSnapshot.Version;
+            } else if (ver.VersionNumber >= version) {
                 return false;
             }
 
-            while (ver != null && ver.VersionNumber < version) {
+            while (ver != null && ver.Next != null && ver.VersionNumber < version) {
                 ver = ver.Next;
             }
             LastAnalysisReceivedVersion = ver;
