@@ -1117,10 +1117,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point) {
+        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point, ExpressionAtPointPurpose purpose = ExpressionAtPointPurpose.Evaluate) {
             Debug.Assert(entry.Analyzer == this);
 
-            var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Evaluate, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
+            var analysis = await GetExpressionAtPointAsync(point, purpose, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
                 var location = analysis.Location;

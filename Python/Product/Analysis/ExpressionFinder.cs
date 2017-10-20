@@ -296,6 +296,14 @@ namespace Microsoft.PythonTools.Analysis {
             Members = true,
             MemberTarget = true,
         };
+        public static GetExpressionOptions FindDefinition => new GetExpressionOptions {
+            Names = true,
+            Members = true,
+            ParameterNames = true,
+            NamedArgumentNames = true,
+            ImportNames = true,
+            ImportAsNames = true,
+        };
         public static GetExpressionOptions Rename => new GetExpressionOptions {
             Names = true,
             MemberName = true,

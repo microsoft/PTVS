@@ -1223,6 +1223,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ExpressionAtPointPurpose.Hover:
                     options = GetExpressionOptions.Hover;
                     break;
+                case AP.ExpressionAtPointPurpose.FindDefinition:
+                    options = GetExpressionOptions.FindDefinition;
+                    break;
+                case AP.ExpressionAtPointPurpose.Rename:
+                    options = GetExpressionOptions.Rename;
+                    break;
                 default:
                     options = new GetExpressionOptions();
                     break;

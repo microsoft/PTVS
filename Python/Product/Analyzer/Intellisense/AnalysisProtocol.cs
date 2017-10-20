@@ -924,7 +924,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public enum ExpressionAtPointPurpose : int {
             Hover = 1,
             Evaluate = 2,
-            EvaluateMembers = 3
+            EvaluateMembers = 3,
+            FindDefinition = 4,
+            Rename = 5
         }
 
         public sealed class ExpressionAtPointRequest : Request<ExpressionAtPointResponse> {

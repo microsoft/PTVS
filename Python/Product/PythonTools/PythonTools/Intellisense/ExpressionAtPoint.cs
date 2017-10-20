@@ -36,7 +36,9 @@ namespace Microsoft.PythonTools.Intellisense {
     internal enum ExpressionAtPointPurpose : int {
         Hover = AP.ExpressionAtPointPurpose.Hover,
         Evaluate = AP.ExpressionAtPointPurpose.Evaluate,
-        EvaluateMembers = AP.ExpressionAtPointPurpose.EvaluateMembers
+        EvaluateMembers = AP.ExpressionAtPointPurpose.EvaluateMembers,
+        FindDefinition = AP.ExpressionAtPointPurpose.FindDefinition,
+        Rename = AP.ExpressionAtPointPurpose.Rename
     }
 
 }
