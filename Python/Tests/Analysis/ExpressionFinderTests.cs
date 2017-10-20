@@ -209,7 +209,7 @@ b = C().f(1)
             var finder = new ExpressionFinder(ast, options);
             var range = new SourceSpan(new SourceLocation(0, startLine, startColumn), new SourceLocation(0, endLine, endColumn));
             var span = finder.GetExpressionSpan(range);
-            if (span == null || span.Value.Length == 0) {
+            if (span == null || span.Value.Start == span.Value.End) {
                 return;
             }
 

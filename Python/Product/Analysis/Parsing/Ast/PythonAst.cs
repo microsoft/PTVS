@@ -117,6 +117,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return NewLineLocation.LocationToIndex(_lineLocations, location);
         }
 
+        /// <summary>
+        /// Length of the span (number of characters inside the span).
+        /// </summary>
+        public int GetSpanLength(SourceSpan span) {
+            return LocationToIndex(span.End) - LocationToIndex(span.Start);
+        }
+
+
         internal int GetLineEndFromPosition(int index) {
             var loc = IndexToLocation(index);
             var res = _lineLocations[loc.Line - 1];

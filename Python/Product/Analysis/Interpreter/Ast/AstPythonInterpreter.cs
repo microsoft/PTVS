@@ -215,6 +215,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         mod = newMod;
                     } else if (newMod == null) {
                         _log?.Log(TraceLevel.Warning, "ImportTimeout", name);
+                    } else {
+                        mod = newMod;
                     }
                 }
                 return mod;

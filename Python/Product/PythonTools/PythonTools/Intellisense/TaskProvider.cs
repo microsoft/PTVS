@@ -24,6 +24,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -85,19 +86,22 @@ namespace Microsoft.PythonTools.Intellisense {
         public bool IsValid => _squiggle && !string.IsNullOrEmpty(ErrorType);
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
-            if (_rawSpan.Length <= 0 || _spanTranslator == null) {
+            if (_rawSpan.Start <= _rawSpan.End || _spanTranslator == null) {
                 return;
             }
 
-            SnapshotSpan target = _spanTranslator.TranslateForward(
-                new Span(_rawSpan.Start.Index, _rawSpan.Length)
-            );
+            // TODO: Map between versions rather than using the current snapshot
+            var snapshot = _spanTranslator.TextBuffer.CurrentSnapshot;
+            var target = _rawSpan.ToSnapshotSpan(snapshot);
+            //SnapshotSpan target = _spanTranslator.TranslateForward(
+            //    new Span(_rawSpan.Start.Index, _rawSpan.Length)
+            //);
 
             if (target.Length <= 0) {
                 return;
             }
 
-            var tagSpan = _spanTranslator.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
+            var tagSpan = snapshot.CreateTrackingSpan(
                 target.Start,
                 target.Length,
                 SpanTrackingMode.EdgeInclusive
@@ -121,16 +125,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
-
-        private static ITrackingSpan CreateSpan(ITextSnapshot snapshot, SourceSpan span) {
-            Debug.Assert(span.Start.Index >= 0);
-            var res = new Span(
-                span.Start.Index,
-                Math.Min(span.End.Index - span.Start.Index, Math.Max(snapshot.Length - span.Start.Index, 0))
-            );
-            Debug.Assert(res.End <= snapshot.Length);
-            return snapshot.CreateTrackingSpan(res, SpanTrackingMode.EdgeNegative);
-        }
     }
 
     sealed class TaskProviderItemFactory {
@@ -157,8 +151,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal static SourceSpan GetSpan(AP.Error result) {
             return new SourceSpan(
-                new SourceLocation(result.startIndex, result.startLine, result.startColumn),
-                new SourceLocation(result.startIndex + result.length, result.endLine, result.endColumn)
+                new SourceLocation(result.startLine, result.startColumn),
+                new SourceLocation(result.endLine, result.endColumn)
             );
         }
 
@@ -840,7 +834,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         int IVsTaskItem.Column(out int piCol) {
-            if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
+            if (Span.Start.Line == 1 && Span.Start.Column == 1) {
                 // we don't have the column number calculated
                 piCol = 0;
                 return VSConstants.E_FAIL;
@@ -891,7 +885,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         int IVsTaskItem.Line(out int piLine) {
-            if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
+            if (Span.Start.Line == 1 && Span.Start.Column == 1) {
                 // we don't have the line number calculated
                 piLine = 0;
                 return VSConstants.E_FAIL;
@@ -902,12 +896,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         int IVsTaskItem.NavigateTo() {
             try {
-                if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
-                    // we have just an absolute index, use that to naviagte
-                    PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Index);
-                } else {
-                    PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
-                }
+                PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
                 return VSConstants.S_OK;
             } catch (DirectoryNotFoundException) {
                 // This may happen when the error was in a file that's located inside a .zip archive.

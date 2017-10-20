@@ -43,6 +43,19 @@ namespace Microsoft.PythonTools.Parsing {
             _column = column;
         }
 
+        /// <summary>
+        /// Creates a new source location.
+        /// </summary>
+        /// <param name="line">The line in the source stream the location represents (1-based).</param>
+        /// <param name="column">The column in the source stream the location represents (1-based).</param>
+        public SourceLocation(int line, int column) {
+            ValidateLocation(0, line, column);
+
+            _index = -1;
+            _line = line;
+            _column = column;
+        }
+
         private static void ValidateLocation(int index, int line, int column) {
             if (index < 0) {
                 throw ErrorOutOfRange("index", 0);
@@ -70,7 +83,12 @@ namespace Microsoft.PythonTools.Parsing {
         /// The index in the source stream the location represents (0-based).
         /// </summary>
         public int Index {
-            get { return _index; }
+            get {
+                if (_index < 0) {
+                    throw new InvalidOperationException("Index is not valid");
+                }
+                return _index;
+            }
         }
 
         /// <summary>

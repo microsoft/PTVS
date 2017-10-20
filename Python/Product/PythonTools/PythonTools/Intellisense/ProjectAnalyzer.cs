@@ -1071,7 +1071,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var req = new AP.ValueDescriptionRequest() {
                 expr = expr,
                 column = location.Column,
-                index = location.Index,
                 line = location.Line,
                 fileId = file.FileId
             };
@@ -1098,7 +1097,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var req = new AP.AnalyzeExpressionRequest() {
                 expr = expr,
                 column = location.Column,
-                index = location.Index,
                 line = location.Line,
                 fileId = entry.FileId
             };
@@ -1119,22 +1117,21 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point) {
+        internal async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry entry, SnapshotPoint point, ExpressionAtPointPurpose purpose = ExpressionAtPointPurpose.Evaluate) {
             Debug.Assert(entry.Analyzer == this);
 
-            var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Evaluate, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
+            var analysis = await GetExpressionAtPointAsync(point, purpose, TimeSpan.FromSeconds(1.0)).ConfigureAwait(false);
 
             if (analysis != null) {
                 var location = analysis.Location;
                 var req = new AP.AnalyzeExpressionRequest() {
                     expr = analysis.Text,
                     column = location.Column,
-                    index = location.Index,
                     line = location.Line,
                     fileId = analysis.Entry.FileId
                 };
 
-                var definitions = await SendRequestAsync(req);
+                var definitions = await SendRequestAsync(req).ConfigureAwait(false);
 
                 if (definitions != null) {
                     return new ExpressionAnalysis(
@@ -1200,7 +1197,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 sigs = await SendRequestAsync(
                     new AP.SignaturesRequest() {
                         text = text,
-                        location = location.Index,
+                        line = location.Line,
                         column = location.Column,
                         fileId = entry.FileId
                     }
@@ -1876,7 +1873,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = entry.FileId,
                     text = text,
                     options = options,
-                    location = location.Index,
+                    line = location.Line,
                     column = location.Column
                 }).ConfigureAwait(false);
             }
@@ -2421,7 +2418,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = entry.FileId,
                     bufferId = entry.GetBufferId(textBuffer),
                     column = location.Column,
-                    index = location.Index,
                     line = location.Line,
                     indentation = indentation
                 }
@@ -2462,7 +2458,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 var req = new AP.QuickInfoRequest() {
                     expr = analysis.Text,
                     column = location.Column,
-                    index = location.Index,
                     line = location.Line,
                     fileId = analysis.Entry.FileId
                 };

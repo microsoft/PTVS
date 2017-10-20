@@ -362,7 +362,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 var values = entry.Analysis.GetValues(
                     request.expr,
                     new SourceLocation(
-                        request.index,
                         request.line,
                         request.column
                     )
@@ -943,8 +942,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var span = fromImport.GetSpan(curAst);
             int leadingWhiteSpaceLength = (fromImport.GetLeadingWhiteSpace(curAst) ?? "").Length;
             return new AP.ChangeInfo() {
-                start = span.Start.Index - leadingWhiteSpaceLength,
-                length = span.Length + leadingWhiteSpaceLength,
+                start = curAst.LocationToIndex(span.Start) - leadingWhiteSpaceLength,
+                length = curAst.GetSpanLength(span) + leadingWhiteSpaceLength,
                 newText = newCode
             };
         }
@@ -1031,10 +1030,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     name = name,
                     startLine = span.Start.Line,
                     startColumn = span.Start.Column,
-                    startIndex = span.Start.Index,
                     endLine = span.End.Line,
                     endColumn = span.End.Column,
-                    endIndex = span.End.Index
                 };
             }
 
@@ -1226,6 +1223,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ExpressionAtPointPurpose.Hover:
                     options = GetExpressionOptions.Hover;
                     break;
+                case AP.ExpressionAtPointPurpose.FindDefinition:
+                    options = GetExpressionOptions.FindDefinition;
+                    break;
+                case AP.ExpressionAtPointPurpose.Rename:
+                    options = GetExpressionOptions.Rename;
+                    break;
                 default:
                     options = new GetExpressionOptions();
                     break;
@@ -1253,7 +1256,8 @@ namespace Microsoft.PythonTools.Intellisense {
             string memberName = null;
 
             if (entry.Tree != null) {
-                var w = new ImportedModuleNameWalker(entry.ModuleName, request.index);
+                int index = entry.Tree.LocationToIndex(new SourceLocation(request.line, request.column));
+                var w = new ImportedModuleNameWalker(entry.ModuleName, index);
                 entry.Tree.Walk(w);
                 ModuleReference modRef;
                 if (!string.IsNullOrEmpty(w.ImportedName) &&
@@ -1273,7 +1277,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var variables = entry.Analysis.GetVariables(
                     request.expr,
                     new SourceLocation(
-                        request.index,
+                        0,
                         request.line,
                         request.column
                     )
@@ -1347,9 +1351,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 return IncorrectFileType();
             }
             string text = null;
+            var loc = new SourceLocation(request.line, request.column);
 
             if (entry.Tree != null) {
-                var w = new ImportedModuleNameWalker(entry.ModuleName, request.index);
+                var w = new ImportedModuleNameWalker(
+                    entry.ModuleName,
+                    entry.Tree.LocationToIndex(loc)
+                );
                 entry.Tree.Walk(w);
                 if (!string.IsNullOrEmpty(w.ImportedName)) {
                     return new AP.QuickInfoResponse {
@@ -1366,7 +1374,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 bool multiline = false;
                 bool includeExpression = true;
 
-                var loc = new SourceLocation(request.index, request.line, request.column);
                 var exprAst = ModuleAnalysis.GetExpression(entry.Analysis.GetAstFromText(request.expr, loc)?.Body);
                 if (exprAst is ConstantExpression || exprAst is ErrorExpression) {
                     includeExpression = false;
@@ -1474,9 +1481,9 @@ namespace Microsoft.PythonTools.Intellisense {
             IEnumerable<IOverloadResult> sigs;
             if (entry.Analysis != null) {
                 using (new DebugTimer("GetSignaturesByIndex")) {
-                    sigs = entry.Analysis.GetSignaturesByIndex(
+                    sigs = entry.Analysis.GetSignatures(
                         request.text,
-                        request.location
+                        new SourceLocation(request.line, request.column)
                     );
                 }
             } else {
@@ -1537,9 +1544,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             IEnumerable<MemberResult> members;
             if (entry.Analysis != null) {
-                members = entry.Analysis.GetMembersByIndex(
+                members = entry.Analysis.GetMembers(
                     completions.text,
-                    completions.location,
+                    new SourceLocation(completions.line, completions.column),
                     completions.options
                 ).MaybeEnumerate();
             } else {
@@ -1740,7 +1747,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return new AP.OverridesCompletionResponse();
             }
 
-            var location = new SourceLocation(request.index, request.line, request.column);
+            var location = new SourceLocation(request.line, request.column);
 
             var cls = analysis.GetDefinitionTree(location).LastOrDefault(member => member.MemberType == PythonMemberType.Class);
             var members = analysis.GetOverrideable(location).ToArray();
@@ -1856,17 +1863,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 newCode = newCode
 #endif
             };
-        }
-
-        /// <summary>
-        /// Gets a CompletionList providing a list of possible members the user can dot through.
-        /// </summary>
-        internal AP.CompletionsResponse GetCompletions(AP.CompletionsRequest request) {
-            var file = _projectFiles.Get(request.fileId);
-
-            using (new DebugTimer("GetCompletions")) {
-                return GetNormalCompletions(file, request);
-            }
         }
 
         internal Task ProcessMessages() {
@@ -2228,8 +2224,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         x => new AP.BufferParseInfo() {
                             bufferId = x.Key,
                             version = x.Value.Version,
-                            errors = x.Value.Errors.Errors.Select(MakeError).ToArray(),
-                            warnings = x.Value.Errors.Warnings.Select(MakeError).ToArray(),
+                            errors = x.Value.Errors.Errors.Select(e => MakeError(e, x.Value.Ast)).ToArray(),
+                            warnings = x.Value.Errors.Warnings.Select(e => MakeError(e, x.Value.Ast)).ToArray(),
                             hasErrors = x.Value.Errors.Errors.Any(),
                             tasks = x.Value.Tasks.ToArray()
                         }
@@ -2238,15 +2234,14 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        private static AP.Error MakeError(ErrorResult error) {
+        private static AP.Error MakeError(ErrorResult error, PythonAst ast) {
             return new AP.Error() {
                 message = error.Message,
                 startLine = error.Span.Start.Line,
                 startColumn = error.Span.Start.Column,
-                startIndex = error.Span.Start.Index,
                 endLine = error.Span.End.Line,
                 endColumn = error.Span.End.Column,
-                length = error.Span.Length
+                length = ast.GetSpanLength(error.Span)
             };
         }
 
@@ -2288,10 +2283,9 @@ namespace Microsoft.PythonTools.Intellisense {
                                     message = text.Substring(1).Trim(),
                                     startLine = span.Start.Line,
                                     startColumn = span.Start.Column,
-                                    startIndex = span.Start.Index,
                                     endLine = span.End.Line,
                                     endColumn = span.End.Column,
-                                    length = span.Length,
+                                    length = text.Length,
                                     priority = kv.Value,
                                     category = AP.TaskCategory.comments,
                                     squiggle = false
@@ -2305,44 +2299,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Implementation Details
 
-
-        private AP.CompletionsResponse GetNormalCompletions(IProjectEntry projectEntry, AP.CompletionsRequest request) {
-            int version;
-            var code = projectEntry.GetCurrentCode(request.bufferId, out version);
-
-            if (IsSpaceCompletion(code, request.location) && !request.forceCompletions) {
-                return new AP.CompletionsResponse() {
-                    completions = new AP.Completion[0]
-                };
-            }
-
-            var analysis = ((IPythonProjectEntry)projectEntry).Analysis;
-            if (analysis != null) {
-                var members = analysis.GetMembers(
-                    request.text,
-                    new SourceLocation(
-                        request.location,
-                        1,
-                        request.column
-                    ),
-                    request.options
-                ).MaybeEnumerate();
-
-                return new AP.CompletionsResponse() {
-                    completions = ToCompletions(members.ToArray(), request.options)
-                };
-            }
-            return new AP.CompletionsResponse() {
-                completions = Array.Empty<AP.Completion>()
-            };
-        }
-
-        private bool IsSpaceCompletion(string text, int location) {
-            if (location > 0 && location < text.Length - 1) {
-                return text[location - 1] == ' ';
-            }
-            return false;
-        }
 
         internal void Cancel() {
             _analysisQueue.Stop();
