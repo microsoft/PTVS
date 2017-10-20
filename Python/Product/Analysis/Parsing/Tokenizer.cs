@@ -213,6 +213,7 @@ namespace Microsoft.PythonTools.Parsing {
             _tokenEnd = -1;
             _multiEolns = !_disableLineFeedLineSeparator;
             _initialLocation = initialLocation;
+            Debug.Assert(_initialLocation.Index >= 0);
 
             _tokenEndIndex = -1;
             _tokenStartIndex = 0;

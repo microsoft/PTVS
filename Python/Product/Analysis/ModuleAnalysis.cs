@@ -1004,7 +1004,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
-            if (location.Index < function.StartIndex || location.Index >= function.Body.StartIndex) {
+            int index = tree.LocationToIndex(location);
+            if (index < function.StartIndex || index >= function.Body.StartIndex) {
                 // Not within the def line
                 return false;
             }
@@ -1012,7 +1013,7 @@ namespace Microsoft.PythonTools.Analysis {
             return function.Parameters != null &&
                 function.Parameters.Any(p => {
                     var paramName = p.GetVerbatimImage(tree) ?? p.Name;
-                    return location.Index >= p.StartIndex && location.Index <= p.StartIndex + paramName.Length;
+                    return index >= p.StartIndex && index <= p.StartIndex + paramName.Length;
                 });
         }
 

@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override int GetBodyStart(PythonAst ast) {
-            return ast.IndexToLocation(((FunctionDefinition)Node).HeaderIndex).Index;
+            return ((FunctionDefinition)Node).HeaderIndex;
         }
 
         public override string Name {

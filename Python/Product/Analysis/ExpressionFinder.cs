@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -88,6 +89,8 @@ namespace Microsoft.PythonTools.Analysis {
             private readonly PythonAst _ast;
             private readonly GetExpressionOptions _options;
 
+            private bool _walkingClassBases;
+
             public NormalExpressionWalker(PythonAst ast, int location, int endLocation, GetExpressionOptions options) : base(location) {
                 _ast = ast;
                 _endLocation = endLocation;
@@ -128,7 +131,6 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
             public override bool Walk(Parameter node) => Save(node, base.Walk(node), _options.ParameterNames && Location <= node.StartIndex + node.Name.Length);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
-            public override bool Walk(ClassDefinition node) => Save(node, base.Walk(node), _options.ClassDefinition && BeforeBody(node.Body));
             public override bool Walk(FunctionDefinition node) => Save(node, base.Walk(node), _options.FunctionDefinition && BeforeBody(node.Body));
 
             public override bool Walk(MemberExpression node) {
@@ -143,14 +145,103 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
+            public override bool Walk(ClassDefinition node) {
+                if (!base.Walk(node)) {
+                    return false;
+                }
+
+                if (_options.ClassDefinition && BeforeBody(node.Body)) {
+                    Expression = node;
+                }
+
+                node.NameExpression?.Walk(this);
+                node.Decorators?.Walk(this);
+                _walkingClassBases = true;
+                try {
+                    foreach (var b in node.Bases.MaybeEnumerate()) {
+                        b.Walk(this);
+                    }
+                } finally {
+                    _walkingClassBases = false;
+                }
+                node.Body?.Walk(this);
+
+                return true;
+            }
+
             public override bool Walk(Arg node) {
                 if (!base.Walk(node)) {
                     return false;
                 }
-                
+
+                if (_walkingClassBases) {
+                    node.Expression?.Walk(this);
+                    return true;
+                }
+
                 var n = node.NameExpression;
                 if (_options.NamedArgumentNames && n != null && Location >= n.StartIndex && Location <= n.EndIndex) {
                     Expression = n;
+                }
+
+                return true;
+            }
+
+            public override bool Walk(DottedName node) {
+                if (base.Walk(node)) {
+                    string totalName = null;
+                    foreach (var n in node.Names.MaybeEnumerate()) {
+                        if (n?.Name == null) {
+                            break;
+                        }
+                        if (Location >= n.StartIndex && Location <= n.EndIndex) {
+                            if (totalName == null) {
+                                Expression = n;
+                            } else {
+                                Expression = new NameExpression(totalName + n.Name);
+                                Expression.SetLoc(node.StartIndex, n.EndIndex);
+                            }
+                            break;
+                        }
+                        totalName = (totalName ?? "") + n.Name + ".";
+                    }
+                }
+                return false;
+            }
+
+            public override bool Walk(ImportStatement node) {
+                if (!base.Walk(node)) {
+                    return false;
+                }
+
+                if (_options.ImportNames) {
+                    foreach (var n in node.Names.MaybeEnumerate()) {
+                        n?.Walk(this);
+                    }
+                }
+                if (_options.ImportAsNames) {
+                    foreach (var n in node.AsNames.MaybeEnumerate()) {
+                        n?.Walk(this);
+                    }
+                }
+
+                return true;
+            }
+
+            public override bool Walk(FromImportStatement node) {
+                if (!base.Walk(node)) {
+                    return false;
+                }
+
+                if (_options.ImportNames) {
+                    node.Root?.Walk(this);
+                }
+
+                foreach (var n in node.Names.MaybeEnumerate()) {
+                    n?.Walk(this);
+                }
+                foreach (var n in node.AsNames.MaybeEnumerate()) {
+                    n?.Walk(this);
                 }
 
                 return true;
@@ -185,6 +276,8 @@ namespace Microsoft.PythonTools.Analysis {
             ParameterNames = true,
             ParenthesisedExpression = true,
             Literals = true,
+            ImportNames = true,
+            ImportAsNames = true,
         };
         public static GetExpressionOptions Evaluate => new GetExpressionOptions {
             Calls = true,
@@ -196,6 +289,8 @@ namespace Microsoft.PythonTools.Analysis {
             ParenthesisedExpression = true,
             ClassDefinition = true,
             FunctionDefinition = true,
+            ImportNames = true,
+            ImportAsNames = true,
         };
         public static GetExpressionOptions EvaluateMembers => new GetExpressionOptions {
             Members = true,
@@ -206,6 +301,8 @@ namespace Microsoft.PythonTools.Analysis {
             MemberName = true,
             NamedArgumentNames = true,
             ParameterNames = true,
+            ImportNames = true,
+            ImportAsNames = true,
         };
 
         public bool Calls { get; set; } = false;
@@ -220,6 +317,8 @@ namespace Microsoft.PythonTools.Analysis {
         public bool ParameterNames { get; set; } = false;
         public bool ClassDefinition { get; set; } = false;
         public bool FunctionDefinition { get; set; } = false;
+        public bool ImportNames { get; set; } = false;
+        public bool ImportAsNames { get; set; } = false;
 
         public GetExpressionOptions Clone() {
             return (GetExpressionOptions)MemberwiseClone();

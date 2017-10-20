@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public int fileId;
             public string expr;
-            public int line, column, index;
+            public int line, column;
 
             public override string command => Command;
         }
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public int fileId;
             public string expr;
-            public int line, column, index;
+            public int line, column;
 
             public override string command => Command;
         }
@@ -292,7 +292,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public class Error {
             public string message;
-            public int startLine, startColumn, startIndex;
+            public int startLine, startColumn;
             public int endLine, endColumn, length;
         }
 
@@ -462,7 +462,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class UnresolvedImport {
             public string name;
-            public int startIndex, endIndex, startLine, endLine, startColumn, endColumn;
+            public int startLine, endLine, startColumn, endColumn;
         }
 
         public sealed class FileChangedResponse : Response {
@@ -519,7 +519,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "overrides";
 
             public int fileId, bufferId;
-            public int line, column, index;
+            public int line, column;
             public string indentation;
 
             public override string command => Command;
@@ -657,7 +657,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public int fileId, bufferId;
             public string text;
-            public int location, column;
+            public int line, column;
             public GetMemberOptions options;
             public bool forceCompletions;
 
@@ -670,7 +670,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string command => Command;
 
             public string text;
-            public int location, column;
+            public int line, column;
             public int fileId;
         }
 
@@ -841,7 +841,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public int fileId;
             public string expr;
-            public int line, column, index;
+            public int line, column;
+            [Obsolete("only use line and column")]
+            public int index;
 
             public override string command => Command;
         }
