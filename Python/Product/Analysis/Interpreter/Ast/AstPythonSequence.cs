@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IEnumerable<IPythonType> contents
         ) {
             _sequenceType = sequenceType;
-            IndexTypes = contents.ToArray();
+            IndexTypes = (contents ?? throw new ArgumentNullException(nameof(contents))).ToArray();
             DeclaringModule = declaringModule;
         }
 
