@@ -143,23 +143,25 @@ namespace Microsoft.PythonTools.Analysis {
 
             VariableDef def = referenceable as VariableDef;
             if (def != null) {
-                foreach (var location in def.TypesNoCopy.SelectMany(type => type.Locations)) {
-                    yield return new AnalysisVariable(VariableType.Value, location);
+                foreach (var loc in def.TypesNoCopy.SelectMany(type => type.Locations)) {
+                    if (loc != null) {
+                        yield return new AnalysisVariable(VariableType.Value, loc);
+                    }
                 }
             }
 
             foreach (var reference in referenceable.Definitions) {
-                yield return new AnalysisVariable(
-                    VariableType.Definition,
-                    reference.GetLocationInfo()
-                );
+                var loc = reference.GetLocationInfo();
+                if (loc != null) {
+                    yield return new AnalysisVariable(VariableType.Definition, loc);
+                }
             }
 
             foreach (var reference in referenceable.References) {
-                yield return new AnalysisVariable(
-                    VariableType.Reference,
-                    reference.GetLocationInfo()
-                );
+                var loc = reference.GetLocationInfo();
+                if (loc != null) {
+                    yield return new AnalysisVariable(VariableType.Reference, loc);
+                }
             }
         }
 

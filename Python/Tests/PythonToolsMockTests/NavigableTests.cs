@@ -66,7 +66,7 @@ sys.version
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // sys
-                await helper.CheckDefinitionLocations(15, 3, Location(1, 8));
+                await helper.CheckDefinitionLocations(14, 3, Location(1, 8));
 
                 // version
                 await helper.CheckDefinitionLocations(18, 7, null);
