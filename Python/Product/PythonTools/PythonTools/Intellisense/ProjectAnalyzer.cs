@@ -1358,7 +1358,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     translator = new LocationTracker(
-                        textBuffer.LastAnalysisReceivedVersion,
+                        textBuffer.LastParseReceivedVersion,
                         textBuffer.Buffer,
                         buffer.version
                     );
