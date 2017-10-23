@@ -72,6 +72,7 @@
     <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonMultipleMembers.cs" />
     <Compile Include="Interpreter\Ast\AstPythonStringLiteral.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonSequence.cs" />
     <Compile Include="Interpreter\Ast\AstPythonType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonConstant.cs" />
     <Compile Include="Interpreter\Ast\AstPythonFunction.cs" />

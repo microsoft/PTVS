@@ -308,6 +308,29 @@ R_A3 = R_A1.r_A()");
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void AstMro() {
+            var O = new AstPythonType("O");
+            var A = new AstPythonType("A");
+            var B = new AstPythonType("B");
+            var C = new AstPythonType("C");
+            var D = new AstPythonType("D");
+            var E = new AstPythonType("E");
+            var F = new AstPythonType("F");
+
+            F.SetBases(null, new[] { O });
+            E.SetBases(null, new[] { O });
+            D.SetBases(null, new[] { O });
+            C.SetBases(null, new[] { D, F });
+            B.SetBases(null, new[] { D, E });
+            A.SetBases(null, new[] { B, C });
+
+            AssertUtil.AreEqual(AstPythonType.CalculateMro(A).Select(t => t.Name), "A", "B", "C", "D", "E", "F", "O");
+            AssertUtil.AreEqual(AstPythonType.CalculateMro(B).Select(t => t.Name), "B", "D", "E", "O");
+            AssertUtil.AreEqual(AstPythonType.CalculateMro(C).Select(t => t.Name), "C", "D", "F", "O");
+            
+        }
+
         private static IPythonModule Parse(string path, PythonLanguageVersion version) {
             var interpreter = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion()).CreateInterpreter();
             if (!Path.IsPathRooted(path)) {

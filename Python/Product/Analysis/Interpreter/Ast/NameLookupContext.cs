@@ -390,6 +390,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
             }
 
+            if (value is IPythonBoundFunction) {
+                return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
+            }
+
             if (value is IPythonModule) {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Module);
             }
@@ -471,6 +475,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public void SetInScope(string name, IMember value, bool mergeWithExisting = true) {
             var s = _scopes.Peek();
+            if (value == null) {
+                s.Remove(name);
+                return;
+            }
             if (mergeWithExisting && s.TryGetValue(name, out IMember existing) && existing != null) {
                 s[name] = AstPythonMultipleMembers.Combine(existing, value);
             } else {

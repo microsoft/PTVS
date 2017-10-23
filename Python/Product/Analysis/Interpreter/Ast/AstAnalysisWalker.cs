@@ -277,19 +277,27 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public override bool Walk(ClassDefinition node) {
-            var t = _scope.GetInScope(node.Name) as AstPythonType;
+            var member = _scope.GetInScope(node.Name);
+            AstPythonType t = member as AstPythonType;
+            if (t == null && member is IPythonMultipleMembers mm) {
+                t = mm.Members.OfType<AstPythonType>().FirstOrDefault(pt => pt.StartIndex == node.StartIndex);
+            }
             if (t == null) {
                 t = CreateType(node);
                 _scope.SetInScope(node.Name, t);
             }
 
-            var mro = node.Bases.Where(a => string.IsNullOrEmpty(a.Name))
-                .Select(a => _scope.GetNameFromExpression(a.Expression))
-                .Where(a => !string.IsNullOrEmpty(a))
-                .Select(a => new AstPythonType(a));
+            if (t.Bases == null) {
+                var bases = node.Bases.Where(a => string.IsNullOrEmpty(a.Name))
+                    .Select(a => _scope.GetValueFromExpression(a.Expression))
+                    .OfType<IPythonType>()
+                    .ToArray();
 
-            if (t.Mro == null) {
-                t.SetMro(mro);
+                try {
+                    t.SetBases(_interpreter, bases);
+                } catch (InvalidOperationException) {
+                    // Bases were set while we were working
+                }
             }
 
             _scope.PushScope();
