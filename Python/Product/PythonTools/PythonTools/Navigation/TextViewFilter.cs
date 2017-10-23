@@ -118,9 +118,14 @@ namespace Microsoft.PythonTools.Language {
                 return VSConstants.E_FAIL;
             }
 
-            var expr = _serviceProvider.GetUIThread().InvokeTaskSync(async () => {
-                return await analyzer.GetExpressionSpanAtPointAsync(bi, pt, ExpressionAtPointPurpose.Hover, TimeSpan.FromSeconds(1.0));
-            }, CancellationTokens.After1s);
+            SourceSpan? expr;
+            try {
+                expr = _serviceProvider.GetUIThread().InvokeTaskSync(async () => {
+                    return await analyzer.GetExpressionSpanAtPointAsync(bi, pt, ExpressionAtPointPurpose.Hover, TimeSpan.FromSeconds(1.0));
+                }, CancellationTokens.After1s);
+            } catch (OperationCanceledException) {
+                expr = null;
+            }
 
             if (expr == null) {
                 pbstrText = null;
