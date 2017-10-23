@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public override int GetHashCode() {
-            return _type.GetHashCode() ^ _loc.GetHashCode() ^ _defLoc?.GetHashCode() ?? 0;
+            return _type.GetHashCode() ^ _loc?.GetHashCode() ?? 0 ^ _defLoc?.GetHashCode() ?? 0;
         }
     }
 }
