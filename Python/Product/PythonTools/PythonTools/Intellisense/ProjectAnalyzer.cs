@@ -1352,13 +1352,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     var textBuffer = bufferParser.GetBuffer(buffer.bufferId);
-                    if (textBuffer == null) {
+                    if (textBuffer == null || textBuffer.Buffer == null || textBuffer.LastParseReceivedVersion == null) {
                         // ignore unexpected buffer ID
                         continue;
                     }
 
                     translator = new LocationTracker(
-                        textBuffer.LastAnalysisReceivedVersion,
+                        textBuffer.LastParseReceivedVersion,
                         textBuffer.Buffer,
                         buffer.version
                     );
