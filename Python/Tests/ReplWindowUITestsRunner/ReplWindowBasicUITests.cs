@@ -86,7 +86,6 @@ namespace ReplWindowUITestsRunner {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ImportCompletions), Interpreter);
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2682
         [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void Comments() {

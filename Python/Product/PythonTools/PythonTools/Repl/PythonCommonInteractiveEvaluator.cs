@@ -278,21 +278,26 @@ namespace Microsoft.PythonTools.Repl {
         public abstract void AbortExecution();
 
         public bool CanExecuteCode(string text) {
+            return CanExecuteCode(text, out _);
+        }
+
+        protected bool CanExecuteCode(string text, out ParseResult pr) {
+            pr = ParseResult.Complete;
             if (string.IsNullOrEmpty(text)) {
                 return true;
             }
             if (string.IsNullOrWhiteSpace(text) && text.EndsWith("\n")) {
+                pr = ParseResult.Empty;
                 return true;
             }
 
             var config = Configuration;
             using (var parser = Parser.CreateParser(new StringReader(text), LanguageVersion)) {
-                ParseResult pr;
                 parser.ParseInteractiveCode(out pr);
-                if (pr == ParseResult.IncompleteStatement) {
+                if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
                     return text.EndsWith("\n");
                 }
-                if (pr == ParseResult.Empty || pr == ParseResult.IncompleteToken) {
+                if (pr == ParseResult.IncompleteToken) {
                     return false;
                 }
             }
