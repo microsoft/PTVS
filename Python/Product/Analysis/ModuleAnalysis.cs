@@ -143,23 +143,25 @@ namespace Microsoft.PythonTools.Analysis {
 
             VariableDef def = referenceable as VariableDef;
             if (def != null) {
-                foreach (var location in def.TypesNoCopy.SelectMany(type => type.Locations)) {
-                    yield return new AnalysisVariable(VariableType.Value, location);
+                foreach (var loc in def.TypesNoCopy.SelectMany(type => type.Locations)) {
+                    if (loc != null) {
+                        yield return new AnalysisVariable(VariableType.Value, loc);
+                    }
                 }
             }
 
             foreach (var reference in referenceable.Definitions) {
-                yield return new AnalysisVariable(
-                    VariableType.Definition,
-                    reference.GetLocationInfo()
-                );
+                var loc = reference.GetLocationInfo();
+                if (loc != null) {
+                    yield return new AnalysisVariable(VariableType.Definition, loc);
+                }
             }
 
             foreach (var reference in referenceable.References) {
-                yield return new AnalysisVariable(
-                    VariableType.Reference,
-                    reference.GetLocationInfo()
-                );
+                var loc = reference.GetLocationInfo();
+                if (loc != null) {
+                    yield return new AnalysisVariable(VariableType.Reference, loc);
+                }
             }
         }
 
@@ -228,29 +230,44 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+
+            var finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { Calls = true });
+            var callNode = finder.GetExpression(location) as CallExpression;
+            if (callNode != null) {
+                finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { NamedArgumentNames = true });
+                var argNode = finder.GetExpression(location) as NameExpression;
+                if (argNode != null && argNode.Name == exprText) {
+                    var objects = eval.Evaluate(callNode.Target);
+
+                    return new VariablesResult(objects
+                        .Where(v => v.Overloads.MaybeEnumerate().Any(o => o.Parameters.MaybeEnumerate().Any(p => p.Name == argNode.Name)))
+                        .Select(v => (v as BoundMethodInfo)?.Function ?? v as FunctionInfo)
+                        .Select(f => f?.AnalysisUnit?.Scope)
+                        .Where(s => s != null)
+                        .SelectMany(s => GetVariablesInScope(argNode, s)
+                        .Distinct()), ast);
+                }
+            }
 
             if (expr is NameExpression name) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
                     s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
-            
+
                 if (defScope == null) {
                     variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name)
                         .SelectMany(ToVariables);
                 } else {
                     variables = GetVariablesInScope(name, defScope).Distinct();
                 }
-            } else {
-                MemberExpression member = expr as MemberExpression;
-                if (member != null && !string.IsNullOrEmpty(member.Name)) {
-                    var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
-                    var objects = eval.Evaluate(member.Target);
-            
-                    foreach (var v in objects) {
-                        var container = v as IReferenceableContainer;
-                        if (container != null) {
-                            variables = ReferencablesToVariables(container.GetDefinitions(member.Name));
-                            break;
-                        }
+            } else if (expr is MemberExpression member && !string.IsNullOrEmpty(member.Name)) {
+                var objects = eval.Evaluate(member.Target);
+
+                foreach (var v in objects) {
+                    var container = v as IReferenceableContainer;
+                    if (container != null) {
+                        variables = ReferencablesToVariables(container.GetDefinitions(member.Name));
+                        break;
                     }
                 }
             }
@@ -989,7 +1006,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
-            if (location.Index < function.StartIndex || location.Index >= function.Body.StartIndex) {
+            int index = tree.LocationToIndex(location);
+            if (index < function.StartIndex || index >= function.Body.StartIndex) {
                 // Not within the def line
                 return false;
             }
@@ -997,7 +1015,7 @@ namespace Microsoft.PythonTools.Analysis {
             return function.Parameters != null &&
                 function.Parameters.Any(p => {
                     var paramName = p.GetVerbatimImage(tree) ?? p.Name;
-                    return location.Index >= p.StartIndex && location.Index <= p.StartIndex + paramName.Length;
+                    return index >= p.StartIndex && index <= p.StartIndex + paramName.Length;
                 });
         }
 
@@ -1029,7 +1047,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static InterpreterScope FindScope(InterpreterScope parent, PythonAst tree, SourceLocation location) {
-            var children = parent.Children.Where(c => !(c is StatementScope)).ToList();
+            var children = parent.Children;
 
             var index = tree.LocationToIndex(location);
 
@@ -1063,7 +1081,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            if (candidate == null) {
+            if (candidate == null || candidate is StatementScope) {
                 // No children, so we must belong in our parent
                 return parent;
             }

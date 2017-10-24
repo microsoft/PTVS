@@ -118,10 +118,11 @@ namespace Microsoft.PythonTools {
 
                 var tokenizer = GetTokenizer(snapshot);
                 foreach (var change in e.Changes) {
+                    var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
                     if (change.LineCountDelta > 0) {
-                        _tokenCache.InsertLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1 - change.LineCountDelta, change.LineCountDelta);
+                        _tokenCache.InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
                     } else if (change.LineCountDelta < 0) {
-                        _tokenCache.DeleteLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1, -change.LineCountDelta);
+                        _tokenCache.DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
                     }
 
                     ApplyChange(tokenizer, snapshot, change.NewSpan);
@@ -129,6 +130,15 @@ namespace Microsoft.PythonTools {
             }
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// This can only be used with Tokenizer spans. Others do not have valid Index values
+        /// </summary>
+        /// <param name="span"></param>
+        /// <returns></returns>
+        private static int GetSpanLength(SourceSpan span) {
+            return span.End.Index - span.Start.Index;
         }
 
         /// <summary>
@@ -166,7 +176,7 @@ namespace Microsoft.PythonTools {
 
                         TokenInfo startToken = token;
                         int validPrevLine;
-                        int length = startToken.SourceSpan.Length;
+                        int length = GetSpanLength(startToken.SourceSpan);
                         if (i == 0) {
                             length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine, ref startToken);
                         } else {
@@ -228,7 +238,7 @@ namespace Microsoft.PythonTools {
                     }
 
                     startToken = prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1];
-                    length += startToken.SourceSpan.Length;
+                    length += GetSpanLength(startToken.SourceSpan);
                 }
 
                 validPrevLine = prevLine;
@@ -261,7 +271,7 @@ namespace Microsoft.PythonTools {
                         break;
                     }
 
-                    length += nextLineTokenization.Tokens[0].SourceSpan.Length;
+                    length += GetSpanLength(nextLineTokenization.Tokens[0].SourceSpan);
                 }
                 nextLine++;
             }
@@ -362,7 +372,7 @@ namespace Microsoft.PythonTools {
         private static Span SnapshotSpanToSpan(ITextSnapshot snapshot, TokenInfo token, int lineNumber) {
             var line = snapshot.GetLineFromLineNumber(lineNumber);
             var index = line.Start.Position + token.SourceSpan.Start.Column - 1;
-            var tokenSpan = new Span(index, token.SourceSpan.Length);
+            var tokenSpan = new Span(index, GetSpanLength(token.SourceSpan));
             return tokenSpan;
         }
 

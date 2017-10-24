@@ -73,8 +73,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     var newCode = updatedStatement.ToCodeString(_ast);
 
                     int proceedingLength = (removed.Node.GetLeadingWhiteSpace(_ast) ?? "").Length;
-                    int start = span.Start.Index - proceedingLength;
-                    int length = span.Length + proceedingLength;
+                    int start = _ast.LocationToIndex(span.Start) - proceedingLength;
+                    int length = _ast.GetSpanLength(span) + proceedingLength;
 
                     changes.Add(
                         new AP.ChangeInfo() {
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     );
                     changes.Add(
                         new AP.ChangeInfo() {
-                            start = span.Start.Index,
+                            start = _ast.LocationToIndex(span.Start),
                             length = 0,
                             newText = newCode
                         }
@@ -100,8 +100,8 @@ namespace Microsoft.PythonTools.Intellisense {
             // newline and any indentation.
 
 
-            int start = span.Start.Index;
-            int length = span.Length;
+            int start = _ast.LocationToIndex(span.Start);
+            int length = _ast.GetSpanLength(span);
             int cur = start - 1;
             if (!insertPass) {
                 // backup to remove any indentation

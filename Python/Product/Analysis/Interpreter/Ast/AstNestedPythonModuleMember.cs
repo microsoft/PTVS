@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 
@@ -28,8 +30,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IModuleContext importContext,
             LocationInfo importLocation
         ) {
-            Name = memberName;
-            Module = module;
+            Name = memberName ?? throw new ArgumentNullException(nameof(memberName));
+            Module = module ?? throw new ArgumentNullException(nameof(module));
             _context = importContext;
             ImportLocation = importLocation;
         }
@@ -46,19 +48,33 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return m;
             }
 
-            Module.Imported(_context);
-            m = Module.GetMember(_context, Name);
-            if (m != null) {
-                return Interlocked.CompareExchange(ref _realMember, m, null) ?? m;
-            }
-
             var interp = _context as AstPythonInterpreter;
             if (interp == null) {
                 return null;
             }
 
-            m = new AstPythonConstant(interp.GetBuiltinType(BuiltinTypeId.Unknown), ImportLocation);
-            return Interlocked.CompareExchange(ref _realMember, m, null) ?? m;
+            // Set an "unknown" value to prevent recursion
+            var locs = ImportLocation == null ? Array.Empty<LocationInfo>() : new[] { ImportLocation };
+            var sentinel = new AstPythonConstant(interp.GetBuiltinType(BuiltinTypeId.Unknown), locs);
+            m = Interlocked.CompareExchange(ref _realMember, sentinel, null);
+            if (m != null) {
+                // We raced and someone else set a value, so just return that
+                return m;
+            }
+
+            Module.Imported(_context);
+            m = Module.GetMember(_context, Name) ?? interp?.ImportModule(Module.Name + "." + Name);
+            if (m != null) {
+                (m as IPythonModule)?.Imported(_context);
+                var current = Interlocked.CompareExchange(ref _realMember, m, sentinel);
+                if (current == sentinel) {
+                    return m;
+                }
+                return current;
+            }
+
+            // Did not find a better member, so keep the sentinel
+            return sentinel;
         }
     }
 }

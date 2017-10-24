@@ -6411,7 +6411,7 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "def test-module.A.fn(self) -> lambda : 123 -> int\ndeclared in A",
+                "def test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }

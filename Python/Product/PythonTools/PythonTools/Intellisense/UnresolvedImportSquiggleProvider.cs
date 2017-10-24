@@ -94,8 +94,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
                             t.name,
                             new SourceSpan(
-                                new SourceLocation(t.startIndex, t.startLine, t.startColumn),
-                                new SourceLocation(t.endIndex, t.endLine, t.endColumn)
+                                new SourceLocation(t.startLine, t.startColumn),
+                                new SourceLocation(t.endLine, t.endColumn)
                             )
                         )).ToList()
                     );

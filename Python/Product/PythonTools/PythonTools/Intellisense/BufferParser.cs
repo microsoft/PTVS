@@ -199,8 +199,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static AP.FileUpdate GetUpdateForSnapshot(PythonEditorServices services, ITextSnapshot snapshot) {
-            var buffer = services.GetBufferInfo(snapshot.TextBuffer);
+        private static AP.FileUpdate GetUpdateForSnapshot(PythonTextBufferInfo buffer, ITextSnapshot snapshot) {
             if (buffer.DoNotParse || snapshot.IsReplBufferWithCommand() || buffer.AnalysisBufferId < 0) {
                 return null;
             }
@@ -233,7 +232,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
             }
 
-            var versions = GetVersions(lastSent.Version, snapshot.Version).Select(v => new AP.VersionChanges{
+            var versions = GetVersions(lastSent.Version, snapshot.Version).Select(v => new AP.VersionChanges {
                 changes = GetChanges(v)
             }).ToArray();
 
@@ -263,7 +262,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     continue;
                 }
 
-                Debug.Assert(newCode.TrimEnd() == snapshot.GetText().TrimEnd(), "Buffer content mismatch");
+                if (newCode.TrimEnd() != snapshot.GetText().TrimEnd()) {
+                    Console.Error.WriteLine($"New Code: [{newCode}]");
+                    Console.Error.WriteLine($"Snapshot: [{snapshot.GetText()}]");
+                    Debug.Fail("Buffer content mismatch");
+                }
             }
 #endif
         }
@@ -273,39 +276,36 @@ namespace Microsoft.PythonTools.Intellisense {
             VsProjectAnalyzer analyzer,
             IEnumerable<ITextSnapshot> snapshots
         ) {
-            var updates = snapshots
-                .GroupBy(s => PythonTextBufferInfo.TryGetForBuffer(s.TextBuffer)?.AnalysisEntry.FileId ?? -1)
-                .Where(g => g.Key >= 0)
-                .Select(g => Tuple.Create(
-                    g.Key,
-                    g.Select(s => GetUpdateForSnapshot(services, s)).Where(u => u != null).ToArray()
-                ))
-                .ToList();
+            var tasks = new List<Tuple<ITextSnapshot[], Task<AP.FileUpdateResponse>>>();
 
-            if (!updates.Any()) {
-                return;
-            }
+            foreach (var snapshotGroup in snapshots.GroupBy(s => PythonTextBufferInfo.TryGetForBuffer(s.TextBuffer))) {
+                if (snapshotGroup.Key?.AnalysisEntry == null) {
+                    continue;
+                }
 
-
-            foreach (var update in updates) {
-                if (update.Item1 < 0) {
+                var updates = snapshotGroup.Select(s => GetUpdateForSnapshot(snapshotGroup.Key, s)).Where(u => u != null).ToArray();
+                if (!updates.Any()) {
                     continue;
                 }
 
                 analyzer._analysisComplete = false;
                 Interlocked.Increment(ref analyzer._parsePending);
 
-                var res = await analyzer.SendRequestAsync(
-                    new AP.FileUpdateRequest() {
-                        fileId = update.Item1,
-                        updates = update.Item2
+                tasks.Add(Tuple.Create(snapshotGroup.ToArray(), analyzer.SendRequestAsync(
+                    new AP.FileUpdateRequest {
+                        fileId = snapshotGroup.Key.AnalysisEntry.FileId,
+                        updates = updates
                     }
-                );
+                )));
+            }
+
+            foreach (var task in tasks) {
+                var res = await task.Item2;
 
                 if (res != null) {
                     Debug.Assert(res.failed != true);
                     analyzer.OnAnalysisStarted();
-                    ValidateBufferContents(snapshots, res);
+                    ValidateBufferContents(task.Item1, res);
                 } else {
                     Interlocked.Decrement(ref analyzer._parsePending);
                 }
@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (curVersion.Changes != null) {
                 foreach (var change in curVersion.Changes) {
                     Debug.WriteLine("Changes for version {0} {1} {2}", change.OldPosition, change.OldLength, change.NewText);
-                    
+
                     changes.Add(
                         new AP.ChangeInfo() {
                             start = change.OldPosition,

@@ -223,6 +223,9 @@ No files will be deleted from disk.</value>
   <data name="UninstallPackage" xml:space="preserve">
     <value>'{0}' will be uninstalled from {1} ({2}).</value>
   </data>
+  <data name="VirtualEnvSaveDeferredSolution" xml:space="preserve">
+    <value>Your project must be saved before adding a virtual environment.</value>
+  </data>
   <data name="VirtualEnvCreating" xml:space="preserve">
     <value>Virtual environment is being created at '{0}'</value>
   </data>

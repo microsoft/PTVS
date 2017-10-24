@@ -66,7 +66,7 @@ sys.version
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // sys
-                await helper.CheckDefinitionLocations(15, 3, Location(1, 8));
+                await helper.CheckDefinitionLocations(14, 3, Location(1, 8));
 
                 // version
                 await helper.CheckDefinitionLocations(18, 7, null);
@@ -128,7 +128,6 @@ my_func(2, param2=False)
             }
         }
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2869
         [TestMethod, Priority(0)]
         public async Task NamedArgumentDefinition() {
             var code = @"class MyClass(object):
@@ -141,6 +140,9 @@ my_func(2, param2=False)
 def my_func(param3 = True):
     pass
 
+def different_func():
+    pass
+
 my_func(param3=False)
 
 obj = MyClass()
@@ -149,15 +151,13 @@ obj.my_class_func2(param3=False)
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // param3 in my_func(param3=False)
-                await helper.CheckDefinitionLocations(197, 6, Location(8, 13));
+                await helper.CheckDefinitionLocations(232, 6, Location(8, 13));
 
-                // BUG: can't go to definition
                 // param2 in obj.my_class_func1(param2=False)
-                await helper.CheckDefinitionLocations(250, 6, Location(2, 30));
+                await helper.CheckDefinitionLocations(285, 6, Location(2, 30));
 
-                // BUG: goes to my_func instead of my_class_func2
                 // param3 in obj.my_class_func2(param3=False)
-                await helper.CheckDefinitionLocations(284, 6, Location(5, 30));
+                await helper.CheckDefinitionLocations(319, 6, Location(5, 30));
             }
         }
 
@@ -244,6 +244,7 @@ res = my_var * 10
 
                 var trackingSpan = _view.CurrentSnapshot.CreateTrackingSpan(pos, length, SpanTrackingMode.EdgeInclusive);
                 var snapshotSpan = trackingSpan.GetSpan(_view.CurrentSnapshot);
+                Console.WriteLine("Finding definition of \"{0}\"", snapshotSpan.GetText());
                 var actualLocations = await NavigableSymbolSource.GetDefinitionLocationsAsync(entry, snapshotSpan.Start);
                 if (expectedLocations != null) {
                     Assert.IsNotNull(actualLocations);

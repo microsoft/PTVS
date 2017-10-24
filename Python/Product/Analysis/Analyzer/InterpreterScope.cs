@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (_node == null) {
                 return 1;
             }
-            return _node.GetStart(ast).Index;
+            return _node.StartIndex;
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (_node == null) {
                 return int.MaxValue;
             }
-            return _node.GetEnd(ast).Index;
+            return _node.EndIndex;
         }
 
         public abstract string Name {

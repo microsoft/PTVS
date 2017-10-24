@@ -1694,6 +1694,7 @@ namespace Microsoft.PythonTools.Parsing {
                     args = new Arg[l.Count];
                     for (int i = 0; i < l.Count; i++) {
                         args[i] = new Arg(l[i]);
+                        args[i].SetLoc(l[i].StartIndex, l[i].EndIndex);
                     }
                     
                     ateTerminator = Eat(TokenKind.RightParenthesis);

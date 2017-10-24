@@ -28,23 +28,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _method = method;
         }
 
-        public override PythonMemberType MemberType {
-            get {
-                return _method.MemberType;
-            }
+        public BoundBuiltinMethodInfo(IPythonBoundFunction function, PythonAnalyzer projectState)
+            : this(new BuiltinMethodInfo(function.Function, PythonMemberType.Method, projectState)) {
         }
 
-        public BuiltinMethodInfo Method {
-            get {
-                return _method;
-            }
-        }
+        public override PythonMemberType MemberType => _method.MemberType;
 
-        public override string Documentation {
-            get {
-                return _method.Documentation;
-            }
-        }
+        public override IPythonType PythonType => base._type;
+
+        public BuiltinMethodInfo Method => _method;
+
+        public override string Documentation => _method.Documentation;
 
         public override string Description {
             get {

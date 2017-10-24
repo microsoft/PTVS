@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,11 +21,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using analysis::Microsoft.PythonTools.Interpreter;
-using analysis::Microsoft.PythonTools.Interpreter.Ast;
-using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -235,6 +235,37 @@ R_A3 = R_A1.r_A()");
         }
 
         [TestMethod, Priority(0)]
+        public void AstInstanceMembers() {
+            using (var entry = CreateAnalysis()) {
+                entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                entry.AddModule("test-module", "from InstanceMethod import f1, f2");
+                entry.WaitForAnalysis();
+
+                entry.AssertHasAttr("", "f1", "f2");
+
+                entry.AssertIsInstance("f1", BuiltinTypeId.BuiltinFunction);
+                entry.AssertIsInstance("f2", BuiltinTypeId.BuiltinMethodDescriptor);
+
+                var func = entry.GetValue<BuiltinFunctionInfo>("f1");
+                var method = entry.GetValue<BoundBuiltinMethodInfo>("f2");
+            }
+        }
+        [TestMethod, Priority(0)]
+        public void AstInstanceMembers_Random() {
+            using (var entry = CreateAnalysis()) {
+                entry.AddModule("test-module", "from random import *");
+                entry.WaitForAnalysis();
+
+                foreach (var fnName in new[] { "seed", "randrange", "gauss" }) {
+                    entry.AssertIsInstance(fnName, BuiltinTypeId.BuiltinMethodDescriptor);
+                    var func = entry.GetValue<BoundBuiltinMethodInfo>(fnName);
+                    Assert.AreNotEqual(0, func.Overloads.Count(), $"{fnName} overloads");
+                    Assert.AreNotEqual(0, func.Overloads.ElementAt(0).Parameters.Length, $"{fnName} parameters");
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void AstSearchPathsThroughFactory() {
             using (var evt = new ManualResetEvent(false))
             using (var analysis = CreateAnalysis()) {
@@ -277,12 +308,63 @@ R_A3 = R_A1.r_A()");
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void AstMro() {
+            var O = new AstPythonType("O");
+            var A = new AstPythonType("A");
+            var B = new AstPythonType("B");
+            var C = new AstPythonType("C");
+            var D = new AstPythonType("D");
+            var E = new AstPythonType("E");
+            var F = new AstPythonType("F");
+
+            F.SetBases(null, new[] { O });
+            E.SetBases(null, new[] { O });
+            D.SetBases(null, new[] { O });
+            C.SetBases(null, new[] { D, F });
+            B.SetBases(null, new[] { D, E });
+            A.SetBases(null, new[] { B, C });
+
+            AssertUtil.AreEqual(AstPythonType.CalculateMro(A).Select(t => t.Name), "A", "B", "C", "D", "E", "F", "O");
+            AssertUtil.AreEqual(AstPythonType.CalculateMro(B).Select(t => t.Name), "B", "D", "E", "O");
+            AssertUtil.AreEqual(AstPythonType.CalculateMro(C).Select(t => t.Name), "C", "D", "F", "O");
+            
+        }
+
         private static IPythonModule Parse(string path, PythonLanguageVersion version) {
             var interpreter = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion()).CreateInterpreter();
             if (!Path.IsPathRooted(path)) {
                 path = TestData.GetPath(Path.Combine("TestData", "AstAnalysis", path));
             }
             return AstPythonModule.FromFile(interpreter, path, version);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ScrapedTypeWithWrongModule() {
+            var version = PythonPaths.Versions.LastOrDefault(v => Directory.Exists(Path.Combine(v.PrefixPath, "Lib", "site-packages", "numpy")));
+            version.AssertInstalled();
+            Console.WriteLine("Using {0}", version.PrefixPath);
+            using (var analysis = CreateAnalysis(version)) {
+                var entry = analysis.AddModule("test-module", "import numpy.core.numeric as NP; ndarray = NP.ndarray");
+                analysis.WaitForAnalysis(CancellationTokens.After15s);
+
+                var cls = analysis.GetValue<BuiltinClassInfo>("ndarray");
+                Assert.IsNotNull(cls);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ScrapedSpecialFloats() {
+            using (var analysis = CreateAnalysis()) {
+                var entry = analysis.AddModule("test-module", "import math; inf = math.inf; nan = math.nan");
+                analysis.WaitForAnalysis(CancellationTokens.After15s);
+
+                var inf = analysis.GetValue<ConstantInfo>("inf");
+                Assert.AreEqual(BuiltinTypeId.Float, inf.TypeId);
+
+                var nan = analysis.GetValue<ConstantInfo>("nan");
+                Assert.AreEqual(BuiltinTypeId.Float, nan.TypeId);
+            }
         }
 
         #endregion

@@ -16,6 +16,7 @@
 
 using System;
 using System.Globalization;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Parsing {
 
@@ -62,13 +63,6 @@ namespace Microsoft.PythonTools.Parsing {
         /// </summary>
         public SourceLocation End {
             get { return _end; }
-        }
-
-        /// <summary>
-        /// Length of the span (number of characters inside the span).
-        /// </summary>
-        public int Length {
-            get { return _end.Index - _start.Index; }
         }
 
         /// <summary>

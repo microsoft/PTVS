@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected virtual PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {
-            return new AstAnalysisWalker(interpreter, ast, this, _filePath, _members, false);
+            return new AstAnalysisWalker(interpreter, ast, this, _filePath, _members, false, true);
         }
 
         protected virtual void PostWalk(PythonWalker walker) {

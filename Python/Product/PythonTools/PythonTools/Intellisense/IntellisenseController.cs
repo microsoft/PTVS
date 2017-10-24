@@ -867,7 +867,6 @@ namespace Microsoft.PythonTools.Intellisense {
             if (set == null) {
                 return false;
             }
-            set.Filter();
             if (set.SelectSingleBest()) {
                 session.Commit();
                 return true;
@@ -1200,8 +1199,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private bool EnterOnCompleteText(ICompletionSession session) {
             var selectionStatus = session.SelectedCompletionSet.SelectionStatus;
-            var caret = _textView.Caret.Position.BufferPosition;
-            var span = session.GetApplicableSpan(_textView.TextBuffer).GetSpan(caret.Snapshot);
+            var mcaret = session.TextView.MapDownToPythonBuffer(session.TextView.Caret.Position.BufferPosition);
+            if (!mcaret.HasValue) {
+                return false;
+            }
+            var caret = mcaret.Value;
+            var span = session.GetApplicableSpan(caret.Snapshot.TextBuffer).GetSpan(caret.Snapshot);
 
             return caret == span.End &&
                 span.Length == selectionStatus.Completion?.InsertionText.Length &&

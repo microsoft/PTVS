@@ -66,11 +66,13 @@
     <Compile Include="Interpreter\Ast\AstBuiltinPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstBuiltinsPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstNestedPythonModuleMember.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonBoundMethod.cs" />
     <Compile Include="Interpreter\Ast\AstPythonBuiltinType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
     <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonMultipleMembers.cs" />
     <Compile Include="Interpreter\Ast\AstPythonStringLiteral.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonSequence.cs" />
     <Compile Include="Interpreter\Ast\AstPythonType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonConstant.cs" />
     <Compile Include="Interpreter\Ast\AstPythonFunction.cs" />
