@@ -80,7 +80,10 @@ namespace Microsoft.PythonTools {
 
                 lock (_spanCacheLock) {
                     // sort the spans by starting position so we can use binary search when handing them out
-                    _spanCache = classifications.Data.classifications.OrderBy(c => c.start).ToArray();
+                    _spanCache = classifications.Data.classifications
+                        .OrderBy(c => c.start)
+                        .Distinct(ClassificationComparer.Instance)
+                        .ToArray();
                     _spanTranslator = classifications.GetTracker(classifications.Data.version);
                 }
 
@@ -88,6 +91,16 @@ namespace Microsoft.PythonTools {
                     OnNewClassifications(sender.CurrentSnapshot);
                 }
             }
+        }
+
+        private class ClassificationComparer : IEqualityComparer<AP.AnalysisClassification> {
+            public static readonly IEqualityComparer<AP.AnalysisClassification> Instance = new ClassificationComparer();
+
+            public bool Equals(AP.AnalysisClassification x, AP.AnalysisClassification y) {
+                return x.start == y.start && x.length == y.length && x.type == y.type;
+            }
+
+            public int GetHashCode(AP.AnalysisClassification obj) => obj.start;
         }
 
         private void OnNewClassifications(ITextSnapshot snapshot) {
