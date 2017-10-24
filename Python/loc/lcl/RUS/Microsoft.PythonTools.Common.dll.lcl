@@ -2401,15 +2401,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";FailedToLaunchDebugger" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Failed to launch debugger]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Не удалось запустить отладчик]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";FailedToReadResource" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not get resource {1}.{2} from {0}.]D;]A;]D;]A;{3}]]></Val>
@@ -2628,12 +2619,12 @@
       </Item>
       <Item ItemId=";ImportCoverageCommandFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
+          <Val><![CDATA[Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[XML-файл coverage.py (*.xml)|*.xml|Все файлы (*.*)|*.*]]></Val>
+            <Val><![CDATA[XML-файл покрытия (*.xml)|*.xml|Все файлы (*.*)|*.*]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
+            <Val><![CDATA[coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -5335,7 +5326,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17291.1]]></Val>
+        <Val><![CDATA[3.0.17296.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5371,7 +5362,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17291.1]]></Val>
+        <Val><![CDATA[3.0.17296.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
