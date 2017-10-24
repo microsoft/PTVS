@@ -2620,8 +2620,8 @@
       <Item ItemId=";ImportCoverageCommandFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[coverage.py-XML (*.xml)|*.xml|Alle Dateien (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Coverage-XML (*.xml)|*.xml|Alle Dateien (*.*)|*.*]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
