@@ -142,7 +142,9 @@ namespace Microsoft.PythonTools.TestAdapter {
             var pyProj = PythonProject.FromObject(e.Project);
             if (pyProj != null) {
                 var analyzer = pyProj.Analyzer;
-                _projectInfo[pyProj] = new ProjectInfo(this, pyProj);
+                if (analyzer != null) {
+                    _projectInfo[pyProj] = new ProjectInfo(this, pyProj);
+                }
             }
 
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
@@ -178,7 +180,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _pendingRequests = new List<string>();
 
                 project.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
-                RegisterWithAnalyzer();
+                RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
             }
 
             public void Dispose() {
@@ -206,15 +208,17 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
 
-            private async void RegisterWithAnalyzer() {
+            private async Task RegisterWithAnalyzerAsync() {
                 if (_analyzer != null) {
                     _analyzer.AnalysisComplete -= AnalysisComplete;
                 }
                 _analyzer = _project.Analyzer;
-                _analyzer.RegisterExtension(typeof(TestAnalyzer).Assembly.Location);
-                _analyzer.AnalysisComplete += AnalysisComplete;
+                if (_analyzer != null) {
+                    _analyzer.RegisterExtension(typeof(TestAnalyzer).Assembly.Location);
+                    _analyzer.AnalysisComplete += AnalysisComplete;
 
-                await UpdateTestCasesAsync(_analyzer.Files, false).HandleAllExceptions(_discoverer._serviceProvider, GetType());
+                    await UpdateTestCasesAsync(_analyzer.Files, false);
+                }
             }
 
             private async void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
@@ -251,7 +255,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             private async Task UpdateTestCasesAsync(IEnumerable<string> paths, bool notify) {
-                var testCaseData = await _project.Analyzer.SendExtensionCommandAsync(
+                var analyzer = _project.Analyzer;
+                if (analyzer == null) {
+                    return;
+                }
+
+                var testCaseData = await analyzer.SendExtensionCommandAsync(
                     TestAnalyzer.Name,
                     TestAnalyzer.GetTestCasesCommand,
                     string.Join(";", paths)
@@ -302,7 +311,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             public void ProjectAnalyzerChanged(object sender, EventArgs e) {
-                RegisterWithAnalyzer();
+                RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
             }
         }
     }

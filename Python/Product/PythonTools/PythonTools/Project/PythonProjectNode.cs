@@ -1109,7 +1109,12 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
-                _analyzer = Site.GetUIThread().InvokeTaskSync(CreateAnalyzerAsync, CancellationToken.None);
+                return Site.GetUIThread().InvokeTaskSync(async() => {
+                    if (_analyzer == null) {
+                        _analyzer = await CreateAnalyzerAsync();
+                    }
+                    return _analyzer;
+                }, CancellationToken.None);
             }
             return _analyzer;
         }
@@ -2752,6 +2757,9 @@ namespace Microsoft.PythonTools.Project {
 
             public override ProjectAnalyzer Analyzer {
                 get {
+                    if (_node.IsClosing || _node.IsClosed) {
+                        return null;
+                    }
                     return _node.GetAnalyzer();
                 }
             }

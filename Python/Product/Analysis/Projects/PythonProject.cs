@@ -55,7 +55,9 @@ namespace Microsoft.PythonTools.Projects {
 
         public abstract IPythonInterpreterFactory GetInterpreterFactory();
 
-
+        /// <summary>
+        /// Gets the current analyzer for the project, or null if no analyzer is available.
+        /// </summary>
         public abstract ProjectAnalyzer Analyzer {
             get;
         }
