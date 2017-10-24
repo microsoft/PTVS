@@ -1499,8 +1499,9 @@ plot(x, x)");
                 interactive.WaitForText(">" + comment, "." + comment);
 
                 interactive.ClearInput();
+                // Pasting with a newline will submit
                 interactive.Paste(comment + "\r\n" + comment + "\r\n");
-                interactive.WaitForText(">" + comment, "." + comment, ".");
+                interactive.WaitForText(">" + comment, "." + comment, ".", ">");
             }
         }
 

@@ -118,10 +118,11 @@ namespace Microsoft.PythonTools {
 
                 var tokenizer = GetTokenizer(snapshot);
                 foreach (var change in e.Changes) {
+                    var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
                     if (change.LineCountDelta > 0) {
-                        _tokenCache.InsertLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1 - change.LineCountDelta, change.LineCountDelta);
+                        _tokenCache.InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
                     } else if (change.LineCountDelta < 0) {
-                        _tokenCache.DeleteLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1, -change.LineCountDelta);
+                        _tokenCache.DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
                     }
 
                     ApplyChange(tokenizer, snapshot, change.NewSpan);

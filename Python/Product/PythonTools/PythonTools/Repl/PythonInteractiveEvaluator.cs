@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Utilities;
@@ -226,6 +227,15 @@ namespace Microsoft.PythonTools.Repl {
             var cmdRes = cmds.TryExecuteCommand();
             if (cmdRes != null) {
                 return await cmdRes;
+            }
+
+            ParseResult pr;
+            if (CanExecuteCode(text, out pr)) {
+                if (pr == ParseResult.Empty) {
+                    // Actually execute "pass", so that we launch the
+                    // interpreter but do not cause any other errors.
+                    text = "pass";
+                }
             }
 
             var thread = await EnsureConnectedAsync();

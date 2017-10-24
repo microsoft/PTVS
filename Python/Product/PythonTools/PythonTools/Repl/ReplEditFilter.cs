@@ -484,6 +484,13 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var curBuffer = window.CurrentLanguageBuffer;
+            if (curBuffer.CurrentSnapshot.Length > 0) {
+                // There is existing content in the buffer, so let's just insert and
+                // return. We do submit any statements.
+                window.InsertCode(pasting);
+                return;
+            }
+
             var inputPoint = view.BufferGraph.MapDownToBuffer(
                 caret.Position.BufferPosition,
                 PointTrackingMode.Positive,
@@ -507,6 +514,8 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
+            bool submitLast = pasting.EndsWith("\n");
+
             if (inputPoint == null) {
                 // we didn't find a point to insert, insert at the beginning.
                 inputPoint = new SnapshotPoint(curBuffer.CurrentSnapshot, 0);
@@ -514,20 +523,13 @@ namespace Microsoft.PythonTools.Repl {
 
             // we want to insert the pasted code at the caret, but we also want to
             // respect the stepping.  So first grab the code before and after the caret.
-            string startText = curBuffer.CurrentSnapshot.GetText(0, inputPoint.Value);
-
-            string endText = curBuffer.CurrentSnapshot.GetText(
-                inputPoint.Value,
-                curBuffer.CurrentSnapshot.Length - inputPoint.Value);
-
-
-            var splitCode = JoinToCompleteStatements(SplitAndDedent(startText + pasting + endText), version).ToList();
+            var splitCode = JoinToCompleteStatements(SplitAndDedent(pasting), version).ToList();
             curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
 
             bool supportMultiple = await window.GetSupportsMultipleStatements();
 
             if (supportMultiple) {
-                await window.SubmitAsync(new[] { string.Join(Environment.NewLine, splitCode) });
+                window.InsertCode(string.Join(Environment.NewLine, splitCode));
             } else if (splitCode.Count == 1) {
                 curBuffer.Insert(0, splitCode[0]);
                 var viewPoint = view.BufferGraph.MapUpToBuffer(
@@ -557,13 +559,21 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 if (supportMultiple) {
-                    // Submit all remaning lines of code
-                    await window.SubmitAsync(new[] { string.Join(Environment.NewLine, splitCode) });
-                } else {
-                    window.CurrentLanguageBuffer.Insert(0, lastCode);
+                    // Insert all remaning lines of code
+                    lastCode = string.Join(Environment.NewLine, splitCode);
                 }
+
+                window.InsertCode(lastCode);
             } else {
-                window.CurrentLanguageBuffer.Insert(0, startText + pasting + endText);
+                window.InsertCode(pasting);
+            }
+
+            if (submitLast) {
+                if (window.Evaluator.CanExecuteCode(window.CurrentLanguageBuffer.CurrentSnapshot.GetText())) {
+                    window.Operations.ExecuteInput();
+                } else {
+                    window.InsertCode("\n");
+                }
             }
         }
 

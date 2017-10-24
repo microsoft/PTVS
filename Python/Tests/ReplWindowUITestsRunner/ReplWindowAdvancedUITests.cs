@@ -362,7 +362,6 @@ namespace ReplWindowUITestsRunner {
 
         #region Advanced Clipboard tests
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2682
         [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void CommentPaste() {
