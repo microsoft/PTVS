@@ -83,6 +83,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ThreadingTest.cs" />
     <Compile Include="TokenizerRoundTripTest.cs" />
+    <Compile Include="TypeAnnotationTests.cs" />
     <Compile Include="UpdaterTests.cs" />
   </ItemGroup>
   <ItemGroup>

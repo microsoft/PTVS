@@ -81,6 +81,7 @@
     <Compile Include="Interpreter\Ast\AstPythonParameterInfo.cs" />
     <Compile Include="Interpreter\Ast\AstPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstScrapedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstTypeAnnotationConverter.cs" />
     <Compile Include="Interpreter\Ast\NameLookupContext.cs" />
     <Compile Include="Interpreter\ILazyMember.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithLog.cs" />
@@ -94,6 +95,7 @@
     <Compile Include="Interpreter\NoPackageManager.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PackageVersion.cs" />
+    <Compile Include="Parsing\Ast\TypeAnnotation.cs" />
     <Compile Include="Parsing\Ast\ExpressionWithAnnotation.cs" />
     <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />
     <Compile Include="AnalysisExtensions.cs" />
