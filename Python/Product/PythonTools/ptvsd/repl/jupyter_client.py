@@ -22,8 +22,11 @@ __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.2.1.0"
 
 import ast
+import base64
+import errno
 import re
 import sys
+import threading
 import time
 import traceback
 from ptvsd.repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
@@ -45,6 +48,9 @@ try:
 except ImportError:
     from Queue import Empty
 
+# Use safer eval
+eval = ast.literal_eval
+
 class Message(object):
     _sentinel = object()
 
@@ -56,12 +62,18 @@ class Message(object):
         return self[attr]
 
     def __getitem__(self, key):
+        if isinstance(key, tuple):
+            key, default_value = key
+        else:
+            default_value = self._sentinel
         if not self._m:
             return self
         try:
             v = self._m[key]
         except KeyError:
-            return Message({})
+            if default_value is self._sentinel:
+                return Message({})
+            return default_value
         if not isinstance(v, dict):
             return v
         return Message(v)
@@ -73,87 +85,67 @@ class JupyterClientBackend(ReplBackend):
     def __init__(self, mod_name='__main__', launch_file=None):
         super(JupyterClientBackend, self).__init__()
         self.__client = None
+
+        # This lock will be released when we should shut down
+        self.__exit = threading.Lock()
+        self.__exit.acquire()
+
+        self.__lock = threading.RLock()
+        self.__status = 'idle'
         self.__msg_buffer = []
-        self.__cur_ps1, self.__cur_ps2 = None, None
+        self.__execution_count = 0
         self.__cmd_buffer = []
-
-    def __fill_message_buffer(self, timeout=None):
-        mb = self.__msg_buffer
-        removed = len(mb)
-        mb[:] = (m for m in mb if not m._read)
-        removed -= len(mb)
-
-        added = -len(mb)
-        try:
-            while True:
-                msg = self.__client.shell_channel.get_msg(block=True, timeout=timeout)
-                mb.append(Message(msg))
-        except (TimeoutError, Empty):
-            pass
-        added += len(mb)
-        return added, removed
-
-    def __get_reply(self, msg_id, msg_type, timeout=1.0):
-        stop_at = time.clock() + timeout
-        added = 1
-        while added or time.clock() < stop_at:
-            for m in self.__msg_buffer:
-                if not m._read and m.parent_header.msg_id == msg_id and m.header.msg_type == msg_type:
-                    m._read = True
-                    return m
-            added, _ = self.__fill_message_buffer(timeout=0.1)
+        self.__on_reply = {}
 
     def execution_loop(self):
         """starts processing execution requests"""
-        with jupyter_client.run_kernel() as client:
-            self.exit_requested = False
-            self.__client = client
-            while not self.exit_requested:
-                # Forward output
-                self.flush()
-
-                # Get the current prompts
-                self.__get_prompts()
-
-                self.__fill_message_buffer(timeout=1.0)
-
-    def run_command(self, command):
-        """runs the specified command which is a string containing code"""
-        print('executing', command)
-        msg_id = self.__client.execute(command, store_history=False, allow_stdin=False)
-        self.__get_reply(msg_id, 'execute_reply')
-        self.send_command_executed()
-
-    def __get_prompts(self):
         try:
-            prompts = self.__exec("import sys", dict(ps1="sys.ps1", ps2="sys.ps2"))
-            try:
-                cur_ps1 = prompts.content.user_expressions.ps1.data['text/plain']
-                cur_ps2 = prompts.content.user_expressions.ps2.data['text/plain']
-            except KeyboardInterrupt:
-                self.exit_process()
-            except Exception:
-                pass
-            else:
-                if cur_ps1 != self.__cur_ps1 or cur_ps2 != self.__cur_ps2:
-                    self.__cur_ps1 = cur_ps1
-                    self.__cur_ps2 = cur_ps2
-                    self.send_prompt(cur_ps1, cur_ps2, allow_multiple_statements=True)
+            return self._execution_loop()
         except:
             traceback.print_exc()
             input()
+            raise
 
+    def _execution_loop(self):
+        km, kc = jupyter_client.manager.start_new_kernel()
+        try:
+            self.exit_requested = False
+            self.__client = kc
+            self.send_cwd()
 
-    def __exec(self, command, silent, vars):
-        msg_id = self.__client.execute(
-            command,
-            store_history=False,
-            allow_stdin=False,
-            silent=silent,
-            user_expressions=vars,
-        )
-        msg = self.__get_reply(msg_id, 'execute_reply')
-        return msg
+            self.__shell_thread = _thread.start_new_thread(self.__shell_threadproc, (kc,))
+            self.__iopub_thread = _thread.start_new_thread(self.__iopub_threadproc, (kc,))
+
+            self.__exit.acquire()
+
+            self.send_exit()
+        finally:
+            kc.stop_channels()
+            km.shutdown_kernel(now=True)
+
+    def __command_executed(self, msg):
+        self.send_command_executed()
+
+    def run_command(self, command):
+        """runs the specified command which is a string containing code"""
+        if self.__client:
+            with self.__lock:
+                self.__exec(command, store_history=True, silent=False).append(self.__command_executed)
+            return True
+
+        self.__cmd_buffer.append(command)
+        return False
+
+    def __exec(self, command, store_history=False, allow_stdin=False, silent=True, get_vars=None):
+        with self.__lock:
+            msg_id = self.__client.execute(
+                command,
+                store_history=store_history,
+                allow_stdin=allow_stdin,
+                silent=silent,
+                user_expressions=get_vars,
+            )
+            return self.__on_reply.setdefault((msg_id, 'execute_reply'), [])
 
     def execute_file_ex(self, filetype, filename, args):
         """executes the given filename as a 'script', 'module' or 'process'."""
@@ -171,7 +163,8 @@ class JupyterClientBackend(ReplBackend):
 
     def exit_process(self):
         """exits the REPL process"""
-        pass
+        self.exit_requested = True
+        self.__exit.release()
 
     def get_members(self, expression):
         """returns a tuple of the type name, instance members, and type members"""
@@ -195,22 +188,142 @@ class JupyterClientBackend(ReplBackend):
 
     def flush(self):
         """flushes the stdout/stderr buffers"""
-        if not self.__client:
+        pass
+
+    def __shell_threadproc(self, client):
+        try:
+            last_exec_count = None
+            on_replies = self.__on_reply
+            while not self.exit_requested:
+                while self.__cmd_buffer and not self.exit_requested:
+                    self.run_command(self.__cmd_buffer.pop(0))
+
+                m = Message(client.get_shell_msg(block=True))
+                msg_id = m.msg_id
+                msg_type = m.msg_type
+
+                print('%s: %s' % (msg_type, msg_id))
+                #print(m)
+
+                exec_count = m.content['execution_count', None]
+                if exec_count != last_exec_count:
+                    last_exec_count = exec_count
+                    exec_count = int(exec_count) + 1
+                    ps1 = 'In  [%s]: ' % exec_count
+                    ps2 = ' ' * (len(ps1) - 5) + '...: '
+                    self.send_prompt(ps1, ps2, allow_multiple_statements=True)
+
+                parent_id = m.parent_header['msg_id', None]
+                if parent_id:
+                    on_reply = on_replies.pop((parent_id, msg_type), ())
+                    for callable in on_reply:
+                        callable(m)
+
+        except KeyboardInterrupt:
+            self.exit_process()
+        except:
+            traceback.print_exc()
+            input()
+            self.exit_process()
+
+    def __iopub_threadproc(self, client):
+        try:
+            last_exec_count = None
+            while not self.exit_requested:
+                m = Message(client.get_iopub_msg(block=True))
+
+                if m.msg_type == 'execute_input':
+                    pass
+                elif m.msg_type == 'execute_result':
+                    print(m.msg_type, m.content)
+                    self.__write_result(m.content)
+                elif m.msg_type == 'display_data':
+                    print(m.msg_type, m.content)
+                    self.__write_content(m.content)
+                elif m.msg_type == 'stream':
+                    self.__write_stream(m.content)
+                elif m.msg_type == 'error':
+                    self.__write_error(m.content)
+                elif m.msg_type == 'status':
+                    self.__status = m.content['execution_state', 'idle']
+                else:
+                    print("Received: " + str(m) + "\n")
+                    self.write_stdout(str(m) + '\n')
+
+        except KeyboardInterrupt:
+            self.exit_process()
+        except:
+            traceback.print_exc()
+            input()
+            self.exit_process()
+
+    def __write_stream(self, content):
+        if content.name == 'stderr':
+            f = self.write_stderr
+        else:
+            f = self.write_stdout
+        text = content.text
+        if text:
+            f(text)
+
+    def __write_result(self, content):
+        exec_count = content['execution_count', None]
+        if exec_count is not None:
+            prefix = 'Out [%s]: ' % exec_count
+        else:
+            prefix = 'Out: '
+
+        if content.status == 'ok':
+            output_str = content.data['text/plain', None]
+            if output_str is None:
+                output_str = str(content.data)
+            if '\n' in output_str:
+                output_str = '%s\n%s\n' % (prefix, output_str)
+            else:
+                output_str = prefix + output_str + '\n'
+            self.write_stdout(output_str)
             return
 
-        while True:
+        if content.status == 'error':
+            tb = content['traceback', None]
+            if tb:
+                self.write_stderr(prefix + '\n')
+                for line in tb:
+                    self.write_stderr(line + '\n')
+                return
+
+        self.write_stderr(str(content) + '\n')
+        self.send_error()
+
+    def __write_content(self, content):
+        if content.status != 'ok':
+            return
+
+        output_xaml = content.data['application/xaml+xml', None]
+        if output_xaml is not None:
             try:
-                m = Message(self.__client.iopub_channel.get_msg(block=True, timeout=0.1))
-            except KeyboardInterrupt:
-                self.exit_process()
-                break
-            except Empty:
-                break
-            else:
-                if m.msg_type == 'status':
-                    continue
-                self.write_stdout(str(m) + '\n')
+                if isinstance(output_xaml, str) and sys.version_info[0] >= 3:
+                    output_xaml = output_xaml.encode('ascii')
+                self.write_stdout(prefix)
+                self.write_xaml(base64.decodestring(output_xaml))
+                self.write_stdout('\n\n')
+                return
+            except:
+                pass
+
+        output_png = content.data['image/png', None]
+        if output_png is not None:
+            try:
+                if isinstance(output_png, str) and sys.version_info[0] >= 3:
+                    output_png = output_png.encode('ascii')
+                self.write_stdout(prefix)
+                self.write_png(base64.decodestring(output_png))
+                self.write_stdout('\n\n')
+                return
+            except:
+                pass
 
 if __name__ == '__main__':
     b = JupyterClientBackend()
     b.execution_loop()
+
