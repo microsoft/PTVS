@@ -172,6 +172,18 @@ def f(a = A, b : B):
         }
 
         [TestMethod, Priority(0)]
+        public void MultilineStringClassification() {
+            var code = @"t = '''a
+
+b ''' + c + '''d
+
+e'''";
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("i=s+i+s");
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void TrueFalseClassification() {
             var code = "True False";
 
@@ -320,6 +332,7 @@ def f() -> int:
                 { 'l', PredefinedClassificationTypeNames.Literal },
                 { 'n', PredefinedClassificationTypeNames.Number },
                 { 'k', PredefinedClassificationTypeNames.Keyword },
+                { 's', PredefinedClassificationTypeNames.String },
                 { '(', PythonPredefinedClassificationTypeNames.Grouping },
                 { ')', PythonPredefinedClassificationTypeNames.Grouping },
                 { '[', PythonPredefinedClassificationTypeNames.Grouping },
