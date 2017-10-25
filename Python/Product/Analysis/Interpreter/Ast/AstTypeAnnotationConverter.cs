@@ -26,6 +26,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _scope = scope;
         }
 
+        public override IPythonType Finalize(IPythonType type) {
+            if (type is ModuleType) {
+                return null;
+            }
+
+            return type;
+        }
+
         public override IPythonType LookupName(string name) {
             var m = _scope.LookupNameInScopes(name, NameLookupContext.LookupOptions.Global | NameLookupContext.LookupOptions.Builtins);
             if (m is IPythonMultipleMembers mm) {

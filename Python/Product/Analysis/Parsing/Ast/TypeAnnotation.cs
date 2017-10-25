@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     return default(T);
                 }
                 Debug.Assert(stack.Count == 1);
-                return stack.Pop().Value;
+                return converter.Finalize(stack.Pop().Value);
             }
 
             public override bool Walk(ConstantExpression node) {
@@ -258,6 +258,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// Returns the types as a single union type.
         /// </summary>
         public virtual T MakeUnion(IReadOnlyList<T> types) => default(T);
+
+        /// <summary>
+        /// Ensure the final result is a suitable type. Return null
+        /// if not.
+        /// </summary>
+        public virtual T Finalize(T type) => type;
 
         #endregion
 
