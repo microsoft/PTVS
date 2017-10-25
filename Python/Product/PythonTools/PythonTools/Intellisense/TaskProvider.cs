@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public bool IsValid => _squiggle && !string.IsNullOrEmpty(ErrorType);
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
-            if (_rawSpan.Start <= _rawSpan.End || _spanTranslator == null) {
+            if (_rawSpan.Start >= _rawSpan.End || _spanTranslator == null) {
                 return;
             }
 
