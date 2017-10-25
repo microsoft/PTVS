@@ -18,15 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Text;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -133,15 +131,6 @@ namespace Microsoft.PythonTools {
         }
 
         /// <summary>
-        /// This can only be used with Tokenizer spans. Others do not have valid Index values
-        /// </summary>
-        /// <param name="span"></param>
-        /// <returns></returns>
-        private static int GetSpanLength(SourceSpan span) {
-            return span.End.Index - span.Start.Index;
-        }
-
-        /// <summary>
         /// Adds classification spans to the given collection.
         /// Scans a contiguous sub-<paramref name="span"/> of a larger code span which starts at <paramref name="codeStartLine"/>.
         /// </summary>
@@ -154,128 +143,131 @@ namespace Microsoft.PythonTools {
 
             Contract.Assert(firstLine >= 0);
 
+            var strSpan = default(SourceSpan);
+
             _tokenCache.EnsureCapacity(snapshot.LineCount);
 
-            // find the closest line preceding firstLine for which we know categorizer state, stop at the codeStartLine:
-            LineTokenization lineTokenization;
-            int currentLine = _tokenCache.IndexOfPreviousTokenization(firstLine, 0, out lineTokenization) + 1;
-            object state = lineTokenization.State;
-
-            while (currentLine <= lastLine) {
-                if (!_tokenCache.TryGetTokenization(currentLine, out lineTokenization)) {
-                    lineTokenization = TokenizeLine(tokenizer, snapshot, state, currentLine);
-                    _tokenCache[currentLine] = lineTokenization;
-                }
-
-                state = lineTokenization.State;
+            for (int line = firstLine; line <= lastLine; ++line) {
+                var lineTokenization = GetTokenizationOfKnownState(tokenizer, snapshot, _tokenCache, line);
 
                 for (int i = 0; i < lineTokenization.Tokens.Length; i++) {
                     var token = lineTokenization.Tokens[i];
-                    if (token.Category == TokenCategory.IncompleteMultiLineStringLiteral) {
-                        // we need to walk backwards to find the start of this multi-line string...
+                    if (token.Category == TokenCategory.IncompleteMultiLineStringLiteral || token.Category == TokenCategory.StringLiteral) {
+                        if (token.SourceSpan.Start >= strSpan.Start && token.SourceSpan.End <= strSpan.End) {
+                            // We are already in the current string span, so do not add any
+                            // more classifications.
+                            continue;
+                        }
 
-                        TokenInfo startToken = token;
-                        int validPrevLine;
-                        int length = GetSpanLength(startToken.SourceSpan);
-                        if (i == 0) {
-                            length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine, ref startToken);
+                        // Walk both directions to get the full span
+                        if (token.Category == TokenCategory.StringLiteral) {
+                            strSpan = token.SourceSpan;
                         } else {
-                            validPrevLine = currentLine;
+                            strSpan = GetMultiLineString(tokenizer, snapshot, token);
                         }
 
-                        if (i == lineTokenization.Tokens.Length - 1) {
-                            length += GetTrailingMultiLineStrings(tokenizer, snapshot, currentLine, state);
-                        }
-
-                        var multiStrSpan = new Span(SnapshotSpanToSpan(snapshot, startToken, validPrevLine).Start, length);
-                        classifications.Add(
-                            new ClassificationSpan(
-                                new SnapshotSpan(snapshot, multiStrSpan),
-                                _provider.StringLiteral
-                            )
-                        );
+                        classifications.Add(new ClassificationSpan(
+                            GetTokenSnapshotSpan(snapshot, strSpan.Start, strSpan.End),
+                            _provider.StringLiteral
+                        ));
                     } else {
-                        var classification = ClassifyToken(span, token, currentLine);
+                        var classification = ClassifyToken(span, token, line);
 
                         if (classification != null) {
                             classifications.Add(classification);
                         }
                     }
                 }
-
-                currentLine++;
             }
         }
 
-        private int GetLeadingMultiLineStrings(Tokenizer tokenizer, ITextSnapshot snapshot, int firstLine, int currentLine, out int validPrevLine, ref TokenInfo startToken) {
-            validPrevLine = currentLine;
-            int prevLine = currentLine - 1;
-            int length = 0;
+        private static LineTokenization GetTokenizationOfKnownState(Tokenizer tokenizer, ITextSnapshot snapshot, TokenCache cache, int lineNo) {
+            LineTokenization line;
+            int lastLine = cache.IndexOfPreviousTokenization(lineNo + 1, 0, out line);
+            if (lastLine == lineNo) {
+                return line;
+            }
 
-            while (prevLine >= 0) {
-                LineTokenization prevLineTokenization;
-                if (!_tokenCache.TryGetTokenization(prevLine, out prevLineTokenization)) {
-                    LineTokenization lineTokenizationTemp;
-                    int currentLineTemp = _tokenCache.IndexOfPreviousTokenization(firstLine, 0, out lineTokenizationTemp) + 1;
-                    object stateTemp = lineTokenizationTemp.State;
+            for (int i = lastLine + 1; i <= lineNo; ++i) {
+                var lineState = line.State;
+                if (!cache.TryGetTokenization(i, out line)) {
+                    cache[i] = line = TokenizeLine(tokenizer, snapshot, lineState, i);
+                }
+            }
 
-                    while (currentLineTemp <= snapshot.LineCount) {
-                        if (!_tokenCache.TryGetTokenization(currentLineTemp, out lineTokenizationTemp)) {
-                            lineTokenizationTemp = TokenizeLine(tokenizer, snapshot, stateTemp, currentLineTemp);
-                            _tokenCache[currentLineTemp] = lineTokenizationTemp;
-                        }
+            return line;
+        }
 
-                        stateTemp = lineTokenizationTemp.State;
-                    }
+        private SourceSpan GetMultiLineString(Tokenizer tokenizer, ITextSnapshot snapshot, TokenInfo initial) {
+            var bestStart = initial.SourceSpan.Start;
+            var bestEnd = initial.SourceSpan.End;
 
-                    prevLineTokenization = TokenizeLine(tokenizer, snapshot, stateTemp, prevLine);
-                    _tokenCache[prevLine] = prevLineTokenization;
+            for (int line = initial.SourceSpan.Start.Line - 1; line >= 0; --line) {
+                var tokens = GetTokenizationOfKnownState(tokenizer, snapshot, _tokenCache, line);
+
+                if (tokens.Tokens.Length == 0) {
+                    continue;
                 }
 
-                if (prevLineTokenization.Tokens.Length != 0) {
-                    if (prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1].Category != TokenCategory.IncompleteMultiLineStringLiteral) {
-                        break;
+                int lastIndex = tokens.Tokens.Length - 1;
+                // For the first line, only look up to the start location
+                if (line == initial.SourceSpan.Start.Line - 1) {
+                    lastIndex = tokens.Tokens.Count(t => t.SourceSpan.Start < initial.SourceSpan.Start);
+                    if (lastIndex >= tokens.Tokens.Length) {
+                        lastIndex = tokens.Tokens.Length - 1;
                     }
-
-                    startToken = prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1];
-                    length += GetSpanLength(startToken.SourceSpan);
                 }
 
-                validPrevLine = prevLine;
-                prevLine--;
+                // If the last token is not a string, the previous best was the start
+                var tok = tokens.Tokens[lastIndex];
+                if (tok.Category != TokenCategory.IncompleteMultiLineStringLiteral) {
+                    break;
+                }
 
-                if (prevLineTokenization.Tokens.Length > 1) {
-                    // http://pytools.codeplex.com/workitem/749
-                    // if there are multiple tokens on this line then our multi-line string
-                    // is terminated.
+                // We have a new best start point
+                bestStart = tok.SourceSpan.Start;
+
+                // If there are other tokens on this line, we have the start point
+                if (lastIndex > 0) {
                     break;
                 }
             }
-            return length;
-        }
 
-        private int GetTrailingMultiLineStrings(Tokenizer tokenizer, ITextSnapshot snapshot, int currentLine, object state) {
-            int nextLine = currentLine + 1;
-            var prevState = state;
-            int length = 0;
-            while (nextLine < snapshot.LineCount) {
-                LineTokenization nextLineTokenization;
-                if (!_tokenCache.TryGetTokenization(nextLine, out nextLineTokenization)) {
-                    nextLineTokenization = TokenizeLine(tokenizer, snapshot, prevState, nextLine);
-                    prevState = nextLineTokenization.State;
-                    _tokenCache[nextLine] = nextLineTokenization;
+            for (int line = initial.SourceSpan.End.Line - 1; line < snapshot.LineCount; ++line) {
+                var tokens = GetTokenizationOfKnownState(tokenizer, snapshot, _tokenCache, line);
+
+                if (tokens.Tokens.Length == 0) {
+                    continue;
                 }
 
-                if (nextLineTokenization.Tokens.Length != 0) {
-                    if (nextLineTokenization.Tokens[0].Category != TokenCategory.IncompleteMultiLineStringLiteral) {
-                        break;
+                int firstIndex = 0;
+                if (line == initial.SourceSpan.End.Line - 1) {
+                    firstIndex = tokens.Tokens.Count(t => t.SourceSpan.Start < initial.SourceSpan.Start);
+                    if (firstIndex >= tokens.Tokens.Length) {
+                        continue;
                     }
-
-                    length += GetSpanLength(nextLineTokenization.Tokens[0].SourceSpan);
                 }
-                nextLine++;
+
+                // If the first token is not a string, the previous best was the end
+                var tok = tokens.Tokens[firstIndex];
+                if (tok.Category == TokenCategory.StringLiteral) {
+                    bestEnd = tok.SourceSpan.End;
+                    break;
+                }
+                if (tok.Category != TokenCategory.IncompleteMultiLineStringLiteral) {
+                    break;
+                }
+
+                // We have a new best end point
+                bestEnd = tok.SourceSpan.End;
+
+                // If there are other tokens on this line, we have the end point
+                if (tokens.Tokens.Length - 1> firstIndex) {
+                    break;
+                }
             }
-            return length;
+
+            return new SourceSpan(bestStart, bestEnd);
         }
 
         /// <summary>
@@ -308,6 +300,7 @@ namespace Microsoft.PythonTools {
                 currentLine++;
             }
 
+
             // classification spans might have changed between the start of the first and end of the last visited line:
             int changeStart = snapshot.GetLineFromLineNumber(firstLine).Start;
             int changeEnd = (currentLine < snapshot.LineCount) ? snapshot.GetLineFromLineNumber(currentLine).End : snapshot.Length;
@@ -320,7 +313,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private LineTokenization TokenizeLine(Tokenizer tokenizer, ITextSnapshot snapshot, object previousLineState, int lineNo) {
+        private static LineTokenization TokenizeLine(Tokenizer tokenizer, ITextSnapshot snapshot, object previousLineState, int lineNo) {
             ITextSnapshotLine line = snapshot.GetLineFromLineNumber(lineNo);
             SnapshotSpan lineSpan = new SnapshotSpan(snapshot, line.Start, line.LengthIncludingLineBreak);
 
@@ -357,7 +350,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (classification != null) {
-                var tokenSpan = SnapshotSpanToSpan(span.Snapshot, token, lineNumber);
+                var tokenSpan = GetTokenSnapshotSpan(span.Snapshot, token.SourceSpan.Start, token.SourceSpan.End);
                 var intersection = span.Intersection(tokenSpan);
 
                 if (intersection != null && intersection.Value.Length > 0 ||
@@ -369,11 +362,37 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
-        private static Span SnapshotSpanToSpan(ITextSnapshot snapshot, TokenInfo token, int lineNumber) {
-            var line = snapshot.GetLineFromLineNumber(lineNumber);
-            var index = line.Start.Position + token.SourceSpan.Start.Column - 1;
-            var tokenSpan = new Span(index, GetSpanLength(token.SourceSpan));
-            return tokenSpan;
+        private static SnapshotSpan GetTokenSnapshotSpan(ITextSnapshot snapshot, SourceLocation tokenStart, SourceLocation tokenEnd) {
+            ITextSnapshotLine startLine, endLine;
+            if (tokenStart.Line <= 0) {
+                startLine = snapshot.GetLineFromLineNumber(0);
+            } else if (tokenStart.Line <= snapshot.LineCount) {
+                startLine = snapshot.GetLineFromLineNumber(tokenStart.Line - 1);
+            } else {
+                return new SnapshotSpan(snapshot, snapshot.Length, 0);
+            }
+
+            var startCol = tokenStart.Column - 1;
+            var start = (startLine.Start.Position + startCol >= startLine.EndIncludingLineBreak) ?
+                startLine.EndIncludingLineBreak:
+                (startLine.Start + startCol);
+
+            if (tokenEnd.Line == tokenStart.Line) {
+                endLine = startLine;
+            } else if (tokenEnd.Line <= 0) {
+                endLine = snapshot.GetLineFromLineNumber(0);
+            } else if (tokenEnd.Line <= snapshot.LineCount) {
+                endLine = snapshot.GetLineFromLineNumber(tokenEnd.Line - 1);
+            } else {
+                return new SnapshotSpan(snapshot, snapshot.Length, 0);
+            }
+
+            var endCol = tokenEnd.Column - 1;
+            var end = (endLine.Start.Position + endCol >= endLine.EndIncludingLineBreak) ?
+                endLine.EndIncludingLineBreak :
+                (endLine.Start + endCol);
+
+            return new SnapshotSpan(start, end);
         }
 
         Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
