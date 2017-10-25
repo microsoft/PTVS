@@ -81,6 +81,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
+            if (_target.ReturnAnnotation != null) {
+                var retAnn = new TypeAnnotation(_scope.Ast.LanguageVersion, _target.ReturnAnnotation);
+                var m = retAnn.GetValue(new AstTypeAnnotationConverter(_scope));
+                if (m is IPythonMultipleMembers mm) {
+                    _returnTypes.AddRange(mm.Members.OfType<IPythonType>());
+                } else if (m is IPythonType type) {
+                    _returnTypes.Add(type);
+                }
+            }
+
             _scope.PushScope();
             if (self != null) {
                 var p0 = _target.Parameters?.FirstOrDefault();

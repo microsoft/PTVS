@@ -328,7 +328,6 @@ R_A3 = R_A1.r_A()");
             AssertUtil.AreEqual(AstPythonType.CalculateMro(A).Select(t => t.Name), "A", "B", "C", "D", "E", "F", "O");
             AssertUtil.AreEqual(AstPythonType.CalculateMro(B).Select(t => t.Name), "B", "D", "E", "O");
             AssertUtil.AreEqual(AstPythonType.CalculateMro(C).Select(t => t.Name), "C", "D", "F", "O");
-            
         }
 
         private static IPythonModule Parse(string path, PythonLanguageVersion version) {
@@ -534,7 +533,7 @@ R_A3 = R_A1.r_A()");
                     interp.AddUnimportableModule(m);
                 }
 
-                foreach(var r in modules
+                foreach (var r in modules
                     .Where(m => !skip.Contains(m.ModuleName))
                     .GroupBy(m => {
                         int i = m.FullName.IndexOf('.');
@@ -573,6 +572,22 @@ R_A3 = R_A1.r_A()");
             Assert.IsFalse(anyParseError, "parse errors occurred");
         }
 
+        #endregion
+
+        #region Type Annotation tests
+        [TestMethod, Priority(0)]
+        public void AstTypeAnnotationConversion() {
+            using (var analysis = CreateAnalysis()) {
+                analysis.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                analysis.AddModule("test-module", @"from ReturnAnnotations import *
+x = f()
+y = g()");
+                analysis.WaitForAnalysis();
+
+                analysis.AssertIsInstance("x", BuiltinTypeId.Int);
+                analysis.AssertIsInstance("y", BuiltinTypeId.Str);
+            }
+        }
         #endregion
     }
 }
