@@ -2629,8 +2629,8 @@
       <Item ItemId=";ImportCoverageCommandFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[coverage.py XML (*.xml)|*.xml|所有檔案 (*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
+            <Val><![CDATA[涵蓋範圍 XML (*.xml)|*.xml|所有檔案 (*.*)|*.*]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
@@ -5233,6 +5233,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";VirtualEnvSaveDeferredSolution" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Your project must be saved before adding a virtual environment.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";WaitForCompleteAnalysisDialog_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cancel]]></Val>
@@ -5332,7 +5338,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17291.1]]></Val>
+        <Val><![CDATA[3.0.17297.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5368,7 +5374,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17291.1]]></Val>
+        <Val><![CDATA[3.0.17297.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
