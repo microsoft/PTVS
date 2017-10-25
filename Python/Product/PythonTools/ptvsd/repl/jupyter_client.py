@@ -14,26 +14,26 @@
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 """Implements REPL support over IPython/ZMQ for VisualStudio"""
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.0.0.0"
+__version__ = "3.2.1.0"
 
 import ast
 import re
 import sys
 import time
 import traceback
-from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
-from visualstudio_py_util import to_bytes
+from ptvsd.repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
+from ptvsd.util import to_bytes
 
 try:
     import jupyter_client
     import jupyter_client.manager
 except ImportError:
-    raise UnsupportedReplException("Jupyter mode requires the jupyter_client and ipykernel packages")
+    raise UnsupportedReplException("Jupyter mode requires the jupyter_client and ipykernel packages. " + traceback.format_exc())
 
 try:
     import _thread
