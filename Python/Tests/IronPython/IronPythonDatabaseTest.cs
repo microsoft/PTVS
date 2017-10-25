@@ -30,10 +30,9 @@ namespace IronPythonTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void InvalidIronPythonDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
                 // __bad_builtin__ is missing str

@@ -13,7 +13,7 @@
     <Name>Commands3</Name>
     <RootNamespace>Commands3</RootNamespace>
     <OutputPath>.</OutputPath>
-    <InterpreterId>Global|PythonCore|3.3-32</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.5-32</InterpreterId>
     <PythonCommands>PrintToRepl;PrintToOutput;PrintToConsole</PythonCommands>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -35,12 +35,10 @@
   <ItemGroup>
     <Compile Include="Program.py" />
   </ItemGroup>
-
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <PropertyGroup>
     <PythonCommands>PrintToRepl;PrintToOutput;PrintToConsole</PythonCommands>
   </PropertyGroup>
-
   <Target Name="SetInterpreterPath">
     <ResolveEnvironment>
       <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />

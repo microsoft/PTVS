@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -772,6 +772,44 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static string MisconfiguredEnvironment {
             get {
                 return ResourceManager.GetString("MisconfiguredEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IntelliSense [database disabled].
+        /// </summary>
+        public static string NoDBExtensionDisplayName {
+            get {
+                return ResourceManager.GetString("NoDBExtensionDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IntelliSense databases will be removed in a future update and have been disabled to help with testing. See the link below to reactivate the database..
+        /// </summary>
+        public static string NoDBExtensionHelpContent {
+            get {
+                return ResourceManager.GetString("NoDBExtensionHelpContent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In a future update to Visual Studio, IntelliSense databases for Python code will be removed. We are currently testing our replacement, and have enabled it in Preview.
+        ///
+        ///Click the link below and restart Visual Studio to restore the old functionality. It can be enabled again through Tools, Options, Python..
+        /// </summary>
+        public static string NoDBExtensionMessage {
+            get {
+                return ResourceManager.GetString("NoDBExtensionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reactivate IntelliSense databases in my next session.
+        /// </summary>
+        public static string NoDBExtensionReactivate {
+            get {
+                return ResourceManager.GetString("NoDBExtensionReactivate", resourceCulture);
             }
         }
         

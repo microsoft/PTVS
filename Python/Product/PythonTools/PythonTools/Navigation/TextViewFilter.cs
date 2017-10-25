@@ -16,7 +16,11 @@
 
 using System;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -25,6 +29,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Infrastructure;
 using IServiceProvider = System.IServiceProvider;
 
@@ -104,37 +109,32 @@ namespace Microsoft.PythonTools.Language {
             // Adjust the span to expression boundaries.
 
             var snapshot = _wpfTextView.TextSnapshot;
-            var start = LineAndColumnNumberToSnapshotPoint(snapshot, pSpan[0].iStartLine, pSpan[0].iStartIndex);
-            var end = LineAndColumnNumberToSnapshotPoint(snapshot, pSpan[0].iEndLine, pSpan[0].iEndIndex);
+            var pt = new SourceLocation(0, pSpan[0].iStartLine + 1, pSpan[0].iStartIndex + 1);
 
-            // If this is a zero-length span (which it usually is, unless there's selection), adjust it
-            // to cover one char to the right, since an empty span at the beginning of the expression does
-            // not count as belonging to that expression;
-            if (start == end && start.Position != snapshot.Length) {
-                end += 1;
-            }
-
-            var snapshotSpan = new SnapshotSpan(start, end);
-            var trackingSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, SpanTrackingMode.EdgeExclusive);
-            var rep = new ReverseExpressionParser(snapshot, _wpfTextView.TextBuffer, trackingSpan);
-            var exprSpan = rep.GetExpressionRange(forCompletion: false);
-            string expr = null;
-            if (exprSpan != null) {
-                SnapshotPointToLineAndColumnNumber(exprSpan.Value.Start, out pSpan[0].iStartLine, out pSpan[0].iStartIndex);
-                SnapshotPointToLineAndColumnNumber(exprSpan.Value.End, out pSpan[0].iEndLine, out pSpan[0].iEndIndex);
-                expr = VsProjectAnalyzer.ExpressionForDataTipAsync(
-                    _serviceProvider,
-                    _wpfTextView,
-                    exprSpan.Value,
-                    TimeSpan.FromSeconds(1.0)
-                ).WaitAndUnwrapExceptions(Dispatcher.CurrentDispatcher);
-            } else {
-                // If it's not an expression, suppress the tip.
+            var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
+            var analyzer = bi?.AnalysisEntry?.Analyzer;
+            if (analyzer == null) {
                 pbstrText = null;
                 return VSConstants.E_FAIL;
             }
 
-            return _debugger.GetDataTipValue(_vsTextLines, pSpan, expr, out pbstrText);
+            SourceSpan? expr;
+            try {
+                expr = _serviceProvider.GetUIThread().InvokeTaskSync(async () => {
+                    return await analyzer.GetExpressionSpanAtPointAsync(bi, pt, ExpressionAtPointPurpose.Hover, TimeSpan.FromSeconds(1.0));
+                }, CancellationTokens.After1s);
+            } catch (OperationCanceledException) {
+                expr = null;
+            }
+
+            if (expr == null) {
+                pbstrText = null;
+                return VSConstants.E_ABORT;
+            }
+
+            var span = expr.Value.ToSnapshotSpan(snapshot);
+
+            return _debugger.GetDataTipValue(_vsTextLines, pSpan, span.GetText(), out pbstrText);
         }
 
         public int GetPairExtents(int iLine, int iIndex, TextSpan[] pSpan) {
@@ -143,18 +143,6 @@ namespace Microsoft.PythonTools.Language {
 
         public int GetWordExtent(int iLine, int iIndex, uint dwFlags, TextSpan[] pSpan) {
             return VSConstants.E_NOTIMPL;
-        }
-
-        private static SnapshotPoint LineAndColumnNumberToSnapshotPoint(ITextSnapshot snapshot, int lineNumber, int columnNumber) {
-            var line = snapshot.GetLineFromLineNumber(lineNumber);
-            var snapshotPoint = new SnapshotPoint(snapshot, line.Start + columnNumber);
-            return snapshotPoint;
-        }
-
-        private static void SnapshotPointToLineAndColumnNumber(SnapshotPoint snapshotPoint, out int lineNumber, out int columnNumber) {
-            var line = snapshotPoint.GetContainingLine();
-            lineNumber = line.LineNumber;
-            columnNumber = snapshotPoint.Position - line.Start.Position;
         }
     }
 }

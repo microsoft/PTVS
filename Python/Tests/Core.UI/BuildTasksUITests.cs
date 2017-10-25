@@ -29,24 +29,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    [TestClass]
-    public class BuildTasksUI27Tests {
-        static BuildTasksUI27Tests() {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
-        internal virtual PythonVersion PythonVersion {
-            get {
-                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
-            }
-        }
-
+    public class BuildTasksUITests {
         internal void Execute(PythonProjectNode projectNode, string commandName) {
             Console.WriteLine("Executing command {0}", commandName);
             var t = projectNode.Site.GetUIThread().InvokeTask(() => projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode));
@@ -58,146 +45,124 @@ namespace PythonToolsUITests {
             return projectNode.Site.GetUIThread().InvokeTask(() => projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode));
         }
 
-        internal void OpenProject(VisualStudioApp app, string slnName, out PythonProjectNode projectNode, out EnvDTE.Project dteProject) {
-            PythonVersion.AssertInstalled();
-
-            dteProject = app.OpenProject("TestData\\Targets\\" + slnName);
+        internal void OpenProject(VisualStudioApp app, string slnName, PythonVersion python, out PythonProjectNode projectNode, out EnvDTE.Project dteProject) {
+            dteProject = app.OpenProject(app.CopyProjectForTest("TestData\\Targets\\" + slnName));
             projectNode = dteProject.GetPythonProject();
-            var fact = projectNode.InterpreterFactories.Where(x => x.Configuration.Id == PythonVersion.Id).FirstOrDefault();
+            var fact = projectNode.InterpreterFactories.Where(x => x.Configuration.Id == python.Id).FirstOrDefault();
             Assert.IsNotNull(fact, "Project does not contain expected interpreter");
             projectNode.ActiveInterpreter = fact;
             dteProject.Save();
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsAdded() {
-            using (var app = new VisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "Commands1.sln", out node, out proj);
+        public void CustomCommandsAdded(VisualStudioApp app, PythonVersion python) {
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "Commands1.sln", python, out node, out proj);
 
-                AssertUtil.ContainsExactly(
-                    node._customCommands.Select(cc => cc.DisplayLabel),
-                    "Test Command 1",
-                    "Test Command 2"
-                );
+            AssertUtil.ContainsExactly(
+                node._customCommands.Select(cc => cc.DisplayLabel),
+                "Test Command 1",
+                "Test Command 2"
+            );
 
-                app.OpenSolutionExplorer().FindItem("Solution 'Commands1' (1 project)", "Commands1").Select();
+            app.OpenSolutionExplorer().FindItem("Solution 'Commands1' (1 project)", "Commands1").Select();
 
-                var menuBar = app.FindByAutomationId("MenuBar").AsWrapper();
-                Assert.IsNotNull(menuBar, "Unable to find menu bar");
-                var projectMenu = menuBar.FindByName("Project").AsWrapper();
-                Assert.IsNotNull(projectMenu, "Unable to find Project menu");
-                projectMenu.Element.EnsureExpanded();
+            var menuBar = app.FindByAutomationId("MenuBar").AsWrapper();
+            Assert.IsNotNull(menuBar, "Unable to find menu bar");
+            var projectMenu = menuBar.FindByName("Project").AsWrapper();
+            Assert.IsNotNull(projectMenu, "Unable to find Project menu");
+            projectMenu.Element.EnsureExpanded();
 
+            try {
+                foreach (var name in node._customCommands.Select(cc => cc.DisplayLabelWithoutAccessKeys)) {
+                    Assert.IsNotNull(projectMenu.FindByName(name), name + " not found");
+                }
+            } finally {
                 try {
-                    foreach (var name in node._customCommands.Select(cc => cc.DisplayLabelWithoutAccessKeys)) {
-                        Assert.IsNotNull(projectMenu.FindByName(name), name + " not found");
-                    }
-                } finally {
-                    try {
-                        // Try really really hard to collapse and deselect the
-                        // Project menu, since VS will keep it selected and it
-                        // may not come back for some reason...
-                        projectMenu.Element.Collapse();
-                        Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
-                        Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
-                    } catch {
-                        // ...but don't try so hard that we fail if we can't 
-                        // simulate keypresses.
-                    }
+                    // Try really really hard to collapse and deselect the
+                    // Project menu, since VS will keep it selected and it
+                    // may not come back for some reason...
+                    projectMenu.Element.Collapse();
+                    Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
+                    Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
+                } catch {
+                    // ...but don't try so hard that we fail if we can't 
+                    // simulate keypresses.
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsWithResourceLabel() {
-            using (var app = new VisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "Commands2.sln", out node, out proj);
+        public void CustomCommandsWithResourceLabel(VisualStudioApp app, PythonVersion python) {
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "Commands2.sln", python, out node, out proj);
 
-                AssertUtil.ContainsExactly(
-                    node._customCommands.Select(cc => cc.Label),
-                    "resource:PythonToolsUITests;PythonToolsUITests.Resources;CommandName"
+            AssertUtil.ContainsExactly(
+                node._customCommands.Select(cc => cc.Label),
+                "resource:PythonToolsUITests;PythonToolsUITests.Resources;CommandName"
+            );
+
+            AssertUtil.ContainsExactly(
+                node._customCommands.Select(cc => cc.DisplayLabel),
+                "Command from Resource"
+            );
+        }
+
+        public void CustomCommandsReplWithResourceLabel(PythonVisualStudioApp app, PythonVersion python) {
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "Commands2.sln", python, out node, out proj);
+
+            Execute(node, "Command from Resource");
+
+            using (var repl = app.GetInteractiveWindow("Repl from Resource")) {
+                Assert.IsNotNull(repl, "Could not find repl window");
+                repl.WaitForTextEnd(
+                    "Program.py completed",
+                    ">"
                 );
+            }
 
-                AssertUtil.ContainsExactly(
-                    node._customCommands.Select(cc => cc.DisplayLabel),
-                    "Command from Resource"
+            using (var repl = app.GetInteractiveWindow("resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName")) {
+                Assert.IsNull(repl);
+            }
+        }
+
+        public void CustomCommandsRunInRepl(PythonVisualStudioApp app, PythonVersion python) {
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "Commands1.sln", python, out node, out proj);
+
+            Execute(node, "Test Command 2");
+
+            using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                Assert.IsNotNull(repl, "Could not find repl window");
+                repl.WaitForTextEnd(
+                    "Program.py completed",
+                    ">"
                 );
             }
-        }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsReplWithResourceLabel() {
-            using (var app = new PythonVisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "Commands2.sln", out node, out proj);
+            app.Dte.Solution.Close();
 
-                Execute(node, "Command from Resource");
-
-                using (var repl = app.GetInteractiveWindow("Repl from Resource")) {
-                    Assert.IsNotNull(repl, "Could not find repl window");
-                    repl.WaitForTextEnd(
-                        "Program.py completed",
-                        ">"
-                    );
-                }
-
-                using (var repl = app.GetInteractiveWindow("resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName")) {
-                    Assert.IsNull(repl);
-                }
+            using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                Assert.IsNull(repl, "Repl window was not closed");
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsRunInRepl() {
-            using (var app = new PythonVisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "Commands1.sln", out node, out proj);
+        public void CustomCommandsRunProcessInRepl(PythonVisualStudioApp app, PythonVersion python) {
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "Commands3.sln", python, out node, out proj);
 
-                Execute(node, "Test Command 2");
+            Execute(node, "Write to Repl");
 
-                using (var repl = app.GetInteractiveWindow("Test Repl")) {
-                    Assert.IsNotNull(repl, "Could not find repl window");
-                    repl.WaitForTextEnd(
-                        "Program.py completed",
-                        ">"
-                    );
-                }
-
-                app.Dte.Solution.Close();
-
-                using (var repl = app.GetInteractiveWindow("Test Repl")) {
-                    Assert.IsNull(repl, "Repl window was not closed");
-                }
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsRunProcessInRepl() {
-            using (var app = new PythonVisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "Commands3.sln", out node, out proj);
-
-                Execute(node, "Write to Repl");
-
-                using (var repl = app.GetInteractiveWindow("Test Repl")) {
-                    Assert.IsNotNull(repl, "Could not find repl window");
-                    repl.WaitForTextEnd(
-                        string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor),
-                        ">"
-                    );
-                }
+            using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                Assert.IsNotNull(repl, "Could not find repl window");
+                repl.WaitForTextEnd(
+                    string.Format("({0}, {1})", python.Configuration.Version.Major, python.Configuration.Version.Minor),
+                    ">"
+                );
             }
         }
 
@@ -222,139 +187,124 @@ namespace PythonToolsUITests {
             Assert.IsTrue(outputText.Contains(expected), string.Format("Expected to see:\r\n\r\n{0}\r\n\r\nActual content:\r\n\r\n{1}", expected, outputText));
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsRunProcessInOutput() {
-            using (var app = new PythonVisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "Commands3.sln", out node, out proj);
+        public void CustomCommandsRunProcessInOutput(PythonVisualStudioApp app, PythonVersion python) {
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "Commands3.sln", python, out node, out proj);
 
-                Execute(node, "Write to Output");
+            Execute(node, "Write to Output");
 
-                var outputWindow = app.Element.FindFirst(TreeScope.Descendants,
-                    new AndCondition(
-                        new PropertyCondition(AutomationElement.ClassNameProperty, "GenericPane"),
-                        new PropertyCondition(AutomationElement.NameProperty, "Output")
-                    )
-                );
-                Assert.IsNotNull(outputWindow, "Output Window was not opened");
+            var outputWindow = app.Element.FindFirst(TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "GenericPane"),
+                    new PropertyCondition(AutomationElement.NameProperty, "Output")
+                )
+            );
+            Assert.IsNotNull(outputWindow, "Output Window was not opened");
 
-                ExpectOutputWindowText(app, string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor));
-            }
+            ExpectOutputWindowText(app, string.Format("({0}, {1})", python.Configuration.Version.Major, python.Configuration.Version.Minor));
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsRunProcessInConsole() {
-            using (var app = new PythonVisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "Commands3.sln", out node, out proj);
+        public void CustomCommandsRunProcessInConsole(PythonVisualStudioApp app, PythonVersion python) {
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "Commands3.sln", python, out node, out proj);
 
-                var existingProcesses = new HashSet<int>(Process.GetProcessesByName("cmd").Select(p => p.Id));
+            var existingProcesses = new HashSet<int>(Process.GetProcessesByName("cmd").Select(p => p.Id));
 
-                Execute(node, "Write to Console");
+            Execute(node, "Write to Console");
 
-                Process newProcess = null;
-                for (int retries = 100; retries > 0 && newProcess == null; --retries) {
-                    Thread.Sleep(100);
-                    newProcess = Process.GetProcessesByName("cmd").Where(p => !existingProcesses.Contains(p.Id)).FirstOrDefault();
+            Process newProcess = null;
+            for (int retries = 100; retries > 0 && newProcess == null; --retries) {
+                Thread.Sleep(100);
+                newProcess = Process.GetProcessesByName("cmd").Where(p => !existingProcesses.Contains(p.Id)).FirstOrDefault();
+            }
+            Assert.IsNotNull(newProcess, "Process did not start");
+            try {
+                newProcess.CloseMainWindow();
+                newProcess.WaitForExit(1000);
+                if (newProcess.HasExited) {
+                    newProcess = null;
                 }
-                Assert.IsNotNull(newProcess, "Process did not start");
-                try {
-                    Keyboard.PressAndRelease(System.Windows.Input.Key.Space);
-                    newProcess.WaitForExit(1000);
-                    if (newProcess.HasExited) {
-                        newProcess = null;
-                    }
-                } finally {
-                    if (newProcess != null) {
-                        newProcess.Kill();
-                    }
+            } finally {
+                if (newProcess != null) {
+                    newProcess.Kill();
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsErrorList() {
-            using (var app = new PythonVisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "ErrorCommand.sln", out node, out proj);
+        public void CustomCommandsErrorList(PythonVisualStudioApp app, PythonVersion python) {
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "ErrorCommand.sln", python, out node, out proj);
 
-                var expectedItems = new[] {
+            var expectedItems = new[] {
                     new { Document = "Program.py", Line = 0, Column = 1, Category = __VSERRORCATEGORY.EC_ERROR, Message = "This is an error with a relative path." },
                     new { Document = Path.Combine(node.ProjectHome, "Program.py"), Line = 2, Column = 3, Category = __VSERRORCATEGORY.EC_WARNING, Message = "This is a warning with an absolute path." },
                     new { Document = ">>>", Line = 4, Column = -1, Category = __VSERRORCATEGORY.EC_ERROR, Message = "This is an error with an invalid path." },
                 };
 
-                Execute(node, "Produce Errors");
-                var items = app.WaitForErrorListItems(3);
-                Console.WriteLine("Got errors:");
-                foreach (var item in items) {
-                    string document, text;
-                    Assert.AreEqual(0, item.Document(out document), "HRESULT getting document");
-                    Assert.AreEqual(0, item.get_Text(out text), "HRESULT getting message");
-                    Console.WriteLine("  {0}: {1}", document ?? "(null)", text ?? "(null)");
-                }
-                Assert.AreEqual(expectedItems.Length, items.Count);
-
-                // Second invoke should replace the error items in the list, not add new ones to those already existing.
-                Execute(node, "Produce Errors");
-                items = app.WaitForErrorListItems(3);
-                Assert.AreEqual(expectedItems.Length, items.Count);
-
-                items.Sort(Comparer<IVsTaskItem>.Create((x, y) => {
-                    int lx, ly;
-                    x.Line(out lx);
-                    y.Line(out ly);
-                    return lx.CompareTo(ly);
-                }));
-
-                for (int i = 0; i < expectedItems.Length; ++i) {
-                    var item = items[i];
-                    var expectedItem = expectedItems[i];
-
-                    string document, message;
-                    item.get_Text(out message);
-                    item.Document(out document);
-
-                    int line, column;
-                    item.Line(out line);
-                    item.Column(out column);
-
-                    uint category;
-                    ((IVsErrorItem)item).GetCategory(out category);
-
-                    Assert.AreEqual(expectedItem.Document, document);
-                    Assert.AreEqual(expectedItem.Line, line);
-                    Assert.AreEqual(expectedItem.Column, column);
-                    Assert.AreEqual(expectedItem.Message, message);
-                    Assert.AreEqual(expectedItem.Category, (__VSERRORCATEGORY)category);
-                }
-
-                app.ServiceProvider.GetUIThread().Invoke((Action)delegate { items[0].NavigateTo(); });
-
-                var doc = app.Dte.ActiveDocument;
-                Assert.IsNotNull(doc);
-                Assert.AreEqual("Program.py", doc.Name);
-
-                var textDoc = (EnvDTE.TextDocument)doc.Object("TextDocument");
-                Assert.AreEqual(1, textDoc.Selection.ActivePoint.Line);
-                Assert.AreEqual(2, textDoc.Selection.ActivePoint.DisplayColumn);
+            Execute(node, "Produce Errors");
+            var items = app.WaitForErrorListItems(3);
+            Console.WriteLine("Got errors:");
+            foreach (var item in items) {
+                string document, text;
+                Assert.AreEqual(0, item.Document(out document), "HRESULT getting document");
+                Assert.AreEqual(0, item.get_Text(out text), "HRESULT getting message");
+                Console.WriteLine("  {0}: {1}", document ?? "(null)", text ?? "(null)");
             }
+            Assert.AreEqual(expectedItems.Length, items.Count);
+
+            // Second invoke should replace the error items in the list, not add new ones to those already existing.
+            Execute(node, "Produce Errors");
+            items = app.WaitForErrorListItems(3);
+            Assert.AreEqual(expectedItems.Length, items.Count);
+
+            items.Sort(Comparer<IVsTaskItem>.Create((x, y) => {
+                int lx, ly;
+                x.Line(out lx);
+                y.Line(out ly);
+                return lx.CompareTo(ly);
+            }));
+
+            for (int i = 0; i < expectedItems.Length; ++i) {
+                var item = items[i];
+                var expectedItem = expectedItems[i];
+
+                string document, message;
+                item.get_Text(out message);
+                item.Document(out document);
+
+                int line, column;
+                item.Line(out line);
+                item.Column(out column);
+
+                uint category;
+                ((IVsErrorItem)item).GetCategory(out category);
+
+                Assert.AreEqual(expectedItem.Document, document);
+                Assert.AreEqual(expectedItem.Line, line);
+                Assert.AreEqual(expectedItem.Column, column);
+                Assert.AreEqual(expectedItem.Message, message);
+                Assert.AreEqual(expectedItem.Category, (__VSERRORCATEGORY)category);
+            }
+
+            app.ServiceProvider.GetUIThread().Invoke((Action)delegate { items[0].NavigateTo(); });
+
+            var doc = app.Dte.ActiveDocument;
+            Assert.IsNotNull(doc);
+            Assert.AreEqual("Program.py", doc.Name);
+
+            var textDoc = (EnvDTE.TextDocument)doc.Object("TextDocument");
+            Assert.AreEqual(1, textDoc.Selection.ActivePoint.Line);
+            Assert.AreEqual(2, textDoc.Selection.ActivePoint.DisplayColumn);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsRequiredPackages() {
-            using (var app = new PythonVisualStudioApp())
-            using (var dis = app.SelectDefaultInterpreter(PythonVersion, "virtualenv")) {
+        public void CustomCommandsRequiredPackages(PythonVisualStudioApp app, PythonVersion python) {
+            using (var dis = app.SelectDefaultInterpreter(python, "virtualenv")) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
-                OpenProject(app, "CommandRequirePackages.sln", out node, out proj);
+                OpenProject(app, "CommandRequirePackages.sln", python, out node, out proj);
 
                 string envName;
                 var env = app.CreateVirtualEnvironment(proj, out envName);
@@ -424,7 +374,7 @@ namespace PythonToolsUITests {
                     }
                     task.Wait();
 
-                    var ver = PythonVersion.Version.ToVersion();
+                    var ver = python.Version.ToVersion();
                     ExpectOutputWindowText(app, string.Format("pass {0}.{1}", ver.Major, ver.Minor));
                 } finally {
                     if (!task.IsCanceled && !task.IsCompleted && !task.IsFaulted) {
@@ -438,10 +388,7 @@ namespace PythonToolsUITests {
             }
         }
 
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void CustomCommandsSearchPath() {
+        public void CustomCommandsSearchPath(PythonVisualStudioApp app, PythonVersion python) {
             var expectedSearchPath = string.Format("['{0}', '{1}', '{2}']",
                 // Includes CWD (ProjectHome) first
                 TestData.GetPath(@"TestData\Targets\Package\Subpackage").Replace("\\", "\\\\"),
@@ -450,42 +397,22 @@ namespace PythonToolsUITests {
                 // Specified as '..' from ProjectHome
                 TestData.GetPath(@"TestData\Targets\Package").Replace("\\", "\\\\")
             );
-           
-            using (var app = new PythonVisualStudioApp()) {
-                PythonProjectNode node;
-                EnvDTE.Project proj;
-                OpenProject(app, "CommandSearchPath.sln", out node, out proj);
 
-                Execute(node, "Import From Search Path");
+            PythonProjectNode node;
+            EnvDTE.Project proj;
+            OpenProject(app, "CommandSearchPath.sln", python, out node, out proj);
 
-                var outputWindow = app.Element.FindFirst(TreeScope.Descendants,
-                    new AndCondition(
-                        new PropertyCondition(AutomationElement.ClassNameProperty, "GenericPane"),
-                        new PropertyCondition(AutomationElement.NameProperty, "Output")
-                    )
-                );
-                Assert.IsNotNull(outputWindow, "Output Window was not opened");
+            Execute(node, "Import From Search Path");
 
-                ExpectOutputWindowText(app, expectedSearchPath);
-            }
-        }
-    }
+            var outputWindow = app.Element.FindFirst(TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "GenericPane"),
+                    new PropertyCondition(AutomationElement.NameProperty, "Output")
+                )
+            );
+            Assert.IsNotNull(outputWindow, "Output Window was not opened");
 
-    [TestClass]
-    public class BuildTasksUI26Tests : BuildTasksUI27Tests {
-        internal override PythonVersion PythonVersion {
-            get {
-                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
-            }
-        }
-    }
-
-    [TestClass]
-    public class BuildTasksUI35Tests : BuildTasksUI27Tests {
-        internal override PythonVersion PythonVersion {
-            get {
-                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;
-            }
+            ExpectOutputWindowText(app, expectedSearchPath);
         }
     }
 }

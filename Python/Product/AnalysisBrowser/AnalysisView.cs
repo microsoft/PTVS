@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
             if (version == null) {
                 if (File.Exists(IOPath.Combine(paths[0], "builtins.idb"))) {
-                    version = new Version(3, 3);
+                    version = new Version(3, 6);
                 } else {
                     version = new Version(2, 7);
                 }

@@ -96,7 +96,7 @@ TRACE and will also log detailed analysis information to CSV file.
                 Trace.AutoFlush = true;
 
                 if (VERBOSE & !(STDLIB | DJANGO | PATH)) {
-                    AnalysisLog.Output = new StreamWriter(new FileStream("AnalysisTests.Trace.csv", FileMode.Create, FileAccess.Write, FileShare.Read), Encoding.UTF8);
+                    AnalysisLog.Output = "AnalysisTests.Trace.csv";
                     AnalysisLog.AsCSV = true;
                 }
             } else {
@@ -179,8 +179,7 @@ TRACE and will also log detailed analysis information to CSV file.
 
             foreach (var ver in VERSIONS) {
                 if (VERBOSE) {
-                    AnalysisLog.ResetTime();
-                    AnalysisLog.Output = new StreamWriter(new FileStream(string.Format("AnalysisTests.StdLib.{0}.csv", ver.Version), FileMode.Append, FileAccess.Write, FileShare.Read), Encoding.UTF8);
+                    AnalysisLog.Output = string.Format("AnalysisTests.StdLib.{0}.csv", ver.Version);
                     AnalysisLog.AsCSV = true;
                     AnalysisLog.Add("StdLib Start", ver.InterpreterPath, ver.Version, DateTime.Now);
                 }
@@ -224,8 +223,7 @@ TRACE and will also log detailed analysis information to CSV file.
                 }
 
                 if (VERBOSE) {
-                    AnalysisLog.ResetTime();
-                    AnalysisLog.Output = new StreamWriter(new FileStream(string.Format("AnalysisTests.Django.{0}.csv", ver.Version), FileMode.Append, FileAccess.Write, FileShare.Read), Encoding.UTF8);
+                    AnalysisLog.Output = string.Format("AnalysisTests.Django.{0}.csv", ver.Version);
                     AnalysisLog.AsCSV = true;
                     AnalysisLog.Add("Django Start", ver.InterpreterPath, ver.Version, DateTime.Now);
                 }
@@ -266,8 +264,7 @@ TRACE and will also log detailed analysis information to CSV file.
 
                 foreach (var ver in VERSIONS) {
                     if (VERBOSE) {
-                        AnalysisLog.ResetTime();
-                        AnalysisLog.Output = new StreamWriter(new FileStream(string.Format("AnalysisTests.Path.{0}.csv", ver.Version), FileMode.Append, FileAccess.Write, FileShare.Read), Encoding.UTF8);
+                        AnalysisLog.Output = string.Format("AnalysisTests.Path.{0}.csv", ver.Version);
                         AnalysisLog.AsCSV = true;
                         AnalysisLog.Add("Path Start", path, ver.Version, DateTime.Now);
                     }

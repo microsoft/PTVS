@@ -239,6 +239,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
+                _name?.Walk(walker);
                 if (_parameters != null) {
                     foreach (Parameter p in _parameters) {
                         p.Walk(walker);
@@ -281,7 +282,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (Decorators != null) {
                 Decorators.AppendCodeString(res, ast, format);
             }
-            format.ReflowComment(res, this.GetProceedingWhiteSpaceDefaultNull(ast));
+            format.ReflowComment(res, this.GetPreceedingWhiteSpaceDefaultNull(ast));
             if (IsCoroutine) {
                 res.Append("async");
                 res.Append(NodeAttributes.GetWhiteSpace(this, ast, WhitespaceAfterAsync));

@@ -20,131 +20,107 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 
 namespace TestUtilities {
     public static class TestData {
-        const string BinariesAltSourcePath = @"Tests";
-        const string BinariesSourcePath = @"BuildOutput\" +
-#if DEBUG
-            @"Debug" +
-#else
-            @"Release" + 
-#endif
-            AssemblyVersionInfo.VSVersion + @"\Tests";
-        const string BinariesOutPath = "";
-
-        const string DataAltSourcePath = @"Tests\TestData";
-        const string DataOutPath = @"TestData";
-
-        private static string GetSolutionDir() {
-            var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
+        private static string GetRootDir() {
+            var dir = CommonUtils.GetParent((typeof(TestData)).Assembly.Location);
             while (!string.IsNullOrEmpty(dir) &&
                 Directory.Exists(dir) &&
-                !File.Exists(Path.Combine(dir, "build.root"))) {
-                dir = Path.GetDirectoryName(dir);
+                !File.Exists(CommonUtils.GetAbsoluteFilePath(dir, "build.root"))) {
+                dir = CommonUtils.GetParent(dir);
             }
             return dir ?? "";
         }
 
-        public static void CopyFiles(string sourceDir, string destDir) {
-            FileUtils.CopyDirectory(sourceDir, destDir);
-        }
-
-        public static string BinarySourceLocation {
-            get {
-                var sourceRoot = GetSolutionDir();
-                var binSource = Path.Combine(sourceRoot, BinariesSourcePath);
-                if (!Directory.Exists(binSource)) {
-                    binSource = Path.Combine(sourceRoot, BinariesAltSourcePath);
-                    if (!Directory.Exists(binSource)) {
-                        Debug.Fail("Could not find location of test binaries." + Environment.NewLine + "    " + binSource);
-                    }
-                }
-                Console.WriteLine("Binary source location: {0}", binSource);
-                return binSource;
-            }
-        }
-
-        public static void Deploy(string dataSourcePath, bool includeTestData = true) {
-            var sourceRoot = GetSolutionDir();
-            var deployRoot = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
-
-            if (deployRoot.Length < 5) {
-                Debug.Fail("Invalid deploy root", string.Format("sourceRoot={0}\ndeployRoot={1}", sourceRoot, deployRoot));
-            }
-
-            var binSource = BinarySourceLocation;
-
-            var binDest = Path.Combine(deployRoot, BinariesOutPath);
-            if (binSource == binDest) {
-                if (includeTestData) {
-                    Debug.Fail("Running tests inside build directory", "Select the default.testsettings file before running tests.");
-                } else {
-                    return;
-                }
-            }
-
-            CopyFiles(binSource, binDest);
-
-            if (includeTestData) {
-                var dataSource = Path.Combine(sourceRoot, dataSourcePath);
-                if (!Directory.Exists(dataSource)) {
-                    dataSource = Path.Combine(sourceRoot, DataAltSourcePath);
-                    if (!Directory.Exists(dataSource)) {
-                        Debug.Fail("Could not find location of test data." + Environment.NewLine + "    " + dataSource);
-                    }
-                }
-
-                CopyFiles(dataSource, Path.Combine(deployRoot, DataOutPath));
+        public static void ProvideContext(TestContext context) {
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("_TESTDATA_TEMP_PATH"))) {
+                Environment.SetEnvironmentVariable("_TESTDATA_TEMP_PATH", context.DeploymentDirectory);
             }
         }
 
         /// <summary>
         /// Returns the full path to the test data root.
         /// </summary>
-        public static string GetPath() {
-            return Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
+        private static string CalculateTestDataRoot() {
+            var path = Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH");
+            if (Directory.Exists(path)) {
+                return path;
+            }
+
+            path = GetRootDir();
+            if (Directory.Exists(path)) {
+                foreach (var landmark in new[] {
+                    "TestData",
+                    @"Python\Tests\TestData"
+                }) {
+                    var candidate = CommonUtils.GetAbsoluteDirectoryPath(path, landmark);
+                    if (Directory.Exists(candidate)) {
+                        return CommonUtils.GetParent(candidate);
+                    }
+                }
+            }
+
+            throw new InvalidOperationException("Failed to find test data");
         }
+
+        private static readonly Lazy<string> _root = new Lazy<string>(CalculateTestDataRoot);
+        public static string Root => _root.Value;
 
         /// <summary>
         /// Returns the full path to the deployed file.
         /// </summary>
-        public static string GetPath(string relativePath) {
-            return CommonUtils.GetAbsoluteFilePath(GetPath(), relativePath);
+        public static string GetPath(params string[] paths) {
+            var res = Root;
+            foreach (var p in paths) {
+                res = CommonUtils.GetAbsoluteFilePath(res, p);
+            }
+            return res;
         }
+
+        private static string CalculateTempRoot() {
+            var path = Environment.GetEnvironmentVariable("_TESTDATA_TEMP_PATH");
+            
+            if (string.IsNullOrEmpty(path)) {
+                path = Path.GetTempPath();
+                var subpath = Path.Combine(path, Path.GetRandomFileName());
+                while (Directory.Exists(subpath) || File.Exists(subpath)) {
+                    subpath = Path.Combine(path, Path.GetRandomFileName());
+                }
+                path = subpath;
+            }
+            if (!Directory.Exists(path)) {
+                Directory.CreateDirectory(path);
+            }
+            return path;
+        }
+
+        private static readonly Lazy<string> _tempRoot = new Lazy<string>(CalculateTempRoot);
 
         /// <summary>
         /// Returns the full path to a temporary directory. This is within the
         /// deployment to ensure that test files are easily cleaned up.
         /// </summary>
-        public static string GetTempPath(string subPath = null, bool randomSubPath = false) {
-            var path = TestData.GetPath("Temp");
-            if (randomSubPath) {
+        /// <param name="subPath">
+        /// Name of the subdirectory within the temporary directory. If omitted,
+        /// a randomly generated name will be used.
+        /// </param>
+        public static string GetTempPath(string subPath = null) {
+            var path = _tempRoot.Value;
+            if (string.IsNullOrEmpty(subPath)) {
                 subPath = Path.GetRandomFileName();
                 while (Directory.Exists(Path.Combine(path, subPath))) {
                     subPath = Path.GetRandomFileName();
                 }
             }
-            if (!string.IsNullOrEmpty(subPath)) {
-                path = Path.Combine(path, subPath);
+            path = CommonUtils.GetAbsoluteDirectoryPath(path, subPath);
+            if (!Directory.Exists(path)) {
+                Directory.CreateDirectory(path);
             }
-            Directory.CreateDirectory(path);
+            Console.WriteLine($"Creating temp directory for test at {path}");
             return path;
-        }
-
-        /// <summary>
-        /// Opens a FileStream for a file from the current deployment.
-        /// </summary>
-        public static FileStream Open(string relativePath, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read) {
-            return new FileStream(GetPath(relativePath), mode, access, share);
-        }
-
-        /// <summary>
-        /// Opens a StreamReader for a file from the current deployment.
-        /// </summary>
-        public static StreamReader Read(string relativePath, Encoding encoding = null) {
-            return new StreamReader(GetPath(relativePath), encoding ?? Encoding.Default);
         }
     }
 }

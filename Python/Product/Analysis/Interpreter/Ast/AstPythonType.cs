@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -23,15 +24,17 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonType : IPythonType, IMemberContainer, ILocatedMember {
-        private readonly Dictionary<string, IMember> _members;
+        private readonly string _name;
+        protected readonly Dictionary<string, IMember> _members;
+        private IList<IPythonType> _mro;
 
         private static readonly IPythonModule NoDeclModule = new AstPythonModule();
 
         public AstPythonType(string name) {
             _members = new Dictionary<string, IMember>();
-            Name = name;
+            _name = name ?? throw new ArgumentNullException(nameof(name));
             DeclaringModule = NoDeclModule;
-            Mro = Array.Empty<IPythonType>();
+            _mro = Array.Empty<IPythonType>();
             Locations = Array.Empty<LocationInfo>();
         }
 
@@ -40,16 +43,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IPythonModule declModule,
             ClassDefinition def,
             string doc,
-            LocationInfo loc,
-            IEnumerable<IPythonType> mro
+            LocationInfo loc
         ) {
             _members = new Dictionary<string, IMember>();
 
-            Name = def.Name;
+            _name = def?.Name ?? throw new ArgumentNullException(nameof(def));
             Documentation = doc;
-            DeclaringModule = declModule;
-            Mro = mro.MaybeEnumerate().ToArray();
-            Locations = new[] { loc };
+            DeclaringModule = declModule ?? throw new ArgumentNullException(nameof(declModule));
+            Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
+            StartIndex = def?.StartIndex ?? 0;
         }
 
         internal void AddMembers(IEnumerable<KeyValuePair<string, IMember>> members, bool overwrite) {
@@ -66,20 +68,130 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        public string Name { get; }
+        internal void SetBases(IPythonInterpreter interpreter, IEnumerable<IPythonType> bases) {
+            if (Bases != null) {
+                throw new InvalidOperationException("cannot set Bases multiple times");
+            }
+            Bases = bases.MaybeEnumerate().ToArray();
+            lock (_members) {
+                if (Bases.Count > 0) {
+                    _members["__base__"] = Bases[0];
+                }
+                _members["__bases__"] = new AstPythonSequence(interpreter?.GetBuiltinType(BuiltinTypeId.Tuple), DeclaringModule, Bases);
+            }
+        }
+
+        public IList<IPythonType> Mro {
+            get {
+                lock (_members) {
+                    if (_mro != null) {
+                        return _mro;
+                    }
+                    if (Bases == null) {
+                        Debug.Fail("Accessing Mro before SetBases has been called");
+                        return new IPythonType[] { this };
+                    }
+                    _mro = new IPythonType[] { this };
+                    _mro = CalculateMro(this);
+                    return _mro;
+                }
+            }
+        }
+
+        internal static IList<IPythonType> CalculateMro(IPythonType cls, HashSet<IPythonType> recursionProtection = null) {
+            if (cls == null) {
+                return Array.Empty<IPythonType>();
+            }
+            if (recursionProtection == null) {
+                recursionProtection = new HashSet<IPythonType>();
+            }
+            if (!recursionProtection.Add(cls)) {
+                return Array.Empty<IPythonType>();
+            }
+            try {
+                var mergeList = new List<List<IPythonType>> { new List<IPythonType>() };
+                var finalMro = new List<IPythonType> { cls };
+
+                var bases = (cls as AstPythonType)?.Bases ??
+                    (cls.GetMember(null, "__bases__") as IPythonSequenceType)?.IndexTypes ??
+                    Array.Empty<IPythonType>();
+
+                foreach (var b in bases) {
+                    var b_mro = new List<IPythonType>();
+                    b_mro.AddRange(CalculateMro(b, recursionProtection));
+                    mergeList.Add(b_mro);
+                }
+
+                while (mergeList.Any()) {
+                    // Next candidate is the first head that does not appear in
+                    // any other tails.
+                    var nextInMro = mergeList.FirstOrDefault(mro => {
+                        var m = mro.FirstOrDefault();
+                        return m != null && !mergeList.Any(m2 => m2.Skip(1).Contains(m));
+                    })?.FirstOrDefault();
+
+                    if (nextInMro == null) {
+                        // MRO is invalid, so return just this class
+                        return new IPythonType[] { cls };
+                    }
+
+                    finalMro.Add(nextInMro);
+
+                    // Remove all instances of that class from potentially being returned again
+                    foreach (var mro in mergeList) {
+                        mro.RemoveAll(ns => ns == nextInMro);
+                    }
+
+                    // Remove all lists that are now empty.
+                    mergeList.RemoveAll(mro => !mro.Any());
+                }
+
+                return finalMro;
+            } finally {
+                recursionProtection.Remove(cls);
+            }
+        }
+
+        public string Name {
+            get {
+                lock (_members) {
+                    IMember nameMember;
+                    if (_members.TryGetValue("__name__", out nameMember) && nameMember is AstPythonStringLiteral lit) {
+                        return lit.Value;
+                    }
+                }
+                return _name;
+            }
+        }
         public string Documentation { get; }
         public IPythonModule DeclaringModule {get;}
-        public IList<IPythonType> Mro { get; }
-        public bool IsBuiltin => true;
+        public IReadOnlyList<IPythonType> Bases { get; private set; }
+        public virtual bool IsBuiltin => false;
         public PythonMemberType MemberType => PythonMemberType.Class;
-        public BuiltinTypeId TypeId => BuiltinTypeId.Type;
+        public virtual BuiltinTypeId TypeId => BuiltinTypeId.Type;
+
+        /// <summary>
+        /// The start index of this class. Used to disambiguate multiple
+        /// class definitions with the same name in the same file.
+        /// </summary>
+        public int StartIndex { get; }
 
         public IEnumerable<LocationInfo> Locations { get; }
 
         public IMember GetMember(IModuleContext context, string name) {
             IMember member;
             lock (_members) {
-                _members.TryGetValue(name, out member);
+                if (!_members.TryGetValue(name, out member)) {
+                    switch (name) {
+                        case "__mro__":
+                            member = _members[name] = new AstPythonSequence(
+                                (context as IPythonInterpreter)?.GetBuiltinType(BuiltinTypeId.Tuple),
+                                DeclaringModule,
+                                Mro
+                            );
+                            break;
+                    }
+                }
             }
             return member;
         }

@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
@@ -67,6 +68,7 @@ namespace Microsoft.PythonTools.Language {
         private readonly AnalysisEntryService _entryService;
         private readonly ITextBufferUndoManagerProvider _undoManagerProvider;
         private readonly IOleCommandTarget _next;
+        private readonly IPeekBroker _peekBroker;
 
         private EditFilter(
             IVsTextView vsTextView,
@@ -85,6 +87,7 @@ namespace Microsoft.PythonTools.Language {
             _entryService = _componentModel.GetService<AnalysisEntryService>();
             _undoManagerProvider = _componentModel.GetService<ITextBufferUndoManagerProvider>();
             _next = next;
+            _peekBroker = _componentModel.GetService<IPeekBroker>();
 
             BraceMatcher.WatchBraceHighlights(textView, _componentModel);
 
@@ -145,7 +148,7 @@ namespace Microsoft.PythonTools.Language {
             var caret = _textView.GetPythonCaret();
             var analysis = _textView.GetAnalysisAtCaret(_serviceProvider);
             if (analysis != null && caret != null) {
-                var defs = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, _textView, caret.Value);
+                var defs = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, caret.Value);
                 if (defs == null) {
                     return;
                 }
@@ -217,7 +220,7 @@ namespace Microsoft.PythonTools.Language {
             var caret = _textView.GetPythonCaret();
             var analysis = _textView.GetAnalysisAtCaret(_serviceProvider);
             if (analysis != null && caret != null) {
-                var references = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, _textView, caret.Value);
+                var references = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, caret.Value);
                 if (references == null) {
                     return;
                 }
@@ -670,9 +673,19 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd97CmdID.GotoDefn: GotoDefinition(); return VSConstants.S_OK;
                     case VSConstants.VSStd97CmdID.FindReferences: FindAllReferences(); return VSConstants.S_OK;
                 }
+            } else if (pguidCmdGroup == VSConstants.VsStd12) {
+                switch ((VSConstants.VSStd12CmdID)nCmdID) {
+                    case VSConstants.VSStd12CmdID.PeekDefinition:
+                        if (_peekBroker != null &&
+                            !_textView.Roles.Contains(PredefinedTextViewRoles.EmbeddedPeekTextView) &&
+                            !_textView.Roles.Contains(PredefinedTextViewRoles.CodeDefinitionView)) {
+                            _peekBroker.TriggerPeekSession(_textView, PredefinedPeekRelationships.Definitions.Name);
+                            return VSConstants.S_OK;
+                        }
+                        break;
+                }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 SnapshotPoint? pyPoint;
-                OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.RETURN:
                         pyPoint = _textView.GetPythonCaret();
@@ -751,18 +764,12 @@ namespace Microsoft.PythonTools.Language {
                         }
                         break;
                     case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                        tagger = _textView.GetOutliningTagger();
-                        if (tagger != null) {
-                            tagger.Disable();
-                        }
+                        _textView.GetOutliningTagger()?.Disable(_textView.TextSnapshot);
                         // let VS get the event as well
                         break;
 
                     case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                        tagger = _textView.GetOutliningTagger();
-                        if (tagger != null) {
-                            tagger.Enable();
-                        }
+                        _textView.GetOutliningTagger()?.Enable(_textView.TextSnapshot);
                         // let VS get the event as well
                         break;
                     case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
@@ -811,7 +818,7 @@ namespace Microsoft.PythonTools.Language {
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(_textView, span.Snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return;
             }
 
@@ -856,6 +863,22 @@ namespace Microsoft.PythonTools.Language {
                             break;
                     }
                 }
+            } else if (pguidCmdGroup == VSConstants.VsStd12) {
+                for (int i = 0; i < cCmds; i++) {
+                    switch ((VSConstants.VSStd12CmdID)prgCmds[i].cmdID) {
+                        case VSConstants.VSStd12CmdID.PeekDefinition:
+                            // Since our provider supports standalone files,
+                            // the predicate isn't invoked but it needs to be non null.
+                            var canPeek = _peekBroker?.CanTriggerPeekSession(
+                                _textView,
+                                PredefinedPeekRelationships.Definitions.Name,
+                                isStandaloneFilePredicate: (string filename) => false
+                            );
+                            prgCmds[i].cmdf = (uint)OLECMDF.OLECMDF_SUPPORTED;
+                            prgCmds[0].cmdf |= (uint)(canPeek == true ? OLECMDF.OLECMDF_ENABLED : OLECMDF.OLECMDF_INVISIBLE);
+                            break;
+                    }
+                }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 for (int i = 0; i < cCmds; i++) {
                     switch (prgCmds[i].cmdID) {
@@ -873,7 +896,13 @@ namespace Microsoft.PythonTools.Language {
                             break;
                         case CommonConstants.StartDebuggingCmdId:
                         case CommonConstants.StartWithoutDebuggingCmdId:
-                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            // Don't enable the command when the file is null or doesn't exist,
+                            // which can happen in the diff window.
+                            if (File.Exists(_textView.GetFilePath())) {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            } else {
+                                prgCmds[i].cmdf = CommandDisabledAndHidden;
+                            }
                             return VSConstants.S_OK;
                         default:
                             lock (PythonToolsPackage.CommandsLock) {
@@ -890,7 +919,6 @@ namespace Microsoft.PythonTools.Language {
                     }
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
-                OutliningTaggerProvider.OutliningTagger tagger;
                 for (int i = 0; i < cCmds; i++) {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
@@ -904,15 +932,13 @@ namespace Microsoft.PythonTools.Language {
                             break;
 
                         case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                            tagger = _textView.GetOutliningTagger();
-                            if (tagger != null && tagger.Enabled) {
+                            if (_textView.GetOutliningTagger()?.Enabled == true) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             }
                             break;
 
                         case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                            tagger = _textView.GetOutliningTagger();
-                            if (tagger != null && !tagger.Enabled) {
+                            if (_textView.GetOutliningTagger()?.Enabled == false) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             }
                             break;

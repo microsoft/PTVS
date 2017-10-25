@@ -213,6 +213,7 @@ namespace Microsoft.PythonTools.Parsing {
             _tokenEnd = -1;
             _multiEolns = !_disableLineFeedLineSeparator;
             _initialLocation = initialLocation;
+            Debug.Assert(_initialLocation.Index >= 0);
 
             _tokenEndIndex = -1;
             _tokenStartIndex = 0;
@@ -2632,6 +2633,30 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             return new SourceLocation(index, match + 2, index - lineLocations[match].EndIndex + 1);
+        }
+
+        public static int LocationToIndex(NewLineLocation[] lineLocations, SourceLocation location) {
+            if (lineLocations == null) {
+                return 0;
+            }
+            if (lineLocations.Length == 0) {
+                // We have a single line, so the column is the index
+                return location.Column - 1;
+            }
+            int line = location.Line - 1;
+            if (line > lineLocations.Length) {
+                return lineLocations[lineLocations.Length - 1].EndIndex;
+            }
+
+            int index = 0;
+            if (line > 0) {
+                index = lineLocations[line - 1].EndIndex;
+            }
+            index += location.Column - 1;
+            if (line < lineLocations.Length && index > lineLocations[line].EndIndex) {
+                index = lineLocations[line].EndIndex;
+            }
+            return index;
         }
     }
 

@@ -187,7 +187,7 @@ namespace Microsoft.VisualStudioTools.Project {
 #if DEV11_OR_LATER
 
         public virtual bool CanCreateProjectAsynchronously(ref Guid rguidProjectID, string filename, uint flags) {
-            return true;
+            return false;
         }
 
         public void OnBeforeCreateProjectAsync(ref Guid rguidProjectID, string filename, string location, string pszName, uint flags) {

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
@@ -37,10 +38,9 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
@@ -83,7 +83,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCanExecute() {
             using (var evaluator = MakeEvaluator()) {
                 Assert.IsTrue(evaluator.CanExecuteCode("print 'hello'"));
@@ -122,14 +122,14 @@ namespace PythonToolsTests {
                         are.Set();
                     }
                 );
-                are.WaitOne();
+                are.WaitOne(10000);
                 var names = evaluator.GetMemberNames("");
                 Assert.IsNotNull(names);
                 AssertUtil.ContainsAtLeast(names.Select(m => m.Name), "my_new_value");
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ReplSplitCodeTest() {
             // http://pytools.codeplex.com/workitem/606
 
@@ -308,7 +308,7 @@ f()",
                 task.Wait(timeout);
             } catch (AggregateException ex) {
                 if (ex.InnerException != null) {
-                    throw ex.InnerException;
+                    ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
                 }
                 throw;
             }
@@ -318,7 +318,7 @@ f()",
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task NoInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
@@ -335,7 +335,7 @@ f()",
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void BadInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 

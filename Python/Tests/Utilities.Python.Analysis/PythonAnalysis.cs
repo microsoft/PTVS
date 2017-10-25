@@ -33,6 +33,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.Python {
     public class PythonAnalysis : IDisposable {
+        private readonly IPythonInterpreterFactory _factory;
         private readonly PythonAnalyzer _analyzer;
         private readonly Dictionary<string, IPythonProjectEntry> _entries;
 
@@ -40,6 +41,7 @@ namespace TestUtilities.Python {
         private readonly Dictionary<BuiltinTypeId, string[]> _cachedMembers;
 
         private readonly string _root;
+        private readonly bool _disposeFactory;
         private bool _disposed;
 
         public PythonAnalysis(PythonLanguageVersion version)
@@ -65,6 +67,11 @@ namespace TestUtilities.Python {
         public PythonAnalysis(string idOrDescription)
             : this(TryFindFactory(idOrDescription)) { }
 
+        public PythonAnalysis(Func<IPythonInterpreterFactory> factoryCreator)
+            : this(factoryCreator()) {
+            _disposeFactory = true;
+        }
+
         public PythonAnalysis(
             IPythonInterpreterFactory factory,
             IPythonInterpreter interpreter = null,
@@ -73,11 +80,12 @@ namespace TestUtilities.Python {
             if (factory == null) {
                 Assert.Inconclusive("Expected interpreter is not installed");
             }
+            _factory = factory;
             _analyzer = PythonAnalyzer.CreateSynchronously(factory, interpreter, builtinName);
             _entries = new Dictionary<string, IPythonProjectEntry>(StringComparer.OrdinalIgnoreCase);
             _tasks = new ConcurrentDictionary<IPythonProjectEntry, TaskCompletionSource<CollectingErrorSink>>();
             _cachedMembers = new Dictionary<BuiltinTypeId, string[]>();
-            _root = TestData.GetTempPath(randomSubPath: true);
+            _root = TestData.GetTempPath();
         }
 
         public void Dispose() {
@@ -97,6 +105,9 @@ namespace TestUtilities.Python {
 
             if (disposing) {
                 _analyzer.Dispose();
+                if (_disposeFactory) {
+                    (_factory as IDisposable)?.Dispose();
+                }
             }
         }
 
@@ -193,6 +204,7 @@ namespace TestUtilities.Python {
                 return;
             }
             _analyzer.AnalyzeQueuedEntries(cancel ?? CancellationTokens.After5s);
+            AssertListener.ThrowUnhandled();
         }
 
         private void Entry_OnNewAnalysis(object sender, EventArgs e) {
@@ -302,7 +314,7 @@ namespace TestUtilities.Python {
         }
 
         public IEnumerable<string> GetAllNames(IPythonProjectEntry module, int index = 0) {
-            return module.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name);
+            return module.Analysis.GetAllAvailableMembers(SourceLocation.MinValue).Select(m => m.Name);
         }
 
         public IEnumerable<string> GetNamesNoBuiltins(int index = 0) {

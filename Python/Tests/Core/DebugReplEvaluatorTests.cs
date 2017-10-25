@@ -41,7 +41,6 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal virtual string DebuggerTestPath {
@@ -92,7 +91,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public async Task DisplayVariables() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -158,7 +157,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", variables[0].StringRepr);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task AvailableScopes() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -187,8 +186,8 @@ NameError: name 'does_not_exist' is not defined
             }
         }
 
-        [TestMethod, Priority(1)]
-        public async Task ChangeModule() {
+        [TestMethod, Priority(0)]
+        public virtual async Task ChangeModule() {
             await AttachAsync("DebugReplTest1.py", 3);
 
             Assert.AreEqual("'hello'", ExecuteText("a"));
@@ -217,8 +216,8 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(2)]
-        public async Task ChangeFrame() {
+        [TestMethod, Priority(0)]
+        public virtual async Task ChangeFrame() {
             await AttachAsync("DebugReplTest2.py", 13);
 
             // We are broken in the innermost function
@@ -281,8 +280,8 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'thread1'", ExecuteText("t1_val"));
         }
 
-        [TestMethod, Priority(1)]
-        public async Task ChangeProcess() {
+        [TestMethod, Priority(0)]
+        public virtual async Task ChangeProcess() {
             await AttachAsync("DebugReplTest4A.py", 3);
             await AttachAsync("DebugReplTest4B.py", 3);
 
@@ -321,7 +320,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("Abort is not supported.", _window.Error.TrimEnd());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task StepInto() {
             // Make sure that we don't step into the internal repl code
             // http://pytools.codeplex.com/workitem/777
@@ -431,26 +430,10 @@ NameError: name 'does_not_exist' is not defined
     }
 
     [TestClass]
-    public class DebugReplEvaluatorTests30 : DebugReplEvaluatorTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
-
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python30 ?? PythonPaths.Python30_x64;
-            }
-        }
-    }
-
-    [TestClass]
     public class DebugReplEvaluatorTests31 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -465,7 +448,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -480,7 +462,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -495,7 +476,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -510,7 +490,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -525,7 +504,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -536,11 +514,24 @@ NameError: name 'does_not_exist' is not defined
     }
 
     [TestClass]
+    public class DebugReplEvaluatorTests37 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python37 ?? PythonPaths.Python37_x64;
+            }
+        }
+    }
+
+    [TestClass]
     public class DebugReplEvaluatorTests27 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -555,7 +546,6 @@ NameError: name 'does_not_exist' is not defined
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -563,5 +553,14 @@ NameError: name 'does_not_exist' is not defined
                 return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
             }
         }
+
+        [TestMethod, Priority(2)]
+        public override async Task ChangeFrame() => await base.ChangeFrame();
+
+        [TestMethod, Priority(2)]
+        public override async Task ChangeModule() => await base.ChangeModule();
+
+        [TestMethod, Priority(2)]
+        public override async Task ChangeProcess() => await base.ChangeProcess();
     }
 }

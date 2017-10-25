@@ -3,7 +3,7 @@
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
-    <Cmt Name="RCCX" />
+    <Cmt Name="Rccx" />
   </OwnedComments>
   <Settings Name="@SettingsPath@\default.lss" Type="Lss" />
   <Item ItemId=";Managed Resources" ItemType="0" PsrId="211" Leaf="true">
@@ -130,7 +130,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";AddVirtualEnvironmentWindow_BrowsePathOrigPrefixError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[We could not find a base interpreter at {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -250,7 +250,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";AddVirtualEnvironmentWindow_InstallPipAndVirtualEnv" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install pip and virtualenv packages]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -259,7 +259,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";AddVirtualEnvironmentWindow_InstallRequirements" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";AddVirtualEnvironmentWindow_InstallRequirements" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install packages from requirements.txt]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -268,7 +268,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";AddVirtualEnvironmentWindow_InstallVirtualEnv" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";AddVirtualEnvironmentWindow_InstallVirtualEnv" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install the virtualenv package]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -376,7 +376,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";AddingProjectEnvironmentToWrongProjectException" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";AddingProjectEnvironmentToWrongProjectException" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Adding project environment {0} to wrong project {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -394,7 +394,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Analyzer_Analyzing" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Analyzer_Analyzing" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Analyzing {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -430,7 +430,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Analyzer_Parsing" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Analyzer_Parsing" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Parsing {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -439,7 +439,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Analyzer_Saving" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Analyzer_Saving" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Saving {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -448,7 +448,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Analyzer_Scraping" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Analyzer_Scraping" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -484,7 +484,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Analyzer_WaitingForRefresh_Message" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Analyzer_WaitingForRefresh_Message" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Waiting for another refresh: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -853,6 +853,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";CookiecutterComponentInstallInstructions" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[These tools are an installable component for your version of Visual Studio that allow you to create projects from Cookiecutter templates.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[これらのツールは、ご使用のバージョンの Visual Studio に対してインストール可能なコンポーネントであり、Cookiecutter テンプレートからプロジェクトを作成できるようにします。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CookiecutterComponentRequired" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[This project requires Cookiecutter template support for Visual Studio.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[このプロジェクトには Visual Studio 向けの Cookiecutter テンプレートのサポートが必要です。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CookiecutterWizardUnresolvedTemplate" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The Cookiecutter template at '{0}' was not found.]D;]A;]D;]A;Please check your internet connection.]D;]A;]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' の Cookiecutter テンプレートが見つかりませんでした。]D;]A;]D;]A;インターネット接続をご確認ください。]D;]A;]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";CurrentInterpreterDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[your current environment]]></Val>
@@ -862,7 +889,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CurrentWorkingDirectoryCaption" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";CurrentWorkingDirectoryCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Working Directory ({0})]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -871,7 +898,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CustomCommandExecutingModule" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";CustomCommandExecutingModule" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executing -m {0} {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -880,7 +907,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CustomCommandExecutingOther" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";CustomCommandExecutingOther" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executing {0} {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -889,7 +916,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CustomCommandExecutingScript" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";CustomCommandExecutingScript" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Executing {0} {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -952,7 +979,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";CustomCommandReplTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1006,7 +1033,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugConnectionFailedToConnectToProcessWithModule" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugConnectionFailedToConnectToProcessWithModule" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to connect to process {0} ({1}): {2}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1015,7 +1042,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugConnectionFailedToConnectToProcessWithoutModule" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugConnectionFailedToConnectToProcessWithoutModule" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to connect to process {0}: {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1033,7 +1060,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugErrorWhileEvaluatingExpression" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugErrorWhileEvaluatingExpression" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} raised while evaluating expression: {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1069,7 +1096,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugFileModule" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugFileModule" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} module]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1078,7 +1105,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugFileUnknownCode" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugFileUnknownCode" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} unknown code]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1159,7 +1186,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugPythonExceptionStackTraceFileAndLineNumber" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugPythonExceptionStackTraceFileAndLineNumber" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0}:{1} in {2}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1168,7 +1195,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugPythonExceptionStackTraceFileOnly" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugPythonExceptionStackTraceFileOnly" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} in {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1204,7 +1231,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplCannotChangeCurrentThreadNoFrame" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplCannotChangeCurrentThreadNoFrame" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot change current thread to {0}, because it does not have any visible frames.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1213,7 +1240,25 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplCurrentIndicator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplCannotRetrieveFrameError" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not retrieve the current frame.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[現在のフレームを取得できませんでした。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DebugReplCurrentFrameScope" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[<Current Frame>]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[<現在のフレーム>]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DebugReplCurrentIndicator" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[=> ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1231,7 +1276,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplFrameChanged" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplFrameChanged" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Current frame changed to {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1249,7 +1294,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplFrameCommandInvalidArguments" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplFrameCommandInvalidArguments" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid arguments '{0}'. Expected frame id.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1285,7 +1330,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplFramesOutput" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplFramesOutput" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{2}Frame id={0}, function={1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1321,7 +1366,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplInvalidFrameId" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplInvalidFrameId" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid frame id '{0}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1330,7 +1375,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplInvalidProcessId" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplInvalidProcessId" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid process id '{0}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1339,7 +1384,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplInvalidThreadId" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplInvalidThreadId" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid thread id '{0}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1375,7 +1420,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplNotCurrentIndicator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplNotCurrentIndicator" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[   ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1393,7 +1438,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplProcessCommandInvalidArguments" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplProcessCommandInvalidArguments" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid arguments '{0}'. Expected process id.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1411,7 +1456,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplProcessesOutput" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplProcessesOutput" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{2}Process id={0}, Language version={1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1456,7 +1501,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplSwitchProcessOutput" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplSwitchProcessOutput" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Current process changed to {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1465,7 +1510,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplThreadChanged" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplThreadChanged" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Current thread changed to {0}, frame {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1483,7 +1528,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplThreadCommandInvalidArguments" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplThreadCommandInvalidArguments" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid arguments '{0}'. Expected thread id.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1501,7 +1546,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplThreadsOutput" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugReplThreadsOutput" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{2}Thread id={0}, name={1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1519,7 +1564,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugStackFrameFunctionWithLine" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugStackFrameFunctionWithLine" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} line {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1528,7 +1573,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugStackFrameInfoFunctionNameInFileName" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugStackFrameInfoFunctionNameInFileName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} in {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1537,7 +1582,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugStackFrameNameInName" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugStackFrameNameInName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} in {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1546,7 +1591,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugStackFrameParseTextError" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugStackFrameParseTextError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1555,7 +1600,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugStructuredExceptionWhileEvaluatingExpression" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugStructuredExceptionWhileEvaluatingExpression" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Native exception {0:x08} ({1}) raised while evaluating expression]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1564,7 +1609,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Native exception {0:x08} raised while evaluating expression]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1582,7 +1627,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugTcpsTransportConnectionError" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DebugTcpsTransportConnectionError" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not establish secure connection to {0} because of the following SSL issues:]D;]A;{1}]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -1708,7 +1753,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DefaultInterpreterDescription" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";DefaultInterpreterDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[your default environment]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2059,7 +2104,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ExecuteInReplCommand_ExecuteFile" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ExecuteInReplCommand_ExecuteFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Execute File in P&ython Interactive]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2068,7 +2113,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ExecuteInReplCommand_ExecuteProject" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ExecuteInReplCommand_ExecuteProject" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Execute Project in P&ython Interactive]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2077,7 +2122,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ExecuteInReplCommand_RunningMessage" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ExecuteInReplCommand_RunningMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Running {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2086,7 +2131,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ExecutingCommandFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ExecutingCommandFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to run '{0}' -----]D;]A;]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2095,7 +2140,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ExecutingCommandStarted" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ExecutingCommandStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Running '{0}' -----]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2104,7 +2149,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ExecutingCommandSucceeded" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ExecutingCommandSucceeded" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully ran '{0}' -----]D;]A;]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2131,7 +2176,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ExtractMethodCannotExtract" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ExtractMethodCannotExtract" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot extract code containing "{0}"]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2320,7 +2365,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";FailedToAttachDebugger" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";FailedToAttachDebugger" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to attach debugger:]D;]A;{0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2356,6 +2401,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";FailedToLaunchDebugger" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to launch debugger]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[デバッガーの起動に失敗しました]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";FailedToReadResource" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not get resource {1}.{2} from {0}.]D;]A;]D;]A;{3}]]></Val>
@@ -2383,7 +2437,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";FilePublisherIncorrectUsernameOrPassword" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";FilePublisherIncorrectUsernameOrPassword" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Incorrect user name or password: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2410,7 +2464,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";FormattingOptionPreviewNotAltered" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";FormattingOptionPreviewNotAltered" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[# The existing formatting will not be altered:]D;]A;]D;]A;{0}]D;]A;    # or]D;]A;{1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2482,7 +2536,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";FormattingOptionsDefaultText" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";FormattingOptionsDefaultText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[# Select an option to see a preview]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2509,7 +2563,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";FtpPublisherDirCreateException" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";FtpPublisherDirCreateException" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to create directory: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2518,7 +2572,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";FtpPublisherDirExistsCheckException" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";FtpPublisherDirExistsCheckException" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to check if directory exists: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2527,7 +2581,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";FtpPublisherUploadFileException" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";FtpPublisherUploadFileException" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to upload file: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2545,7 +2599,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";GlobalDefaultSuffix" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";GlobalDefaultSuffix" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[ (global default)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2574,10 +2628,13 @@
       </Item>
       <Item ItemId=";ImportCoverageCommandFileFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
+          <Val><![CDATA[coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[カバレッジ XML (*.xml)|*.xml|すべてのファイル (*.*)|*.*]]></Val>
+            <Val><![CDATA[coverage.py XML (*.xml)|*.xml|すべてのファイル (*.*)|*.*]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2869,7 +2926,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ImportWizard_SelectStartupFileHelp" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ImportWizard_SelectStartupFileHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[If it is not in this list, you can right-click any file in your project and choose "Set as startup file"]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2932,7 +2989,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallRequirementsIntoCurrentEnv" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallRequirementsIntoCurrentEnv" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Install into {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -2941,7 +2998,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallRequirementsIntoGlobalEnv" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallRequirementsIntoGlobalEnv" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Install into {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3004,7 +3061,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallationFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallationFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Installation failed]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3013,7 +3070,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallingPackageFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallingPackageFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to install '{0}' -----]D;]A;]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3022,7 +3079,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallingPackageStarted" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallingPackageStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Installing '{0}' -----]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3031,7 +3088,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallingPackageSuccess" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallingPackageSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully installed '{0}' -----]D;]A;]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3040,7 +3097,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallingPipFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallingPipFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Failed to install pip -----]D;]A;]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3049,7 +3106,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallingPipStarted" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallingPipStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Installing pip -----]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3058,7 +3115,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstallingPipSuccess" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InstallingPipSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully installed pip -----]D;]A;]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3085,7 +3142,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InvalidHexValue" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";InvalidHexValue" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[bad char for integer value: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3103,13 +3160,13 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";IssueTrackerUrl" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";IssueTrackerUrl" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[https://go.microsoft.com/fwlink/?LinkId=402428]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";LibraryNodeAliasOf" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";LibraryNodeAliasOf" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} (alias of {1})]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3118,7 +3175,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";MisconfiguredEnvironment" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";MisconfiguredEnvironment" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Operation cannot be started because the environment is not configured.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3163,7 +3220,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";MissingSuffix" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";MissingSuffix" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[ (missing)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3228,10 +3285,13 @@
       </Item>
       <Item ItemId=";NoInterpretersAvailable" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
+          <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See https://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[構成された Python 環境がありません。環境をインストールまたは構成してから、もう一度お試しください。Python 環境のセットアップに関する情報は、http://go.microsoft.com/fwlink/?LinkID=299429 をご覧ください。]]></Val>
+            <Val><![CDATA[構成された Python 環境がありません。環境をインストールまたは構成してから、もう一度お試しください。Python 環境のセットアップに関する情報は、https://go.microsoft.com/fwlink/?LinkID=299429 をご覧ください。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3343,7 +3403,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";PackageManagementNotSupported_Package" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";PackageManagementNotSupported_Package" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to install {0} because the selected environment does not support package management.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3451,7 +3511,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";PublishPropertyControl_LocationLabel" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";PublishPropertyControl_LocationLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Publishing folder location ({0}): ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3460,7 +3520,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";PublishPropertyControl_LocationTypeSeparator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";PublishPropertyControl_LocationTypeSeparator" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[, ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3469,7 +3529,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";PublishPropertyControl_LocationTypeSeparatorLast" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";PublishPropertyControl_LocationTypeSeparatorLast" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[ or ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3703,7 +3763,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";PythonNavigateToItemDisplay_FileInfo" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";PythonNavigateToItemDisplay_FileInfo" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[File: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3730,7 +3790,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";PythonNavigateToItemDisplay_ProjectInfo" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";PythonNavigateToItemDisplay_ProjectInfo" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3829,7 +3889,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RefactorPreviewChangesRenaming" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";RefactorPreviewChangesRenaming" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Renaming '{0}' to '{1}']]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3847,7 +3907,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RefactorPreviewChangesRenamingDescription" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";RefactorPreviewChangesRenamingDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Rename '{0}' to '{1}']]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3856,7 +3916,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RefactorPreviewChangesTextViewDescription" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";RefactorPreviewChangesTextViewDescription" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Preview Code Changes:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3865,7 +3925,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RefactorPreviewUpdatedLogEntry" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";RefactorPreviewUpdatedLogEntry" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0}({1},{2}): updated {3}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3937,7 +3997,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteProcessAuthenticationErrorWarning" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";RemoteProcessAuthenticationErrorWarning" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0}]D;]A;Connect anyway?]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -3964,7 +4024,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteUnrecognizedDebuggingTransport" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";RemoteUnrecognizedDebuggingTransport" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unrecognized remote debugging transport '{0}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4108,7 +4168,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4189,7 +4249,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ReplInitializationMessage" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ReplInitializationMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&#x1b;[94;21m{0} interactive window &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;Type $help for a list of commands.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4261,7 +4321,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ReplProjectProjectCaption" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ReplProjectProjectCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4270,7 +4330,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ReplQuerySwitchEvaluator" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ReplQuerySwitchEvaluator" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Changing to {0} will reset your current state.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4333,12 +4393,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ReplScriptPathIPythonModeTxtContents" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";ReplScriptPathIPythonModeTxtContents" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
+          <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   ptvsd.repl.ipython.IPythonBackend]D;]A;#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;ptvsd.repl.ipython.IPythonBackend]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[#]D;]A;# このファイルでは、REPL バックエンドを指定します。これは、]D;]A;#インタープリターからインポートできる呼び出し可能オブジェクトです。]D;]A;#]D;]A;# 現在サポートされているオプションは次のとおりです。]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
+            <Val><![CDATA[#]D;]A;# このファイルでは、REPL バックエンドを指定します。これは、]D;]A;#インタープリターからインポートできる呼び出し可能オブジェクトです。]D;]A;#]D;]A;# 現在サポートされているオプションは次のとおりです。]D;]A;#   standard]D;]A;#   ptvsd.repl.ipython.IPythonBackend]D;]A;#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;ptvsd.repl.ipython.IPythonBackend]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[#]D;]A;# This file specifies the REPL backend, which is an callable that]D;]A;# can be imported by the interpreter.]D;]A;#]D;]A;# Currently, supported options are:]D;]A;#   standard]D;]A;#   visualstudio_ipython_repl.IPythonBackend]D;]A;#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab]D;]A;#]D;]A;]D;]A;visualstudio_ipython_repl.IPythonBackend]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4468,7 +4531,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RequirementsTxtInstalling" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";RequirementsTxtInstalling" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Installing packages from '{0}']]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4549,7 +4612,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RunPyLintLabel" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";RunPyLintLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Run PyLint]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4828,6 +4891,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";Test_NotRun" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Test could not be run. Check the Tests Output Pane for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[テストを実行できませんでした。詳細については、テスト出力ウィンドウで確認してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";Test_UnableToDetermineInterpreter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to determine interpreter to use for {0}]]></Val>
@@ -4837,7 +4909,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";Test_UnexpectedResult" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";Test_UnexpectedResult" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unexpected test result: {0}.{1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4864,7 +4936,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";UnexpectedError_InstructionWithLink" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";UnexpectedError_InstructionWithLink" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Please press Ctrl+C to copy the contents of this dialog and report this error to our <a href="issuetracker">issue tracker</a>.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4909,7 +4981,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";UninstallMessage_Package" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";UninstallMessage_Package" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Remove {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4936,7 +5008,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";UninstallingPackageFailed" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";UninstallingPackageFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Error while uninstalling '{0}' -----]D;]A;'{0}' may not have been uninstalled completely.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4945,7 +5017,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";UninstallingPackageStarted" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";UninstallingPackageStarted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Uninstalling '{0}' -----]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4954,7 +5026,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";UninstallingPackageSuccess" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";UninstallingPackageSuccess" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[----- Successfully uninstalled '{0}' -----]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4963,7 +5035,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";UnknownRoleTypeException" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";UnknownRoleTypeException" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown role type: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -4972,7 +5044,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";UnrecognizedEnumValue" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";UnrecognizedEnumValue" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unrecognized value for enum type '{0}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -5008,7 +5080,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";UpgradeMessage_Package" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";UpgradeMessage_Package" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Upgrade to {0} version {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -5260,7 +5332,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17291.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5296,7 +5368,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17160.3]]></Val>
+        <Val><![CDATA[3.0.17291.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

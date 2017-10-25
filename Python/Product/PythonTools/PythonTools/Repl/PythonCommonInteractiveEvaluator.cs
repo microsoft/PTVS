@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
@@ -70,7 +71,7 @@ namespace Microsoft.PythonTools.Repl {
         internal const string DoNotResetConfigurationLaunchOption = "DoNotResetConfiguration";
 
         public PythonCommonInteractiveEvaluator(IServiceProvider serviceProvider) {
-            _serviceProvider = serviceProvider;
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _deferredOutput = new StringBuilder();
             _analysisFilename = Guid.NewGuid().ToString() + ".py";
         }
@@ -157,12 +158,12 @@ namespace Microsoft.PythonTools.Repl {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
                     var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
-                    _analyzer = new VsProjectAnalyzer(
-                        _serviceProvider,
+                    _analyzer = _serviceProvider.GetUIThread().InvokeTaskSync(() => VsProjectAnalyzer.CreateForInteractiveAsync(
+                        _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
                         factory,
-                        projectFile: projectFile,
-                        comment: "{0} Interactive".FormatInvariant(DisplayName.IfNullOrEmpty("Unnamed"))
-                    );
+                        DisplayName.IfNullOrEmpty("Unnamed"),
+                        projectFile
+                    ), CancellationToken.None);
                 }
                 return _analyzer;
             }
@@ -277,21 +278,26 @@ namespace Microsoft.PythonTools.Repl {
         public abstract void AbortExecution();
 
         public bool CanExecuteCode(string text) {
+            return CanExecuteCode(text, out _);
+        }
+
+        protected bool CanExecuteCode(string text, out ParseResult pr) {
+            pr = ParseResult.Complete;
             if (string.IsNullOrEmpty(text)) {
                 return true;
             }
             if (string.IsNullOrWhiteSpace(text) && text.EndsWith("\n")) {
+                pr = ParseResult.Empty;
                 return true;
             }
 
             var config = Configuration;
             using (var parser = Parser.CreateParser(new StringReader(text), LanguageVersion)) {
-                ParseResult pr;
                 parser.ParseInteractiveCode(out pr);
-                if (pr == ParseResult.IncompleteStatement) {
+                if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
                     return text.EndsWith("\n");
                 }
-                if (pr == ParseResult.Empty || pr == ParseResult.IncompleteToken) {
+                if (pr == ParseResult.IncompleteToken) {
                     return false;
                 }
             }
@@ -487,6 +493,14 @@ namespace Microsoft.PythonTools.Repl {
             ).Replace("&#x1b;", "\x1b");
 
             WriteOutput(msg, addNewline: true);
+
+            var langBuffer = _window.CurrentLanguageBuffer;
+            if (langBuffer != null) {
+                // Reinitializing, and our new language buffer does not automatically
+                // get connected to the Intellisense controller. Let's fix that.
+                var controller = IntellisenseControllerProvider.GetController(_window.TextView);
+                controller?.ConnectSubjectBuffer(langBuffer);
+            }
 
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);

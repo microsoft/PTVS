@@ -154,6 +154,8 @@ namespace Microsoft.CookiecutterTools.Model {
 
             return new Dictionary<string, string>() {
                 { "PATH", path },
+                { "GIT_FLUSH", "1" },
+                { "GIT_TERMINAL_PROMPT", "0" }
             };
         }
 

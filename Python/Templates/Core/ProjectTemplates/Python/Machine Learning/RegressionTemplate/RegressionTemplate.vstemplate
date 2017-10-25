@@ -11,8 +11,11 @@
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>
   <TemplateContent>
-    <Project File="RegressionTemplate.pyproj" ReplaceParameters="true">
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">regression.py</ProjectItem>
-    </Project>
+    <Project File="RegressionTemplate.pyproj" ReplaceParameters="true" IgnoreProjectParameter="$true$"></Project>
   </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ProjectWizards.CookiecutterWizard</FullClassName>
+  </WizardExtension>
+  <WizardData>https://go.microsoft.com/fwlink/?linkid=857043</WizardData>
 </VSTemplate>

@@ -6,7 +6,7 @@
     <ProjectGuid>{12535E18-06DA-4F15-B99E-8F492FE721E3}</ProjectGuid>
     <ProjectHome>Package\Subpackage</ProjectHome>
     <StartupFile>Program.py</StartupFile>
-    <SearchPath>..\..;..</SearchPath>
+    <SearchPath>..\..\;..\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
@@ -30,21 +30,13 @@
   <ItemGroup>
     <Compile Include="Program.py" />
   </ItemGroup>
-
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
-
   <PropertyGroup>
     <PythonCommands>ImportFromSearchPathCommand</PythonCommands>
   </PropertyGroup>
-
-  <Target Name="ImportFromSearchPathCommand"
-          Label="Import From Search Path"
-          Returns="@(Commands)">
-    <CreatePythonCommandItem Target="import sys; print([i for i in sys.path if 'TestData' in i])"
-                             TargetType="code"
-                             ExecuteIn="output">
+  <Target Name="ImportFromSearchPathCommand" Label="Import From Search Path" Returns="@(Commands)">
+    <CreatePythonCommandItem Target="import sys; print([i for i in sys.path if 'TestData' in i])" TargetType="code" ExecuteIn="output">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>
-
 </Project>

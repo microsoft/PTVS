@@ -62,30 +62,29 @@ namespace Microsoft.PythonTools.Repl {
             return b;
         }
 
-        private Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
+        private async Task<CommandProcessorThread> ConnectAsync(CancellationToken ct) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThreadOrThrow();
 
             var interpreterPath = Configuration?.GetInterpreterPath();
             if (string.IsNullOrWhiteSpace(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(DisplayName));
-                return Task.FromResult<CommandProcessorThread>(null);
+                return null;
             } else if (!File.Exists(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotFound);
-                return Task.FromResult<CommandProcessorThread>(null);
+                return null;
             }
 
             var processInfo = new ProcessStartInfo(interpreterPath);
+            processInfo.UseShellExecute = false;
 
 #if DEBUG
             bool debugMode = Environment.GetEnvironmentVariable("_PTVS_DEBUG_REPL") != null;
             processInfo.CreateNoWindow = !debugMode;
-            processInfo.UseShellExecute = debugMode;
             processInfo.RedirectStandardOutput = !debugMode;
             processInfo.RedirectStandardError = !debugMode;
             processInfo.RedirectStandardInput = !debugMode;
 #else
             processInfo.CreateNoWindow = true;
-            processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = true;
             processInfo.RedirectStandardError = true;
             processInfo.RedirectStandardInput = true;
@@ -123,7 +122,7 @@ namespace Microsoft.PythonTools.Repl {
                 args.Add(interpreterArguments);
             }
 
-            args.Add(ProcessOutput.QuoteSingleArgument(PythonToolsInstallPath.GetFile("visualstudio_py_repl.py")));
+            args.Add(ProcessOutput.QuoteSingleArgument(PythonToolsInstallPath.GetFile("ptvsd_repl_launcher.py")));
             args.Add("--port");
             args.Add(portNum.ToString());
 
@@ -149,10 +148,11 @@ namespace Microsoft.PythonTools.Repl {
                 }
                 return null;
             } catch (Exception e) when(!e.IsCriticalException()) {
+                Debug.Fail(e.ToUnhandledExceptionMessage(GetType()));
                 return null;
             }
 
-            return Task.FromResult(CommandProcessorThread.Create(this, conn, process));
+            return CommandProcessorThread.Create(this, conn, process);
         }
 
 
@@ -369,12 +369,16 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
+                TaskCompletionSource<ExecutionResult> completion;
                 lock (_completionLock) {
-                    if (_completion != null) {
-                        bool success = _completion.TrySetCanceled();
-                        Debug.Assert(success);
-                        _completion = null;
-                    }
+                    completion = _completion;
+                    _completion = null;
+                }
+
+                if (completion != null) {
+                    bool success = completion.TrySetCanceled();
+                    Debug.Assert(success);
+                    completion = null;
                 }
             }
 
@@ -611,25 +615,31 @@ namespace Microsoft.PythonTools.Repl {
 
             private void HandleExecutionError() {
                 // ERRE command
+                TaskCompletionSource<ExecutionResult> completion;
                 lock (_completionLock) {
-                    if (_completion != null) {
-                        _completion.SetResult(ExecutionResult.Failure);
-                        _completion = null;
-                    } else {
-                        Debug.Fail("No completion task");
-                    }
+                    completion = _completion;
+                    _completion = null;
+                }
+
+                if (completion != null) {
+                    completion.SetResult(ExecutionResult.Failure);
+                } else {
+                    Debug.Fail("No completion task");
                 }
             }
 
             private void HandleExecutionDone() {
                 // DONE command
+                TaskCompletionSource<ExecutionResult> completion;
                 lock (_completionLock) {
-                    if (_completion != null) {
-                        _completion.SetResult(ExecutionResult.Success);
-                        _completion = null;
-                    } else {
-                        Debug.Fail("No completion task");
-                    }
+                    completion = _completion;
+                    _completion = null;
+                }
+
+                if (completion != null) {
+                    completion.SetResult(ExecutionResult.Success);
+                } else {
+                    Debug.Fail("No completion task");
                 }
             }
 
@@ -651,6 +661,11 @@ namespace Microsoft.PythonTools.Repl {
                     SendString(text);
                 };
 
+                var tcs = new TaskCompletionSource<ExecutionResult>();
+                lock (_completionLock) {
+                    _completion = tcs;
+                }
+
                 Trace.TraceInformation("Executing text: {0}", text);
                 using (new StreamLock(this, throwIfDisconnected: false)) {
                     if (_stream == null) {
@@ -660,6 +675,9 @@ namespace Microsoft.PythonTools.Repl {
                             _deferredExecute = send;
                         } else {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
+                            lock (_completionLock) {
+                                _completion = null;
+                            }
                             return ExecutionResult.Failed;
                         }
                     } else {
@@ -667,14 +685,14 @@ namespace Microsoft.PythonTools.Repl {
                             send();
                         } catch (IOException) {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
+                            lock (_completionLock) {
+                                _completion = null;
+                            }
                             return ExecutionResult.Failed;
                         }
                     }
                 }
-                var tcs = new TaskCompletionSource<ExecutionResult>();
-                lock (_completionLock) {
-                    _completion = tcs;
-                }
+
                 return tcs.Task;
             }
 
@@ -690,6 +708,11 @@ namespace Microsoft.PythonTools.Repl {
                     SendString(extraArgs ?? string.Empty);
                 };
 
+                var tcs = new TaskCompletionSource<ExecutionResult>();
+                lock (_completionLock) {
+                    _completion = tcs;
+                }
+
                 using (new StreamLock(this, throwIfDisconnected: false)) {
                     if (_stream == null) {
                         // If we're still waiting for debuggee to connect to us, postpone the actual execution until we have the command stream.
@@ -697,6 +720,9 @@ namespace Microsoft.PythonTools.Repl {
                             _deferredExecute = send;
                         } else {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
+                            lock (_completionLock) {
+                                _completion = null;
+                            }
                             return false;
                         }
                     } else {
@@ -704,15 +730,14 @@ namespace Microsoft.PythonTools.Repl {
                             send();
                         } catch (IOException) {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
+                            lock (_completionLock) {
+                                _completion = null;
+                            }
                             return false;
                         }
                     }
                 }
 
-                var tcs = new TaskCompletionSource<ExecutionResult>();
-                lock (_completionLock) {
-                    _completion = tcs;
-                }
                 return (await tcs.Task).IsSuccessful;
             }
 
@@ -899,16 +924,20 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
+                TaskCompletionSource<ExecutionResult> completion;
                 lock (_completionLock) {
-                    if (_completion != null) {
-                        bool success = _completion.TrySetResult(ExecutionResult.Failure);
-                        Debug.Assert(success);
-                        _completion = null;
-                    }
+                    completion = _completion;
+                    _completion = null;
+
                     if (_completionResultEvent != null) {
                         _completionResultEvent.Dispose();
                         _completionResultEvent = null;
                     }
+                }
+
+                if (completion != null) {
+                    bool success = completion.TrySetResult(ExecutionResult.Failure);
+                    Debug.Assert(success);
                 }
             }
 

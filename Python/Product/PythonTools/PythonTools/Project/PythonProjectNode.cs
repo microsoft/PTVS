@@ -30,6 +30,8 @@ using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -39,10 +41,12 @@ using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -713,12 +717,6 @@ namespace Microsoft.PythonTools.Project {
             ReanalyzeProject()
                 .HandleAllExceptions(Site, GetType(), allowUI: false)
                 .DoNotWait();
-
-            try {
-                Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
-            } catch (Exception ex) {
-                Debug.Fail($"Error checking news: {ex}");
-            }
         }
 
         private void RefreshCurrentWorkingDirectory() {
@@ -1111,20 +1109,38 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
-                _analyzer = CreateAnalyzer();
+                return Site.GetUIThread().InvokeTaskSync(async() => {
+                    if (_analyzer == null) {
+                        _analyzer = await CreateAnalyzerAsync();
+                    }
+                    return _analyzer;
+                }, CancellationToken.None);
             }
             return _analyzer;
         }
 
-        private VsProjectAnalyzer CreateAnalyzer() {
+        public VsProjectAnalyzer TryGetAnalyzer() {
+            return _analyzer;
+        }
+
+        private async Task<VsProjectAnalyzer> CreateAnalyzerAsync() {
             var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterRegistryService>();
             var factory = GetInterpreterFactory();
-            var res = new VsProjectAnalyzer(
-                Site,
+
+            bool inProc = false;
+            var ipp = BuildProject.GetProperty("_InProcessPythonAnalyzer");
+            if (ipp != null) {
+                if (ipp.EvaluatedValue?.IsTrue() ?? false) {
+                    inProc = true;
+                }
+            }
+
+            var res = await VsProjectAnalyzer.CreateForProjectAsync(
+                model.GetService<PythonEditorServices>(),
                 factory,
-                false,
-                BuildProject
+                BuildProject,
+                inProcess: inProc
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
             res.AnalyzerNeedsRestart += OnActiveInterpreterChanged;
@@ -1290,15 +1306,7 @@ namespace Microsoft.PythonTools.Project {
 
             // Ensure working directory is a search path.
             config.SearchPaths.Insert(0, config.WorkingDirectory);
-
-            if (!Site.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
-                config.SearchPaths.AddRange(Environment.GetEnvironmentVariable(config.Interpreter.PathEnvironmentVariable)
-                    .Split(Path.PathSeparator)
-                    // Just ensure the string is not empty - if people are passing
-                    // through invalid paths this option is meant to allow it
-                    .Where(p => !string.IsNullOrEmpty(p))
-                );
-            }
+            config.SearchPaths.AddRange(Site.GetPythonToolsService().GetGlobalPythonSearchPaths(config.Interpreter));
 
             return config;
         }
@@ -1341,8 +1349,14 @@ namespace Microsoft.PythonTools.Project {
             try {
                 if ((statusBar = Site.GetService(typeof(SVsStatusbar)) as IVsStatusbar) != null) {
                     statusBar.SetText(Strings.AnalyzingProject);
-                    object index = (short)0;
-                    statusBar.Animation(1, ref index);
+                    try {
+                        object index = (short)0;
+                        statusBar.Animation(1, ref index);
+                    } catch (ArgumentNullException) {
+                        // Issue in status bar implementation
+                        // https://github.com/Microsoft/PTVS/issues/3064
+                        // Silently suppress since animation is not critical.
+                    }
                     statusBar.FreezeOutput(1);
                     statusBarConfigured = true;
                 }
@@ -1352,7 +1366,7 @@ namespace Microsoft.PythonTools.Project {
                 if (_analyzer != null) {
                     UnHookErrorsAndWarnings(_analyzer);
                 }
-                var analyzer = CreateAnalyzer();
+                var analyzer = await CreateAnalyzerAsync();
                 Debug.Assert(analyzer != null);
 
                 ProjectAnalyzerChanging?.Invoke(this, new AnalyzerChangingEventArgs(_analyzer, analyzer));
@@ -1361,17 +1375,30 @@ namespace Microsoft.PythonTools.Project {
 
                 if (oldAnalyzer != null) {
                     if (analyzer != null) {
-                        analyzer.SwitchAnalyzers(oldAnalyzer);
+                        await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
                     }
                     if (oldAnalyzer.RemoveUser()) {
                         oldAnalyzer.Dispose();
                     }
                 }
 
+                var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
+
+                var defAnalyzer = Site.GetPythonToolsService().MaybeDefaultAnalyzer;
+                if (defAnalyzer != null) {
+                    foreach (var f in files) {
+                        var entry = defAnalyzer.GetAnalysisEntryFromPath(f);
+                        if (entry != null) {
+                            await defAnalyzer.UnloadFileAsync(entry);
+                        }
+                    }
+                }
+
                 if (analyzer != null) {
-                    var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
-                    await analyzer.AnalyzeFileAsync(files);
+                    // Set search paths first, as it will save full reanalysis later
                     await analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths());
+                    // Add all our files into our analyzer
+                    await analyzer.AnalyzeFileAsync(files);
                 }
 
                 ProjectAnalyzerChanged?.Invoke(this, EventArgs.Empty);
@@ -2347,6 +2374,14 @@ namespace Microsoft.PythonTools.Project {
         private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting, string requirementsPath) {
             var service = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
             var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
+
+            var solution = (IVsSolution3)GetService(typeof(SVsSolution));
+            var saveResult = solution.CheckForAndSaveDeferredSaveSolution(0, Strings.VirtualEnvSaveDeferredSolution, Strings.ProductTitle, 0);
+            if (saveResult != VSConstants.S_OK) {
+                // The user cancelled out of the save project dialog
+                return;
+            }
+
             object index = (short)0;
             statusBar.Animation(1, ref index);
             try {
@@ -2722,6 +2757,9 @@ namespace Microsoft.PythonTools.Project {
 
             public override ProjectAnalyzer Analyzer {
                 get {
+                    if (_node.IsClosing || _node.IsClosed) {
+                        return null;
+                    }
                     return _node.GetAnalyzer();
                 }
             }

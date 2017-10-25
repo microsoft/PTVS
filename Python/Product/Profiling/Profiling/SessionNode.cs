@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.Profiling {
                     if (itemid == VSConstants.VSITEMID_ROOT) {
                         pvar = Caption;
                     } else if (itemid == ReportsItemId) {
-                        pvar = "Reports";
+                        pvar = Strings.Reports;
                     } else if (IsReportItem(itemid)) {
                         pvar = Path.GetFileNameWithoutExtension(GetReport(itemid).Filename);
                     }

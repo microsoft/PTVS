@@ -75,6 +75,18 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Information about a debug REPL connection event
         /// </summary>
-        DebugRepl
+        DebugRepl,
+        /// <summary>
+        /// Information about enabled experimental features
+        /// </summary>
+        Experiments,
+        /// <summary>
+        /// Summary info about requests processed by an analyzer
+        /// </summary>
+        AnalysisRequestSummary,
+        /// <summary>
+        /// Info about slow GetExpressionAtPoint events
+        /// </summary>
+        GetExpressionAtPoint
     }
 }

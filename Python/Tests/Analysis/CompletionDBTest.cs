@@ -40,7 +40,14 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
+        }
+
+        private string CompletionDB {
+            get {
+                var completionDB = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "CompletionDB");
+                Assert.IsTrue(Directory.Exists(completionDB), $"Did not find {completionDB}");
+                return completionDB;
+            }
         }
 
         private void TestOpen(PythonVersion path) {
@@ -50,12 +57,15 @@ namespace PythonToolsTests {
             Guid testId = Guid.NewGuid();
             var testDir = TestData.GetTempPath(testId.ToString());
 
+            var scraper = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location), "PythonScraper.py");
+            Assert.IsTrue(File.Exists(scraper), $"Did not find {scraper}");
+
             // run the scraper
             using (var proc = ProcessOutput.RunHiddenAndCapture(
                 path.InterpreterPath,
-                TestData.GetPath("PythonScraper.py"),
+                scraper,
                 testDir,
-                TestData.GetPath("CompletionDB")
+                CompletionDB
             )) {
                 Console.WriteLine("Command: " + proc.Arguments);
 
@@ -110,62 +120,52 @@ namespace PythonToolsTests {
             Console.WriteLine("Passed: {0}", path.InterpreterPath);
         }
 
-        [TestMethod, Priority(1)]
-        public void TestOpen25() {
-            TestOpen(PythonPaths.Python25 ?? PythonPaths.Python25_x64);
-        }
-
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestOpen26() {
             TestOpen(PythonPaths.Python26 ?? PythonPaths.Python26_x64);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestOpen27() {
             TestOpen(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
         }
 
-        [TestMethod, Priority(1)]
-        public void TestOpen30() {
-            TestOpen(PythonPaths.Python30 ?? PythonPaths.Python30_x64);
-        }
-
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestOpen31() {
             TestOpen(PythonPaths.Python31 ?? PythonPaths.Python31_x64);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestOpen32() {
             TestOpen(PythonPaths.Python32 ?? PythonPaths.Python32_x64);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestOpen33() {
             TestOpen(PythonPaths.Python33 ?? PythonPaths.Python33_x64);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestOpen34() {
             TestOpen(PythonPaths.Python34 ?? PythonPaths.Python34_x64);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestOpen35() {
             TestOpen(PythonPaths.Python35 ?? PythonPaths.Python35_x64);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestPthFiles() {
-            var outputPath = TestData.GetTempPath(randomSubPath: true);
+            var outputPath = TestData.GetTempPath();
             Console.WriteLine("Writing to: " + outputPath);
 
             // run the analyzer
             using (var output = ProcessOutput.RunHiddenAndCapture("Microsoft.PythonTools.Analyzer.exe",
-                "/lib", TestData.GetPath(@"TestData\PathStdLib"),
+                "/lib", TestData.GetPath("TestData", "PathStdLib"),
                 "/version", "2.7",
                 "/outdir", outputPath,
-                "/indir", TestData.GetPath("CompletionDB"),
+                "/indir", CompletionDB,
                 "/log", "AnalysisLog.txt")) {
                 output.Wait();
                 Console.WriteLine("* Stdout *");
@@ -179,7 +179,7 @@ namespace PythonToolsTests {
                 Assert.AreEqual(0, output.ExitCode);
             }
 
-            File.Copy(TestData.GetPath(@"CompletionDB\__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
+            File.Copy(Path.Combine(CompletionDB, "__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
 
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var paths = new List<string> { outputPath };
@@ -196,11 +196,11 @@ namespace PythonToolsTests {
             Assert.AreEqual(PythonMemberType.Class, cClass.MemberType);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void PydInPackage() {
             PythonPaths.Python27.AssertInstalled();
 
-            var outputPath = TestData.GetTempPath(randomSubPath: true);
+            var outputPath = TestData.GetTempPath();
             Console.WriteLine("Writing to: " + outputPath);
 
             // run the analyzer
@@ -209,7 +209,7 @@ namespace PythonToolsTests {
                 "/lib", TestData.GetPath(@"TestData\PydStdLib"),
                 "/version", "2.7",
                 "/outdir", outputPath,
-                "/indir", TestData.GetPath("CompletionDB"),
+                "/indir", CompletionDB,
                 "/log", "AnalysisLog.txt")) {
                 output.Wait();
                 Console.WriteLine("* Stdout *");
@@ -269,7 +269,7 @@ namespace PythonToolsTests {
         /// Checks that members removed or introduced in later versions show up or don't in
         /// earlier versions as appropriate.
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void VersionedSharedDatabase() {
             var twoFive = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 5));
             var twoSix = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 6));
@@ -330,19 +330,23 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
+        [TestCategory("60s")]
         public void CheckObsoleteGenerateFunction() {
             var path = PythonPaths.Versions.LastOrDefault(p => p != null && p.IsCPython);
             path.AssertInstalled();
 
-            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(path.Configuration);
+            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(path.Configuration) as PythonInterpreterFactoryWithDatabase;
+            if (factory == null) {
+                Assert.Inconclusive("Test requires PythonInterpreterFactoryWithDatabase");
+            }
 
             var tcs = new TaskCompletionSource<int>();
             var beforeProc = Process.GetProcessesByName("Microsoft.PythonTools.Analyzer");
 
             var request = new PythonTypeDatabaseCreationRequest {
                 Factory = factory,
-                OutputPath = TestData.GetTempPath(randomSubPath: true),
+                OutputPath = TestData.GetTempPath(),
                 SkipUnchanged = true,
                 OnExit = tcs.SetResult
             };

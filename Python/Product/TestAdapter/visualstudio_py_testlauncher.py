@@ -19,8 +19,10 @@ from __future__ import with_statement
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
+import os.path
 import sys
 import json
+import time
 import unittest
 import socket
 import traceback
@@ -29,6 +31,13 @@ try:
     import thread
 except:
     import _thread as thread
+
+try:
+    from unittest import TextTestResult
+    _IS_OLD_UNITTEST = False
+except:
+    from unittest import _TextTestResult as TextTestResult
+    _IS_OLD_UNITTEST = True
 
 if sys.version_info[0] < 3:
     if sys.version_info[:2] < (2, 6):
@@ -122,62 +131,99 @@ class _IpcChannel(object):
 _channel = None
 
 
-class VsTestResult(unittest.TextTestResult):
+class VsTestResult(TextTestResult):
+    _start_time = None
+    _result = None
+
     def startTest(self, test):
         super(VsTestResult, self).startTest(test)
+        self._start_time = time.time()
         if _channel is not None:
             _channel.send_event(
                 name='start', 
                 test = test.test_id
             )
 
+    def stopTest(self, test):
+        # stopTest is called after tearDown on all Python versions
+        # so it is the right time to send the result back to VS
+        # (sending it in the addX methods is too early on Python <= 3.1)
+        super(VsTestResult, self).stopTest(test)
+        if _channel is not None and self._result is not None:
+            _channel.send_event(**self._result)
+
     def addError(self, test, err):
         super(VsTestResult, self).addError(test, err)
-        self.sendResult(test, 'failed', err)
+        self._setResult(test, 'failed', err)
 
     def addFailure(self, test, err):
         super(VsTestResult, self).addFailure(test, err)
-        self.sendResult(test, 'failed', err)
+        self._setResult(test, 'failed', err)
 
     def addSuccess(self, test):
         super(VsTestResult, self).addSuccess(test)
-        self.sendResult(test, 'passed')
+        self._setResult(test, 'passed')
 
     def addSkip(self, test, reason):
         super(VsTestResult, self).addSkip(test, reason)
-        self.sendResult(test, 'skipped')
+        self._setResult(test, 'skipped')
 
     def addExpectedFailure(self, test, err):
         super(VsTestResult, self).addExpectedFailure(test, err)
-        self.sendResult(test, 'failed', err)
+        self._setResult(test, 'failed', err)
 
     def addUnexpectedSuccess(self, test):
         super(VsTestResult, self).addUnexpectedSuccess(test)
-        self.sendResult(test, 'passed')
+        self._setResult(test, 'passed')
 
-    def sendResult(self, test, outcome, trace = None):
-        if _channel is not None:
-            tb = None
-            message = None
-            if trace is not None:
-                traceback.print_exception(*trace)
-                formatted = traceback.format_exception(*trace)
-                # Remove the 'Traceback (most recent call last)'
-                formatted = formatted[1:]
-                tb = ''.join(formatted)
-                message = str(trace[1])
-            _channel.send_event(
-                name='result', 
-                outcome=outcome,
-                traceback = tb,
-                message = message,
-                test = test.test_id
-            )
+    def _setResult(self, test, outcome, trace = None):
+        tb = None
+        message = None
+        duration = time.time() - self._start_time if self._start_time else 0
+        if trace is not None:
+            traceback.print_exception(*trace)
+            tb = _get_traceback(trace)
+            message = str(trace[1])
+        self._result = dict(
+            name = 'result', 
+            outcome = outcome,
+            traceback = tb,
+            message = message,
+            durationInSecs = duration,
+            test = test.test_id
+        )
+
+def _get_traceback(trace):
+    def norm_module(file_path):
+        return os.path.splitext(os.path.normcase(file_path))[0] + '.py'
+
+    def is_framework_frame(f):
+        return is_excluded_module_path(norm_module(f[0]))
+
+    if _IS_OLD_UNITTEST:
+        def is_excluded_module_path(file_path):
+            # unittest is a module, not a package on 2.5, 2.6, 3.0, 3.1
+            return file_path == norm_module(unittest.__file__) or file_path == norm_module(__file__)
+
+    else:
+        def is_excluded_module_path(file_path):
+            for lib_path in unittest.__path__:
+                # if it's in unit test package or it's this module
+                if file_path.startswith(os.path.normcase(lib_path)) or file_path == norm_module(__file__):
+                    return True
+            return False
+
+    all = traceback.extract_tb(trace[2])
+    filtered = [f for f in reversed(all) if not is_framework_frame(f)]
+
+    # stack trace parser needs the Python version, it parses the user's
+    # code to create fully qualified function names
+    lang_ver = '{0}.{1}'.format(sys.version_info[0], sys.version_info[1])
+    tb = ''.join(traceback.format_list(filtered))
+    return lang_ver + '\n' + tb
 
 def main():
     import os
-    import sys
-    import unittest
     from optparse import OptionParser
     global _channel
 
@@ -200,8 +246,8 @@ def main():
         sys.stderr = _TestOutput(sys.stderr, is_stdout = False)
 
     if opts.secret and opts.port:
-        from ptvsd.visualstudio_py_debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
-        from ptvsd.attach_server import DEFAULT_PORT, enable_attach, wait_for_attach
+        from ptvsd.debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
+        from ptvsd import DEFAULT_PORT, enable_attach, wait_for_attach
 
         DONT_DEBUG.append(os.path.normcase(__file__))
         DEBUG_ENTRYPOINTS.add(get_code(main))
@@ -275,13 +321,12 @@ def main():
                     # VsTestResult will use that instead of test.id().
                     loaded_test.test_id = test
                     tests.append(loaded_test)
-            except Exception as err:
-                traceback.print_exc()
-                formatted = traceback.format_exc().splitlines()
-                # Remove the 'Traceback (most recent call last)'
-                formatted = formatted[1:]
-                tb = '\n'.join(formatted)
-                message = str(err)
+            except Exception:
+                trace = sys.exc_info()
+
+                traceback.print_exception(*trace)
+                tb = _get_traceback(trace)
+                message = str(trace[1])
 
                 if _channel is not None:
                     _channel.send_event(
@@ -296,7 +341,15 @@ def main():
                         test = test
                     )
 
-        runner = unittest.TextTestRunner(verbosity=0, resultclass=VsTestResult)
+        if _IS_OLD_UNITTEST:
+            def _makeResult(self):
+                return VsTestResult(self.stream, self.descriptions, self.verbosity)
+
+            unittest.TextTestRunner._makeResult = _makeResult
+
+            runner = unittest.TextTestRunner(verbosity=0)
+        else:
+            runner = unittest.TextTestRunner(verbosity=0, resultclass=VsTestResult)
         
         result = runner.run(unittest.defaultTestLoader.suiteClass(tests))
 

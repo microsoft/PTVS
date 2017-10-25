@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Rule Name="PythonDebugLaunchProvider"
+      DisplayName="Python/Native Debugging"
+      PageTemplate="debugger"
+      Description="Python/Native debugging options"
+      xmlns="http://schemas.microsoft.com/build/2009/properties">
+  <Rule.DataSource>
+    <DataSource Persistence="UserFile" />
+  </Rule.DataSource>
+  <StringProperty Name="LocalDebuggerCommand" DisplayName="Command"
+                  Description="The debug command to execute."
+                  F1Keyword="VC.Project.IVCLocalDebugPageObject.Command">
+    <StringProperty.ValueEditors>
+      <ValueEditor EditorType="DefaultStringPropertyEditor" DisplayName="&lt;Edit...&gt;"/>
+      <ValueEditor EditorType="DefaultFilePropertyEditor" DisplayName="&lt;Browse...&gt;"/>
+    </StringProperty.ValueEditors>
+  </StringProperty>
+    
+  <StringProperty Name="LocalDebuggerCommandArguments" DisplayName="Command Arguments"
+                  Description="The command line arguments to pass to the application."
+                  F1Keyword="VC.Project.IVCLocalDebugPageObject.CommandArguments">
+    <Argument Property="LocalDebuggerCommand" />
+  </StringProperty>
+  <StringProperty Name="LocalDebuggerWorkingDirectory" DisplayName="Working Directory"
+                Description="The application's working directory. By default, the directory containing the project file."
+                Subtype="folder"
+                F1Keyword="VC.Project.IVCLocalDebugPageObject.WorkingDirectory"/>
+  <StringListProperty Name="LocalDebuggerEnvironment" DisplayName="Environment"
+                      Description="Specifies the environment for the debugee, or variables to merge with existing environment."
+                      Separator="&#xA;"
+                      F1Keyword="VC.Project.IVCLocalDebugPageObject.Environment"/>
+  <BoolProperty Name="LocalDebuggerMergeEnvironment" DisplayName="Merge Environment"
+                Description="Merge specified environment variables with existing environment."
+                F1Keyword="VC.Project.IVCLocalDebugPageObject.EnvironmentMerge"/>
+</Rule>

@@ -111,6 +111,16 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// True if the module is a stub file.
+        /// </summary>
+        /// <remarks>New in 3.2</remarks>
+        public bool IsStub {
+            get {
+                return PythonStubRegex.IsMatch(Path.GetFileName(SourceFile));
+            }
+        }
+
+        /// <summary>
         /// Creates a new ModulePath item.
         /// </summary>
         /// <param name="fullname">The full name of the module.</param>
@@ -129,7 +139,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyw?$",
+        private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.py[iw]?$",
+            RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex PythonStubRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyi$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.((\w|_|-)+?\.)?pyd$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
@@ -142,7 +154,8 @@ namespace Microsoft.PythonTools.Analysis {
             string baseModule,
             bool skipFiles,
             bool recurse,
-            bool requireInitPy
+            bool requireInitPy,
+            bool includePackages
         ) {
             Debug.Assert(baseModule == "" || baseModule.EndsWith("."));
 
@@ -167,22 +180,38 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            var directories = new List<ModulePath>();
+            foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
+                var dirname = PathUtils.GetFileOrDirectoryName(dir);
+                var match = PythonPackageRegex.Match(dirname);
+                var withInitPy = Path.Combine(dir, "__init__.py");
+                bool hasInitPy = File.Exists(withInitPy);
+                if (match.Success && (!requireInitPy || hasInitPy)) {
+                    directories.Add(new ModulePath(
+                        baseModule + match.Groups["name"].Value,
+                        hasInitPy ? withInitPy : dir,
+                        dir
+                    ));
+                }
+            }
+
             if (recurse) {
-                foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
-                    var dirname = PathUtils.GetFileOrDirectoryName(dir);
-                    var match = PythonPackageRegex.Match(dirname);
-                    if (match.Success && (!requireInitPy || File.Exists(Path.Combine(dir, "__init__.py")))) {
-                        foreach (var entry in GetModuleNamesFromPathHelper(
-                            skipFiles ? dir : libPath,
-                            dir,
-                            baseModule + match.Groups["name"].Value + ".",
-                            false,
-                            true,
-                            requireInitPy
-                        )) {
-                            yield return entry;
-                        }
+                foreach (var dir in directories) {
+                    foreach (var entry in GetModuleNamesFromPathHelper(
+                        skipFiles ? dir.LibraryPath : libPath,
+                        dir.LibraryPath,
+                        dir.ModuleName + ".",
+                        false,
+                        true,
+                        requireInitPy,
+                        includePackages
+                    )) {
+                        yield return entry;
                     }
+                }
+            } else if (includePackages) {
+                foreach (var dir in directories) {
+                    yield return dir;
                 }
             }
         }
@@ -196,7 +225,8 @@ namespace Microsoft.PythonTools.Analysis {
             bool includeTopLevelFiles = true,
             bool recurse = true,
             string basePackage = null,
-            bool requireInitPy = true
+            bool requireInitPy = true,
+            bool includePackages = false
         ) {
             return GetModuleNamesFromPathHelper(
                 path,
@@ -204,7 +234,8 @@ namespace Microsoft.PythonTools.Analysis {
                 basePackage ?? string.Empty,
                 !includeTopLevelFiles,
                 recurse,
-                requireInitPy
+                requireInitPy,
+                includePackages
             ).Where(mp => !string.IsNullOrEmpty(mp.ModuleName));
         }
 
@@ -217,7 +248,8 @@ namespace Microsoft.PythonTools.Analysis {
             bool includeTopLevelFiles = true,
             bool recurse = true,
             string baseModule = null,
-            bool requireInitPy = true
+            bool requireInitPy = true,
+            bool includePackages = false
         ) {
             return paths.SelectMany(p => GetModuleNamesFromPathHelper(
                 p,
@@ -225,7 +257,8 @@ namespace Microsoft.PythonTools.Analysis {
                 baseModule ?? string.Empty,
                 !includeTopLevelFiles,
                 recurse,
-                requireInitPy
+                requireInitPy,
+                includePackages
             )).Where(mp => !string.IsNullOrEmpty(mp.ModuleName));
         }
 
@@ -384,6 +417,19 @@ namespace Microsoft.PythonTools.Analysis {
             return IsPythonFile(path, false, false, false);
         }
         
+        /// <summary>
+        /// Returns true if the provided name can be imported in Python code.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static bool IsImportable(string name) {
+            try {
+                return PythonPackageRegex.IsMatch(name);
+            } catch (RegexMatchTimeoutException) {
+                return false;
+            }
+        }
+
         /// <summary>
         /// Returns true if the provided path references an importable Python
         /// module. This function does not access the filesystem.
@@ -585,6 +631,62 @@ namespace Microsoft.PythonTools.Analysis {
             Func<string, bool> isPackage = null,
             Func<string, string, string> getModule = null
         ) {
+            ModulePath module;
+            string errorParameter;
+            bool isInvalid, isMissing;
+            if (FromBasePathAndName_NoThrow(
+                basePath,
+                moduleName,
+                isPackage,
+                getModule,
+                out module,
+                out isInvalid,
+                out isMissing,
+                out errorParameter
+            )) {
+                return module;
+            }
+
+            if (isInvalid) {
+                throw new ArgumentException("Not a valid Python package: " + errorParameter);
+            }
+            if (isMissing) {
+                throw new ArgumentException("Python package not found: " + errorParameter);
+            }
+            throw new ArgumentException("Unknown error finding module");
+        }
+
+        internal static bool FromBasePathAndName_NoThrow(
+            string basePath,
+            string moduleName,
+            out ModulePath modulePath
+        ) {
+            return FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
+        }
+
+        private static bool IsModuleNameMatch(Regex regex, string path, string mod) {
+            var m = regex.Match(PathUtils.GetFileOrDirectoryName(path));
+            if (!m.Success) {
+                return false;
+            }
+            return m.Groups["name"].Value == mod;
+        }
+
+        internal static bool FromBasePathAndName_NoThrow(
+            string basePath,
+            string moduleName,
+            Func<string, bool> isPackage,
+            Func<string, string, string> getModule,
+            out ModulePath modulePath,
+            out bool isInvalid,
+            out bool isMissing,
+            out string errorParameter
+        ) {
+            modulePath = default(ModulePath);
+            isInvalid = false;
+            isMissing = false;
+            errorParameter = null;
+
             var bits = moduleName.Split('.');
             var lastBit = bits.Last();
 
@@ -598,8 +700,8 @@ namespace Microsoft.PythonTools.Analysis {
                         return pack;
                     }
                     var mods = PathUtils.EnumerateFiles(dir, mod + "*", recurse: false).ToArray();
-                    return mods.FirstOrDefault(p => PythonBinaryRegex.IsMatch(PathUtils.GetFileOrDirectoryName(p))) ??
-                        mods.FirstOrDefault(p => PythonFileRegex.IsMatch(PathUtils.GetFileOrDirectoryName(p)));
+                    return mods.FirstOrDefault(p => IsModuleNameMatch(PythonBinaryRegex, p, mod)) ??
+                        mods.FirstOrDefault(p => IsModuleNameMatch(PythonFileRegex, p, mod));
                 };
             }
 
@@ -607,7 +709,9 @@ namespace Microsoft.PythonTools.Analysis {
 
             foreach (var bit in bits.Take(bits.Length - 1)) {
                 if (!PythonPackageRegex.IsMatch(bit)) {
-                    throw new ArgumentException("Not a valid Python package: " + bit);
+                    isInvalid = true;
+                    errorParameter = bit;
+                    return false;
                 }
                 if (string.IsNullOrEmpty(path)) {
                     path = bit;
@@ -615,18 +719,26 @@ namespace Microsoft.PythonTools.Analysis {
                     path = PathUtils.GetAbsoluteFilePath(path, bit);
                 }
                 if (!isPackage(path)) {
-                    throw new ArgumentException("Python package not found: " + path);
+                    isMissing = true;
+                    errorParameter = path;
+                    return false;
                 }
             }
 
             if (!PythonPackageRegex.IsMatch(lastBit)) {
-                throw new ArgumentException("Not a valid Python module: " + moduleName);
+                isInvalid = true;
+                errorParameter = moduleName;
+                return false;
             }
             path = getModule(path, lastBit);
             if (string.IsNullOrEmpty(path)) {
-                throw new ArgumentException("Python module not found: " + moduleName);
+                isMissing = true;
+                errorParameter = moduleName;
+                return false;
             }
-            return new ModulePath(moduleName, path, basePath);
+
+            modulePath = new ModulePath(moduleName, path, basePath);
+            return true;
         }
 
         internal static IEnumerable<string> GetParents(string name, bool includeFullName = true) {

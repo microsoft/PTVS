@@ -32,8 +32,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         readonly Version _langVersion;
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb, _searchPathDb;
+        private readonly object _searchPathDbLock = new object();
         private PythonAnalyzer _state;
         private IReadOnlyList<string> _searchPaths;
+        private IReadOnlyDictionary<string, string> _searchPathPackages;
+        private CancellationTokenSource _searchPathPackagesCancellation;
         private Dictionary<string, HashSet<string>> _zipPackageCache;
 
         public CPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
@@ -52,6 +55,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             _typeDb = factory.GetCurrentDatabase();
             _searchPathDb = null;
+            _searchPathPackages = null;
             _zipPackageCache = null;
 
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
@@ -80,9 +84,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public IList<string> GetModuleNames() {
             var fromDb = (_typeDb?.GetModuleNames()).MaybeEnumerate().ToList();
 
-            fromDb.AddRange((_searchPathDb?.GetModuleNames()).MaybeEnumerate());
-            
-            // TODO: Return list of not-yet-imported modules from search paths?
+            PythonTypeDatabase db;
+            lock (_searchPathDbLock) {
+                db = _searchPathDb;
+            }
+            fromDb.AddRange((db?.GetModuleNames()).MaybeEnumerate());
+
+            fromDb.AddRange((_searchPathPackages?.Keys).MaybeEnumerate());
 
             return fromDb;
         }
@@ -90,7 +98,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public IPythonModule ImportModule(string name) {
             var mod = _typeDb?.GetModule(name);
             if (mod == null) {
-                mod = _searchPathDb?.GetModule(name);
+                PythonTypeDatabase db;
+                lock (_searchPathDbLock) {
+                    db = _searchPathDb;
+                }
+                mod = db?.GetModule(name);
                 if (mod == null) {
                     foreach (var searchPath in _searchPaths.MaybeEnumerate()) {
                         try {
@@ -112,10 +124,70 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return mod;
         }
 
-        private void EnsureSearchPathDB() {
-            if (_searchPathDb == null) {
-                _searchPathDb = new PythonTypeDatabase(_factory, innerDatabase: _typeDb);
+        private PythonTypeDatabase EnsureSearchPathDB() {
+            lock (_searchPathDb) {
+                if (_searchPathDb == null) {
+                    _searchPathDb = new PythonTypeDatabase(_factory, innerDatabase: _typeDb);
+                }
+                return _searchPathDb;
             }
+        }
+
+        private async void BeginUpdateSearchPathPackages() {
+            var cts = new CancellationTokenSource();
+            var oldCts = Interlocked.Exchange(ref _searchPathPackagesCancellation, cts);
+            try {
+                oldCts?.Cancel();
+                oldCts?.Dispose();
+            } catch (ObjectDisposedException) {
+            }
+
+            try {
+                await Task.Run(() => UpdateSearchPathPackagesAsync(cts.Token));
+            } catch (OperationCanceledException) {
+            } catch (ObjectDisposedException) {
+            } catch (Exception ex) {
+                // Cannot do anything more useful with the exception message here
+                Debug.Fail(ex.ToString());
+            } finally {
+                Interlocked.CompareExchange(ref _searchPathPackagesCancellation, null, cts)?.Dispose();
+            }
+        }
+
+        private async Task UpdateSearchPathPackagesAsync(CancellationToken cancellationToken) {
+            var packageDict = new Dictionary<string, string>();
+
+            foreach(var searchPath in _searchPaths.MaybeEnumerate()) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                IReadOnlyCollection<string> packages = null;
+                if (File.Exists(searchPath)) {
+                    packages = await GetPackagesFromZipFileAsync(searchPath, cancellationToken);
+                } else if (Directory.Exists(searchPath)) {
+                    packages = await GetPackagesFromDirectoryAsync(searchPath, cancellationToken);
+                }
+                foreach(var package in packages.MaybeEnumerate()) {
+                    packageDict[package] = searchPath;
+                }
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            Interlocked.Exchange(ref _searchPathPackages, packageDict);
+            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private async Task<IReadOnlyCollection<string>> GetPackagesFromDirectoryAsync(string searchPath, CancellationToken cancellationToken) {
+            return ModulePath.GetModulesInPath(
+                searchPath,
+                recurse: false,
+                requireInitPy: ModulePath.PythonVersionRequiresInitPyFiles(_langVersion),
+                includePackages: true
+            ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n)).ToList();
+        }
+
+        private async Task<IReadOnlyCollection<string>> GetPackagesFromZipFileAsync(string searchPath, CancellationToken cancellationToken) {
+            // TODO: Search zip files for packages
+            return new string[0];
         }
 
         private IPythonModule LoadModuleFromDirectory(string searchPath, string moduleName) {
@@ -131,30 +203,45 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return null;
             }
 
-            EnsureSearchPathDB();
+            var db = EnsureSearchPathDB();
             if (package.IsNativeExtension || package.IsCompiled) {
-                _searchPathDb.LoadExtensionModule(package);
+                db.LoadExtensionModule(package);
             } else {
-                _searchPathDb.AddModule(package.FullName, AstPythonModule.FromFile(
+                db.AddModule(package.FullName, AstPythonModule.FromFile(
                     this,
                     package.SourceFile,
-                    _factory.GetLanguageVersion()
+                    _factory.GetLanguageVersion(),
+                    package.FullName
                 ));
             }
 
-            var mod = _searchPathDb.GetModule(package.FullName);
+            if (db != _searchPathDb) {
+                // Racing with the DB being invalidated.
+                // It's okay if we miss it here, so don't worry
+                // about taking the lock.
+                return null;
+            }
+
+            var mod = db.GetModule(package.FullName);
 
             if (!package.IsSpecialName) {
                 int i = package.FullName.LastIndexOf('.');
                 if (i >= 1) {
                     var parent = package.FullName.Remove(i);
-                    var parentMod = _searchPathDb.GetModule(parent) as AstPythonModule;
+                    var parentMod = db.GetModule(parent) as AstPythonModule;
                     if (parentMod != null) {
                         parentMod.AddChildModule(package.Name, mod);
                     }
                 }
             }
-            
+
+            lock (_searchPathDbLock) {
+                if (db != _searchPathDb) {
+                    // Raced with the DB being invalidated
+                    return null;
+                }
+            }
+
             return mod;
         }
 
@@ -204,7 +291,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 name = ModulePath.FromBasePathAndName(
                     "",
                     moduleName,
-                    packages.Contains,
+                    packageName => packages.Contains(packageName + '\\'),
                     new GetModuleCallable(packages).GetModule
                 );
             } catch (ArgumentException) {
@@ -244,10 +331,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private void PythonAnalyzer_SearchPathsChanged(object sender, EventArgs e) {
-            _searchPaths = _state.GetSearchPaths();
-            _searchPathDb = null;
-            _zipPackageCache = null;
-            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+            lock (_searchPathDbLock) {
+                _searchPaths = _state.GetSearchPaths();
+                _searchPathDb = null;
+                _zipPackageCache = null;
+            }
+
+            BeginUpdateSearchPathPackages();
         }
 
         public event EventHandler ModuleNamesChanged;
@@ -256,7 +346,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
 
         public void Dispose() {
-            _searchPathDb = null;
+            lock (_searchPathDbLock) {
+                _searchPathDb = null;
+            }
             _zipPackageCache = null;
             _typeDb = null;
 

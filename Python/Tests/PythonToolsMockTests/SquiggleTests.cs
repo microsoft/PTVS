@@ -44,7 +44,6 @@ namespace PythonToolsMockTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         [TestInitialize]
@@ -73,7 +72,7 @@ namespace PythonToolsMockTests {
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void UnresolvedImportSquiggle() {
             List<string> squiggles;
 
@@ -110,7 +109,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void HandledImportSquiggle() {
             var testCases = new List<Tuple<string, string[]>>();
             testCases.AddRange(

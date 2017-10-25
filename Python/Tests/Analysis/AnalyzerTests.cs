@@ -26,7 +26,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace AnalysisTests {
     [TestClass]
@@ -34,10 +33,9 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task LogFileEncoding() {
             // Ensure that log messages round-trip correctly.
 
@@ -93,6 +91,34 @@ namespace AnalysisTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void LogFileRotation() {
+            var logFile = Path.Combine(TestData.GetTempPath(), "Log.txt");
+            var writer = new AnalysisLogWriter(logFile, false, false);
+            for (int i = 0; i < 100; ++i) {
+                writer.Log("Event", i);
+            }
+            writer.Flush(synchronous: true);
+
+            var lines = File.ReadAllLines(logFile);
+            Assert.AreEqual(101, lines.Length);
+
+            writer.Rotate(11);
+            lines = File.ReadAllLines(logFile);
+            AssertUtil.ContainsExactly(lines.Select(l => l.Substring(l.IndexOf(']') + 1).Trim()), 
+                "Event: 90",
+                "Event: 91",
+                "Event: 92",
+                "Event: 93",
+                "Event: 94",
+                "Event: 95",
+                "Event: 96",
+                "Event: 97",
+                "Event: 98",
+                "Event: 99"
+            );
+        }
+
         private static DateTime LastWeek {
             get {
                 return DateTime.Now.Subtract(TimeSpan.FromDays(7));
@@ -105,7 +131,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TemporaryLibTest() {
             string libPath, dbPath;
 
@@ -190,7 +216,7 @@ namespace AnalysisTests {
             "site-packages\\B\\b.py"
         };
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task NoFilesOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -206,7 +232,7 @@ namespace AnalysisTests {
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task AllFilesOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -222,7 +248,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task FileInStdLibMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -245,7 +271,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task FileInSitePackageMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -260,7 +286,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task FileInStdLibOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -277,7 +303,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task FileInSitePackageOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -293,7 +319,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task IdbInStdLibMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -310,7 +336,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task IdbInSitePackageMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -326,7 +352,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task SitePackageAdded() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -346,7 +372,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task SitePackageRemoved() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -364,7 +390,7 @@ namespace AnalysisTests {
         }
 
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ConflictingPyAndPyd() {
             var files = new[] {
                 "a.py",
@@ -384,7 +410,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task ChangeAllToTrueOnSecondGroup() {
             var files = new[] {
                 "a.py",
@@ -403,7 +429,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task SitePackagesInPthFile() {
             var files = new[] {
                 "a.py",
@@ -425,7 +451,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task GetDatabasePaths() {
             foreach (var version in PythonPaths.Versions) {
                 var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(version.InterpreterPath);
@@ -445,13 +471,13 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task GetVirtualEnvDatabasePaths() {
             var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
             version.AssertInstalled();
 
-            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+            var env = Path.Combine(TestData.GetTempPath(), "env");
 
             using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "virtualenv", env)) {
                 if ((await p) != 0) {
@@ -487,13 +513,13 @@ namespace AnalysisTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task GetVirtualEnvDatabasePathsWithSystemSitePackages() {
             var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
             version.AssertInstalled();
 
-            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+            var env = Path.Combine(TestData.GetTempPath(), "env");
 
             using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "virtualenv", "--system-site-packages", env)) {
                 if ((await p) != 0) {
@@ -526,12 +552,12 @@ namespace AnalysisTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task GetVEnvDatabasePaths() {
             var version = PythonPaths.Python35 ?? PythonPaths.Python35_x64;
 
-            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+            var env = Path.Combine(TestData.GetTempPath(), "env");
 
             using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "venv", env)) {
                 if ((await p) != 0) {
@@ -567,12 +593,12 @@ namespace AnalysisTests {
             );
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public async Task GetVEnvDatabasePathsWithSystemSitePackage() {
             var version = PythonPaths.Python35 ?? PythonPaths.Python35_x64;
 
-            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+            var env = Path.Combine(TestData.GetTempPath(), "env");
 
             using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "venv", "--system-site-packages", env)) {
                 if ((await p) != 0) {

@@ -48,7 +48,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private readonly Action<string, string> _executeCommand;
         public static readonly ICommand LoadMore = new RoutedCommand();
         public static readonly ICommand OpenInBrowser = new RoutedCommand();
-        public static readonly ICommand OpenInExplorer = new RoutedCommand();
         public static readonly ICommand RunSelection = new RoutedCommand();
         public static readonly ICommand Search = new RoutedCommand();
         public static readonly ICommand CreateFilesCommand = new RoutedCommand();
@@ -56,7 +55,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         private string _searchTerm;
         private string _outputFolderPath;
-        private string _openInExplorerFolderPath;
+        private string _projectName;
         private string _selectedDescription;
         private ImageSource _selectedImage;
         private string _selectedLocation;
@@ -66,6 +65,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private DteCommand[] _postCommands;
         private bool _hasPostCommands;
         private bool _shouldExecutePostCommands;
+        private PostCreateAction _postCreate;
+        private bool _hasOpenProjectPostCommand;
+        private bool _solutionLoaded;
 
         private OperationStatus _installingStatus;
         private OperationStatus _cloningStatus;
@@ -78,6 +80,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private ImageMoniker _statusImage;
         private Visibility _statusVisibility = Visibility.Collapsed;
         private Visibility _statusImageVisibility = Visibility.Collapsed;
+        private Visibility _spinningStatusImageVisibility = Visibility.Collapsed;
         private Visibility _statusProgressVisibility = Visibility.Collapsed;
         private Visibility _statusUpdateProgressVisibility = Visibility.Collapsed;
 
@@ -131,13 +134,37 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _githubSource = gitHubTemplateSource;
             _executeCommand = executeCommand;
             _projectSystemClient = projectSystemClient;
-
+            if (_projectSystemClient != null) {
+                _projectSystemClient.SolutionOpenChanged += OnSolutionLoadedChanged;
+            }
             Installed = new CategorizedViewModel(Strings.TemplateCategoryInstalled);
             Recommended = new CategorizedViewModel(Strings.TemplateCategoryRecommended);
             GitHub = new CategorizedViewModel(Strings.TemplateCategoryGitHub);
             Custom = new CategorizedViewModel(Strings.TemplateCategoryCustom);
 
             PropertyChanged += UpdateStatus;
+        }
+
+        private void OnSolutionLoadedChanged(object sender, EventArgs e) {
+            _solutionLoaded = _projectSystemClient.IsSolutionOpen;
+            if (!_solutionLoaded && TargetProjectLocation != null) {
+                // User initiated cookiecutter explorer with add new item,
+                // but they've now closed the solution, so update the state
+                // so we no longer add to project.
+                TargetProjectLocation = null;
+
+                // If we've already loaded the template, we may have
+                // initialized the context items with values based on
+                // what was the state of VS at the time. We need to
+                // reload the context to get the proper values.
+                if (ContextItems.Any()) {
+                    // RefreshContextAsync catches all non critical exceptions
+                    // and prints them to output window.
+                    RefreshContextAsync(SelectedTemplate).DoNotWait();
+                }
+
+            }
+            UpdatePostCreateOption();
         }
 
         protected void OnPropertyChange([CallerMemberName] string name = null) {
@@ -170,18 +197,21 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public string OpenInExplorerFolderPath {
+        public string ProjectName {
             get {
-                return _openInExplorerFolderPath;
+                return _projectName;
             }
 
             set {
-                if (value != _openInExplorerFolderPath) {
-                    _openInExplorerFolderPath = value;
+                if (value != _projectName) {
+                    _projectName = value;
                     OnPropertyChange();
+                    OnPropertyChange(nameof(IsFromProjectWizard));
                 }
             }
         }
+
+        public bool IsFromProjectWizard => !string.IsNullOrEmpty(ProjectName);
 
         public string SelectedDescription {
             get {
@@ -225,6 +255,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public ImageMoniker StatusImage => _statusImage;
         public Visibility StatusVisibility => _statusVisibility;
         public Visibility StatusImageVisibility => _statusImageVisibility;
+        public Visibility SpinningStatusImageVisibility => _spinningStatusImageVisibility;
         public Visibility StatusProgressVisibility => _statusProgressVisibility;
         public Visibility StatusUpdateProgressVisibility => _statusUpdateProgressVisibility;
 
@@ -239,7 +270,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _statusMessage = message ?? string.Empty;
             _statusHelp = help ?? string.Empty;
             _statusImage = image ?? default(ImageMoniker);
-            _statusImageVisibility = image.HasValue ? Visibility.Visible : Visibility.Collapsed;
+            _statusImageVisibility = image.HasValue && !progressVisible ? Visibility.Visible : Visibility.Collapsed;
+            _spinningStatusImageVisibility = image.HasValue && progressVisible ? Visibility.Visible : Visibility.Collapsed;
             bool v = (visible ?? !string.IsNullOrEmpty(message));
             _statusVisibility = v ? Visibility.Visible : Visibility.Collapsed;
             _statusProgressVisibility = progressVisible ? Visibility.Visible : Visibility.Collapsed;
@@ -252,6 +284,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             OnPropertyChange(nameof(StatusHelp));
             OnPropertyChange(nameof(StatusImage));
             OnPropertyChange(nameof(StatusImageVisibility));
+            OnPropertyChange(nameof(SpinningStatusImageVisibility));
             OnPropertyChange(nameof(StatusProgressVisibility));
             OnPropertyChange(nameof(StatusUpdateProgressVisibility));
             if (v) {
@@ -469,6 +502,34 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
+        private void UpdatePostCreateOption() {
+            if (AddingToExistingProject) {
+                PostCreate = PostCreateAction.AddToProject;
+            } else {
+                if (_hasOpenProjectPostCommand) {
+                    if (_solutionLoaded) {
+                        PostCreate = PostCreateAction.AddToSolution;
+                    } else {
+                        PostCreate = PostCreateAction.OpenProject;
+                    }
+                } else {
+                    PostCreate = PostCreateAction.OpenFolder;
+                }
+            }
+        }
+        public PostCreateAction PostCreate {
+            get {
+                return _postCreate;
+            }
+
+            set {
+                if (value != _postCreate) {
+                    _postCreate = value;
+                    OnPropertyChange();
+                }
+            }
+        }
+
         public ProjectLocation TargetProjectLocation {
             get {
                 return _targetProjectLocation;
@@ -478,7 +539,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _targetProjectLocation) {
                     _targetProjectLocation = value;
                     OnPropertyChange();
+                    OnPropertyChange(nameof(AddingToExistingProject));
                 }
+            }
+        }
+
+        public bool AddingToExistingProject {
+            get {
+                return _targetProjectLocation != null;
             }
         }
 
@@ -555,13 +623,32 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             return userConfigFilePath;
         }
 
-        public async Task SearchAsync() {
+        public async Task SearchAsync(string autoSelectTemplateUri = null) {
             _templateRefreshCancelTokenSource?.Cancel();
             _templateRefreshCancelTokenSource = new CancellationTokenSource();
             try {
                 ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.Load);
 
                 await RefreshTemplatesAsync(SearchTerm, _templateRefreshCancelTokenSource.Token);
+
+                if (!string.IsNullOrEmpty(autoSelectTemplateUri)) {
+                    var firstTemplate = SearchResults
+                        .SelectMany(cat => cat.Templates)
+                        .OfType<TemplateViewModel>()
+                        .Where(tmp => string.Compare(tmp.RemoteUrl, autoSelectTemplateUri, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        .FirstOrDefault();
+                    if (firstTemplate != null) {
+                        firstTemplate.IsSelected = true;
+                    } else {
+                        // We were asked to select a template which wasn't part of the search results
+                        // so add it to the custom section and select it
+                        var addedCustomTemplate = AddToCustomTemplates(autoSelectTemplateUri);
+                        addedCustomTemplate.IsSelected = true;
+                        if (!SearchResults.Contains(Custom)) {
+                            SearchResults.Insert(0, Custom);
+                        }
+                    }
+                }
             } catch (OperationCanceledException) {
             }
         }
@@ -575,22 +662,17 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             SearchResults.Clear();
 
             if (!string.IsNullOrEmpty(searchTerm)) {
-                var searchTermTemplate = new TemplateViewModel();
-                searchTermTemplate.IsSearchTerm = true;
+                if (AddToCustomTemplates(searchTerm) != null) {
+                    SearchResults.Add(Custom);
+                }
 
-                if (searchTerm.StartsWith("http")) {
-                    searchTermTemplate.DisplayName = searchTerm;
-                    searchTermTemplate.RemoteUrl = searchTerm;
-                    searchTermTemplate.Category = Custom.DisplayName;
-                    Custom.Templates.Add(searchTermTemplate);
-                    SearchResults.Add(Custom);
-                    return;
-                } else if (Directory.Exists(searchTerm)) {
-                    searchTermTemplate.DisplayName = searchTerm;
-                    searchTermTemplate.ClonedPath = searchTerm;
-                    searchTermTemplate.Category = Custom.DisplayName;
-                    Custom.Templates.Add(searchTermTemplate);
-                    SearchResults.Add(Custom);
+                // If it's a location on local disk or http, then we're done
+                if (SearchResults.Any()) {
+                    // Ensure that there's a selection, to avoid focus issues
+                    // when tabbing to the search results.
+                    if (!AnySelection()) {
+                        SelectFirstTemplateOrCategory();
+                    }
                     return;
                 }
             }
@@ -601,11 +683,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
             // Ensure that there's a selection, to avoid focus issues
             // when tabbing to the search results.
-            if (!SearchResults.Any(cat => cat.IsSelected)) {
-                var first = SearchResults.FirstOrDefault();
-                if (first != null) {
-                    first.IsSelected = true;
-                }
+            if (!AnySelection()) {
+                SelectFirstTemplateOrCategory();
             }
 
             var recommendedTask = AddFromSourceAsync(_recommendedSource, searchTerm, Recommended, false, ct);
@@ -613,6 +692,44 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             var githubTask = AddFromSourceAsync(_githubSource, searchTerm, GitHub, false, ct);
 
             await Task.WhenAll(recommendedTask, installedTask, githubTask);
+        }
+
+        private TemplateViewModel AddToCustomTemplates(string possibleUri) {
+            var searchTermTemplate = new TemplateViewModel();
+            searchTermTemplate.IsSearchTerm = true;
+
+            if (possibleUri.StartsWith("http")) {
+                searchTermTemplate.DisplayName = possibleUri;
+                searchTermTemplate.RemoteUrl = possibleUri;
+                searchTermTemplate.Category = Custom.DisplayName;
+                Custom.Templates.Add(searchTermTemplate);
+                return searchTermTemplate;
+            } else if (Directory.Exists(possibleUri)) {
+                searchTermTemplate.DisplayName = possibleUri;
+                searchTermTemplate.ClonedPath = possibleUri;
+                searchTermTemplate.Category = Custom.DisplayName;
+                Custom.Templates.Add(searchTermTemplate);
+                return searchTermTemplate;
+            }
+
+            return null;
+        }
+
+        private bool AnySelection() {
+            return SearchResults.Any(cat => cat.IsSelected) ||
+                SearchResults.SelectMany(cat => cat.Templates).Any(tmp => tmp.IsSelected);
+        }
+
+        private void SelectFirstTemplateOrCategory() {
+            var firstTemplate = SearchResults.SelectMany(cat => cat.Templates).FirstOrDefault();
+            if (firstTemplate != null) {
+                firstTemplate.IsSelected = true;
+            } else {
+                var firstCategory = SearchResults.FirstOrDefault();
+                if (firstCategory != null) {
+                    firstCategory.IsSelected = true;
+                }
+            }
         }
 
         public async Task DeleteTemplateAsync(TemplateViewModel template) {
@@ -882,7 +999,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             ResetStatus();
 
             CreatingStatus = OperationStatus.InProgress;
-            OpenInExplorerFolderPath = null;
 
             try {
                 var contextFilePath = Path.GetTempFileName();
@@ -935,14 +1051,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 ContextItems.Clear();
                 ResetStatus();
                 _templateLocalFolderPath = null;
-                OpenInExplorerFolderPath = OutputFolderPath;
                 CreatingStatus = OperationStatus.Succeeded;
 
-                if (TargetProjectLocation != null) {
-                    // Don't show the succeeded message and open in solution explorer link when adding to project
-                    CreatingStatus = OperationStatus.NotStarted;
-                }
-
+                OpenFolderInExplorer(OutputFolderPath);
                 Home();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 CreatingStatus = OperationStatus.Failed;
@@ -992,25 +1103,35 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
 
             foreach (var cmd in _postCommands) {
+                if (cmd.Name == "File.OpenProject") {
+                    continue;
+                }
+
                 _executeCommand?.Invoke(cmd.Name, cmd.Args);
             }
         }
 
-        public void OpenFolderInExplorer(string path) {
+        private void OpenFolderInExplorer(string outputFolderPath) {
             try {
-                RunOpenInSolutionExplorerCommands(path);
-                RunPostCommands();
+                // Rather than hard code detection of project files,
+                // let the template specify which project/solution file
+                // it wants to open.
+                var openProjCmd = _postCommands?.FirstOrDefault(cmd => cmd.Name == "File.OpenProject");
+                if (openProjCmd != null) {
+                    if (_solutionLoaded) {
+                        _projectSystemClient.AddToSolution(openProjCmd.Args);
+                    } else {
+                        _executeCommand(openProjCmd.Name, openProjCmd.Args);
+                    }
+                } else {
+                    _executeCommand("File.OpenFolder", outputFolderPath);
+                    _executeCommand("View.SolutionExplorer", null);
+                }
 
-                CreatingStatus = OperationStatus.NotStarted;
-                OpenInExplorerFolderPath = null;
+                RunPostCommands();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 _outputWindow.WriteErrorLine(ex.Message);
             }
-        }
-
-        private void RunOpenInSolutionExplorerCommands(string path) {
-            _executeCommand("File.OpenFolder", path);
-            _executeCommand("View.SolutionExplorer", null);
         }
 
         public async Task SelectTemplateAsync(TemplateViewModel template) {
@@ -1146,13 +1267,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 var unrenderedContext = await _cutterClient.LoadUnrenderedContextAsync(selection.ClonedPath, UserConfigFilePath);
 
-                ContextItems.Clear();
-                foreach (var item in unrenderedContext.Items.Where(it => !it.Name.StartsWith("_", StringComparison.InvariantCulture))) {
-                    ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Values));
-                }
-
-                HasPostCommands = unrenderedContext.Commands.Count > 0;
-                ShouldExecutePostCommands = HasPostCommands;
+                InitializeContextItems(unrenderedContext);
 
                 LoadingStatus = OperationStatus.Succeeded;
 
@@ -1170,6 +1285,36 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Load, selection, ex);
             }
+        }
+
+        internal void InitializeContextItems(TemplateContext unrenderedContext) {
+            var sourceValues = new Dictionary<string, string>() {
+                    { KnownValueSources.ProjectName, ProjectName ?? string.Empty },
+                    { KnownValueSources.IsNewProject, TargetProjectLocation == null ? "y" : "n" },
+                    { KnownValueSources.IsNewItem, TargetProjectLocation != null ? "y" : "n" },
+                    { KnownValueSources.IsFromProjectWizard, IsFromProjectWizard ? "y" : "n" },
+                };
+
+            ContextItems.Clear();
+            foreach (var item in unrenderedContext.Items) {
+                var itemVM = new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Visible, item.Values);
+
+                if (!string.IsNullOrEmpty(item.ValueSource)) {
+                    if (sourceValues.TryGetValue(item.ValueSource, out string sourceValue)) {
+                        itemVM.Val = sourceValue;
+                    } else {
+                        _outputWindow.WriteLine(Strings.LoadTemplateValueSourceNotSupportedWarning.FormatUI(item.Name, item.ValueSource));
+                    }
+                }
+
+                ContextItems.Add(itemVM);
+            }
+
+            HasPostCommands = unrenderedContext.Commands.Count > 0;
+            _hasOpenProjectPostCommand = unrenderedContext.Commands.Any(cmd => cmd.Name == "File.OpenProject");
+            _solutionLoaded = _projectSystemClient.IsSolutionOpen;
+            ShouldExecutePostCommands = HasPostCommands;
+            UpdatePostCreateOption();
         }
 
         private async Task RefreshSelectedDescriptionAsync(TemplateViewModel selection) {

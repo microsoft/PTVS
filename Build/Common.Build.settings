@@ -82,7 +82,10 @@
     <BinariesOutputPath Condition="'$(BinariesOutputPath)' == ''">$(BuildOutputRoot)raw\binaries\</BinariesOutputPath>
     <BinariesOutputPath Condition="!HasTrailingSlash($(BinariesOutputPath))">$(BinariesOutputPath)\</BinariesOutputPath>
 
-    <LayoutOutputPath Condition="'$(LayoutOutputPath)' == ''">$(BuildOutputRoot)layout\</LayoutOutputPath>
+    <LayoutOutputRoot Condition="'$(LayoutOutputRoot)' == ''">$(BuildOutputRoot)layout\</LayoutOutputRoot>
+    <LayoutOutputRoot Condition="!HasTrailingSlash($(LayoutOutputRoot))">$(LayoutOutputRoot)\</LayoutOutputRoot>
+    <LayoutOutputPath Condition="$(LayoutOutputPath) == '' and $(LayoutOutputPathSuffix) == ''">$(LayoutOutputRoot)</LayoutOutputPath>
+    <LayoutOutputPath Condition="$(LayoutOutputPath) == '' and $(LayoutOutputPathSuffix) != ''">$(LayoutOutputRoot)$(LayoutOutputPathSuffix)\</LayoutOutputPath>
     <LayoutOutputPath Condition="!HasTrailingSlash($(LayoutOutputPath))">$(LayoutOutputPath)\</LayoutOutputPath>
 
     <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == '' and '$(BUILD_STAGINGDIRECTORY)' != ''">$(BUILD_STAGINGDIRECTORY)\release\</ReleaseOutputPath>
@@ -102,6 +105,8 @@
     <IntermediateOutputRoot Condition="!HasTrailingSlash($(IntermediateOutputRoot))">$(IntermediateOutputRoot)\</IntermediateOutputRoot>
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(IntermediateOutputRoot)$(IntermediateOutputPathSuffix)</IntermediateOutputPath>
     <IntermediateOutputPath Condition="!HasTrailingSlash($(IntermediateOutputPath))">$(IntermediateOutputPath)\</IntermediateOutputPath>
+
+    <LocOutputPath>$(BinariesOutputPath)localize\</LocOutputPath>
 
     <OutDir>$(OutputPath)</OutDir>
     <IntDir>$(IntermediateOutputPath)</IntDir>

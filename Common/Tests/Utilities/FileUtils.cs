@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -142,7 +143,9 @@ namespace TestUtilities {
             }
         }
 
-        public static void CopyDirectory(string sourceDir, string destDir) {
+        public static void CopyDirectory(string sourceDir, string destDir) => CopyDirectory(sourceDir, destDir, false);
+
+        public static void CopyDirectory(string sourceDir, string destDir, bool tryHardLinkFirst) {
             sourceDir = sourceDir.TrimEnd('\\');
             destDir = destDir.TrimEnd('\\');
             try {
@@ -167,6 +170,14 @@ namespace TestUtilities {
             foreach (var newFile in newFiles) {
                 var copyFrom = Path.Combine(sourceDir, newFile);
                 var copyTo = Path.Combine(destDir, newFile);
+
+                if (tryHardLinkFirst) {
+                    if (NativeMethods.CreateHardLink(copyTo, copyFrom, IntPtr.Zero)) {
+                        continue;
+                    }
+                    Debug.WriteLine("Failed to hard link " + copyFrom + " to " + copyTo + ". Trying copy");
+                }
+
                 try {
                     File.Copy(copyFrom, copyTo);
                     File.SetAttributes(copyTo, FileAttributes.Normal);
@@ -179,6 +190,19 @@ namespace TestUtilities {
         public static void DeleteDirectory(string path) {
             Trace.TraceInformation("Removing directory: {0}", path);
             NativeMethods.RecursivelyDeleteDirectory(path, silent: true);
+        }
+
+        public static void Delete(string path) {
+            for (int retries = 10; retries > 0 && File.Exists(path); --retries) {
+                try {
+                    File.SetAttributes(path, FileAttributes.Normal);
+                    File.Delete(path);
+                    return;
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+                Thread.Sleep(100);
+            }
         }
 
         public static IDisposable Backup(string path) {

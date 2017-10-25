@@ -105,14 +105,14 @@
                          Focusable="False"
                          ToolTipService.ShowDuration="{x:Static s:Int32.MaxValue}" />
 
-            <inf:LiveTextBlock HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               Visibility="{Binding RefreshProgressVisibility}"
-                               Margin="5 4"
-                               TextTrimming="CharacterEllipsis"
-                               IsHitTestVisible="False"
-                               Text="{Binding RefreshDBMessage,Mode=OneWay}"
-                               ToolTip="{Binding RefreshDBMessage,Mode=OneWay}"/>
+            <TextBlock HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Visibility="{Binding RefreshProgressVisibility}"
+                       Margin="5 4"
+                       TextTrimming="CharacterEllipsis"
+                       IsHitTestVisible="False"
+                       Text="{Binding RefreshDBMessage,Mode=OneWay}"
+                       ToolTip="{Binding RefreshDBMessage,Mode=OneWay}"/>
         </Grid>
 
         <ListBox Grid.Row="2"

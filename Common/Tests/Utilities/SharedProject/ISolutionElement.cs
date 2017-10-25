@@ -34,17 +34,13 @@ namespace TestUtilities.SharedProject {
         /// <summary>
         /// The type guid for the project type or other solution element type such as a folder.
         /// </summary>
-        Guid TypeGuid {
-            get;
-        }
+        Guid TypeGuid { get; }
 
         /// <summary>
         /// Gets the flags which control how the solution element is written to the
         /// solution file.
         /// </summary>
-        SolutionElementFlags Flags {
-            get;
-        }
+        SolutionElementFlags Flags { get; }
 
         /// <summary>
         /// Saves the solution element to disk at the specified location.  The

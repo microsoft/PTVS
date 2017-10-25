@@ -107,10 +107,11 @@ namespace Microsoft.PythonTools.Debugger {
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
             processInfo.RedirectStandardInput = (options & PythonDebugOptions.RedirectInput) != 0;
+            processInfo.WorkingDirectory = dir;
 
             processInfo.Arguments = 
                 (String.IsNullOrWhiteSpace(interpreterOptions) ? "" : (interpreterOptions + " ")) +
-                "\"" + PythonToolsInstallPath.GetFile("visualstudio_py_launcher.py") + "\" " +
+                "\"" + PythonToolsInstallPath.GetFile("ptvsd_launcher.py") + "\" " +
                 "\"" + dir + "\" " +
                 " " + DebugConnectionListener.ListenerPort + " " +
                 " " + _processGuid + " " +
@@ -183,7 +184,13 @@ namespace Microsoft.PythonTools.Debugger {
             DebugConnectionListener.UnregisterProcess(_processGuid);
 
             if (disposing) {
+                DebugConnection connection;
+                Process process;
+
                 lock (_connectionLock) {
+                    connection = _connection;
+                    process = _process;
+
                     if (_connection != null) {
                         _connection.ProcessingMessagesEnded -= OnProcessingMessagesEnded;
                         _connection.LegacyAsyncBreak -= OnLegacyAsyncBreak;
@@ -205,13 +212,16 @@ namespace Microsoft.PythonTools.Debugger {
                         _connection.LegacyThreadExit -= OnLegacyThreadExit;
                         _connection.LegacyThreadFrameList -= OnLegacyThreadFrameList;
                         _connection.LegacyModulesChanged -= OnLegacyModulesChanged;
-                        _connection.Dispose();
                         _connection = null;
                     }
-                    // Avoiding ?. syntax because FxCop doesn't understand it
-                    if (_process != null) {
-                        _process.Dispose();
-                    }
+                }
+
+                if (connection != null) {
+                    connection.Dispose();
+                }
+
+                if (process != null) {
+                    process.Dispose();
                 }
 
                 _connectedEvent.Dispose();
@@ -582,7 +592,22 @@ namespace Microsoft.PythonTools.Debugger {
                 thread = null;
             }
 
-            DebuggerOutput?.Invoke(this, new OutputEventArgs(thread, e.output, e.isStdOut));
+            OutputChannel channel;
+            switch (e.channel) {
+                case LDP.OutputChannel.debug:
+                    channel = OutputChannel.Debug;
+                    break;
+                case LDP.OutputChannel.stdout:
+                    channel = OutputChannel.StdOut;
+                    break;
+                case LDP.OutputChannel.stderr:
+                    channel = OutputChannel.StdErr;
+                    break;
+                default:
+                    throw new ArgumentException("Invalid channel", "e");
+            }
+
+            DebuggerOutput?.Invoke(this, new OutputEventArgs(thread, e.output, channel));
         }
 
         private void OnLegacyAsyncBreak(object sender, LDP.AsyncBreakEvent e) {
@@ -676,8 +701,8 @@ namespace Microsoft.PythonTools.Debugger {
         private void OnLegacyModuleLoad(object sender, LDP.ModuleLoadEvent e) {
             // module load
             if (e.moduleFileName != null) {
-                Debug.WriteLine(String.Format("Module Loaded ({0}): {1}", e.moduleId, e.moduleFileName));
-                var module = new PythonModule(e.moduleId, e.moduleFileName);
+                Debug.WriteLine(String.Format("Module Loaded ({0}): {2} : {1}", e.moduleId, e.moduleFileName, e.moduleName));
+                var module = new PythonModule(e.moduleId, e.moduleFileName, e.moduleName, !e.isStdLib);
 
                 ModuleLoaded?.Invoke(this, new ModuleLoadedEventArgs(module));
             }

@@ -25,8 +25,7 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     ///This class provides some useful static shell based methods. 
     /// </summary>
-
-    internal static class UIHierarchyUtilities {
+    public static class UIHierarchyUtilities {
         /// <summary>
         /// Get reference to IVsUIHierarchyWindow interface from guid persistence slot.
         /// </summary>
@@ -69,10 +68,12 @@ namespace Microsoft.VisualStudioTools.Project {
 
             ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
 
-            // Set the cursor at the beginning of the declaration.
-            ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
-            // Make sure that the text is visible.
-            viewAdapter.CenterLines(line, 1);
+            if (viewAdapter != null) {
+                // Set the cursor at the beginning of the declaration.
+                ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
+                // Make sure that the text is visible.
+                viewAdapter.CenterLines(line, 1);
+            }
         }
 
         internal static void NavigateTo(IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int pos) {

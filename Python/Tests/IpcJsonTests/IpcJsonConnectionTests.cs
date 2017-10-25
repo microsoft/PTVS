@@ -47,10 +47,9 @@ namespace IpcJsonTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task DotNetHandleRequest() {
             InitConnection(async (requestArgs, done) => {
                 switch (requestArgs.Command) {
@@ -80,7 +79,7 @@ namespace IpcJsonTests {
             Assert.AreEqual("test response text", response.responseText);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task DotNetHandleRequestUnicode() {
             InitConnection(async (requestArgs, done) => {
                 switch (requestArgs.Command) {
@@ -110,7 +109,7 @@ namespace IpcJsonTests {
             Assert.AreEqual("この文は、テストです。私はこれがうまく願っています。", response.responseText);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task PythonHandleRequest() {
             InitConnection(PythonSocketHandleRequest);
 
@@ -132,7 +131,7 @@ namespace IpcJsonTests {
             Assert.AreEqual("test response text", response.responseText);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task PythonHandleRequestUnicode() {
             InitConnection(PythonSocketHandleRequest);
 
@@ -154,7 +153,7 @@ namespace IpcJsonTests {
             Assert.AreEqual("test response text", response.responseText);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task DotNetSendEvent() {
             InitConnection((requestArgs, done) => {
                 Assert.Fail();
@@ -181,7 +180,7 @@ namespace IpcJsonTests {
             Assert.AreEqual("event data text", ((TestDataProtocol.TestEvent)eventsReceived[0].Event).dataText);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public async Task PythonSendEvent() {
             InitConnection(PythonSocketSendEventPath);
 

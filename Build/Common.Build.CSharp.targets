@@ -7,12 +7,6 @@
     <DefineConstants>$(DefineConstants);SUPPRESS_COMMON_ASSEMBLY_VERSION</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition="$(AssemblyName) == 'TestUtilities'">
-    <Compile Include="$(BuildRoot)Python\Tests\Utilities.Python.Analysis\PythonTestData.cs">
-      <Link>PythonTestData.cs</Link>
-    </Compile>
-  </ItemGroup>
-
   <!-- If any references packages have been installed, use them. -->
   <PropertyGroup>
     <ResolveAssemblyReferencesDependsOn>$(ResolveAssemblyReferencesDependsOn);_AddPTVSReferences</ResolveAssemblyReferencesDependsOn>

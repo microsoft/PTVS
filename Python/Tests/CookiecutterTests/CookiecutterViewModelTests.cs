@@ -22,7 +22,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.CookiecutterTools.Model;
@@ -46,12 +45,12 @@ namespace CookiecutterTests {
         private MockTemplateSource _installedTemplateSource;
         private MockTemplateSource _gitHubTemplateSource;
         private MockTemplateSource _feedTemplateSource;
+        private MockProjectSystemClient _projectSystemClient;
         private CookiecutterTelemetry _telemetry;
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         [TestInitialize]
@@ -63,12 +62,24 @@ namespace CookiecutterTests {
             _installedTemplateSource = new MockTemplateSource();
             _gitHubTemplateSource = new MockTemplateSource();
             _feedTemplateSource = new MockTemplateSource();
+            _projectSystemClient = new MockProjectSystemClient();
 
-            var output = TestData.GetTempPath("Cookiecutter", true);
+            var output = TestData.GetTempPath();
             var outputProjectFolder = Path.Combine(output, "project");
 
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
-            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null, null);
+            _vm = new CookiecutterViewModel(
+                _cutterClient,
+                _gitHubClient,
+                _gitClient,
+                _telemetry,
+                _redirector,
+                _installedTemplateSource,
+                _feedTemplateSource,
+                _gitHubTemplateSource,
+                null,
+                _projectSystemClient
+            );
             _vm.UserConfigFilePath = UserConfigFilePath;
             _vm.OutputFolderPath = outputProjectFolder;
         }
@@ -86,7 +97,6 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task CheckForUpdates() {
-            _vm.OpenInExplorerFolderPath = @"c:\folder";
             _vm.CreatingStatus = OperationStatus.Succeeded;
 
             PopulateInstalledSource();
@@ -101,7 +111,6 @@ namespace CookiecutterTests {
 
             // Checking for updates shouldn't be clearing the status of other operations, such as create
             Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
-            Assert.AreEqual(@"c:\folder", _vm.OpenInExplorerFolderPath);
 
             var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(t => t.RepositoryName == "template1");
             Assert.IsTrue(t1.IsUpdateAvailable);
@@ -131,6 +140,112 @@ namespace CookiecutterTests {
             CollectionAssert.AreEquivalent(
                 new string[] { Path.Combine(_vm.InstalledFolderPath, "template1") },
                 _installedTemplateSource.Updated);
+        }
+
+        private static readonly ContextItem[] itemsWithValueSources = new ContextItem[] {
+            new ContextItem("is_new_item", Selectors.String, string.Empty) { ValueSource=KnownValueSources.IsNewItem },
+            new ContextItem("is_new_project", Selectors.String, string.Empty) { ValueSource=KnownValueSources.IsNewProject },
+            new ContextItem("is_from_project_wizard", Selectors.String, string.Empty) { ValueSource=KnownValueSources.IsFromProjectWizard },
+            new ContextItem("project_name", Selectors.String, string.Empty) { ValueSource=KnownValueSources.ProjectName, Visible=false },
+        };
+
+        private static readonly DteCommand[] commandsWithOpenProject = new DteCommand[] {
+            new DteCommand("File.OpenProject", "{{cookiecutter._output_folder_path}}\\{{cookiecutter.project_name}}.pyproj"),
+        };
+
+        private static readonly TemplateContext contextWithValueSourcesOpenFolder = new TemplateContext(
+            itemsWithValueSources
+        );
+
+        private static readonly TemplateContext contextWithValueSourcesOpenProject = new TemplateContext(
+            itemsWithValueSources,
+            commandsWithOpenProject
+        );
+
+        [TestMethod]
+        public async Task ContextItemsFromProjectWizardOpenFolder() {
+            _projectSystemClient.IsSolutionOpen = false;
+            _vm.TargetProjectLocation = null;
+            _vm.ProjectName = "TestProjectName";
+            _vm.InitializeContextItems(contextWithValueSourcesOpenFolder);
+
+            var expected = new ContextItemViewModel[] {
+                new ContextItemViewModel() { Name="is_new_item", Selector=Selectors.String, Val="n" },
+                new ContextItemViewModel() { Name="is_new_project", Selector=Selectors.String, Val="y" },
+                new ContextItemViewModel() { Name="is_from_project_wizard", Selector=Selectors.String, Val="y" },
+                new ContextItemViewModel() { Name="project_name", Selector=Selectors.String, Val="TestProjectName", Visible=false },
+            };
+
+            CollectionAssert.AreEqual(expected, _vm.ContextItems, new ContextItemViewModelComparer());
+
+            Assert.AreEqual(PostCreateAction.OpenFolder, _vm.PostCreate);
+            Assert.IsFalse(_vm.HasPostCommands);
+            Assert.IsFalse(_vm.AddingToExistingProject);
+        }
+
+        [TestMethod]
+        public async Task ContextItemsFromProjectWizardOpenProject() {
+            _projectSystemClient.IsSolutionOpen = false;
+            _vm.TargetProjectLocation = null;
+            _vm.ProjectName = "TestProjectName";
+            _vm.InitializeContextItems(contextWithValueSourcesOpenProject);
+
+            var expected = new ContextItemViewModel[] {
+                new ContextItemViewModel() { Name="is_new_item", Selector=Selectors.String, Val="n" },
+                new ContextItemViewModel() { Name="is_new_project", Selector=Selectors.String, Val="y" },
+                new ContextItemViewModel() { Name="is_from_project_wizard", Selector=Selectors.String, Val="y" },
+                new ContextItemViewModel() { Name="project_name", Selector=Selectors.String, Val="TestProjectName", Visible=false },
+            };
+
+            CollectionAssert.AreEqual(expected, _vm.ContextItems, new ContextItemViewModelComparer());
+
+            Assert.AreEqual(PostCreateAction.OpenProject, _vm.PostCreate);
+            Assert.IsTrue(_vm.HasPostCommands);
+            Assert.IsFalse(_vm.AddingToExistingProject);
+        }
+
+        [TestMethod]
+        public async Task ContextItemsAddNewProject() {
+            _projectSystemClient.IsSolutionOpen = true;
+            _vm.TargetProjectLocation = null;
+            _vm.ProjectName = null;
+            _vm.InitializeContextItems(contextWithValueSourcesOpenProject);
+
+            var expected = new ContextItemViewModel[] {
+                new ContextItemViewModel() { Name="is_new_item", Selector=Selectors.String, Val="n" },
+                new ContextItemViewModel() { Name="is_new_project", Selector=Selectors.String, Val="y" },
+                new ContextItemViewModel() { Name="is_from_project_wizard", Selector=Selectors.String, Val="n" },
+                new ContextItemViewModel() { Name="project_name", Selector=Selectors.String, Val="", Visible=false },
+            };
+
+            CollectionAssert.AreEqual(expected, _vm.ContextItems, new ContextItemViewModelComparer());
+            Assert.AreEqual(PostCreateAction.AddToSolution, _vm.PostCreate);
+            Assert.IsTrue(_vm.HasPostCommands);
+            Assert.IsFalse(_vm.AddingToExistingProject);
+        }
+
+        [TestMethod]
+        public async Task ContextItemsAddNewItem() {
+            _projectSystemClient.IsSolutionOpen = true;
+            _vm.TargetProjectLocation = new ProjectLocation() {
+                ProjectUniqueName="TestProject",
+                ProjectKind= "{EB4B2D97-897B-4A9B-926F-38D7FAAAF399}",
+                FolderPath="C:\\TestProject",
+            };
+            _vm.ProjectName = null;
+            _vm.InitializeContextItems(contextWithValueSourcesOpenProject);
+
+            var expected = new ContextItemViewModel[] {
+                new ContextItemViewModel() { Name="is_new_item", Selector=Selectors.String, Val="y" },
+                new ContextItemViewModel() { Name="is_new_project", Selector=Selectors.String, Val="n" },
+                new ContextItemViewModel() { Name="is_from_project_wizard", Selector=Selectors.String, Val="n" },
+                new ContextItemViewModel() { Name="project_name", Selector=Selectors.String, Val="", Visible=false },
+            };
+
+            CollectionAssert.AreEqual(expected, _vm.ContextItems, new ContextItemViewModelComparer());
+            Assert.AreEqual(PostCreateAction.AddToProject, _vm.PostCreate);
+            Assert.IsTrue(_vm.HasPostCommands);
+            Assert.IsTrue(_vm.AddingToExistingProject);
         }
 
         private void PopulateInstalledSource() {

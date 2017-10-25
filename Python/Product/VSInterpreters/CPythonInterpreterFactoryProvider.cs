@@ -28,18 +28,44 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [Export(typeof(CPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
+    class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         const string PythonPath = "Software\\Python";
         internal const string FactoryProviderName = "Global";
         private readonly bool _watchRegistry;
+        private readonly HashSet<object> _registryTags;
         private int _ignoreNotifications;
         private bool _initialized;
 
-        public CPythonInterpreterFactoryProvider() : this(true) { }
+        private static readonly Version[] ExcludedVersions = new[] {
+            new Version(2, 5),
+            new Version(3, 0)
+        };
+
+        [ImportingConstructor]
+        public CPythonInterpreterFactoryProvider(
+            [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
+        ) : this(isMockVs == null) { }
 
         public CPythonInterpreterFactoryProvider(bool watchRegistry) {
             _watchRegistry = watchRegistry;
+            _registryTags = _watchRegistry ? new HashSet<object>() : null;
+        }
+
+        protected void Dispose(bool disposing) {
+            foreach(var tag in _registryTags.MaybeEnumerate()) {
+                RegistryWatcher.Instance.Remove(tag);
+            }
+            _registryTags?.Clear();
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~CPythonInterpreterFactoryProvider() {
+            Dispose(false);
         }
 
         private void EnsureInitialized() {
@@ -49,22 +75,21 @@ namespace Microsoft.PythonTools.Interpreter {
                     DiscoverInterpreterFactories();
 
                     if (_watchRegistry) {
-                        StartWatching(RegistryHive.CurrentUser, RegistryView.Default);
-                        StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
+                        _registryTags.Add(StartWatching(RegistryHive.CurrentUser, RegistryView.Default));
+                        _registryTags.Add(StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32));
                         if (Environment.Is64BitOperatingSystem) {
-                            StartWatching(RegistryHive.LocalMachine, RegistryView.Registry64);
+                            _registryTags.Add(StartWatching(RegistryHive.LocalMachine, RegistryView.Registry64));
                         }
                     }
                 }
             }
         }
 
-        private void StartWatching(RegistryHive hive, RegistryView view, int retries = 5) {
+        private object StartWatching(RegistryHive hive, RegistryView view, int retries = 5) {
             var tag = RegistryWatcher.Instance.TryAdd(
                 hive, view, PythonPath, Registry_PythonPath_Changed,
                 recursive: true, notifyValueChange: true, notifyKeyChange: true
-            ) ??
-            RegistryWatcher.Instance.TryAdd(
+            ) ?? RegistryWatcher.Instance.TryAdd(
                 hive, view, "Software", Registry_Software_Changed,
                 recursive: false, notifyValueChange: false, notifyKeyChange: true
             );
@@ -76,6 +101,7 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (tag == null) {
                 Trace.TraceError("Failed to watch registry");
             }
+            return tag;
         }
 
         #region Registry Watching
@@ -92,7 +118,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 // Python key no longer exists, so go back to watching
                 // Software.
                 e.CancelWatcher = true;
-                StartWatching(e.Hive, e.View);
+                _registryTags.Remove(e.Tag);
+                _registryTags.Add(StartWatching(e.Hive, e.View));
             } else {
                 DiscoverInterpreterFactories();
             }
@@ -125,36 +152,46 @@ namespace Microsoft.PythonTools.Interpreter {
             // Discover the available interpreters...
             bool anyChanged = false;
 
-            var search = new PythonRegistrySearch();
+            PythonRegistrySearch search = null;
+            Dictionary<string, PythonInterpreterInformation> machineFactories = null;
 
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
-            using (var root = baseKey.OpenSubKey(PythonPath)) {
-                search.Search(
-                    root,
-                    Environment.Is64BitOperatingSystem ? InterpreterArchitecture.Unknown : InterpreterArchitecture.x86
-                );
-            }
+            try {
+                search = new PythonRegistrySearch();
 
-            Dictionary<string, PythonInterpreterInformation> machineFactories = new Dictionary<string, PythonInterpreterInformation>();
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            using (var root = baseKey.OpenSubKey(PythonPath)) {
-                search.Search(
-                    root,
-                    InterpreterArchitecture.x86
-                );
-            }
-
-            if (Environment.Is64BitOperatingSystem) {
-                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
                 using (var root = baseKey.OpenSubKey(PythonPath)) {
                     search.Search(
                         root,
-                        InterpreterArchitecture.x64
+                        Environment.Is64BitOperatingSystem ? InterpreterArchitecture.Unknown : InterpreterArchitecture.x86
                     );
                 }
+
+                machineFactories = new Dictionary<string, PythonInterpreterInformation>();
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+                using (var root = baseKey.OpenSubKey(PythonPath)) {
+                    search.Search(
+                        root,
+                        InterpreterArchitecture.x86
+                    );
+                }
+
+                if (Environment.Is64BitOperatingSystem) {
+                    using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                    using (var root = baseKey.OpenSubKey(PythonPath)) {
+                        search.Search(
+                            root,
+                            InterpreterArchitecture.x64
+                        );
+                    }
+                }
+            } catch (ObjectDisposedException) {
+                // We are aborting, so silently return with no results.
+                return;
             }
 
-            var found = search.Interpreters.ToList();
+            var found = search.Interpreters
+                .Where(i => !ExcludedVersions.Contains(i.Configuration.Version))
+                .ToList();
             var uniqueIds = new HashSet<string>(found.Select(i => i.Configuration.Id));
 
             // Then update our cached state with the lock held.

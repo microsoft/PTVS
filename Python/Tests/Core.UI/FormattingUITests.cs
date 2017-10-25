@@ -18,67 +18,48 @@ extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Automation;
 using analysis::Microsoft.PythonTools.Parsing;
-using EnvDTE;
 using Microsoft.PythonTools;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Document;
 using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    [TestClass]
     public class FormattingUITests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
+        public void ToggleableOptionTest(PythonVisualStudioApp app) {
+            app.PythonToolsService.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
+            foreach (var expectedResult in new bool?[] { false, null, true }) {
+                using (var dialog = ToolsOptionsDialog.FromDte(app)) {
+                    dialog.SelectedView = "Text Editor/Python/Formatting/Spacing";
+                    var spacingView = FormattingOptionsTreeView.FromDialog(dialog);
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ToggleableOptionTest() {
-            using (var app = new PythonVisualStudioApp()) {
-                app.PythonToolsService.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
-                foreach (var expectedResult in new bool?[] { false, null, true }) {
-                    using (var dialog = ToolsOptionsDialog.FromDte(app)) {
-                        dialog.SelectedView = "Text Editor/Python/Formatting/Spacing";
-                        var spacingView = FormattingOptionsTreeView.FromDialog(dialog);
+                    var value = spacingView.WaitForItem(
+                        "Class Definitions",
+                        "Insert space between a class name and bases list"
+                    );
+                    Assert.IsNotNull(value, "Did not find item");
 
-                        var value = spacingView.WaitForItem(
-                            "Class Definitions",
-                            "Insert space between a class declaration's name and bases list"
-                        );
-                        Assert.IsNotNull(value, "Did not find item");
+                    value.SetFocus();
+                    Mouse.MoveTo(value.GetClickablePoint());
+                    Mouse.Click(System.Windows.Input.MouseButton.Left);
 
-                        value.SetFocus();
-                        Mouse.MoveTo(value.GetClickablePoint());
-                        Mouse.Click(System.Windows.Input.MouseButton.Left);
+                    dialog.OK();
 
-                        dialog.OK();
-
-                        Assert.AreEqual(
-                            expectedResult,
-                            app.PythonToolsService.GetFormattingOption("SpaceBeforeClassDeclarationParen")
-                        );
-                    }
+                    Assert.AreEqual(
+                        expectedResult,
+                        app.PythonToolsService.GetFormattingOption("SpaceBeforeClassDeclarationParen")
+                    );
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void FormatDocument() {
-            FormattingTest("document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
+        public void FormatDocument(PythonVisualStudioApp app) {
+            FormattingTest(app, "document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
 def f():
     pass
@@ -88,23 +69,19 @@ def g():
     pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void FormatAsyncDocument() {
-            FormattingTest("async.py", null, @"async  def f(x):
+        public void FormatAsyncDocument(PythonVisualStudioApp app) {
+            FormattingTest(app, "async.py", null, @"async  def f(x):
     async  for  i in await  x:
         pass
     # comment before
     async   with x:
         pass
-", new Span[] { }, null, null, new Version(3, 5));
+    [  x   async for x  in await    x]", new Span[] { }, null, null, new Version(3, 6));
         }
 
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void FormatSelection() {
-            FormattingTest("selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
+        public void FormatSelection(PythonVisualStudioApp app) {
+            FormattingTest(app, "selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
 def f():
     pass
@@ -114,20 +91,17 @@ def g():
     pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void FormatSelectionNoSelection() {
-            FormattingTest("selection2.py", new Span(5, 0), @"x=1
+        public void FormatSelectionNoSelection(PythonVisualStudioApp app) {
+            FormattingTest(app, "selection2.py", new Span(5, 0), @"x=1
 
 y=2
 
 z=3", new Span[0], null, null);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void FormatReduceLines() {
+        public void FormatReduceLines(PythonVisualStudioApp app) {
             FormattingTest(
+                app,
                 "linereduction.py",
                 null,
                 "(a + b + c + d + e + f)\r\n",
@@ -149,6 +123,7 @@ z=3", new Span[0], null, null);
         /// <param name="expectedText">The expected source code after the formatting</param>
         /// <param name="changedSpans">The spans which should be marked as changed in the buffer after formatting</param>
         private static void FormattingTest(
+            PythonVisualStudioApp app,
             string filename,
             Span? selection,
             string expectedText,
@@ -157,7 +132,6 @@ z=3", new Span[0], null, null);
             Action<PythonToolsService, object> revertSettings,
             Version version = null
         ) {
-            using (var app = new PythonVisualStudioApp())
             using (version == null ? null : app.SelectDefaultInterpreter(PythonPaths.Versions.FirstOrDefault(v => v.Version.ToVersion() >= version))) {
                 var o = updateSettings?.Invoke(app.PythonToolsService);
                 if (revertSettings != null) {
@@ -175,10 +149,10 @@ z=3", new Span[0], null, null);
 
                 // format the selection or document
                 if (selection == null) {
-                    DoFormatDocument();
+                    DoFormatDocument(app);
                 } else {
                     doc.Invoke(() => doc.TextView.Selection.Select(new SnapshotSpan(doc.TextView.TextBuffer.CurrentSnapshot, selection.Value), false));
-                    DoFormatSelection();
+                    DoFormatSelection(app);
                 }
 
                 // verify the contents are correct
@@ -228,13 +202,13 @@ z=3", new Span[0], null, null);
             }
         }
 
-        private static void DoFormatSelection() {
+        private static void DoFormatSelection(VisualStudioApp app) {
             try {
                 Task.Factory.StartNew(() => {
                     for (int i = 0; i < 3; i++) {
                         try {
                             // wait for the command to become available if it's not already
-                            VSTestContext.DTE.ExecuteCommand("Edit.FormatSelection");
+                            app.ExecuteCommand("Edit.FormatSelection");
                             return;
                         } catch {
                             System.Threading.Thread.Sleep(1000);
@@ -247,13 +221,13 @@ z=3", new Span[0], null, null);
             }
         }
 
-        private static void DoFormatDocument() {
+        private static void DoFormatDocument(VisualStudioApp app) {
             try {
                 Task.Factory.StartNew(() => {
                     for (int i = 0; i < 3; i++) {
                         try {
                             // wait for the command to become available if it's not already
-                            VSTestContext.DTE.ExecuteCommand("Edit.FormatDocument");
+                            app.ExecuteCommand("Edit.FormatDocument");
                             return;
                         } catch {
                             System.Threading.Thread.Sleep(1000);

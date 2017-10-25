@@ -218,6 +218,10 @@ namespace Microsoft.PythonTools.InterpreterList {
                 view.Extensions.Add(new DBExtensionProvider(_withDb));
             }
 
+            if (_withDb == null && ExperimentalOptions.NoDatabaseFactory) {
+                view.Extensions.Add(new NoDBExtensionProvider());
+            }
+
             var model = _site.GetComponentModel();
             if (model != null) {
                 try {

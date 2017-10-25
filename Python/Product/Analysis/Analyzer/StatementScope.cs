@@ -30,11 +30,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override int GetStart(PythonAst ast) {
-            return ast.IndexToLocation(_startIndex).Index;
+            return _startIndex;
         }
 
         public override int GetStop(PythonAst ast) {
-            return ast.IndexToLocation(_endIndex).Index;
+            return _endIndex;
         }
 
         public int EndIndex {

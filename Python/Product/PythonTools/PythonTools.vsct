@@ -285,7 +285,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>Send to &amp;Interactive</ButtonText>
           <ToolTipText>Sends the current editor selection to a Python Interactive window.</ToolTipText>
-          <CanonicalName>Send Selection To Interactive</CanonicalName>
+          <CanonicalName>.Python.Send Selection To Interactive</CanonicalName>
           <LocCanonicalName>Send Selection To Interactive</LocCanonicalName>
         </Strings>
       </Button>
@@ -297,7 +297,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>&amp;Fill Comment Paragraph</ButtonText>
           <ToolTipText>Reflows the selected paragraph to adjust its width.</ToolTipText>
-          <CanonicalName>Fill Comment Paragraph</CanonicalName>
+          <CanonicalName>.Python.Fill Comment Paragraph</CanonicalName>
           <LocCanonicalName>Fill Comment Paragraph</LocCanonicalName>
         </Strings>
       </Button>
@@ -429,20 +429,10 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <CommandFlag>AllowParams</CommandFlag>
         <Strings>
-          <ButtonText>&amp;Import coverage file...</ButtonText>
-          <ToolTipText>Imports a coverage.xml file produced by coverage.py.</ToolTipText>
+          <ButtonText>&amp;Import coverage.py XML file...</ButtonText>
+          <ToolTipText>Imports an XML file produced by coverage.py.</ToolTipText>
           <CanonicalName>Import Coverage</CanonicalName>
           <LocCanonicalName>Import Coverage</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidSurveyNews" priority="0x0200" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
-        <Strings>
-          <ButtonText>Survey/&amp;News...</ButtonText>
-          <ToolTipText>Displays recent news and surveys from the Python tools team.</ToolTipText>
-          <CanonicalName>Survey News</CanonicalName>
-          <LocCanonicalName>Survey News</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -655,7 +645,7 @@ permissions and limitations under the License.
           <ButtonText>Open Command &amp;Prompt Here...</ButtonText>
           <ToolTipText>Opens Command Prompt at the selected file or directory.</ToolTipText>
           <CanonicalName>.Python.Open Command Prompt Here</CanonicalName>
-          <LocCanonicalName>.Python.Open Command Prompt Here</LocCanonicalName>
+          <LocCanonicalName>Open Command Prompt Here</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -1124,7 +1114,6 @@ permissions and limitations under the License.
       <IDSymbol name="cmdidRefactorRename" value ="0x0109" />
       <IDSymbol name="cmdidExtractMethod" value ="0x010a" />
       <IDSymbol name="cmdidImportWizard" value ="0x010d" />
-      <IDSymbol name="cmdidSurveyNews" value ="0x010e" />
       <IDSymbol name="cmdidImportCoverage" value ="0x010f" />
 
       <IDSymbol name="cmdidReplWindow" value="0x0201" />

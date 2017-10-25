@@ -90,4 +90,11 @@ namespace Microsoft.PythonTools.Logging {
         public bool RemoteProcess { get; set; }
         public string Version { get; set; }
     }
+
+    internal sealed class GetExpressionAtPointInfo : PythonToolsLoggerData {
+        public int Milliseconds { get; set; }
+        public int PartialAstLength { get; set; }
+        public bool Success { get; set; }
+        public bool ExpressionFound { get; set; }
+    }
 }

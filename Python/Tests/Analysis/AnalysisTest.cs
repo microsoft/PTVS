@@ -24,8 +24,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -1631,6 +1633,71 @@ v = x[0]
         }
 
         [TestMethod, Priority(0)]
+        public void BuiltinSpecializations() {
+            var entry = CreateAnalyzer(DefaultFactoryV3);
+            entry.AddModule("test-module", @"
+expect_int = abs(1)
+expect_float = abs(2.3)
+expect_object = abs(object())
+expect_str = abs('')
+
+expect_bool = all()
+expect_bool = any()
+expect_str = ascii()
+expect_str = bin()
+expect_bool = callable()
+expect_str = chr()
+expect_list = dir()
+expect_str = dir()[0]
+expect_object = eval()
+expect_str = format()
+expect_dict = globals()
+expect_object = globals()['']
+expect_bool = hasattr()
+expect_int = hash()
+expect_str = hex()
+expect_int = id()
+expect_bool = isinstance()
+expect_bool = issubclass()
+expect_int = len()
+expect_dict = locals()
+expect_object = locals()['']
+expect_str = oct()
+expect_TextIOWrapper = open('')
+expect_BufferedIOBase = open('', 'b')
+expect_int = ord()
+expect_int = pow(1, 1)
+expect_float = pow(1.0, 1.0)
+expect_str = repr()
+expect_int = round(1)
+expect_float = round(1.1)
+expect_float = round(1, 1)
+expect_list = sorted([0, 1, 2])
+expect_int = sum(1, 2)
+expect_float = sum(2.0, 3.0)
+expect_dict = vars()
+expect_object = vars()['']
+");
+            // The open() specialization uses classes from the io module,
+            // so provide them here.
+            entry.AddModule("io", @"
+class TextIOWrapper(object): pass
+class BufferedIOBase(object): pass
+", "io.py");
+            entry.WaitForAnalysis();
+
+            entry.AssertIsInstance("expect_object", BuiltinTypeId.Object);
+            entry.AssertIsInstance("expect_bool", BuiltinTypeId.Bool);
+            entry.AssertIsInstance("expect_int", BuiltinTypeId.Int);
+            entry.AssertIsInstance("expect_float", BuiltinTypeId.Float);
+            entry.AssertIsInstance("expect_str", BuiltinTypeId.Str);
+            entry.AssertIsInstance("expect_list", BuiltinTypeId.List);
+            entry.AssertIsInstance("expect_dict", BuiltinTypeId.Dict);
+            Assert.AreEqual("TextIOWrapper", entry.GetValue<InstanceInfo>("expect_TextIOWrapper")?.ClassInfo?.Name);
+            Assert.AreEqual("BufferedIOBase", entry.GetValue<InstanceInfo>("expect_BufferedIOBase")?.ClassInfo?.Name);
+        }
+
+        [TestMethod, Priority(0)]
         public void ListAppend() {
             var entry = ProcessText(@"
 x = []
@@ -2906,15 +2973,15 @@ def m(x = math.atan2(1, 0)): pass
                 new { FuncName = "j", ParamName="x", DefaultValue="[...]" },
                 new { FuncName = "k", ParamName="x", DefaultValue = "()" },
                 new { FuncName = "l", ParamName="x", DefaultValue = "(...)" },
-                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1,0)" },
+                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1, 0)" },
             };
 
             foreach (var test in tests) {
                 var result = entry.GetSignatures(test.FuncName, 1).ToArray();
-                Assert.AreEqual(result.Length, 1);
-                Assert.AreEqual(result[0].Parameters.Length, 1);
-                Assert.AreEqual(result[0].Parameters[0].Name, test.ParamName);
-                Assert.AreEqual(result[0].Parameters[0].DefaultValue, test.DefaultValue);
+                Assert.AreEqual(1, result.Length);
+                Assert.AreEqual(1, result[0].Parameters.Length);
+                Assert.AreEqual(test.ParamName, result[0].Parameters[0].Name);
+                Assert.AreEqual(test.DefaultValue, result[0].Parameters[0].DefaultValue);
             }
         }
 
@@ -5404,6 +5471,36 @@ b2 = r2.b[0]
             entry.AssertIsInstance("r2.c", BuiltinTypeId.Str);
         }
 
+        private static IEnumerable<string> DumpScopesToStrings(InterpreterScope scope) {
+            yield return scope.Name;
+            foreach (var child in scope.Children) {
+                foreach (var s in DumpScopesToStrings(child)) {
+                    yield return "  " + s;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void IsInstanceAndLambdaScopes() {
+            // https://github.com/Microsoft/PTVS/issues/2801
+            var text = @"if isinstance(p, dict):
+    v = [i for i in (lambda x: x)()]";
+
+            var entry = ProcessTextV3(text);
+            var scope = entry.Modules[entry.DefaultModule].Analysis.Scope;
+            var dump = string.Join(Environment.NewLine, DumpScopesToStrings(scope));
+
+            Console.WriteLine($"Actual:{Environment.NewLine}{dump}");
+
+            Assert.AreEqual(entry.DefaultModule + @"
+  <statements>
+  <isinstance scope>
+    <comprehension scope>
+      <lambda>
+        <statements>
+  <statements>", dump);
+        }
+
         [TestMethod, Priority(0)]
         public void IsInstanceReferences() {
             var text = @"def fob():
@@ -6260,18 +6357,16 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
 
             // Without absolute_import, we should see these two possibilities
             // for a regular import.
-            AssertUtil.ContainsExactly(
-                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", false),
-                "package.subpackage1.moduleY",
-                "moduleY"
+            AssertUtil.ArrayEquals(
+                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", false).ToArray(),
+                new[] { "package.subpackage1.moduleY", "moduleY" }
             );
 
             // With absolute_import, we should see the two possibilities for a
             // regular import, but in the opposite order.
-            AssertUtil.ContainsExactly(
-                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", true),
-                "moduleY",
-                "package.subpackage1.moduleY"
+            AssertUtil.ArrayEquals(
+                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", true).ToArray(),
+                new[] { "moduleY", "package.subpackage1.moduleY" }
             );
 
             // Regardless of absolute import, we should see these results for
@@ -6316,7 +6411,7 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                "def test-module.A.fn(self) -> lambda : 123 -> int\ndeclared in A",
+                "def test-module.A.fn(self) -> lambda: 123 -> int\ndeclared in A",
                 entry.GetDescriptions("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }
@@ -6506,6 +6601,28 @@ def f():
                 var entry1 = state.AddModule("NullNamedArgument", "def fn(**kwargs): pass");
                 var entry2 = state.AddModule("test", "import NullNamedArgument; NullNamedArgument.fn(a=0, ]]])");
                 state.WaitForAnalysis();
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ModuleNameWalker() {
+            foreach (var item in new[] {
+                new { Code="import abc", Index=7, Expected="abc", Base="" },
+                new { Code="import abc", Index=8, Expected="abc", Base="" },
+                new { Code="import abc", Index=9, Expected="abc", Base="" },
+                new { Code="import abc", Index=10, Expected="abc", Base="" },
+                new { Code="import deg, abc as A", Index=12, Expected="abc", Base="" },
+                new { Code="from abc import A", Index=6, Expected="abc", Base="" },
+                new { Code="from .deg import A", Index=9, Expected="abc.deg", Base="abc" },
+                new { Code="from .hij import A", Index=9, Expected="abc.deg.hij", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="abc.hij", Base="abc.deg" },
+                new { Code="from ..hij import A", Index=10, Expected="abc.deg.hij", Base="abc.deg.HIJ" },
+            }) {
+                var entry = ProcessTextV3(item.Code);
+                var walker = new ImportedModuleNameWalker(item.Base, item.Index);
+                entry.Modules[entry.DefaultModule].Tree.Walk(walker);
+
+                Assert.AreEqual(item.Expected, walker.ImportedName);
             }
         }
 

@@ -249,11 +249,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (FunctionDefinition.IsLambda) {
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "lambda ");
+                bool needsLambda = true;
                 foreach (var kv in GetParameterString()) {
+                    if (needsLambda) {
+                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "lambda ");
+                        needsLambda = false;
+                    }
                     yield return kv;
                 }
-                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ": ");
+                if (needsLambda) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "lambda:");
+                } else {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ":");
+                }
 
                 if (FunctionDefinition.IsGenerator) {
                     var lambdaExpr = ((ExpressionStatement)FunctionDefinition.Body).Expression;
@@ -519,7 +527,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                         return "(...)";
                                     }
                                 } else {
-                                    return curParam.DefaultValue.ToCodeString(tree);
+                                    return curParam.DefaultValue.ToCodeString(tree).Trim();
                                 }
                             }
                         }

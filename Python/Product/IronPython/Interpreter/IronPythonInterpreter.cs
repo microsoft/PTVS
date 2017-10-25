@@ -425,8 +425,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     var asmRef = (ProjectAssemblyReference)reference;
 
                     return Task.Factory.StartNew(() => {
-                        if (!Remote.LoadAssemblyReference(asmRef.Name)) {
-                            throw new Exception("Failed to load assembly: " + asmRef.Name);
+                        if (File.Exists(asmRef.Name)) {
+                            if (!Remote.LoadAssemblyReference(asmRef.Name)) {
+                                throw new Exception("Failed to load assembly: " + asmRef.Name);
+                            }
+                        } else {
+                            if (!Remote.LoadAssemblyReferenceByName(asmRef.AssemblyName.FullName) &&
+                                !Remote.LoadAssemblyReferenceByName(asmRef.AssemblyName.Name)) {
+                                throw new Exception("Failed to load assembly: " + asmRef.AssemblyName.FullName);
+                            }
                         }
 
                         lock (_projectReferenceSet) {

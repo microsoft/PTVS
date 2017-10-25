@@ -31,10 +31,9 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ArgumentQuoting() {
             foreach (var testCase in new[] {
                 new { Source = "Abc", Expected = "Abc" },
@@ -54,7 +53,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SplitLines() {
             foreach (var testCase in new[] {
                 new { Source = "A\nB\nC\n", Expected = new[] { "A", "B", "C" } },
@@ -91,7 +90,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RunInterpreterOutput() {
             foreach (var fact in Factories) {
                 using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
@@ -113,7 +112,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunInterpreterError() {
             foreach(var fact in Factories) {
@@ -134,7 +133,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ProcessOutputEncoding() {
             var testDataPath = TestData.GetTempPath();
             var testData = Path.Combine(testDataPath, "ProcessOutputEncoding.txt");
@@ -166,7 +165,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void RunElevatedProcess() {
             var fact = Factories.First();
             var output = new List<string>();

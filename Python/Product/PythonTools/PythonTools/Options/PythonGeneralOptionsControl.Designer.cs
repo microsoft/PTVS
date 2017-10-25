@@ -31,8 +31,6 @@ namespace Microsoft.PythonTools.Options {
             this._updateSearchPathsForLinkedFiles = new System.Windows.Forms.CheckBox();
             this._indentationInconsistentLabel = new System.Windows.Forms.Label();
             this._indentationInconsistentCombo = new System.Windows.Forms.ComboBox();
-            this._surveyNewsCheckLabel = new System.Windows.Forms.Label();
-            this._surveyNewsCheckCombo = new System.Windows.Forms.ComboBox();
             this._elevatePip = new System.Windows.Forms.CheckBox();
             this._unresolvedImportWarning = new System.Windows.Forms.CheckBox();
             this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
@@ -49,8 +47,6 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 5);
             this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 7);
             this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 7);
-            this.tableLayoutPanel3.Controls.Add(this._surveyNewsCheckLabel, 0, 8);
-            this.tableLayoutPanel3.Controls.Add(this._surveyNewsCheckCombo, 1, 8);
             this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 6);
             this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 4);
@@ -59,7 +55,6 @@ namespace Microsoft.PythonTools.Options {
             // 
             // _showOutputWindowForVirtualEnvCreate
             // 
-            this._showOutputWindowForVirtualEnvCreate.AutoEllipsis = true;
             resources.ApplyResources(this._showOutputWindowForVirtualEnvCreate, "_showOutputWindowForVirtualEnvCreate");
             this.tableLayoutPanel3.SetColumnSpan(this._showOutputWindowForVirtualEnvCreate, 2);
             this._showOutputWindowForVirtualEnvCreate.Name = "_showOutputWindowForVirtualEnvCreate";
@@ -67,7 +62,6 @@ namespace Microsoft.PythonTools.Options {
             // 
             // _showOutputWindowForPackageInstallation
             // 
-            this._showOutputWindowForPackageInstallation.AutoEllipsis = true;
             resources.ApplyResources(this._showOutputWindowForPackageInstallation, "_showOutputWindowForPackageInstallation");
             this.tableLayoutPanel3.SetColumnSpan(this._showOutputWindowForPackageInstallation, 2);
             this._showOutputWindowForPackageInstallation.Name = "_showOutputWindowForPackageInstallation";
@@ -106,27 +100,8 @@ namespace Microsoft.PythonTools.Options {
             resources.GetString("_indentationInconsistentCombo.Items2")});
             this._indentationInconsistentCombo.Name = "_indentationInconsistentCombo";
             // 
-            // _surveyNewsCheckLabel
-            // 
-            resources.ApplyResources(this._surveyNewsCheckLabel, "_surveyNewsCheckLabel");
-            this._surveyNewsCheckLabel.Name = "_surveyNewsCheckLabel";
-            // 
-            // _surveyNewsCheckCombo
-            // 
-            resources.ApplyResources(this._surveyNewsCheckCombo, "_surveyNewsCheckCombo");
-            this._surveyNewsCheckCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this._surveyNewsCheckCombo.DropDownWidth = 172;
-            this._surveyNewsCheckCombo.FormattingEnabled = true;
-            this._surveyNewsCheckCombo.Items.AddRange(new object[] {
-            resources.GetString("_surveyNewsCheckCombo.Items"),
-            resources.GetString("_surveyNewsCheckCombo.Items1"),
-            resources.GetString("_surveyNewsCheckCombo.Items2"),
-            resources.GetString("_surveyNewsCheckCombo.Items3")});
-            this._surveyNewsCheckCombo.Name = "_surveyNewsCheckCombo";
-            // 
             // _elevatePip
             // 
-            this._elevatePip.AutoEllipsis = true;
             resources.ApplyResources(this._elevatePip, "_elevatePip");
             this.tableLayoutPanel3.SetColumnSpan(this._elevatePip, 2);
             this._elevatePip.Name = "_elevatePip";
@@ -172,8 +147,6 @@ namespace Microsoft.PythonTools.Options {
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
-        private System.Windows.Forms.Label _surveyNewsCheckLabel;
-        private System.Windows.Forms.ComboBox _surveyNewsCheckCombo;
         private System.Windows.Forms.CheckBox _showOutputWindowForVirtualEnvCreate;
         private System.Windows.Forms.CheckBox _showOutputWindowForPackageInstallation;
         private System.Windows.Forms.CheckBox _autoAnalysis;

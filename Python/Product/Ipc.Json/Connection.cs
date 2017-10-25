@@ -289,17 +289,23 @@ namespace Microsoft.PythonTools.Ipc.Json {
             var name = packet["event"].ToObject<string>();
             var eventBody = packet["body"];
             Event eventObj;
-            if (name != null &&
-                _types != null &&
-                _types.TryGetValue("event." + name, out requestType)) {
-                // We have a strongly typed event type registered, use that.
-                eventObj = eventBody.ToObject(requestType) as Event;
-            } else {
-                // We have no strongly typed event type, so give the user a 
-                // GenericEvent and they can look through the body manually.
-                eventObj = new GenericEvent() {
-                    body = eventBody.ToObject<Dictionary<string, object>>()
-                };
+            try {
+                if (name != null &&
+                    _types != null &&
+                    _types.TryGetValue("event." + name, out requestType)) {
+                    // We have a strongly typed event type registered, use that.
+                    eventObj = eventBody.ToObject(requestType) as Event;
+                } else {
+                    // We have no strongly typed event type, so give the user a 
+                    // GenericEvent and they can look through the body manually.
+                    eventObj = new GenericEvent() {
+                        body = eventBody.ToObject<Dictionary<string, object>>()
+                    };
+                }
+            } catch (Exception e) {
+                // TODO: Notify receiver of invalid message
+                Debug.Fail(e.Message);
+                return;
             }
             try {
                 EventReceived?.Invoke(this, new EventReceivedEventArgs(name, eventObj));
@@ -323,8 +329,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 // was completed.  That's okay, there's no one waiting on the 
                 // response anymore.
                 if (_requestCache.TryGetValue(reqSeq.Value, out r)) {
-                    r.message = packet["message"].ToObject<string>();
-                    r.success = packet["success"].ToObject<bool>();
+                    r.message = packet["message"]?.ToObject<string>() ?? string.Empty;
+                    r.success = packet["success"]?.ToObject<bool>() ?? false;
                     r.SetResponse(body);
                 }
             }
@@ -361,6 +367,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             } catch (Exception e) {
                 success = false;
                 message = e.ToString();
+                Trace.TraceError(message);
                 await SendResponseAsync(seq.Value, command, success, message, null, CancellationToken.None).ConfigureAwait(false);
             }
         }
@@ -378,7 +385,10 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     r.Cancel();
                 }
             }
-            _logFile?.Dispose();
+            try {
+                _logFile?.Dispose();
+            } catch (ObjectDisposedException) {
+            }
         }
 
         internal static async Task<JObject> ReadPacketAsJObject(ProtocolReader reader) {
@@ -449,6 +459,10 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
 
             var contentBinary = await reader.ReadContentAsync(contentLength);
+            if (contentBinary.Length == 0 && contentLength > 0) {
+                // The stream was closed, so let's abort safely
+                return null;
+            }
             if (contentBinary.Length != contentLength) {
                 throw new InvalidDataException(string.Format("Content length does not match Content-Length header. Expected {0} bytes but read {1} bytes.", contentLength, contentBinary.Length));
             }
@@ -564,6 +578,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             public int request_seq;
             public bool success;
             public string command;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
             public string message;
             public object body;
         }

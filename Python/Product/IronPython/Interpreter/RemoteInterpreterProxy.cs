@@ -96,6 +96,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return _remoteInterpreter.LoadAssemblyReference(assembly);
         }
 
+        internal bool LoadAssemblyReferenceByName(string assembly) {
+            return _remoteInterpreter.LoadAssemblyReferenceByName(assembly);
+        }
+
         internal string GetExtensionPropertyDocumentation(ObjectIdentityHandle value) {
             return _remoteInterpreter.GetExtensionPropertyDocumentation(value);
         }

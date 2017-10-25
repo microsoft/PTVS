@@ -19,54 +19,46 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools {
     /// <summary>
     /// Provides classification based upon the DLR TokenCategory enum.
     /// </summary>
-    internal sealed class PythonClassifier : IClassifier {
+    internal sealed class PythonClassifier : IClassifier, IPythonTextBufferInfoEventSink {
         private readonly TokenCache _tokenCache;
         private readonly PythonClassifierProvider _provider;
-        private readonly ITextBuffer _buffer;
-        private PythonLanguageVersion _version;
 
         [ThreadStatic]
         private static Dictionary<PythonLanguageVersion, Tokenizer> _tokenizers;    // tokenizer for each version, shared between all buffers
 
-        internal PythonClassifier(PythonClassifierProvider provider, ITextBuffer buffer) {
-            buffer.Changed += BufferChanged;
-            buffer.ContentTypeChanged += BufferContentTypeChanged;
-
+        internal PythonClassifier(PythonClassifierProvider provider) {
             _tokenCache = new TokenCache();
             _provider = provider;
-            _buffer = buffer;
-
-            _buffer.RegisterForNewAnalysisEntry(NewAnalysisEntry);
-
-            _version = _buffer.GetLanguageVersion(_provider._serviceProvider);
         }
 
-        private void NewAnalysisEntry(AnalysisEntry entry) {
-            var analyzer = entry.Analyzer;
-            var newVersion = _version;
-            if (newVersion != _version) {
-                _tokenCache.Clear();
-
-                Debug.Assert(analyzer != null);
-                _version = analyzer.InterpreterFactory.GetLanguageVersion();
-
-                var changed = ClassificationChanged;
-                if (changed != null) {
-                    var snapshot = _buffer.CurrentSnapshot;
-
-                    changed(this, new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
-                }
+        private Task OnNewAnalysisEntryAsync(PythonTextBufferInfo sender, AnalysisEntry entry) {
+            var analyzer = entry?.Analyzer;
+            if (analyzer == null) {
+                Debug.Assert(entry == null, "Should not have new analysis entry without an analyzer");
+                return Task.CompletedTask;
             }
+            _tokenCache.Clear();
+
+            var snapshot = sender.CurrentSnapshot;
+            ClassificationChanged?.Invoke(
+                this,
+                new ClassificationChangedEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
+            );
+
+            return Task.CompletedTask;
         }
 
         #region IDlrClassifier
@@ -79,25 +71,27 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
             var classifications = new List<ClassificationSpan>();
-            var snapshot = span.Snapshot;
 
             if (span.Length > 0) {
                 // don't add classifications for REPL commands.
-                if (!span.Snapshot.IsReplBufferWithCommand()) {
-                    AddClassifications(GetTokenizer(), classifications, span);
+                var snapshot = span.Snapshot;
+                if (!snapshot.IsReplBufferWithCommand()) {
+                    AddClassifications(GetTokenizer(snapshot), classifications, span);
                 }
             }
 
             return classifications;
         }
 
-        private Tokenizer GetTokenizer() {
+        private Tokenizer GetTokenizer(ITextSnapshot snapshot) {
             if (_tokenizers == null) {
                 _tokenizers = new Dictionary<PythonLanguageVersion, Tokenizer>();
             }
             Tokenizer res;
-            if (!_tokenizers.TryGetValue(_version, out res)) {
-                _tokenizers[_version] = res = new Tokenizer(_version, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
+            var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
+            var version = bi?.LanguageVersion ?? PythonLanguageVersion.None;
+            if (!_tokenizers.TryGetValue(version, out res)) {
+                _tokenizers[version] = res = new Tokenizer(version, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
             }
             return res;
         }
@@ -112,37 +106,39 @@ namespace Microsoft.PythonTools {
 
         #region Private Members
 
-        private Dictionary<TokenCategory, IClassificationType> CategoryMap {
-            get {
-                return _provider.CategoryMap;
+        private Task OnTextContentChangedAsync(PythonTextBufferInfo sender, TextContentChangedEventArgs e) {
+            if (e == null) {
+                Debug.Fail("Invalid type passed to event");
             }
-        }
 
-        private void BufferContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
-            _tokenCache.Clear();
-            _buffer.Changed -= BufferChanged;
-            _buffer.ContentTypeChanged -= BufferContentTypeChanged;
-            _buffer.Properties.RemoveProperty(typeof(PythonClassifier));
-            _buffer.UnregisterForNewAnalysisEntry(NewAnalysisEntry);
-        }
-
-        private void BufferChanged(object sender, TextContentChangedEventArgs e) {
             var snapshot = e.After;
 
             if (!snapshot.IsReplBufferWithCommand()) {
                 _tokenCache.EnsureCapacity(snapshot.LineCount);
 
-                var tokenizer = GetTokenizer();
+                var tokenizer = GetTokenizer(snapshot);
                 foreach (var change in e.Changes) {
+                    var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
                     if (change.LineCountDelta > 0) {
-                        _tokenCache.InsertLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1 - change.LineCountDelta, change.LineCountDelta);
+                        _tokenCache.InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
                     } else if (change.LineCountDelta < 0) {
-                        _tokenCache.DeleteLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1, -change.LineCountDelta);
+                        _tokenCache.DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
                     }
 
                     ApplyChange(tokenizer, snapshot, change.NewSpan);
                 }
             }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// This can only be used with Tokenizer spans. Others do not have valid Index values
+        /// </summary>
+        /// <param name="span"></param>
+        /// <returns></returns>
+        private static int GetSpanLength(SourceSpan span) {
+            return span.End.Index - span.Start.Index;
         }
 
         /// <summary>
@@ -180,7 +176,7 @@ namespace Microsoft.PythonTools {
 
                         TokenInfo startToken = token;
                         int validPrevLine;
-                        int length = startToken.SourceSpan.Length;
+                        int length = GetSpanLength(startToken.SourceSpan);
                         if (i == 0) {
                             length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine, ref startToken);
                         } else {
@@ -242,7 +238,7 @@ namespace Microsoft.PythonTools {
                     }
 
                     startToken = prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1];
-                    length += startToken.SourceSpan.Length;
+                    length += GetSpanLength(startToken.SourceSpan);
                 }
 
                 validPrevLine = prevLine;
@@ -275,7 +271,7 @@ namespace Microsoft.PythonTools {
                         break;
                     }
 
-                    length += nextLineTokenization.Tokens[0].SourceSpan.Length;
+                    length += GetSpanLength(nextLineTokenization.Tokens[0].SourceSpan);
                 }
                 nextLine++;
             }
@@ -357,7 +353,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (classification == null) {
-                CategoryMap.TryGetValue(token.Category, out classification);
+                _provider.CategoryMap.TryGetValue(token.Category, out classification);
             }
 
             if (classification != null) {
@@ -376,8 +372,19 @@ namespace Microsoft.PythonTools {
         private static Span SnapshotSpanToSpan(ITextSnapshot snapshot, TokenInfo token, int lineNumber) {
             var line = snapshot.GetLineFromLineNumber(lineNumber);
             var index = line.Start.Position + token.SourceSpan.Start.Column - 1;
-            var tokenSpan = new Span(index, token.SourceSpan.Length);
+            var tokenSpan = new Span(index, GetSpanLength(token.SourceSpan));
             return tokenSpan;
+        }
+
+        Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.NewAnalysisEntry) {
+                return OnNewAnalysisEntryAsync(sender, e.AnalysisEntry);
+            } else if (e.Event == PythonTextBufferInfoEvents.ContentTypeChanged) {
+                _tokenCache.Clear();
+            } else if (e.Event == PythonTextBufferInfoEvents.TextContentChanged) {
+                return OnTextContentChangedAsync(sender, (e as PythonTextBufferInfoNestedEventArgs)?.NestedEventArgs as TextContentChangedEventArgs);
+            }
+            return Task.CompletedTask;
         }
 
         #endregion
@@ -385,11 +392,13 @@ namespace Microsoft.PythonTools {
 
     internal static partial class ClassifierExtensions {
         public static PythonClassifier GetPythonClassifier(this ITextBuffer buffer) {
-            PythonClassifier res;
-            if (buffer.Properties.TryGetProperty<PythonClassifier>(typeof(PythonClassifier), out res)) {
-                return res;
+            var bi = PythonTextBufferInfo.TryGetForBuffer(buffer);
+            if (bi == null) {
+                return null;
             }
-            return null;
+
+            var provider = bi.Services.ComponentModel.GetService<PythonClassifierProvider>();
+            return provider.GetClassifier(buffer) as PythonClassifier;
         }
     }
 }

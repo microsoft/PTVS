@@ -327,81 +327,6 @@
   <data name="&gt;&gt;_indentationInconsistentCombo.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="_surveyNewsCheckLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_surveyNewsCheckLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_surveyNewsCheckLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 195</value>
-  </data>
-  <data name="_surveyNewsCheckLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
-  </data>
-  <data name="_surveyNewsCheckLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
-  </data>
-  <data name="_surveyNewsCheckLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="_surveyNewsCheckLabel.Text" xml:space="preserve">
-    <value>&amp;Check for survey/news</value>
-  </data>
-  <data name="_surveyNewsCheckLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleLeft</value>
-  </data>
-  <data name="&gt;&gt;_surveyNewsCheckLabel.Name" xml:space="preserve">
-    <value>_surveyNewsCheckLabel</value>
-  </data>
-  <data name="&gt;&gt;_surveyNewsCheckLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_surveyNewsCheckLabel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_surveyNewsCheckLabel.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left, Right</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.Items" xml:space="preserve">
-    <value>Never</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.Items1" xml:space="preserve">
-    <value>Once a day</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.Items2" xml:space="preserve">
-    <value>Once a week</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.Items3" xml:space="preserve">
-    <value>Once a month</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>185, 191</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 21</value>
-  </data>
-  <data name="_surveyNewsCheckCombo.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;_surveyNewsCheckCombo.Name" xml:space="preserve">
-    <value>_surveyNewsCheckCombo</value>
-  </data>
-  <data name="&gt;&gt;_surveyNewsCheckCombo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_surveyNewsCheckCombo.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_surveyNewsCheckCombo.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
   <data name="_elevatePip.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -430,7 +355,7 @@
     <value>tableLayoutPanel3</value>
   </data>
   <data name="&gt;&gt;_elevatePip.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>6</value>
   </data>
   <data name="_unresolvedImportWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -463,7 +388,7 @@
     <value>tableLayoutPanel3</value>
   </data>
   <data name="&gt;&gt;_unresolvedImportWarning.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>7</value>
   </data>
   <data name="_clearGlobalPythonPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -496,7 +421,7 @@
     <value>tableLayoutPanel3</value>
   </data>
   <data name="&gt;&gt;_clearGlobalPythonPath.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>8</value>
   </data>
   <data name="_resetSuppressDialog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top</value>
@@ -508,7 +433,7 @@
     <value>GrowAndShrink</value>
   </data>
   <data name="_resetSuppressDialog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>96, 218</value>
+    <value>96, 191</value>
   </data>
   <data name="_resetSuppressDialog.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 23</value>
@@ -529,7 +454,7 @@
     <value>tableLayoutPanel3</value>
   </data>
   <data name="&gt;&gt;_resetSuppressDialog.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>9</value>
   </data>
   <data name="tableLayoutPanel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -562,7 +487,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel3.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_autoAnalysis" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_updateSearchPathsForLinkedFiles" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indentationInconsistentLabel" Row="7" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indentationInconsistentCombo" Row="7" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_surveyNewsCheckLabel" Row="8" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_surveyNewsCheckCombo" Row="8" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_elevatePip" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_unresolvedImportWarning" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="9" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_autoAnalysis" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_updateSearchPathsForLinkedFiles" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indentationInconsistentLabel" Row="7" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indentationInconsistentCombo" Row="7" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_elevatePip" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_unresolvedImportWarning" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="9" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

@@ -18,9 +18,11 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 using TestUtilities.Mocks;
 
 namespace AnalysisTests {
@@ -1215,6 +1217,8 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "exec  'abc'");
             TestOneString(PythonLanguageVersion.V27, "exec  'abc'   in    l");
             TestOneString(PythonLanguageVersion.V27, "exec  'abc'   in    l     ,      g");
+            TestOneString(PythonLanguageVersion.V27, "exec(a, b, c)");
+            TestOneString(PythonLanguageVersion.V27, "exec  ( a, b, c )");
 
             // Print Statement
             TestOneString(PythonLanguageVersion.V27, "print fob");
@@ -1525,48 +1529,75 @@ def f(): pass");
 
         }
 
-        [TestMethod, Priority(1)]
-        public void StdLibTest() {
-            var versions = new[] { 
-                new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
-                new { Path = "C:\\Python26\\Lib", Version = PythonLanguageVersion.V26 },
-                new { Path = "C:\\Python27\\Lib", Version = PythonLanguageVersion.V27 },
-                
-                new { Path = "C:\\Python30\\Lib", Version = PythonLanguageVersion.V30 },
-                new { Path = "C:\\Python31\\Lib", Version = PythonLanguageVersion.V31 },
-                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 },
-                new { Path = "C:\\Python33\\Lib", Version = PythonLanguageVersion.V33 } 
-            };
-
-            foreach (var version in versions) {
-                Console.WriteLine("Testing version {0} {1}", version.Version, version.Path);
-                int ran = 0, succeeded = 0;
-                string[] files;
-                try {
-                    files = Directory.GetFiles(version.Path);
-                } catch (DirectoryNotFoundException) {
-                    continue;
-                }
-
-                foreach (var file in files) {
-                    try {
-                        if (file.EndsWith(".py")) {
-                            ran++;
-                            TestOneFile(file, version.Version);
-                            succeeded++;
-                        }
-                    } catch (Exception e) {
-                        Console.WriteLine(e);
-                        Console.WriteLine("Failed: {0}", file);
-                        break;
-                    }
-                }
-
-                Assert.AreEqual(ran, succeeded);
-            }
+        [TestMethod, Priority(0)]
+        public void RoundTripSublistParameterWithDefault() {
+            TestOneString(PythonLanguageVersion.V27, "def f((a, b) = (1, 2)):\r\n    pass");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
+        public void RoundTripDoubleAwait() {
+            TestOneString(PythonLanguageVersion.V35, "async def f(x):\r\n    await await x");
+        }
+
+        [TestMethod, Priority(0)]
+        public void RoundTripExecTupleIn() {
+            TestOneString(PythonLanguageVersion.V27, "exec(f, g, h) in i, j");
+            TestOneString(PythonLanguageVersion.V27, "exec f in g");
+            TestOneString(PythonLanguageVersion.V27, "exec(f,g)");
+        }
+
+
+        private static void RoundTripStdLibTest(PythonVersion version) {
+            version.AssertInstalled();
+
+            Console.WriteLine("Testing version {0} {1}", version.Version, version.InterpreterPath);
+
+            int ran = 0, succeeded = 0;
+            foreach(var file in ModulePath.GetModulesInLib(version.Configuration)) {
+                try {
+                    if (!file.IsCompiled && !file.IsNativeExtension) {
+                        ran++;
+                        TestOneFile(file.SourceFile, version.Version);
+                        succeeded++;
+                    }
+                } catch (Exception e) {
+                    Console.WriteLine(e);
+                    Console.WriteLine("Failed: {0}", file);
+                    break;
+                }
+            }
+
+            Assert.AreEqual(ran, succeeded);
+        }
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib26() => RoundTripStdLibTest(PythonPaths.Python26 ?? PythonPaths.Python26_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib27() => RoundTripStdLibTest(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib31() => RoundTripStdLibTest(PythonPaths.Python31 ?? PythonPaths.Python31_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib32() => RoundTripStdLibTest(PythonPaths.Python32 ?? PythonPaths.Python32_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib33() => RoundTripStdLibTest(PythonPaths.Python33 ?? PythonPaths.Python33_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib34() => RoundTripStdLibTest(PythonPaths.Python34 ?? PythonPaths.Python34_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib35() => RoundTripStdLibTest(PythonPaths.Python35 ?? PythonPaths.Python35_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib36() => RoundTripStdLibTest(PythonPaths.Python36 ?? PythonPaths.Python36_x64);
+
+        [TestMethod, Priority(0)]
+        public void RoundTripStdLib37() => RoundTripStdLibTest(PythonPaths.Python37 ?? PythonPaths.Python37_x64);
+
+        [TestMethod, Priority(0)]
         public void GroupingRecovery() {
             // The exact text below hit an issue w/ grouping recovery where the buffer wrapped
             // and our grouping recovery was invalid, but we thought it was valid due to the
@@ -1641,13 +1672,29 @@ class BaseSet(object):
     """"""Common base class for mutable and immutable sets.");
         }
 
+        [TestMethod, Priority(0)]
+        public void GeneralizedUnpacking() {
+            TestOneString(PythonLanguageVersion.V35, "list_ = [  *a, *b, c,*d]");
+            TestOneString(PythonLanguageVersion.V35, "tuple_ =   *a, *b, c,*d");
+            TestOneString(PythonLanguageVersion.V35, "paren_tuple = (  *a, *b, c,*d)");
+            TestOneString(PythonLanguageVersion.V35, "set_ = {  *a, *b, c,*d}");
+            TestOneString(PythonLanguageVersion.V35, "dict_ = {  **a, **b, c: 'c',**d}");
+        }
+
         private static void TestOneFile(string filename, PythonLanguageVersion version) {
             var originalText = File.ReadAllText(filename);
 
-            TestOneString(version, originalText);
+            TestOneString(version, originalText, filename: filename);
         }
 
-        internal static void TestOneString(PythonLanguageVersion version, string originalText, CodeFormattingOptions format = null, string expected = null, bool recurse = true) {
+        internal static void TestOneString(
+            PythonLanguageVersion version,
+            string originalText,
+            CodeFormattingOptions format = null,
+            string expected = null,
+            bool recurse = true,
+            string filename = null
+        ) {
             bool hadExpected = true;
             if (expected == null) {
                 expected = originalText;
@@ -1669,6 +1716,7 @@ class BaseSet(object):
                 return;
             }
 
+            bool shownFilename = false;
             const int contextSize = 50;
             for (int i = 0; i < expected.Length && i < output.Length; i++) {
                 if (expected[i] != output[i]) {
@@ -1690,6 +1738,12 @@ class BaseSet(object):
                         }
                     }
 
+                    if (!shownFilename) {
+                        shownFilename = true;
+                        if (!string.IsNullOrEmpty(filename)) {
+                            Console.WriteLine("In file: {0}", filename);
+                        }
+                    }
                     Console.WriteLine("Mismatch context at {0}:", i);
                     Console.WriteLine("Expected: {0}", x.ToString());
                     Console.WriteLine("Got     : {0}", y.ToString());

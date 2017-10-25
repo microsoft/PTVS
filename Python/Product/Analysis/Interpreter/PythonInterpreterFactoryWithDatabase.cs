@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     public class PythonInterpreterFactoryWithDatabase :
         IPythonInterpreterFactoryWithDatabase,
+        IPythonInterpreterFactoryWithLog,
         IDisposable
     {
         private PythonTypeDatabase _typeDb, _typeDbWithoutPackages;
@@ -643,6 +644,9 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
+                if (PackageManager != null) {
+                    PackageManager.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+                }
                 (PackageManager as IDisposable)?.Dispose();
 
                 _isCurrentSemaphore.Dispose();

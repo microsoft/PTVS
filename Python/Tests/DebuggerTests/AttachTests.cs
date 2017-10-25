@@ -16,7 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
@@ -31,9 +35,7 @@ namespace DebuggerTests {
     public abstract class AttachTests : BaseDebuggerTests {
         [TestInitialize]
         public void CheckVersion() {
-            if (Version == null) {
-                Assert.Inconclusive("Required version of Python is not installed");
-            }
+            Version.AssertInstalled();
         }
 
         internal override PythonVersion Version {
@@ -65,7 +67,7 @@ namespace DebuggerTests {
         public virtual async Task AttachThreadingStartNewThread() {
             // http://pytools.codeplex.com/workitem/638
             // http://pytools.codeplex.com/discussions/285741#post724014
-            var psi = new ProcessStartInfo(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
+            var psi = new ProcessStartInfo(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
             psi.WorkingDirectory = TestData.GetPath(@"TestData\DebuggerProject");
             psi.EnvironmentVariables["PYTHONPATH"] = @"..\..";
             psi.UseShellExecute = false;
@@ -73,17 +75,19 @@ namespace DebuggerTests {
             psi.RedirectStandardError = true;
             Process p = Process.Start(psi);
             try {
-                if (p.WaitForExit(1000)) {
-                    Assert.Fail("Process exited");
-                }
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    if (p.WaitForExit(1000)) {
+                        Assert.Fail("Process exited");
+                    }
 
-                var proc = PythonProcess.Attach(p.Id);
-                try {
-                    using (var attached = new AutoResetEvent(false))
-                    using (var readyToContinue = new AutoResetEvent(false))
-                    using (var threadBreakpointHit = new AutoResetEvent(false)) {
+                    var proc = PythonProcess.Attach(p.Id);
+                    try {
+                        var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        var readyToContinue = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        var threadBreakpointHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
                         proc.ProcessLoaded += async (sender, args) => {
-                            attached.Set();
+                            attached.TrySetResult(true);
                             var bp = proc.AddBreakpoint("ThreadingStartNewThread.py", 9);
                             await bp.AddAsync(TimeoutToken());
 
@@ -92,6 +96,7 @@ namespace DebuggerTests {
 
                             await proc.ResumeAsync(TimeoutToken());
                         };
+
                         PythonThread mainThread = null;
                         PythonThread bpThread = null;
                         bool wrongLine = false;
@@ -100,35 +105,38 @@ namespace DebuggerTests {
                                 // stop running the infinite loop
                                 Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
                                 mainThread = args.Thread;
-                                await args.Thread.Frames[0].ExecuteTextAsync("x = False", (x) => { readyToContinue.Set(); }, TimeoutToken());
+                                await args.Thread.Frames[0].ExecuteTextAsync(
+                                    "x = False",
+                                    x => readyToContinue.TrySetResult(true),
+                                    TimeoutToken());
                             } else if (args.Breakpoint.LineNo == 5) {
                                 // we hit the breakpoint on the new thread
                                 Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
                                 bpThread = args.Thread;
-                                threadBreakpointHit.Set();
+                                threadBreakpointHit.TrySetResult(true);
                                 await proc.ResumeAsync(TimeoutToken());
                             } else {
                                 Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
                                 wrongLine = true;
-                                attached.Set();
-                                threadBreakpointHit.Set();
+                                attached.TrySetResult(true);
+                                threadBreakpointHit.TrySetResult(true);
                                 await proc.ResumeAsync(TimeoutToken());
                             }
                         };
 
                         await proc.StartListeningAsync();
-                        Assert.IsTrue(attached.WaitOne(30000), "Failed to attach within 30s");
+                        await attached.Task.WithTimeout(30000, "Failed to attach within 30s");
 
-                        Assert.IsTrue(readyToContinue.WaitOne(30000), "Failed to hit the main thread breakpoint within 30s");
+                        await readyToContinue.Task.WithTimeout(30000, "Failed to hit the main thread breakpoint within 30s");
                         await proc.ResumeAsync(TimeoutToken());
 
-                        Assert.IsTrue(threadBreakpointHit.WaitOne(30000), "Failed to hit the background thread breakpoint within 30s");
+                        await threadBreakpointHit.Task.WithTimeout(30000, "Failed to hit the background thread breakpoint within 30s");
                         Assert.IsFalse(wrongLine, "Breakpoint broke on the wrong line");
 
                         Assert.AreNotEqual(mainThread, bpThread);
+                    } finally {
+                        await DetachProcessAsync(proc);
                     }
-                } finally {
-                    await DetachProcessAsync(proc);
                 }
             } finally {
                 DisposeProcess(p);
@@ -138,28 +146,33 @@ namespace DebuggerTests {
         [TestMethod, Priority(2)]
         [TestCategory("10s"), TestCategory("60s")]
         public virtual async Task AttachReattach() {
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
             try {
-                Thread.Sleep(1000);
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent detached = new AutoResetEvent(false);
-                for (int i = 0; i < 10; i++) {
-                    Console.WriteLine(i);
+                    for (int i = 0; i < 10; i++) {
+                        Console.WriteLine(i);
 
-                    var proc = PythonProcess.Attach(p.Id);
+                        var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                    };
-                    proc.ProcessExited += (sender, args) => {
-                        detached.Set();
-                    };
-                    await proc.StartListeningAsync();
+                        var proc = PythonProcess.Attach(p.Id);
 
-                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                    await proc.DetachAsync(TimeoutToken());
-                    Assert.IsTrue(detached.WaitOne(10000), "Failed to detach within 10s");
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.SetResult(true);
+                        };
+                        proc.ProcessExited += (sender, args) => {
+                            detached.SetResult(true);
+                        };
+                        await proc.StartListeningAsync(20000);
+
+                        await attached.Task.WithTimeout(10000, "Failed to attach within 10s");
+                        await proc.DetachAsync(TimeoutToken());
+                        await detached.Task.WithTimeout(10000, "Failed to detach within 10s");
+                    }
+
+                    dumpWriter.Cancel();
                 }
             } finally {
                 DisposeProcess(p);
@@ -182,25 +195,28 @@ namespace DebuggerTests {
         [TestCategory("10s")]
         public virtual async Task AttachMultithreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
             try {
-                Thread.Sleep(1000);
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
+                    var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id);
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.SetResult(true);
+                        };
+                        await proc.StartListeningAsync();
 
-                try {
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                    };
-                    await proc.StartListeningAsync();
+                        await attached.Task.WithTimeout(10000, "Failed to attach within 10s");
+                        await proc.ResumeAsync(TimeoutToken());
+                        Debug.WriteLine("Waiting for exit");
+                    } finally {
+                        WaitForExit(proc);
+                    }
 
-                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                    await proc.ResumeAsync(TimeoutToken());
-                    Debug.WriteLine("Waiting for exit");
-                } finally {
-                    WaitForExit(proc);
+                    dumpWriter.Cancel();
                 }
             } finally {
                 DisposeProcess(p);
@@ -215,22 +231,25 @@ namespace DebuggerTests {
         [TestMethod, Priority(3)]
         public virtual async Task AttachSingleThreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
             try {
                 Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
+                var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
                 var proc = PythonProcess.Attach(p.Id);
                 try {
                     proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
+                        attached.SetResult(true);
                     };
                     await proc.StartListeningAsync();
 
-                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                    await proc.ResumeAsync(TimeoutToken());
-                    Debug.WriteLine("Waiting for exit");
+                    using (var dumpWriter = new MiniDumpWriter(p)) {
+                        await attached.Task.WithTimeout(10000, "Failed to attach within 10s");
+                        await proc.ResumeAsync(TimeoutToken());
+                        Debug.WriteLine("Waiting for exit");
+                        dumpWriter.Cancel();
+                    }
                 } finally {
                     TerminateProcess(proc);
                 }
@@ -239,54 +258,35 @@ namespace DebuggerTests {
             }
         }
 
-        /*
-        [TestMethod, Priority(1)]
-        public void AttachReattach64() {
-            Process p = Process.Start("C:\\Python27_x64\\python.exe", "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
+        [TestMethod, Priority(2)]
+        [TestCategory("10s")]
+        public virtual async Task AttachReattachThreadingInited() {
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
             try {
-                Thread.Sleep(1000);
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    Thread.Sleep(1000);
 
-                for (int i = 0; i < 10; i++) {
-                    Console.WriteLine(i);
+                    for (int i = 0; i < 10; i++) {
+                        Console.WriteLine(i);
 
-                    PythonProcess proc;
-                    ConnErrorMessages errReason;
-                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                        Assert.Fail("Failed to attach {0}", errReason);
+                        var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+                        var proc = PythonProcess.Attach(p.Id);
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.SetResult(true);
+                        };
+                        proc.ProcessExited += (sender, args) => {
+                            detached.SetResult(true);
+                        };
+                        await proc.StartListeningAsync();
+
+                        await attached.Task.WithTimeout(10000, "Failed to attach within 10s");
+                        await proc.DetachAsync(TimeoutToken());
+                        await detached.Task.WithTimeout(10000, "Failed to detach within 10s");
                     }
 
-                    proc.Detach();
-                }
-            } finally {
-                DisposeProcess(p);
-            }
-        }*/
-
-        [TestMethod, Priority(2)]
-        [TestCategory("10s"), TestCategory("60s")]
-        public virtual async Task AttachReattachThreadingInited() {
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
-            try {
-                Thread.Sleep(1000);
-
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent detached = new AutoResetEvent(false);
-                for (int i = 0; i < 10; i++) {
-                    Console.WriteLine(i);
-
-                    var proc = PythonProcess.Attach(p.Id);
-
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                    };
-                    proc.ProcessExited += (sender, args) => {
-                        detached.Set();
-                    };
-                    await proc.StartListeningAsync();
-
-                    Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
-                    await proc.DetachAsync(TimeoutToken());
-                    Assert.IsTrue(detached.WaitOne(10000), "Failed to detach within 10s");
+                    dumpWriter.Cancel();
                 }
             } finally {
                 DisposeProcess(p);
@@ -296,29 +296,32 @@ namespace DebuggerTests {
         [TestMethod, Priority(3)]
         [TestCategory("10s")]
         public virtual async Task AttachReattachInfiniteThreads() {
-            Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
+            Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
             try {
-                Thread.Sleep(1000);
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent detached = new AutoResetEvent(false);
-                for (int i = 0; i < 10; i++) {
-                    Console.WriteLine(i);
+                    for (int i = 0; i < 10; i++) {
+                        Console.WriteLine(i);
 
-                    var proc = PythonProcess.Attach(p.Id);
+                        var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                    };
-                    proc.ProcessExited += (sender, args) => {
-                        detached.Set();
-                    };
-                    await proc.StartListeningAsync();
+                        var proc = PythonProcess.Attach(p.Id);
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.SetResult(true);
+                        };
+                        proc.ProcessExited += (sender, args) => {
+                            detached.SetResult(true);
+                        };
+                        await proc.StartListeningAsync();
 
-                    Assert.IsTrue(attached.WaitOne(30000), "Failed to attach within 30s");
-                    await proc.DetachAsync(TimeoutToken());
-                    Assert.IsTrue(detached.WaitOne(30000), "Failed to detach within 30s");
+                        await attached.Task.WithTimeout(30000, "Failed to attach within 30s");
+                        await proc.DetachAsync(TimeoutToken());
+                        await detached.Task.WithTimeout(30000, "Failed to detach within 30s");
+                    }
 
+                    dumpWriter.Cancel();
                 }
             } finally {
                 DisposeProcess(p);
@@ -453,32 +456,36 @@ void main()
             // start the test process w/ our handle
             Process p = RunHost(exe);
             try {
-                Thread.Sleep(1500);
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    Thread.Sleep(1500);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent bpHit = new AutoResetEvent(false);
+                    var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                var proc = PythonProcess.Attach(p.Id);
-                try {
-                    proc.ProcessLoaded += (sender, args) => {
-                        Console.WriteLine("Process loaded");
-                        attached.Set();
-                    };
-                    await proc.StartListeningAsync();
+                    var proc = PythonProcess.Attach(p.Id);
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            Console.WriteLine("Process loaded");
+                            attached.SetResult(true);
+                        };
+                        await proc.StartListeningAsync();
 
-                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                        await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
 
-                    proc.BreakpointHit += (sender, args) => {
-                        Console.WriteLine("Breakpoint hit");
-                        bpHit.Set();
-                    };
+                        proc.BreakpointHit += (sender, args) => {
+                            Console.WriteLine("Breakpoint hit");
+                            bpHit.SetResult(true);
+                        };
 
-                    var bp = proc.AddBreakpoint("gilstate_attach.py", 3);
-                    await bp.AddAsync(TimeoutToken());
+                        var bp = proc.AddBreakpoint("gilstate_attach.py", 3);
+                        await bp.AddAsync(TimeoutToken());
 
-                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
-                } finally {
-                    await DetachProcessAsync(proc);
+                        await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
+                    } finally {
+                        await DetachProcessAsync(proc);
+                    }
+
+                    dumpWriter.Cancel();
                 }
             } finally {
                 DisposeProcess(p);
@@ -580,32 +587,36 @@ void main()
             // start the test process w/ our handle
             Process p = RunHost(exe);
             try {
-                Thread.Sleep(1500);
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    Thread.Sleep(1500);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent bpHit = new AutoResetEvent(false);
+                    var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                var proc = PythonProcess.Attach(p.Id);
-                try {
-                    proc.ProcessLoaded += (sender, args) => {
-                        Console.WriteLine("Process loaded");
-                        attached.Set();
-                    };
-                    await proc.StartListeningAsync();
+                    var proc = PythonProcess.Attach(p.Id);
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            Console.WriteLine("Process loaded");
+                            attached.SetResult(true);
+                        };
+                        await proc.StartListeningAsync();
 
-                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                        await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
 
-                    proc.BreakpointHit += (sender, args) => {
-                        Console.WriteLine("Breakpoint hit");
-                        bpHit.Set();
-                    };
+                        proc.BreakpointHit += (sender, args) => {
+                            Console.WriteLine("Breakpoint hit");
+                            bpHit.SetResult(true);
+                        };
 
-                    var bp = proc.AddBreakpoint("gilstate_attach.py", 3);
-                    await bp.AddAsync(TimeoutToken());
+                        var bp = proc.AddBreakpoint("gilstate_attach.py", 3);
+                        await bp.AddAsync(TimeoutToken());
 
-                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
-                } finally {
-                    await DetachProcessAsync(proc);
+                        await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
+                    } finally {
+                        await DetachProcessAsync(proc);
+                    }
+
+                    dumpWriter.Cancel();
                 }
             } finally {
                 DisposeProcess(p);
@@ -667,36 +678,40 @@ int main(int argc, char* argv[]) {
             p.BeginOutputReadLine();
 
             try {
-                bool isAttached = false;
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    bool isAttached = false;
 
-                // start the attach with the GIL held
-                AutoResetEvent attachStarted = new AutoResetEvent(false);
-                AutoResetEvent attachDone = new AutoResetEvent(false);
+                    // Start the attach with the GIL held.
 
-                // We run the Attach and StartListeningAsync on a separate thread,
-                // because StartListeningAsync waits until debuggee has connected
-                // back (which it won't do until handle is set).
-                var task = Task.Run(async () =>
-                {
-                    var proc = PythonProcess.Attach(p.Id);
-                    try {
-                        proc.ProcessLoaded += (sender, args) => {
-                            attachDone.Set();
-                            isAttached = false;
-                        };
+                    var attachStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    var attachDone = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                        attachStarted.Set();
-                        await proc.StartListeningAsync(10000);
-                    } finally {
-                        await DetachProcessAsync(proc);
-                    }
-                });
+                    // We run the Attach and StartListeningAsync on a separate thread,
+                    // because StartListeningAsync waits until debuggee has connected
+                    // back (which it won't do until handle is set).
+                    var attachTask = Task.Run(async () => {
+                        var proc = PythonProcess.Attach(p.Id);
+                        try {
+                            proc.ProcessLoaded += (sender, args) => {
+                                attachDone.SetResult(true);
+                                isAttached = true;
+                            };
 
-                Assert.IsTrue(attachStarted.WaitOne(10000), "Failed to start attaching within 10s");
-                Assert.IsFalse(isAttached, "should not have attached yet"); // we should be blocked
-                handle.Set();   // let the code start running
+                            attachStarted.SetResult(true);
+                            await proc.StartListeningAsync(10000);
+                        } finally {
+                            await DetachProcessAsync(proc);
+                        }
+                    });
 
-                Assert.IsTrue(attachDone.WaitOne(10000), "Failed to attach within 10s");
+                    await Task.WhenAny(attachTask, attachStarted.Task).Unwrap().WithTimeout(10000, "Failed to start attaching within 10s");
+                    Assert.IsFalse(isAttached, "Should not have attached yet"); // we should be blocked
+
+                    handle.Set();   // let the code start running
+
+                    await Task.WhenAny(attachTask, attachDone.Task).Unwrap().WithTimeout(10000, "Failed to attach within 10s");
+                    dumpWriter.Cancel();
+                }
             } finally {
                 Debug.WriteLine(String.Format("Process output: {0}", outRecv.Output.ToString()));
                 DisposeProcess(p);
@@ -707,100 +722,112 @@ int main(int argc, char* argv[]) {
         [TestCategory("10s")]
         public virtual async Task AttachAndStepWithBlankSysPrefix() {
             string script = TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunBlankPrefix.py");
-            var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
+            var p = Process.Start(Version.InterpreterPath, "-B \"" + script + "\"");
             try {
-                Thread.Sleep(1000);
-                var proc = PythonProcess.Attach(p.Id);
-                try {
-                    var attached = new AutoResetEvent(false);
-                    proc.ProcessLoaded += async (sender, args) => {
-                        Console.WriteLine("Process loaded");
-                        await proc.ResumeAsync(TimeoutToken());
-                        attached.Set();
-                    };
-                    await proc.StartListeningAsync();
-                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    Thread.Sleep(1000);
+                    var proc = PythonProcess.Attach(p.Id);
+                    try {
+                        var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        proc.ProcessLoaded += async (sender, args) => {
+                            Console.WriteLine("Process loaded");
+                            await proc.ResumeAsync(TimeoutToken());
+                            attached.SetResult(true);
+                        };
+                        await proc.StartListeningAsync();
+                        await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
 
-                    var bpHit = new AutoResetEvent(false);
-                    PythonThread thread = null;
-                    PythonStackFrame oldFrame = null;
-                    proc.BreakpointHit += (sender, args) => {
-                        Console.WriteLine("Breakpoint hit");
-                        thread = args.Thread;
-                        oldFrame = args.Thread.Frames[0];
-                        bpHit.Set();
-                    };
-                    var bp = proc.AddBreakpoint(script, 6);
-                    await bp.AddAsync(TimeoutToken());
-                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+                        var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        PythonThread thread = null;
+                        PythonStackFrame oldFrame = null;
+                        proc.BreakpointHit += (sender, args) => {
+                            Console.WriteLine("Breakpoint hit");
+                            thread = args.Thread;
+                            oldFrame = args.Thread.Frames[0];
+                            bpHit.SetResult(true);
+                        };
+                        var bp = proc.AddBreakpoint(script, 6);
+                        await bp.AddAsync(TimeoutToken());
+                        await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
 
-                    var stepComplete = new AutoResetEvent(false);
-                    PythonStackFrame newFrame = null;
-                    proc.StepComplete += (sender, args) => {
-                        newFrame = args.Thread.Frames[0];
-                        stepComplete.Set();
-                    };
-                    await thread.StepOverAsync(TimeoutToken());
-                    Assert.IsTrue(stepComplete.WaitOne(20000), "Failed to complete the step within 20s");
+                        var stepComplete = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        PythonStackFrame newFrame = null;
+                        proc.StepComplete += (sender, args) => {
+                            newFrame = args.Thread.Frames[0];
+                            stepComplete.SetResult(true);
+                        };
+                        await thread.StepOverAsync(TimeoutToken());
+                        await stepComplete.Task.WithTimeout(20000, "Failed to complete the step within 20s");
 
-                    Assert.AreEqual(oldFrame.FileName, newFrame.FileName);
-                    Assert.IsTrue(oldFrame.LineNo + 1 == newFrame.LineNo);
-                } finally {
-                    await DetachProcessAsync(proc);
+                        Assert.AreEqual(oldFrame.FileName, newFrame.FileName);
+                        Assert.IsTrue(oldFrame.LineNo + 1 == newFrame.LineNo);
+                    } finally {
+                        await DetachProcessAsync(proc);
+                    }
+
+                    dumpWriter.Cancel();
                 }
             } finally {
                 DisposeProcess(p);
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public virtual async Task AttachWithOutputRedirection() {
             var expectedOutput = new[] { "stdout", "stderr" };
 
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachOutput.py");
-            var p = Process.Start(Version.InterpreterPath, "\"" + script + "\"");
+            var p = Process.Start(Version.InterpreterPath, "-B \"" + script + "\"");
             try {
                 Thread.Sleep(1000);
-                var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput);
-                try {
-                    var attached = new AutoResetEvent(false);
-                    proc.ProcessLoaded += (sender, args) => {
-                        Console.WriteLine("Process loaded");
-                        attached.Set();
-                    };
-                    await proc.StartListeningAsync();
+                if (p.HasExited) {
+                    Assert.Fail($"Failed to start process: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
+                }
 
-                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
-                    await proc.ResumeAsync(TimeoutToken());
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput);
+                    try {
+                        var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        proc.ProcessLoaded += (sender, args) => {
+                            Console.WriteLine("Process loaded");
+                            attached.SetResult(true);
+                        };
+                        await proc.StartListeningAsync();
 
-                    var bpHit = new AutoResetEvent(false);
-                    PythonThread thread = null;
-                    proc.BreakpointHit += (sender, args) => {
-                        thread = args.Thread;
-                        bpHit.Set();
-                    };
-                    var bp = proc.AddBreakpoint(script, 5);
-                    await bp.AddAsync(TimeoutToken());
+                        await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
+                        await proc.ResumeAsync(TimeoutToken());
 
-                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
-                    Assert.IsNotNull(thread);
+                        var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        PythonThread thread = null;
+                        proc.BreakpointHit += (sender, args) => {
+                            thread = args.Thread;
+                            bpHit.SetResult(true);
+                        };
+                        var bp = proc.AddBreakpoint(script, 5);
+                        await bp.AddAsync(TimeoutToken());
 
-                    var actualOutput = new List<string>();
-                    proc.DebuggerOutput += (sender, e) => {
-                        Console.WriteLine("Debugger output: '{0}'", e.Output);
-                        actualOutput.Add(e.Output);
-                    };
+                        await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
+                        Assert.IsNotNull(thread);
 
-                    var frame = thread.Frames[0];
-                    Assert.AreEqual("False", frame.ExecuteTextAsync("attached").Result.StringRepr);
-                    await frame.ExecuteTextAsync("attached = True", ct: CancellationTokens.After15s);
+                        var actualOutput = new List<string>();
+                        proc.DebuggerOutput += (sender, e) => {
+                            Console.WriteLine("Debugger output: '{0}'", e.Output);
+                            actualOutput.Add(e.Output);
+                        };
 
-                    await proc.ResumeAsync(TimeoutToken());
-                    WaitForExit(proc);
-                    AssertUtil.ArrayEquals(expectedOutput, actualOutput);
-                } finally {
-                    await DetachProcessAsync(proc);
+                        var frame = thread.Frames[0];
+                        Assert.AreEqual("False", (await frame.ExecuteTextAsync("attached", ct: CancellationTokens.After15s)).StringRepr);
+                        await frame.ExecuteTextAsync("attached = True", ct: TimeoutToken());
+
+                        await proc.ResumeAsync(TimeoutToken());
+                        WaitForExit(proc);
+                        AssertUtil.ArrayEquals(expectedOutput, actualOutput);
+                    } finally {
+                        await DetachProcessAsync(proc);
+                    }
+
+                    dumpWriter.Cancel();
                 }
             } finally {
                 DisposeProcess(p);
@@ -808,78 +835,357 @@ int main(int argc, char* argv[]) {
         }
 
         protected virtual string PtvsdInterpreterArguments {
-            get { return ""; }
+            get { return "-B"; }
         }
 
-        [TestMethod, Priority(3)]
-        public async Task AttachPtvsd() {
-            var expectedOutput = new[] { "stdout", "stderr" };
+        private void CaptureOutput(StreamReader reader, StringBuilder builder) {
+            try {
+                while (true) {
+                    int ch = reader.Read();
+                    if (ch < 0) {
+                        break;
+                    }
 
-            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsd.py");
-            var psi = new ProcessStartInfo(Version.InterpreterPath, PtvsdInterpreterArguments + " \"" + script + "\"") {
+                    lock (builder) {
+                        builder.Append((char)ch);
+                    }
+                }
+            } catch (Exception) {
+            }
+        }
+
+        private async Task TestPtvsd(string pythonArgs, string script, string scriptArgs, Uri uri, List<string> output, Func<PythonProcess, Task> body, Func<Task> waitBeforeAttach = null) {
+            var query = uri.Query;
+            if (query.Length > 0) {
+                // Remove leading "?"
+                query = query.Substring(1);
+            }
+            query += "&opt=" + PythonDebugOptions.RedirectOutput;
+            uri = new UriBuilder(uri) { Query = query }.Uri;
+
+            string args = PtvsdInterpreterArguments + " " + pythonArgs + " \"" + script + "\"  " + scriptArgs;
+            var psi = new ProcessStartInfo(Version.InterpreterPath, args) {
                 WorkingDirectory = TestData.GetPath(),
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                Environment = {
+                    { "PYTHONPATH", Path.GetDirectoryName(GetType().Assembly.Location) },
+                }
             };
 
+            Console.WriteLine("Python command line: " + psi.Arguments);
+            Console.WriteLine("Attach URI: " + uri);
+
             var p = Process.Start(psi);
+
+            var stdout = new StringBuilder();
+            Task.Run(() => CaptureOutput(p.StandardOutput, stdout)).DoNotWait();
+
+            var stderr = new StringBuilder();
+            Task.Run(() => CaptureOutput(p.StandardError, stderr)).DoNotWait();
+
+            if (waitBeforeAttach != null) {
+                await waitBeforeAttach();
+            }
+
             try {
-                PythonProcess proc = null;
-                for (int i = 0; ; ++i) {
-                    Thread.Sleep(1000);
-                    try {
-                        proc = await PythonRemoteProcess.AttachAsync(
-                            new Uri("tcp://secret@localhost?opt=" + PythonDebugOptions.RedirectOutput),
-                            false, TimeoutToken());
-                        break;
-                    } catch (SocketException) {
-                        // Failed to connect - the process might have not started yet, so keep trying a few more times.
-                        if (i >= 5 || p.HasExited) {
-                            throw;
+                using (var dumpWriter = new MiniDumpWriter(p)) {
+                    PythonProcess proc = null;
+                    for (int i = 0; ; ++i) {
+                        Thread.Sleep(1000);
+                        try {
+                            proc = await PythonRemoteProcess.AttachAsync(uri, false, TimeoutToken());
+                            break;
+                        } catch (SocketException) {
+                            // Failed to connect - the process might have not started yet, so keep trying a few more times.
+                            if (i >= 5 || p.HasExited) {
+                                throw;
+                            }
                         }
                     }
-                }
 
-                try {
-                    var attached = new AutoResetEvent(false);
-                    proc.ProcessLoaded += async (sender, e) => {
-                        Console.WriteLine("Process loaded");
+                    try {
+                        var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                        var bp = proc.AddBreakpoint(script, 10);
-                        await bp.AddAsync(TimeoutToken());
+                        if (output != null) {
+                            proc.DebuggerOutput += (sender, e) => {
+                                output.Add(e.Output);
+                            };
+                        }
 
-                        await proc.ResumeAsync(TimeoutToken());
-                        attached.Set();
-                    };
+                        await body(proc);
 
-                    var actualOutput = new List<string>();
-                    proc.DebuggerOutput += (sender, e) => {
-                        actualOutput.Add(e.Output);
-                    };
+                        Assert.IsTrue(p.WaitForExit(DefaultWaitForExitTimeout), "Python process did not terminate.");
+                    } finally {
+                        await DetachProcessAsync(proc);
+                    }
 
-                    var bpHit = new AutoResetEvent(false);
-                    proc.BreakpointHit += async (sender, args) => {
-                        Console.WriteLine("Breakpoint hit");
-                        bpHit.Set();
-                        await proc.ResumeAsync(TimeoutToken());
-                    };
-
-                    await proc.StartListeningAsync();
-                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
-                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
-
-                    p.WaitForExit(DefaultWaitForExitTimeout);
-                    AssertUtil.ArrayEquals(expectedOutput, actualOutput);
-                } finally {
-                    await DetachProcessAsync(proc);
+                    dumpWriter.Cancel();
                 }
             } finally {
-                Console.WriteLine(p.StandardOutput.ReadToEnd());
-                Console.WriteLine(p.StandardError.ReadToEnd());
+                Console.WriteLine("STDOUT:");
+                lock (stdout) {
+                    Console.WriteLine(stdout.ToString());
+                }
+
+                Console.WriteLine("STDERR:");
+                lock (stderr) {
+                    Console.WriteLine(stderr.ToString());
+                }
+
                 DisposeProcess(p);
             }
+        }
+
+        protected virtual bool HasPtvsdCommandLine => true;
+
+        private async Task TestPtvsdImport(string enableAttachArgs, Uri uri) {
+            if (!HasPtvsdCommandLine) {
+                return;
+            }
+
+            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsd.py");
+            var expectedOutput = new[] { "stdout", "stderr" };
+            var actualOutput = new List<string>();
+
+            await TestPtvsd("", script, '"' + enableAttachArgs + '"', uri, actualOutput, async proc => {
+                var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.ProcessLoaded += async (sender, e) => {
+                    Console.WriteLine("Process loaded");
+
+                    var bp = proc.AddBreakpoint(script, 11);
+                    await bp.AddAsync(TimeoutToken());
+
+                    await proc.ResumeAsync(TimeoutToken());
+                    attached.SetResult(true);
+                };
+
+                var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.BreakpointHit += async (sender, e) => {
+                    Console.WriteLine("Breakpoint hit");
+                    bpHit.SetResult(true);
+                    await proc.ResumeAsync(TimeoutToken());
+                };
+
+                await proc.StartListeningAsync();
+                await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
+                await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
+            });
+
+            AssertUtil.ArrayEquals(expectedOutput, actualOutput);
+        }
+
+        private async Task TestPtvsdCommandLine(string args, Uri uri) {
+            if (!HasPtvsdCommandLine) {
+                return;
+            }
+
+            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsd.py");
+            var expectedOutput = new[] { "stdout", "stderr" };
+            var actualOutput = new List<string>();
+
+            await TestPtvsd("-B -m ptvsd " + args, script, "", uri, actualOutput, async proc => {
+                var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.ProcessLoaded += async (sender, e) => {
+                    Console.WriteLine("Process loaded");
+
+                    var bp = proc.AddBreakpoint(script, 11);
+                    await bp.AddAsync(TimeoutToken());
+
+                    await proc.ResumeAsync(TimeoutToken());
+                    attached.SetResult(true);
+                };
+
+                var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.BreakpointHit += async (sender, e) => {
+                    Console.WriteLine("Breakpoint hit");
+                    bpHit.SetResult(true);
+                    await proc.ResumeAsync(TimeoutToken());
+                };
+
+                await proc.StartListeningAsync();
+                await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
+                await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
+            });
+
+            AssertUtil.ArrayEquals(expectedOutput, actualOutput);
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task AttachPtvsdImport() {
+            await TestPtvsdImport("secret=None", new Uri("tcp://localhost"));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task AttachPtvsdCommandLine() {
+            await TestPtvsdCommandLine("--wait", new Uri("tcp://localhost"));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task AttachPtvsdImportSecret() {
+            await TestPtvsdImport("secret='secret'", new Uri("tcp://secret@localhost"));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task AttachPtvsdCommandLineSecret() {
+            await TestPtvsdCommandLine("--wait --secret secret", new Uri("tcp://secret@localhost"));
+        }
+
+        private static IPAddress GetNetworkInterface() {
+            var ip = (from netif in NetworkInterface.GetAllNetworkInterfaces()
+                      where netif.OperationalStatus == OperationalStatus.Up && netif.Supports(NetworkInterfaceComponent.IPv4)
+                      from uaddr in netif.GetIPProperties().UnicastAddresses
+                      where uaddr.Address.AddressFamily == AddressFamily.InterNetwork
+                      select uaddr.Address
+                     ).FirstOrDefault();
+
+            if (ip == null) {
+                Assert.Inconclusive("Couldn't find an IPv4 network interface to test with");
+            }
+
+            Console.WriteLine("Using interface " + ip);
+            return ip;
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task AttachPtvsdImportAddress() {
+            var ip = GetNetworkInterface();
+            await TestPtvsdImport("secret=None, address=('" + ip + "', 8765)", new Uri("tcp://" + ip + ":8765"));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task AttachPtvsdCommandLinePort() {
+            await TestPtvsdCommandLine("--wait --port 8765", new Uri("tcp://localhost:8765"));
+        }
+
+        [TestMethod, Priority(0)]
+        public async Task AttachPtvsdCommandLineInterface() {
+            var ip = GetNetworkInterface();
+            await TestPtvsdCommandLine("--wait --interface " + ip, new Uri("tcp://" + ip));
+        }
+
+        [TestMethod, Priority(2)]
+        public async Task AttachPtvsdCommandLineWait() {
+            if (!HasPtvsdCommandLine) {
+                return;
+            }
+
+            string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsdLoop.py");
+
+            await TestPtvsd("-m ptvsd --wait", script, "", new Uri("tcp://localhost"), null, async proc => {
+                var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.ProcessLoaded += async (sender, e) => {
+                    Console.WriteLine("Process loaded");
+                    await proc.ResumeAsync(TimeoutToken());
+                    attached.SetResult(true);
+                };
+
+                var threadTcs = new TaskCompletionSource<PythonThread>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.AsyncBreakComplete += async (sender, e) => {
+                    Console.WriteLine("break_into_debugger hit");
+                    threadTcs.TrySetResult(e.Thread);
+                };
+
+                await proc.StartListeningAsync();
+                await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
+
+                var thread = await threadTcs.Task.WithTimeout(20000, "Failed to break into debugger within 20s");
+                var frame = thread.Frames[0];
+
+                var result = await frame.ExecuteTextAsync("i", PythonEvaluationResultReprKind.Normal, TimeoutToken());
+                Assert.AreEqual(int.Parse(result.StringRepr), 0);
+
+                await frame.ExecuteTextAsync("i = None", PythonEvaluationResultReprKind.Normal, TimeoutToken());
+                await proc.ResumeAsync(TimeoutToken());
+            });
+        }
+
+        [TestMethod, Priority(3)]
+        public async Task AttachPtvsdCommandLineNoWait() {
+            if (!HasPtvsdCommandLine) {
+                return;
+            }
+
+            string script = TestData.GetPath("TestData", "DebuggerProject", "AttachPtvsdLoop.py");
+            string runFile = Path.Combine(TestData.GetTempPath(), "AttachPtvsdLoop.running");
+
+            await TestPtvsd("-m ptvsd", script, "- \"" + runFile + "\"", new Uri("tcp://localhost"), null, async proc => {
+                proc.ProcessLoaded += async (sender, e) => {
+                    Console.WriteLine("Process loaded");
+                    await proc.ResumeAsync(TimeoutToken());
+                };
+
+                var threadTcs = new TaskCompletionSource<PythonThread>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.AsyncBreakComplete += async (sender, e) => {
+                    Console.WriteLine("break_into_debugger hit");
+                    threadTcs.TrySetResult(e.Thread);
+                };
+
+                await proc.StartListeningAsync();
+
+                var thread = await threadTcs.Task.WithTimeout(20000, "Failed to break into debugger within 20s");
+                var frame = thread.Frames[0];
+
+                var result = await frame.ExecuteTextAsync("i", PythonEvaluationResultReprKind.Normal, TimeoutToken());
+                Assert.AreNotEqual(int.Parse(result.StringRepr), 0);
+
+                await frame.ExecuteTextAsync("i = None", PythonEvaluationResultReprKind.Normal, TimeoutToken());
+                await proc.ResumeAsync(TimeoutToken());
+            }, waitBeforeAttach: async () => {
+                for (int i = 0;; ++i) {
+                    if (File.Exists(runFile)) {
+                        File.Delete(runFile);
+                        break;
+                    }
+
+                    if (i > 200) {
+                        Assert.Fail("Python code didn't start running within 20s");
+                    }
+
+                    await Task.Delay(100);
+                }
+
+                // Now that it's running, give the loop some time to spin and increment the counter.
+                await Task.Delay(500);
+            });
+        }
+
+        // https://github.com/Microsoft/PTVS/issues/2842
+        [TestMethod, Priority(2)]
+        public virtual async Task AttachPtvsdAndStopDebugging() {
+            if (!HasPtvsdCommandLine) {
+                return;
+            }
+
+            string script = TestData.GetPath(@"TestData\TestAdapterTestB\InheritanceBaseTest.py");
+
+            await TestPtvsd("-m ptvsd --wait", script, "", new Uri("tcp://localhost"), null, async proc => {
+                var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.ProcessLoaded += async (sender, e) => {
+                    Console.WriteLine("Process loaded");
+
+                    var bp = proc.AddBreakpoint(script, 8);
+                    await bp.AddAsync(TimeoutToken());
+
+                    await proc.ResumeAsync(TimeoutToken());
+                    attached.SetResult(true);
+                };
+
+                var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                proc.BreakpointHit += async (sender, args) => {
+                    Console.WriteLine("Breakpoint hit");
+                    bpHit.SetResult(true);
+                    await proc.ResumeAsync(TimeoutToken());
+                };
+
+                await proc.StartListeningAsync();
+                await attached.Task.WithTimeout(20000, "Failed to attach within 20s");
+                await bpHit.Task.WithTimeout(20000, "Failed to hit breakpoint within 20s");
+
+                await proc.DetachAsync(TimeoutToken());
+            });
         }
 
         class TraceRedirector : Redirector {
@@ -903,7 +1209,7 @@ int main(int argc, char* argv[]) {
         }
 
         private string CompileCode(string hostCode) {
-            var buildDir = TestData.GetTempPath(randomSubPath: true);
+            var buildDir = TestData.GetTempPath();
 
             var pythonHome = "\"" + Version.PrefixPath.Replace("\\", "\\\\") + "\"";
             if (Version.Version >= PythonLanguageVersion.V30) {
@@ -943,11 +1249,11 @@ int main(int argc, char* argv[]) {
 
             using (var p = ProcessOutput.Run(
                 Path.Combine(vc.BinPath, "cl.exe"),
-                new[] { "/MD", "test.cpp" },
+                new[] { "/nologo", "/Zi", "/MD", "test.cpp" },
                 buildDir,
                 env,
                 false,
-                new TraceRedirector()
+                new TraceRedirector("cl.exe")
             )) {
                 Trace.TraceInformation(p.Arguments);
                 if (!p.Wait(TimeSpan.FromMilliseconds(DefaultWaitForExitTimeout))) {
@@ -975,21 +1281,15 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests30 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python30 ?? PythonPaths.Python30_x64;
-            }
-        }
-    }
-
-    [TestClass]
     public class AttachTests31 : AttachTests {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python31 ?? PythonPaths.Python31_x64;
             }
         }
+
+        [TestMethod, Priority(2)]
+        public override async Task AttachWithOutputRedirection() => await base.AttachWithOutputRedirection();
     }
 
     [TestClass]
@@ -1076,10 +1376,32 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests36_x64 : AttachTests35 {
+    public class AttachTests36_x64 : AttachTests36 {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python36_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class AttachTests37 : AttachTests {
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python37;
+            }
+        }
+
+        public override async Task AttachNewThread_PyThreadState_New() {
+            // PyEval_AcquireLock deprecated in 3.2
+        }
+    }
+
+    [TestClass]
+    public class AttachTests37_x64 : AttachTests37 {
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python37_x64;
             }
         }
     }
@@ -1091,6 +1413,9 @@ int main(int argc, char* argv[]) {
                 return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             }
         }
+
+        // 2.6 does not support packages as scripts (__main__.py)
+        protected override bool HasPtvsdCommandLine => false;
     }
 
     [TestClass]
@@ -1132,6 +1457,9 @@ int main(int argc, char* argv[]) {
         public override async Task AttachTimeout() { }
         public override async Task AttachWithOutputRedirection() { }
         public override async Task AttachAndStepWithBlankSysPrefix() { }
+
+        [TestMethod, Priority(2)]
+        public override async Task AttachPtvsdAndStopDebugging() => await base.AttachPtvsdAndStopDebugging();
 
         protected override string PtvsdInterpreterArguments {
             get { return "-X:Tracing -X:Frames"; }

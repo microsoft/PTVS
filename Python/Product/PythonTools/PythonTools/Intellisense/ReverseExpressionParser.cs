@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -47,17 +48,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var targetSpan = new Span(line.Start.Position, span.GetEndPoint(snapshot).Position - line.Start.Position);
 
-            if (!_buffer.Properties.TryGetProperty(typeof(PythonClassifier), out _classifier) || _classifier == null) {
+            _classifier = _buffer.GetPythonClassifier();
+            if (_classifier == null) {
                 throw new ArgumentException(Strings.ReverseExpressionParserFailedToGetClassifierFromBufferException);
             }
-        }
-
-        public SnapshotSpan? GetExpressionRange(bool forCompletion = true, int nesting = 0) {
-            int dummy;
-            SnapshotPoint? dummyPoint;
-            string lastKeywordArg;
-            bool isParameterName;
-            return GetExpressionRange(nesting, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName, forCompletion);
         }
 
         internal static IEnumerator<ClassificationSpan> ForwardClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {
@@ -180,6 +174,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="nesting">1 if we have an opening parenthesis for sig completion</param>
         /// <param name="paramIndex">The current parameter index.</param>
         /// <returns></returns>
+        [Obsolete("Use GetExpressionAtPoint instead")]
         public SnapshotSpan? GetExpressionRange(int nesting, out int paramIndex, out SnapshotPoint? sigStart, out string lastKeywordArg, out bool isParameterName, bool forCompletion = true) {
             SnapshotSpan? start = null;
             paramIndex = 0;

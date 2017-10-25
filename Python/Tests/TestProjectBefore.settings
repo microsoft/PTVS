@@ -3,6 +3,7 @@
     <BuildRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
     <OutputPathSuffix Condition="$(TestOutputPathSuffix) == ''">binaries\</OutputPathSuffix>
     <OutputPathSuffix Condition="$(TestOutputPathSuffix) != ''">$(TestOutputPathSuffix)\</OutputPathSuffix>
+    <LayoutOutputPathSuffix>Tests</LayoutOutputPathSuffix>
     <IntermediateOutputPathSuffix>test_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
@@ -11,5 +12,6 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <MicroBuild_FXCop>false</MicroBuild_FXCop>
     <MicroBuild_APIScan>false</MicroBuild_APIScan>
+    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
   </PropertyGroup>
 </Project>

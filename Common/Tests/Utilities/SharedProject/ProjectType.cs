@@ -16,8 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace TestUtilities.SharedProject {
@@ -56,10 +59,27 @@ namespace TestUtilities.SharedProject {
             Processors = postProcess ?? new IProjectProcessor[0];
         }
 
-        /// <summary>
-        /// Appends the code extension to a filename
-        /// </summary>
-        public string Code(string filename) {
+        public static IEnumerable<ProjectType> FromType(Type definition, IEnumerable<IProjectProcessor> processors) {
+            foreach (var member in definition.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
+                var mtype = (member as FieldInfo)?.FieldType ?? (member as PropertyInfo)?.PropertyType;
+                if (mtype == null || !mtype.IsAssignableFrom(typeof(ProjectTypeDefinition)) || member.GetCustomAttribute<ExportAttribute>() == null) {
+                    continue;
+                }
+
+                yield return new ProjectType(
+                    member.GetCustomAttribute<CodeExtensionAttribute>().CodeExtension,
+                    member.GetCustomAttribute<ProjectExtensionAttribute>().ProjectExtension,
+                    new Guid(member.GetCustomAttribute<ProjectTypeGuidAttribute>()?.ProjectTypeGuid ?? Guid.Empty.ToString()),
+                    member.GetCustomAttribute<SampleCodeAttribute>()?.SampleCode ?? "",
+                    (processors ?? Enumerable.Empty<IProjectProcessor>()).ToArray()
+                );
+            }
+        }
+
+    /// <summary>
+    /// Appends the code extension to a filename
+    /// </summary>
+    public string Code(string filename) {
             if (String.IsNullOrWhiteSpace(filename)) {
                 throw new ArgumentException("no filename suppied", "filename");
             }

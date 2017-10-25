@@ -42,7 +42,8 @@ namespace Microsoft.PythonTools.Interpreter {
                             Configuration,
                             new InterpreterFactoryCreationOptions {
                                 PackageManager = new PipPackageManager(),
-                                WatchFileSystem = true
+                                WatchFileSystem = true,
+                                NoDatabase = ExperimentalOptions.NoDatabaseFactory
                             }
                         );
                     }

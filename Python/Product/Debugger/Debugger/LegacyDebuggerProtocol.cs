@@ -16,12 +16,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Microsoft.PythonTools.Ipc.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.PythonTools.Debugger {
     // IMPORTANT:
     // Names of all fields, commands and events must match the names in
-    // visualstudio_py_debugger.py and attach_server.py
+    // ptvsd/debugger.py and ptvsd/attach_server.py
     internal static class LegacyDebuggerProtocol {
         public static readonly Dictionary<string, Type> RegisteredTypes = CollectCommands();
 
@@ -403,6 +406,10 @@ namespace Microsoft.PythonTools.Debugger {
 
             public int moduleId;
             public string moduleFileName;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public string moduleName;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore)]
+            public bool isStdLib;
         }
 
         public sealed class StepDoneEvent : Event {
@@ -444,7 +451,34 @@ namespace Microsoft.PythonTools.Debugger {
 
             public long threadId;
             public string output;
-            public bool isStdOut;
+            public OutputChannel channel;
+
+            // Legacy fallback in case channel is not specified. Should only be used for serialization.
+            [Obsolete]
+            public bool? isStdOut {
+                get {
+                    switch (channel) {
+                        case OutputChannel.stdout:
+                            return true;
+                        case OutputChannel.stderr:
+                            return false;
+                        default:
+                            return null;
+                    }
+                }
+                set {
+                    switch (value) {
+                        case true:
+                            channel = OutputChannel.stdout;
+                            break;
+                        case false:
+                            channel = OutputChannel.stderr;
+                            break;
+                        case null:
+                            throw new ArgumentNullException("value");
+                    }
+                }
+            }
         }
 
         public sealed class ExecutionResultEvent : Event {
@@ -532,6 +566,13 @@ namespace Microsoft.PythonTools.Debugger {
             Every = 1,
             WhenEqual = 2,
             WhenEqualOrGreater = 3,
+        }
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        public enum OutputChannel {
+            debug,
+            stdout,
+            stderr,
         }
 
         public sealed class PythonObject {

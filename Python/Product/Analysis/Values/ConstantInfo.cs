@@ -184,6 +184,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string ToString() {
             var valueStr = (_value == null || _value is IPythonConstant) ? "" : (" '" + _value.ToString() + "'");
             valueStr = valueStr.Replace("\r", "\\r").Replace("\n", "\\n");
+            for (char c = '\0'; c < ' '; ++c) {
+                valueStr = valueStr.Replace(c.ToString(), string.Format("\\x{0:X2}", (int)c));
+            }
             return "<" + Description + valueStr + ">"; // " at " + hex(id(self))
         }
 

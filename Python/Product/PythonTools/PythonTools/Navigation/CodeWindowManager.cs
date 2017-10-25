@@ -67,11 +67,11 @@ namespace Microsoft.PythonTools.Navigation {
         private async Task AddDropDownBarAsync(PythonToolsService service) {
             var prefs = await _pyService.GetLangPrefsAsync();
             if (prefs.NavigationBar) {
-                AddDropDownBar();
+                AddDropDownBar(false);
             }
         }
 
-        private int AddDropDownBar() {
+        private int AddDropDownBar(bool refresh) {
             var cpc = (IConnectionPointContainer)_window;
             if (cpc != null) {
                 IConnectionPoint cp;
@@ -90,14 +90,19 @@ namespace Microsoft.PythonTools.Navigation {
                 return VSConstants.E_FAIL;
             }
 
-            AnalysisEntry entry;
-            var entryService = _serviceProvider.GetEntryService();
-            if (entryService == null || !entryService.TryGetAnalysisEntry(wpfTextView, wpfTextView.TextBuffer, out entry)) {
-                return VSConstants.E_FAIL;
+            _client = new DropDownBarClient(_serviceProvider, wpfTextView);
+            var result = _client.Register((IVsDropdownBarManager)_window);
+ 
+            if (refresh) {
+                var entryService = _serviceProvider.GetEntryService();
+                if (entryService != null && entryService.TryGetAnalysisEntry(wpfTextView, out AnalysisEntry entry) && entry.IsAnalyzed) {
+                    _client.RefreshNavigationsFromAnalysisEntry(entry)
+                        .HandleAllExceptions(_serviceProvider, GetType())
+                        .DoNotWait();
+                }
             }
 
-            _client = new DropDownBarClient(_serviceProvider, wpfTextView, entry);
-            return _client.Register((IVsDropdownBarManager)_window);
+            return result;
         }
 
         private int RemoveDropDownBar() {
@@ -120,7 +125,7 @@ namespace Microsoft.PythonTools.Navigation {
             // NO-OP We use IVsCodeWindowEvents to track text view lifetime
             return VSConstants.S_OK;
         }
-            
+
         public int RemoveAdornments() {
             IVsTextView textView;
 
@@ -136,7 +141,7 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public int ToggleNavigationBar(bool fEnable) {
-            return fEnable ? AddDropDownBar() : RemoveDropDownBar();
+            return fEnable ? AddDropDownBar(true) : RemoveDropDownBar();
         }
 
         #endregion

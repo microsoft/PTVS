@@ -95,11 +95,11 @@ namespace TestUtilities {
                     _dispatcher.BeginInvokeShutdown(DispatcherPriority.Send);
                 }
             }
-            if (_thread != null && !_thread.Join(1000)) {
-                try {
+            try {
+                if (_thread != null && !_thread.Join(1000)) {
                     _thread.Abort();
-                } catch (ThreadStateException) {
                 }
+            } catch (ThreadStateException) {
             }
         }
 
@@ -110,6 +110,8 @@ namespace TestUtilities {
         public bool IsDisposed {
             get { return _isDisposed; }
         }
+
+        private CancellationToken DefaultCancellationToken => Debugger.IsAttached ? CancellationToken.None : new CancellationTokenSource(10000).Token;
 
         public void InvokeWithRetry(Action action, DispatcherPriority priority = DispatcherPriority.Normal) {
             for (int retries = 100; retries > 0; --retries) {
@@ -136,7 +138,7 @@ namespace TestUtilities {
 
 
         public void Invoke(Action action, DispatcherPriority priority = DispatcherPriority.Normal) {
-            _dispatcher.Invoke(action, priority);
+            _dispatcher.Invoke(action, priority, DefaultCancellationToken);
         }
 
         public void Invoke(Action action, DispatcherPriority priority, TimeSpan timeout) {
@@ -144,19 +146,19 @@ namespace TestUtilities {
         }
 
         public T Invoke<T>(Func<T> action, DispatcherPriority priority = DispatcherPriority.Normal) {
-            return _dispatcher.Invoke(action, priority);
+            return _dispatcher.Invoke(action, priority, DefaultCancellationToken);
         }
 
         public T Invoke<T>(Func<T> action, DispatcherPriority priority, TimeSpan timeout) {
             return _dispatcher.Invoke(action, priority, CancellationToken.None, timeout);
         }
 
-        public async Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal) {
-            await _dispatcher.InvokeAsync(action, priority);
+        public async Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal, CancellationToken? token = null) {
+            await _dispatcher.InvokeAsync(action, priority, token ?? DefaultCancellationToken);
         }
 
-        public async Task<T> InvokeAsync<T>(Func<T> action, DispatcherPriority priority = DispatcherPriority.Normal) {
-            return await _dispatcher.InvokeAsync(action, priority);
+        public async Task<T> InvokeAsync<T>(Func<T> action, DispatcherPriority priority = DispatcherPriority.Normal, CancellationToken? token = null) {
+            return await _dispatcher.InvokeAsync(action, priority, token ?? DefaultCancellationToken);
         }
 
         public bool CanExecute(RoutedCommand command, object target, object parameter) {
@@ -173,7 +175,7 @@ namespace TestUtilities {
             );
         }
 
-        public Task Execute(RoutedCommand command, object target, object parameter) {
+        public Task Execute(RoutedCommand command, object target, object parameter, CancellationToken? token = null) {
             target = WpfObjectProxy.UnwrapIfProxy(target);
 
             if (!(target is IInputElement)) {
@@ -181,7 +183,7 @@ namespace TestUtilities {
             }
 
             parameter = WpfObjectProxy.UnwrapIfProxy(parameter);
-            return InvokeAsync(() => command.Execute(parameter, target as IInputElement));
+            return InvokeAsync(() => command.Execute(parameter, target as IInputElement), token: token ?? DefaultCancellationToken);
         }
     }
 

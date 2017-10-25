@@ -168,7 +168,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 //Refresh the properties in the properties window
                 IVsUIShell shell = this.ProjectMgr.GetService(typeof(SVsUIShell)) as IVsUIShell;
                 Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
-                ErrorHandler.ThrowOnFailure(shell.RefreshPropertyBrowser(0));
+                shell.RefreshPropertyBrowser(0);
 
                 // Notify the listeners that the name of this folder is changed. This will
                 // also force a refresh of the SolutionExplorer's node.
@@ -246,6 +246,32 @@ namespace Microsoft.VisualStudioTools.Project {
                 return VSConstants.E_FAIL;
             }
             return VSConstants.S_OK;
+        }
+
+        private static string GetFullPathToParent(HierarchyNode parent) {
+            if (parent != null) {
+                try {
+                    return parent.FullPathToChildren;
+                } catch (InvalidOperationException) {
+                    return parent.Url;
+                }
+            }
+
+            throw new InvalidOperationException("Node is not parented correctly");
+        }
+
+        public override void Reparent(HierarchyNode newParent) {
+            var oldUrl = Url;
+            var newUrl = CommonUtils.GetAbsoluteFilePath(
+                GetFullPathToParent(newParent),
+                CommonUtils.GetFileOrDirectoryName(oldUrl)
+            );
+
+            if (!CommonUtils.IsSameDirectory(oldUrl, newUrl)) {
+                RenameFolder(newUrl);
+            }
+
+            base.Reparent(newParent);
         }
 
         public override int MenuCommandId {
@@ -440,63 +466,41 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         public virtual void RenameFolder(string newName) {
             // Do the rename (note that we only do the physical rename if the leaf name changed)
-            string newPath = Path.Combine(Parent.FullPathToChildren, newName);
+            Debug.Assert(Path.IsPathRooted(Parent.FullPathToChildren), "Invalid full path: " + Parent.FullPathToChildren);
+            string newPath = CommonUtils.GetAbsoluteDirectoryPath(Parent.FullPathToChildren, newName);
             string oldPath = Url;
-            if (!String.Equals(Path.GetFileName(Url), newName, StringComparison.Ordinal)) {
-                RenameDirectory(CommonUtils.GetAbsoluteDirectoryPath(ProjectMgr.ProjectHome, newPath));
+            if (!CommonUtils.IsSameDirectory(oldPath, newPath)) {
+                RenameDirectory(newPath);
             }
 
             bool wasExpanded = GetIsExpanded();
 
-            ReparentFolder(newPath);
+            var parentPath = CommonUtils.GetParent(newPath);
+            var newParent = ProjectMgr.CreateFolderNodes(parentPath);
+            if (newParent == null) {
+                Debug.Fail("Failed to create folder nodes");
+                throw new DirectoryNotFoundException(newPath);
+            }
 
             var oldTriggerFlag = ProjectMgr.EventTriggeringFlag;
             ProjectMgr.EventTriggeringFlag |= ProjectNode.EventTriggering.DoNotTriggerTrackerEvents;
             try {
-                // Let all children know of the new path
-                for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) {
-                    FolderNode node = child as FolderNode;
+                ProjectMgr.OnItemDeleted(this);
 
-                    if (node == null) {
-                        child.SetEditLabel(child.GetEditLabel());
-                    } else {
-                        node.RenameFolder(node.Caption);
-                    }
-                }
+                ItemNode.Rename(newPath);
+
+                ProjectMgr.OnItemAdded(newParent, this);
+
+                Reparent(newParent);
             } finally {
                 ProjectMgr.EventTriggeringFlag = oldTriggerFlag;
             }
 
-            ProjectMgr.Tracker.OnItemRenamed(oldPath, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
+            ProjectMgr.Tracker.OnItemRenamed(oldPath, Url, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
 
             // Some of the previous operation may have changed the selection so set it back to us
             ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
             ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
-        }
-
-        /// <summary>
-        /// Moves the HierarchyNode from the old path to be a child of the
-        /// newly specified node.
-        /// 
-        /// This is a low-level operation that only updates the hierarchy and our MSBuild
-        /// state.  The parents of the node must already be created. 
-        /// 
-        /// To do a general rename, call RenameFolder instead.
-        /// </summary>
-        internal void ReparentFolder(string newPath) {
-            // Reparent the folder
-            ProjectMgr.OnItemDeleted(this);
-            Parent.RemoveChild(this);
-            ProjectMgr.Site.GetUIThread().MustBeCalledFromUIThread();
-            ID = ProjectMgr.ItemIdMap.Add(this);
-
-            ItemNode.Rename(CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, newPath));
-            var parent = ProjectMgr.GetParentFolderForPath(newPath);
-            if (parent == null) {
-                Debug.Fail("ReparentFolder called without full path to parent being created");
-                throw new DirectoryNotFoundException(newPath);
-            }
-            parent.AddChild(this);
         }
 
         /// <summary>

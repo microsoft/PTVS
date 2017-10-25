@@ -23,14 +23,19 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonFunction : IPythonFunction, ILocatedMember {
-        private readonly List<AstPythonFunctionOverload> _overloads;
+        private readonly List<IPythonFunctionOverload> _overloads;
 
-        public AstPythonFunction(PythonAst ast, IPythonModule declModule, IPythonType declType, FunctionDefinition def, LocationInfo loc, string doc) {
-            DeclaringModule = declModule;
+        public AstPythonFunction(
+            PythonAst ast,
+            IPythonModule declModule,
+            IPythonType declType,
+            FunctionDefinition def,
+            LocationInfo loc
+        ) {
+            DeclaringModule = declModule ?? throw new ArgumentNullException(nameof(declModule));
             DeclaringType = declType;
 
             Name = def.Name;
-            Documentation = doc;
 
             foreach (var dec in (def.Decorators?.Decorators).MaybeEnumerate().OfType<NameExpression>()) {
                 if (dec.Name == "classmethod") {
@@ -40,31 +45,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
-            _overloads = new List<AstPythonFunctionOverload> {
-                new AstPythonFunctionOverload(Documentation, "", MakeParameters(ast, def), MakeReturns(def))
-            };
+            _overloads = new List<IPythonFunctionOverload>();
 
-            Locations = new[] { loc };
+            Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
         }
 
-        internal void AddOverload(PythonAst ast, FunctionDefinition def) {
-            _overloads.Add(new AstPythonFunctionOverload(def.Documentation, "", MakeParameters(ast, def), MakeReturns(def)));
+        internal void AddOverload(IPythonFunctionOverload overload) {
+            _overloads.Add(overload);
         }
 
-        private static IEnumerable<IParameterInfo> MakeParameters(PythonAst ast, FunctionDefinition def) {
+        internal static IEnumerable<IParameterInfo> MakeParameters(PythonAst ast, FunctionDefinition def) {
             foreach (var p in def.Parameters) {
                 yield return new AstPythonParameterInfo(ast, p);
             }
         }
 
-        private static IEnumerable<IPythonType> MakeReturns(FunctionDefinition def) {
-            yield break;
-        }
-
         public IPythonModule DeclaringModule {get;}
         public IPythonType DeclaringType {get;}
         public string Name { get; }
-        public string Documentation {get;}
+        public string Documentation => _overloads.FirstOrDefault()?.Documentation;
         public bool IsBuiltin => true;
 
         public bool IsClassMethod { get; }

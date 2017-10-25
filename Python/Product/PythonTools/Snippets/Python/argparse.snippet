@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>argparse block</Title>
+      <Shortcut>argparse</Shortcut>
+      <Description>Code snippet for a function to parse arguments using argparse</Description>
+      <Author>Microsoft Corporation</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Imports>
+        <Import>
+          <Namespace>argparse</Namespace>
+        </Import>
+        <Import>
+          <Namespace>sys</Namespace>
+        </Import>
+      </Imports>
+      <Declarations>
+        <Literal>
+          <ID>description</ID>
+          <ToolTip>Short description of your script</ToolTip>
+          <Default>My Python script.</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="Python"><![CDATA[def parse_args(argv=sys.argv[1:]):
+    parser = argparse.ArgumentParser(description="$description$")
+
+    # Use the arg_* snippets to add arguments
+    $end$
+
+    return parser.parse_args(argv)
+]]></Code>
+    </Snippet>  
+  </CodeSnippet>
+</CodeSnippets>

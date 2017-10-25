@@ -19,10 +19,16 @@ using System.Text;
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ComprehensionFor : ComprehensionIterator {
         private readonly Expression _lhs, _list;
+        private readonly bool _isAsync;
 
         public ComprehensionFor(Expression lhs, Expression list) {
             _lhs = lhs;
             _list = list;
+        }
+
+        public ComprehensionFor(Expression lhs, Expression list, bool isAsync)
+            : this(lhs, list) {
+            _isAsync = isAsync;
         }
 
         public Expression Left {
@@ -32,6 +38,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public Expression List {
             get { return _list; }
         }
+
+        public bool IsAsync => _isAsync;
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (_lhs != null) {
@@ -45,7 +54,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            if (_isAsync) {
+                res.Append(this.GetThirdWhiteSpace(ast));
+                res.Append("async");
+            }
+            res.Append(this.GetPreceedingWhiteSpace(ast));
             res.Append("for");
             _lhs.AppendCodeString(res, ast, format);
             if (!this.IsIncompleteNode(ast)) {

@@ -901,6 +901,36 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to These tools are an installable component for your version of Visual Studio that allow you to create projects from Cookiecutter templates..
+        /// </summary>
+        public static string CookiecutterComponentInstallInstructions {
+            get {
+                return ResourceManager.GetString("CookiecutterComponentInstallInstructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This project requires Cookiecutter template support for Visual Studio..
+        /// </summary>
+        public static string CookiecutterComponentRequired {
+            get {
+                return ResourceManager.GetString("CookiecutterComponentRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Cookiecutter template at &apos;{0}&apos; was not found.
+        ///
+        ///Please check your internet connection.
+        ///.
+        /// </summary>
+        public static string CookiecutterWizardUnresolvedTemplate {
+            get {
+                return ResourceManager.GetString("CookiecutterWizardUnresolvedTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to your current environment.
         /// </summary>
         public static string CurrentInterpreterDescription {
@@ -2450,6 +2480,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to launch debugger.
+        /// </summary>
+        public static string FailedToLaunchDebugger {
+            get {
+                return ResourceManager.GetString("FailedToLaunchDebugger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not get resource {1}.{2} from {0}.
         ///
         ///{3}.
@@ -2674,7 +2713,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*.
+        ///   Looks up a localized string similar to coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*.
         /// </summary>
         public static string ImportCoverageCommandFileFilter {
             get {
@@ -3345,7 +3384,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment..
+        ///   Looks up a localized string similar to No Python environments are configured. Please install or configure an environment and try again. See https://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment..
         /// </summary>
         public static string NoInterpretersAvailable {
             get {
@@ -4472,11 +4511,11 @@ namespace Microsoft.PythonTools {
         ///#
         ///# Currently, supported options are:
         ///#   standard
-        ///#   visualstudio_ipython_repl.IPythonBackend
-        ///#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab
+        ///#   ptvsd.repl.ipython.IPythonBackend
+        ///#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab
         ///#
         ///
-        ///visualstudio_ipython_repl.IPythonBackend.
+        ///ptvsd.repl.ipython.IPythonBackend.
         /// </summary>
         public static string ReplScriptPathIPythonModeTxtContents {
             get {
@@ -4975,6 +5014,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test could not be run. Check the Tests Output Pane for details..
+        /// </summary>
+        public static string Test_NotRun {
+            get {
+                return ResourceManager.GetString("Test_NotRun", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to determine interpreter to use for {0}.
         /// </summary>
         public static string Test_UnableToDetermineInterpreter {
@@ -5322,6 +5370,15 @@ namespace Microsoft.PythonTools {
         public static string VirtualEnvCreationSucceeded {
             get {
                 return ResourceManager.GetString("VirtualEnvCreationSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your project must be saved before adding a virtual environment..
+        /// </summary>
+        public static string VirtualEnvSaveDeferredSolution {
+            get {
+                return ResourceManager.GetString("VirtualEnvSaveDeferredSolution", resourceCulture);
             }
         }
         

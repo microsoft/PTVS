@@ -29,7 +29,6 @@ namespace FastCgiTest {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         public override PythonVersion PythonVersion {

@@ -52,7 +52,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int EnableModeless(int fEnable) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int FindToolWindow(uint grfFTW, ref Guid rguidPersistenceSlot, out IVsWindowFrame ppWindowFrame) {
@@ -78,7 +78,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int GetDialogOwnerHwnd(out IntPtr phwnd) {
-            throw new NotImplementedException();
+            phwnd = IntPtr.Zero;
+            return VSConstants.S_OK;
         }
 
         public int GetDirectoryViaBrowseDlg(VSBROWSEINFOW[] pBrowse) {
@@ -251,6 +252,19 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 Thread.Sleep(_waitTimeout);
             }
             Assert.Fail("Failed to get message box");
+        }
+
+        internal void MaybeCheckMessageBox(MessageBoxButton button, string[] text) {
+            for (int i = 0; i < _waitLoops; i++) {
+                MockMessageBox msgBox;
+                if ((msgBox = LastDialog<MockMessageBox>()) != null) {
+                    if (text.All(msgBox.Text.Contains)) {
+                        msgBox.Close((int)button);
+                    }
+                    return;
+                }
+                Thread.Sleep(_waitTimeout);
+            }
         }
 
         private T LastDialog<T>() where T : MockDialog {

@@ -16,6 +16,7 @@
 
 using System;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools.Project;
 
@@ -52,19 +53,32 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            string errorMessage = null;
             try {
                 return base.DebugLaunch(flags);
             } catch (MissingInterpreterException ex) {
                 if (_project.ActiveInterpreter == _project.InterpreterRegistry.NoInterpretersValue) {
                     PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
                 } else {
-                    MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    errorMessage = ex.Message;
                 }
-                return VSConstants.S_OK;
             } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
-                return VSConstants.S_OK;
+            } catch (ArgumentException ex) {
+                errorMessage = ex.Message;
             }
+
+            if (!string.IsNullOrEmpty(errorMessage)) {
+                var td = new TaskDialog(ProjectMgr.Site) {
+                    Title = Strings.ProductTitle,
+                    MainInstruction = Strings.FailedToLaunchDebugger,
+                    Content = errorMessage
+                };
+                td.Buttons.Add(TaskDialogButton.Close);
+                td.ShowModal();
+            }
+
+            return VSConstants.S_OK;
         }
     }
 }

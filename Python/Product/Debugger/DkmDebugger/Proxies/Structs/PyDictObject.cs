@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
     internal abstract class PyDictObject : PyObject {
@@ -57,6 +58,8 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
     }
 
+    [StructProxy(MaxVersion = PythonLanguageVersion.V27, StructName = "PyDictEntry")]
+    [StructProxy(MinVersion = PythonLanguageVersion.V33)]
     internal class PyDictKeyEntry : StructProxy {
         private class Fields {
             public StructField<PointerProxy<PyObject>> me_key;

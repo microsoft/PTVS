@@ -29,30 +29,32 @@ namespace TestUtilities {
     public class PythonPaths {
         private static readonly List<PythonInterpreterInformation> _foundInRegistry = PythonRegistrySearch
             .PerformDefaultSearch()
-            .Where(pii => pii.Configuration.Id.Contains("PythonCore|"))
+            .Where(pii => pii.Configuration.Id.Contains("PythonCore|") || pii.Configuration.Id.Contains("ContinuumAnalytics|"))
             .ToList();
 
-        public static readonly PythonVersion Python25 = GetCPythonVersion(PythonLanguageVersion.V25, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python26 = GetCPythonVersion(PythonLanguageVersion.V26, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python27 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x86);
-        public static readonly PythonVersion Python30 = GetCPythonVersion(PythonLanguageVersion.V30, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python31 = GetCPythonVersion(PythonLanguageVersion.V31, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python32 = GetCPythonVersion(PythonLanguageVersion.V32, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python33 = GetCPythonVersion(PythonLanguageVersion.V33, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python34 = GetCPythonVersion(PythonLanguageVersion.V34, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python35 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python36 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python37 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x86);
         public static readonly PythonVersion IronPython27 = GetIronPythonVersion(false);
-        public static readonly PythonVersion Python25_x64 = GetCPythonVersion(PythonLanguageVersion.V25, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python26_x64 = GetCPythonVersion(PythonLanguageVersion.V26, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
-        public static readonly PythonVersion Python30_x64 = GetCPythonVersion(PythonLanguageVersion.V30, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python31_x64 = GetCPythonVersion(PythonLanguageVersion.V31, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python32_x64 = GetCPythonVersion(PythonLanguageVersion.V32, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python33_x64 = GetCPythonVersion(PythonLanguageVersion.V33, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python34_x64 = GetCPythonVersion(PythonLanguageVersion.V34, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python37_x64 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Anaconda27 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Anaconda27_x64 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Anaconda36_x64 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
 
         public static readonly PythonVersion Jython27 = GetJythonVersion(PythonLanguageVersion.V27);
@@ -99,6 +101,19 @@ namespace TestUtilities {
             if (File.Exists(ver.InterpreterPath)) {
                 return ver;
             }
+            return null;
+        }
+
+        private static PythonVersion GetAnacondaVersion(PythonLanguageVersion version, InterpreterArchitecture arch) {
+            var res = _foundInRegistry.FirstOrDefault(ii =>
+                ii.Configuration.Id.StartsWith("Global|ContinuumAnalytics|") &&
+                ii.Configuration.Architecture == arch &&
+                ii.Configuration.Version == version.ToVersion()
+            );
+            if (res != null) {
+                return new PythonVersion(res.Configuration, cPython: true);
+            }
+
             return null;
         }
 
@@ -183,27 +198,25 @@ namespace TestUtilities {
 
         public static IEnumerable<PythonVersion> Versions {
             get {
-                if (Python25 != null) yield return Python25;
                 if (Python26 != null) yield return Python26;
                 if (Python27 != null) yield return Python27;
-                if (Python30 != null) yield return Python30;
                 if (Python31 != null) yield return Python31;
                 if (Python32 != null) yield return Python32;
                 if (Python33 != null) yield return Python33;
                 if (Python34 != null) yield return Python34;
                 if (Python35 != null) yield return Python35;
                 if (Python36 != null) yield return Python36;
+                if (Python37 != null) yield return Python37;
                 if (IronPython27 != null) yield return IronPython27;
-                if (Python25_x64 != null) yield return Python25_x64;
                 if (Python26_x64 != null) yield return Python26_x64;
                 if (Python27_x64 != null) yield return Python27_x64;
-                if (Python30_x64 != null) yield return Python30_x64;
                 if (Python31_x64 != null) yield return Python31_x64;
                 if (Python32_x64 != null) yield return Python32_x64;
                 if (Python33_x64 != null) yield return Python33_x64;
                 if (Python34_x64 != null) yield return Python34_x64;
                 if (Python35_x64 != null) yield return Python35_x64;
                 if (Python36_x64 != null) yield return Python36_x64;
+                if (Python37_x64 != null) yield return Python37_x64;
                 if (IronPython27_x64 != null) yield return IronPython27_x64;
                 if (Jython27 != null) yield return Jython27;
             }
@@ -219,6 +232,22 @@ namespace TestUtilities {
             Configuration = config;
             IsCPython = cPython;
             IsIronPython = ironPython;
+        }
+
+        public PythonVersion(string version) {
+            var v = System.Version.Parse(version).ToLanguageVersion();
+            var candididates = PythonPaths.Versions.Where(pv => pv.IsCPython && pv.Version == v).ToArray();
+            PythonVersion selected;
+            if (candididates.Length > 1) {
+                selected = candididates.FirstOrDefault(c => c.Isx64) ?? candididates.First();
+            } else {
+                selected = candididates.FirstOrDefault();
+            }
+            selected.AssertInstalled();
+
+            Configuration = selected.Configuration;
+            IsCPython = selected.IsCPython;
+            IsIronPython = selected.IsIronPython;
         }
 
         public override string ToString() => Configuration.Description;

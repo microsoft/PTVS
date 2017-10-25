@@ -68,17 +68,6 @@ namespace Microsoft.CookiecutterTools.View {
             Process.Start(url)?.Dispose();
         }
 
-        private void OpenInExplorer_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var folderPath = (string)e.Parameter;
-            e.CanExecute = Directory.Exists(folderPath);
-            e.Handled = true;
-        }
-
-        private void OpenInExplorer_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var folderPath = (string)e.Parameter;
-            ViewModel.OpenFolderInExplorer(folderPath);
-        }
-
         private void LoadMore_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = true;
             e.Handled = true;

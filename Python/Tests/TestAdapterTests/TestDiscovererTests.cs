@@ -39,7 +39,6 @@ namespace TestAdapterTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>C:\Visual Studio 2015\Projects\PythonApplication107\TestResults</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases><Project path=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\PythonApplication107.pyproj"" home=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" interpreter=""C:\Python35-32\python.exe"" pathEnv=""PYTHONPATH""><Environment /><SearchPaths><Search value=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" /></SearchPaths>
@@ -47,7 +46,7 @@ namespace TestAdapterTests {
 <Test className=""Test_test1"" file=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py"" line=""21"" column=""9"" method=""test_B"" />
 <Test className=""Test_test2"" file=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py"" line=""48"" column=""9"" method=""test_C"" /></Project></TestCases></Python></RunSettings>";
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void TestDiscover() {
             var ctx = new MockDiscoveryContext(new MockRunSettings(_runSettings));
@@ -95,11 +94,11 @@ namespace TestAdapterTests {
 
         private static IEnumerable<TestCaseInfo> GetTestCasesFromAst(string code, PythonAnalyzer analyzer) {
             var codeStream = new MemoryStream(Encoding.UTF8.GetBytes(code));
-            var m = AstPythonModule.FromStream(analyzer.Interpreter, codeStream, "<string>", analyzer.LanguageVersion);
+            var m = AstPythonModule.FromStream(analyzer.Interpreter, codeStream, "<string>", analyzer.LanguageVersion, "__main__");
             return TestAnalyzer.GetTestCasesFromAst(m, null);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void DecoratedTests() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest
@@ -113,23 +112,33 @@ class MyTest(unittest.TestCase):
     @decorator
     def testAbc(self):
         pass
+
+    @fake_decorator
+    def testDef(self):
+        pass
 ";
                 var entry = AddModule(analyzer, "Fob", code);
 
                 entry.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry).Single();
-                Assert.AreEqual("testAbc", test.MethodName);
-                Assert.AreEqual(10, test.StartLine);
+                var tests = TestAnalyzer.GetTestCasesFromAnalysis(entry)
+                    .Select(t => $"{t.MethodName}:{t.StartLine}");
+                AssertUtil.ArrayEquals(
+                    new[] { "testAbc:10", "testDef:14" },
+                    tests.ToArray()
+                );
 
-                test = GetTestCasesFromAst(code, analyzer).Single();
-                Assert.AreEqual("testAbc", test.MethodName);
-                Assert.AreEqual(10, test.StartLine);
+                tests = GetTestCasesFromAst(code, analyzer)
+                    .Select(t => $"{t.MethodName}:{t.StartLine}");
+                AssertUtil.ArrayEquals(
+                    new[] { "testAbc:9", "testDef:13" },
+                    tests.ToArray()
+                );
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void TestCaseSubclasses() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var entry1 = AddModule(analyzer, "Pkg.SubPkg", @"import unittest
@@ -177,7 +186,7 @@ class MyTest3(TestBase):
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCaseRunTests() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest
@@ -204,7 +213,7 @@ class TestBase(unittest.TestCase):
         /// <summary>
         /// If we have test* and runTest we shouldn't discover runTest
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void TestCaseRunTestsWithTest() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest

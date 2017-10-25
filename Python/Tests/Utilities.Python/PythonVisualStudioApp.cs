@@ -44,14 +44,14 @@ using TestUtilities.Python;
 using Process = System.Diagnostics.Process;
 
 namespace TestUtilities.UI.Python {
-    class PythonVisualStudioApp : VisualStudioApp {
+    public class PythonVisualStudioApp : VisualStudioApp {
         private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
         public readonly PythonToolsService PythonToolsService;
-        
-        public PythonVisualStudioApp(DTE dte = null)
-            : base(dte) {
+
+        public PythonVisualStudioApp(IServiceProvider site)
+            : base(site) {
 
             var shell = (IVsShell)ServiceProvider.GetService(typeof(SVsShell));
             var pkg = new Guid("6dbd7c1e-1f1b-496d-ac7c-c55dae66c783");
@@ -127,7 +127,7 @@ namespace TestUtilities.UI.Python {
         public const string FlaskWebProjectTemplate = "WebProjectFlask";
         public const string DjangoWebProjectTemplate = "DjangoProject";
         public const string WorkerRoleProjectTemplate = "WorkerRoleProject";
-        
+
         public const string EmptyFileTemplate = "EmptyPyFile";
         public const string WebRoleSupportTemplate = "AzureCSWebRole";
         public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole";
@@ -204,10 +204,12 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public ReplWindowProxy ExecuteInInteractive(Project project, PythonReplWindowProxySettings settings = null) {
+        public ReplWindowProxy ExecuteInInteractive(Project project, ReplWindowProxySettings settings = null) {
+            // Prepare makes sure that IPython mode is disabled, and that the REPL is reset and cleared
+            var window = ReplWindowProxy.Prepare(this, settings, project.Name);
             OpenSolutionExplorer().SelectProject(project);
             ExecuteCommand("Python.ExecuteInInteractive");
-            return GetInteractiveWindow(project);
+            return window;
         }
 
         public void SendToInteractive() {
@@ -215,7 +217,7 @@ namespace TestUtilities.UI.Python {
         }
 
 
-        public ReplWindowProxy WaitForInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+        public ReplWindowProxy WaitForInteractiveWindow(string title, ReplWindowProxySettings settings = null) {
             var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
             IVsInteractiveWindow window = null;
             for (int retries = 20; retries > 0 && window == null; --retries) {
@@ -230,14 +232,14 @@ namespace TestUtilities.UI.Python {
                 );
                 return null;
             }
-            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new ReplWindowProxySettings());
         }
 
-        public ReplWindowProxy GetInteractiveWindow(Project project, PythonReplWindowProxySettings settings = null) {
+        public ReplWindowProxy GetInteractiveWindow(Project project, ReplWindowProxySettings settings = null) {
             return GetInteractiveWindow(project.Name + " Interactive", settings);
         }
 
-        public ReplWindowProxy GetInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+        public ReplWindowProxy GetInteractiveWindow(string title, ReplWindowProxySettings settings = null) {
             var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
             var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
             if (window == null) {
@@ -248,7 +250,7 @@ namespace TestUtilities.UI.Python {
                 );
                 return null;
             }
-            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new ReplWindowProxySettings());
         }
 
         internal Document WaitForDocument(string docName) {
@@ -275,6 +277,19 @@ namespace TestUtilities.UI.Python {
             );
         }
 
+        /// <summary>
+        /// Selects the given interpreter as the default.
+        /// </summary>
+        /// <remarks>
+        /// This method should always be called as a using block.
+        /// </remarks>
+        public DefaultInterpreterSetter SelectDefaultInterpreter(InterpreterConfiguration python) {
+            return new DefaultInterpreterSetter(
+                InterpreterService.FindInterpreter(python.Id),
+                ServiceProvider
+            );
+        }
+
         public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion interp, string installPackages) {
             interp.AssertInstalled();
             if (interp.IsIronPython && !string.IsNullOrEmpty(installPackages)) {
@@ -283,7 +298,7 @@ namespace TestUtilities.UI.Python {
 
             var interpreterService = InterpreterService;
             var factory = interpreterService.FindInterpreter(interp.Id);
-            var defaultInterpreterSetter = new DefaultInterpreterSetter(factory);
+            var defaultInterpreterSetter = new DefaultInterpreterSetter(factory, ServiceProvider);
 
             try {
                 if (!string.IsNullOrEmpty(installPackages)) {
@@ -391,7 +406,7 @@ namespace TestUtilities.UI.Python {
                 new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
                 var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                envName = string.Format("{0} ({1})", Path.GetFileName(envPath), baseInterp);
+                envName = string.Format("{0} ({1})", PathUtils.GetFileOrDirectoryName(envPath), baseInterp);
 
                 Console.WriteLine("Expecting environment named: {0}", envName);
 

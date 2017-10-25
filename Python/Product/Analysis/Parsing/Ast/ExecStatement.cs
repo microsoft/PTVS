@@ -14,39 +14,45 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Linq;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     
     public class ExecStatement : Statement {
         private readonly Expression _code, _locals, _globals;
+        private readonly TupleExpression _codeTuple;
 
-        public ExecStatement(Expression code, Expression locals, Expression globals) {
-            _code = code;
+        public ExecStatement(Expression code, Expression locals, Expression globals, TupleExpression codeTuple) {
+            _code = (code != codeTuple) ? code : null;
             _locals = locals;
             _globals = globals;
+            _codeTuple = codeTuple;
         }
 
         public Expression Code {
-            get { return _code; }
+            get { return _code ?? _codeTuple?.Items.ElementAtOrDefault(0); }
         }
 
         public Expression Locals {
-            get { return _locals; }
+            get { return _locals ?? _codeTuple?.Items.ElementAtOrDefault(2); }
         }
 
         public Expression Globals {
-            get { return _globals; }
+            get { return _globals ?? _codeTuple?.Items.ElementAtOrDefault(1); }
         }
 
         public bool NeedsLocalsDictionary() {
-            return _globals == null && _locals == null;
+            return Globals == null && Locals == null;
         }
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (_code != null) {
                     _code.Walk(walker);
+                }
+                if (_codeTuple != null) {
+                    _codeTuple.Walk(walker);
                 }
                 if (_locals != null) {
                     _locals.Walk(walker);
@@ -59,9 +65,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+            format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
             res.Append("exec");
-            _code.AppendCodeString(res, ast, format);
+
+            if (_codeTuple != null) {
+                _codeTuple.AppendCodeString(res, ast, format);
+            } else {
+                _code.AppendCodeString(res, ast, format);
+            }
+
             if (_globals != null) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append("in");

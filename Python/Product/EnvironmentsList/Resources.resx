@@ -429,4 +429,18 @@
   <data name="ToolWindow_ListOfEnvironmentsName" xml:space="preserve">
     <value>Python environments</value>
   </data>
+  <data name="NoDBExtensionDisplayName" xml:space="preserve">
+    <value>IntelliSense [database disabled]</value>
+  </data>
+  <data name="NoDBExtensionHelpContent" xml:space="preserve">
+    <value>IntelliSense databases will be removed in a future update and have been disabled to help with testing. See the link below to reactivate the database.</value>
+  </data>
+  <data name="NoDBExtensionMessage" xml:space="preserve">
+    <value>In a future update to Visual Studio, IntelliSense databases for Python code will be removed. We are currently testing our replacement, and have enabled it in Preview.
+
+Click the link below and restart Visual Studio to restore the old functionality. It can be enabled again through Tools, Options, Python.</value>
+  </data>
+  <data name="NoDBExtensionReactivate" xml:space="preserve">
+    <value>Reactivate IntelliSense databases in my next session</value>
+  </data>
 </root>

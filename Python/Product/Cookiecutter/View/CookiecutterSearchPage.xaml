@@ -32,9 +32,6 @@
         <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CanExecute="OpenInBrowser_CanExecute"
                     Executed="OpenInBrowser_Executed" />
-        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
-                    CanExecute="OpenInExplorer_CanExecute"
-                    Executed="OpenInExplorer_Executed" />
     </Page.CommandBindings>
     <Page.Resources>
         <ResourceDictionary>
@@ -84,33 +81,6 @@
             <!-- Description -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
-        <!-- Created successfully -->
-        <StackPanel Grid.Row="0" Orientation="Vertical" Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
-                        AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_FilesCreatedSuccessfully}">
-                <imaging:CrispImage Width="16" Height="16"
-                                    Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}" />
-                <TextBlock Margin="4 0 0 0"
-                           TextWrapping="Wrap"
-                           Text="{x:Static cct:Strings.SearchPage_FilesCreatedSuccessfully}"/>
-            </StackPanel>
-            <Button Style="{StaticResource NavigationButton}"
-                    Margin="24 0 0 0"
-                    Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
-                    CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
-                    HorizontalAlignment="Left">
-                <Button.Content>
-                    <StackPanel Orientation="Horizontal">
-                        <imaging:CrispImage Width="16" Height="16"
-                                            Moniker="{x:Static imagecatalog:KnownMonikers.OpenFolder}"
-                                            AutomationProperties.HelpText="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
-                        <Label Content="{x:Static cct:Strings.SearchPage_OpenInSolutionExplorer}"/>
-                    </StackPanel>
-                </Button.Content>
-            </Button>
-        </StackPanel>
 
         <!-- Search -->
         <StackPanel Grid.Row="1" Orientation="Vertical">
@@ -168,12 +138,12 @@
                                             Margin="0 0 0 2"
                                             Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplateWarning}">
                         </imaging:CrispImage>
-                        <ccv:LiveTextBlock Margin="3 3"
+                        <TextBlock Margin="3 3"
                                    Text="{Binding Path=ErrorDescription}">
-                            <ccv:LiveTextBlock.ToolTip>
+                            <TextBlock.ToolTip>
                                 <TextBlock TextWrapping="Wrap" Text="{Binding Path=ErrorDetails}"/>
-                            </ccv:LiveTextBlock.ToolTip>
-                        </ccv:LiveTextBlock>
+                            </TextBlock.ToolTip>
+                        </TextBlock>
                     </StackPanel>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vm:LoadingViewModel}">
@@ -239,11 +209,33 @@
                     <imaging:CrispImage Width="16" Height="16"
                                         Moniker="{Binding StatusImage}"
                                         AutomationProperties.HelpText="{Binding StatusMessage}"
-                                        Visibility="{Binding StatusImageVisibility}"/>
-                    <ccv:LiveTextBlock Margin="4 0 0 0"
-                                       Text="{Binding StatusMessage}"
-                                       TextWrapping="Wrap"
-                                       ToolTip="{Binding StatusHelp}" />
+                                        Visibility="{Binding StatusImageVisibility}" />
+                    <imaging:CrispImage Width="16" Height="16"
+                                        Moniker="{Binding StatusImage}"
+                                        AutomationProperties.HelpText="{Binding StatusMessage}"
+                                        Visibility="{Binding SpinningStatusImageVisibility}"
+                                        RenderTransformOrigin="0.5, 0.5">
+                        <imaging:CrispImage.RenderTransform>
+                            <RotateTransform x:Name="Rotation" />
+                        </imaging:CrispImage.RenderTransform>
+                        <imaging:CrispImage.Triggers>
+                            <EventTrigger RoutedEvent="Image.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Rotation"
+                                                         Storyboard.TargetProperty="Angle"
+                                                         By="360.0"
+                                                         Duration="0:0:2.0"
+                                                         RepeatBehavior="Forever" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </imaging:CrispImage.Triggers>
+                    </imaging:CrispImage>
+                    <TextBlock Margin="4 0 0 0"
+                               Text="{Binding StatusMessage}"
+                               TextWrapping="Wrap"
+                               ToolTip="{Binding StatusHelp}" />
                 </StackPanel>
                 <ProgressBar Margin="4" IsIndeterminate="True"
                              Visibility="{Binding StatusProgressVisibility}"/>

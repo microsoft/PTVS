@@ -78,6 +78,7 @@
     <Compile Include="Intellisense\ExtractedMethodCreator.cs" />
     <Compile Include="Intellisense\ExtractMethodResult.cs" />
     <Compile Include="Intellisense\FlowChecker.cs" />
+    <Compile Include="Intellisense\ImportedModuleNameWalker.cs" />
     <Compile Include="Intellisense\ImportRemover.cs" />
     <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
     <Compile Include="Intellisense\OutliningWalker.cs" />

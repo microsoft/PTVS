@@ -23,6 +23,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         public const int RPC_E_SERVERFAULT = unchecked((int)0x80010105);
         public const int E_PROGRAM_DESTROY_PENDING = unchecked((int)0x80040B01);
+        public const int E_PORTSUPPLIER_NO_PORT = unchecked((int)0x80040080); // Cannot find port. Check the remote machine name.
+
         static private Guid _guidFilterRegisters = new Guid("223ae797-bd09-4f28-8241-2763bdc5f713");
         static public Guid guidFilterRegisters {
             get { return _guidFilterRegisters; }

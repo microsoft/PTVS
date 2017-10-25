@@ -15,23 +15,45 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     public sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
+        private readonly IPythonInterpreter _interpreter;
         private readonly Dictionary<object, object> _properties;
         private readonly List<string> _childModules;
+        private bool _foundChildModules;
         private readonly Dictionary<string, IMember> _members;
 
-        public static IPythonModule FromFile(IPythonInterpreter interpreter, string sourceFile, PythonLanguageVersion langVersion) {
+        public static IPythonModule FromFile(
+            IPythonInterpreter interpreter,
+            string sourceFile,
+            PythonLanguageVersion langVersion
+        ) => FromFile(interpreter, sourceFile, langVersion, null);
+
+        public static IPythonModule FromFile(
+            IPythonInterpreter interpreter,
+            string sourceFile,
+            PythonLanguageVersion langVersion,
+            string moduleFullName
+        ) {
             using (var stream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
-                return FromStream(interpreter, stream, sourceFile, langVersion);
+                return FromStream(interpreter, stream, sourceFile, langVersion, moduleFullName);
             }
+        }
+
+        // Avoid hitting the filesystem, but exclude non-importable
+        // paths. Ideally, we'd stop at the first path that's a known
+        // search path, except we don't know search paths here.
+        private static bool IsPackageCheck(string path) {
+            return ModulePath.IsImportable(PathUtils.GetFileOrDirectoryName(path));
         }
 
         public static IPythonModule FromStream(
@@ -39,13 +61,26 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Stream sourceFile,
             string fileName,
             PythonLanguageVersion langVersion
+        ) => FromStream(interpreter, sourceFile, fileName, langVersion, null);
+
+        public static IPythonModule FromStream(
+            IPythonInterpreter interpreter,
+            Stream sourceFile,
+            string fileName,
+            PythonLanguageVersion langVersion,
+            string moduleFullName
         ) {
             PythonAst ast;
             using (var parser = Parser.CreateParser(sourceFile, langVersion)) {
                 ast = parser.ParseFile();
             }
 
-            return new AstPythonModule(interpreter, ast, fileName);
+            return new AstPythonModule(
+                moduleFullName ?? ModulePath.FromFullPath(fileName, isPackage: IsPackageCheck).FullName,
+                interpreter,
+                ast,
+                fileName
+            );
         }
 
         internal AstPythonModule() {
@@ -54,20 +89,27 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             FilePath = string.Empty;
             _properties = new Dictionary<object, object>();
             _childModules = new List<string>();
+            _foundChildModules = true;
             _members = new Dictionary<string, IMember>();
         }
 
-        internal AstPythonModule(IPythonInterpreter interpreter, PythonAst ast, string filePath) {
-            Name = ast.Name;
+        internal AstPythonModule(string moduleName, IPythonInterpreter interpreter, PythonAst ast, string filePath) {
+            Name = moduleName;
             Documentation = ast.Documentation;
             FilePath = filePath;
             Locations = new[] { new LocationInfo(filePath, 1, 1) };
+            _interpreter = interpreter;
 
             _properties = new Dictionary<object, object>();
             _childModules = new List<string>();
             _members = new Dictionary<string, IMember>();
 
-            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members);
+            // Do not allow children of named modules
+            if (!ModulePath.IsInitPyFile(FilePath)) {
+                _foundChildModules = true;
+            }
+
+            var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true, true);
             ast.Walk(walker);
         }
 
@@ -92,8 +134,35 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public bool IsAnalyzed => true;
         public void Analyze(CancellationToken cancel) { }
 
+        private static IEnumerable<string> GetChildModules(string filePath, string prefix, AstPythonInterpreter interpreter) {
+            if (interpreter == null || string.IsNullOrEmpty(filePath)) {
+                yield break;
+            }
+            var searchPath = PathUtils.GetParent(filePath);
+            if (!Directory.Exists(searchPath)) {
+                yield break;
+            }
+
+            foreach (var n in ModulePath.GetModulesInPath(
+                searchPath,
+                recurse: false,
+                includePackages: true
+            ).Select(mp => mp.ModuleName).Where(n => !string.IsNullOrEmpty(n))) {
+                yield return n;
+            }
+        }
+
         public IEnumerable<string> GetChildrenModules() {
             lock (_childModules) {
+                if (!_foundChildModules) {
+                    // We've already checked whether this module may have children
+                    // so don't worry about checking again here.
+                    _foundChildModules = true;
+                    foreach (var m in GetChildModules(FilePath, Name, _interpreter as AstPythonInterpreter)) {
+                        _members[m] = new AstNestedPythonModule(_interpreter, m, new[] { Name + "." + m });
+                        _childModules.Add(m);
+                    }
+                }
                 return _childModules.ToArray();
             }
         }
@@ -102,6 +171,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IMember member = null;
             lock (_members) {
                 _members.TryGetValue(name, out member);
+            }
+            if (member is ILazyMember lm) {
+                member = lm.Get();
+                lock (_members) {
+                    _members[name] = member;
+                }
             }
             return member;
         }

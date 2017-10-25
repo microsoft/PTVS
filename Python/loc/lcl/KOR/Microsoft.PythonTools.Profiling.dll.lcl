@@ -3,7 +3,7 @@
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
-    <Cmt Name="RCCX" />
+    <Cmt Name="Rccx" />
   </OwnedComments>
   <Settings Name="@SettingsPath@\default.lss" Type="Lss" />
   <Item ItemId=";Images" ItemType="0" PsrId="211" Leaf="false">
@@ -64,7 +64,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";CaptionDirty" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";CaptionDirty" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} *]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -331,7 +331,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";PerformanceBaseFileName" ItemType="0" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";PerformanceBaseFileName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Performance]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -796,7 +796,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17109.1]]></Val>
+        <Val><![CDATA[3.0.17296.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -832,7 +832,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17109.1]]></Val>
+        <Val><![CDATA[3.0.17296.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

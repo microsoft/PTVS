@@ -85,6 +85,7 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true)]
     [ProvideOptionPage(typeof(PythonDiagnosticsOptionsPage), "Python Tools", "Diagnostics", 115, 129, true)]
     [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
+    [ProvideOptionPage(typeof(PythonExperimentalOptionsPage), "Python Tools", "Experimental", 115, 130, false)]
     [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID        
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
@@ -282,29 +283,40 @@ namespace Microsoft.PythonTools {
 
         internal static bool LaunchFile(IServiceProvider provider, string filename, bool debug, bool saveDirtyFiles) {
             var project = (IPythonProject)provider.GetProjectFromOpenFile(filename) ?? new DefaultPythonProject(provider, filename);
-            var starter = GetLauncher(provider, project);
-            if (starter == null) {
-                Debug.Fail("Failed to get project launcher");
-                return false;
-            }
+            try {
+                var starter = GetLauncher(provider, project);
+                if (starter == null) {
+                    Debug.Fail("Failed to get project launcher");
+                    return false;
+                }
 
-            if (saveDirtyFiles) {
-                var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                if (rdt != null) {
-                    // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
-                    // when VS settings include prompt for save on build
-                    var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
-                    var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
-                    if (hr == VSConstants.E_ABORT) {
-                        return false;
+                if (saveDirtyFiles) {
+                    var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+                    if (rdt != null) {
+                        // Consider using (uint)(__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty | __VSRDTSAVEOPTIONS.RDTSAVEOPT_PromptSave)
+                        // when VS settings include prompt for save on build
+                        var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
+                        var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
+                        if (hr == VSConstants.E_ABORT) {
+                            return false;
+                        }
                     }
                 }
-            }
 
-            try {
                 starter.LaunchFile(filename, debug);
             } catch (MissingInterpreterException ex) {
-                MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                var interpreterRegistry = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                if (project.GetInterpreterFactory() == interpreterRegistry.NoInterpretersValue) {
+                    OpenNoInterpretersHelpPage(provider, ex.HelpPage);
+                } else {
+                    var td = new TaskDialog(provider) {
+                        Title = Strings.ProductTitle,
+                        MainInstruction = Strings.FailedToLaunchDebugger,
+                        Content = ex.Message
+                    };
+                    td.Buttons.Add(TaskDialogButton.Close);
+                    td.ShowModal();
+                }
                 return false;
             } catch (NoInterpretersException ex) {
                 OpenNoInterpretersHelpPage(provider, ex.HelpPage);
@@ -341,7 +353,7 @@ namespace Microsoft.PythonTools {
 
         public static string InterpreterHelpUrl {
             get {
-                return string.Format("http://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
+                return string.Format("https://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
                     CultureInfo.CurrentCulture.LCID);
             }
         }
@@ -422,7 +434,6 @@ namespace Microsoft.PythonTools {
                 new RemoveImportsCommand(this, false),
                 new OpenInterpreterListCommand(this),
                 new ImportWizardCommand(this),
-                new SurveyNewsCommand(this),
                 new ImportCoverageCommand(this),
                 new ShowPythonViewCommand(this),
                 new ShowCppViewCommand(this),

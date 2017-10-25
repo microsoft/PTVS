@@ -42,7 +42,6 @@ namespace IronPythonTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy();
         }
 
         protected override bool SupportsPython3 => false;
@@ -64,7 +63,7 @@ namespace IronPythonTests {
             return analysis;
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void Generics() {
             var text = @"
 import clr
@@ -79,7 +78,7 @@ zzz = y.ReturnsGenericParam()
             AssertUtil.ContainsExactly(entry.GetMemberNames("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void Constructors() {
             var text = @"
 from System import AccessViolationException
@@ -103,7 +102,7 @@ n = AccessViolationException.__new__
                 ")";
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ImportClr() {
             var text = @"
 import clr
@@ -113,7 +112,7 @@ x = 'abc'
             entry.AssertHasAttr("x", "Length");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ClrAddReference() {
             var text = @"
 import clr
@@ -126,7 +125,7 @@ from System.Drawing import Point
             Assert.AreEqual(35, members.Count);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ClrAddReferenceByName() {
             var text = @"
 import clr
@@ -137,7 +136,7 @@ from Microsoft.Scripting import SourceUnit
             Assert.AreEqual(40, entry.GetMemberNames("SourceUnit", text.IndexOf("from Microsoft.")).ToList().Count);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void Enum() {
             var entry = ProcessText(@"
 import System
@@ -149,7 +148,7 @@ x = System.StringComparison.OrdinalIgnoreCase
             Assert.AreEqual(x.MemberType, PythonMemberType.EnumInstance);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void Color() {
 
             var entry = ProcessText(@"
@@ -174,7 +173,7 @@ b = a.some_color
             AssertUtil.ContainsExactly(entry.GetTypes("b", 1).Select(x => x.Name), "Color");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void BuiltinTypeSignatures() {
             var entry = ProcessText(@"
 import System
@@ -197,7 +196,7 @@ y = int
             Assert.AreEqual(24, result.Length);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void EventReferences() {
             var text = @"
 from System import EventHandler
@@ -228,7 +227,7 @@ a.fob += EventHandler(f)
             entry.AssertReferences("f", text.IndexOf("a.fob +="), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SystemFromImport() {
             var text = @"
 from System import Environment
@@ -238,7 +237,7 @@ Environment.GetCommandLineArgs()
             Assert.IsTrue(entry.GetMemberNames("Environment", 1).Any(s => s == "CommandLine"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ImportAsIpy() {
             var text = @"
 import System.Collections as coll
@@ -247,7 +246,7 @@ import System.Collections as coll
             Assert.IsTrue(entry.GetMemberNames("coll", 1).Any(s => s == "ArrayList"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SystemImport() {
             var text = @"
 import System
@@ -264,7 +263,7 @@ x = System.Environment
             AssertUtil.Contains(entry.GetMemberNames("x", 1), "GetEnvironmentVariables");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void SystemMembers() {
             var text = @"
 import System
@@ -280,7 +279,7 @@ args = x.GetCommandLineArgs()
             Assert.IsTrue(entry.GetMemberNames("args", text.IndexOf("args =")).Any(s => s == "AsReadOnly"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void NamespaceMembers() {
             var text = @"
 import System
@@ -292,7 +291,7 @@ x = System.Collections
             Assert.IsTrue(x.Contains("ArrayList"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void GenericIndexing() {
             // indexing into a generic type should know how the type info
             // flows through
@@ -308,7 +307,7 @@ x = List[int]()
             Assert.IsTrue(self.Contains("AddRange"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ReturnTypesCollapsing() {
             // indexing into a generic type should know how the type info
             // flows through
@@ -318,7 +317,7 @@ asm = AppDomain.CurrentDomain.DefineDynamicAssembly()
 mod = asm.DefineDynamicModule()
 mod.
 ";
-            var entry = ProcessText(text);
+            var entry = ProcessText(text, allowParseErrors: true);
             var tooltips = entry.GetMember("mod", "CreateGlobalFunctions", text.IndexOf("mod ="))
                 .Select(m => m.Documentation)
                 .ToArray();
@@ -329,7 +328,7 @@ mod.
 #endif
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void IronPythonMro() {
             var text = @"
 from System import DivideByZeroException
@@ -352,7 +351,7 @@ from System import DivideByZeroException
                 "object");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void AssignEvent() {
             var text = @"
 import System
@@ -366,7 +365,7 @@ System.AppDomain.CurrentDomain.AssemblyLoad += f
             Assert.IsTrue(entry.GetMemberNames("args", text.IndexOf("pass")).Any(s => s == "LoadedAssembly"));
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void EventMemberType() {
             var text = @"from System import AppDomain";
             var entry = ProcessText(text);
@@ -374,7 +373,7 @@ System.AppDomain.CurrentDomain.AssemblyLoad += f
             Assert.AreEqual(mem.MemberType, PythonMemberType.Event);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void NegCallProperty() {
             // invalid code, this shouldn't crash us.
             var text = @"
@@ -385,7 +384,7 @@ y = System.Environment.CurrentDirectory()
             ProcessText(text);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void QuickInfoClr() {
             var text = @"
 import System
@@ -409,11 +408,11 @@ def g():
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("\"abc\".Length", 1), "int");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("c.Length", 1), "int");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 0), "field of type StringSplitOptions");
-            AssertUtil.ContainsExactly(entry.GetDescriptions("g", 1), "def g() -> built-in module System");    // return info could be better
+            AssertUtil.ContainsExactly(entry.GetDescriptions("g", 1), "def test-module.g() -> built-in module System");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void BuiltinMethodSignaturesClr() {
             var entry = ProcessText(@"
 import clr
@@ -432,7 +431,7 @@ constructed = str().Contains
 
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void BuiltinMethodDocumentationClr() {
             var entry = ProcessText(@"
 import wpf
@@ -447,7 +446,7 @@ w.Activate
         }
 
         /*
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void OverrideParams() {
             var text = @"
 import System
@@ -465,7 +464,7 @@ class MyArrayList(System.Collections.ArrayList):
         /// <summary>
         /// Verify importing wpf will add a reference to the WPF assemblies
         /// </summary>
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void WpfReferences() {
             var entry = ProcessText(@"
 import wpf
@@ -476,7 +475,7 @@ from System.Windows.Media import Colors
             AssertUtil.Contains(entry.GetMemberNames("wpf", 1), "LoadComponent");
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void XamlEmptyXName() {
             // [Python Tools] Adding attribute through XAML in IronPython application crashes VS.
             // http://pytools.codeplex.com/workitem/743

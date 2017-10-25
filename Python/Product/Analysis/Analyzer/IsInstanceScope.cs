@@ -35,11 +35,23 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override int GetStart(PythonAst ast) {
-            return ast.IndexToLocation(_startIndex).Index;
+            return _startIndex;
         }
 
         public override int GetStop(PythonAst ast) {
-            return ast.IndexToLocation(_endIndex).Index;
+            return _endIndex;
+        }
+
+        public override InterpreterScope AddNodeScope(Node node, InterpreterScope scope) {
+            return OuterScope.AddNodeScope(node, scope);
+        }
+
+        internal override void ClearNodeScopes() {
+            OuterScope.ClearNodeScopes();
+        }
+
+        internal override bool RemoveNodeScope(Node node) {
+            return OuterScope.RemoveNodeScope(node);
         }
 
         public override bool AssignVariable(string name, Node location, AnalysisUnit unit, IAnalysisSet values) {

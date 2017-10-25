@@ -32,7 +32,6 @@ using TestUtilities.UI;
 using CommonUtils = pythontools::Microsoft.VisualStudioTools.CommonUtils;
 
 namespace PythonToolsUITests {
-    [TestClass]
     public class PublishTest {
         private static string TestFtpUrl = "ftp://anonymous:blazzz@" + GetPyToolsIp() + "/testdir";
 
@@ -43,12 +42,6 @@ namespace PythonToolsUITests {
         private const string PrivateShareUserWithoutMachine = "TestUser";
         private const string PrivateSharePassword = "!10ctopus";
         private const string PrivateSharePasswordIncorrect = "NotThisPassword";
-
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            PythonTestData.Deploy();
-        }
 
         public TestContext TestContext { get; set; }
 
@@ -98,128 +91,112 @@ namespace PythonToolsUITests {
             return WaitForFiles(dir);
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishFiles() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                try {
-                    string subDir = Guid.NewGuid().ToString();
-                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
-                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
-                    string dir = Path.Combine(TestSharePublic, subDir);
+        public void TestPublishFiles(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+            try {
+                string subDir = Guid.NewGuid().ToString();
+                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
+                app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+                string dir = Path.Combine(TestSharePublic, subDir);
 
-                    app.OpenSolutionExplorer().SelectProject(project);
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                    var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
+                var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
 
-                    Assert.IsNotNull(files, "Timed out waiting for files to publish");
-                    Assert.AreEqual(1, files.Length);
-                    Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
+                Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                Assert.AreEqual(1, files.Length);
+                Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
 
-                    Directory.Delete(dir, true);
-                } finally {
-                    WNetCancelConnection2(TestSharePublic, 0, true);
-                }
+                Directory.Delete(dir, true);
+            } finally {
+                WNetCancelConnection2(TestSharePublic, 0, true);
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishReadOnlyFiles() {
+        public void TestPublishReadOnlyFiles(VisualStudioApp app) {
             var sourceFile = TestData.GetPath(@"TestData\HelloWorld\Program.py");
             Assert.IsTrue(File.Exists(sourceFile), sourceFile + " not found");
             var attributes = File.GetAttributes(sourceFile);
 
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                try {
-                    string subDir = Guid.NewGuid().ToString();
-                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
-                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
-                    string dir = Path.Combine(TestSharePublic, subDir);
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+            try {
+                string subDir = Guid.NewGuid().ToString();
+                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
+                app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+                string dir = Path.Combine(TestSharePublic, subDir);
 
-                    File.SetAttributes(sourceFile, attributes | FileAttributes.ReadOnly);
+                File.SetAttributes(sourceFile, attributes | FileAttributes.ReadOnly);
 
-                    app.OpenSolutionExplorer().SelectProject(project);
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                    var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
-                    
-                    Assert.IsNotNull(files, "Timed out waiting for files to publish");
-                    Assert.AreEqual(1, files.Length);
-                    Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
-                    Assert.IsTrue(File.GetAttributes(sourceFile).HasFlag(FileAttributes.ReadOnly), "Source file should be read-only");
-                    Assert.IsFalse(File.GetAttributes(files[0]).HasFlag(FileAttributes.ReadOnly), "Published file should not be read-only");
+                var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
 
-                    Directory.Delete(dir, true);
-                } finally {
-                    WNetCancelConnection2(TestSharePublic, 0, true);
-                    File.SetAttributes(sourceFile, attributes);
-                }
+                Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                Assert.AreEqual(1, files.Length);
+                Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
+                Assert.IsTrue(File.GetAttributes(sourceFile).HasFlag(FileAttributes.ReadOnly), "Source file should be read-only");
+                Assert.IsFalse(File.GetAttributes(files[0]).HasFlag(FileAttributes.ReadOnly), "Published file should not be read-only");
+
+                Directory.Delete(dir, true);
+            } finally {
+                WNetCancelConnection2(TestSharePublic, 0, true);
+                File.SetAttributes(sourceFile, attributes);
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishFilesControlled() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\PublishTest.sln");
-                try {
-                    string subDir = Guid.NewGuid().ToString();
-                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
-                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
-                    string dir = Path.Combine(TestSharePublic, subDir);
+        public void TestPublishFilesControlled(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\PublishTest.sln");
+            try {
+                string subDir = Guid.NewGuid().ToString();
+                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
+                app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+                string dir = Path.Combine(TestSharePublic, subDir);
 
-                    app.OpenSolutionExplorer().SelectProject(project);
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                    var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
+                var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
 
-                    Assert.IsNotNull(files, "Timed out waiting for files to publish");
-                    Assert.AreEqual(2, files.Length);
-                    AssertUtil.ContainsExactly(
-                        files.Select(Path.GetFileName),
-                        "Program.py",
-                        "TextFile.txt"
-                    );
+                Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                Assert.AreEqual(2, files.Length);
+                AssertUtil.ContainsExactly(
+                    files.Select(Path.GetFileName),
+                    "Program.py",
+                    "TextFile.txt"
+                );
 
-                    Directory.Delete(dir, true);
-                } finally {
-                    WNetCancelConnection2(TestSharePrivate, 0, true);
-                }
+                Directory.Delete(dir, true);
+            } finally {
+                WNetCancelConnection2(TestSharePrivate, 0, true);
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishFilesImpersonate() {
+        public void TestPublishFilesImpersonate(VisualStudioApp app) {
             WNetCancelConnection2(TestSharePrivate, 0, true);
-            using (var app = new VisualStudioApp()) {
-                try {
-                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    string subDir = Guid.NewGuid().ToString();
-                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+            try {
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                string subDir = Guid.NewGuid().ToString();
+                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
 
-                    app.OpenSolutionExplorer().SelectProject(project);
+                app.OpenSolutionExplorer().SelectProject(project);
 
-                    using (var creds = CredentialsDialog.PublishSelection(app)) {
-                        creds.UserName = PrivateShareUserWithoutMachine;
-                        creds.Password = PrivateSharePassword;
-                        creds.OK();
-                    }
-
-                    string dir = Path.Combine(TestSharePrivate, subDir);
-
-                    var files = WaitForFiles(dir);
-
-                    Assert.IsNotNull(files, "Timed out waiting for files to publish");
-                    Assert.AreEqual(1, files.Length);
-                    Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
-
-                    Directory.Delete(dir, true);
-                } finally {
-                    WNetCancelConnection2(TestSharePrivate, 0, true);
+                using (var creds = CredentialsDialog.PublishSelection(app)) {
+                    creds.UserName = PrivateShareUserWithoutMachine;
+                    creds.Password = PrivateSharePassword;
+                    creds.OK();
                 }
+
+                string dir = Path.Combine(TestSharePrivate, subDir);
+
+                var files = WaitForFiles(dir);
+
+                Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                Assert.AreEqual(1, files.Length);
+                Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
+
+                Directory.Delete(dir, true);
+            } finally {
+                WNetCancelConnection2(TestSharePrivate, 0, true);
             }
         }
 
@@ -261,176 +238,158 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishFilesImpersonateNoMachineName() {
+        public void TestPublishFilesImpersonateNoMachineName(VisualStudioApp app) {
             WNetCancelConnection2(TestSharePrivate, 0, true);
-            using (var app = new VisualStudioApp()) {
-                try {
-                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    string subDir = Guid.NewGuid().ToString();
-                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
-
-                    app.OpenSolutionExplorer().SelectProject(project);
-
-                    using (var creds = CredentialsDialog.PublishSelection(app)) {
-                        creds.UserName = PrivateShareUserWithoutMachine;
-                        creds.Password = PrivateSharePassword;
-                        creds.OK();
-                    }
-
-                    System.Threading.Thread.Sleep(2000);
-
-                    using (var helper = new NetUseHelper()) {
-                        string dir = Path.Combine(helper.Drive + "\\", subDir);
-                        var files = WaitForFiles(dir);
-                        Assert.AreEqual(1, files.Length);
-                        Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
-
-                        Directory.Delete(dir, true);
-                    }
-                } finally {
-                    WNetCancelConnection2(TestSharePrivate, 0, true);
-                }
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishFilesImpersonateWrongCredentials() {
-            WNetCancelConnection2(TestSharePrivate, 0, true);
-            using (var app = new VisualStudioApp()) {
-                try {
-                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    string subDir = Guid.NewGuid().ToString();
-                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
-                    string dir = Path.Combine(TestSharePrivate, subDir);
-
-                    app.OpenSolutionExplorer().SelectProject(project);
-
-                    using (var creds = CredentialsDialog.PublishSelection(app)) {
-                        creds.UserName = PrivateShareUser;
-                        creds.Password = PrivateSharePasswordIncorrect;
-                        creds.OK();
-                    }
-
-                    const string expected = "Publish failed: Incorrect user name or password: ";
-
-                    string text = "";
-                    for (int i = 0; i < 5; i++) {
-                        var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
-                        ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
-                        if (text.StartsWith(expected)) {
-                            break;
-                        }
-                        System.Threading.Thread.Sleep(2000);
-                    }
-
-                    Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
-                } finally {
-                    WNetCancelConnection2(TestSharePrivate, 0, true);
-                }
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishFilesImpersonateCancelCredentials() {
-            WNetCancelConnection2(TestSharePrivate, 0, true);
-            using (var app = new VisualStudioApp()) {
-                try {
-                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                    string subDir = Guid.NewGuid().ToString();
-                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                    app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
-                    string dir = Path.Combine(TestSharePrivate, subDir);
-
-                    app.OpenSolutionExplorer().SelectProject(project);
-
-                    using (var creds = CredentialsDialog.PublishSelection(app)) {
-                        creds.UserName = PrivateShareUser;
-                        creds.Password = PrivateSharePasswordIncorrect;
-                        creds.Cancel();
-                    }
-
-                    var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
-                    string text = null;
-                    const string expected = "Publish failed: Access to the path";
-
-                    for (int i = 0; i < 10; i++) {
-                        ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
-
-                        if (text.StartsWith(expected)) {
-                            break;
-                        }
-                        System.Threading.Thread.Sleep(1000);
-                    }
-
-                    Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
-                } finally {
-                    WNetCancelConnection2(TestSharePrivate, 0, true);
-                }
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishFtp() {
-            using (var app = new VisualStudioApp()) {
+            try {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 string subDir = Guid.NewGuid().ToString();
-                string url = TestFtpUrl + "/" + subDir;
-                project.Properties.Item("PublishUrl").Value = url;
+                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
                 app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
-                string dir = Path.Combine(FtpValidateDir, subDir);
-                Debug.WriteLine(dir);
 
                 app.OpenSolutionExplorer().SelectProject(project);
 
-                app.ExecuteCommand("Build.PublishSelection");
+                using (var creds = CredentialsDialog.PublishSelection(app)) {
+                    creds.UserName = PrivateShareUserWithoutMachine;
+                    creds.Password = PrivateSharePassword;
+                    creds.OK();
+                }
+
                 System.Threading.Thread.Sleep(2000);
-                var files = WaitForFiles(dir);
-                Assert.AreEqual(1, files.Length);
-                Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
 
-                // do it again w/ the directories already existing
-                File.Delete(files[0]);
+                using (var helper = new NetUseHelper()) {
+                    string dir = Path.Combine(helper.Drive + "\\", subDir);
+                    var files = WaitForFiles(dir);
+                    Assert.AreEqual(1, files.Length);
+                    Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
 
-                app.OpenSolutionExplorer().SelectProject(project);
-                app.ExecuteCommand("Build.PublishSelection");
-                files = WaitForFiles(dir);
-                Assert.AreEqual(1, files.Length);
-                Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
-
-                Directory.Delete(dir, true);
+                    Directory.Delete(dir, true);
+                }
+            } finally {
+                WNetCancelConnection2(TestSharePrivate, 0, true);
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPublishVirtualEnvironment() {
-            using (var app = new VisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\VirtualEnv.sln");
-                var dir = TestData.GetTempPath(randomSubPath: true);
-                project.Properties.Item("PublishUrl").Value = dir;
+        public void TestPublishFilesImpersonateWrongCredentials(VisualStudioApp app) {
+            WNetCancelConnection2(TestSharePrivate, 0, true);
+            try {
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                string subDir = Guid.NewGuid().ToString();
+                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
                 app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+                string dir = Path.Combine(TestSharePrivate, subDir);
 
                 app.OpenSolutionExplorer().SelectProject(project);
-                var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
 
-                Assert.IsNotNull(files, "Timed out waiting for files to publish");
-                AssertUtil.ContainsAtLeast(
-                    files.Select(f => CommonUtils.GetRelativeFilePath(dir, f).ToLowerInvariant()),
-                    "env\\include\\pyconfig.h",
-                    "env\\lib\\site.py",
-                    "env\\scripts\\python.exe",
-                    "program.py"
-                );
+                using (var creds = CredentialsDialog.PublishSelection(app)) {
+                    creds.UserName = PrivateShareUser;
+                    creds.Password = PrivateSharePasswordIncorrect;
+                    creds.OK();
+                }
 
-                Directory.Delete(dir, true);
+                const string expected = "Publish failed: Incorrect user name or password: ";
+
+                string text = "";
+                for (int i = 0; i < 5; i++) {
+                    var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
+                    ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
+                    if (text.StartsWith(expected)) {
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(2000);
+                }
+
+                Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
+            } finally {
+                WNetCancelConnection2(TestSharePrivate, 0, true);
             }
+        }
+
+        public void TestPublishFilesImpersonateCancelCredentials(VisualStudioApp app) {
+            WNetCancelConnection2(TestSharePrivate, 0, true);
+            try {
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                string subDir = Guid.NewGuid().ToString();
+                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+                string dir = Path.Combine(TestSharePrivate, subDir);
+
+                app.OpenSolutionExplorer().SelectProject(project);
+
+                using (var creds = CredentialsDialog.PublishSelection(app)) {
+                    creds.UserName = PrivateShareUser;
+                    creds.Password = PrivateSharePasswordIncorrect;
+                    creds.Cancel();
+                }
+
+                var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
+                string text = null;
+                const string expected = "Publish failed: Access to the path";
+
+                for (int i = 0; i < 10; i++) {
+                    ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
+
+                    if (text.StartsWith(expected)) {
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
+            } finally {
+                WNetCancelConnection2(TestSharePrivate, 0, true);
+            }
+        }
+
+        public void TestPublishFtp(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\HelloWorld.sln");
+            string subDir = Guid.NewGuid().ToString();
+            string url = TestFtpUrl + "/" + subDir;
+            project.Properties.Item("PublishUrl").Value = url;
+            app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+            string dir = Path.Combine(FtpValidateDir, subDir);
+            Debug.WriteLine(dir);
+
+            app.OpenSolutionExplorer().SelectProject(project);
+
+            app.ExecuteCommand("Build.PublishSelection");
+            System.Threading.Thread.Sleep(2000);
+            var files = WaitForFiles(dir);
+            Assert.AreEqual(1, files.Length);
+            Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
+
+            // do it again w/ the directories already existing
+            File.Delete(files[0]);
+
+            app.OpenSolutionExplorer().SelectProject(project);
+            app.ExecuteCommand("Build.PublishSelection");
+            files = WaitForFiles(dir);
+            Assert.AreEqual(1, files.Length);
+            Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
+
+            Directory.Delete(dir, true);
+        }
+
+        public void TestPublishVirtualEnvironment(VisualStudioApp app) {
+            var project = app.OpenProject(app.CopyProjectForTest(@"TestData\VirtualEnv.sln"));
+            var dir = TestData.GetTempPath();
+            project.Properties.Item("PublishUrl").Value = dir;
+            app.OnDispose(() => project.Properties.Item("PublishUrl").Value = "");
+
+            app.OpenSolutionExplorer().SelectProject(project);
+            var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
+
+            Assert.IsNotNull(files, "Timed out waiting for files to publish");
+            AssertUtil.ContainsAtLeast(
+                files.Select(f => CommonUtils.GetRelativeFilePath(dir, f).ToLowerInvariant()),
+                "env\\include\\pyconfig.h",
+                "env\\lib\\site.py",
+                "env\\scripts\\python.exe",
+                "program.py"
+            );
+
+            Directory.Delete(dir, true);
         }
     }
 }

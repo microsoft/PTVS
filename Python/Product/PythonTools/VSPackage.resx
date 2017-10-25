@@ -142,7 +142,7 @@
     <value>Intellisense</value>
   </data>
   <data name="115" xml:space="preserve">
-    <value>Python Tools</value>
+    <value>Python</value>
   </data>
   <data name="116" xml:space="preserve">
     <value>Environment Options</value>
@@ -540,5 +540,8 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   </data>
   <data name="129" xml:space="preserve">
     <value>Diagnostics</value>
+  </data>
+  <data name="130" xml:space="preserve">
+    <value>Experimental</value>
   </data>
 </root>

@@ -15,15 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.Mocks {
     public class MockUIThread : MockUIThreadBase {
+        public MockUIThread() {
+        }
+
         public override void Invoke(Action action) {
             action();
         }
@@ -34,13 +35,13 @@ namespace TestUtilities.Mocks {
 
         public override Task InvokeAsync(Action action) {
             var tcs = new TaskCompletionSource<object>();
-            UIThread.InvokeAsyncHelper(action, tcs);
+            InvokeAsyncHelper(action, tcs);
             return tcs.Task;
         }
 
         public override Task<T> InvokeAsync<T>(Func<T> func) {
             var tcs = new TaskCompletionSource<T>();
-            UIThread.InvokeAsyncHelper<T>(func, tcs);
+            InvokeAsyncHelper<T>(func, tcs);
             return tcs.Task;
         }
 
@@ -49,7 +50,7 @@ namespace TestUtilities.Mocks {
             if (cancellationToken.CanBeCanceled) {
                 cancellationToken.Register(() => tcs.TrySetCanceled());
             }
-            UIThread.InvokeAsyncHelper(action, tcs);
+            InvokeAsyncHelper(action, tcs);
             return tcs.Task;
         }
 
@@ -58,19 +59,19 @@ namespace TestUtilities.Mocks {
             if (cancellationToken.CanBeCanceled) {
                 cancellationToken.Register(() => tcs.TrySetCanceled());
             }
-            UIThread.InvokeAsyncHelper<T>(func, tcs);
+            InvokeAsyncHelper<T>(func, tcs);
             return tcs.Task;
         }
 
         public override Task InvokeTask(Func<Task> func) {
             var tcs = new TaskCompletionSource<object>();
-            UIThread.InvokeTaskHelper(func, tcs);
+            InvokeTaskHelper(func, tcs);
             return tcs.Task;
         }
 
         public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
             var tcs = new TaskCompletionSource<T>();
-            UIThread.InvokeTaskHelper<T>(func, tcs);
+            InvokeTaskHelper<T>(func, tcs);
             return tcs.Task;
         }
 
@@ -79,6 +80,68 @@ namespace TestUtilities.Mocks {
 
         public override bool InvokeRequired {
             get { return false; }
+        }
+
+        internal static void InvokeAsyncHelper(Action action, TaskCompletionSource<object> tcs) {
+            try {
+                action();
+                tcs.TrySetResult(null);
+            } catch (OperationCanceledException) {
+                tcs.TrySetCanceled();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                tcs.TrySetException(ex);
+            }
+        }
+
+        internal static void InvokeAsyncHelper<T>(Func<T> func, TaskCompletionSource<T> tcs) {
+            try {
+                tcs.TrySetResult(func());
+            } catch (OperationCanceledException) {
+                tcs.TrySetCanceled();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                tcs.TrySetException(ex);
+            }
+        }
+
+        internal static async void InvokeTaskHelper(Func<Task> func, TaskCompletionSource<object> tcs) {
+            try {
+                await func();
+                tcs.TrySetResult(null);
+            } catch (OperationCanceledException) {
+                tcs.TrySetCanceled();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                tcs.TrySetException(ex);
+            }
+        }
+
+        internal static async void InvokeTaskHelper<T>(Func<Task<T>> func, TaskCompletionSource<T> tcs) {
+            try {
+                tcs.TrySetResult(await func());
+            } catch (OperationCanceledException) {
+                tcs.TrySetCanceled();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                tcs.TrySetException(ex);
+            }
+        }
+
+        public override void InvokeTaskSync(Func<Task> func, CancellationToken cancellationToken) {
+            func().WaitAndUnwrapExceptions();
+        }
+
+        public override T InvokeTaskSync<T>(Func<Task<T>> func, CancellationToken cancellationToken) {
+            return func().WaitAndUnwrapExceptions();
         }
     }
 }

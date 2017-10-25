@@ -24,9 +24,12 @@ namespace TestAdapterTests {
     class MockRunContext : IRunContext {
         private readonly IRunSettings _runSettings;
 
-        public MockRunContext(IRunSettings runSettings) {
+        public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases) {
             _runSettings = runSettings;
+            TestCases = testCases;
         }
+
+        public IReadOnlyList<TestCase> TestCases { get; }
 
         public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider) {
             throw new NotImplementedException();

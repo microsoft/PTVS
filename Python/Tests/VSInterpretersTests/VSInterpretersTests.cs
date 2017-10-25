@@ -39,7 +39,6 @@ namespace VSInterpretersTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            PythonTestData.Deploy(includeTestData: false);
         }
 
         private static readonly List<string> _tempFiles = new List<string>();
@@ -106,7 +105,7 @@ namespace FactoryProviderSuccess {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ProviderLoadLog_Success() {
             var path = FactoryProviderTypeLoadErrorPath;
 
@@ -133,7 +132,7 @@ namespace FactoryProviderSuccess {
             Assert.AreEqual(0, log.AllItems.Count);
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ProviderLoadLog_FileNotFound() {
             var catalogLog = new MockLogger();
 
@@ -190,7 +189,7 @@ namespace FactoryProviderSuccess {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ProviderLoadLog_CorruptImage() {
             var catalogLog = new MockLogger();
 
@@ -252,7 +251,7 @@ namespace FactoryProviderTypeLoadException {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ProviderLoadLog_TypeLoadException() {
             var path = FactoryProviderTypeLoadErrorPath;
 
@@ -284,7 +283,7 @@ namespace FactoryProviderTypeLoadException {
             Assert.IsNotNull(registry.Configurations.FirstOrDefault());
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void ProviderLoadLog_SuccessAndFailure() {
             var path = FactoryProviderTypeLoadErrorPath;
 

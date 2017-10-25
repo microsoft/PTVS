@@ -200,6 +200,10 @@ Please delete the installed template and try again.</value>
     <value>----- Failed to load template '{0}' -----</value>
     <comment>{0} is a template name</comment>
   </data>
+  <data name="LoadTemplateValueSourceNotSupportedWarning" xml:space="preserve">
+    <value>WARNING: The template item '{0}' has an unsupported value_source '{1}'.</value>
+    <comment>Do not localize value_source, it is the name of the JSON element</comment>
+  </data>
   <data name="RunningTemplateStarted" xml:space="preserve">
     <value>----- Creating files using template '{0}' -----</value>
     <comment>{0} is a template name</comment>
@@ -343,9 +347,6 @@ Please delete the installed template and try again.</value>
   <data name="SearchPage_LoadMore" xml:space="preserve">
     <value>Load more...</value>
   </data>
-  <data name="SearchPage_FilesCreatedSuccessfully" xml:space="preserve">
-    <value>Files created successfully.</value>
-  </data>
   <data name="SearchPage_Search" xml:space="preserve">
     <value>Search</value>
   </data>
@@ -454,6 +455,15 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="OptionsPage_Create" xml:space="preserve">
     <value>Create</value>
+  </data>
+  <data name="OptionsPage_CreateAndOpenFolder" xml:space="preserve">
+    <value>Create and Open Folder</value>
+  </data>
+  <data name="OptionsPage_CreateAndOpenProject" xml:space="preserve">
+    <value>Create and Open Project</value>
+  </data>
+  <data name="OptionsPage_AddToSolution" xml:space="preserve">
+    <value>Add to Solution</value>
   </data>
   <data name="OptionsPage_Options" xml:space="preserve">
     <value>Options</value>

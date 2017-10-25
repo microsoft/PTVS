@@ -105,29 +105,84 @@ namespace Microsoft.PythonTools.Analysis {
             if (locatedDef != null &&
                 locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
                 locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
-                var start = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
-                yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry.FilePath, start.Line, start.Column));
+                var identifierStart = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
+
+                // For classes and functions, find the ClassDefinition or
+                // FunctionDefinition to get the full span of the definition.
+                var walker = new DefinitionWalker(locatedDef.Node.StartIndex);
+                locatedDef.Entry.Tree.Walk(walker);
+
+                SourceLocation definitionStart;
+                SourceLocation definitionEnd;
+                if (walker.Definition != null) {
+                    definitionStart = walker.Definition.GetStart(locatedDef.Entry.Tree);
+                    definitionEnd = walker.Definition.GetEnd(locatedDef.Entry.Tree);
+                } else {
+                    definitionStart = identifierStart;
+                    definitionEnd = locatedDef.Node.GetEnd(locatedDef.Entry.Tree);
+                }
+
+                yield return new AnalysisVariable(
+                    VariableType.Definition,
+                    // Location of the identifier only
+                    new LocationInfo(
+                        locatedDef.Entry.FilePath,
+                        identifierStart.Line,
+                        identifierStart.Column
+                    ),
+                    // Location of the full definition
+                    new LocationInfo(
+                        locatedDef.Entry.FilePath,
+                        definitionStart.Line,
+                        definitionStart.Column,
+                        definitionEnd.Line,
+                        definitionEnd.Column
+                    )
+                );
             }
 
             VariableDef def = referenceable as VariableDef;
             if (def != null) {
-                foreach (var location in def.TypesNoCopy.SelectMany(type => type.Locations)) {
-                    yield return new AnalysisVariable(VariableType.Value, location);
+                foreach (var loc in def.TypesNoCopy.SelectMany(type => type.Locations)) {
+                    if (loc != null) {
+                        yield return new AnalysisVariable(VariableType.Value, loc);
+                    }
                 }
             }
 
             foreach (var reference in referenceable.Definitions) {
-                yield return new AnalysisVariable(
-                    VariableType.Definition, 
-                    reference.GetLocationInfo()
-                );
+                var loc = reference.GetLocationInfo();
+                if (loc != null) {
+                    yield return new AnalysisVariable(VariableType.Definition, loc);
+                }
             }
 
             foreach (var reference in referenceable.References) {
-                yield return new AnalysisVariable(
-                    VariableType.Reference, 
-                    reference.GetLocationInfo()
-                );
+                var loc = reference.GetLocationInfo();
+                if (loc != null) {
+                    yield return new AnalysisVariable(VariableType.Reference, loc);
+                }
+            }
+        }
+
+        private class DefinitionWalker : PythonWalkerWithLocation {
+            public ScopeStatement Definition;
+
+            public DefinitionWalker(int location) : base(location) {
+            }
+
+            public override void PostWalk(FunctionDefinition node) {
+                if (Location >= node.NameExpression.StartIndex && Location <= node.NameExpression.EndIndex) {
+                    Definition = node;
+                }
+                base.PostWalk(node);
+            }
+
+            public override void PostWalk(ClassDefinition node) {
+                if (Location >= node.NameExpression.StartIndex && Location <= node.NameExpression.EndIndex) {
+                    Definition = node;
+                }
+                base.PostWalk(node);
             }
         }
 
@@ -168,11 +223,34 @@ namespace Microsoft.PythonTools.Analysis {
             string privatePrefix = GetPrivatePrefixClassName(scope);
             var ast = GetAstFromText(exprText, privatePrefix);
             var expr = Statement.GetExpression(ast.Body);
+            var variables = Enumerable.Empty<IAnalysisVariable>();
+
+            if (expr == null) {
+                return new VariablesResult(variables, ast);
+            }
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
-            NameExpression name = expr as NameExpression;
-            IEnumerable<IAnalysisVariable> variables = Enumerable.Empty<IAnalysisVariable>();
-            if (name != null) {
+            var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+
+            var finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { Calls = true });
+            var callNode = finder.GetExpression(location) as CallExpression;
+            if (callNode != null) {
+                finder = new ExpressionFinder(unit.Tree, new GetExpressionOptions { NamedArgumentNames = true });
+                var argNode = finder.GetExpression(location) as NameExpression;
+                if (argNode != null && argNode.Name == exprText) {
+                    var objects = eval.Evaluate(callNode.Target);
+
+                    return new VariablesResult(objects
+                        .Where(v => v.Overloads.MaybeEnumerate().Any(o => o.Parameters.MaybeEnumerate().Any(p => p.Name == argNode.Name)))
+                        .Select(v => (v as BoundMethodInfo)?.Function ?? v as FunctionInfo)
+                        .Select(f => f?.AnalysisUnit?.Scope)
+                        .Where(s => s != null)
+                        .SelectMany(s => GetVariablesInScope(argNode, s)
+                        .Distinct()), ast);
+                }
+            }
+
+            if (expr is NameExpression name) {
                 var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
                     s.ContainsVariable(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, location)));
 
@@ -182,18 +260,14 @@ namespace Microsoft.PythonTools.Analysis {
                 } else {
                     variables = GetVariablesInScope(name, defScope).Distinct();
                 }
-            } else {
-                MemberExpression member = expr as MemberExpression;
-                if (member != null && !string.IsNullOrEmpty(member.Name)) {
-                    var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
-                    var objects = eval.Evaluate(member.Target);
+            } else if (expr is MemberExpression member && !string.IsNullOrEmpty(member.Name)) {
+                var objects = eval.Evaluate(member.Target);
 
-                    foreach (var v in objects) {
-                        var container = v as IReferenceableContainer;
-                        if (container != null) {
-                            variables = ReferencablesToVariables(container.GetDefinitions(member.Name));
-                            break;
-                        }
+                foreach (var v in objects) {
+                    var container = v as IReferenceableContainer;
+                    if (container != null) {
+                        variables = ReferencablesToVariables(container.GetDefinitions(member.Name));
+                        break;
                     }
                 }
             }
@@ -243,8 +317,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// Gets the list of modules known by the current analysis.
         /// </summary>
         /// <param name="topLevelOnly">Only return top-level modules.</param>
+        [Obsolete]
         public MemberResult[] GetModules(bool topLevelOnly = false) {
-            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules(topLevelOnly));
+            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules());
 
             var children = GlobalScope.GetChildrenPackages(InterpreterContext);
 
@@ -261,6 +336,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="names">The dotted name parts to match</param>
         /// <param name="includeMembers">Include module members that match as
         /// well as just modules.</param>
+        [Obsolete]
         public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
             var res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
             var children = GlobalScope.GetChildrenPackages(InterpreterContext);
@@ -354,28 +430,83 @@ namespace Microsoft.PythonTools.Analysis {
             var scope = FindScope(location);
             var privatePrefix = GetPrivatePrefixClassName(scope);
 
-            var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
+            var ast = GetAstFromText(exprText, privatePrefix).Body;
+
+            var expr = Statement.GetExpression(ast);
             if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
                 // no completions on integer ., the user is typing a float
                 return Enumerable.Empty<MemberResult>();
             }
 
+            if (expr == null) {
+                return Enumerable.Empty<MemberResult>();
+            }
+
+            var lookup = AnalysisSet.Create();
             var errorWalker = new ErrorWalker();
             expr.Walk(errorWalker);
             if (errorWalker.HasError) {
                 return null;
             }
 
-            var unit = GetNearestEnclosingAnalysisUnit(scope);
-            var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
-            IAnalysisSet lookup;
-            if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
-                lookup = eval.EvaluateNoMemberRecursion(expr);
-            } else {
-                lookup = eval.Evaluate(expr);
+            // Special handling for `__import__('module.name')`
+            if (expr is CallExpression ce &&
+                ce.Target is NameExpression ne &&
+                ne.Name == "__import__" &&
+                ce.Args?.Count == 1 &&
+                ce.Args[0].Expression is ConstantExpression modNameExpr
+            ) {
+                string modName = modNameExpr.Value as string ?? (modNameExpr.Value as AsciiString)?.String;
+                if (!string.IsNullOrEmpty(modName)) {
+                    lookup = ResolveModule(expr, _unit.CopyForEval(), modName);
+                }
+            }
+
+            if (!lookup.Any()) {
+                var unit = GetNearestEnclosingAnalysisUnit(scope);
+                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+                if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
+                    lookup = eval.EvaluateNoMemberRecursion(expr);
+                } else {
+                    lookup = eval.Evaluate(expr);
+                }
             }
 
             return GetMemberResults(lookup, scope, options);
+        }
+
+        private static IAnalysisSet ResolveModule(Node node, AnalysisUnit unit, string moduleName) {
+            ModuleReference modRef;
+            var modules = unit.ProjectState.Modules;
+
+            if (modules.TryImport(moduleName, out modRef)) {
+                return modRef.AnalysisModule ?? AnalysisSet.Empty;
+            }
+
+            var attrs = new List<string>();
+
+            var modName = moduleName;
+            int i;
+            while ((i = modName.LastIndexOf('.')) > 0) {
+                attrs.Add(modName.Substring(i + 1));
+                modName = modName.Remove(i);
+
+                if (modules.TryImport(modName, out modRef)) {
+                    break;
+                }
+            }
+
+            IAnalysisSet mod = modRef?.AnalysisModule;
+            foreach (var attr in attrs.Reverse<string>()) {
+                if (mod == null || !mod.Any()) {
+                    return AnalysisSet.Empty;
+                }
+
+                mod = AnalysisSet.Create(mod.Where(m => m.MemberType == PythonMemberType.Module || m.MemberType == PythonMemberType.Multiple))
+                    .GetMember(node, unit, attr);
+            }
+
+            return mod ?? AnalysisSet.Empty;
         }
 
         /// <summary>
@@ -585,7 +716,11 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var kvp in s.GetAllMergedVariables()) {
                     // deliberately overwrite variables from outer scopes
                     var values = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
-                    values.Add(new SyntheticDefinitionInfo(kvp.Value.Definitions));
+                    values.Add(new SyntheticDefinitionInfo(
+                        kvp.Key,
+                        null,
+                        kvp.Value.Definitions.Select(e => e.GetLocationInfo())
+                    ));
                     result[kvp.Key] = values;
                 }
             }
@@ -839,7 +974,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private PythonAst GetAstFromText(string exprText, string privatePrefix) {
+        internal PythonAst GetAstFromText(string exprText, string privatePrefix) {
             using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true })) {
                 return parser.ParseTopExpression();
             }
@@ -871,7 +1006,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
-            if (location.Index < function.StartIndex || location.Index >= function.Body.StartIndex) {
+            int index = tree.LocationToIndex(location);
+            if (index < function.StartIndex || index >= function.Body.StartIndex) {
                 // Not within the def line
                 return false;
             }
@@ -879,7 +1015,7 @@ namespace Microsoft.PythonTools.Analysis {
             return function.Parameters != null &&
                 function.Parameters.Any(p => {
                     var paramName = p.GetVerbatimImage(tree) ?? p.Name;
-                    return location.Index >= p.StartIndex && location.Index <= p.StartIndex + paramName.Length;
+                    return index >= p.StartIndex && index <= p.StartIndex + paramName.Length;
                 });
         }
 
@@ -911,7 +1047,9 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static InterpreterScope FindScope(InterpreterScope parent, PythonAst tree, SourceLocation location) {
-            var children = parent.Children.Where(c => !(c is StatementScope)).ToList();
+            var children = parent.Children;
+
+            var index = tree.LocationToIndex(location);
 
             InterpreterScope candidate = null;
 
@@ -924,7 +1062,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 int start = children[i].GetBodyStart(tree);
 
-                if (start > location.Index) {
+                if (start > index) {
                     // We've gone past index completely so our last candidate is
                     // the best one.
                     break;
@@ -938,12 +1076,12 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
 
-                if (location.Index <= end || (candidate == null && i + 1 == children.Count)) {
+                if (index <= end || (candidate == null && i + 1 == children.Count)) {
                     candidate = children[i];
                 }
             }
 
-            if (candidate == null) {
+            if (candidate == null || candidate is StatementScope) {
                 // No children, so we must belong in our parent
                 return parent;
             }
@@ -961,7 +1099,7 @@ namespace Microsoft.PythonTools.Analysis {
             var funcChild = child as FunctionScope;
             if (funcChild != null &&
                 funcChild.Function.FunctionDefinition.IsLambda &&
-                child.GetStop(tree) < location.Index) {
+                child.GetStop(tree) < index) {
                 // Do not want to extend a lambda function's scope to the end of
                 // the parent scope.
                 return parent;

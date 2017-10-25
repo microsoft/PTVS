@@ -34,7 +34,8 @@ namespace Microsoft.PythonTools.Parsing {
         V33 = 0x0303,
         V34 = 0x0304,
         V35 = 0x0305,
-        V36 = 0x0306
+        V36 = 0x0306,
+        V37 = 0x0307
     }
 
     public static class PythonLanguageVersionExtensions {
@@ -55,31 +56,9 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public static PythonLanguageVersion ToLanguageVersion(this Version version) {
-            switch (version.Major) {
-                case 0:
-                    switch (version.Minor) {
-                        case 0: return PythonLanguageVersion.None;
-                    }
-                    break;
-                case 2:
-                    switch (version.Minor) {
-                        case 4: return PythonLanguageVersion.V24;
-                        case 5: return PythonLanguageVersion.V25;
-                        case 6: return PythonLanguageVersion.V26;
-                        case 7: return PythonLanguageVersion.V27;
-                    }
-                    break;
-                case 3:
-                    switch (version.Minor) {
-                        case 0: return PythonLanguageVersion.V30;
-                        case 1: return PythonLanguageVersion.V31;
-                        case 2: return PythonLanguageVersion.V32;
-                        case 3: return PythonLanguageVersion.V33;
-                        case 4: return PythonLanguageVersion.V34;
-                        case 5: return PythonLanguageVersion.V35;
-                        case 6: return PythonLanguageVersion.V36;
-                    }
-                    break;
+            int value = (version.Major << 8) + version.Minor;
+            if (Enum.IsDefined(typeof(PythonLanguageVersion), value)) {
+                return (PythonLanguageVersion)value;
             }
             throw new InvalidOperationException(String.Format("Unsupported Python version: {0}", version.ToString()));
         }

@@ -491,7 +491,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     new InterpreterFactoryCreationOptions {
                         PackageManager = new PipPackageManager(),
                         DatabasePath = dbPath,
-                        WatchFileSystem = true
+                        WatchFileSystem = true,
+                        NoDatabase = ExperimentalOptions.NoDatabaseFactory
                     }
                 );
             }

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -53,12 +54,12 @@ namespace Microsoft.PythonTools {
         private readonly PythonToolsLogger _logger;
         private readonly Lazy<AdvancedEditorOptions> _advancedOptions;
         private readonly Lazy<DebuggerOptions> _debuggerOptions;
+        private readonly Lazy<Options.ExperimentalOptions> _experimentalOptions;
         private readonly Lazy<DiagnosticsOptions> _diagnosticsOptions;
         private readonly Lazy<GeneralOptions> _generalOptions;
         private readonly Lazy<PythonInteractiveOptions> _debugInteractiveOptions;
         private readonly Lazy<PythonInteractiveOptions> _interactiveOptions;
         private readonly Lazy<SuppressDialogOptions> _suppressDialogOptions;
-        private readonly Lazy<SurveyNewsService> _surveyNews;
         private readonly AnalysisEntryService _entryService;
         private readonly IdleManager _idleManager;
         private readonly DiagnosticsProvider _diagnosticsProvider;
@@ -94,17 +95,19 @@ namespace Microsoft.PythonTools {
             _idleManager = new IdleManager(container);
             _advancedOptions = new Lazy<AdvancedEditorOptions>(CreateAdvancedEditorOptions);
             _debuggerOptions = new Lazy<DebuggerOptions>(CreateDebuggerOptions);
+            _experimentalOptions = new Lazy<Options.ExperimentalOptions>(CreateExperimentalOptions);
             _diagnosticsOptions = new Lazy<DiagnosticsOptions>(CreateDiagnosticsOptions);
             _generalOptions = new Lazy<GeneralOptions>(CreateGeneralOptions);
-            _surveyNews = new Lazy<SurveyNewsService>(() => new SurveyNewsService(this));
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
             _debugInteractiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Debug Interactive Window"));
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
-            _entryService = ComponentModel.GetService<AnalysisEntryService>();
+            _entryService = (AnalysisEntryService)ComponentModel.GetService<IAnalysisEntryService>();
             _diagnosticsProvider = new DiagnosticsProvider(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
+
+            EditorServices.SetPythonToolsService(this);
         }
 
         private void OnIdleInitialization(object sender, ComponentManagerEventArgs e) {
@@ -154,7 +157,9 @@ namespace Microsoft.PythonTools {
                     });
                 }
 
-                _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck.ToString());
+                _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
+                    { "NoDatabaseFactory", ExperimentalOptions.NoDatabaseFactory }
+                });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
@@ -166,11 +171,11 @@ namespace Microsoft.PythonTools {
                 return;
             }
 
-            _container.GetUIThread().InvokeAsync(() => {
-                var analyzer = CreateAnalyzer();
+            _container.GetUIThread().InvokeTask(async () => {
+                var analyzer = await CreateAnalyzerAsync();
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
                 if (oldAnalyzer != null) {
-                    analyzer.SwitchAnalyzers(oldAnalyzer);
+                    await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
                     if (oldAnalyzer.RemoveUser()) {
                         oldAnalyzer.Dispose();
                     }
@@ -191,8 +196,10 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal string GetDiagnosticsLog(bool includeAnalysisLogs) {
-            return _diagnosticsProvider.GetLog(includeAnalysisLogs);
+        internal PythonEditorServices EditorServices => ComponentModel.GetService<PythonEditorServices>();
+
+        internal void GetDiagnosticsLog(TextWriter writer, bool includeAnalysisLogs) {
+            _diagnosticsProvider.WriteLog(writer, includeAnalysisLogs);
         }
 
         private IInterpreterOptionsService CreateInterpreterOptionsService() {
@@ -204,35 +211,37 @@ namespace Microsoft.PythonTools {
             return service;
         }
 
-        private VsProjectAnalyzer CreateAnalyzer() {
+        private Task<VsProjectAnalyzer> CreateAnalyzerAsync() {
             var interpreters = _interpreterOptionsService.Value;
 
             // may not available in some test cases
             if (interpreters == null) {
-                return new VsProjectAnalyzer(_container, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
+                return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)));
             }
 
             var defaultFactory = interpreters.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
-            return new VsProjectAnalyzer(_container, defaultFactory);
+            return VsProjectAnalyzer.CreateDefaultAsync(EditorServices, defaultFactory);
         }
 
         internal PythonToolsLogger Logger => _logger;
-        internal SurveyNewsService SurveyNews => _surveyNews.Value;
 
         #region Public API
 
         public VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {
-                    _analyzer = _container.GetUIThread().Invoke(() => CreateAnalyzer());
+                    _analyzer = _container.GetUIThread().InvokeTaskSync(() => CreateAnalyzerAsync(), CancellationToken.None);
                 }
                 return _analyzer;
             }
         }
 
+        public VsProjectAnalyzer MaybeDefaultAnalyzer => _analyzer;
+
         public AdvancedEditorOptions AdvancedOptions => _advancedOptions.Value;
         public DebuggerOptions DebuggerOptions => _debuggerOptions.Value;
+        public Options.ExperimentalOptions ExperimentalOptions => _experimentalOptions.Value;
         public DiagnosticsOptions DiagnosticsOptions => _diagnosticsOptions.Value;
         public GeneralOptions GeneralOptions => _generalOptions.Value;
         internal PythonInteractiveOptions DebugInteractiveOptions => _debugInteractiveOptions.Value;
@@ -245,6 +254,12 @@ namespace Microsoft.PythonTools {
 
         private DebuggerOptions CreateDebuggerOptions() {
             var opts = new DebuggerOptions(this);
+            opts.Load();
+            return opts;
+        }
+
+        private Options.ExperimentalOptions CreateExperimentalOptions() {
+            var opts = new Options.ExperimentalOptions(this);
             opts.Load();
             return opts;
         }
@@ -368,6 +383,13 @@ namespace Microsoft.PythonTools {
         #region Interactive Options
 
         internal PythonInteractiveOptions InteractiveOptions => _interactiveOptions.Value;
+
+        /// <summary>
+        /// Interactive window backend. If set, it overrides the value in the
+        /// mode.txt file. For use by tests, rather than have them modify
+        /// mode.txt directly.
+        /// </summary>
+        internal string InteractiveBackendOverride { get; set; }
 
         private PythonInteractiveOptions CreateInteractiveOptions(string category) {
             var opts = new PythonInteractiveOptions(this, category);
@@ -542,12 +564,12 @@ namespace Microsoft.PythonTools {
         #region Intellisense
 
         public CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(_container, session, view, snapshot, span, point, options);
+            return VsProjectAnalyzer.GetCompletions(EditorServices, session, view, snapshot, span, point, options);
         }
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
             return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
@@ -555,7 +577,7 @@ namespace Microsoft.PythonTools {
 
         public Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return Task.FromResult(new SignatureAnalysis("", 0, new ISignature[0]));
             }
             return entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span);
@@ -563,10 +585,10 @@ namespace Microsoft.PythonTools {
 
         public ExpressionAnalysis AnalyzeExpression(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(view, snapshot.TextBuffer, out entry)) {
+            if (_entryService == null || !_entryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
                 return null;
             }
-            return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, view, span.GetStartPoint(snapshot)), "AnalyzeExpression");
+            return entry.Analyzer.WaitForRequest(entry.Analyzer.AnalyzeExpressionAsync(entry, span.GetStartPoint(snapshot)), "AnalyzeExpression");
         }
 
         public Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {
@@ -612,6 +634,19 @@ namespace Microsoft.PythonTools {
                 );
             }
             return env;
+        }
+
+        public IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
+            if (!GeneralOptions.ClearGlobalPythonPath) {
+                string pythonPath = Environment.GetEnvironmentVariable(interpreter.PathEnvironmentVariable) ?? string.Empty;
+                return pythonPath
+                    .Split(Path.PathSeparator)
+                    // Just ensure the string is not empty - if people are passing
+                    // through invalid paths this option is meant to allow it
+                    .Where(p => !string.IsNullOrEmpty(p));
+            }
+
+            return Enumerable.Empty<string>();
         }
     }
 }

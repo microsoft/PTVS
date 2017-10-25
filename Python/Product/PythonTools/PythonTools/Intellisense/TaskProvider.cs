@@ -19,10 +19,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -80,32 +82,26 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #region Conversion Functions
-        
-        public bool IsValid {
-            get {
-                if (!_squiggle || _spanTranslator == null || string.IsNullOrEmpty(ErrorType)) {
-                    return false;
-                }
-                return true;
-            }
-        }
+
+        public bool IsValid => _squiggle && !string.IsNullOrEmpty(ErrorType);
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
-            if (_rawSpan.Length <= 0) {
-                Debug.Fail($"Expected span {_rawSpan} to be non-empty");
+            if (_rawSpan.Start <= _rawSpan.End || _spanTranslator == null) {
                 return;
             }
 
-            SnapshotSpan target = _spanTranslator.TranslateForward(
-                new Span(_rawSpan.Start.Index, _rawSpan.Length)
-            );
+            // TODO: Map between versions rather than using the current snapshot
+            var snapshot = _spanTranslator.TextBuffer.CurrentSnapshot;
+            var target = _rawSpan.ToSnapshotSpan(snapshot);
+            //SnapshotSpan target = _spanTranslator.TranslateForward(
+            //    new Span(_rawSpan.Start.Index, _rawSpan.Length)
+            //);
 
             if (target.Length <= 0) {
-                Debug.Fail($"Expected translated span {target} to be non-empty");
                 return;
             }
 
-            var tagSpan = _spanTranslator.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
+            var tagSpan = snapshot.CreateTrackingSpan(
                 target.Start,
                 target.Length,
                 SpanTrackingMode.EdgeInclusive
@@ -114,21 +110,14 @@ namespace Microsoft.PythonTools.Intellisense {
             tagger.CreateTagSpan(tagSpan, new ErrorTag(ErrorType, _message));
         }
 
-        public ITextBuffer TextBuffer {
-            get {
-                if (_spanTranslator != null) {
-                    return _spanTranslator.TextBuffer;
-                }
-                return null;
-            }
-        }
+        public ITextBuffer TextBuffer => _spanTranslator?.TextBuffer;
 
         public ErrorTaskItem ToErrorTaskItem(EntryKey key) {
             return new ErrorTaskItem(
                 _serviceProvider,
                 _rawSpan,
                 _message,
-                (key.Entry != null ? key.Entry.Path : null) ?? string.Empty
+                key.FilePath ?? string.Empty
             ) {
                 Priority = _priority,
                 Category = _category
@@ -136,16 +125,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
-
-        private static ITrackingSpan CreateSpan(ITextSnapshot snapshot, SourceSpan span) {
-            Debug.Assert(span.Start.Index >= 0);
-            var res = new Span(
-                span.Start.Index,
-                Math.Min(span.End.Index - span.Start.Index, Math.Max(snapshot.Length - span.Start.Index, 0))
-            );
-            Debug.Assert(res.End <= snapshot.Length);
-            return snapshot.CreateTrackingSpan(res, SpanTrackingMode.EdgeNegative);
-        }
     }
 
     sealed class TaskProviderItemFactory {
@@ -172,8 +151,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal static SourceSpan GetSpan(AP.Error result) {
             return new SourceSpan(
-                new SourceLocation(result.startIndex, result.startLine, result.startColumn),
-                new SourceLocation(result.startIndex + result.length, result.endLine, result.endColumn)
+                new SourceLocation(result.startLine, result.startColumn),
+                new SourceLocation(result.endLine, result.endColumn)
             );
         }
 
@@ -205,13 +184,13 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     struct EntryKey : IEquatable<EntryKey> {
-        public AnalysisEntry Entry;
+        public string FilePath;
         public string Moniker;
 
         public static readonly EntryKey Empty = new EntryKey(null, null);
 
-        public EntryKey(AnalysisEntry entry, string moniker) {
-            Entry = entry;
+        public EntryKey(string filePath, string moniker) {
+            FilePath = filePath;
             Moniker = moniker;
         }
 
@@ -220,11 +199,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public bool Equals(EntryKey other) {
-            return Entry == other.Entry && Moniker == other.Moniker;
+            return FilePath == other.FilePath && Moniker == other.Moniker;
         }
 
         public override int GetHashCode() {
-            return (Entry == null ? 0 : Entry.GetHashCode()) ^ (Moniker ?? string.Empty).GetHashCode();
+            return (FilePath?.GetHashCode() ?? 0) ^ (Moniker?.GetHashCode() ?? 0);
         }
     }
 
@@ -248,16 +227,16 @@ namespace Microsoft.PythonTools.Intellisense {
             return new ClearMessage(EntryKey.Empty);
         }
 
-        public static WorkerMessage Clear(AnalysisEntry entry, string moniker) {
-            return new ClearMessage(new EntryKey(entry, moniker));
+        public static WorkerMessage Clear(string filePath, string moniker) {
+            return new ClearMessage(new EntryKey(filePath, moniker));
         }
 
-        public static WorkerMessage Replace(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
-            return new ReplaceMessage(new EntryKey(entry, moniker), items);
+        public static WorkerMessage Replace(string filePath, string moniker, List<TaskProviderItem> items) {
+            return new ReplaceMessage(new EntryKey(filePath, moniker), items);
         }
 
-        public static WorkerMessage Append(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
-            return new AppendMessage(new EntryKey(entry, moniker), items);
+        public static WorkerMessage Append(string filePath, string moniker, List<TaskProviderItem> items) {
+            return new AppendMessage(new EntryKey(filePath, moniker), items);
         }
 
         public static WorkerMessage Flush(TaskCompletionSource<TimeSpan> taskSource) {
@@ -281,7 +260,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override string ToString() {
-                return "Replace " + _key.Moniker + " " + _items.Count + " " + _key.Entry?.Path;
+                return $"Replace {_key.Moniker} {_items.Count} {_key.FilePath ?? "(null)"}";
             }
         }
 
@@ -302,7 +281,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override string ToString() {
-                return "Append " + _key.Moniker + " " + _key.Entry?.Path;
+                return $"Append {_key.Moniker} {_key.FilePath ?? "(null)"}";
             }
         }
 
@@ -312,7 +291,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override bool Apply(Dictionary<EntryKey, List<TaskProviderItem>> items, object itemsLock) {
                 lock (itemsLock) {
-                    if (_key.Entry != null) {
+                    if (_key.FilePath != null) {
                         items.Remove(_key);
                     } else {
                         items.Clear();
@@ -323,7 +302,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override string ToString() {
-                return "Clear " + _key.Moniker + " " + _key.Entry?.Path;
+                return $"Clear {_key.Moniker} {_key.FilePath ?? "(null)"}";
             }
         }
 
@@ -432,15 +411,15 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Replaces the items for the specified entry.
         /// </summary>
-        public void ReplaceItems(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
-            SendMessage(WorkerMessage.Replace(entry, moniker, items));
+        public void ReplaceItems(string filePath, string moniker, List<TaskProviderItem> items) {
+            SendMessage(WorkerMessage.Replace(filePath, moniker, items));
         }
 
         /// <summary>
         /// Adds items to the specified entry's existing items.
         /// </summary>
-        public void AddItems(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
-            SendMessage(WorkerMessage.Append(entry, moniker, items));
+        public void AddItems(string filePath, string moniker, List<TaskProviderItem> items) {
+            SendMessage(WorkerMessage.Append(filePath, moniker, items));
         }
 
         /// <summary>
@@ -453,8 +432,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Removes all items for the specified entry.
         /// </summary>
-        public void Clear(AnalysisEntry entry, string moniker) {
-            SendMessage(WorkerMessage.Clear(entry, moniker));
+        public void Clear(string filePath, string moniker) {
+            SendMessage(WorkerMessage.Clear(filePath, moniker));
         }
 
         /// <summary>
@@ -474,12 +453,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Adds the buffer to be tracked for reporting squiggles and error list entries
         /// for the given project entry and moniker for the error source.
         /// </summary>
-        public void AddBufferForErrorSource(AnalysisEntry entry, string moniker, ITextBuffer buffer) {
+        public void AddBufferForErrorSource(string filePath, string moniker, ITextBuffer buffer) {
             lock (_errorSources) {
-                var key = new EntryKey(entry, moniker);
+                var key = new EntryKey(filePath, moniker);
                 HashSet<ITextBuffer> buffers;
                 if (!_errorSources.TryGetValue(key, out buffers)) {
-                    _errorSources[new EntryKey(entry, moniker)] = buffers = new HashSet<ITextBuffer>();
+                    _errorSources[key] = buffers = new HashSet<ITextBuffer>();
                 }
                 buffers.Add(buffer);
             }
@@ -489,9 +468,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Removes the buffer from tracking for reporting squiggles and error list entries
         /// for the given project entry and moniker for the error source.
         /// </summary>
-        public void RemoveBufferForErrorSource(AnalysisEntry entry, string moniker, ITextBuffer buffer) {
+        public void RemoveBufferForErrorSource(string filePath, string moniker, ITextBuffer buffer) {
+            Clear(filePath, moniker);
             lock (_errorSources) {
-                var key = new EntryKey(entry, moniker);
+                var key = new EntryKey(filePath, moniker);
                 HashSet<ITextBuffer> buffers;
                 if (_errorSources.TryGetValue(key, out buffers)) {
                     buffers.Remove(buffer);
@@ -503,9 +483,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Clears all tracked buffers for the given project entry and moniker for
         /// the error source.
         /// </summary>
-        public void ClearErrorSource(AnalysisEntry entry, string moniker) {
+        public void ClearErrorSource(string filePath, string moniker) {
+            Clear(filePath, moniker);
             lock (_errorSources) {
-                _errorSources.Remove(new EntryKey(entry, moniker));
+                _errorSources.Remove(new EntryKey(filePath, moniker));
             }
         }
 
@@ -623,7 +604,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_taskList == null && _errorProvider == null) {
                 return true;
             }
-            _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
+            _serviceProvider.MustNotBeCalledFromUIThread("TaskProvider.Refresh() called on UI thread");
 
             // Allow 1 second to get onto the UI thread for the update
             // Otherwise abort and we'll try again later
@@ -633,7 +614,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     RefreshAsync(cts.Token).Wait(cts.Token);
                 } catch (AggregateException ex) {
                     if (ex.InnerExceptions.Count == 1) {
-                        throw ex.InnerException;
+                        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
                     }
                     throw;
                 }
@@ -664,7 +645,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
 
                             foreach (var item in items) {
-                                if (item.IsValid) {
+                                if (item.IsValid && item.TextBuffer != null) {
                                     List<TaskProviderItem> itemList;
                                     if (!bufferToErrorList.TryGetValue(item.TextBuffer, out itemList)) {
                                         bufferToErrorList[item.TextBuffer] = itemList = new List<TaskProviderItem>();
@@ -733,7 +714,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
             lock (_itemsLock) {
                 ppenum = new TaskEnum(_items
-                    .Where(x => x.Key.Entry.Path != null)   // don't report REPL window errors in the error list, you can't naviagate to them
+                    .Where(x => x.Key.FilePath != null)   // don't report REPL window errors in the error list, you can't naviagate to them
                     .SelectMany(kv => kv.Value.Select(i => i.ToErrorTaskItem(kv.Key)))
                     .ToArray()
                 );
@@ -853,7 +834,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         int IVsTaskItem.Column(out int piCol) {
-            if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
+            if (Span.Start.Line == 1 && Span.Start.Column == 1) {
                 // we don't have the column number calculated
                 piCol = 0;
                 return VSConstants.E_FAIL;
@@ -904,7 +885,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         int IVsTaskItem.Line(out int piLine) {
-            if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
+            if (Span.Start.Line == 1 && Span.Start.Column == 1) {
                 // we don't have the line number calculated
                 piLine = 0;
                 return VSConstants.E_FAIL;
@@ -915,12 +896,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         int IVsTaskItem.NavigateTo() {
             try {
-                if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
-                    // we have just an absolute index, use that to naviagte
-                    PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Index);
-                } else {
-                    PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
-                }
+                PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
                 return VSConstants.S_OK;
             } catch (DirectoryNotFoundException) {
                 // This may happen when the error was in a file that's located inside a .zip archive.

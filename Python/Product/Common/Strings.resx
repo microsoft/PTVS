@@ -223,6 +223,9 @@ No files will be deleted from disk.</value>
   <data name="UninstallPackage" xml:space="preserve">
     <value>'{0}' will be uninstalled from {1} ({2}).</value>
   </data>
+  <data name="VirtualEnvSaveDeferredSolution" xml:space="preserve">
+    <value>Your project must be saved before adding a virtual environment.</value>
+  </data>
   <data name="VirtualEnvCreating" xml:space="preserve">
     <value>Virtual environment is being created at '{0}'</value>
   </data>
@@ -273,7 +276,7 @@ Continue?</value>
     <value>A command is already running.</value>
   </data>
   <data name="NoInterpretersAvailable" xml:space="preserve">
-    <value>No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.</value>
+    <value>No Python environments are configured. Please install or configure an environment and try again. See https://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment.</value>
   </data>
   <data name="ErrorImportWizardException" xml:space="preserve">
     <value>An unexpected error {0} occurred while creating your project.
@@ -958,6 +961,18 @@ You can get more information by running Visual Studio with the /log parameter on
   <data name="Retry" xml:space="preserve">
     <value>&amp;Retry</value>
   </data>
+  <data name="CookiecutterComponentInstallInstructions" xml:space="preserve">
+    <value>These tools are an installable component for your version of Visual Studio that allow you to create projects from Cookiecutter templates.</value>
+  </data>
+  <data name="CookiecutterComponentRequired" xml:space="preserve">
+    <value>This project requires Cookiecutter template support for Visual Studio.</value>
+  </data>
+  <data name="CookiecutterWizardUnresolvedTemplate" xml:space="preserve">
+    <value>The Cookiecutter template at '{0}' was not found.
+
+Please check your internet connection.
+</value>
+  </data>
   <data name="AzureToolsInstallInstructions" xml:space="preserve">
     <value>These tools are an installable workload for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.</value>
   </data>
@@ -1176,11 +1191,11 @@ but your command history will be preserved.</value>
 #
 # Currently, supported options are:
 #   standard
-#   visualstudio_ipython_repl.IPythonBackend
-#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab
+#   ptvsd.repl.ipython.IPythonBackend
+#   ptvsd.repl.ipython.IPythonBackendWithoutPyLab
 #
 
-visualstudio_ipython_repl.IPythonBackend</value>
+ptvsd.repl.ipython.IPythonBackend</value>
     <comment>Do not localize</comment>
   </data>
   <data name="ReplScriptPathReadmeContents" xml:space="preserve">
@@ -1716,7 +1731,8 @@ Connect anyway?</value>
     <comment>{0} is the name of the script that is being run</comment>
   </data>
   <data name="ImportCoverageCommandFileFilter" xml:space="preserve">
-    <value>Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*</value>
+    <value>coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*</value>
+    <comment>Do not translate coverage.py, it's the name of a library.</comment>
   </data>
   <data name="RenameVariable_NewName" xml:space="preserve">
     <value>_New name:</value>
@@ -2097,5 +2113,11 @@ Expand selection to the full expression?</value>
   </data>
   <data name="RemoveReplPrompts" xml:space="preserve">
     <value>Remove Interactive Prompts</value>
+  </data>
+  <data name="Test_NotRun" xml:space="preserve">
+    <value>Test could not be run. Check the Tests Output Pane for details.</value>
+  </data>
+  <data name="FailedToLaunchDebugger" xml:space="preserve">
+    <value>Failed to launch debugger</value>
   </data>
 </root>

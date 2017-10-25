@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Automation;
 
@@ -27,16 +28,26 @@ namespace TestUtilities.UI {
         }
 
         protected AutomationElement WaitForItemHelper(Func<string[], AutomationElement> getItem, string[] path) {
+            return WaitForItemHelper(getItem, path, TimeSpan.FromSeconds(10));
+        }
+
+        /// <summary>
+        /// Waits for the item in the solution tree to be available for up to a specified timeout.
+        /// </summary>
+        protected AutomationElement WaitForItemHelper(Func<string[], AutomationElement> getItem, string[] path, TimeSpan timeout) {
             AutomationElement item = null;
-            for (int i = 0; i < 40; i++) {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            while (stopWatch.Elapsed < timeout) {
                 item = getItem(path);
                 if (item != null) {
                     break;
                 }
                 System.Threading.Thread.Sleep(250);
             }
+
             if (item == null) {
-                Console.WriteLine("Failed to find {0}", String.Join("\\", path));
+                Console.WriteLine("Failed to find {0} within {1} ms", String.Join("\\", path), timeout.TotalMilliseconds);
                 DumpElement(Element);
             }
             return item;

@@ -58,15 +58,36 @@
   <ItemGroup>
     <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
+    <Compile Include="AnalysisLogWriter.cs" />
+    <Compile Include="ExpressionFinder.cs" />
+    <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisWalker.cs" />
     <Compile Include="IHasRichDescription.cs" />
+    <Compile Include="Interpreter\Ast\AstBuiltinPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstBuiltinsPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstNestedPythonModuleMember.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonBoundMethod.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonBuiltinType.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonInterpreter.cs" />
+    <Compile Include="Interpreter\Ast\AstNestedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonMultipleMembers.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonStringLiteral.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonSequence.cs" />
     <Compile Include="Interpreter\Ast\AstPythonType.cs" />
     <Compile Include="Interpreter\Ast\AstPythonConstant.cs" />
     <Compile Include="Interpreter\Ast\AstPythonFunction.cs" />
     <Compile Include="Interpreter\Ast\AstPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\Ast\AstPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonParameterInfo.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonInterpreterFactory.cs" />
+    <Compile Include="Interpreter\Ast\AstScrapedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstTypeAnnotationConverter.cs" />
+    <Compile Include="Interpreter\Ast\NameLookupContext.cs" />
+    <Compile Include="Interpreter\ILazyMember.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterWithLog.cs" />
+    <Compile Include="Interpreter\SentinelModule.cs" />
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
+    <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
     <Compile Include="Interpreter\IPackageManager.cs" />
     <Compile Include="Interpreter\IPackageManagerUI.cs" />
@@ -74,6 +95,7 @@
     <Compile Include="Interpreter\NoPackageManager.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PackageVersion.cs" />
+    <Compile Include="Parsing\Ast\TypeAnnotation.cs" />
     <Compile Include="Parsing\Ast\ExpressionWithAnnotation.cs" />
     <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />
     <Compile Include="AnalysisExtensions.cs" />
@@ -135,6 +157,7 @@
     <Compile Include="Projects\PythonProject.cs" />
     <Compile Include="PythonAnalyzer.Specializations.cs" />
     <Compile Include="PythonKeywords.cs" />
+    <Compile Include="QualifiedFunctionNameWalker.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -389,6 +412,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="scrape_module.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

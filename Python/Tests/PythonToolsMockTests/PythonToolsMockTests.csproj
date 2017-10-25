@@ -90,7 +90,6 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudioTools.VSTestHost.$(VSTarget)" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core">
@@ -120,6 +119,7 @@
     <Compile Include="EditorTests.cs" />
     <Compile Include="MockClipboardService.cs" />
     <Compile Include="MockPythonToolsPackage.cs" />
+    <Compile Include="NavigableTests.cs" />
     <Compile Include="ProjectTests.cs" />
     <Compile Include="PythonEditor.cs" />
     <Compile Include="RefactorRenameTests.cs" />
@@ -176,6 +176,9 @@
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
       <Name>VSCommon</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

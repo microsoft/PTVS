@@ -146,7 +146,9 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.NavigateTo.Interfaces, Version=$(VSTarget).0.0, Culture=neutral" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
@@ -262,6 +264,9 @@
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
+    <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
+    <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />
+    <Compile Include="PythonTools\Editor\PythonTextBufferInfo.cs" />
     <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
@@ -270,6 +275,7 @@
     <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionCompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisEntryService.cs" />
+    <Compile Include="PythonTools\Intellisense\ExpressionAtPoint.cs" />
     <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSourceProvider.cs" />
@@ -283,7 +289,21 @@
     <Compile Include="PythonTools\Intellisense\VersionedResponse.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
+    <Compile Include="PythonTools\Options\ExperimentalOptions.cs" />
     <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonExperimentalOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonExperimentalOptionsControl.Designer.cs">
+      <DependentUpon>PythonExperimentalOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonExperimentalOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -293,6 +313,9 @@
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItem.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSource.cs" />
+    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSourceProvider.cs" />
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
     <Compile Include="PythonTools\Repl\PythonCommonInteractiveEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugProcessReplEvaluator.cs" />
@@ -330,7 +353,6 @@
     <Compile Include="PythonTools\Repl\ResizingAdorner.cs" />
     <Compile Include="PythonTools\Repl\SelectableReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
-    <Compile Include="PythonTools\SurveyNewsService.cs" />
     <Compile Include="PythonTools\Options\GeneralOptions.cs" />
     <Compile Include="PythonTools\Options\DebuggerOptions.cs" />
     <Compile Include="PythonTools\Options\AdvancedEditorOptions.cs" />
@@ -366,7 +388,6 @@
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
-    <Compile Include="PythonTools\Commands\SurveyNewsCommand.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
     <Compile Include="PythonTools\InterpreterView.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplay.cs" />
@@ -694,9 +715,7 @@
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <None Include="Theme\contrast.vstheme" />
-    <None Include="NoSurveyNewsFeed.htmlsrc" />
     <None Include="NoInterpreters.htmlsrc" />
-    <None Include="ptvsd\attach_server.py" />
     <None Include="Theme\Microsoft.PythonTools.theme.v14.0.pkgdef" />
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
@@ -715,18 +734,21 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="NoSurveyNewsFeed.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <None Include="ptvsd\__init__.py" />
-    <None Include="ptvsd\__main__.py" />
     <Content Include="pip_downloader.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="ptvsd_repl_launcher.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ptvsd_loader.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="ptvsd\setup.py" />
     <Content Include="Snippets\Python\for.snippet">
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -737,68 +759,134 @@
     </Content>
     <Content Include="Snippets\Test\testclass.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Test</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\while.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\def.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\class.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\if.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\with.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\try.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\except.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Snippets\Python\main.snippet">
       <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_path.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_path_positional.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_str.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_str_positional.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\arg_switch.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Snippets\Python\argparse.snippet">
+      <SubType>Designer</SubType>
+      <VSIXSubPath>Snippets\1033\Python</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ReadmeStyle.css" />
-    <Content Include="visualstudio_jupyter_client_repl.py">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="visualstudio_py_ipcjson.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="visualstudio_py_debugger.py">
+    <Content Include="ptvsd\__init__.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
     </Content>
-    <Content Include="visualstudio_py_repl.py">
+    <Content Include="ptvsd\__main__.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
+    </Content>
+    <Content Include="ptvsd\attach_server.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
+    </Content>
+    <Content Include="ptvsd\ipcjson.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
     </Content>
-    <Content Include="visualstudio_py_util.py">
+    <Content Include="ptvsd\debugger.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
+    </Content>
+    <Content Include="ptvsd\repl\__init__.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd\repl</VSIXSubPath>
+    </Content>
+    <Content Include="ptvsd\repl\ipython.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd\repl</VSIXSubPath>
+    </Content>
+    <Content Include="ptvsd\util.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd</VSIXSubPath>
     </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -826,10 +914,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="visualstudio_ipython_repl.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonFile.ico">
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
@@ -845,7 +929,7 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="visualstudio_py_launcher.py">
+    <Content Include="ptvsd_launcher.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -854,6 +938,9 @@
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Options\PythonExperimentalOptionsControl.resx">
+      <DependentUpon>PythonExperimentalOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonDiagnosticsOptionsControl.resx">
       <DependentUpon>PythonDiagnosticsOptionsControl.cs</DependentUpon>
@@ -981,21 +1068,6 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="_DeployPTVSDFiles" AfterTargets="PrepareForBuild" Returns="@(_PTVSDFiles)">
-    <ItemGroup>
-      <_PTVSDSourceFiles Include="visualstudio_py_*.py;ptvsd\*.py" />
-      <_PTVSDFiles Include="@(_PTVSDSourceFiles->'$(IntermediateOutputPath)ptvsd\%(Filename)%(Extension)')" />
-      <Content Include="@(_PTVSDFiles)">
-        <IncludeInVSIX>true</IncludeInVSIX>
-        <VSIXSubPath>ptvsd</VSIXSubPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <Link>ptvsd\%(Filename)%(Extension)</Link>
-      </Content>
-    </ItemGroup>
-    <Copy SourceFiles="@(_PTVSDSourceFiles)" DestinationFiles="@(_PTVSDFiles)" SkipUnchangedFiles="true">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
-    </Copy>
-  </Target>
   <!-- We build these assemblies into separate folders to avoid incremental cleaning issues,
        but then CreatePkgDef can't find them for the ProvideCodeBase attributes. So we copy
        into the PythonTools output folder temporarily to generate the pkgdef file. -->

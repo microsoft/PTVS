@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Diagnostics;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -58,6 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case BuiltinTypeId.CallableIterator:
                     return klass;
                 default:
+                    Debug.Fail($"No iterator type for {klass.PythonType} ({klass.PythonType.Name}::{klass.PythonType.TypeId}");
                     return null;
             }
         }

@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             // propagate white space so we stay mostly the same...
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
-            var colonWhiteSpace = this.GetProceedingWhiteSpaceDefaultNull(ast);
+            var colonWhiteSpace = this.GetPreceedingWhiteSpaceDefaultNull(ast);
 
             if (itemWhiteSpace != null) {
                 // semi-colon list of statements, must end in a new line, but the original new line
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             //  2. A set of semi-colon separated items
             //  3. A top-level group of statements in a top-level PythonAst node.
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
-            var colonWhiteSpace = this.GetProceedingWhiteSpaceDefaultNull(ast);
+            var colonWhiteSpace = this.GetPreceedingWhiteSpaceDefaultNull(ast);
             if (this.IsAltForm(ast)) {
                 // suite statement in top-level PythonAst, we have no colons or other delimiters
                 foreach (var statement in _statements) {

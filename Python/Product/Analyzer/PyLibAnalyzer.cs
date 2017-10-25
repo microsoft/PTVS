@@ -180,7 +180,8 @@ namespace Microsoft.PythonTools.Analysis {
             if (_interactive) {
                 var analyzer = new OutOfProcProjectAnalyzer(
                     Console.OpenStandardOutput(),
-                    Console.OpenStandardInput()
+                    Console.OpenStandardInput(),
+                    true
                 );
 
                 await analyzer.ProcessMessages();
@@ -820,6 +821,7 @@ namespace Microsoft.PythonTools.Analysis {
             using (var proc = ProcessOutput.RunHiddenAndCapture(
                 interpreter,
                 "-E",   // ignore environment
+                "-B",
                 "-c", string.Format("import {0}; print('\\n'.join({0}.__path__[1:]))", moduleName)
             )) {
                 if (await proc != 0) {
@@ -860,7 +862,7 @@ namespace Microsoft.PythonTools.Analysis {
             builtinNames.Add(_version.Major == 3 ? BuiltinName3x : BuiltinName2x);
             using (var output = ProcessOutput.RunHiddenAndCapture(
                 _interpreter,
-                "-E", "-S",
+                "-E", "-S", "-B",
                 "-c", "import sys; print('\\n'.join(sys.builtin_module_names))"
             )) {
                 if (await output != 0) {
@@ -878,7 +880,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (builtinNames.Contains("clr")) {
                 bool isCli = false;
                 using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter,
-                    "-E", "-S",
+                    "-E", "-S", "-B",
                     "-c", "import sys; print(sys.platform)"
                 )) {
                     if (await output == 0) {
@@ -1050,7 +1052,7 @@ namespace Microsoft.PythonTools.Analysis {
                     TraceDryRun("Scrape builtin modules");
                 } else {
                     // Scape builtin Python types
-                    using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, PythonScraperPath, _outDir, _baseDb.First())) {
+                    using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, "-B", PythonScraperPath, _outDir, _baseDb.First())) {
                         TraceInformation("Scraping builtin modules");
                         TraceInformation("Command: {0}", output.Arguments);
                         await output;
@@ -1106,7 +1108,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                     var prefixDir = Path.GetDirectoryName(_interpreter);
                     var pathVar = string.Format("{0};{1}", Environment.GetEnvironmentVariable("PATH"), prefixDir);
-                    var arguments = new [] { ExtensionScraperPath, "scrape", file.ModuleName, scrapePath, destFile };
+                    var arguments = new [] { "-B", ExtensionScraperPath, "scrape", file.ModuleName, scrapePath, destFile };
                     var env = new[] { new KeyValuePair<string, string>("PATH", pathVar) };
 
                     using (var output = ProcessOutput.Run(_interpreter, arguments, prefixDir, env, false, null)) {
@@ -1191,7 +1193,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (!string.IsNullOrEmpty(_logDiagnostic) && AnalysisLog.Output == null) {
                 try {
-                    AnalysisLog.Output = new StreamWriter(new FileStream(_logDiagnostic, FileMode.Create, FileAccess.Write, FileShare.Read), Encoding.UTF8);
+                    AnalysisLog.Output = _logDiagnostic;
                     AnalysisLog.AsCSV = _logDiagnostic.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase);
                 } catch (Exception ex) {
                     TraceWarning("Failed to open \"{0}\" for logging{1}{2}", _logDiagnostic, Environment.NewLine, ex.ToString());

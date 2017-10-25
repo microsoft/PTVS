@@ -34,21 +34,25 @@ namespace TestAdapterTests {
         public string SourceCodeFilePath { get; private set; }
         public int SourceCodeLineNumber { get; private set; }
         public TestOutcome Outcome { get; private set; }
+        public TimeSpan MinDuration { get; private set; }
+        public string ContainedErrorMessage { get; private set; }
 
         private TestInfo() {
         }
 
-        public static TestInfo FromRelativePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null) {
+        public static TestInfo FromRelativePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, TimeSpan? minDuration = null, string containedErrorMessage = null) {
             return FromAbsolutePaths(className,
                 methodName,
                 TestData.GetPath(projectFilePath),
                 TestData.GetPath(sourceCodeFilePath),
                 sourceCodeLineNumber,
                 outcome,
-                classFilePath != null ? TestData.GetPath(classFilePath) : null);
+                classFilePath != null ? TestData.GetPath(classFilePath) : null,
+                minDuration,
+                containedErrorMessage);
         }
 
-        public static TestInfo FromAbsolutePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null) {
+        public static TestInfo FromAbsolutePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, TimeSpan? minDuration = null, string containedErrorMessage = null) {
             TestInfo ti = new TestInfo();
             ti.ClassName = className;
             ti.MethodName = methodName;
@@ -58,6 +62,8 @@ namespace TestAdapterTests {
             ti.Outcome = outcome;
             ti.ClassFilePath = classFilePath ?? sourceCodeFilePath;
             ti.RelativeClassFilePath = CommonUtils.GetRelativeFilePath(Path.GetDirectoryName(ti.ProjectFilePath), ti.ClassFilePath);
+            ti.MinDuration = minDuration ?? TimeSpan.Zero;
+            ti.ContainedErrorMessage = containedErrorMessage;
             return ti;
         }
 
@@ -137,11 +143,17 @@ namespace TestAdapterTests {
             }
         }
 
-        private static TestInfo GetLoadErrorImportError(string projectName) => TestInfo.FromRelativePaths("ImportErrorTests", "test_import_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestImportError.py", 5, TestOutcome.Failed);
-        private static TestInfo GetLoadErrorNoError(string projectName) => TestInfo.FromRelativePaths("NoErrorTests", "test_no_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestNoError.py", 4, TestOutcome.Passed);
+        private static TestInfo GetLoadErrorImportError(string importErrorFormat)
+            => TestInfo.FromRelativePaths("ImportErrorTests", "test_import_error", "TestData\\TestAdapterTests\\LoadErrorTest.pyproj", @"TestData\TestAdapterTests\LoadErrorTestImportError.py", 5, TestOutcome.Failed, containedErrorMessage: string.Format(importErrorFormat, "boooo"));
 
-        public static TestInfo[] GetTestAdapterLoadErrorTests(string projectName) {
-            return new[] { GetLoadErrorImportError(projectName), GetLoadErrorNoError(projectName) };
+        private static TestInfo GetLoadErrorNoError()
+            => TestInfo.FromRelativePaths("NoErrorTests", "test_no_error", "TestData\\TestAdapterTests\\LoadErrorTest.pyproj", @"TestData\TestAdapterTests\LoadErrorTestNoError.py", 4, TestOutcome.Passed);
+
+        public static TestInfo[] GetTestAdapterLoadErrorTests(string importErrorFormat) {
+            return new[] {
+                GetLoadErrorImportError(importErrorFormat),
+                GetLoadErrorNoError()
+            };
         }
 
         public static string TestAdapterEnvironmentProject = TestData.GetPath(@"TestData\TestAdapterTests\EnvironmentTest.pyproj");
@@ -149,5 +161,20 @@ namespace TestAdapterTests {
 
         public static string TestAdapterExtensionReferenceProject = TestData.GetPath(@"TestData\TestAdapterTests\ExtensionReferenceTest.pyproj");
         public static TestInfo ExtensionReferenceTestSuccess = TestInfo.FromRelativePaths("SpamTests", "test_spam", @"TestData\TestAdapterTests\ExtensionReferenceTest.pyproj", @"TestData\TestAdapterTests\ExtensionReferenceTest.py", 5, TestOutcome.Passed);
+
+        public static string TestAdapterDurationProject = TestData.GetPath(@"TestData\TestAdapterTests\DurationTest.pyproj");
+        public static TestInfo DurationSleep01TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_1", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 5, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.1));
+        public static TestInfo DurationSleep03TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_3", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 8, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.3));
+        public static TestInfo DurationSleep05TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_5", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 11, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.5));
+        public static TestInfo DurationSleep08TestSuccess = TestInfo.FromRelativePaths("DurationTests", "test_sleep_0_8", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 14, TestOutcome.Passed, minDuration: TimeSpan.FromSeconds(0.8));
+        public static TestInfo DurationSleep15TestFailure = TestInfo.FromRelativePaths("DurationTests", "test_sleep_1_5", @"TestData\TestAdapterTests\DurationTest.pyproj", @"TestData\TestAdapterTests\DurationTest.py", 17, TestOutcome.Failed, minDuration: TimeSpan.FromSeconds(1.5));
+
+        public static string TestAdapterStackTraceProject = TestData.GetPath(@"TestData\TestAdapterTests\StackTraceTest.pyproj");
+        public static TestInfo StackTraceBadLocalImportFailure = TestInfo.FromRelativePaths("StackTraceTests", "test_bad_import", @"TestData\TestAdapterTests\StackTraceTest.pyproj", @"TestData\TestAdapterTests\StackTraceTest.py", 4, TestOutcome.Failed);
+        public static TestInfo StackTraceNotEqualFailure = TestInfo.FromRelativePaths("StackTraceTests", "test_not_equal", @"TestData\TestAdapterTests\StackTraceTest.pyproj", @"TestData\TestAdapterTests\StackTraceTest.py", 8, TestOutcome.Failed);
+
+        public static string TestAdapterTeardownProject = TestData.GetPath(@"TestData\TestAdapterTests\TeardownTest.pyproj");
+        public static TestInfo TeardownSuccess = TestInfo.FromRelativePaths("TeardownTests", "test_success", @"TestData\TestAdapterTests\TeardownTest.pyproj", @"TestData\TestAdapterTests\TeardownTest.py", 10, TestOutcome.Passed);
+        public static TestInfo TeardownFailure = TestInfo.FromRelativePaths("TeardownTests", "test_failure", @"TestData\TestAdapterTests\TeardownTest.pyproj", @"TestData\TestAdapterTests\TeardownTest.py", 13, TestOutcome.Failed);
     }
 }

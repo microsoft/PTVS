@@ -28,25 +28,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _expression = expression;
         }
 
-        public string Name {
-            get {
-                var nameExpr = _name as NameExpression;
-                if (nameExpr != null) {
-                    return nameExpr.Name;
-                }
-                return null;
-            }
-        }
-
-        public Expression NameExpression {
-            get {
-                return _name;
-            }
-        }
-
-        public Expression Expression {
-            get { return _expression; }
-        } 
+        public string Name => (_name as NameExpression)?.Name;
+        public Expression NameExpression => _name;
+        public Expression Expression => _expression;
 
         public override string ToString() {
             return base.ToString() + ":" + _name;
@@ -70,7 +54,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 } else {
                     // keyword arg
                     _name.AppendCodeString(res, ast, format);
-                    res.Append(this.GetProceedingWhiteSpace(ast));
+                    res.Append(this.GetPreceedingWhiteSpace(ast));
                     res.Append('=');
                     _expression.AppendCodeString(res, ast, format);
                 }

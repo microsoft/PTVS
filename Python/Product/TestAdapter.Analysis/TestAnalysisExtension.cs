@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
 
 namespace Microsoft.PythonTools.TestAdapter {
@@ -39,11 +40,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             switch (commandId) {
                 case GetTestCasesCommand:
                     IProjectEntry projEntry;
-                    IEnumerable<TestCaseInfo> testCases;
-                    if (_analyzer.TryGetProjectEntryByPath(body, out projEntry)) {
-                        testCases = GetTestCasesFromAnalysis(projEntry);
-                    } else {
-                        testCases = GetTestCasesFromAst(body);
+                    var testCases = new List<TestCaseInfo>();
+                    foreach (var f in body.Split(';')) {
+                        if (_analyzer.TryGetProjectEntryByPath(f, out projEntry)) {
+                            testCases.AddRange(GetTestCasesFromAnalysis(projEntry));
+                        } else {
+                            testCases.AddRange(GetTestCasesFromAst(f));
+                        }
                     }
 
                     return serializer.Serialize(testCases.Select(tc => tc.AsDictionary()).ToArray());
@@ -116,22 +119,41 @@ namespace Microsoft.PythonTools.TestAdapter {
                 yield break;
             }
 
+            // GetTestCaseMembers may return duplicates, so we filter in
+            // this function.
+            var seen = new Dictionary<string, int>();
+
             foreach (var classValue in GetTestCaseClasses(analysis)) {
                 // Check the name of all functions on the class using the
                 // analyzer. This will return functions defined on this
                 // class and base classes
-                foreach (var member in GetTestCaseMembers(analysis, classValue)) {
+                foreach (var member in GetTestCaseMembers(entry.Tree, entry.FilePath, analysis, classValue)) {
+                    var name = $"{classValue.Name}.{member.Key}";
                     // Find the definition to get the real location of the
                     // member. Otherwise decorators will confuse us.
                     var definition = entry.Analysis
-                        .GetVariablesByIndex(classValue.Name + "." + member.Key, 0)
+                        .GetVariablesByIndex(name, 0)
                         .FirstOrDefault(v => v.Type == VariableType.Definition);
 
-                    var location = (definition != null) ?
-                        definition.Location :
-                        member.Value.SelectMany(m => m.Locations).FirstOrDefault(loc => loc != null);
+                    var location = definition?.Location ?? member.Value;
 
                     int endLine = location?.EndLine ?? location?.StartLine ?? 0;
+
+                    int startLine = location?.StartLine ?? 0;
+                    if (seen.TryGetValue(name, out int existingStartLine)) {
+                        // Same name and same line is obviously the same
+                        // test. Within one line probably means that the
+                        // decorator was miscalculated, and it's best to
+                        // skip it anyway. (There isn't a style guide on
+                        // earth that encourages using distinct single-line
+                        // tests with the same name adjacent to each other,
+                        // so this should have no false positives.)
+                        if (Math.Abs(startLine - existingStartLine) <= 1) {
+                            continue;
+                        }
+                    } else {
+                        seen[name] = startLine;
+                    }
 
                     yield return new TestCaseInfo(
                         classValue.DeclaringModule?.FilePath,
@@ -162,15 +184,30 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// return those.  If there aren't any 'test*' tests return (if one at 
         /// all) the runTest overridden method
         /// </summary>
-        private static IEnumerable<KeyValuePair<string, IAnalysisSet>> GetTestCaseMembers(
+        private static IEnumerable<KeyValuePair<string, LocationInfo>> GetTestCaseMembers(
+            PythonAst ast,
+            string sourceFile,
             ModuleAnalysis analysis,
             AnalysisValue classValue
         ) {
-            var methodFunctions = classValue.GetAllMembers(analysis.InterpreterContext)
-                .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
 
-            var tests = methodFunctions.Where(v => v.Key.StartsWith("test"));
-            var runTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
+            IEnumerable<KeyValuePair<string, LocationInfo>> tests = null, runTest = null;
+            if (ast != null && !string.IsNullOrEmpty(sourceFile)) {
+                var walker = new TestMethodWalker(ast, sourceFile, classValue.Locations);
+                ast.Walk(walker);
+                tests = walker.Methods.Where(v => v.Key.StartsWith("test"));
+                runTest = walker.Methods.Where(v => v.Key.Equals("runTest"));
+            }
+
+            var methodFunctions = classValue.GetAllMembers(analysis.InterpreterContext)
+                .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method))
+                .Select(v => new KeyValuePair<string, LocationInfo>(v.Key, v.Value.SelectMany(av => av.Locations).FirstOrDefault(l => l != null)));
+
+            var analysisTests = methodFunctions.Where(v => v.Key.StartsWith("test"));
+            var analysisRunTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
+
+            tests = tests?.Concat(analysisTests) ?? analysisTests;
+            runTest = runTest?.Concat(analysisRunTest) ?? analysisRunTest;
 
             if (tests.Any()) {
                 return tests;

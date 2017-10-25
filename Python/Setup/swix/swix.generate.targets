@@ -5,6 +5,7 @@
     <SwrFile Condition="$(OutputLocalized)">$(IntermediateOutputPath)package.g.$(lang).swr</SwrFile>
     <SwixPackageType Condition="$(SwixPackageType) == ''">component</SwixPackageType>
     <SwixVersion Condition="$(SwixVersion) == ''">$(VSTarget).$(BuildNumber)</SwixVersion>
+    <Python Condition="$(Python) == ''">"$(PackagesPath)python\tools\python.exe"</Python>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -17,6 +18,10 @@
       <Type>Required</Type>
     </Dependency>
   </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <Package Include="$(SwrFile)" />
+  </ItemGroup>
 
   <ItemGroup Condition="'$(SourcePath)' != ''">
     <SwrSource Include="$(SourcePath)" />
@@ -36,7 +41,6 @@
 
   <Target Name="_GenerateSwrFromSources" Condition="@(SwrSource) != ''">
     <PropertyGroup>
-      <Python>"$(PackagesPath)python\tools\python.exe"</Python>
       <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py" $(GenerateCommand)</GenerateCommand>
       <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
     </PropertyGroup>
@@ -55,10 +59,6 @@
     <Message Text="Updating $(SwrFile)" Importance="High" Condition="$(_Orig) != $(_New)" />
     <WriteLinesToFile File="$(SwrFile)" Lines="$(_New)" Condition="$(_Orig) != $(_New)" Overwrite="yes" Encoding="UTF-8" />
     <Delete Files="$(SwrFile).tmp" />
-
-    <ItemGroup>
-      <Package Include="$(SwrFile)" Condition="Exists($(SwrFile))" />
-    </ItemGroup>
   </Target>
 </Project>
 

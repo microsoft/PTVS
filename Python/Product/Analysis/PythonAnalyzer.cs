@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (moduleRef != null) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
             } else {
-                Modules[_builtinName] = new ModuleReference(_builtinModule);
+                Modules[_builtinName] = new ModuleReference(_builtinModule, _builtinName);
             }
 
             FinishLoadKnownTypes(null);
@@ -413,7 +413,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of candidate absolute module names for the given
         /// modules.
         /// </summary>
-        /// <param name="projectEntry">
+        /// <param name="importingFrom">
         /// The project entry that is importing the module.
         /// </param>
         /// <param name="relativeModuleName">
@@ -424,14 +424,45 @@ namespace Microsoft.PythonTools.Analysis {
         /// in order of precedence.
         /// </returns>
         internal static IEnumerable<string> ResolvePotentialModuleNames(
-            IPythonProjectEntry projectEntry,
+            IPythonProjectEntry importingFrom,
+            string relativeModuleName,
+            bool absoluteImports
+        ) {
+            return ResolvePotentialModuleNames(
+                importingFrom?.ModuleName,
+                importingFrom?.FilePath,
+                relativeModuleName,
+                absoluteImports
+            );
+        }
+
+        /// <summary>
+        /// Returns a sequence of candidate absolute module names for the given
+        /// modules.
+        /// </summary>
+        /// <param name="importingFromModuleName">
+        /// The module that is importing the module.
+        /// </param>
+        /// <param name="importingFromFilePath">
+        /// The path to the file that is importing the module.
+        /// </param>
+        /// <param name="relativeModuleName">
+        /// A dotted name identifying the path to the module.
+        /// </param>
+        /// <returns>
+        /// A sequence of strings representing the absolute names of the module
+        /// in order of precedence.
+        /// </returns>
+        internal static IEnumerable<string> ResolvePotentialModuleNames(
+            string importingFromModuleName,
+            string importingFromFilePath,
             string relativeModuleName,
             bool absoluteImports
         ) {
             string importingFrom = null;
-            if (projectEntry != null) {
-                importingFrom = projectEntry.ModuleName;
-                if (ModulePath.IsInitPyFile(projectEntry.FilePath)) {
+            if (!string.IsNullOrEmpty(importingFromModuleName)) {
+                importingFrom = importingFromModuleName;
+                if (!string.IsNullOrEmpty(importingFromFilePath) && ModulePath.IsInitPyFile(importingFromFilePath)) {
                     if (string.IsNullOrEmpty(importingFrom)) {
                         importingFrom = "__init__";
                     } else {
@@ -453,12 +484,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                 var prefix = importingFrom.Split('.');
 
-                if (relativeModuleName.LastOrDefault() == '.') {
-                    // Last part empty means the whole name is dots, so there's
-                    // nothing to concatenate.
+                if (relativeModuleName.All(c => c == '.')) {
+                    // The whole name is dots, so there's nothing to concatenate.
                     yield return string.Join(".", prefix.Take(prefix.Length - relativeModuleName.Length));
                 } else {
-                    var suffix = relativeModuleName.Split('.');
+                    // Assume trailing dots are not part of the import
+                    var suffix = relativeModuleName.TrimEnd('.').Split('.');
                     var dotCount = suffix.TakeWhile(bit => string.IsNullOrEmpty(bit)).Count();
                     if (dotCount < prefix.Length) {
                         // If we have as many dots as prefix parts, the entire
@@ -475,6 +506,9 @@ namespace Microsoft.PythonTools.Analysis {
             // * importingFrom.relativeModuleName
             // and the order they are returned depends on whether
             // absolute_import is enabled or not.
+
+            // Assume trailing dots are not part of the import
+            relativeModuleName = relativeModuleName.TrimEnd('.');
 
             // With absolute_import, we treat the name as complete first.
             if (absoluteImports) {
@@ -498,28 +532,16 @@ namespace Microsoft.PythonTools.Analysis {
 
 
         /// <summary>
-        /// Looks up the specified module by name.
-        /// </summary>
-        public MemberResult[] GetModule(string name) {
-            return GetModules(modName => modName != name);
-        }
-
-        /// <summary>
         /// Gets a top-level list of all the available modules as a list of MemberResults.
         /// </summary>
         /// <returns></returns>
-        public MemberResult[] GetModules(bool topLevelOnly = false) {
-            return GetModules(modName => topLevelOnly && modName.IndexOf('.') != -1);
-        }
-
-        private MemberResult[] GetModules(Func<string, bool> excludedPredicate) {
+        public MemberResult[] GetModules() {
             var d = new Dictionary<string, List<ModuleLoadState>>();
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (String.IsNullOrWhiteSpace(modName) ||
-                    excludedPredicate(modName)) {
+                if (string.IsNullOrWhiteSpace(modName) || modName.Contains(".")) {
                     continue;
                 }
 
@@ -561,7 +583,13 @@ namespace Microsoft.PythonTools.Analysis {
 
             public IEnumerable<AnalysisValue> GetLazyModules() {
                 foreach (var value in _loaded) {
-                    yield return value.Module;
+                    yield return new SyntheticDefinitionInfo(
+                        value.Name,
+                        null,
+                        string.IsNullOrEmpty(value.MaybeSourceFile) ?
+                            Enumerable.Empty<LocationInfo>() :
+                            new[] { new LocationInfo(value.MaybeSourceFile, 0, 0) }
+                    );
                 }
             }
 
@@ -586,6 +614,38 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="name"></param>
         public IEnumerable<ExportedMemberInfo> FindNameInAllModules(string name) {
+            string pkgName;
+
+            if (_interpreter is ICanFindModuleMembers finder) {
+                foreach (var modName in finder.GetModulesNamed(name)) {
+                    int dot = modName.LastIndexOf('.');
+                    if (dot < 0) {
+                        yield return new ExportedMemberInfo(null, modName);
+                    } else {
+                        yield return new ExportedMemberInfo(modName.Remove(dot), modName.Substring(dot + 1));
+                    }
+                }
+
+                foreach (var modName in finder.GetModulesContainingName(name)) {
+                    yield return new ExportedMemberInfo(modName, name);
+                }
+
+                // Scan added modules directly
+                foreach (var mod in _modulesByFilename.Values) {
+                    if (mod.Name == name) {
+                        yield return new ExportedMemberInfo(null, mod.Name);
+                    } else if (GetPackageNameIfMatch(name, mod.Name, out pkgName)) {
+                        yield return new ExportedMemberInfo(pkgName, name);
+                    }
+
+                    if (mod.IsMemberDefined(_defaultContext, name)) {
+                        yield return new ExportedMemberInfo(mod.Name, name);
+                    }
+                }
+
+                yield break;
+            }
+            
             // provide module names first
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
@@ -593,7 +653,6 @@ namespace Microsoft.PythonTools.Analysis {
             
                 if (moduleRef.IsValid) {
                     // include modules which can be imported
-                    string pkgName;
                     if (modName == name) {
                         yield return new ExportedMemberInfo(null, modName);
                     } else if (GetPackageNameIfMatch(name, modName, out pkgName)) {
@@ -602,7 +661,15 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            // then include module members
+            foreach (var modName in _interpreter.GetModuleNames()) {
+                if (modName == name) {
+                    yield return new ExportedMemberInfo(null, modName);
+                } else if (GetPackageNameIfMatch(name, modName, out pkgName)) {
+                    yield return new ExportedMemberInfo(pkgName, name);
+                }
+            }
+
+            // then include imported module members
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
@@ -844,6 +911,8 @@ namespace Microsoft.PythonTools.Analysis {
                         return new BuiltinMethodInfo(md, this);
                     }
                 }) ?? _noneInst;
+            } else if (attr is IPythonBoundFunction) {
+                return GetCached(attr, () => new BoundBuiltinMethodInfo((IPythonBoundFunction)attr, this)) ?? _noneInst;
             } else if (attr is IBuiltinProperty) {
                 return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this)) ?? _noneInst;
             } else if (attr is IPythonModule) {
@@ -877,6 +946,17 @@ namespace Microsoft.PythonTools.Analysis {
             var result = new Dictionary<string, IAnalysisSet>();
             foreach (var name in names) {
                 result[name] = GetAnalysisValueFromObjects(container.GetMember(moduleContext, name));
+            }
+            var children = (container as IModule)?.GetChildrenPackages(moduleContext);
+            if (children?.Any() ?? false) {
+                foreach (var child in children) {
+                    IAnalysisSet existing;
+                    if (result.TryGetValue(child.Key, out existing)) {
+                        result[child.Key] = existing.Add(child.Value);
+                    } else {
+                        result[child.Key] = child.Value;
+                    }
+                }
             }
 
             return result;

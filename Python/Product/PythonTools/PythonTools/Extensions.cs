@@ -27,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -230,6 +231,26 @@ namespace Microsoft.PythonTools {
             return project.GetCommonProject() as PythonProjectNode;
         }
 
+        internal static string GetNameProperty(this IVsHierarchy project) {
+            object value;
+            ErrorHandler.ThrowOnFailure(project.GetProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_Name,
+                out value
+            ));
+            return value as string;
+        }
+
+        internal static Guid GetProjectIDGuidProperty(this IVsHierarchy project) {
+            Guid guid;
+            ErrorHandler.ThrowOnFailure(project.GetGuidProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
+                out guid
+            ));
+            return guid;
+        }
+
         internal static AnalysisEntry GetAnalysisEntry(this FileNode node) {
             return ((PythonProjectNode)node.ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(node.Url);
         }
@@ -255,6 +276,10 @@ namespace Microsoft.PythonTools {
 
         internal static AnalysisEntryService GetEntryService(this IServiceProvider serviceProvider) {
             return serviceProvider.GetComponentModel()?.GetService<AnalysisEntryService>();
+        }
+
+        internal static PythonEditorServices GetEditorServices(this IServiceProvider serviceProvider) {
+            return serviceProvider.GetComponentModel()?.GetService<PythonEditorServices>();
         }
 
         internal static PythonLanguageVersion GetLanguageVersion(this ITextView textView, IServiceProvider serviceProvider) {
@@ -307,14 +332,15 @@ namespace Microsoft.PythonTools {
         /// Returns null if the caret isn't in Python code or an analysis doesn't exist for some reason.
         /// </summary>
         internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            var buffer = textView.GetPythonBufferAtCaret();
-            if (buffer == null) {
-                return null;
-            }
-
             var service = serviceProvider.GetEntryService();
             AnalysisEntry entry = null;
-            service?.TryGetAnalysisEntry(textView, buffer, out entry);
+
+            var buffer = textView.GetPythonBufferAtCaret();
+            if (buffer == null) {
+                service?.TryGetAnalysisEntry(textView, out entry);
+            } else {
+                service?.TryGetAnalysisEntry(buffer, out entry);
+            }
             return entry;
         }
 

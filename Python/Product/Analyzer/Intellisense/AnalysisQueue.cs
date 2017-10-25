@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -105,6 +106,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 try {
                     _workEvent.Set();
+                } catch (IOException) {
                 } catch (ObjectDisposedException) {
                     // Queue was closed while we were running
                 }
@@ -178,7 +180,15 @@ namespace Microsoft.PythonTools.Intellisense {
             AnalysisStarted?.Invoke(this, EventArgs.Empty);
             _isAnalyzing = true;
 
-            while (!_cancel.IsCancellationRequested) {
+            CancellationToken cancel;
+            try {
+                cancel = _cancel.Token;
+            } catch (ObjectDisposedException) {
+                AnalysisAborted?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+
+            while (!cancel.IsCancellationRequested) {
                 IAnalyzable workItem;
 
                 AnalysisPriority pri;
@@ -195,9 +205,9 @@ namespace Microsoft.PythonTools.Intellisense {
                                 Enqueue(new GroupAnalysis(groupable.AnalysisGroup, this), pri);
                             }
 
-                            groupable.Analyze(_cancel.Token, true);
+                            groupable.Analyze(cancel, true);
                         } else {
-                            workItem.Analyze(_cancel.Token);
+                            workItem.Analyze(cancel);
                         }
                     } catch (Exception ex) {
                         if (ex.IsCriticalException() || System.Diagnostics.Debugger.IsAttached) {
@@ -213,7 +223,17 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (evt1 != null) {
                         ThreadPool.QueueUserWorkItem(_ => evt1(this, EventArgs.Empty));
                     }
-                    WaitHandle.SignalAndWait(_analyzer.QueueActivityEvent, _workEvent);
+                    try {
+                        WaitHandle.SignalAndWait(_analyzer.QueueActivityEvent, _workEvent);
+                    } catch (ApplicationException) {
+                        // No idea where this is coming from...
+                        try {
+                            _cancel.Cancel();
+                        } catch (ObjectDisposedException) {
+                            // Doesn't matter - we're breaking out anyway
+                        }
+                        break;
+                    }
                     var evt2 = AnalysisStarted;
                     if (evt2 != null) {
                         ThreadPool.QueueUserWorkItem(_ => evt2(this, EventArgs.Empty));
@@ -223,7 +243,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             _isAnalyzing = false;
 
-            if (_cancel.IsCancellationRequested) {
+            if (cancel.IsCancellationRequested) {
                 AnalysisAborted?.Invoke(this, EventArgs.Empty);
             }
         }

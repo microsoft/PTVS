@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, string start, string end, Expression item) {
             if (!String.IsNullOrEmpty(start)) {
-                format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+                format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
                 res.Append(start);
             }
 

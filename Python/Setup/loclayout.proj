@@ -55,6 +55,9 @@
         Microsoft.PythonTools.Uwp.Wizards.dll;
         " Condition="$(IncludeUwp)" />
     <ManagedFiles Include="
+        Microsoft.PythonTools.Debugger.VCLauncher.dll;
+        " Condition="$(IncludeVCDebugLauncher)" />
+    <ManagedFiles Include="
         Microsoft.PythonTools.Wsl.dll;
         " Condition="$(IncludeWsl)" />
 
@@ -62,15 +65,26 @@
         $(BinariesOutputPath)Snippets\SnippetsIndex.xml;
         $(BinariesOutputPath)Snippets\**\*.snippet" />
 
+    <VCPropertyPages Include="
+        $(BinariesOutputPath)VCTargets\**\*.xaml" />
+
     <FilesToLocalize Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
       <TranslationFile>$(LocDir)lcl\{Lang}\%(Filename)%(Extension).lcl</TranslationFile>
-      <LciCommentFile>$(LocDir)lci\%(Filename)%(Extension).lci</LciCommentFile>
+      <LciCommentFile Condition="Exists('$(LocDir)lci\%(Filename)%(Extension).lci')">$(LocDir)lci\%(Filename)%(Extension).lci</LciCommentFile>
       <SettingsFile>$(LSBuildRoot)\MCP_excludeBaml.lss</SettingsFile>
+      <HasLceComments>false</HasLceComments>
     </FilesToLocalize>
     <FilesToLocalize Include="@(CodeSnippets)">
       <TranslationFile>$(LocDir)lcl\{Lang}\Snippets\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
-      <LciCommentFile>$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
+      <LciCommentFile Condition="Exists('$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci')">$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
       <SettingsFile>$(LSBuildRoot)\locxml_snippets.lss</SettingsFile>
+      <HasLceComments>false</HasLceComments>
+    </FilesToLocalize>
+    <FilesToLocalize Include="@(VCPropertyPages)">
+      <TranslationFile>$(LocDir)lcl\{Lang}\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
+      <LciCommentFile Condition="Exists('$(LocDir)lci\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lci')">$(LocDir)lci\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
+      <SettingsFile>$(LSBuildRoot)\locxml_strpLocTg_vc.lss</SettingsFile>
+      <HasLceComments>false</HasLceComments>
     </FilesToLocalize>
   </ItemGroup>
   

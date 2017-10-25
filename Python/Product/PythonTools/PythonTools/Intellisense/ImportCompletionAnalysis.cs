@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -27,8 +28,8 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class AsKeywordCompletionAnalysis : CompletionAnalysis {
-        public AsKeywordCompletionAnalysis(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
-            : base(serviceProvider, session, view, span, buffer, options) { }
+        public AsKeywordCompletionAnalysis(PythonEditorServices services, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
+            : base(services, session, view, span, buffer, options) { }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var completion = new[] { PythonCompletion(glyphService, "as", null, StandardGlyphGroup.GlyphKeyword) };
@@ -43,12 +44,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private static readonly Regex _validNameRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
         private readonly string[] _namespace;
 
-        private ImportCompletionAnalysis(string[] ns, IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(serviceProvider, session, view, span, textBuffer, options) {
+        private ImportCompletionAnalysis(PythonEditorServices services, string[] ns, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(services, session, view, span, textBuffer, options) {
             _namespace = ns;
         }
 
-        public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        public static CompletionAnalysis Make(PythonEditorServices services, IList<ClassificationSpan> tokens, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             Debug.Assert(tokens[0].Span.GetText() == "import" || tokens[0].Span.GetText() == "from");
 
             if (tokens.Count >= 2) {
@@ -84,12 +85,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     return EmptyCompletionContext;
                 }
                 if (expectDot) {
-                    return new AsKeywordCompletionAnalysis(serviceProvider, session, view, span, textBuffer, options);
+                    return new AsKeywordCompletionAnalysis(services, session, view, span, textBuffer, options);
                 }
-                return new ImportCompletionAnalysis(ns.ToArray(), serviceProvider, session, view, span, textBuffer, options);
+                return new ImportCompletionAnalysis(services, ns.ToArray(), session, view, span, textBuffer, options);
             }
 
-            return new ImportCompletionAnalysis(new string[0], serviceProvider, session, view, span, textBuffer, options);
+            return new ImportCompletionAnalysis(services, new string[0], session, view, span, textBuffer, options);
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {

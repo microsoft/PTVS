@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Creates a new interpreter factory with the specified options. This
         /// interpreter always includes a cached completion database.
         /// </summary>
-        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options = null) {
+        public static IPythonInterpreterFactory CreateInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options = null) {
             options = options?.Clone() ?? new InterpreterFactoryCreationOptions();
 
             if (string.IsNullOrEmpty(options.DatabasePath)) {
@@ -40,11 +40,18 @@ namespace Microsoft.PythonTools.Interpreter {
                 );
             }
 
-            var fact = new CPythonInterpreterFactory(configuration, options);
-            if (options.WatchFileSystem) {
-                fact.BeginRefreshIsCurrent();
+            if (options.NoDatabase) {
+                // Use the (currenty experimental) non-database backed factory
+                var fact = new Ast.AstPythonInterpreterFactory(configuration, options);
+                return fact;
+            } else {
+                // Use the database-backed factory
+                var fact = new CPythonInterpreterFactory(configuration, options);
+                if (options.WatchFileSystem) {
+                    fact.BeginRefreshIsCurrent();
+                }
+                return fact;
             }
-            return fact;
         }
 
         /// <summary>

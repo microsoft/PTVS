@@ -16,49 +16,23 @@
 
 using System;
 using EnvDTE;
-using Microsoft.PythonTools;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
-    [TestClass]
-    public class SnippetsTests : PythonProjectTest {
-        private bool _previousALI;
-        
-        [TestInitialize]
-        public void UpdateSettings() {
-            // TODO: Update tests to use PythonVisualStudioApp and remove this
-            AssertListener.Initialize();
-            VSTestContext.ServiceProvider.GetUIThread().Invoke(() => {
-                var props = VSTestContext.ServiceProvider.GetPythonToolsService().AdvancedOptions;
-                _previousALI = props.AutoListIdentifiers;
-                props.AutoListIdentifiers = false;
-            });
-        }
-
-        [TestCleanup]
-        public void RestoreSettings() {
-            // TODO: Update tests to use PythonVisualStudioApp and remove this
-            VSTestContext.ServiceProvider.GetUIThread().Invoke(() => {
-                var props = VSTestContext.ServiceProvider.GetPythonToolsService().AdvancedOptions;
-                props.AutoListIdentifiers = _previousALI;
-            });
-        }
-
-        private static ProjectDefinition BasicProject = Project(
+    public class SnippetsTests {
+        private static ProjectDefinition BasicProjectDefinition = new ProjectDefinition(
             "SnippetsTest",
-            Compile("app", ""),
-            Compile("indented", "if True:\r\n    \r\n    pass"),
-            Compile("nonempty", "42"),
-            Compile("multiline", "1\r\n2\r\n3"),
-            Compile("imported", "import unittest\r\n"),
-            Compile("importedas", "import unittest as foo\r\n"),
-            Compile("badimport", "import\r\n")
+            ProjectGenerator.Compile("app", ""),
+            ProjectGenerator.Compile("indented", "if True:\r\n    \r\n    pass"),
+            ProjectGenerator.Compile("nonempty", "42"),
+            ProjectGenerator.Compile("multiline", "1\r\n2\r\n3"),
+            ProjectGenerator.Compile("imported", "import unittest\r\n"),
+            ProjectGenerator.Compile("importedas", "import unittest as foo\r\n"),
+            ProjectGenerator.Compile("badimport", "import\r\n")
         );
 
         private static readonly Snippet[] BasicSnippets = new Snippet[] {
@@ -97,93 +71,85 @@ namespace PythonToolsUITests {
             ),
             new Snippet(
                 "try",
-                "try:\r\n    $body$\r\nexcept  :\r\n    pass",
+                "try:\r\n    $body$\r\nexcept :\r\n    pass",
                 new Declaration("Exception", "try:\r\n    $body$\r\nexcept Exception:\r\n    pass")
             ),
             new Snippet(
                 "except",
-                "try:\r\n    pass\r\nexcept  :\r\n    $body$",
+                "try:\r\n    pass\r\nexcept :\r\n    $body$",
                 new Declaration("Exception", "try:\r\n    pass\r\nexcept Exception:\r\n    $body$")
             )
         };
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestBasicSnippetsTab() {
-            using (var solution = BasicProject.Generate().ToVs()) {
+        public void TestBasicSnippetsTab(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
-                    TestOneTabSnippet(solution, snippet);
-
-                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                    TestOneTabSnippet(vs, snippet);
+                    
+                    vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
 
-        private static IEditor TestOneTabSnippet(IVisualStudioInstance solution, Snippet snippet) {
+        private static IEditor TestOneTabSnippet(IVisualStudioInstance vs, Snippet snippet) {
             Console.WriteLine("Testing: {0}", snippet.Shortcut);
-            var app = solution.OpenItem("SnippetsTest", "app.py");
-            app.MoveCaret(1, 1);
-            app.Invoke(() => app.TextView.Caret.EnsureVisible());
-            app.SetFocus();
+            var editor = vs.OpenItem("SnippetsTest", "app.py");
+            editor.MoveCaret(1, 1);
+            editor.Invoke(() => editor.TextView.Caret.EnsureVisible());
 
-            return VerifySnippet(snippet, "pass", app);
+            return VerifySnippet(snippet, "pass", editor);
         }
 
-        private static IEditor TestOneSurroundWithSnippet(IVisualStudioInstance solution, Snippet snippet, string body = "42", string file = "nonempty.py") {
+        private static IEditor TestOneSurroundWithSnippet(IVisualStudioInstance vs, Snippet snippet, string body = "42", string file = "nonempty.py") {
             Console.WriteLine("Testing: {0}", snippet.Shortcut);
-            var app = solution.OpenItem("SnippetsTest", file);
-            app.Select(1, 1, app.Text.Length);
-            app.Invoke(() => app.TextView.Caret.EnsureVisible());
-            app.SetFocus();
+            var editor = vs.OpenItem("SnippetsTest", file);
+            editor.Select(1, 1, editor.Text.Length);
+            editor.Invoke(() => editor.TextView.Caret.EnsureVisible());
 
-            solution.ExecuteCommand("Edit.SurroundWith");
-            return VerifySnippet(snippet, body, app);
+            vs.ExecuteCommand("Edit.SurroundWith");
+            return VerifySnippet(snippet, body, editor);
         }
 
-        private static IEditor TestOneInsertSnippet(IVisualStudioInstance solution, Snippet snippet, string category, string body = "42", string file = "nonempty.py") {
+        private static IEditor TestOneInsertSnippet(IVisualStudioInstance vs, Snippet snippet, string category, string body = "42", string file = "nonempty.py") {
             Console.WriteLine("Testing: {0}", snippet.Shortcut);
-            var app = solution.OpenItem("SnippetsTest", file);
-            app.Select(1, 1, app.Text.Length);
-            app.Invoke(() => app.TextView.Caret.EnsureVisible());
-            app.SetFocus();
+            var editor = vs.OpenItem("SnippetsTest", file);
+            editor.Select(1, 1, editor.Text.Length);
+            editor.Invoke(() => editor.TextView.Caret.EnsureVisible());
 
-            solution.ExecuteCommand("Edit.InsertSnippet");
+            vs.ExecuteCommand("Edit.InsertSnippet");
             Keyboard.Type(category + "\t");
 
-            return VerifySnippet(snippet, body, app);
+            return VerifySnippet(snippet, body, editor);
         }
 
-        private static IEditor TestOneInsertSnippetMoveCaret(IVisualStudioInstance solution, Snippet snippet, string category, string body = "42", string file = "nonempty.py", int line = 1) {
+        private static IEditor TestOneInsertSnippetMoveCaret(IVisualStudioInstance vs, Snippet snippet, string category, string body = "42", string file = "nonempty.py", int line = 1) {
             Console.WriteLine("Testing: {0}", snippet.Shortcut);
-            var app = solution.OpenItem("SnippetsTest", file);
-            app.MoveCaret(line, 1);
-            app.Invoke(() => app.TextView.Caret.EnsureVisible());
-            app.SetFocus();
+            var editor = vs.OpenItem("SnippetsTest", file);
+            editor.MoveCaret(line, 1);
+            editor.Invoke(() => editor.TextView.Caret.EnsureVisible());
 
-            solution.ExecuteCommand("Edit.InsertSnippet");
+            vs.ExecuteCommand("Edit.InsertSnippet");
             Keyboard.Type(category + "\t");
 
-            return VerifySnippet(snippet, body, app);
+            return VerifySnippet(snippet, body, editor);
         }
 
-        private static IEditor VerifySnippet(Snippet snippet, string body, IEditor app) {
+        private static IEditor VerifySnippet(Snippet snippet, string body, IEditor editor) {
             Keyboard.Type(snippet.Shortcut + "\t");
 
-            app.WaitForText(snippet.Expected.Replace("$body$", body));
+            editor.WaitForText(snippet.Expected.Replace("$body$", body));
 
             foreach (var decl in snippet.Declarations) {
                 Console.WriteLine("Declaration: {0}", decl.Replacement);
                 Keyboard.Type(decl.Replacement);
-                app.WaitForText(decl.Expected.Replace("$body$", body));
+                editor.WaitForText(decl.Expected.Replace("$body$", body));
                 Keyboard.Type("\t");
             }
             Keyboard.Type("\r");
-            return app;
+            return editor;
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPassSelected() {
+        public void TestPassSelected(PythonVisualStudioApp app, PythonProjectGenerator pg) {
             var snippet = new Snippet(
                 "class",
                 "class ClassName(object):\r\n    pass",
@@ -191,153 +157,90 @@ namespace PythonToolsUITests {
                 new Declaration("(base)", "class myclass(base):\r\n    pass")
             );
 
-            using (var solution = BasicProject.Generate().ToVs()) {
-                var app = TestOneTabSnippet(solution, snippet);
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
+                var editor = TestOneTabSnippet(vs, snippet);
 
                 Keyboard.Type("42");
-                app.WaitForText("class myclass(base):\r\n    42");
+                editor.WaitForText("class myclass(base):\r\n    42");
 
-                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestPassSelectedIndented() {
-            using (var solution = BasicProject.Generate().ToVs()) {
-                var app = solution.OpenItem("SnippetsTest", "indented.py");
-                app.MoveCaret(2, 5);
-                app.Invoke(() => app.TextView.Caret.EnsureVisible());
-                app.SetFocus();
+        public void TestPassSelectedIndented(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
+                var editor = vs.OpenItem("SnippetsTest", "indented.py");
+                editor.MoveCaret(2, 5);
+                editor.Invoke(() => editor.TextView.Caret.EnsureVisible());
+                editor.SetFocus();
 
                 Keyboard.Type("class\t");
-                app.WaitForText("if True:\r\n    class ClassName(object):\r\n        pass\r\n    pass");
+                editor.WaitForText("if True:\r\n    class ClassName(object):\r\n        pass\r\n    pass");
                 Keyboard.Type("\r");
                 Keyboard.Type("42");
-                app.WaitForText("if True:\r\n    class ClassName(object):\r\n        42\r\n    pass");
+                editor.WaitForText("if True:\r\n    class ClassName(object):\r\n        42\r\n    pass");
 
-                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestSurroundWith() {
-            using (var solution = BasicProject.Generate().ToVs()) {
+        public void TestSurroundWith(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
-                    TestOneSurroundWithSnippet(solution, snippet);
+                    TestOneSurroundWithSnippet(vs, snippet);
 
-                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                    vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestSurroundWithMultiline() {
-            using (var solution = BasicProject.Generate().ToVs()) {
+        public void TestSurroundWithMultiline(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
                     TestOneSurroundWithSnippet(
-                        solution,
+                        vs,
                         snippet,
                         "1\r\n    2\r\n    3",
                         "multiline.py"
                     );
 
-                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                    vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestInsertSnippet() {
-            using (var solution = BasicProject.Generate().ToVs()) {
+        public void TestInsertSnippet(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
-                    TestOneInsertSnippet(solution, snippet, "Python");
+                    TestOneInsertSnippet(vs, snippet, "Python");
 
-                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                    vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestInsertSnippetEmptySelectionNonEmptyLine() {
-            using (var solution = BasicProject.Generate().ToVs()) {
+        public void TestInsertSnippetEmptySelectionNonEmptyLine(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
                     Console.WriteLine("Testing: {0}", snippet.Shortcut);
-                    var app = solution.OpenItem("SnippetsTest", "nonempty.py");
-                    app.MoveCaret(1, 1);
-                    app.Invoke(() => app.TextView.Caret.EnsureVisible());
-                    app.SetFocus();
+                    var editor = vs.OpenItem("SnippetsTest", "nonempty.py");
+                    editor.MoveCaret(1, 1);
+                    editor.Invoke(() => editor.TextView.Caret.EnsureVisible());
+                    editor.SetFocus();
 
-                    solution.ExecuteCommand("Edit.InsertSnippet");
+                    vs.ExecuteCommand("Edit.InsertSnippet");
                     Keyboard.Type("Python\t");
 
                     Keyboard.Type(snippet.Shortcut + "\t");
-                    app.WaitForText(snippet.Expected.Replace("$body$", "pass") + "\r\n" + "42");
+                    editor.WaitForText(snippet.Expected.Replace("$body$", "pass") + "\r\n" + "42");
 
-                    solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                    vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
         }
 
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestTestClassSnippet() {
-            using (var solution = BasicProject.Generate().ToVs()) {
-                var snippet = new Snippet(
-                    "testc",
-                    "\r\nimport unittest\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
-                    new Declaration("mytest", "\r\nimport unittest\r\nclass mytest(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n"),
-                    new Declaration("quox", "\r\nimport unittest\r\nclass mytest(unittest.TestCase):\r\n    def test_quox(self):\r\n        self.fail(\"Not implemented\")\r\n")
-                );
-
-                TestOneInsertSnippet(solution, snippet, "Test");
-
-                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestTestClassSnippetBadImport() {
-            using (var solution = BasicProject.Generate().ToVs()) {
-                var snippet = new Snippet(
-                    "testc",
-                    "import\r\nimport unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
-                    new Declaration("mytest", "import\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n"),
-                    new Declaration("quox", "import\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_quox(self):\r\n        self.fail(\"Not implemented\")\r\n")
-                );
-
-                TestOneInsertSnippetMoveCaret(solution, snippet, "Test", file: "badimport.py", line:2);
-
-                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestTestClassSnippetImportAs() {
-            using (var solution = BasicProject.Generate().ToVs()) {
-                var snippet = new Snippet(
-                    "testc",
-                    "import unittest as foo\r\nimport unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
-                    new Declaration("mytest", "import unittest as foo\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n"),
-                    new Declaration("quox", "import unittest as foo\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_quox(self):\r\n        self.fail(\"Not implemented\")\r\n")
-                );
-
-                TestOneInsertSnippetMoveCaret(solution, snippet, "Test", file: "importedas.py", line: 2);
-
-                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestTestClassSnippetUnitTestImported() {
-            using (var solution = BasicProject.Generate().ToVs()) {
+        public void TestTestClassSnippet(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 var snippet = new Snippet(
                     "testc",
                     "import unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
@@ -345,34 +248,77 @@ namespace PythonToolsUITests {
                     new Declaration("quox", "import unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_quox(self):\r\n        self.fail(\"Not implemented\")\r\n")
                 );
 
-                TestOneInsertSnippetMoveCaret(solution, snippet, "Test", file: "imported.py", line: 2);
+                TestOneInsertSnippet(vs, snippet, "Test");
 
-                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+            }
+        }
+
+        public void TestTestClassSnippetBadImport(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
+                var snippet = new Snippet(
+                    "testc",
+                    "import\r\nimport unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
+                    new Declaration("mytest", "import\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n"),
+                    new Declaration("quox", "import\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_quox(self):\r\n        self.fail(\"Not implemented\")\r\n")
+                );
+
+                TestOneInsertSnippetMoveCaret(vs, snippet, "Test", file: "badimport.py", line:2);
+
+                vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+            }
+        }
+
+        public void TestTestClassSnippetImportAs(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
+                var snippet = new Snippet(
+                    "testc",
+                    "import unittest as foo\r\nimport unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
+                    new Declaration("mytest", "import unittest as foo\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n"),
+                    new Declaration("quox", "import unittest as foo\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_quox(self):\r\n        self.fail(\"Not implemented\")\r\n")
+                );
+
+                TestOneInsertSnippetMoveCaret(vs, snippet, "Test", file: "importedas.py", line: 2);
+
+                vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+            }
+        }
+
+        public void TestTestClassSnippetUnitTestImported(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
+                var snippet = new Snippet(
+                    "testc",
+                    "import unittest\r\n\r\nclass MyTestClass(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n",
+                    new Declaration("mytest", "import unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_name(self):\r\n        self.fail(\"Not implemented\")\r\n"),
+                    new Declaration("quox", "import unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_quox(self):\r\n        self.fail(\"Not implemented\")\r\n")
+                );
+
+                TestOneInsertSnippetMoveCaret(vs, snippet, "Test", file: "imported.py", line: 2);
+
+                vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
         /// <summary>
         /// Starting a nested session should dismiss the initial session
         /// </summary>
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void TestNestedSession() {
-            using (var solution = BasicProject.Generate().ToVs()) {
-                var app = solution.OpenItem("SnippetsTest", "app.py");
-                app.MoveCaret(1, 1);
-                app.Invoke(() => app.TextView.Caret.EnsureVisible());
-                app.SetFocus();
+        public void TestNestedSession(PythonVisualStudioApp app, PythonProjectGenerator pg) {
+            using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
+                var editor = vs.OpenItem("SnippetsTest", "app.py");
+                editor.MoveCaret(1, 1);
+                editor.Invoke(() => editor.TextView.Caret.EnsureVisible());
+                editor.SetFocus();
 
                 // start session
                 Keyboard.Type("if\t");
                 // select inserted pass
-                app.Select(2, 5, 4);
+                editor.Select(2, 5, 4);
                 // start nested session
-                solution.ExecuteCommand("Edit.SurroundWith");
+                vs.ExecuteCommand("Edit.SurroundWith");
                 Keyboard.Type("if\t");
-                app.WaitForText("if True:\r\n    if True:\r\n        pass");
+                editor.WaitForText("if True:\r\n    if True:\r\n        pass");
 
-                solution.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
+                vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }
         }
 

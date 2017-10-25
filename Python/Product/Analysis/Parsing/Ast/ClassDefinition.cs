@@ -163,6 +163,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
+                _name?.Walk(walker);
                 if (_decorators != null) {
                     _decorators.Walk(walker);
                 }
@@ -187,7 +188,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 Decorators.AppendCodeString(res, ast, format);
             }
 
-            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+            format.ReflowComment(res, this.GetPreceedingWhiteSpace(ast));
             res.Append("class");
             res.Append(this.GetSecondWhiteSpace(ast));
             res.Append(this.GetVerbatimImage(ast) ?? Name);

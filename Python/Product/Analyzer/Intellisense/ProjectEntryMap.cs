@@ -98,8 +98,24 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public IProjectEntry Get(int itemId) {
+            var r = this[itemId];
+            if (r == null) {
+                throw new ProjectEntryNotFoundException(itemId);
+            }
+            return r;
+        }
+
+        public T Get<T>(int itemId) where T : class, IProjectEntry {
+            return Get(itemId) as T;
+        }
+
         public bool TryGetValue(string path, out IProjectEntry item) {
             return _projectFiles.TryGetValue(path, out item);
         }
+    }
+
+    sealed class ProjectEntryNotFoundException : KeyNotFoundException {
+        public ProjectEntryNotFoundException(int itemId) : base($"Entry Id {itemId}") { }
     }
 }
