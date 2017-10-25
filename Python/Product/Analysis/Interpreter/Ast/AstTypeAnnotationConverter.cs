@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -23,7 +24,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly NameLookupContext _scope;
 
         public AstTypeAnnotationConverter(NameLookupContext scope) {
-            _scope = scope;
+            _scope = scope ?? throw new ArgumentNullException(nameof(scope));
         }
 
         public override IPythonType Finalize(IPythonType type) {
