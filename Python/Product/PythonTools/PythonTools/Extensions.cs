@@ -453,6 +453,11 @@ namespace Microsoft.PythonTools {
         }
 
         internal static PythonProjectNode GetProjectContainingFile(this IServiceProvider serviceProvider, string filename) {
+            if (!Path.IsPathRooted(filename)) {
+                // If the file is not a full path, it didn't come from a project
+                return null;
+            }
+
             var sln = (IVsSolution)serviceProvider.GetService(typeof(SVsSolution));
             return sln.EnumerateLoadedPythonProjects()
                 .FirstOrDefault(p => p.FindNodeByFullPath(filename) != null);

@@ -312,13 +312,13 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython36x64));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython37() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython37));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython37x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython37x64));

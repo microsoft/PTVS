@@ -5786,7 +5786,7 @@ If the files in the existing folder have the same names as files in the folder y
         internal HierarchyNode FindNodeByFullPath(string name) {
             Site.GetUIThread().MustBeCalledFromUIThread();
 
-            Debug.Assert(Path.IsPathRooted(name));
+            Debug.Assert(Path.IsPathRooted(name), $"{name} is not a full path");
 
             HierarchyNode res;
             _diskNodes.TryGetValue(name, out res);

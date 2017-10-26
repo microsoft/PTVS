@@ -39,7 +39,7 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ToggleableOptionTest() {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.ToggleableOptionTest));
