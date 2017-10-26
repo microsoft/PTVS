@@ -2404,6 +2404,9 @@
       <Item ItemId=";FailedToLaunchDebugger" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to launch debugger]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è stato possibile avviare il debugger]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
