@@ -140,7 +140,7 @@ permissions and limitations under the License.
   <Target Name="DjangoShellCommand"
           Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;OpenDjangoShellLabel"
           Returns="@(Commands)">
-    <CreatePythonCommandItem Target="import django, $(DjangoSettingsModule); print('Starting Django %s shell' % django.get_version())"
+    <CreatePythonCommandItem Target="import django, $(DjangoSettingsModule); print('Starting Django %s shell' % django.get_version()); django.setup()"
                              TargetType="code"
                              Arguments=""
                              WorkingDirectory="$(WorkingDirectory)"
