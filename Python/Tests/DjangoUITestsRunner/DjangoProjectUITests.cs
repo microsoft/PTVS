@@ -59,6 +59,12 @@ namespace DjangoUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
+        public void DjangoShellCommand() {
+            _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoShellCommand));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
         public void DjangoCommandsNonDjangoApp() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCommandsNonDjangoApp));
         }

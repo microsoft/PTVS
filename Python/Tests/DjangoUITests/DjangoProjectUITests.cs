@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Microsoft.PythonTools.Django;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -76,6 +77,34 @@ namespace DjangoUITests {
                 console.WaitForTextEnd("The interactive Python process has exited.", ">");
 
                 Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("0 static files copied"));
+            }
+        }
+
+        public void DjangoShellCommand(PythonVisualStudioApp app, DjangoInterpreterSetter interpreterSetter) {
+            // Open a project that has some models defined, and make sure they can be imported without errors
+            var sln = app.CopyProjectForTest(@"TestData\DjangoAnalysisTestApp.sln");
+            var project = app.OpenProject(sln);
+            app.SolutionExplorerTreeView.SelectProject(project);
+
+            app.Dte.ExecuteCommand("Project.OpenDjangoShell");
+
+            using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
+                Assert.IsNotNull(console);
+
+                bool started = false;
+                for (int i = 0; i < 20; i++) {
+                    if (console.TextView.TextSnapshot.GetText().Contains("Starting Django")) {
+                        started = true;
+                        break;
+                    }
+                    Thread.Sleep(250);
+                }
+
+                Assert.IsTrue(started, "Did not see 'Starting Django <ver> shell' message");
+
+                console.WaitForTextEnd(">");
+                console.SubmitCode("import myapp.models");
+                console.WaitForTextEnd(">import myapp.models", ">");
             }
         }
 
