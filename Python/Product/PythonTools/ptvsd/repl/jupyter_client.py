@@ -59,24 +59,27 @@ class Message(object):
         self._read = False
 
     def __getattr__(self, attr):
-        return self[attr]
+        v = self[attr, self._sentinel]
+        if v is self._sentinel:
+            return Message({})
+        if isinstance(v, dict):
+            return Message(v)
+        return v
 
     def __getitem__(self, key):
         if isinstance(key, tuple):
             key, default_value = key
         else:
-            default_value = self._sentinel
+            default_value = None
         if not self._m:
             return self
         try:
             v = self._m[key]
         except KeyError:
-            if default_value is self._sentinel:
-                return Message({})
             return default_value
-        if not isinstance(v, dict):
-            return v
-        return Message(v)
+        if isinstance(v, dict):
+            return Message(v)
+        return v
 
     def __repr__(self):
         return repr(self._m)
@@ -124,6 +127,9 @@ class JupyterClientBackend(ReplBackend):
             km.shutdown_kernel(now=True)
 
     def __command_executed(self, msg):
+        if msg.msg_type == 'execute_reply':
+            self.__handle_payloads(msg.content['payload'])
+
         self.send_command_executed()
 
     def run_command(self, command):
@@ -197,21 +203,22 @@ class JupyterClientBackend(ReplBackend):
             while not self.exit_requested:
                 while self.__cmd_buffer and not self.exit_requested:
                     self.run_command(self.__cmd_buffer.pop(0))
+                if self.exit_requested:
+                    break
 
                 m = Message(client.get_shell_msg(block=True))
                 msg_id = m.msg_id
                 msg_type = m.msg_type
 
                 print('%s: %s' % (msg_type, msg_id))
-                #print(m)
 
                 exec_count = m.content['execution_count', None]
                 if exec_count != last_exec_count:
                     last_exec_count = exec_count
                     exec_count = int(exec_count) + 1
-                    ps1 = 'In  [%s]: ' % exec_count
+                    ps1 = 'In [%s]: ' % exec_count
                     ps2 = ' ' * (len(ps1) - 5) + '...: '
-                    self.send_prompt(ps1, ps2, allow_multiple_statements=True)
+                    self.send_prompt('\n' + ps1, ps2, allow_multiple_statements=True)
 
                 parent_id = m.parent_header['msg_id', None]
                 if parent_id:
@@ -235,19 +242,17 @@ class JupyterClientBackend(ReplBackend):
                 if m.msg_type == 'execute_input':
                     pass
                 elif m.msg_type == 'execute_result':
-                    print(m.msg_type, m.content)
                     self.__write_result(m.content)
                 elif m.msg_type == 'display_data':
-                    print(m.msg_type, m.content)
                     self.__write_content(m.content)
                 elif m.msg_type == 'stream':
                     self.__write_stream(m.content)
                 elif m.msg_type == 'error':
-                    self.__write_error(m.content)
+                    self.__write_result(m.content, treat_as_error=True)
                 elif m.msg_type == 'status':
                     self.__status = m.content['execution_state', 'idle']
                 else:
-                    print("Received: " + str(m) + "\n")
+                    print("Received: " + m.msg_type + ":" + str(m) + "\n")
                     self.write_stdout(str(m) + '\n')
 
         except KeyboardInterrupt:
@@ -266,15 +271,23 @@ class JupyterClientBackend(ReplBackend):
         if text:
             f(text)
 
-    def __write_result(self, content):
-        exec_count = content['execution_count', None]
+    def __write_result(self, content, treat_as_error=False):
+        exec_count = content['execution_count']
         if exec_count is not None:
             prefix = 'Out [%s]: ' % exec_count
         else:
             prefix = 'Out: '
 
-        if content.status == 'ok':
-            output_str = content.data['text/plain', None]
+        if treat_as_error or content['status'] == 'error':
+            tb = content['traceback']
+            if tb:
+                self.write_stderr(prefix + '\n')
+                for line in tb:
+                    self.write_stderr(line + '\n')
+                return
+
+        if content['status', 'ok'] == 'ok':
+            output_str = content.data['text/plain']
             if output_str is None:
                 output_str = str(content.data)
             if '\n' in output_str:
@@ -284,22 +297,20 @@ class JupyterClientBackend(ReplBackend):
             self.write_stdout(output_str)
             return
 
-        if content.status == 'error':
-            tb = content['traceback', None]
-            if tb:
-                self.write_stderr(prefix + '\n')
-                for line in tb:
-                    self.write_stderr(line + '\n')
-                return
-
         self.write_stderr(str(content) + '\n')
         self.send_error()
+
+    def __handle_payloads(self, payloads):
+        if not payloads:
+            return
+        for p in payloads:
+            print(p['source'], p)
 
     def __write_content(self, content):
         if content.status != 'ok':
             return
 
-        output_xaml = content.data['application/xaml+xml', None]
+        output_xaml = content.data['application/xaml+xml']
         if output_xaml is not None:
             try:
                 if isinstance(output_xaml, str) and sys.version_info[0] >= 3:
