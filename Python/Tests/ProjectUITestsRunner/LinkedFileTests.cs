@@ -114,7 +114,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding a duplicate link to the same item
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddExistingItem() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItem));
@@ -123,7 +123,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding a link to a folder which is already linked in somewhere else.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndItemIsAlreadyLinked() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndItemIsAlreadyLinked));
@@ -136,7 +136,7 @@ namespace ProjectUITestsRunner {
         /// this verifies we deal with the project name string comparison correctly (including a \ at the end of the
         /// path).
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndLinkAlreadyExists() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndLinkAlreadyExists));
@@ -145,7 +145,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding new linked item when file of same name exists (when the file only exists on disk)
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndFileByNameExistsOnDiskButNotInProject));
@@ -154,7 +154,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding new linked item when file of same name exists (both in the project and on disk)
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsOnDiskAndInProject() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndFileByNameExistsOnDiskAndInProject));
@@ -163,7 +163,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding new linked item when file of same name exists (in the project, but not on disk)
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndFileByNameExistsInProjectButNotOnDisk));
@@ -173,7 +173,7 @@ namespace ProjectUITestsRunner {
         /// Adding new linked item when the file lives in the project dir but not in the directory we selected
         /// Add Existing Item from.  We should add the file to the directory where it lives.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void AddExistingItemAsLinkButFileExistsInProjectDirectory() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAsLinkButFileExistsInProjectDirectory));
