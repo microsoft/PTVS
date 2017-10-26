@@ -12,7 +12,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a function to parse arguments using argparse]]></Val>
       </Str>
-      <Disp Icon="Str" Order="3" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;Title&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -21,7 +21,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[argparse block]]></Val>
       </Str>
-      <Disp Icon="Str" Order="1" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;ToolTip&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -29,8 +29,11 @@
     <Item ItemId="0;62568bc5e481b7c2bf94f72978c34da4" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Short description of your script]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Krátký popis skriptu]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="5" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
 </LCX>
