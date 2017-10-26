@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly Connection _connection;
 
-        internal OutOfProcProjectAnalyzer(Stream writer, Stream reader, bool inOwnProcess) {
+        internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
@@ -95,11 +95,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 "Analyzer"
             );
             _connection.EventReceived += ConectionReceivedEvent;
-
-            if (inOwnProcess) {
-                GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
-                GlobalInterpreterOptions.SuppressPackageManagers = true;
-            }
 
             _catalog = new AggregateCatalog();
             _container = new CompositionContainer(_catalog);

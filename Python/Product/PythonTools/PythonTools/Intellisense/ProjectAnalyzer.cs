@@ -589,7 +589,7 @@ namespace Microsoft.PythonTools.Intellisense {
             OutOfProcProjectAnalyzer analyzer;
             int exitCode = 0;
             try {
-                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput, info.IsUnitTest);
+                analyzer = new OutOfProcProjectAnalyzer(info.StandardOutput, info.StandardInput);
                 info.CancellationToken.Register(() => {
                     analyzer.Cancel();
                     analyzer.Dispose();
