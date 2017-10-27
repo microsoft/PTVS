@@ -70,11 +70,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var tokens = bi.GetTokens(range).Where(t => t.Category == TokenCategory.Identifier);
             foreach (var t in tokens) {
-                var span = t.SourceSpan.ToSnapshotSpan(range.Snapshot);
+                var span = t.ToSnapshotSpan(range.Snapshot);
                 var isMissing = await entry.Analyzer.IsMissingImportAsync(
                     entry,
                     span.GetText(),
-                    t.SourceSpan.Start
+                    t.ToSourceSpan().Start
                 );
 
                 if (isMissing) {

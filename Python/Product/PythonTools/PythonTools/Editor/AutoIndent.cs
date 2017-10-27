@@ -48,17 +48,6 @@ namespace Microsoft.PythonTools.Editor {
             public bool ShouldDedentAfter;
         }
 
-        private static bool IsWhitespace(TokenCategory category) {
-            return category == TokenCategory.Comment ||
-                category == TokenCategory.DocComment ||
-                category == TokenCategory.LineComment ||
-                category == TokenCategory.WhiteSpace;
-        }
-
-        private static bool IsExplicitLineJoin(TokenInfo token, ITextSnapshot snapshot) => token.Category == TokenCategory.Operator && GetText(token, snapshot) == "\\";
-
-        private static string GetText(TokenInfo token, ITextSnapshot snapshot) => token.SourceSpan.ToSnapshotSpan(snapshot).GetText();
-
         private static int CalculateIndentation(
             string baseline,
             ITextSnapshotLine line,
@@ -73,7 +62,7 @@ namespace Microsoft.PythonTools.Editor {
             int indentation = GetIndentation(baseline, options.GetTabSize());
             int tabSize = options.GetIndentSize();
             var tokens = buffer.GetTokens(line).ToList();
-            if (tokens.Count > 0 && !IsUnterminatedStringToken(tokens[tokens.Count - 1], line)) {
+            if (tokens.Count > 0 && !IsUnterminatedStringToken(tokens[tokens.Count - 1], snapshot)) {
                 int tokenIndex = tokens.Count - 1;
 
                 while (tokenIndex >= 0 && IsWhitespace(tokens[tokenIndex].Category)) {
@@ -91,7 +80,7 @@ namespace Microsoft.PythonTools.Editor {
                     // we're already indented because of multiple line continuation characters.
 
                     indentation = GetIndentation(line.GetText(), options.GetTabSize());
-                    var joinedLine = token.SourceSpan.Start.Line - 1;
+                    var joinedLine = token.ToSourceSpan().Start.Line - 1;
                     if (joinedLine > 0) {
                         var prevLineTokens = buffer.GetTokens(line.Snapshot.GetLineFromLineNumber(joinedLine - 1)).ToList();
                         if (prevLineTokens.Count == 0 || !IsExplicitLineJoin(prevLineTokens.Last(), snapshot)) {
@@ -104,22 +93,22 @@ namespace Microsoft.PythonTools.Editor {
                     return indentation;
                 }
 
-                var tokenStack = new Stack<TokenInfo?>();
+                var tokenStack = new Stack<TrackingTokenInfo?>();
                 tokenStack.Push(null);  // end with an implicit newline
-                int endAtLine = -1, currentLine = token.SourceSpan.Start.Line;
+                int endAtLine = -1, currentLine = token.LineNumber;
 
-                foreach (var t in buffer.GetTokensInReverseFromPoint(token.SourceSpan.Start.ToSnapshotPoint(snapshot))) {
-                    if (t.Category == TokenCategory.WhiteSpace && t.SourceSpan.Start.Line != currentLine) {
+                foreach (var t in buffer.GetTokensInReverseFromPoint(token.ToSnapshotSpan(snapshot).Start)) {
+                    if (t.Category == TokenCategory.WhiteSpace && t.LineNumber != currentLine) {
                         tokenStack.Push(null);
-                        currentLine = t.SourceSpan.Start.Line;
+                        currentLine = t.LineNumber;
                     } else {
                         tokenStack.Push(t);
                     }
 
-                    if (t.SourceSpan.End.Line == endAtLine) {
+                    if (t.LineNumber == endAtLine) {
                         break;
-                    } else if (t.Category == TokenCategory.Keyword && PythonKeywords.IsOnlyStatementKeyword(GetText(t, snapshot), buffer.LanguageVersion)) {
-                        endAtLine = t.SourceSpan.Start.Line - 1;
+                    } else if (t.Category == TokenCategory.Keyword && PythonKeywords.IsOnlyStatementKeyword(t.GetText(snapshot), buffer.LanguageVersion)) {
+                        endAtLine = t.LineNumber - 1;
                     }
                 }
 
@@ -133,24 +122,23 @@ namespace Microsoft.PythonTools.Editor {
                         continue;
                     }
 
-                    var txt = GetText(t.Value, snapshot);
-                    var tline = snapshot.GetLineFromLineNumber(t.Value.SourceSpan.Start.Line - 1);
+                    var tline = new Lazy<string>(() => snapshot.GetLineFromLineNumber(t.Value.LineNumber - 1).GetText());
 
-                    if (t.Value.Category == TokenCategory.Grouping && txt.Length == 1 && "([{".Contains(txt)) {
+                    if (IsOpenGrouping(t.Value, snapshot)) {
                         indentStack.Push(current);
                         var next = tokenStack.Count > 0 ? tokenStack.Peek() : null;
-                        if (next != null && next.Value.SourceSpan.End.Line == t.Value.SourceSpan.End.Line) {
+                        if (next != null && next.Value.LineNumber == t.Value.LineNumber) {
                             // Put indent at same depth as grouping
                             current = new LineInfo {
-                                Indentation = t.Value.SourceSpan.End.Column - 1
+                                Indentation = t.Value.ToSourceSpan().End.Column - 1
                             };
                         } else {
                             // Put indent at one indent deeper than this line
                             current = new LineInfo {
-                                Indentation = GetIndentation(tline.GetText(), tabSize) + tabSize
+                                Indentation = GetIndentation(tline.Value, tabSize) + tabSize
                             };
                         }
-                    } else if (t.Value.Category == TokenCategory.Grouping && txt.Length == 1 && ")]}".Contains(txt)) {
+                    } else if (IsCloseGrouping(t.Value, snapshot)) {
                         if (indentStack.Count > 0) {
                             current = indentStack.Pop();
                         } else {
@@ -162,16 +150,15 @@ namespace Microsoft.PythonTools.Editor {
                         }
                     } else if (current.NeedsUpdate == true) {
                         current = new LineInfo {
-                            Indentation = GetIndentation(tline.GetText(), tabSize)
+                            Indentation = GetIndentation(tline.Value, tabSize)
                         };
                     }
 
-                    if (t.Value.Category == TokenCategory.Keyword &&
-                        ShouldDedentAfterKeyword(txt)) {    // dedent after some statements
+                    if (ShouldDedentAfterKeyword(t.Value, snapshot)) {    // dedent after some statements
                         current.ShouldDedentAfter = true;
                     }
 
-                    if (txt == ":" &&                       // indent after a colon
+                    if (IsColon(t.Value, snapshot) &&       // indent after a colon
                         indentStack.Count == 0) {           // except in a grouping
                         current.ShouldIndentAfter = true;
                         // If the colon isn't at the end of the line, cancel it out.
@@ -188,7 +175,23 @@ namespace Microsoft.PythonTools.Editor {
             return indentation;
         }
 
-        private static bool IsUnterminatedStringToken(TokenInfo token, ITextSnapshotLine line) {
+        private static bool IsOpenGrouping(TrackingTokenInfo token, ITextSnapshot snapshot) {
+            if (token.Category != TokenCategory.Grouping) {
+                return false;
+            }
+            var span = token.ToSnapshotSpan(snapshot);
+            return span.Length == 1 && "([{".Contains(span.GetText());
+        }
+
+        private static bool IsCloseGrouping(TrackingTokenInfo token, ITextSnapshot snapshot) {
+            if (token.Category != TokenCategory.Grouping) {
+                return false;
+            }
+            var span = token.ToSnapshotSpan(snapshot);
+            return span.Length == 1 && ")]}".Contains(span.GetText());
+        }
+
+        private static bool IsUnterminatedStringToken(TrackingTokenInfo token, ITextSnapshot snapshot) {
             if (token.Category == TokenCategory.IncompleteMultiLineStringLiteral) {
                 return true;
             }
@@ -197,16 +200,27 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             try {
-                var span = new SnapshotSpan(line.Start + token.SourceSpan.End.Column - 2, 1);
-                var c = span.GetText();
+                var c = token.GetText(snapshot);
                 return c == "\"" || c == "'";
             } catch (ArgumentException) {
                 return false;
             }
         }
 
-        private static bool ShouldDedentAfterKeyword(string keyword) {
+        private static bool ShouldDedentAfterKeyword(TrackingTokenInfo token, ITextSnapshot snapshot) {
+            if (token.Category != TokenCategory.Keyword) {
+                return false;
+            }
+            var keyword = token.GetText(snapshot);
             return keyword == "pass" || keyword == "return" || keyword == "break" || keyword == "continue" || keyword == "raise";
+        }
+
+        private static bool IsColon(TrackingTokenInfo token, ITextSnapshot snapshot) {
+            if (token.Category != TokenCategory.Delimiter) {
+                return false;
+            }
+            var span = token.ToSnapshotSpan(snapshot);
+            return span.Length == 1 && span.GetText() == ":";
         }
 
         private static bool IsBlankLine(string lineText) {
@@ -216,6 +230,17 @@ namespace Microsoft.PythonTools.Editor {
                 }
             }
             return true;
+        }
+
+        private static bool IsWhitespace(TokenCategory category) {
+            return category == TokenCategory.Comment ||
+                category == TokenCategory.DocComment ||
+                category == TokenCategory.LineComment ||
+                category == TokenCategory.WhiteSpace;
+        }
+
+        private static bool IsExplicitLineJoin(TrackingTokenInfo token, ITextSnapshot snapshot) {
+            return token.Category == TokenCategory.Operator && token.GetText(snapshot) == "\\";
         }
 
         private static void SkipPreceedingBlankLines(ITextSnapshotLine line, out string baselineText, out ITextSnapshotLine baseline) {
@@ -233,10 +258,6 @@ namespace Microsoft.PythonTools.Editor {
             baseline = line;
         }
 
-        private static bool PythonContentTypePrediciate(ITextSnapshot snapshot) {
-            return snapshot.ContentType.IsOfType(PythonCoreConstants.ContentType);
-        }
-
         internal static int? GetLineIndentation(PythonTextBufferInfo buffer, ITextSnapshotLine line, ITextView textView) {
             if (buffer == null) {
                 return 0;
@@ -249,7 +270,7 @@ namespace Microsoft.PythonTools.Editor {
 
             ITextBuffer targetBuffer = line.Snapshot.TextBuffer;
             if (!targetBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                var match = textView.BufferGraph.MapDownToFirstMatch(line.Start, PointTrackingMode.Positive, PythonContentTypePrediciate, PositionAffinity.Successor);
+                var match = textView.MapDownToPythonBuffer(line.Start);
                 if (match == null) {
                     return 0;
                 }

@@ -15,45 +15,32 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Windows.Threading;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Infrastructure;
-using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Language {
-    /// <summary>
-    /// IVsTextViewFilter is implemented to statisfy new VS2012 requirement for debugger tooltips.
-    /// Do not use this from VS2010, it will break debugger tooltips!
-    /// </summary>
-    public sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
-        private readonly IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
+    sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
+        private readonly PythonEditorServices _editorServices;
         private readonly IVsDebugger _debugger;
-        private readonly IServiceProvider _serviceProvider;
         private readonly IOleCommandTarget _next;
         private readonly IVsTextLines _vsTextLines;
         private readonly IWpfTextView _wpfTextView;
 
-        public TextViewFilter(IServiceProvider serviceProvider, IVsTextView vsTextView) {
-            var compModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
-            _vsEditorAdaptersFactoryService = compModel.GetService<IVsEditorAdaptersFactoryService>();
-            _serviceProvider = serviceProvider;
-            _debugger = (IVsDebugger)serviceProvider.GetService(typeof(IVsDebugger));
+        public TextViewFilter(PythonEditorServices editorServices, IVsTextView vsTextView) {
+            _editorServices = editorServices;
+            _debugger = (IVsDebugger)_editorServices.Site.GetService(typeof(IVsDebugger));
 
             vsTextView.GetBuffer(out _vsTextLines);
-            _wpfTextView = _vsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
+            _wpfTextView = _editorServices.EditorAdaptersFactoryService.GetWpfTextView(vsTextView);
 
             ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
         }
@@ -120,7 +107,7 @@ namespace Microsoft.PythonTools.Language {
 
             SourceSpan? expr;
             try {
-                expr = _serviceProvider.GetUIThread().InvokeTaskSync(async () => {
+                expr = _editorServices.Site.GetUIThread().InvokeTaskSync(async () => {
                     return await analyzer.GetExpressionSpanAtPointAsync(bi, pt, ExpressionAtPointPurpose.Hover, TimeSpan.FromSeconds(1.0));
                 }, CancellationTokens.After1s);
             } catch (OperationCanceledException) {

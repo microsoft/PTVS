@@ -15,12 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using Microsoft.PythonTools.Editor.Core;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 
@@ -30,7 +26,6 @@ namespace Microsoft.PythonTools.Editor {
     /// </summary>
     class BraceMatcher {
         private readonly ITextView _textView;
-        private readonly IComponentModel _compModel;
         private readonly PythonEditorServices _editorServices;
         private ITextBuffer _markedBuffer;
         private static TextMarkerTag _tag = new TextMarkerTag("Brace Matching (Rectangle)");
@@ -39,8 +34,8 @@ namespace Microsoft.PythonTools.Editor {
         /// Starts watching the provided text view for brace matching.  When new braces are inserted
         /// in the text or when the cursor moves to a brace the matching braces are highlighted.
         /// </summary>
-        public static void WatchBraceHighlights(ITextView view, IComponentModel componentModel, PythonEditorServices editorServices) {
-            var matcher = new BraceMatcher(view, componentModel, editorServices);
+        public static void WatchBraceHighlights(PythonEditorServices editorServices, ITextView view) {
+            var matcher = new BraceMatcher(editorServices, view);
 
             // position changed only fires when the caret is explicitly moved, not from normal text edits,
             // so we track both changes and position changed.
@@ -49,9 +44,8 @@ namespace Microsoft.PythonTools.Editor {
             view.Closed += matcher.TextViewClosed;
         }
 
-        public BraceMatcher(ITextView view, IComponentModel componentModel, PythonEditorServices editorServices) {
+        public BraceMatcher(PythonEditorServices editorServices, ITextView view) {
             _textView = view;
-            _compModel = componentModel;
             _editorServices = editorServices;
         }
 
@@ -116,7 +110,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private SimpleTagger<TextMarkerTag> GetTextMarker(ITextBuffer buffer) {
-            return _compModel.GetService<ITextMarkerProviderFactory>().GetTextMarkerTagger(buffer);
+            return _editorServices.TextMarkerProviderFactory.GetTextMarkerTagger(buffer);
         }
 
         private bool HighlightBrace(BraceKind brace, int position, int direction) {
@@ -154,7 +148,7 @@ namespace Microsoft.PythonTools.Editor {
                     continue;
                 }
 
-                var tspan = token.SourceSpan.ToSnapshotSpan(snapshot);
+                var tspan = token.ToSnapshotSpan(snapshot);
                 var txt = tspan.GetText();
                 if (IsSameBraceKind(txt, brace)) {
                     if (txt.IsCloseGrouping()) {

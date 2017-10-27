@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools {
                 return Array.Empty<ClassificationSpan>();
             }
 
-            return bi.GetLineTokens(span).Select(kv => ClassifyToken(span, kv.Value, kv.Key)).Where(c => c != null).ToList();
+            return bi.GetTrackingTokens(span).Select(kv => ClassifyToken(span, kv)).Where(c => c != null).ToList();
         }
 
         public PythonClassifierProvider Provider {
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools {
             return Task.CompletedTask;
         }
 
-        private ClassificationSpan ClassifyToken(SnapshotSpan span, LineToken token, int lineNumber) {
+        private ClassificationSpan ClassifyToken(SnapshotSpan span, TrackingTokenInfo token) {
             IClassificationType classification = null;
 
             if (token.Category == TokenCategory.Operator) {
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (classification != null) {
-                var tokenSpan = GetTokenSnapshotSpan(span.Snapshot, lineNumber, token.Column, token.Length);
+                var tokenSpan = token.ToSnapshotSpan(span.Snapshot);
                 var intersection = span.Intersection(tokenSpan);
 
                 if (intersection != null && intersection.Value.Length > 0 ||
@@ -146,19 +146,6 @@ namespace Microsoft.PythonTools {
             }
 
             return null;
-        }
-
-        private static SnapshotSpan GetTokenSnapshotSpan(ITextSnapshot snapshot, int lineNumber, int column, int length) {
-            var tokenLine = snapshot.GetLineFromLineNumber(lineNumber);
-            if (column >= tokenLine.LengthIncludingLineBreak) {
-                return new SnapshotSpan(tokenLine.EndIncludingLineBreak, 0);
-            }
-            var tokenStart = tokenLine.Start + column;
-            if (column + length >= tokenLine.LengthIncludingLineBreak) {
-                return new SnapshotSpan(tokenStart, tokenLine.EndIncludingLineBreak);
-            }
-
-            return new SnapshotSpan(tokenStart, length);
         }
 
         Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {

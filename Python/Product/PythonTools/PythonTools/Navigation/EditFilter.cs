@@ -59,37 +59,23 @@ namespace Microsoft.PythonTools.Language {
     /// to be registered in our .vsct file so that VS knows about them.
     /// </summary>
     internal sealed class EditFilter : IOleCommandTarget {
+        private readonly PythonEditorServices _editorServices;
         private readonly IVsTextView _vsTextView;
         private readonly ITextView _textView;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly IComponentModel _componentModel;
-        private readonly IEditorOperations _editorOps;
-        private readonly PythonToolsService _pyService;
-        private readonly AnalysisEntryService _entryService;
-        private readonly ITextBufferUndoManagerProvider _undoManagerProvider;
         private readonly IOleCommandTarget _next;
-        private readonly IPeekBroker _peekBroker;
 
         private EditFilter(
+            PythonEditorServices editorServices,
             IVsTextView vsTextView,
             ITextView textView,
-            IEditorOperations editorOps,
-            IServiceProvider serviceProvider,
-            IComponentModel model,
             IOleCommandTarget next
         ) {
+            _editorServices = editorServices;
             _vsTextView = vsTextView;
             _textView = textView;
-            _editorOps = editorOps;
-            _serviceProvider = serviceProvider;
-            _componentModel = model;
-            _pyService = _serviceProvider.GetPythonToolsService();
-            _entryService = _componentModel.GetService<AnalysisEntryService>();
-            _undoManagerProvider = _componentModel.GetService<ITextBufferUndoManagerProvider>();
             _next = next;
-            _peekBroker = _componentModel.GetService<IPeekBroker>();
 
-            BraceMatcher.WatchBraceHighlights(textView, _componentModel);
+            BraceMatcher.WatchBraceHighlights(_editorServices, textView);
 
             if (_next == null) {
                 ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
@@ -97,39 +83,29 @@ namespace Microsoft.PythonTools.Language {
         }
 
         public static EditFilter GetOrCreate(
-            IServiceProvider serviceProvider,
-            IComponentModel componentModel,
+            PythonEditorServices editorServices,
             ITextView textView,
             IOleCommandTarget next = null
         ) {
-            var editorFactory = componentModel.GetService<IVsEditorAdaptersFactoryService>();
-            var opsFactory = componentModel.GetService<IEditorOperationsFactoryService>();
-            var vsTextView = editorFactory.GetViewAdapter(textView);
+            var vsTextView = editorServices.EditorAdaptersFactoryService.GetViewAdapter(textView);
             return textView.Properties.GetOrCreateSingletonProperty(() => new EditFilter(
+                editorServices,
                 vsTextView,
                 textView,
-                opsFactory.GetEditorOperations(textView),
-                serviceProvider,
-                componentModel,
                 next
             ));
         }
 
         public static EditFilter GetOrCreate(
-            IServiceProvider serviceProvider,
-            IComponentModel componentModel,
+            PythonEditorServices editorServices,
             IVsTextView vsTextView,
             IOleCommandTarget next = null
         ) {
-            var editorFactory = componentModel.GetService<IVsEditorAdaptersFactoryService>();
-            var opsFactory = componentModel.GetService<IEditorOperationsFactoryService>();
-            var textView = editorFactory.GetWpfTextView(vsTextView);
+            var textView = editorServices.EditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             return textView.Properties.GetOrCreateSingletonProperty(() => new EditFilter(
+                editorServices,
                 vsTextView,
                 textView,
-                opsFactory.GetEditorOperations(textView),
-                serviceProvider,
-                componentModel,
                 next
             ));
         }
@@ -146,14 +122,14 @@ namespace Microsoft.PythonTools.Language {
             UpdateStatusForIncompleteAnalysis();
 
             var caret = _textView.GetPythonCaret();
-            var analysis = _textView.GetAnalysisAtCaret(_serviceProvider);
+            var analysis = _textView.GetAnalysisAtCaret(_editorServices.Site);
             if (analysis != null && caret != null) {
                 var defs = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, caret.Value);
                 if (defs == null) {
                     return;
                 }
                 Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
-                GetDefsRefsAndValues(analysis.Analyzer, _serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
+                GetDefsRefsAndValues(analysis.Analyzer, _editorServices.Site, defs.Expression, defs.Variables, out definitions, out references, out values);
 
                 if ((values.Count + definitions.Count) == 1) {
                     if (values.Count != 0) {
@@ -204,7 +180,7 @@ namespace Microsoft.PythonTools.Language {
                 viewAdapter.SetCaretPos(location.Line - 1, location.Column - 1);
                 viewAdapter.CenterLines(location.Line - 1, 1);
             } else {
-                location.GotoSource(_serviceProvider);
+                location.GotoSource(_editorServices.Site);
             }
         }
 
@@ -218,14 +194,14 @@ namespace Microsoft.PythonTools.Language {
             UpdateStatusForIncompleteAnalysis();
 
             var caret = _textView.GetPythonCaret();
-            var analysis = _textView.GetAnalysisAtCaret(_serviceProvider);
+            var analysis = _textView.GetAnalysisAtCaret(_editorServices.Site);
             if (analysis != null && caret != null) {
                 var references = await analysis.Analyzer.AnalyzeExpressionAsync(analysis, caret.Value);
                 if (references == null) {
                     return;
                 }
 
-                var locations = GetFindRefLocations(analysis.Analyzer, _serviceProvider, references.Expression, references.Variables);
+                var locations = GetFindRefLocations(analysis.Analyzer, _editorServices.Site, references.Expression, references.Variables);
 
                 ShowFindSymbolsDialog(references.Expression, locations);
             }
@@ -288,10 +264,10 @@ namespace Microsoft.PythonTools.Language {
         /// </summary>
         private void ShowFindSymbolsDialog(string expr, IVsNavInfo symbols) {
             // ensure our library is loaded so find all references will go to our library
-            _serviceProvider.GetService(typeof(IPythonLibraryManager));
+            _editorServices.Site.GetService(typeof(IPythonLibraryManager));
 
             if (!string.IsNullOrEmpty(expr)) {
-                var findSym = (IVsFindSymbol)_serviceProvider.GetService(typeof(SVsObjectSearch));
+                var findSym = (IVsFindSymbol)_editorServices.Site.GetService(typeof(SVsObjectSearch));
                 VSOBSEARCHCRITERIA2 searchCriteria = new VSOBSEARCHCRITERIA2();
                 searchCriteria.eSrchType = VSOBSEARCHTYPE.SO_ENTIREWORD;
                 searchCriteria.pIVsNavInfo = symbols;
@@ -302,7 +278,7 @@ namespace Microsoft.PythonTools.Language {
                 //  new Guid("{a5a527ea-cf0a-4abf-b501-eafe6b3ba5c6}")
                 ErrorHandler.ThrowOnFailure(findSym.DoSearch(new Guid(CommonConstants.LibraryGuid), new VSOBSEARCHCRITERIA2[] { searchCriteria }));
             } else {
-                var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
+                var statusBar = (IVsStatusbar)_editorServices.Site.GetService(typeof(SVsStatusbar));
                 statusBar.SetText(Strings.FindReferencesCaretMustBeOnValidExpression);
             }
         }
@@ -354,10 +330,10 @@ namespace Microsoft.PythonTools.Language {
         }
 
         internal class SimpleLocationInfo : SimpleObject, IVsNavInfoNode {
+            private readonly IServiceProvider _serviceProvider;
             private readonly AnalysisLocation _locationInfo;
             private readonly StandardGlyphGroup _glyphType;
             private readonly string _pathText, _lineText;
-            private readonly IServiceProvider _serviceProvider;
 
             public SimpleLocationInfo(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string searchText, AnalysisLocation locInfo, StandardGlyphGroup glyphType) {
                 _serviceProvider = serviceProvider;
@@ -628,8 +604,8 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private void UpdateStatusForIncompleteAnalysis() {
-            var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
-            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
+            var statusBar = (IVsStatusbar)_editorServices.Site.GetService(typeof(SVsStatusbar));
+            var analyzer = _textView.GetAnalyzerAtCaret(_editorServices.Site);
             if (analyzer != null && analyzer.IsAnalyzing) {
                 statusBar.SetText(Strings.SourceAnalysisNotUpToDate);
             }
@@ -644,7 +620,7 @@ namespace Microsoft.PythonTools.Language {
             try {
                 return ExecWorker(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
             } catch (Exception ex) {
-                ex.ReportUnhandledException(_serviceProvider, GetType());
+                ex.ReportUnhandledException(_editorServices.Site, GetType());
                 return VSConstants.E_FAIL;
             }
         }
@@ -654,14 +630,14 @@ namespace Microsoft.PythonTools.Language {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Paste:
-                        if (!_pyService.AdvancedOptions.PasteRemovesReplPrompts) {
+                        if (!_editorServices.Python.AdvancedOptions.PasteRemovesReplPrompts) {
                             // Not stripping prompts, so don't use our logic
                             break;
                         }
                         var beforePaste = _textView.TextSnapshot;
-                        if (_editorOps.Paste()) {
+                        if (_editorServices.EditOperationsFactory.GetEditorOperations(_textView).Paste()) {
                             var afterPaste = _textView.TextSnapshot;
-                            var um = _undoManagerProvider.GetTextBufferUndoManager(afterPaste.TextBuffer);
+                            var um = _editorServices.UndoManagerFactory.GetTextBufferUndoManager(afterPaste.TextBuffer);
                             using (var undo = um.TextBufferUndoHistory.CreateTransaction(Strings.RemoveReplPrompts)) {
                                 if (ReplPromptHelpers.RemovePastedPrompts(beforePaste, afterPaste)) {
                                     undo.Complete();
@@ -676,10 +652,10 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == VSConstants.VsStd12) {
                 switch ((VSConstants.VSStd12CmdID)nCmdID) {
                     case VSConstants.VSStd12CmdID.PeekDefinition:
-                        if (_peekBroker != null &&
+                        if (_editorServices.PeekBroker != null &&
                             !_textView.Roles.Contains(PredefinedTextViewRoles.EmbeddedPeekTextView) &&
                             !_textView.Roles.Contains(PredefinedTextViewRoles.CodeDefinitionView)) {
-                            _peekBroker.TriggerPeekSession(_textView, PredefinedPeekRelationships.Definitions.Name);
+                            _editorServices.PeekBroker.TriggerPeekSession(_textView, PredefinedPeekRelationships.Definitions.Name);
                             return VSConstants.S_OK;
                         }
                         break;
@@ -802,7 +778,7 @@ namespace Microsoft.PythonTools.Language {
                         return VSConstants.S_OK;
                     case CommonConstants.StartDebuggingCmdId:
                     case CommonConstants.StartWithoutDebuggingCmdId:
-                        PythonToolsPackage.LaunchFile(_serviceProvider, _textView.GetFilePath(), nCmdID == CommonConstants.StartDebuggingCmdId, true);
+                        PythonToolsPackage.LaunchFile(_editorServices.Site, _textView.GetFilePath(), nCmdID == CommonConstants.StartDebuggingCmdId, true);
                         return VSConstants.S_OK;
                 }
 
@@ -813,23 +789,23 @@ namespace Microsoft.PythonTools.Language {
 
 
         private void ExtractMethod() {
-            new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider)).DoNotWait();
+            new MethodExtractor(_editorServices.Site, _textView).ExtractMethod(new ExtractMethodUserInput(_editorServices.Site)).DoNotWait();
         }
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {
             AnalysisEntry entry;
-            if (_entryService == null || !_entryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
+            if (!_editorServices.AnalysisEntryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
                 return;
             }
 
-            var options = _pyService.GetCodeFormattingOptions();
+            var options = _editorServices.Python.GetCodeFormattingOptions();
             options.NewLineFormat = _textView.Options.GetNewLineCharacter();
 
             await entry.Analyzer.FormatCodeAsync(span, _textView, options, selectResult);
         }
 
         internal void RefactorRename() {
-            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
+            var analyzer = _textView.GetAnalyzerAtCaret(_editorServices.Site);
             if (analyzer.IsAnalyzing) {
                 var dialog = new WaitForCompleteAnalysisDialog(analyzer);
 
@@ -840,9 +816,9 @@ namespace Microsoft.PythonTools.Language {
                 }
             }
 
-            new VariableRenamer(_textView, _serviceProvider).RenameVariable(
-                new RenameVariableUserInput(_serviceProvider),
-                (IVsPreviewChangesService)_serviceProvider.GetService(typeof(SVsPreviewChangesService))
+            new VariableRenamer(_textView, _editorServices.Site).RenameVariable(
+                new RenameVariableUserInput(_editorServices.Site),
+                (IVsPreviewChangesService)_editorServices.Site.GetService(typeof(SVsPreviewChangesService))
             ).DoNotWait();
         }
 
@@ -869,7 +845,7 @@ namespace Microsoft.PythonTools.Language {
                         case VSConstants.VSStd12CmdID.PeekDefinition:
                             // Since our provider supports standalone files,
                             // the predicate isn't invoked but it needs to be non null.
-                            var canPeek = _peekBroker?.CanTriggerPeekSession(
+                            var canPeek = _editorServices.PeekBroker?.CanTriggerPeekSession(
                                 _textView,
                                 PredefinedPeekRelationships.Definitions.Name,
                                 isStandaloneFilePredicate: (string filename) => false
@@ -981,7 +957,7 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private void QueryStatusRename(OLECMD[] prgCmds, int i) {
-            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
+            var analyzer = _textView.GetAnalyzerAtCaret(_editorServices.Site);
             if (analyzer != null && _textView.GetPythonBufferAtCaret() != null) {
                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {

@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools.Project;
 
@@ -28,10 +29,12 @@ namespace Microsoft.PythonTools {
     internal struct LineTokenization : ITag {
         public readonly LineToken[] Tokens;
         public readonly object State;
+        public readonly ITrackingSpan Line;
 
-        public LineTokenization(IEnumerable<TokenInfo> tokens, object state, int fullLineLength) {
-            Tokens = tokens.Select(t => new LineToken(t, fullLineLength)).ToArray();
+        public LineTokenization(IEnumerable<TokenInfo> tokens, object state, ITextSnapshotLine line) {
+            Tokens = tokens.Select(t => new LineToken(t, line.EndIncludingLineBreak)).ToArray();
             State = state;
+            Line = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
         }
 
         internal string GetDebugView() {
@@ -77,6 +80,83 @@ namespace Microsoft.PythonTools {
         /// Number of characters included in the token.
         /// </summary>
         public int Length;
+    }
+
+    public struct TrackingTokenInfo {
+        internal TrackingTokenInfo(LineToken token, int lineNumber, ITrackingSpan lineSpan) {
+            LineToken = token;
+            LineNumber = lineNumber;
+            LineSpan = lineSpan;
+        }
+
+        private readonly LineToken LineToken;
+        public readonly int LineNumber;
+        private readonly ITrackingSpan LineSpan;
+
+        public TokenCategory Category => LineToken.Category;
+        public TokenTriggers Trigger => LineToken.Trigger;
+
+        /// <summary>
+        /// Returns true if the location is on the same line and between either end. If
+        /// <see cref="IsAdjacent(SourceLocation)"/> is true, this will also be true.
+        /// </summary>
+        /// <param name="location"></param>
+        /// <returns></returns>
+        public bool Contains(SourceLocation location) {
+            int col = location.Column - 1;
+            return location.Line - 1 == LineNumber &&
+                (col >= LineToken.Column && col <= LineToken.Column + LineToken.Length);
+        }
+
+        /// <summary>
+        /// Returns true if the location is on the same line and at either end of this token.
+        /// </summary>
+        public bool IsAdjacent(SourceLocation location) {
+            int col = location.Column - 1;
+            return location.Line - 1 == LineNumber &&
+                (col == LineToken.Column || col == LineToken.Column + LineToken.Length);
+        }
+
+        public bool IsAtStart(SourceLocation location) {
+            return location.Line - 1 == LineNumber && location.Column - 1 == LineToken.Column;
+        }
+
+        public bool IsAtEnd(SourceLocation location) {
+            return location.Line - 1 == LineNumber && location.Column - 1 == LineToken.Column + LineToken.Length;
+        }
+
+        public TokenInfo ToTokenInfo() {
+            return new TokenInfo {
+                Category = Category,
+                Trigger = Trigger,
+                SourceSpan = ToSourceSpan()
+            };
+        }
+
+        public SourceSpan ToSourceSpan() {
+            return new SourceSpan(
+                new SourceLocation(LineNumber + 1, LineToken.Column + 1),
+                new SourceLocation(LineNumber + 1, LineToken.Column + LineToken.Length + 1)
+            );
+        }
+
+        public SnapshotSpan ToSnapshotSpan(ITextSnapshot snapshot) {
+            // Note that this assumes the content of the line has not changed
+            // since the tokenization was created. Lines can move up and down
+            // within the file, and this will handle it correctly, but when a
+            // line is edited the span returned here may not be valid.
+            var line = LineSpan.GetSpan(snapshot);
+
+            Debug.Assert(line.Start.GetContainingLine().LineNumber == LineNumber, "Mismatched line number");
+            Debug.Assert(line.End.GetContainingLine().LineNumber == LineNumber, "Mismatched line number");
+
+            int startCol = Math.Min(LineToken.Column, line.Length);
+            int endCol = Math.Min(LineToken.Column + LineToken.Length, line.Length);
+
+            return new SnapshotSpan(line.Start + startCol, line.Start + endCol);
+        }
+
+        public string GetText(ITextSnapshot snapshot) => ToSnapshotSpan(snapshot).GetText();
     }
 
     internal class TokenCache {

@@ -356,49 +356,39 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
-        private TokenInfo ToTokenInfo(KeyValuePair<int, LineToken> keyValue) => ToTokenInfo(keyValue.Key, keyValue.Value);
-
-        private TokenInfo ToTokenInfo(int line, LineToken token) {
-            return new TokenInfo {
-                Category = token.Category,
-                Trigger = token.Trigger,
-                SourceSpan = new SourceSpan(
-                    new SourceLocation(line + 1, token.Column + 1),
-                    new SourceLocation(line + 1, token.Column + 1 + token.Length)
-                )
-            };
-        }
-
         /// <summary>
         /// Returns the first token containing or adjacent to the specified point.
         /// </summary>
-        public TokenInfo? GetTokenAtPoint(SnapshotPoint point) {
-            var line = point.GetContainingLine();
-            int col = point - line.Start;
-            return GetLineTokens(new SnapshotSpan(point, 0))
-                .Where(it => it.Value.Column <= col && it.Value.Column + it.Value.Length >= col)
-                .Select(ToTokenInfo)
-                .Cast<TokenInfo?>()
+        public TrackingTokenInfo? GetTokenAtPoint(SnapshotPoint point) {
+            return GetTrackingTokens(new SnapshotSpan(point, 0))
+                .Cast<TrackingTokenInfo?>()
                 .FirstOrDefault();
         }
 
-        public IEnumerable<TokenInfo> GetTokens(ITextSnapshotLine line) {
-            return GetLineTokens(line.ExtentIncludingLineBreak).Select(ToTokenInfo);
+        /// <summary>
+        /// Returns tokens for the specified line.
+        /// </summary>
+        public IEnumerable<TrackingTokenInfo> GetTokens(ITextSnapshotLine line) {
+            var tokenizer = GetTokenizer();
+            var lineTokenization = GetLineTokenization(tokenizer, line);
+            var lineNumber = line.LineNumber;
+            var lineSpan = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
+            return lineTokenization.Tokens.Select(t => new TrackingTokenInfo(t, lineNumber, lineSpan));
         }
 
-        public IEnumerable<TokenInfo> GetTokens(SnapshotSpan span) {
-            return GetLineTokens(span).Select(ToTokenInfo);
+        public IEnumerable<TrackingTokenInfo> GetTokens(SnapshotSpan span) {
+            return GetTrackingTokens(span);
         }
 
         /// <summary>
         /// Iterates forwards through tokens starting from the token at or
         /// adjacent to the specified point.
         /// </summary>
-        public IEnumerable<TokenInfo> GetTokensForwardFromPoint(SnapshotPoint point) {
+        public IEnumerable<TrackingTokenInfo> GetTokensForwardFromPoint(SnapshotPoint point) {
             var line = point.GetContainingLine();
 
-            foreach (var token in GetLineTokens(new SnapshotSpan(point, line.End))) {
-                yield return ToTokenInfo(token);
+            foreach (var token in GetTrackingTokens(new SnapshotSpan(point, line.End))) {
+                yield return token;
             }
 
             while (line.LineNumber < line.Snapshot.LineCount - 1) {
@@ -406,8 +396,8 @@ namespace Microsoft.PythonTools.Editor {
                 // Use line.Extent because GetLineTokens endpoints are inclusive - we
                 // will get the line break token because it is adjacent, but no
                 // other repetitions.
-                foreach (var token in GetLineTokens(line.Extent)) {
-                    yield return ToTokenInfo(token);
+                foreach (var token in GetTrackingTokens(line.Extent)) {
+                    yield return token;
                 }
             }
         }
@@ -416,11 +406,11 @@ namespace Microsoft.PythonTools.Editor {
         /// Iterates backwards through tokens starting from the token at or
         /// adjacent to the specified point.
         /// </summary>
-        public IEnumerable<TokenInfo> GetTokensInReverseFromPoint(SnapshotPoint point) {
+        public IEnumerable<TrackingTokenInfo> GetTokensInReverseFromPoint(SnapshotPoint point) {
             var line = point.GetContainingLine();
 
-            foreach (var token in GetLineTokens(new SnapshotSpan(line.Start, point)).Reverse()) {
-                yield return ToTokenInfo(token);
+            foreach (var token in GetTrackingTokens(new SnapshotSpan(line.Start, point)).Reverse()) {
+                yield return token;
             }
 
             while (line.LineNumber > 0) {
@@ -428,13 +418,13 @@ namespace Microsoft.PythonTools.Editor {
                 // Use line.Extent because GetLineTokens endpoints are inclusive - we
                 // will get the line break token because it is adjacent, but no
                 // other repetitions.
-                foreach (var token in GetLineTokens(line.Extent).Reverse()) {
-                    yield return ToTokenInfo(token);
+                foreach (var token in GetTrackingTokens(line.Extent).Reverse()) {
+                    yield return token;
                 }
             }
         }
 
-        internal IEnumerable<KeyValuePair<int, LineToken>> GetLineTokens(SnapshotSpan span) {
+        internal IEnumerable<TrackingTokenInfo> GetTrackingTokens(SnapshotSpan span) {
             int firstLine = span.Start.GetContainingLine().LineNumber;
             int lastLine = span.End.GetContainingLine().LineNumber;
 
@@ -456,7 +446,7 @@ namespace Microsoft.PythonTools.Editor {
                     if (line == lastLine && token.Column > endCol) {
                         continue;
                     }
-                    yield return new KeyValuePair<int, LineToken>(line, token);
+                    yield return new TrackingTokenInfo(token, line, lineTokenization.Line);
                 }
             }
         }
@@ -483,11 +473,12 @@ namespace Microsoft.PythonTools.Editor {
         internal bool IsPossibleExpressionAtPoint(SnapshotPoint point) {
             var line = point.GetContainingLine();
             int col = point - line.Start + 1;
+            var pt = new SourceLocation(line.LineNumber + 1, col + 1);
             bool anyTokens = false;
 
             foreach (var t in GetTokens(line)) {
                 anyTokens = true;
-                if (t.SourceSpan.Start.Column >= col || t.SourceSpan.End.Column < col) {
+                if (!t.Contains(pt)) {
                     continue;
                 }
 
@@ -498,7 +489,7 @@ namespace Microsoft.PythonTools.Editor {
 
                 // Tokens after this point are possible expressions if we are looking
                 // at the very end of the token.
-                if (t.SourceSpan.End.Column == col) {
+                if (t.IsAtEnd(pt)) {
                     continue;
                 }
 
@@ -644,7 +635,7 @@ namespace Microsoft.PythonTools.Editor {
                 return new LineTokenization(
                     tokenizer.ReadTokens(line.LengthIncludingLineBreak),
                     tokenizer.CurrentState,
-                    line.LengthIncludingLineBreak
+                    line
                 );
             } finally {
                 tokenizer.Uninitialize();
