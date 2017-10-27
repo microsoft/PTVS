@@ -339,6 +339,12 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveFolderWithContents));
         }
 
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void CopyFolderWithContents() {
+            _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CopyFolderWithContents));
+        }
+
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void MoveProjectToSolutionFolderKeyboard() {

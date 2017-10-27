@@ -1397,6 +1397,35 @@ namespace ProjectUITests {
             }
         }
 
+        public void CopyFolderWithContents(VisualStudioApp app, ProjectGenerator pg) {
+            foreach (var projectType in pg.ProjectTypes) {
+                var testDef = new ProjectDefinition("FolderWithContentsProj",
+                    projectType,
+                    ProjectGenerator.ItemGroup(
+                        ProjectGenerator.Folder("A"),
+                        ProjectGenerator.Folder("A\\B"),
+                        ProjectGenerator.Content("A\\B\\File.txt", ""),
+                        ProjectGenerator.Folder("C")
+                    )
+                );
+
+                using (var solution = testDef.Generate().ToVs(app)) {
+                    CopyByKeyboard(
+                        solution,
+                        solution.FindItem("FolderWithContentsProj", "C"),
+                        solution.FindItem("FolderWithContentsProj", "A", "B")
+                    );
+
+                    solution.AssertFolderExists("FolderWithContentsProj", "A");
+                    solution.AssertFolderExists("FolderWithContentsProj", "A", "B");
+                    solution.AssertFileExists("FolderWithContentsProj", "A", "B", "File.txt");
+                    solution.AssertFolderExists("FolderWithContentsProj", "C");
+                    solution.AssertFolderExists("FolderWithContentsProj", "C", "B");
+                    solution.AssertFileExists("FolderWithContentsProj", "C", "B", "File.txt");
+                }
+            }
+        }
+
         public void MoveProjectToSolutionFolderKeyboard(VisualStudioApp app, ProjectGenerator pg) {
             MoveProjectToSolutionFolder(app, pg, MoveByKeyboard);
         }
