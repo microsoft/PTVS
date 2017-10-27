@@ -6284,6 +6284,7 @@ def decorator1(fn):
 
 @decorator1
 def test1():
+    '''doc'''
     return 'undecorated'
 
 def test2():
@@ -6315,7 +6316,9 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             state.WaitForAnalysis();
 
             state.AssertConstantEquals("test1.__name__", "test1");
+            Assert.AreEqual("doc", state.GetValue<FunctionInfo>("test1").Documentation);
             state.GetValue<FunctionInfo>("test1.__wrapped__");
+            Assert.AreEqual(2, state.GetValue<FunctionInfo>("test1").Overloads.Count());
             state.AssertConstantEquals("test1_result", "decorated");
 
             // __name__ should not have been changed by update_wrapper

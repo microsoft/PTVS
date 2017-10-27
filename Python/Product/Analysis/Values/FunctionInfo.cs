@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly int _declVersion;
         private int _callDepthLimit;
         private int _callsSinceLimitChange;
+        private string _doc;
 
         internal CallChainSet _allCalls;
 
@@ -48,6 +50,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_functionDefinition.Name == "__new__") {
                 IsClassMethod = true;
             }
+
+            _doc = node.Body?.Documentation?.TrimDocumentation();
 
             object value;
             if (!ProjectEntry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out value) ||
@@ -354,10 +358,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Documentation {
             get {
-                if (FunctionDefinition.Body != null) {
-                    return FunctionDefinition.Body.Documentation.TrimDocumentation();
-                }
-                return "";
+                return _doc ?? "";
             }
         }
 
@@ -429,6 +430,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<OverloadResult> Overloads {
             get {
+                if (_functionAttrs != null && _functionAttrs.TryGetValue("__wrapped__", out VariableDef wrapped)) {
+                    foreach (var o in wrapped.TypesNoCopy.SelectMany(n => n.Overloads)) {
+                        yield return o;
+                    }
+                }
+
                 var references = new Dictionary<string[], IEnumerable<AnalysisVariable>[]>(new StringArrayComparer());
 
                 var units = new HashSet<AnalysisUnit>();
@@ -548,6 +555,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             varRef.AddAssignment(node, unit);
             varRef.AddTypes(unit, value, true, DeclaringModule);
+
+            if (name == "__doc__") {
+                _doc = string.Join(Environment.NewLine, varRef.TypesNoCopy.OfType<ConstantInfo>()
+                    .Select(ci => (ci.Value as string) ?? (ci.Value as AsciiString)?.String)
+                    .Where(s => !string.IsNullOrEmpty(s) && (_doc == null || !_doc.Contains(s)))
+                );
+            }
         }
 
         public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
@@ -566,6 +580,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             // TODO: Create one and add a dependency
             if (name == "__name__") {
                 return unit.ProjectState.GetConstant(FunctionDefinition.Name);
+            }
+            if (name == "__doc__") {
+                return unit.ProjectState.GetConstant(Documentation);
             }
 
             return GetTypeMember(node, unit, name);
