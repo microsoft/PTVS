@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Navigation {
                     var exprAnalysis = analysis.Analyzer.WaitForRequest(analysis.Analyzer.AnalyzeExpressionAsync(
                         analysis,
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
-                        new SourceLocation(0, 1, 1)
+                        new SourceLocation(1, 1)
                     ), "PythonFileLibraryNode.DoSearch");
 
                     if (exprAnalysis != null) {
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Navigation {
             var analysis = _hierarchy.GetAnalysisEntry();
             var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetAllAvailableMembersAsync(
                 analysis,
-                new SourceLocation(0, 1, 1),
+                new SourceLocation(1, 1),
                 GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation
             ), "PythonFileChildren.GetChildren");
             return members;
@@ -230,7 +230,7 @@ namespace Microsoft.PythonTools.Navigation {
             var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetMembersAsync(
                 analysis,
                 _member,
-                new SourceLocation(0, 1, 1),
+                new SourceLocation(1, 1),
                 GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation | GetMemberOptions.DeclaredOnly |
                 GetMemberOptions.NoMemberRecursion
             ), "MemberChildren.GetChildren");

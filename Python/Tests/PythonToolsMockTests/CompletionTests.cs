@@ -635,7 +635,7 @@ f(1, 2, 3, 4,")) {
             return GetCompletionNames(analysis.GetCompletions(new MockGlyphService()));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void CompletionInTripleQuotedString() {
             string code = @"

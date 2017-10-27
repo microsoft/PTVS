@@ -68,18 +68,17 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var needSuggestion = new List<SnapshotSpan>();
 
-            var tokens = textBuffer.GetPythonClassifier()?.GetClassificationSpans(range);
-            foreach (var t in tokens.MaybeEnumerate()) {
-                if (t.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
-                    var isMissing = await entry.Analyzer.IsMissingImportAsync(
-                        entry,
-                        t.Span.GetText(),
-                        t.Span.Start.ToSourceLocation()
-                    );
+            var tokens = bi.GetTokens(range).Where(t => t.Category == TokenCategory.Identifier);
+            foreach (var t in tokens) {
+                var span = t.SourceSpan.ToSnapshotSpan(range.Snapshot);
+                var isMissing = await entry.Analyzer.IsMissingImportAsync(
+                    entry,
+                    span.GetText(),
+                    t.SourceSpan.Start
+                );
 
-                    if (isMissing) {
-                        needSuggestion.Add(t.Span);
-                    }
+                if (isMissing) {
+                    needSuggestion.Add(span);
                 }
             }
 

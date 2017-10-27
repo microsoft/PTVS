@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Navigation {
                         var analysis = analyzer.WaitForRequest(analyzer.AnalyzeExpressionAsync(
                             entry, 
                             Name, 
-                            new SourceLocation(0, reference.line, reference.column)
+                            new SourceLocation(reference.line, reference.column)
                         ), "PythonLibraryNode.AnalyzeExpression");
                         vars.AddRange(analysis.Variables);
                     }

@@ -14,27 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Tagging;
-using System.Diagnostics.Contracts;
-using System.Diagnostics;
-using System.Collections;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools {
     [DebuggerDisplay("{GetDebugView(),nq}")]
     internal struct LineTokenization : ITag {
-        public readonly TokenInfo[] Tokens;
+        public readonly LineToken[] Tokens;
         public readonly object State;
 
-        public LineTokenization(TokenInfo[] tokens, object state) {
-            Tokens = tokens;
+        public LineTokenization(IEnumerable<TokenInfo> tokens, object state, int fullLineLength) {
+            Tokens = tokens.Select(t => new LineToken(t, fullLineLength)).ToArray();
             State = state;
         }
 
@@ -52,6 +48,35 @@ namespace Microsoft.PythonTools {
             }
             return sb.ToString();
         }
+    }
+
+    internal struct LineToken {
+        public LineToken(TokenInfo token, int lineLength) {
+            Category = token.Category;
+            Trigger = token.Trigger;
+            Column = token.SourceSpan.Start.Column - 1;
+            if (token.SourceSpan.Start.Line == token.SourceSpan.End.Line) {
+                // Token on the same line is easy
+                Length = token.SourceSpan.End.Column - token.SourceSpan.Start.Column;
+            } else if (token.SourceSpan.End.Line == token.SourceSpan.Start.Line + 1 && token.SourceSpan.End.Column == 1) {
+                // Token ending at the start of the next line is a known special case
+                Length = lineLength - Column;
+            } else {
+                // Tokens spanning lines should not be added to a LineTokenization
+                throw new ArgumentException("Cannot cache multiline token");
+            }
+        }
+
+        public TokenCategory Category;
+        public TokenTriggers Trigger;
+        /// <summary>
+        /// 0-based index where the token starts on the line.
+        /// </summary>
+        public int Column;
+        /// <summary>
+        /// Number of characters included in the token.
+        /// </summary>
+        public int Length;
     }
 
     internal class TokenCache {

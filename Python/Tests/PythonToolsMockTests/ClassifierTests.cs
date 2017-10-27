@@ -175,11 +175,11 @@ def f(a = A, b : B):
         public void MultilineStringClassification() {
             var code = @"t = '''a
 
-b ''' + c + '''d
+b ''' + c + 'x' + '''d
 
 e'''";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
-                helper.CheckAstClassifierSpans("i=s+i+s");
+                helper.CheckAstClassifierSpans("i=sss+i+s+sss");
             }
         }
 

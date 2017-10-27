@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Language {
             // Adjust the span to expression boundaries.
 
             var snapshot = _wpfTextView.TextSnapshot;
-            var pt = new SourceLocation(0, pSpan[0].iStartLine + 1, pSpan[0].iStartIndex + 1);
+            var pt = new SourceLocation(pSpan[0].iStartLine + 1, pSpan[0].iStartIndex + 1);
 
             var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
             var analyzer = bi?.AnalysisEntry?.Analyzer;
