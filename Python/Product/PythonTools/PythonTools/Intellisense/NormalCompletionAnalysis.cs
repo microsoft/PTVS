@@ -75,6 +75,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 case TokenCategory.Delimiter:
                 case TokenCategory.Grouping:
                 case TokenCategory.Operator:
+                case TokenCategory.WhiteSpace:
+                    // Expect top-level completions after these
+                    expressionExtent = span;
+                    return true;
+                case TokenCategory.BuiltinIdentifier:
+                case TokenCategory.Identifier:
+                case TokenCategory.Keyword:
+                    // Expect filtered top-level completions here
+                    // (but the return value is no different)
                     expressionExtent = span;
                     return true;
             }

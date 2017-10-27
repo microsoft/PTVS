@@ -353,11 +353,8 @@ namespace Microsoft.VisualStudioTools.Project {
         public virtual int OnClear(int wasCut) {
             if (wasCut != 0) {
                 AssertHasParentHierarchy();
-                IVsUIHierarchyWindow w = UIHierarchyUtilities.GetUIHierarchyWindow(this.site, HierarchyNode.SolutionExplorer);
-                if (w != null) {
-                    foreach (HierarchyNode node in ItemsDraggedOrCutOrCopied) {
-                        node.ExpandItem(EXPANDFLAGS.EXPF_UnCutHighlightItem);
-                    }
+                foreach (HierarchyNode node in ItemsDraggedOrCutOrCopied) {
+                    node.ExpandItem(EXPANDFLAGS.EXPF_UnCutHighlightItem);
                 }
             }
 
