@@ -53,6 +53,8 @@ namespace Microsoft.PythonTools {
             _type = _services.ContentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
         }
 
+        internal PythonEditorServices Services => _services;
+
         #region Python Classification Type Definitions
 
         [Export]
@@ -140,6 +142,7 @@ namespace Microsoft.PythonTools {
             categoryMap[TokenCategory.NumericLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Number);
             categoryMap[TokenCategory.CharacterLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Character);
             categoryMap[TokenCategory.StringLiteral] = _stringLiteral = registry.GetClassificationType(PredefinedClassificationTypeNames.String);
+            categoryMap[TokenCategory.IncompleteMultiLineStringLiteral] = _stringLiteral;
             categoryMap[TokenCategory.Keyword] = _keyword = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
             categoryMap[TokenCategory.Directive] = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
             categoryMap[TokenCategory.Identifier] = registry.GetClassificationType(PredefinedClassificationTypeNames.Identifier);

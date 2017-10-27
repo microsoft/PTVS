@@ -87,7 +87,9 @@ namespace Microsoft.PythonTools.Editor {
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
 
         private readonly Lazy<string> _filename;
+        private readonly TokenCache _tokenCache;
 
+        private readonly bool _hasChangedOnBackground;
         private bool _replace;
 
         private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
@@ -95,6 +97,7 @@ namespace Microsoft.PythonTools.Editor {
             Buffer = buffer;
             _eventSinks = new ConcurrentDictionary<object, IPythonTextBufferInfoEventSink>();
             _filename = new Lazy<string>(GetOrCreateFilename);
+            _tokenCache = new TokenCache();
             _bufferId = -1;
 
             ITextDocument doc;
@@ -105,6 +108,11 @@ namespace Microsoft.PythonTools.Editor {
             Buffer.ContentTypeChanged += Buffer_ContentTypeChanged;
             Buffer.Changed += Buffer_TextContentChanged;
             Buffer.ChangedLowPriority += Buffer_TextContentChangedLowPriority;
+
+            if (Buffer is ITextBuffer2 buffer2) {
+                _hasChangedOnBackground = true;
+                buffer2.ChangedOnBackground += Buffer_TextContentChangedOnBackground;
+            }
         }
 
         private T GetOrCreate<T>(ref T destination, Func<PythonTextBufferInfo, T> creator) where T : class {
@@ -133,6 +141,10 @@ namespace Microsoft.PythonTools.Editor {
             Buffer.ContentTypeChanged -= Buffer_ContentTypeChanged;
             Buffer.Changed -= Buffer_TextContentChanged;
             Buffer.ChangedLowPriority -= Buffer_TextContentChangedLowPriority;
+
+            if (Buffer is ITextBuffer2 buffer2) {
+                buffer2.ChangedOnBackground -= Buffer_TextContentChangedOnBackground;
+            }
 
             InvokeSinks(new PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewTextBufferInfo, newInfo));
 
@@ -168,6 +180,7 @@ namespace Microsoft.PythonTools.Editor {
         #region Events
 
         private void OnNewAnalysisEntry(AnalysisEntry entry) {
+            ClearTokenCache();
             InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysisEntry, entry));
         }
 
@@ -180,7 +193,13 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private void Buffer_TextContentChanged(object sender, TextContentChangedEventArgs e) {
+            if (!_hasChangedOnBackground) {
+                UpdateTokenCache(e);
+            }
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChanged, e));
+            if (!_hasChangedOnBackground) {
+                InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedOnBackgroundThread, e));
+            }
         }
 
         private void Buffer_TextContentChangedLowPriority(object sender, TextContentChangedEventArgs e) {
@@ -188,7 +207,17 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private void Buffer_ContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
+            ClearTokenCache();
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.ContentTypeChanged, e));
+        }
+
+        private void Buffer_TextContentChangedOnBackground(object sender, TextContentChangedEventArgs e) {
+            if (!_hasChangedOnBackground) {
+                Debug.Fail("Received TextContentChangedOnBackground unexpectedly");
+                return;
+            }
+            UpdateTokenCache(e);
+            InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedOnBackgroundThread, e));
         }
 
         private void Document_EncodingChanged(object sender, EncodingChangedEventArgs e) {
@@ -328,7 +357,7 @@ namespace Microsoft.PythonTools.Editor {
             timer.Start();
             bool hasError = true, hasResult = false;
             try {
-                var r = GetExpressionAtPoint(span, LanguageVersion, options);
+                var r = GetExpressionAtPointWorker(span, options);
                 hasResult = r != null;
                 hasError = false;
                 return r;
@@ -353,32 +382,107 @@ namespace Microsoft.PythonTools.Editor {
         /// <summary>
         /// Returns the first token containing or adjacent to the specified point.
         /// </summary>
-        public TokenInfo? GetTokenAtPoint(SnapshotPoint point) {
-            var line = point.GetContainingLine();
-            var pt = point.ToSourceLocation();
-            return GetLineTokens(line, LanguageVersion)
-                .TakeWhile(t => t.SourceSpan.End >= pt)
-                .OfType<TokenInfo?>()
-                .FirstOrDefault(t => t.Value.SourceSpan.Start <= pt);
+        public TrackingTokenInfo? GetTokenAtPoint(SnapshotPoint point) {
+            return GetTrackingTokens(new SnapshotSpan(point, 0))
+                .Cast<TrackingTokenInfo?>()
+                .FirstOrDefault();
         }
 
-        private static IEnumerable<TokenInfo> GetLineTokens(ITextSnapshotLine line, PythonLanguageVersion version) {
-            var sourceSpan = new SnapshotSpanSourceCodeReader(line.Extent);
-            var tokenizer = new Tokenizer(version, options: TokenizerOptions.VerbatimCommentsAndLineJoins);
-            tokenizer.Initialize(sourceSpan);
-            for (var t = tokenizer.ReadToken(); t.Category != TokenCategory.EndOfStream; t = tokenizer.ReadToken()) {
-                yield return t;
+        /// <summary>
+        /// Returns tokens for the specified line.
+        /// </summary>
+        public IEnumerable<TrackingTokenInfo> GetTokens(ITextSnapshotLine line) {
+            Tokenizer tokenizer = null;
+            var lineTokenization = GetLineTokenization(line, ref tokenizer);
+            var lineNumber = line.LineNumber;
+            var lineSpan = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
+            return lineTokenization.Tokens.Select(t => new TrackingTokenInfo(t, lineNumber, lineSpan));
+        }
+
+        public IEnumerable<TrackingTokenInfo> GetTokens(SnapshotSpan span) {
+            return GetTrackingTokens(span);
+        }
+
+        /// <summary>
+        /// Iterates forwards through tokens starting from the token at or
+        /// adjacent to the specified point.
+        /// </summary>
+        public IEnumerable<TrackingTokenInfo> GetTokensForwardFromPoint(SnapshotPoint point) {
+            var line = point.GetContainingLine();
+
+            foreach (var token in GetTrackingTokens(new SnapshotSpan(point, line.End))) {
+                yield return token;
+            }
+
+            while (line.LineNumber < line.Snapshot.LineCount - 1) {
+                line = line.Snapshot.GetLineFromLineNumber(line.LineNumber + 1);
+                // Use line.Extent because GetLineTokens endpoints are inclusive - we
+                // will get the line break token because it is adjacent, but no
+                // other repetitions.
+                foreach (var token in GetTrackingTokens(line.Extent)) {
+                    yield return token;
+                }
             }
         }
 
-        internal static bool IsPossibleExpressionAtPoint(SnapshotPoint point, PythonLanguageVersion version) {
+        /// <summary>
+        /// Iterates backwards through tokens starting from the token at or
+        /// adjacent to the specified point.
+        /// </summary>
+        public IEnumerable<TrackingTokenInfo> GetTokensInReverseFromPoint(SnapshotPoint point) {
+            var line = point.GetContainingLine();
+
+            foreach (var token in GetTrackingTokens(new SnapshotSpan(line.Start, point)).Reverse()) {
+                yield return token;
+            }
+
+            while (line.LineNumber > 0) {
+                line = line.Snapshot.GetLineFromLineNumber(line.LineNumber - 1);
+                // Use line.Extent because GetLineTokens endpoints are inclusive - we
+                // will get the line break token because it is adjacent, but no
+                // other repetitions.
+                foreach (var token in GetTrackingTokens(line.Extent).Reverse()) {
+                    yield return token;
+                }
+            }
+        }
+
+        internal IEnumerable<TrackingTokenInfo> GetTrackingTokens(SnapshotSpan span) {
+            int firstLine = span.Start.GetContainingLine().LineNumber;
+            int lastLine = span.End.GetContainingLine().LineNumber;
+
+            int startCol = span.Start - span.Start.GetContainingLine().Start;
+            int endCol = span.End - span.End.GetContainingLine().Start;
+
+            Tokenizer tokenizer = null;
+
+            for (int line = firstLine; line <= lastLine; ++line) {
+                var lineTokenization = GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), ref tokenizer);
+
+                foreach(var token in lineTokenization.Tokens.MaybeEnumerate()) {
+                    if (line < firstLine || line > lastLine) {
+                        continue;
+                    }
+                    if (line == firstLine && token.Column + token.Length < startCol) {
+                        continue;
+                    }
+                    if (line == lastLine && token.Column > endCol) {
+                        continue;
+                    }
+                    yield return new TrackingTokenInfo(token, line, lineTokenization.Line);
+                }
+            }
+        }
+
+        internal bool IsPossibleExpressionAtPoint(SnapshotPoint point) {
             var line = point.GetContainingLine();
             int col = point - line.Start + 1;
+            var pt = new SourceLocation(line.LineNumber + 1, col + 1);
             bool anyTokens = false;
 
-            foreach (var t in GetLineTokens(line, version)) {
+            foreach (var t in GetTokens(line)) {
                 anyTokens = true;
-                if (t.SourceSpan.Start.Column >= col || t.SourceSpan.End.Column < col) {
+                if (!t.Contains(pt)) {
                     continue;
                 }
 
@@ -389,7 +493,7 @@ namespace Microsoft.PythonTools.Editor {
 
                 // Tokens after this point are possible expressions if we are looking
                 // at the very end of the token.
-                if (t.SourceSpan.End.Column == col) {
+                if (t.IsAtEnd(pt)) {
                     continue;
                 }
 
@@ -402,14 +506,14 @@ namespace Microsoft.PythonTools.Editor {
             return anyTokens;
         }
 
-        internal static SnapshotSpan? GetExpressionAtPoint(SnapshotSpan span, PythonLanguageVersion version, GetExpressionOptions options) {
+        internal SnapshotSpan? GetExpressionAtPointWorker(SnapshotSpan span, GetExpressionOptions options) {
             // First do some very quick tokenization to save a full analysis
-            if (!IsPossibleExpressionAtPoint(span.Start, version)) {
+            if (!IsPossibleExpressionAtPoint(span.Start)) {
                 return null;
             }
 
             if (span.End.GetContainingLine() != span.Start.GetContainingLine() &&
-                !IsPossibleExpressionAtPoint(span.End, version)) {
+                !IsPossibleExpressionAtPoint(span.End)) {
                 return null;
             }
 
@@ -418,7 +522,7 @@ namespace Microsoft.PythonTools.Editor {
             );
 
             PythonAst ast;
-            using (var parser = Parser.CreateParser(sourceSpan, version)) {
+            using (var parser = Parser.CreateParser(sourceSpan, LanguageVersion)) {
                 ast = parser.ParseFile();
             }
 
@@ -455,6 +559,127 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
+        #endregion
+
+        #region Token Cache Management
+
+        private Tokenizer MakeTokenizer() {
+            return new Tokenizer(LanguageVersion, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
+        }
+
+        private void ClearTokenCache() {
+            _tokenCache.Clear();
+        }
+
+        private void UpdateTokenCache(TextContentChangedEventArgs e) {
+            // NOTE: Runs on background thread
+
+            var snapshot = e.After;
+            if (snapshot.TextBuffer != Buffer) {
+                Debug.Fail("Mismatched buffer");
+                return;
+            }
+
+            if (snapshot.IsReplBufferWithCommand()) {
+                return;
+            }
+
+            // Prevent later updates overwriting our tokenization
+            lock (_tokenCache) {
+                _tokenCache.EnsureCapacity(snapshot.LineCount);
+
+                Tokenizer tokenizer = null;
+                foreach (var change in e.Changes) {
+                    var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
+                    if (change.LineCountDelta > 0) {
+                        _tokenCache.InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
+                    } else if (change.LineCountDelta < 0) {
+                        _tokenCache.DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
+                    }
+
+                    ApplyChangeToTokenCache(ref tokenizer, new SnapshotSpan(snapshot, change.NewSpan));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the tokenization for the specified line.
+        /// </summary>
+        /// <param name="line">The line to get tokenization for.</param>
+        /// <param name="tokenizer">
+        /// <c>null</c> or a tokenizer previously returned on this thread.
+        /// This allows lazily creating and reusing the same tokenizer.
+        /// </param>
+        /// <returns></returns>
+        private LineTokenization GetLineTokenization(ITextSnapshotLine line, ref Tokenizer tokenizer) {
+            int lineNumber = line.LineNumber;
+
+            _tokenCache.EnsureCapacity(line.Snapshot.LineCount);
+
+            LineTokenization lineTok;
+            int start = _tokenCache.IndexOfPreviousTokenization(lineNumber + 1, 0, out lineTok);
+
+            while (++start <= lineNumber) {
+                var state = lineTok.State;
+
+                if (!_tokenCache.TryGetTokenization(start, out lineTok)) {
+                    if (tokenizer == null) {
+                        tokenizer = MakeTokenizer();
+                    }
+                    _tokenCache[start] = lineTok = TokenizeLine(tokenizer, line.Snapshot.GetLineFromLineNumber(start), state);
+                }
+            }
+
+            return lineTok;
+        }
+
+        private void ApplyChangeToTokenCache(ref Tokenizer tokenizer, SnapshotSpan span) {
+            int firstLine = span.Start.GetContainingLine().LineNumber;
+            int lastLine = span.End.GetContainingLine().LineNumber;
+
+            Debug.Assert(firstLine >= 0);
+
+            // find the closest line preceding firstLine for which we know tokenizer state
+            LineTokenization lineTokenization;
+            firstLine = _tokenCache.IndexOfPreviousTokenization(firstLine, 0, out lineTokenization) + 1;
+
+            for (int lineNo = firstLine; lineNo < span.Snapshot.LineCount; ++lineNo) {
+                var line = span.Snapshot.GetLineFromLineNumber(lineNo);
+
+                var beforeState = lineTokenization.State;
+
+                if (tokenizer == null) {
+                    tokenizer = MakeTokenizer();
+                }
+                _tokenCache[lineNo] = lineTokenization = TokenizeLine(tokenizer, line, beforeState);
+
+                var afterState = lineTokenization.State;
+
+                // stop if we visited all affected lines and the current line has no tokenization state
+                // or its previous state is the same as the new state.
+                if (lineNo > lastLine && (beforeState == null || beforeState.Equals(afterState))) {
+                    break;
+                }
+            }
+        }
+
+        private static LineTokenization TokenizeLine(Tokenizer tokenizer, ITextSnapshotLine line, object state) {
+            tokenizer.Initialize(
+                state,
+                new SnapshotSpanSourceCodeReader(line.ExtentIncludingLineBreak),
+                new SourceLocation(line.Start.Position, line.LineNumber + 1, 1)
+            );
+
+            try {
+                return new LineTokenization(
+                    tokenizer.ReadTokens(line.LengthIncludingLineBreak),
+                    tokenizer.CurrentState,
+                    line
+                );
+            } finally {
+                tokenizer.Uninitialize();
+            }
+        }
 
         #endregion
     }

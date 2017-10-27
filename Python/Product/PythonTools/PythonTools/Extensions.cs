@@ -922,14 +922,23 @@ namespace Microsoft.PythonTools {
         internal static bool IsOpenGrouping(this ClassificationSpan span) {
             return span.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Grouping) &&
                 span.Span.Length == 1 &&
-                (span.Span.GetText() == "{" || span.Span.GetText() == "[" || span.Span.GetText() == "(");
+                span.Span.GetText().IsOpenGrouping();
         }
 
         internal static bool IsCloseGrouping(this ClassificationSpan span) {
             return span.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Grouping) &&
                 span.Span.Length == 1 &&
-                (span.Span.GetText() == "}" || span.Span.GetText() == "]" || span.Span.GetText() == ")");
+                span.Span.GetText().IsCloseGrouping();
         }
+
+        internal static bool IsOpenGrouping(this string s) {
+            return s == "{" || s == "[" || s == "(";
+        }
+
+        internal static bool IsCloseGrouping(this string s) {
+            return s == "}" || s == "]" || s == ")";
+        }
+
 
         internal static T Pop<T>(this List<T> list) {
             if (list.Count == 0) {

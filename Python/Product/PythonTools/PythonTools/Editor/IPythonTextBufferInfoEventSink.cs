@@ -41,7 +41,8 @@ namespace Microsoft.PythonTools.Editor {
         TextContentChangedLowPriority,
         ContentTypeChanged,
         DocumentEncodingChanged,
-        NewTextBufferInfo
+        NewTextBufferInfo,
+        TextContentChangedOnBackgroundThread,
     }
 
     class PythonTextBufferInfoEventArgs : EventArgs {

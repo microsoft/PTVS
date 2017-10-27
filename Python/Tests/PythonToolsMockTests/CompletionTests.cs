@@ -222,13 +222,8 @@ l(42)
                     Assert.AreEqual(1, trueItems.Count());
                     Assert.AreEqual(1, falseItems.Count());
                     Assert.AreEqual(1, noneItems.Count());
-                    if (version.Is3x()) {
-                        Assert.AreEqual("Keyword", trueItems[0].IconAutomationText);
-                        Assert.AreEqual("Keyword", falseItems[0].IconAutomationText);
-                    } else {
-                        Assert.AreEqual("Constant", trueItems[0].IconAutomationText);
-                        Assert.AreEqual("Constant", falseItems[0].IconAutomationText);
-                    }
+                    Assert.AreEqual("Keyword", trueItems[0].IconAutomationText);
+                    Assert.AreEqual("Keyword", falseItems[0].IconAutomationText);
                     Assert.AreEqual("Keyword", noneItems[0].IconAutomationText);
                 }
             }
@@ -635,7 +630,7 @@ f(1, 2, 3, 4,")) {
             return GetCompletionNames(analysis.GetCompletions(new MockGlyphService()));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void CompletionInTripleQuotedString() {
             string code = @"
