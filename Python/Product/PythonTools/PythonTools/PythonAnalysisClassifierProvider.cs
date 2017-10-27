@@ -20,10 +20,8 @@ using System.ComponentModel.Composition;
 using System.Windows.Media;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -85,6 +83,16 @@ namespace Microsoft.PythonTools {
         [BaseDefinition(PredefinedClassificationTypeNames.Identifier)]
         internal static ClassificationTypeDefinition ModuleClassificationDefinition = null; // Set via MEF
 
+        [Export]
+        [Name(PythonPredefinedClassificationTypeNames.Documentation)]
+        [BaseDefinition(PredefinedClassificationTypeNames.String)]
+        internal static ClassificationTypeDefinition DocumentationClassificationDefinition = null; // Set via MEF
+
+        [Export]
+        [Name(PythonPredefinedClassificationTypeNames.RegularExpression)]
+        [BaseDefinition(PredefinedClassificationTypeNames.String)]
+        internal static ClassificationTypeDefinition RegularExpressionClassificationDefinition = null; // Set via MEF
+
         #endregion
 
         #region IDlrClassifierProvider
@@ -93,7 +101,7 @@ namespace Microsoft.PythonTools {
             if (buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
                 return null;
             }
-            
+
             if (_categoryMap == null) {
                 _categoryMap = FillCategoryMap(_classificationRegistry);
             }
@@ -119,6 +127,8 @@ namespace Microsoft.PythonTools {
             categoryMap[PythonPredefinedClassificationTypeNames.Parameter] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Parameter);
             categoryMap[PythonPredefinedClassificationTypeNames.Module] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Module);
             categoryMap[PythonPredefinedClassificationTypeNames.Function] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Function);
+            categoryMap[PythonPredefinedClassificationTypeNames.Documentation] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Documentation);
+            categoryMap[PythonPredefinedClassificationTypeNames.RegularExpression] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.RegularExpression);
             // Include keyword for context-sensitive keywords
             categoryMap[PredefinedClassificationTypeNames.Keyword] = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
 
@@ -176,6 +186,34 @@ namespace Microsoft.PythonTools {
         public FunctionFormat() {
             DisplayName = Strings.FunctionClassificationType;
             // Matches "C++ Functions"
+            ForegroundColor = Colors.Black;
+        }
+    }
+
+    [Export(typeof(EditorFormatDefinition))]
+    [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Documentation)]
+    [Name(PythonPredefinedClassificationTypeNames.Documentation)]
+    [UserVisible(true)]
+    [Order(After = Priority.High)]
+    internal sealed class DocumentationFormat : ClassificationFormatDefinition {
+        public DocumentationFormat() {
+            DisplayName = Strings.DocumentationClassificationType;
+            // Matches nothing in particular
+            // TODO: Default to string color
+            ForegroundColor = Colors.Black;
+        }
+    }
+
+    [Export(typeof(EditorFormatDefinition))]
+    [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.RegularExpression)]
+    [Name(PythonPredefinedClassificationTypeNames.RegularExpression)]
+    [UserVisible(true)]
+    [Order(After = Priority.High)]
+    internal sealed class RegexFormat : ClassificationFormatDefinition {
+        public RegexFormat() {
+            DisplayName = Strings.RegularExpressionClassificationType;
+            // Matches nothing in particular
+            // TODO: Default to existing regex color
             ForegroundColor = Colors.Black;
         }
     }

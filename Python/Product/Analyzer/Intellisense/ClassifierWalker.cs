@@ -30,6 +30,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -74,6 +75,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Function = "function";
             public const string Module = "module";
             public const string Parameter = "parameter";
+            public const string RegexLiteral = "regexliteral";
+            public const string DocString = "docstring";
         }
 
         public ClassifierWalker(PythonAst ast, ModuleAnalysis analysis) {
@@ -230,11 +233,19 @@ namespace Microsoft.PythonTools.Intellisense {
             base.PostWalk(node);
         }
 
+        private void MaybeAddDocstring(Node body) {
+            var docString = (body as SuiteStatement)?.Statements?[0] as ExpressionStatement;
+            if (docString?.Expression is ConstantExpression ce && (ce.Value is string || ce.Value is AsciiString)) {
+                AddSpan(Tuple.Create("", Span.FromBounds(ce.StartIndex, ce.EndIndex)), Classifications.DocString);
+            }
+        }
+
         public override bool Walk(ClassDefinition node) {
             Debug.Assert(_head != null);
             _head.Types.Add(node.NameExpression.Name);
             node.NameExpression.Walk(this);
             BeginScope(node.NameExpression.Name);
+            MaybeAddDocstring(node.Body);
             return base.Walk(node);
         }
 
@@ -247,6 +258,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _head.Functions.Add(node.NameExpression.Name);
             node.NameExpression.Walk(this);
             BeginScope();
+            MaybeAddDocstring(node.Body);
             return base.Walk(node);
         }
 
@@ -380,6 +392,42 @@ namespace Microsoft.PythonTools.Intellisense {
             if (node.IsAsync) {
                 AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), Classifications.Keyword);
             }
+            return base.Walk(node);
+        }
+
+        private static readonly HashSet<string> RegexFunctionNames = new HashSet<string> {
+            "compile",
+            "escape",
+            "findall",
+            "finditer",
+            "fullmatch",
+            "match",
+            "search",
+            "split",
+            "sub",
+            "subn"
+        };
+
+        public override bool Walk(CallExpression node) {
+            bool isRegex = false;
+
+            if (node.Target is MemberExpression me && RegexFunctionNames.Contains(me.Name) && me.Target is NameExpression target) {
+                if (_analysis.GetValues(target.Name, me.GetStart(_ast)).Any(m => m is IModule && m.Name == "re")) {
+                    isRegex = true;
+                }
+            } else if (node.Target is NameExpression ne && RegexFunctionNames.Contains(ne.Name)) {
+                if (_analysis.GetValues(ne.Name, ne.GetStart(_ast)).OfType<BuiltinFunctionInfo>()
+                    .Any(f => f.Function?.DeclaringType == null && f.Function?.DeclaringModule.Name == "re")) {
+                    isRegex = true;
+                }
+            }
+
+            if (isRegex && node.Args != null && node.Args.Count > 0 && node.Args[0].Expression is ConstantExpression ce) {
+                if (ce.Value is string || ce.Value is AsciiString) {
+                    AddSpan(Tuple.Create("", Span.FromBounds(ce.StartIndex, ce.EndIndex)), Classifications.RegexLiteral);
+                }
+            }
+
             return base.Walk(node);
         }
 

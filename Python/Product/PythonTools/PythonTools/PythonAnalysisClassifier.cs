@@ -188,6 +188,8 @@ namespace Microsoft.PythonTools {
                 case "function": typeName = PythonPredefinedClassificationTypeNames.Function; break;
                 case "module": typeName = PythonPredefinedClassificationTypeNames.Module; break;
                 case "parameter": typeName = PythonPredefinedClassificationTypeNames.Parameter; break;
+                case "docstring": typeName = PythonPredefinedClassificationTypeNames.Documentation; break;
+                case "regexliteral": typeName = PythonPredefinedClassificationTypeNames.RegularExpression; break;
             }
 
             return typeName;
