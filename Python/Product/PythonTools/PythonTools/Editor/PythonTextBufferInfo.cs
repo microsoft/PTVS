@@ -655,7 +655,7 @@ namespace Microsoft.PythonTools.Editor {
 
                 var afterState = lineTokenization.State;
 
-                // stop if we visted all affected lines and the current line has no tokenization state
+                // stop if we visited all affected lines and the current line has no tokenization state
                 // or its previous state is the same as the new state.
                 if (lineNo > lastLine && (beforeState == null || beforeState.Equals(afterState))) {
                     break;

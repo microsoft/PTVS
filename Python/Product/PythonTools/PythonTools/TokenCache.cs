@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools {
         public int Length;
     }
 
-    public struct TrackingTokenInfo {
+    struct TrackingTokenInfo {
         internal TrackingTokenInfo(LineToken token, int lineNumber, ITrackingSpan lineSpan) {
             LineToken = token;
             LineNumber = lineNumber;
