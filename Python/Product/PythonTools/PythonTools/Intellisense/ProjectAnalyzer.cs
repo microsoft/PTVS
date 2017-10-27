@@ -1319,7 +1319,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 new AP.IsMissingImportRequest() {
                     fileId = entry.FileId,
                     text = text,
-                    index = location.Index,
                     line = location.Line,
                     column = location.Column
                 }

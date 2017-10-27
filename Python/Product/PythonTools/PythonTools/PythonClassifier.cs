@@ -83,6 +83,7 @@ namespace Microsoft.PythonTools {
         #region Private Members
 
         private Task OnTextContentChangedAsync(PythonTextBufferInfo sender, TextContentChangedEventArgs e) {
+            // NOTE: Runs on background thread
             if (e == null) {
                 Debug.Fail("Invalid type passed to event");
             }
@@ -151,7 +152,7 @@ namespace Microsoft.PythonTools {
         Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
             if (e.Event == PythonTextBufferInfoEvents.NewAnalysisEntry) {
                 return OnNewAnalysisEntryAsync(sender, e.AnalysisEntry);
-            } else if (e.Event == PythonTextBufferInfoEvents.TextContentChanged) {
+            } else if (e.Event == PythonTextBufferInfoEvents.TextContentChangedOnBackgroundThread) {
                 return OnTextContentChangedAsync(sender, (e as PythonTextBufferInfoNestedEventArgs)?.NestedEventArgs as TextContentChangedEventArgs);
             }
             return Task.CompletedTask;

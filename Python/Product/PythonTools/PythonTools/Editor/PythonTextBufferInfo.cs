@@ -90,6 +90,7 @@ namespace Microsoft.PythonTools.Editor {
         private Tokenizer _tokenizer;
         private readonly TokenCache _tokenCache;
 
+        private readonly bool _hasChangedOnBackground;
         private bool _replace;
 
         private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
@@ -108,6 +109,11 @@ namespace Microsoft.PythonTools.Editor {
             Buffer.ContentTypeChanged += Buffer_ContentTypeChanged;
             Buffer.Changed += Buffer_TextContentChanged;
             Buffer.ChangedLowPriority += Buffer_TextContentChangedLowPriority;
+
+            if (Buffer is ITextBuffer2 buffer2) {
+                _hasChangedOnBackground = true;
+                buffer2.ChangedOnBackground += Buffer_TextContentChangedOnBackground;
+            }
         }
 
         private T GetOrCreate<T>(ref T destination, Func<PythonTextBufferInfo, T> creator) where T : class {
@@ -136,6 +142,10 @@ namespace Microsoft.PythonTools.Editor {
             Buffer.ContentTypeChanged -= Buffer_ContentTypeChanged;
             Buffer.Changed -= Buffer_TextContentChanged;
             Buffer.ChangedLowPriority -= Buffer_TextContentChangedLowPriority;
+
+            if (Buffer is ITextBuffer2 buffer2) {
+                buffer2.ChangedOnBackground -= Buffer_TextContentChangedOnBackground;
+            }
 
             InvokeSinks(new PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewTextBufferInfo, newInfo));
 
@@ -184,8 +194,13 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private void Buffer_TextContentChanged(object sender, TextContentChangedEventArgs e) {
-            UpdateTokenCache(e);
+            if (!_hasChangedOnBackground) {
+                UpdateTokenCache(e);
+            }
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChanged, e));
+            if (!_hasChangedOnBackground) {
+                InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedOnBackgroundThread, e));
+            }
         }
 
         private void Buffer_TextContentChangedLowPriority(object sender, TextContentChangedEventArgs e) {
@@ -195,6 +210,15 @@ namespace Microsoft.PythonTools.Editor {
         private void Buffer_ContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
             ClearTokenCache();
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.ContentTypeChanged, e));
+        }
+
+        private void Buffer_TextContentChangedOnBackground(object sender, TextContentChangedEventArgs e) {
+            if (!_hasChangedOnBackground) {
+                Debug.Fail("Received TextContentChangedOnBackground unexpectedly");
+                return;
+            }
+            UpdateTokenCache(e);
+            InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedOnBackgroundThread, e));
         }
 
         private void Document_EncodingChanged(object sender, EncodingChangedEventArgs e) {
@@ -572,6 +596,8 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private void UpdateTokenCache(TextContentChangedEventArgs e) {
+            // NOTE: Runs on background thread
+
             var snapshot = e.After;
             if (snapshot.TextBuffer != Buffer) {
                 Debug.Fail("Mismatched buffer");
