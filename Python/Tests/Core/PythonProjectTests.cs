@@ -277,7 +277,7 @@ namespace PythonToolsTests {
                 analyzer.WaitForCompleteAnalysis(_ => !cancel.IsCancellationRequested);
                 cancel.ThrowIfCancellationRequested();
 
-                var loc = new Microsoft.PythonTools.Parsing.SourceLocation(0, 1, 1);
+                var loc = new Microsoft.PythonTools.Parsing.SourceLocation(1, 1);
                 AssertUtil.ContainsExactly(
                     analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),
                     "module2"

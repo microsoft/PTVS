@@ -15,12 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using Microsoft.PythonTools.Editor.Core;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 
@@ -30,7 +26,7 @@ namespace Microsoft.PythonTools.Editor {
     /// </summary>
     class BraceMatcher {
         private readonly ITextView _textView;
-        private readonly IComponentModel _compModel;
+        private readonly PythonEditorServices _editorServices;
         private ITextBuffer _markedBuffer;
         private static TextMarkerTag _tag = new TextMarkerTag("Brace Matching (Rectangle)");
 
@@ -38,8 +34,8 @@ namespace Microsoft.PythonTools.Editor {
         /// Starts watching the provided text view for brace matching.  When new braces are inserted
         /// in the text or when the cursor moves to a brace the matching braces are highlighted.
         /// </summary>
-        public static void WatchBraceHighlights(ITextView view, IComponentModel componentModel) {
-            var matcher = new BraceMatcher(view, componentModel);
+        public static void WatchBraceHighlights(PythonEditorServices editorServices, ITextView view) {
+            var matcher = new BraceMatcher(editorServices, view);
 
             // position changed only fires when the caret is explicitly moved, not from normal text edits,
             // so we track both changes and position changed.
@@ -48,9 +44,9 @@ namespace Microsoft.PythonTools.Editor {
             view.Closed += matcher.TextViewClosed;
         }
 
-        public BraceMatcher(ITextView view, IComponentModel componentModel) {
+        public BraceMatcher(PythonEditorServices editorServices, ITextView view) {
             _textView = view;
-            _compModel = componentModel;
+            _editorServices = editorServices;
         }
 
         private void TextViewClosed(object sender, EventArgs e) {
@@ -114,7 +110,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private SimpleTagger<TextMarkerTag> GetTextMarker(ITextBuffer buffer) {
-            return _compModel.GetService<ITextMarkerProviderFactory>().GetTextMarkerTagger(buffer);
+            return _editorServices.TextMarkerProviderFactory.GetTextMarkerTagger(buffer);
         }
 
         private bool HighlightBrace(BraceKind brace, int position, int direction) {
@@ -133,66 +129,47 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private bool HighlightBrace(BraceKind brace, SnapshotPoint position, int direction) {
-            var classifier = position.Snapshot.TextBuffer.GetPythonClassifier();
-            
-            if (classifier != null) {
-                var snapshot = position.Snapshot;
-                var span = new SnapshotSpan(snapshot, position.Position - 1, 1);
-                var originalSpan = span;
+            var buffer = _editorServices.GetBufferInfo(position.Snapshot.TextBuffer);
+            if (buffer == null) {
+                return false;
+            }
 
-                var spans = classifier.GetClassificationSpans(span);
-                // we don't highlight braces if we're in a comment or string literal
-                if (spans.Count == 0 ||
-                    (spans.Count == 1 &&
-                    (!spans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) &&
-                    !spans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment)))) {
+            var snapshot = position.Snapshot;
+            var span = new SnapshotSpan(snapshot, position.Position - 1, 1);
+            var originalSpan = span;
 
-                    // find the opening span
-                    var curLine = snapshot.GetLineFromPosition(position);
-                    int curLineNo = curLine.LineNumber;
+            if (!(buffer.GetTokenAtPoint(position)?.Trigger ?? Parsing.TokenTriggers.None).HasFlag(Parsing.TokenTriggers.MatchBraces)) {
+                return false;
+            }
 
-                    if (direction == 1) {
-                        span = new SnapshotSpan(snapshot, position, curLine.End.Position - position);
+            int depth = 0;
+            foreach (var token in (direction > 0 ? buffer.GetTokensForwardFromPoint(position) : buffer.GetTokensInReverseFromPoint(position))) {
+                if (!token.Trigger.HasFlag(Parsing.TokenTriggers.MatchBraces)) {
+                    continue;
+                }
+
+                var tspan = token.ToSnapshotSpan(snapshot);
+                var txt = tspan.GetText();
+                if (IsSameBraceKind(txt, brace)) {
+                    if (txt.IsCloseGrouping()) {
+                        depth -= direction;
                     } else {
-                        span = new SnapshotSpan(curLine.Start, position - 1);
-                    }
-
-                    int depth = 1;
-                    for (; ; ) {
-                        spans = classifier.GetClassificationSpans(span);
-                        for (int i = direction == -1 ? spans.Count - 1 : 0; i >= 0 && i < spans.Count; i += direction) {
-                            if (spans[i].IsCloseGrouping()) {
-                                if (IsSameBraceKind(spans[i].Span.GetText(), brace)) {
-                                    depth -= direction;
-                                }
-                            } else if (spans[i].IsOpenGrouping()) {
-                                if (IsSameBraceKind(spans[i].Span.GetText(), brace)) {
-                                    depth += direction;
-                                }
-                            }
-
-                            if (depth == 0) {
-                                RemoveExistingHighlights();
-                                _markedBuffer = snapshot.TextBuffer;
-
-                                // left brace
-                                GetTextMarker(snapshot.TextBuffer).CreateTagSpan(snapshot.CreateTrackingSpan(spans[i].Span, SpanTrackingMode.EdgeExclusive), _tag);
-                                // right brace
-                                GetTextMarker(snapshot.TextBuffer).CreateTagSpan(snapshot.CreateTrackingSpan(new SnapshotSpan(snapshot, position - 1, 1), SpanTrackingMode.EdgeExclusive), _tag);
-                                return true;
-                            }
-                        }
-
-                        curLineNo += direction;
-                        if (curLineNo < 0 || curLineNo >= snapshot.LineCount) {
-                            break;
-                        }
-
-                        var line = snapshot.GetLineFromLineNumber(curLineNo);
-                        span = new SnapshotSpan(line.Start, line.End);
+                        depth += direction;
                     }
                 }
+
+                if (depth == 0) {
+                    RemoveExistingHighlights();
+                    _markedBuffer = snapshot.TextBuffer;
+
+                    // left brace
+                    GetTextMarker(snapshot.TextBuffer).CreateTagSpan(snapshot.CreateTrackingSpan(tspan, SpanTrackingMode.EdgeExclusive), _tag);
+                    // right brace
+                    GetTextMarker(snapshot.TextBuffer).CreateTagSpan(snapshot.CreateTrackingSpan(new SnapshotSpan(snapshot, position - 1, 1), SpanTrackingMode.EdgeExclusive), _tag);
+                    return true;
+                }
             }
+
             return false;
         }
 

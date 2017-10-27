@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
@@ -111,7 +112,16 @@ namespace Microsoft.PythonTools.Editor {
         public IQuickInfoBroker QuickInfoBroker = null;
 
         [Import]
+        public IPeekBroker PeekBroker = null;
+
+        [Import]
         public IIncrementalSearchFactoryService IncrementalSearch = null;
+
+        [Import]
+        public ITextMarkerProviderFactory TextMarkerProviderFactory = null;
+
+        [Import]
+        public ITextBufferUndoManagerProvider UndoManagerFactory = null;
 
         public IVsTextManager2 VsTextManager2 => (IVsTextManager2)Site.GetService(typeof(SVsTextManager));
 

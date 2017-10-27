@@ -1227,29 +1227,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 analysisSnapshot.TextBuffer == fromSnapshot.TextBuffer) {
 
                 var fromPoint = new SnapshotPoint(fromSnapshot, index);
-                var fromLine = fromPoint.GetContainingLine();
                 var toPoint = fromPoint.TranslateTo(analysisSnapshot, PointTrackingMode.Negative);
-                var toLine = toPoint.GetContainingLine();
 
-                Debug.Assert(fromLine != null, "Unable to get 'from' line from " + fromPoint.ToString());
-                Debug.Assert(toLine != null, "Unable to get 'to' line from " + toPoint.ToString());
-
-                return new SourceLocation(
-                    toPoint.Position,
-                    (toLine != null ? toLine.LineNumber : fromLine != null ? fromLine.LineNumber : 0) + 1,
-                    index - (fromLine != null ? fromLine.Start.Position : 0) + 1
-                );
+                return toPoint.ToSourceLocation();
             } else if (fromSnapshot != null) {
-                var fromPoint = new SnapshotPoint(fromSnapshot, index);
-                var fromLine = fromPoint.GetContainingLine();
-
-                return new SourceLocation(
-                    index,
-                    fromLine.LineNumber + 1,
-                    index - fromLine.Start.Position + 1
-                );
+                return new SnapshotPoint(fromSnapshot, index).ToSourceLocation();
             } else {
-                return new SourceLocation(index, 1, 1);
+                Debug.Fail("Unable to translate index");
+                return new SourceLocation(index, 1, index + 1);
             }
         }
 
@@ -1334,7 +1319,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 new AP.IsMissingImportRequest() {
                     fileId = entry.FileId,
                     text = text,
-                    index = location.Index,
                     line = location.Line,
                     column = location.Column
                 }
@@ -2556,7 +2540,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            return new SourceSpan(new SourceLocation(0, r.startLine, r.startColumn), new SourceLocation(0, r.endLine, r.endColumn));
+            return new SourceSpan(new SourceLocation(r.startLine, r.startColumn), new SourceLocation(r.endLine, r.endColumn));
         }
     }
 }

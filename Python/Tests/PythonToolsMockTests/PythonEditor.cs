@@ -282,6 +282,23 @@ namespace PythonToolsMockTests {
             bool assertIfNoCompletions = true,
             ITextSnapshot snapshot = null
         ) {
+            for (int retries = 5; retries > 0; --retries) {
+                var completions = GetCompletionListNoRetry(index, false, snapshot);
+                if (completions.Any()) {
+                    return completions;
+                }
+            }
+            if (assertIfNoCompletions) {
+                Assert.Fail("No completions");
+            }
+            return new List<Completion>();
+        }
+
+        public List<Completion> GetCompletionListNoRetry(
+            int index,
+            bool assertIfNoCompletions = true,
+            ITextSnapshot snapshot = null
+        ) {
             snapshot = snapshot ?? CurrentSnapshot;
             if (index < 0) {
                 index += snapshot.Length + 1;

@@ -16,6 +16,8 @@
 
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Linq;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.BraceCompletion;
 using Microsoft.VisualStudio.Text.Editor;
@@ -30,8 +32,11 @@ namespace Microsoft.PythonTools.Editor.BraceCompletion {
     [BracePair('\'', '\'')]
     [ContentType(PythonCoreConstants.ContentType)]
     internal sealed class BraceCompletionContextProvider : IBraceCompletionContextProvider {
+        [Import]
+        internal PythonEditorServices EditorServices = null;
+
         public bool TryCreateContext(ITextView textView, SnapshotPoint openingPoint, char openingBrace, char closingBrace, out IBraceCompletionContext context) {
-            if (IsValidBraceCompletionContext(openingPoint)) {
+            if (IsValidBraceCompletionContext(EditorServices.GetBufferInfo(openingPoint.Snapshot.TextBuffer), openingPoint)) {
                 context = new BraceCompletionContext();
                 return true;
             } else {
@@ -40,24 +45,26 @@ namespace Microsoft.PythonTools.Editor.BraceCompletion {
             }
         }
 
-        private bool IsValidBraceCompletionContext(SnapshotPoint openingPoint) {
-            Debug.Assert(openingPoint.Position >= 0, "SnapshotPoint.Position should always be zero or positive.");
-
-            if (openingPoint.Position > 0) {
-                var classificationSpans = openingPoint.Snapshot.TextBuffer
-                    .GetPythonClassifier()
-                    .GetClassificationSpans(new SnapshotSpan(openingPoint - 1, 1));
-
-                foreach (var span in classificationSpans) {
-                    if (span.ClassificationType.IsOfType("comment")) {
-                        return false;
-                    }
-                    if (span.ClassificationType.IsOfType("string")) {
-                        return false;
-                    }
-                }
+        private static bool IsValidBraceCompletionContext(PythonTextBufferInfo buffer, SnapshotPoint openingPoint) {
+            if (buffer == null) {
+                return false;
             }
-            return true;
+
+            Debug.Assert(openingPoint.Position >= 0, "SnapshotPoint.Position should always be zero or positive.");
+            if (openingPoint.Position < 0) {
+                return false;
+            }
+
+            // If we have a token here that is in any of these categories, we do
+            // not want to complete.
+            var category = buffer.GetTokenAtPoint(openingPoint)?.Category ?? TokenCategory.None;
+            return !(
+                category == TokenCategory.Comment ||
+                category == TokenCategory.LineComment ||
+                category == TokenCategory.DocComment ||
+                category == TokenCategory.StringLiteral ||
+                category == TokenCategory.IncompleteMultiLineStringLiteral
+            );
         }
     }
 }

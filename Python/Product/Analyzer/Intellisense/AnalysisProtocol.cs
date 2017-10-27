@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "isMissingImport";
 
             public string text;
-            public int index, line, column, fileId, bufferId;
+            public int line, column, fileId, bufferId;
 
             public override string command => Command;
         }
