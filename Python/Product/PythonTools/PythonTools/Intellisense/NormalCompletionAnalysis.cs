@@ -71,6 +71,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 return true;
             }
 
+            switch (tok.Value.Category) {
+                case TokenCategory.Delimiter:
+                case TokenCategory.Grouping:
+                case TokenCategory.Operator:
+                    expressionExtent = span;
+                    return true;
+            }
+
             return false;
         }
 

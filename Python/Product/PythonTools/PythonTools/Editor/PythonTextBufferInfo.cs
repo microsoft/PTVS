@@ -87,7 +87,6 @@ namespace Microsoft.PythonTools.Editor {
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
 
         private readonly Lazy<string> _filename;
-        private Tokenizer _tokenizer;
         private readonly TokenCache _tokenCache;
 
         private readonly bool _hasChangedOnBackground;
@@ -393,8 +392,8 @@ namespace Microsoft.PythonTools.Editor {
         /// Returns tokens for the specified line.
         /// </summary>
         public IEnumerable<TrackingTokenInfo> GetTokens(ITextSnapshotLine line) {
-            var tokenizer = GetTokenizer();
-            var lineTokenization = GetLineTokenization(tokenizer, line);
+            Tokenizer tokenizer = null;
+            var lineTokenization = GetLineTokenization(line, ref tokenizer);
             var lineNumber = line.LineNumber;
             var lineSpan = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
             return lineTokenization.Tokens.Select(t => new TrackingTokenInfo(t, lineNumber, lineSpan));
@@ -455,10 +454,10 @@ namespace Microsoft.PythonTools.Editor {
             int startCol = span.Start - span.Start.GetContainingLine().Start;
             int endCol = span.End - span.End.GetContainingLine().Start;
 
-            var tokenizer = GetTokenizer();
+            Tokenizer tokenizer = null;
 
             for (int line = firstLine; line <= lastLine; ++line) {
-                var lineTokenization = GetLineTokenization(tokenizer, span.Snapshot.GetLineFromLineNumber(line));
+                var lineTokenization = GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), ref tokenizer);
 
                 foreach(var token in lineTokenization.Tokens.MaybeEnumerate()) {
                     if (line < firstLine || line > lastLine) {
@@ -473,25 +472,6 @@ namespace Microsoft.PythonTools.Editor {
                     yield return new TrackingTokenInfo(token, line, lineTokenization.Line);
                 }
             }
-        }
-
-        private LineTokenization GetLineTokenization(Tokenizer tokenizer, ITextSnapshotLine line) {
-            int lineNumber = line.LineNumber;
-
-            _tokenCache.EnsureCapacity(line.Snapshot.LineCount);
-
-            LineTokenization lineTok;
-            int start = _tokenCache.IndexOfPreviousTokenization(lineNumber + 1, 0, out lineTok);
-
-            while (++start <= lineNumber) {
-                var state = lineTok.State;
-
-                if (!_tokenCache.TryGetTokenization(start, out lineTok)) {
-                    _tokenCache[start] = lineTok = TokenizeLine(tokenizer, line.Snapshot.GetLineFromLineNumber(start), state);
-                }
-            }
-
-            return lineTok;
         }
 
         internal bool IsPossibleExpressionAtPoint(SnapshotPoint point) {
@@ -583,15 +563,11 @@ namespace Microsoft.PythonTools.Editor {
 
         #region Token Cache Management
 
-        private Tokenizer GetTokenizer() {
-            if (_tokenizer == null) {
-                _tokenizer = new Tokenizer(LanguageVersion, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
-            }
-            return _tokenizer;
+        private Tokenizer MakeTokenizer() {
+            return new Tokenizer(LanguageVersion, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
         }
 
         private void ClearTokenCache() {
-            _tokenizer = null;
             _tokenCache.Clear();
         }
 
@@ -608,22 +584,56 @@ namespace Microsoft.PythonTools.Editor {
                 return;
             }
 
-            _tokenCache.EnsureCapacity(snapshot.LineCount);
+            // Prevent later updates overwriting our tokenization
+            lock (_tokenCache) {
+                _tokenCache.EnsureCapacity(snapshot.LineCount);
 
-            var tokenizer = GetTokenizer();
-            foreach (var change in e.Changes) {
-                var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
-                if (change.LineCountDelta > 0) {
-                    _tokenCache.InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
-                } else if (change.LineCountDelta < 0) {
-                    _tokenCache.DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
+                Tokenizer tokenizer = null;
+                foreach (var change in e.Changes) {
+                    var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
+                    if (change.LineCountDelta > 0) {
+                        _tokenCache.InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
+                    } else if (change.LineCountDelta < 0) {
+                        _tokenCache.DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
+                    }
+
+                    ApplyChangeToTokenCache(ref tokenizer, new SnapshotSpan(snapshot, change.NewSpan));
                 }
-
-                ApplyChangeToTokenCache(tokenizer, new SnapshotSpan(snapshot, change.NewSpan), _tokenCache);
             }
         }
 
-        private static void ApplyChangeToTokenCache(Tokenizer tokenizer, SnapshotSpan span, TokenCache tokenCache) {
+        /// <summary>
+        /// Gets the tokenization for the specified line.
+        /// </summary>
+        /// <param name="line">The line to get tokenization for.</param>
+        /// <param name="tokenizer">
+        /// <c>null</c> or a tokenizer previously returned on this thread.
+        /// This allows lazily creating and reusing the same tokenizer.
+        /// </param>
+        /// <returns></returns>
+        private LineTokenization GetLineTokenization(ITextSnapshotLine line, ref Tokenizer tokenizer) {
+            int lineNumber = line.LineNumber;
+
+            _tokenCache.EnsureCapacity(line.Snapshot.LineCount);
+
+            LineTokenization lineTok;
+            int start = _tokenCache.IndexOfPreviousTokenization(lineNumber + 1, 0, out lineTok);
+
+            while (++start <= lineNumber) {
+                var state = lineTok.State;
+
+                if (!_tokenCache.TryGetTokenization(start, out lineTok)) {
+                    if (tokenizer == null) {
+                        tokenizer = MakeTokenizer();
+                    }
+                    _tokenCache[start] = lineTok = TokenizeLine(tokenizer, line.Snapshot.GetLineFromLineNumber(start), state);
+                }
+            }
+
+            return lineTok;
+        }
+
+        private void ApplyChangeToTokenCache(ref Tokenizer tokenizer, SnapshotSpan span) {
             int firstLine = span.Start.GetContainingLine().LineNumber;
             int lastLine = span.End.GetContainingLine().LineNumber;
 
@@ -631,14 +641,17 @@ namespace Microsoft.PythonTools.Editor {
 
             // find the closest line preceding firstLine for which we know tokenizer state
             LineTokenization lineTokenization;
-            firstLine = tokenCache.IndexOfPreviousTokenization(firstLine, 0, out lineTokenization) + 1;
+            firstLine = _tokenCache.IndexOfPreviousTokenization(firstLine, 0, out lineTokenization) + 1;
 
             for (int lineNo = firstLine; lineNo < span.Snapshot.LineCount; ++lineNo) {
                 var line = span.Snapshot.GetLineFromLineNumber(lineNo);
 
                 var beforeState = lineTokenization.State;
 
-                tokenCache[lineNo] = lineTokenization = TokenizeLine(tokenizer, line, beforeState);
+                if (tokenizer == null) {
+                    tokenizer = MakeTokenizer();
+                }
+                _tokenCache[lineNo] = lineTokenization = TokenizeLine(tokenizer, line, beforeState);
 
                 var afterState = lineTokenization.State;
 

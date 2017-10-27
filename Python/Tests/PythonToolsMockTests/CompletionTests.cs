@@ -212,6 +212,10 @@ l(42)
             foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {
                 using (var view = new PythonEditor(version: version)) {
                     var completionList = view.GetCompletionList(0);
+                    for (int retries = 10; retries > 0 && !completionList.Any(); --retries) {
+                        completionList = view.GetCompletionList(0);
+                    }
+                    Assert.AreNotEqual(0, completionList.Count, $"No completions found for {view.Factory.Configuration.InterpreterPath}");
                     foreach (var c in completionList) {
                         Console.WriteLine(c.DisplayText);
                     }
@@ -222,13 +226,8 @@ l(42)
                     Assert.AreEqual(1, trueItems.Count());
                     Assert.AreEqual(1, falseItems.Count());
                     Assert.AreEqual(1, noneItems.Count());
-                    if (version.Is3x()) {
-                        Assert.AreEqual("Keyword", trueItems[0].IconAutomationText);
-                        Assert.AreEqual("Keyword", falseItems[0].IconAutomationText);
-                    } else {
-                        Assert.AreEqual("Constant", trueItems[0].IconAutomationText);
-                        Assert.AreEqual("Constant", falseItems[0].IconAutomationText);
-                    }
+                    Assert.AreEqual("Keyword", trueItems[0].IconAutomationText);
+                    Assert.AreEqual("Keyword", falseItems[0].IconAutomationText);
                     Assert.AreEqual("Keyword", noneItems[0].IconAutomationText);
                 }
             }
