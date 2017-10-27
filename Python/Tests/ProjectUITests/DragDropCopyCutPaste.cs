@@ -190,70 +190,25 @@ namespace ProjectUITests {
         }
 
         public void CopyFileToFolderTooLongKeyboard(VisualStudioApp app, ProjectGenerator pg) {
-            CopyFileToFolderTooLong(app, pg, CopyByKeyboard);
+            CutOrCopyFileToFolderTooLong(app, pg, CopyByKeyboard);
         }
 
         public void CopyFileToFolderTooLongMouse(VisualStudioApp app, ProjectGenerator pg) {
-            CopyFileToFolderTooLong(app, pg, CopyByMouse);
-        }
-
-        /// <summary>
-        /// Adds a new folder which fits exactly w/ no space left in the path name
-        /// </summary>
-        private void CopyFileToFolderTooLong(VisualStudioApp app, ProjectGenerator pg, MoveDelegate copier) {
-            foreach (var projectType in pg.ProjectTypes) {
-                var testDef = new ProjectDefinition("LFN",
-                    projectType,
-                    ProjectGenerator.ItemGroup(
-                        ProjectGenerator.Compile("server")
-                    )
-                );
-
-                using (var solution = SolutionFile.Generate("LongFileNames", 33, testDef).ToVs(app)) {
-                    // find server, send copy & paste, verify copy of file is there
-                    var projectNode = solution.WaitForItem("LFN");
-                    AutomationWrapper.Select(projectNode);
-
-                    solution.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-                    solution.PressAndRelease(Key.D);
-                    solution.PressAndRelease(Key.Right);
-                    solution.PressAndRelease(Key.D);
-                    solution.Type("01234567891");
-                    solution.PressAndRelease(Key.Enter);
-
-                    var folderNode = solution.WaitForItem("LFN", "01234567891");
-                    Assert.IsNotNull(folderNode);
-
-                    var serverNode = solution.WaitForItem("LFN", "server" + projectType.CodeExtension);
-                    AutomationWrapper.Select(serverNode);
-                    solution.ControlC();
-                    solution.ControlV();
-
-                    var serverCopy = solution.WaitForItem("LFN", "server - Copy" + projectType.CodeExtension);
-                    Assert.IsNotNull(serverCopy);
-
-                    copier(solution, folderNode, serverCopy);
-
-                    // Depending on VS version/update, the message may be:
-                    //  "The filename is too long."
-                    //  "The filename or extension is too long."
-                    solution.CheckMessageBox(" filename ", " is too long.");
-                }
-            }
+            CutOrCopyFileToFolderTooLong(app, pg, CopyByMouse);
         }
 
         public void CutFileToFolderTooLongKeyboard(VisualStudioApp app, ProjectGenerator pg) {
-            CutFileToFolderTooLong(app, pg, MoveByKeyboard);
+            CutOrCopyFileToFolderTooLong(app, pg, MoveByKeyboard);
         }
 
         public void CutFileToFolderTooLongMouse(VisualStudioApp app, ProjectGenerator pg) {
-            CutFileToFolderTooLong(app, pg, MoveByMouse);
+            CutOrCopyFileToFolderTooLong(app, pg, MoveByMouse);
         }
 
         /// <summary>
         /// Adds a new folder which fits exactly w/ no space left in the path name
         /// </summary>
-        private void CutFileToFolderTooLong(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
+        private void CutOrCopyFileToFolderTooLong(VisualStudioApp app, ProjectGenerator pg, MoveDelegate mover) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition("LFN",
                     projectType,
@@ -262,7 +217,7 @@ namespace ProjectUITests {
                     )
                 );
 
-                using (var solution = SolutionFile.Generate("LongFileNames", 33, testDef).ToVs(app)) {
+                using (var solution = SolutionFile.Generate("LongFileNames", 40, testDef).ToVs(app)) {
                     // find server, send copy & paste, verify copy of file is there
                     var projectNode = solution.WaitForItem("LFN");
                     AutomationWrapper.Select(projectNode);
@@ -271,13 +226,13 @@ namespace ProjectUITests {
                     solution.PressAndRelease(Key.D);
                     solution.PressAndRelease(Key.Right);
                     solution.PressAndRelease(Key.D);
-                    solution.Type("01234567891");
+                    solution.Type("012345678912345678");
                     solution.PressAndRelease(Key.Enter);
 
-                    var folderNode = solution.WaitForItem("LFN", "01234567891");
+                    var folderNode = solution.WaitForItem("LFN", "012345678912345678");
                     Assert.IsNotNull(folderNode);
 
-                    var serverNode = solution.FindItem("LFN", "server" + projectType.CodeExtension);
+                    var serverNode = solution.WaitForItem("LFN", "server" + projectType.CodeExtension);
                     AutomationWrapper.Select(serverNode);
                     solution.ControlC();
                     solution.ControlV();
