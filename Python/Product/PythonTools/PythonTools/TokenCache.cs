@@ -147,8 +147,6 @@ namespace Microsoft.PythonTools {
             // line is edited the span returned here may not be valid.
             var line = LineSpan.GetSpan(snapshot);
 
-            Debug.Assert(line.Start.GetContainingLine().LineNumber == LineNumber, "Mismatched line number");
-
             int startCol = Math.Min(LineToken.Column, line.Length);
             int endCol = Math.Min(LineToken.Column + LineToken.Length, line.Length);
 
