@@ -8,6 +8,11 @@ import xml.etree.ElementTree
 from pathlib import WindowsPath
 from uuid import UUID
 
+CT_VALUES = {
+    'CT_RAW': 1,
+    'CT_SYSCOLOR': 3,
+}
+
 for VS_VERSION in (14, 15):
     print('Writing to {}'.format(THEME_PKGDEF.format(VS_VERSION)))
     output = open(THEME_PKGDEF.format(VS_VERSION), 'w', encoding='ascii')
@@ -48,14 +53,14 @@ for VS_VERSION in (14, 15):
                 if bg_e is None:
                     data.append(struct.pack('b', 0))
                 else:
-                    data.append(struct.pack('b', 1))
+                    data.append(struct.pack('b', CT_VALUES[bg_e.get('Type')]))
                     data.append(struct.pack('I', int(bg_e.get('Source'), 16)))
                 
                 fg_e = color.find('./Foreground')
                 if fg_e is None:
                     data.append(struct.pack('b', 0))
                 else:
-                    data.append(struct.pack('b', 1))
+                    data.append(struct.pack('b', CT_VALUES[fg_e.get('Type')]))
                     data.append(struct.pack('I', int(fg_e.get('Source'), 16)))
 
         payload = b''.join(data)

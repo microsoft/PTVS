@@ -14,16 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
@@ -140,7 +136,7 @@ namespace Microsoft.PythonTools {
         private Dictionary<TokenCategory, IClassificationType> FillCategoryMap(IClassificationTypeRegistryService registry) {
             var categoryMap = new Dictionary<TokenCategory, IClassificationType>();
 
-            categoryMap[TokenCategory.DocComment] = _comment = registry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
+            categoryMap[TokenCategory.DocComment] = _comment = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Documentation);
             categoryMap[TokenCategory.LineComment] = registry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
             categoryMap[TokenCategory.Comment] = registry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
             categoryMap[TokenCategory.NumericLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Number);

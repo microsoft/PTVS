@@ -62,5 +62,15 @@ namespace Microsoft.PythonTools {
         /// Classification used for builtins.
         /// </summary>
         public const string Builtin = "Python builtin";
+
+        /// <summary>
+        /// Classification used for docstrings
+        /// </summary>
+        public const string Documentation = "Python documentation";
+
+        /// <summary>
+        /// Classification used for regular expressions
+        /// </summary>
+        public const string RegularExpression = "Python regex";
     }
 }

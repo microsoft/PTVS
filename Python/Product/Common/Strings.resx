@@ -2120,4 +2120,10 @@ Expand selection to the full expression?</value>
   <data name="FailedToLaunchDebugger" xml:space="preserve">
     <value>Failed to launch debugger</value>
   </data>
+  <data name="DocumentationClassificationType" xml:space="preserve">
+    <value>Python Documentation</value>
+  </data>
+  <data name="RegularExpressionClassificationType" xml:space="preserve">
+    <value>Python Regular Expression</value>
+  </data>
 </root>

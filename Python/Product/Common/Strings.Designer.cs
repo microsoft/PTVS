@@ -1860,6 +1860,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Python Documentation.
+        /// </summary>
+        public static string DocumentationClassificationType {
+            get {
+                return ResourceManager.GetString("DocumentationClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do not show this warning again..
         /// </summary>
         public static string DontShowAgain {
@@ -4069,6 +4078,15 @@ namespace Microsoft.PythonTools {
         public static string ReferencesNodeName {
             get {
                 return ResourceManager.GetString("ReferencesNodeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Regular Expression.
+        /// </summary>
+        public static string RegularExpressionClassificationType {
+            get {
+                return ResourceManager.GetString("RegularExpressionClassificationType", resourceCulture);
             }
         }
         
