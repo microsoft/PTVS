@@ -330,7 +330,10 @@ namespace Microsoft.VisualStudioTools.Project {
             // they should always pass Move, and we'll know whether or not it's a cut from wasCut.
             // If they copied it from the project system wasCut will be false, and DropEffect
             // will still be Move, resulting in a copy.
-            if (wasCut != 0 && dropEffect == (uint)DropEffect.Move) {
+            // Speaking of other project systems... cut from Python and paste into C# results in
+            // wasCut==1 and dropEffect==Copy
+            // which makes no sense is hopefully harmless to support...
+            if (wasCut != 0 && (dropEffect == (uint)DropEffect.Move || dropEffect == (uint)DropEffect.Copy)) {
                 // If we just did a cut, then we need to free the data object. Otherwise, we leave it
                 // alone so that you can continue to paste the data in new locations.
                 CleanAndFlushClipboard();
@@ -492,6 +495,16 @@ namespace Microsoft.VisualStudioTools.Project {
                                 if (fileAddition.SourceMoniker.StartsWith(folder, StringComparison.OrdinalIgnoreCase)) {
                                     // this will be moved/copied by the folder, it doesn't need another move/copy
                                     add = false;
+
+                                    if (DropEffect == DropEffect.Move && Utilities.IsSameComObject(Project, fileAddition.SourceHierarchy)) {
+                                        var fileNode = Project.FindNodeByFullPath(fileAddition.SourceMoniker);
+                                        Debug.Assert(fileNode is FileNode, $"<{fileNode?.GetType().FullName ?? "null"}>");
+
+                                        if (fileNode != null) {
+                                            Project.ItemsDraggedOrCutOrCopied.Remove(fileNode); // we don't need to remove the file after Paste
+                                        }
+                                    }
+
                                     break;
                                 }
                             }
@@ -783,44 +796,42 @@ namespace Microsoft.VisualStudioTools.Project {
                     var sourceFolder = Project.FindNodeByFullPath(SourceFolder) as FolderNode;
                     if (sourceFolder == null || DropEffect != DropEffect.Move) {
                         newNode = Project.CreateFolderNodes(NewFolderPath);
+
+                        foreach (var addition in Additions) {
+                            addition.DoAddition(ref overwrite);
+                        }
+
+                        if (sourceFolder != null) {
+                            if (sourceFolder.IsNonMemberItem) {
+                                // copying or moving an existing excluded folder, new folder
+                                // is excluded too.
+                                ErrorHandler.ThrowOnFailure(newNode.ExcludeFromProjectWithRefresh());
+                            } else if (sourceFolder.Parent.IsNonMemberItem) {
+                                // We've moved an included folder to a show all files folder,
+                                //     add the parent to the project   
+                                ErrorHandler.ThrowOnFailure(sourceFolder.Parent.IncludeInProjectWithRefresh(false));
+                            }
+                        }
+
+                        // Send OnItemRenamed for the folder now, after all of the children have been renamed
+                        Project.Tracker.OnItemRenamed(SourceFolder, NewFolderPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
                     } else {
                         // Rename the folder & reparent our existing FolderNode w/ potentially w/ a new ID,
-                        // but don't update the children as we'll handle that w/ our file additions...
                         wasExpanded = sourceFolder.GetIsExpanded();
 
+                        // Reparent takes care of renaming the folder on disk and sending rename notification(s)
                         var newFolderParent = Project.CreateFolderNodes(CommonUtils.GetParent(NewFolderPath));
                         sourceFolder.Reparent(newFolderParent);
 
                         sourceFolder.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
                         newNode = sourceFolder;
-                    }
-
-                    foreach (var addition in Additions) {
-                        addition.DoAddition(ref overwrite);
-                    }
-
-                    if (sourceFolder != null) {
-                        if (sourceFolder.IsNonMemberItem) {
-                            // copying or moving an existing excluded folder, new folder
-                            // is excluded too.
-                            ErrorHandler.ThrowOnFailure(newNode.ExcludeFromProjectWithRefresh());
-                        } else if (sourceFolder.Parent.IsNonMemberItem) {
-                            // We've moved an included folder to a show all files folder,
-                            //     add the parent to the project   
-                            ErrorHandler.ThrowOnFailure(sourceFolder.Parent.IncludeInProjectWithRefresh(false));
-                        }
 
                         if (DropEffect == DropEffect.Move) {
-                            Directory.Delete(SourceFolder);
-
                             // we just handled the delete, the updated folder has the new filename,
                             // and we don't want to delete where we just moved stuff...
                             Project.ItemsDraggedOrCutOrCopied.Remove(sourceFolder);
                         }
                     }
-
-                    // Send OnItemRenamed for the folder now, after all of the children have been renamed
-                    Project.Tracker.OnItemRenamed(SourceFolder, NewFolderPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
 
                     if (sourceFolder != null && Project.ParentHierarchy != null) {
                         sourceFolder.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
