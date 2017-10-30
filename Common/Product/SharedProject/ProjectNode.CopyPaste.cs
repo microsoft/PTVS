@@ -814,14 +814,6 @@ namespace Microsoft.VisualStudioTools.Project {
                                 //     add the parent to the project   
                                 ErrorHandler.ThrowOnFailure(sourceFolder.Parent.IncludeInProjectWithRefresh(false));
                             }
-
-                            if (DropEffect == DropEffect.Move) {
-                                Directory.Delete(SourceFolder);
-
-                                // we just handled the delete, the updated folder has the new filename,
-                                // and we don't want to delete where we just moved stuff...
-                                Project.ItemsDraggedOrCutOrCopied.Remove(sourceFolder);
-                            }
                         }
 
                         // Send OnItemRenamed for the folder now, after all of the children have been renamed
