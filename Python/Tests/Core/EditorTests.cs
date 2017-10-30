@@ -499,7 +499,7 @@ In [3]: if True:
                 index += content.Length + 1;
             }
             var pt = new SnapshotPoint(buffer.CurrentSnapshot, index);
-            var actual = PythonTextBufferInfo.IsPossibleExpressionAtPoint(pt, version);
+            var actual = PythonTextBufferInfo.ForBuffer(null, buffer).IsPossibleExpressionAtPoint(pt);
             if (expectExpression) {
                 Assert.IsTrue(actual, content);
             } else {
@@ -513,7 +513,7 @@ In [3]: if True:
                 index += content.Length + 1;
             }
             var span = new SnapshotSpan(buffer.CurrentSnapshot, index, 0);
-            var actual = PythonTextBufferInfo.GetExpressionAtPoint(span, version, GetExpressionOptions.Hover);
+            var actual = PythonTextBufferInfo.ForBuffer(null, buffer).GetExpressionAtPoint(span, GetExpressionOptions.Hover);
             Assert.AreEqual(expected, actual?.GetText(), content);
         }
 

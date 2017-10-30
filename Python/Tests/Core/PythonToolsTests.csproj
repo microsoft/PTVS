@@ -102,6 +102,7 @@
     <Compile Include="..\DebuggerTests\DebugExtensions.cs">
       <Link>DebugExtensions.cs</Link>
     </Compile>
+    <Compile Include="AutoIndentTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
     <Compile Include="CodeCellTests.cs" />
     <Compile Include="CoverageTests.cs" />

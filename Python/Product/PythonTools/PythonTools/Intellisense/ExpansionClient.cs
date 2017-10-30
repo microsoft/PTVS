@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
@@ -244,12 +245,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             SourceLocation loc;
             try {
-                var line = point.GetContainingLine();
-                loc = new SourceLocation(
-                    point.Position,
-                    line.LineNumber + 1,
-                    point.Position - line.Start + 1
-                );
+                loc = point.ToSourceLocation();
             } catch (ArgumentException ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 return;

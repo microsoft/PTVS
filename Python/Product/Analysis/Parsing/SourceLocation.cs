@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// <param name="right">The other location to compare.</param>
         /// <returns>True if the locations are the same, False otherwise.</returns>
         public static bool operator ==(SourceLocation left, SourceLocation right) {
-            return left._index == right._index && left._line == right._line && left._column == right._column;
+            return left._line == right._line && left._column == right._column;
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// <param name="right">The other location to compare.</param>
         /// <returns>True if the locations are not the same, False otherwise.</returns>
         public static bool operator !=(SourceLocation left, SourceLocation right) {
-            return left._index != right._index || left._line != right._line || left._column != right._column;
+            return left._line != right._line || left._column != right._column;
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// <param name="right">The other location to compare.</param>
         /// <returns>True if the first location is before the other location, False otherwise.</returns>
         public static bool operator <(SourceLocation left, SourceLocation right) {
-            return left._index < right._index;
+            return left._line < right._line || (left._line == right._line && left._column < right._column);
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// <param name="right">The other location to compare.</param>
         /// <returns>True if the first location is after the other location, False otherwise.</returns>
         public static bool operator >(SourceLocation left, SourceLocation right) {
-            return left._index > right._index;
+            return left._line > right._line || (left._line == right._line && left._column > right._column);
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// <param name="right">The other location to compare.</param>
         /// <returns>True if the first location is before or the same as the other location, False otherwise.</returns>
         public static bool operator <=(SourceLocation left, SourceLocation right) {
-            return left._index <= right._index;
+            return left._line < right._line || (left._line == right._line && left._column <= right._column);
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// <param name="right">The other location to compare.</param>
         /// <returns>True if the first location is after or the same as the other location, False otherwise.</returns>
         public static bool operator >=(SourceLocation left, SourceLocation right) {
-            return left._index >= right._index;
+            return left._line > right._line || (left._line == right._line && left._column >= right._column);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (!(obj is SourceLocation)) return false;
 
             SourceLocation other = (SourceLocation)obj;
-            return other._index == _index && other._line == _line && other._column == _column;
+            return other._line == _line && other._column == _column;
         }
 
         public override int GetHashCode() {

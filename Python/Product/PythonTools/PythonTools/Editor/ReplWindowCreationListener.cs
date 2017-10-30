@@ -30,34 +30,32 @@ using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 namespace Microsoft.PythonTools.Editor {
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
-    public class ReplWindowCreationListener : IVsInteractiveWindowOleCommandTargetProvider {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly IComponentModel _componentModel;
+    class ReplWindowCreationListener : IVsInteractiveWindowOleCommandTargetProvider {
+        private readonly PythonEditorServices _editorServices;
 
         [ImportingConstructor]
-        public ReplWindowCreationListener([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
-            _serviceProvider = serviceProvider;
-            _componentModel = _serviceProvider.GetComponentModel();
+        public ReplWindowCreationListener([Import] PythonEditorServices editorServices) {
+            _editorServices = editorServices;
         }
 
         public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
             var window = textView.TextBuffer.GetInteractiveWindow();
 
             var controller = IntellisenseControllerProvider.GetOrCreateController(
-                _serviceProvider,
-                _componentModel,
+                _editorServices.Site,
+                _editorServices.ComponentModel,
                 textView
             );
             controller._oldTarget = nextTarget;
 
-            var editFilter = EditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, controller);
+            var editFilter = EditFilter.GetOrCreate(_editorServices, textView, controller);
 
             if (window == null) {
                 return editFilter;
             }
 
             textView.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
-            return ReplEditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, editFilter);
+            return ReplEditFilter.GetOrCreate(_editorServices.Site, _editorServices.ComponentModel, textView, editFilter);
         }
     }
 }

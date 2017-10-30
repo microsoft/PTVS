@@ -201,13 +201,13 @@ b = C().f(1)
             var code = astAndSource.Source;
             var options = astAndSource.Options;
 
-            int start = ast.LocationToIndex(new SourceLocation(0, startLine, 1));
-            int end = ast.LocationToIndex(new SourceLocation(0, endLine + 1, 1));
+            int start = ast.LocationToIndex(new SourceLocation(startLine, 1));
+            int end = ast.LocationToIndex(new SourceLocation(endLine + 1, 1));
             var fullLine = code.Substring(start);
             fullLine = fullLine.Remove("\r\n".Select(c => fullLine.LastIndexOf(c, end - start - 1)).Where(i => i > 0).Min());
 
             var finder = new ExpressionFinder(ast, options);
-            var range = new SourceSpan(new SourceLocation(0, startLine, startColumn), new SourceLocation(0, endLine, endColumn));
+            var range = new SourceSpan(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn));
             var span = finder.GetExpressionSpan(range);
             if (span == null || span.Value.Start == span.Value.End) {
                 return;
@@ -228,13 +228,13 @@ b = C().f(1)
             var code = astAndSource.Source;
             var options = astAndSource.Options;
 
-            int start = ast.LocationToIndex(new SourceLocation(0, startLine, 1));
-            int end = ast.LocationToIndex(new SourceLocation(0, endLine + 1, 1));
+            int start = ast.LocationToIndex(new SourceLocation(startLine, 1));
+            int end = ast.LocationToIndex(new SourceLocation(endLine + 1, 1));
             var fullLine = code.Substring(start);
             fullLine = fullLine.Remove("\r\n".Select(c => fullLine.LastIndexOf(c, end - start - 1)).Where(i => i > 0).Min());
 
             var finder = new ExpressionFinder(ast, options);
-            var range = new SourceSpan(new SourceLocation(0, startLine, startColumn), new SourceLocation(0, endLine, endColumn));
+            var range = new SourceSpan(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn));
             var span = finder.GetExpressionSpan(range);
             Assert.IsNotNull(span, $"Did not find any expression at {range} in <{fullLine}>");
 

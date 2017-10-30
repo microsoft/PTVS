@@ -802,7 +802,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return new AP.IsMissingImportResponse();
             }
 
-            var location = new SourceLocation(request.index, request.line, request.column);
+            var location = new SourceLocation(request.line, request.column);
             var nameExpr = GetFirstNameExpression(
                 analysis.GetAstFromText(
                     request.text,
@@ -1230,7 +1230,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var exprFinder = new ExpressionFinder(ast, options);
-            var expr = exprFinder.GetExpression(new SourceLocation(0, line, column));
+            var expr = exprFinder.GetExpression(new SourceLocation(line, column));
             if (expr == null) {
                 return false;
             }
@@ -1271,11 +1271,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (entry.Analysis != null) {
                 var variables = entry.Analysis.GetVariables(
                     request.expr,
-                    new SourceLocation(
-                        0,
-                        request.line,
-                        request.column
-                    )
+                    new SourceLocation(request.line, request.column)
                 );
 
                 var ast = variables.Ast;
@@ -1497,7 +1493,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IEnumerable<MemberResult> members;
             if (entry?.Analysis != null) {
                 members = entry.Analysis.GetAllAvailableMembers(
-                    new SourceLocation(0, topLevelCompletions.line, topLevelCompletions.column),
+                    new SourceLocation(topLevelCompletions.line, topLevelCompletions.column),
                     topLevelCompletions.options
                 );
             } else {

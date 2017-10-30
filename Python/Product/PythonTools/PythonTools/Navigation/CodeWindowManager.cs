@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
@@ -152,9 +153,9 @@ namespace Microsoft.PythonTools.Navigation {
             _viewCount++;
             var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             if (wpfTextView != null) {
-                var factory = ComponentModel.GetService<IEditorOperationsFactoryService>();
-                EditFilter.GetOrCreate(_serviceProvider, ComponentModel, vsTextView);
-                new TextViewFilter(_serviceProvider, vsTextView);
+                var services = ComponentModel.GetService<PythonEditorServices>();
+                EditFilter.GetOrCreate(services, vsTextView);
+                new TextViewFilter(services, vsTextView);
                 wpfTextView.GotAggregateFocus += OnTextViewGotAggregateFocus;
                 wpfTextView.LostAggregateFocus += OnTextViewLostAggregateFocus;
             }

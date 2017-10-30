@@ -5236,6 +5236,9 @@
       <Item ItemId=";VirtualEnvSaveDeferredSolution" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Your project must be saved before adding a virtual environment.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[가상 환경을 추가하기 전에 프로젝트를 저장해야 합니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

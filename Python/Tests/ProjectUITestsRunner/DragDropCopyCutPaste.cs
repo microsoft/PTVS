@@ -69,7 +69,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutDeletePaste));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void CopyFileToFolderTooLongKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CopyFileToFolderTooLongKeyboard));
@@ -81,7 +81,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CopyFileToFolderTooLongMouse));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void CutFileToFolderTooLongKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutFileToFolderTooLongKeyboard));
@@ -141,7 +141,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutFileReplace));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void CutFolderAndFile() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CutFolderAndFile));
@@ -219,7 +219,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveCrossHierarchyMouse));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void MoveReverseCrossHierarchyKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveReverseCrossHierarchyKeyboard));
@@ -341,6 +341,12 @@ namespace ProjectUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
+        public void CopyFolderWithContents() {
+            _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CopyFolderWithContents));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
         public void MoveProjectToSolutionFolderKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.MoveProjectToSolutionFolderKeyboard));
         }
@@ -375,7 +381,7 @@ namespace ProjectUITestsRunner {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CopyFileFromFolderToLinkedFolderMouse));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void CopyFileToFolderCrossProject() {
             _vs.RunTest(nameof(ProjectUITests.DragDropCopyCutPaste.CopyFileToFolderCrossProject));

@@ -64,7 +64,7 @@ namespace TestUtilities.UI {
             for (int i = 1; i < path.Length; i++) {
                 basePath = Path.Combine(basePath, path[i]);
             }
-            Assert.IsTrue(Directory.Exists(basePath), "File doesn't exist: " + basePath);
+            Assert.IsTrue(Directory.Exists(basePath), "Folder doesn't exist: " + basePath);
         }
 
         public void AssertFolderDoesntExist(string projectLocation, params string[] path) {
@@ -74,7 +74,7 @@ namespace TestUtilities.UI {
             for (int i = 1; i < path.Length; i++) {
                 basePath = Path.Combine(basePath, path[i]);
             }
-            Assert.IsFalse(Directory.Exists(basePath), "File exists: " + basePath);
+            Assert.IsFalse(Directory.Exists(basePath), "Folder exists: " + basePath);
         }
 
         private void AssertItemExistsInTree(string[] path) {
