@@ -28,6 +28,12 @@
       <Color Name="Python builtin">
         <Foreground Type="CT_RAW" Source="FFE0B070" />
       </Color>
+      <Color Name="Python documentation">
+        <Foreground Type="CT_RAW" Source="FF67B64A" />
+      </Color>
+      <Color Name="Python regex">
+        <Foreground Type="CT_RAW" Source="FF9A5334" />
+      </Color>
       <Color Name="Django template tag">
         <Foreground Type="CT_RAW" Source="FFC8C8C8" />
       </Color>

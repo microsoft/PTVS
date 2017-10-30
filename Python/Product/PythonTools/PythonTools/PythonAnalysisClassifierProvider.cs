@@ -198,9 +198,8 @@ namespace Microsoft.PythonTools {
     internal sealed class DocumentationFormat : ClassificationFormatDefinition {
         public DocumentationFormat() {
             DisplayName = Strings.DocumentationClassificationType;
-            // Matches nothing in particular
-            // TODO: Default to string color
-            ForegroundColor = Colors.Black;
+            // Matches comment color but slightly brighter
+            ForegroundColor = Color.FromArgb(0xFF, 0x00, 0x90, 0x10);
         }
     }
 
@@ -212,9 +211,8 @@ namespace Microsoft.PythonTools {
     internal sealed class RegexFormat : ClassificationFormatDefinition {
         public RegexFormat() {
             DisplayName = Strings.RegularExpressionClassificationType;
-            // Matches nothing in particular
-            // TODO: Default to existing regex color
-            ForegroundColor = Colors.Black;
+            // Matches existing regular expression color
+            ForegroundColor = Color.FromArgb(0x00, 0x80, 0x00, 0x00);
         }
     }
 
