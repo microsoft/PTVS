@@ -30,7 +30,6 @@
       </Color>
       <Color Name="Python documentation">
         <Foreground Type="CT_RAW" Source="FF556506" />
-        <Background Type="CT_RAW" Source="FFFFFFFF" />
       </Color>
       <Color Name="Python regex">
         <Foreground Type="CT_RAW" Source="FF000080" />
