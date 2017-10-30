@@ -239,6 +239,38 @@ def f() -> int:
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void DocStringClassifications() {
+            var code = @"def f():
+    '''doc string'''
+    '''not a doc string'''
+";
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
+                helper.CheckAstClassifierSpans("ki():ss");
+                helper.CheckAnalysisClassifierSpans("f<f>d<'''doc string'''>");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void RegexClassifications() {
+            var code = @"import re as R
+R.compile('pattern', 'str')
+R.escape('pattern', 'str')
+R.findall('pattern', 'str')
+R.finditer('pattern', 'str')
+R.fullmatch('pattern', 'str')
+R.match('pattern', 'str')
+R.search('pattern', 'str')
+R.split('pattern', 'str')
+R.sub('pattern', 'str')
+R.subn('pattern', 'str')
+";
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
+                helper.CheckAstClassifierSpans("kiki " + string.Join(" ", Enumerable.Repeat("i.i(s,s)", 10)));
+                helper.CheckAnalysisClassifierSpans("m<re>m<R> " + string.Join(" ", Enumerable.Repeat("m<R>fr", 10)));
+            }
+        }
+
         #region ClassifierHelper class
 
         private class ClassifierHelper : IDisposable {
@@ -333,6 +365,8 @@ def f() -> int:
                 { 'n', PredefinedClassificationTypeNames.Number },
                 { 'k', PredefinedClassificationTypeNames.Keyword },
                 { 's', PredefinedClassificationTypeNames.String },
+                { 'd', PythonPredefinedClassificationTypeNames.Documentation },
+                { 'r', PythonPredefinedClassificationTypeNames.RegularExpression },
                 { '(', PythonPredefinedClassificationTypeNames.Grouping },
                 { ')', PythonPredefinedClassificationTypeNames.Grouping },
                 { '[', PythonPredefinedClassificationTypeNames.Grouping },
