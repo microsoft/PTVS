@@ -444,6 +444,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 _analysisProcess.Dispose();
                 _conn?.Dispose();
+                _conn = null;
             });
 
             try {

@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Navigation {
         public int GetFileExtensions(out string pbstrExtensions) {
             // This is the same extension the language service was
             // registered as supporting.
-            pbstrExtensions = PythonConstants.FileExtension + ";" + PythonConstants.WindowsFileExtension;
+            pbstrExtensions = PythonConstants.SourceFileExtensions;
             return VSConstants.S_OK;
         }
 

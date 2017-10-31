@@ -21,13 +21,17 @@ namespace Microsoft.PythonTools {
         //Language name
         public const string LanguageName = "Python";
         internal const string TextEditorSettingsRegistryKey = LanguageName;
-        internal const string FileExtension = ".py";
         internal const string ProjectFileFilter = "Python Project File (*.pyproj)\n*.pyproj\nAll Files (*.*)\n*.*\n";
         /// <summary>
         /// The extension for Python files which represent Windows applications.
         /// </summary>
-        internal const string WindowsFileExtension = ".pyw";
         internal const string ProjectImageList = "Microsoft.PythonImageList.png";
+
+        internal const string FileExtension = ".py";
+        internal const string WindowsFileExtension = ".pyw";
+        internal const string StubFileExtension = ".pyi";
+        internal const string SourceFileExtensions = ".py;.pyw;.pyi";
+        internal static readonly string[] SourceFileExtensionsArray = SourceFileExtensions.Split(';');
 
         internal const string LibraryManagerGuid = "888888e5-b976-4366-9e98-e7bc01f1842c";
         internal const string LibraryManagerServiceGuid = "88888859-2f95-416e-9e2b-cac4678e5af7";
