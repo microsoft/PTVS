@@ -217,6 +217,10 @@ namespace Microsoft.PythonTools {
                     replId = pyService.LoadString("Id", category);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.Fail("Could not load settings for interactive window.", ex.ToString());
+                    replId = null;
+                }
+
+                if (string.IsNullOrEmpty(replId)) {
                     pyService.DeleteCategory(category);
                     return VSConstants.S_OK;
                 }
