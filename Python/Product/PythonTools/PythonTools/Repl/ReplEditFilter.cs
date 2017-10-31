@@ -399,18 +399,13 @@ namespace Microsoft.PythonTools.Repl {
             _interactive.InsertCode(activeCode);
         }
 
-        private static readonly IEnumerable<string> SourceExtensions = new[] {
-            PythonConstants.FileExtension,
-            PythonConstants.WindowsFileExtension,
-        };
-
         private string GetCurrentScopeSourcePath() {
             var path = (_interactive.Evaluator as IMultipleScopeEvaluator)?.CurrentScopePath;
             if (string.IsNullOrEmpty(path)) {
                 return null;
             }
 
-            foreach (var ext in SourceExtensions) {
+            foreach (var ext in PythonConstants.SourceFileExtensionsArray) {
                 var source = Path.ChangeExtension(path, ext);
                 if (File.Exists(source)) {
                     return source;

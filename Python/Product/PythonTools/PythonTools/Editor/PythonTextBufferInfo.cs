@@ -267,7 +267,21 @@ namespace Microsoft.PythonTools.Editor {
 
         #region Analysis Info
 
-        public AnalysisEntry AnalysisEntry => Volatile.Read(ref _analysisEntry);
+        public AnalysisEntry AnalysisEntry {
+            get {
+                var entry = Volatile.Read(ref _analysisEntry);
+                if (entry != null && (entry.Analyzer == null || !entry.Analyzer.IsActive)) {
+                    // Analyzer has closed, so clear it out from our info.
+                    var previous = TrySetAnalysisEntry(null, entry);
+                    if (previous != entry) {
+                        // The entry has already been updated, so return the new one
+                        return previous;
+                    }
+                    return null;
+                }
+                return entry;
+            }
+        }
 
         /// <summary>
         /// Changes the analysis entry to <paramref name="entry"/> if the current
