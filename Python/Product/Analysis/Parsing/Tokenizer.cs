@@ -2652,11 +2652,11 @@ namespace Microsoft.PythonTools.Parsing {
             if (line > 0) {
                 index = lineLocations[line - 1].EndIndex;
             }
-            index += location.Column - 1;
-            if (line < lineLocations.Length && index > lineLocations[line].EndIndex) {
-                index = lineLocations[line].EndIndex;
+
+            if (line < lineLocations.Length && location.Column >= (lineLocations[line].EndIndex - index)) {
+                return lineLocations[line].EndIndex;
             }
-            return index;
+            return checked(index + location.Column - 1);
         }
     }
 

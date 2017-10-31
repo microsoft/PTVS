@@ -109,11 +109,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal SourceLocation IndexToLocation(int index) {
+        public SourceLocation IndexToLocation(int index) {
             return NewLineLocation.IndexToLocation(_lineLocations, index);
         }
 
-        internal int LocationToIndex(SourceLocation location) {
+        public int LocationToIndex(SourceLocation location) {
             return NewLineLocation.LocationToIndex(_lineLocations, location);
         }
 
