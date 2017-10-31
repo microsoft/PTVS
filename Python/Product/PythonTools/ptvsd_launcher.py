@@ -80,7 +80,6 @@ filename = sys.argv[0]
 sys.path[0] = ''
 
 # exclude ourselves from being debugged
-vspd.PREFIXES.append(os.path.normcase(ptvs_lib_path))
 vspd.DONT_DEBUG.append(os.path.normcase(__file__))
 
 # remove all state we imported

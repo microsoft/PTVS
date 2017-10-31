@@ -370,7 +370,7 @@ def get_thread_from_id(id):
 def should_send_frame(frame):
     return (frame is not None and
             frame.f_code not in DEBUG_ENTRYPOINTS and
-            path.normcase(frame.f_code.co_filename) not in DONT_DEBUG)
+            not is_dont_debug(path.normcase(frame.f_code.co_filename)))
 
 KNOWN_DIRECTORIES = set((None, ''))
 KNOWN_ZIPS = set()
@@ -565,6 +565,9 @@ def is_stdlib(filename):
             if prefix != '' and filename.startswith(prefix):
                 return True
 
+def is_dont_debug(filename):
+    return any(is_same_py_file(filename, f) for f in DONT_DEBUG)
+
 def should_debug_code(code):
     if not code or not code.co_filename:
         return False
@@ -573,9 +576,8 @@ def should_debug_code(code):
     if is_stdlib(filename):
         return False
 
-    for dont_debug_file in DONT_DEBUG:
-        if is_same_py_file(filename, dont_debug_file):
-            return False
+    if is_dont_debug(filename):
+        return False
 
     if is_file_in_zip(filename):
         # file in inside an egg or zip, so we can't debug it
@@ -1028,11 +1030,10 @@ class Thread(object):
             # Otherwise, check if it's some other debugger code.
             filename = path.normcase(frame.f_code.co_filename)
             is_debugger_frame = False
-            for debugger_file in DONT_DEBUG:
-                if is_same_py_file(filename, debugger_file):
-                    # If it is, then the frames above it on the stack that we have just walked through
-                    # were for debugger internal purposes, and we do not want to block here.
-                    return False
+            if is_dont_debug(filename):
+                # If it is, then the frames above it on the stack that we have just walked through
+                # were for debugger internal purposes, and we do not want to block here.
+                return False
             frame = frame.f_back
         return True
 
@@ -2176,12 +2177,16 @@ def report_exception(frame, exc_info, tid, break_type):
     )
 
 def report_module_load(mod):
+    filename = path.normcase(mod.filename)
+    if is_dont_debug(filename):
+        return
+
     send_debug_event(
         name='legacyModuleLoad',
         moduleId=mod.module_id,
         moduleFileName=mod.filename,
         moduleName=mod.module_name,
-        isStdLib=is_stdlib(path.normcase(mod.filename)),
+        isStdLib=is_stdlib(filename),
     )
 
 def report_step_finished(tid):
@@ -2633,7 +2638,7 @@ def print_exception(exc_type, exc_value, exc_tb):
     for i in [0, -1]:
         while tb:
             frame_file = path.normcase(tb[i][0])
-            if not any(is_same_py_file(frame_file, f) for f in DONT_DEBUG):
+            if not is_dont_debug(frame_file):
                 break
             del tb[i]
 
