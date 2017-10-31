@@ -488,6 +488,21 @@ namespace Microsoft.PythonTools.Debugger {
             return ast;
         }
 
+        internal SourceSpan GetStatementSpan(string filename, int line, int column = 0) {
+            var ast = GetAst(filename);
+            if (ast == null) {
+                return new SourceSpan(new SourceLocation(line, 1), new SourceLocation(line, 1));
+            }
+            int len = 0;
+            if (ast != null) {
+                int start = ast.LocationToIndex(new SourceLocation(line, 1));
+                int end = ast.LocationToIndex(new SourceLocation(line, int.MaxValue));
+                len = end - start;
+            }
+
+            return new SourceSpan(new SourceLocation(line, 1), new SourceLocation(line, Math.Max(0, len)));
+        }
+
         internal IList<Tuple<int, int, IList<string>>> GetHandledExceptionRanges(string filename) {
             PythonAst ast;
             TryHandlerWalker walker = new TryHandlerWalker();

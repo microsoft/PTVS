@@ -35,8 +35,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _filename = filename;
             _frame = frame;
 
-            var pos = new TEXT_POSITION { dwLine = lineno, dwColumn = 0 };
-            _documentContext = new AD7DocumentContext(filename, pos, pos, this, frame != null ? frame.Kind : FrameKind.None);
+            var span = _engine.Process.GetStatementSpan(_filename, (int)_lineNo, 0);
+            var startPos = new TEXT_POSITION { dwLine = (uint)(span.Start.Line - 1), dwColumn = (uint)(span.Start.Column - 1) };
+            var endPos = new TEXT_POSITION { dwLine = (uint)(span.End.Line - 1), dwColumn = (uint)(span.End.Column - 1) };
+
+            _documentContext = new AD7DocumentContext(filename, startPos, endPos, this, frame != null ? frame.Kind : FrameKind.None);
         }
 
         public void SetDocumentContext(IDebugDocumentContext2 docContext) {
