@@ -700,7 +700,8 @@ namespace Microsoft.PythonTools.Analysis {
                         return pack;
                     }
                     var mods = PathUtils.EnumerateFiles(dir, mod + "*", recurse: false).ToArray();
-                    return mods.FirstOrDefault(p => IsModuleNameMatch(PythonBinaryRegex, p, mod)) ??
+                    return mods.FirstOrDefault(p => IsModuleNameMatch(PythonStubRegex, p, mod)) ??
+                        mods.FirstOrDefault(p => IsModuleNameMatch(PythonBinaryRegex, p, mod)) ??
                         mods.FirstOrDefault(p => IsModuleNameMatch(PythonFileRegex, p, mod));
                 };
             }
