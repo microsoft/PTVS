@@ -84,6 +84,70 @@ class Message(object):
     def __repr__(self):
         return repr(self._m)
 
+class IntrospectHandler(object):
+    def __init__(self, client, on_reply, suppress_io):
+        self._client = client
+        self._on_reply = on_reply
+        self._suppress_io = suppress_io
+        self.callback = None
+        self.error = None
+        self.typename = None
+        self.members = None
+        self.responded = False
+
+    def send(self, expression):
+        if not expression:
+            self.typename = ''
+            msg_id = self._client.complete("")
+            self._suppress_io.add(msg_id)
+            self._on_reply.setdefault((msg_id, 'complete_reply'), []).append(self.complete_reply)
+        else:
+            msg_id = self._client.execute("_=" + expression,
+                store_history=False, allow_stdin=False, silent=True,
+                user_expressions={'m': 'getattr(type(_), "__module__", "") + "." + type(_).__name__'},
+            )
+            print('suppressing', msg_id)
+            self._suppress_io.add(msg_id)
+            self._on_reply.setdefault((msg_id, 'execute_reply'), []).append(self.typename_reply)
+            msg_id = self._client.complete(expression + '.')
+            self._suppress_io.add(msg_id)
+            self._on_reply.setdefault((msg_id, 'complete_reply'), []).append(self.complete_reply)
+
+    def _respond(self, success):
+        if self.responded:
+            return
+        if not self.callback:
+            raise RuntimeError("No callback provider to message handler")
+        if success:
+            self.callback(self.typename, self.members, {})
+        else:
+            self.error()
+        self.responded = True
+
+    def complete_reply(self, message):
+        if message.content.status != 'ok':
+            self._respond(False)
+            return
+        self.members = dict((m.rpartition('.')[-1], '') for m in message.content['matches', ()])
+        if self.typename is not None:
+            self._respond(True)
+
+    def typename_reply(self, message):
+        if message.content.status != 'ok':
+            self._respond(False)
+            return
+        self.typename = eval(message.content.user_expressions.m.data['text/plain', '"object"'])
+        m, _, n = self.typename.partition('.')
+        if m == type(int).__module__:
+            self.typename = n
+        if self.members is not None:
+            self._respond(True)
+
+    def set_callback(self, success_callback, error_callback):
+        self.callback = success_callback
+        self.error = error_callback
+
+
 class JupyterClientBackend(ReplBackend):
     def __init__(self, mod_name='__main__', launch_file=None):
         super(JupyterClientBackend, self).__init__()
@@ -99,6 +163,7 @@ class JupyterClientBackend(ReplBackend):
         self.__execution_count = 0
         self.__cmd_buffer = []
         self.__on_reply = {}
+        self.__suppress_io = set()
 
     def execution_loop(self):
         """starts processing execution requests"""
@@ -173,8 +238,10 @@ class JupyterClientBackend(ReplBackend):
         self.__exit.release()
 
     def get_members(self, expression):
-        """returns a tuple of the type name, instance members, and type members"""
-        raise NotImplementedError
+        handler = IntrospectHandler(self.__client, self.__on_reply, self.__suppress_io)
+        with self.__lock:
+            handler.send(expression)
+            return handler.set_callback
 
     def get_signatures(self, expression):
         """returns doc, args, vargs, varkw, defaults."""
@@ -213,7 +280,7 @@ class JupyterClientBackend(ReplBackend):
                 print('%s: %s' % (msg_type, msg_id))
 
                 exec_count = m.content['execution_count', None]
-                if exec_count != last_exec_count:
+                if exec_count != last_exec_count and exec_count is not None:
                     last_exec_count = exec_count
                     exec_count = int(exec_count) + 1
                     ps1 = 'In [%s]: ' % exec_count
@@ -238,6 +305,11 @@ class JupyterClientBackend(ReplBackend):
             last_exec_count = None
             while not self.exit_requested:
                 m = Message(client.get_iopub_msg(block=True))
+
+                if m.parent_header.msg_id in self.__suppress_io:
+                    if m.msg_type != 'status':
+                        self.__suppress_io.discard(m.parent_header.msg_id)
+                    continue
 
                 if m.msg_type == 'execute_input':
                     pass

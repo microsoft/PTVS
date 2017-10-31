@@ -67,7 +67,7 @@ except NameError:
     # BaseException not defined until Python 2.5
     BaseException = Exception
 
-DEBUG = os.environ.get('DEBUG_REPL') is not None
+DEBUG = os.environ.get('DEBUG_REPL') or os.environ.get('_PTVS_DEBUG_REPL')
 
 __all__ = ['ReplBackend', 'BasicReplBackend', 'BACKEND']
 
@@ -254,18 +254,28 @@ actual inspection and introspection."""
         """gets the list of members available for the given expression"""
         expression = read_string(self.conn)
         try:
-            name, inst_members, type_members = self.get_members(expression)
+            resp = self.get_members(expression)
         except:
             with self.send_lock:
                 write_bytes(self.conn, ReplBackend._MERR)
             _debug_write('error in eval')
             _debug_write(traceback.format_exc())
         else:
-            with self.send_lock:
-                write_bytes(self.conn, ReplBackend._MRES)
-                write_string(self.conn, name)
-                self._write_member_dict(inst_members)
-                self._write_member_dict(type_members)
+            if isinstance(resp, tuple) and len(resp) == 3:
+                self._send_mres(*resp)
+            else:
+                resp(self._send_mres, self._send_merr)
+
+    def _send_mres(self, name, inst_members, type_members):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._MRES)
+            write_string(self.conn, name)
+            self._write_member_dict(inst_members)
+            self._write_member_dict(type_members)
+
+    def _send_merr(self):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._MERR)
 
     def _cmd_sigs(self):
         """gets the signatures for the given expression"""
@@ -467,7 +477,9 @@ actual inspection and introspection."""
         raise NotImplementedError
 
     def get_members(self, expression):
-        """returns a tuple of the type name, instance members, and type members"""
+        """returns a tuple of the type name, instance members, and type members, or
+        a callable taking a callback function that can be passed the three tuple
+        arguments later."""
         raise NotImplementedError
 
     def get_signatures(self, expression):
