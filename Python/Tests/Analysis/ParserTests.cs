@@ -870,7 +870,13 @@ namespace AnalysisTests {
                         CheckConstantStmt(3.14),    // Also reports an error
                         CheckConstantStmt(3.14),    // Also reports an error
                         CheckConstantStmt(3.14),
-                        CheckConstantStmt(3.14)     // Also reports an error
+                        CheckConstantStmt(3.14),    // Also reports an error
+                        CheckConstantStmt(new BigInteger(0xCAFE_F00D)),
+                        CheckConstantStmt(new BigInteger(0xCAFE_F00D)),     // Error
+                        CheckConstantStmt(511),
+                        CheckConstantStmt(511),
+                        CheckConstantStmt(511),
+                        CheckConstantStmt(511)      // Also reports an error
                     )
                 );
 
@@ -879,7 +885,9 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid token", 91, 9, 1, 95, 9, 5),
                     new ErrorInfo("invalid token", 97, 10, 1, 102, 10, 6),
                     new ErrorInfo("invalid token", 104, 11, 1, 109, 11, 6),
-                    new ErrorInfo("invalid token", 118, 13, 1, 123, 13, 6)
+                    new ErrorInfo("invalid token", 118, 13, 1, 123, 13, 6),
+                    new ErrorInfo("invalid token", 139, 15, 1, 151, 15, 13),
+                    new ErrorInfo("invalid token", 177, 19, 1, 183, 19, 7)
                 );
             }
         }

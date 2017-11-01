@@ -1423,9 +1423,9 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private bool ReportInvalidNumericLiteral(string tokenStr, bool eIsForExponent = false) {
+        private bool ReportInvalidNumericLiteral(string tokenStr, bool eIsForExponent = false, bool allowLeadingUnderscore = false) {
             if (_langVersion >= PythonLanguageVersion.V36 && tokenStr.Contains("_")) {
-                if (tokenStr.Contains("__") || tokenStr.StartsWith("_") || tokenStr.EndsWith("_") ||
+                if (tokenStr.Contains("__") || (!allowLeadingUnderscore && tokenStr.StartsWith("_")) || tokenStr.EndsWith("_") ||
                     tokenStr.Contains("._") || tokenStr.Contains("_.")) {
                     ReportSyntaxError(TokenSpan, "invalid token", ErrorCodes.SyntaxError);
                     return true;
@@ -2148,7 +2148,7 @@ namespace Microsoft.PythonTools.Parsing {
         private object ParseInteger(string s, int radix) {
             bool reported = false;
             try {
-                reported = ReportInvalidNumericLiteral(s);
+                reported = ReportInvalidNumericLiteral(s, allowLeadingUnderscore: radix != 10);
                 return LiteralParser.ParseInteger(s, radix);
             } catch (ArgumentException e) {
                 if (!reported) {
@@ -2161,7 +2161,7 @@ namespace Microsoft.PythonTools.Parsing {
         private object ParseBigInteger(string s, int radix) {
             bool reported = false;
             try {
-                reported = ReportInvalidNumericLiteral(s);
+                reported = ReportInvalidNumericLiteral(s, allowLeadingUnderscore: radix != 10);
                 return LiteralParser.ParseBigInteger(s, radix);
             } catch (ArgumentException e) {
                 if (!reported) {
