@@ -84,6 +84,9 @@ namespace Microsoft.PythonTools {
 
     struct TrackingTokenInfo {
         internal TrackingTokenInfo(LineToken token, int lineNumber, ITrackingSpan lineSpan) {
+            if (lineNumber < 0) {
+                throw new ArgumentOutOfRangeException(nameof(lineNumber));
+            }
             LineToken = token;
             LineNumber = lineNumber;
             LineSpan = lineSpan;
