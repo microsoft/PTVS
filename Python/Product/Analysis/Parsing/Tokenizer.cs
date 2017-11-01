@@ -1084,9 +1084,6 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'L': {
                             MarkTokenEnd();
 
-                            if (_langVersion.Is3x()) {
-                                ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
-                            }
                             string tokenStr = GetTokenString();
                             try {
                                 if (Verbatim) {
@@ -1227,7 +1224,6 @@ namespace Microsoft.PythonTools.Parsing {
                         BufferBack();
                         MarkTokenEnd();
 
-                        // TODO: parse in place
                         if (Verbatim) {
                             return new VerbatimConstantValueToken(ParseInteger(GetTokenSubstring(2), 8), GetTokenString());
                         }
@@ -1347,11 +1343,6 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Token ReadExponent(bool leftIsFloat = false) {
-            BufferBack();
-            MarkTokenEnd();
-            var beforeEStr = GetTokenString();
-            NextChar();
-
             string tokenStr;
             int ch = NextChar();
 
@@ -1435,6 +1426,10 @@ namespace Microsoft.PythonTools.Parsing {
                     ReportSyntaxError(TokenSpan, "invalid token", ErrorCodes.SyntaxError);
                     return true;
                 }
+            }
+            if (_langVersion.Is3x() && tokenStr.ToLowerInvariant().EndsWith("l")) {
+                ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
+                return true;
             }
             return false;
         }
