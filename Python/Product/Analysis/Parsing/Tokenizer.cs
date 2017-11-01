@@ -1089,16 +1089,21 @@ namespace Microsoft.PythonTools.Parsing {
                             }
                             string tokenStr = GetTokenString();
                             try {
-                                // TODO: parse in place
                                 if (Verbatim) {
-                                    return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(tokenStr, b), tokenStr);
+                                    return new VerbatimConstantValueToken(ParseBigInteger(tokenStr, b), tokenStr);
                                 }
-
-                                return new ConstantValueToken(LiteralParser.ParseBigInteger(tokenStr, b));
+                                return new ConstantValueToken(ParseBigInteger(tokenStr, b));
                             } catch (ArgumentException e) {
                                 return new ErrorToken(e.Message, tokenStr);
                             }
                         }
+
+                    case '_':
+                        if (_langVersion < PythonLanguageVersion.V36) {
+                            goto default;
+                        }
+                        break;
+
                     case '0':
                     case '1':
                     case '2':
@@ -1169,6 +1174,13 @@ namespace Microsoft.PythonTools.Parsing {
                             return new VerbatimConstantValueToken(useBigInt ? bigInt : (BigInteger)iVal, GetTokenString());
                         }
                         return new ConstantValueToken(useBigInt ? bigInt : (BigInteger)iVal);
+
+                    case '_':
+                        if (_langVersion < PythonLanguageVersion.V36) {
+                            goto default;
+                        }
+                        break;
+
                     default:
                         BufferBack();
                         MarkTokenEnd();
@@ -1200,15 +1212,16 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'L':
                         MarkTokenEnd();
 
-                        if (_langVersion.Is3x()) {
-                            ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
-                        }
-
-                        // TODO: parse in place
                         if (Verbatim) {
-                            return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8), GetTokenString());
+                            return new VerbatimConstantValueToken(ParseBigInteger(GetTokenSubstring(2), 8), GetTokenString());
                         }
-                        return new ConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8));
+                        return new ConstantValueToken(ParseBigInteger(GetTokenSubstring(2), 8));
+
+                    case '_':
+                        if (_langVersion < PythonLanguageVersion.V36) {
+                            goto default;
+                        }
+                        break;
 
                     default:
                         BufferBack();
@@ -1216,7 +1229,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                         // TODO: parse in place
                         if (Verbatim) {
-                            return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8), GetTokenString());
+                            return new VerbatimConstantValueToken(ParseInteger(GetTokenSubstring(2), 8), GetTokenString());
                         }
                         return new ConstantValueToken(ParseInteger(GetTokenSubstring(2), 8));
                 }
@@ -1224,6 +1237,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Token ReadHexNumber() {
+            string tokenStr;
             while (true) {
                 int ch = NextChar();
 
@@ -1256,33 +1270,33 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'L':
                         MarkTokenEnd();
 
-                        if (_langVersion.Is3x()) {
-                            ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
-                        }
-
-                        // TODO: parse in place
+                        tokenStr = GetTokenString();
                         if (Verbatim) {
-                            return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 3), 16), GetTokenString());
+                            return new VerbatimConstantValueToken(ParseBigInteger(tokenStr.Substring(2), 16), tokenStr);
                         }
-                        return new ConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 3), 16));
+                        return new ConstantValueToken(ParseBigInteger(tokenStr.Substring(2), 16));
+
+                    case '_':
+                        if (_langVersion < PythonLanguageVersion.V36) {
+                            goto default;
+                        }
+                        break;
 
                     default:
                         BufferBack();
                         MarkTokenEnd();
 
-                        // TODO: parse in place
+                        tokenStr = GetTokenString();
                         if (Verbatim) {
-                            return new VerbatimConstantValueToken(
-                                ParseInteger(GetTokenSubstring(2), 16),
-                                GetTokenString()
-                            );
+                            return new VerbatimConstantValueToken(ParseInteger(tokenStr.Substring(2), 16), tokenStr);
                         }
-                        return new ConstantValueToken(ParseInteger(GetTokenSubstring(2), 16));
+                        return new ConstantValueToken(ParseInteger(tokenStr.Substring(2), 16));
                 }
             }
         }
 
         private Token ReadFraction() {
+            string tokenStr;
             while (true) {
                 int ch = NextChar();
 
@@ -1307,28 +1321,37 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'J':
                         MarkTokenEnd();
 
-                        // TODO: parse in place
+                        tokenStr = GetTokenString();
                         if (Verbatim) {
-                            string tokenStr = GetTokenString();
-                            return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
+                            return new VerbatimConstantValueToken(ParseComplex(tokenStr), tokenStr);
                         }
-                        return new ConstantValueToken(LiteralParser.ParseImaginary(GetTokenString()));
+                        return new ConstantValueToken(ParseComplex(tokenStr));
+
+                    case '_':
+                        if (LanguageVersion < PythonLanguageVersion.V36) {
+                            goto default;
+                        }
+                        break;
 
                     default:
                         BufferBack();
                         MarkTokenEnd();
 
-                        // TODO: parse in place
+                        tokenStr = GetTokenString();
                         if (Verbatim) {
-                            string tokenStr = GetTokenString();
                             return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
                         }
-                        return new ConstantValueToken(ParseFloat(GetTokenString()));
+                        return new ConstantValueToken(ParseFloat(tokenStr));
                 }
             }
         }
 
         private Token ReadExponent(bool leftIsFloat = false) {
+            BufferBack();
+            MarkTokenEnd();
+            var beforeEStr = GetTokenString();
+            NextChar();
+
             string tokenStr;
             int ch = NextChar();
 
@@ -1355,12 +1378,18 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'J':
                         MarkTokenEnd();
 
-                        // TODO: parse in place
                         tokenStr = GetTokenString();
                         if (Verbatim) {
                             return new VerbatimConstantValueToken(ParseComplex(tokenStr), tokenStr);
                         }
                         return new ConstantValueToken(ParseComplex(tokenStr));
+
+                    case '_':
+                        if (_langVersion < PythonLanguageVersion.V36) {
+                            goto default;
+                        }
+                        ch = NextChar();
+                        break;
 
                     default:
                         if (iter <= 0) {
@@ -1372,8 +1401,8 @@ namespace Microsoft.PythonTools.Parsing {
                             // since we are ignoring the e this could be either a float or int
                             // depending on the lhs of the e
                             tokenStr = GetTokenString();
+
                             object parsed = leftIsFloat ? ParseFloat(tokenStr) : ParseInteger(tokenStr, 10);
-                            // TODO: parse in place
                             if (Verbatim) {
                                 return new VerbatimConstantValueToken(parsed, tokenStr);
                             }
@@ -1384,7 +1413,6 @@ namespace Microsoft.PythonTools.Parsing {
                             BufferBack();
                             MarkTokenEnd();
 
-                            // TODO: parse in place
                             tokenStr = GetTokenString();
                             if (Verbatim) {
                                 return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
@@ -1393,6 +1421,22 @@ namespace Microsoft.PythonTools.Parsing {
                         }
                 }
             }
+        }
+
+        private bool ReportInvalidNumericLiteral(string tokenStr, bool eIsForExponent = false) {
+            if (_langVersion >= PythonLanguageVersion.V36 && tokenStr.Contains("_")) {
+                if (tokenStr.Contains("__") || tokenStr.StartsWith("_") || tokenStr.EndsWith("_") ||
+                    tokenStr.Contains("._") || tokenStr.Contains("_.")) {
+                    ReportSyntaxError(TokenSpan, "invalid token", ErrorCodes.SyntaxError);
+                    return true;
+                }
+                var lower = tokenStr.ToLowerInvariant();
+                if (eIsForExponent && (lower.Contains("e_") || lower.Contains("_e"))) {
+                    ReportSyntaxError(TokenSpan, "invalid token", ErrorCodes.SyntaxError);
+                    return true;
+                }
+            }
+            return false;
         }
 
         private Token ReadName() {
@@ -2102,28 +2146,53 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private object ParseInteger(string s, int radix) {
+            bool reported = false;
             try {
+                reported = ReportInvalidNumericLiteral(s);
                 return LiteralParser.ParseInteger(s, radix);
             } catch (ArgumentException e) {
-                ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                if (!reported) {
+                    ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                }
+                return null;
+            }
+        }
+
+        private object ParseBigInteger(string s, int radix) {
+            bool reported = false;
+            try {
+                reported = ReportInvalidNumericLiteral(s);
+                return LiteralParser.ParseBigInteger(s, radix);
+            } catch (ArgumentException e) {
+                if (!reported) {
+                    ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                }
                 return null;
             }
         }
 
         private object ParseFloat(string s) {
+            bool reported = false;
             try {
+                reported = ReportInvalidNumericLiteral(s, eIsForExponent: true);
                 return LiteralParser.ParseFloat(s);
             } catch (Exception e) {
-                ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                if (!reported) {
+                    ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                }
                 return 0.0;
             }
         }
 
         private object ParseComplex(string s) {
+            bool reported = false;
             try {
+                reported = ReportInvalidNumericLiteral(s, eIsForExponent: true);
                 return LiteralParser.ParseImaginary(s);
             } catch (Exception e) {
-                ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                if (!reported) {
+                    ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                }
                 return default(Complex);
             }
         }

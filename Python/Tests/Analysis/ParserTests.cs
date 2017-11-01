@@ -853,6 +853,38 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public void Literals36() {
+            foreach (var version in V36AndUp) {
+                CheckAst(
+                    ParseFile("Literals36.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckConstantStmt(10000000.0),
+                        CheckConstantStmt(new BigInteger(0xCAFE_F00D)),
+                        CheckConstantStmt(0b0011_1111_0100_1110),
+                        CheckConstantStmt(0b1111_0000),
+                        CheckExprStmt(CheckNameExpr("_1")),
+                        CheckConstantStmt(10),
+                        CheckConstantStmt(100.0),
+                        CheckConstantStmt(100.0),   // Also reports an error
+                        CheckConstantStmt(10.0),    // Also reports an error
+                        CheckConstantStmt(3.14),    // Also reports an error
+                        CheckConstantStmt(3.14),    // Also reports an error
+                        CheckConstantStmt(3.14),
+                        CheckConstantStmt(3.14)     // Also reports an error
+                    )
+                );
+
+                ParseErrors("Literals36.py", version,
+                    new ErrorInfo("invalid token", 83, 8, 1, 89, 8, 7),
+                    new ErrorInfo("invalid token", 91, 9, 1, 95, 9, 5),
+                    new ErrorInfo("invalid token", 97, 10, 1, 102, 10, 6),
+                    new ErrorInfo("invalid token", 104, 11, 1, 109, 11, 6),
+                    new ErrorInfo("invalid token", 118, 13, 1, 123, 13, 6)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void Keywords25() {
             foreach (var version in V24_V25Versions) {
                 CheckAst(
@@ -2892,6 +2924,9 @@ namespace AnalysisTests {
                 if (sink.Errors[i].Span != errors[i].Span) {
                     Assert.Fail("Wrong span for error {0}: expected {1}, got {2}", i, FormatError(errors[i]), FormatError(sink.Errors[i]));
                 }
+            }
+            if (sink.Errors.Count > errors.Length) {
+                Assert.Fail("Unexpected errors occurred");
             }
         }
 
