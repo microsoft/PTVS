@@ -2589,7 +2589,7 @@ class _DebuggerOutput(object):
     
     @property
     def name(self):
-        return '<' + channel + '>'
+        return '<' + self.channel + '>'
 
     def __getattr__(self, name):
         return getattr(self.old_out, name)
