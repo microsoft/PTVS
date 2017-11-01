@@ -1807,6 +1807,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python Documentation]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";DontShowAgain" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Do not show this warning again.]]></Val>
@@ -3970,6 +3976,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";RegularExpressionClassificationType" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python Regular Expression]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";RememberMySelection" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Remember my selection]]></Val>
@@ -5341,7 +5353,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17297.1]]></Val>
+        <Val><![CDATA[3.0.17304.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5377,7 +5389,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17297.1]]></Val>
+        <Val><![CDATA[3.0.17304.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
