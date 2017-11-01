@@ -39,8 +39,7 @@ namespace AnalysisTests {
             AssertListener.Initialize();
         }
 
-        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35, PythonLanguageVersion.V36, PythonLanguageVersion.V37 };
-        internal static readonly PythonLanguageVersion[] V25AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V25).ToArray();
+        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35, PythonLanguageVersion.V36, PythonLanguageVersion.V37 };
         internal static readonly PythonLanguageVersion[] V26AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V26).ToArray();
         internal static readonly PythonLanguageVersion[] V27AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V27).ToArray();
         internal static readonly PythonLanguageVersion[] V2Versions = AllVersions.Where(v => v <= PythonLanguageVersion.V27).ToArray();
@@ -743,7 +742,9 @@ namespace AnalysisTests {
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
                         CheckConstantStmt(464),
-                        CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(100)))
+                        CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(100))),
+                        CheckConstantStmt(new BigInteger(464)),
+                        CheckConstantStmt(new BigInteger(5))
                     )
                 );
             }
@@ -781,7 +782,9 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid token", 546, 29, 12, 547, 29, 13),
                     new ErrorInfo("invalid token", 560, 30, 12, 561, 30, 13),
                     new ErrorInfo("invalid token", 563, 31, 1, 567, 31, 5),
-                    new ErrorInfo("invalid token", 573, 32, 5, 574, 32, 6)
+                    new ErrorInfo("invalid token", 573, 32, 5, 574, 32, 6),
+                    new ErrorInfo("invalid token", 581, 33, 6, 582, 33, 7),
+                    new ErrorInfo("invalid token", 590, 34, 7, 591, 34, 8)
                 );
             }
 
@@ -792,7 +795,9 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid token", 546, 29, 12, 547, 29, 13),
                     new ErrorInfo("invalid token", 560, 30, 12, 561, 30, 13),
                     new ErrorInfo("invalid token", 563, 31, 1, 567, 31, 5),
-                    new ErrorInfo("invalid token", 573, 32, 5, 574, 32, 6)
+                    new ErrorInfo("invalid token", 573, 32, 5, 574, 32, 6),
+                    new ErrorInfo("invalid token", 581, 33, 6, 582, 33, 7),
+                    new ErrorInfo("invalid token", 590, 34, 7, 591, 34, 8)
                 );
                 CheckAst(
                     ParseFile("LiteralsV3.py", ErrorSink.Null, version),
@@ -848,6 +853,69 @@ namespace AnalysisTests {
                     version,
                     new ErrorInfo("unexpected token 'o720'", 1, 1, 2, 5, 1, 6),
                     new ErrorInfo("unexpected token 'b100'", 8, 2, 2, 12, 2, 6)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void Literals36() {
+            foreach (var version in V36AndUp) {
+                CheckAst(
+                    ParseFile("Literals36.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckConstantStmt(10000000.0),
+                        CheckConstantStmt(new BigInteger(0xCAFE_F00D)),
+                        CheckConstantStmt(0b0011_1111_0100_1110),
+                        CheckConstantStmt(0b1111_0000),
+                        CheckExprStmt(CheckNameExpr("_1")),
+                        CheckConstantStmt(10),
+                        CheckConstantStmt(100.0),
+                        CheckConstantStmt(100.0),   // Also reports an error
+                        CheckConstantStmt(10.0),    // Also reports an error
+                        CheckConstantStmt(3.14),    // Also reports an error
+                        CheckConstantStmt(3.14),    // Also reports an error
+                        CheckConstantStmt(3.14),
+                        CheckConstantStmt(3.14),    // Also reports an error
+                        CheckConstantStmt(new BigInteger(0xCAFE_F00D)),
+                        CheckConstantStmt(new BigInteger(0xCAFE_F00D)),     // Error
+                        CheckConstantStmt(511),
+                        CheckConstantStmt(511),
+                        CheckConstantStmt(511),
+                        CheckConstantStmt(511)      // Also reports an error
+                    )
+                );
+
+                ParseErrors("Literals36.py", version,
+                    new ErrorInfo("invalid token", 83, 8, 1, 89, 8, 7),
+                    new ErrorInfo("invalid token", 91, 9, 1, 95, 9, 5),
+                    new ErrorInfo("invalid token", 97, 10, 1, 102, 10, 6),
+                    new ErrorInfo("invalid token", 104, 11, 1, 109, 11, 6),
+                    new ErrorInfo("invalid token", 118, 13, 1, 123, 13, 6),
+                    new ErrorInfo("invalid token", 139, 15, 1, 151, 15, 13),
+                    new ErrorInfo("invalid token", 177, 19, 1, 183, 19, 7)
+                );
+            }
+
+            foreach (var version in AllVersions.Where(v => v <= PythonLanguageVersion.V35)) {
+                ParseErrors("Literals36.py", version,
+                    new ErrorInfo("unexpected token '_000_000'", 2, 1, 3, 10, 1, 11),
+                    new ErrorInfo("unexpected token '_F00D'", 20, 2, 7, 25, 2, 12),
+                    new ErrorInfo("unexpected token '_0011_1111_0100_1110'", 29, 3, 3, 49, 3, 23),
+                    new ErrorInfo("unexpected token '_1111_0000'", 53, 4, 3, 63, 4, 13),
+                    new ErrorInfo("unexpected token '_0'", 70, 6, 2, 72, 6, 4),
+                    new ErrorInfo("unexpected token '_0e0_1'", 75, 7, 2, 81, 7, 8),
+                    new ErrorInfo("unexpected token '_0e_1'", 84, 8, 2, 89, 8, 7),
+                    new ErrorInfo("unexpected token '_e1'", 92, 9, 2, 95, 9, 5),
+                    new ErrorInfo("unexpected token '_'", 98, 10, 2, 99, 10, 3),
+                    new ErrorInfo("unexpected token '_14'", 106, 11, 3, 109, 11, 6),
+                    new ErrorInfo("unexpected token '_4'", 114, 12, 4, 116, 12, 6),
+                    new ErrorInfo("unexpected token '_'", 122, 13, 5, 123, 13, 6),
+                    new ErrorInfo("unexpected token '_CAFE_F00D'", 127, 14, 3, 137, 14, 13),
+                    new ErrorInfo("unexpected token '_F00D_'", 145, 15, 7, 151, 15, 13),
+                    new ErrorInfo("unexpected token '_777'", 155, 16, 3, 159, 16, 7),
+                    new ErrorInfo("unexpected token '_77'", 164, 17, 4, 167, 17, 7),
+                    new ErrorInfo("unexpected token '_7'", 173, 18, 5, 175, 18, 7),
+                    new ErrorInfo("unexpected token '_'", 182, 19, 6, 183, 19, 7)
                 );
             }
         }
@@ -1335,7 +1403,7 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void YieldExpr() {
-            foreach (var version in V25AndUp) {
+            foreach (var version in V26AndUp) {
                 CheckAst(
                     ParseFile("YieldExpr.py", ErrorSink.Null, version),
                     CheckSuite(
@@ -2343,7 +2411,7 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void AssignStmt25() {
-            foreach (var version in V25AndUp) {
+            foreach (var version in V26AndUp) {
                 CheckAst(
                     ParseFile("AssignStmt25.py", ErrorSink.Null, version),
                     CheckSuite(
@@ -2892,6 +2960,9 @@ namespace AnalysisTests {
                 if (sink.Errors[i].Span != errors[i].Span) {
                     Assert.Fail("Wrong span for error {0}: expected {1}, got {2}", i, FormatError(errors[i]), FormatError(sink.Errors[i]));
                 }
+            }
+            if (sink.Errors.Count > errors.Length) {
+                Assert.Fail("Unexpected errors occurred");
             }
         }
 
