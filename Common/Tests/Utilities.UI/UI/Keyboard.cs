@@ -140,6 +140,7 @@ namespace TestUtilities.UI {
                     case '→': Type(Key.Right); break;
                     case '↑': Type(Key.Up); break;
                     case '↓': Type(Key.Down); break;
+                    case '\r': Type(Key.Enter); break;
                     case CtrlSpace:
                         Keyboard.PressAndRelease(Key.Space, Key.LeftCtrl);
                         break;

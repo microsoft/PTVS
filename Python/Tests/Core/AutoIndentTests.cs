@@ -15,15 +15,22 @@
 // permissions and limitations under the License.
 
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using TestUtilities;
 using TestUtilities.Mocks;
 
 namespace PythonToolsTests {
     [TestClass]
     public class AutoIndentTests {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
+
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+        }
 
         [TestMethod, Priority(0)]
         public void GetIndentation() {
@@ -58,16 +65,35 @@ namespace PythonToolsTests {
             AssertIndent("abc = {'x': [\n\n  ['''str''',\n\n]],\n\n    }", 2, 4);
             AssertIndent("abc = {'x': [\n\n  ['''str''',\n\n]],\n\n    }", 4, 3);
             AssertIndent("abc = {'x': [\n\n  ['''str''',\n\n]],\n\n    }", 6, 7);
+
+            AssertIndent("def f():\n    print 'hi'\n\n\ndef inner(): pass", 4, 4, version: PythonLanguageVersion.V27);
+            AssertIndent("def f():\n    print 'hi'\n\n\ndef inner(): pass", 4, 4, version: PythonLanguageVersion.V36);
+
+            AssertIndent("x = {  #comment\n\n    'a': [\n\n        1,\n\n        ],\n\n    'b':42\n    }", 2, 4);
+            AssertIndent("x = {  #comment\n\n    'a': [\n\n        1,\n\n        ],\n\n    'b':42\n    }", 4, 8);
+            AssertIndent("x = {  #comment\n\n    'a': [\n\n        1,\n\n        ],\n\n    'b':42\n    }", 6, 8);
+            AssertIndent("x = {  #comment\n\n    'a': [\n\n        1,\n\n        ],\n\n    'b':42\n    }", 8, 4);
+            AssertIndent("x = {  #comment\n\n    'a': [\n\n        1,\n\n        ],\n\n    'b':42\n    }", 10, 4);
+
+            AssertIndent("def f():\n    assert False, \\\n        'A message'\n    p", 3, 8);
+            AssertIndent("def f():\n    assert False, \\\n        'A message'\n    p", 4, 4);
+
+            AssertIndent("def a():\n    if b():\n        if c():\n            d()\n            p", 2, 4);
+            AssertIndent("def a():\n    if b():\n        if c():\n            d()\n            p", 3, 8);
+            AssertIndent("def a():\n    if b():\n        if c():\n            d()\n            p", 4, 12);
+            AssertIndent("def a():\n    if b():\n        if c():\n            d()\n            p", 5, 12);
         }
 
-        private static void AssertIndent(string code, int lineNumber, int expected, int tabSize = 4, int indentSize = 4) {
+        private static void AssertIndent(string code, int lineNumber, int expected, int tabSize = 4, int indentSize = 4, PythonLanguageVersion version = PythonLanguageVersion.V36) {
             var buffer = new MockTextBuffer(code, PythonContentType);
             var view = new MockTextView(buffer);
             view.Options.SetOptionValue(DefaultOptions.IndentSizeOptionId, indentSize);
             view.Options.SetOptionValue(DefaultOptions.TabSizeOptionId, tabSize);
 
             var line = buffer.CurrentSnapshot.GetLineFromLineNumber(lineNumber - 1);
-            var actual = AutoIndent.GetLineIndentation(PythonTextBufferInfo.ForBuffer(null, buffer), line, view);
+            var bi = PythonTextBufferInfo.ForBuffer(null, buffer);
+            bi._defaultLanguageVersion = version;
+            var actual = AutoIndent.GetLineIndentation(bi, line, view);
             Assert.AreEqual(expected, actual, line.GetText());
         }
     }

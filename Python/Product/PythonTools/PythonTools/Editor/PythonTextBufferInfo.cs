@@ -92,6 +92,8 @@ namespace Microsoft.PythonTools.Editor {
         private readonly bool _hasChangedOnBackground;
         private bool _replace;
 
+        internal PythonLanguageVersion _defaultLanguageVersion;
+
         private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
             Services = services;
             Buffer = buffer;
@@ -99,6 +101,7 @@ namespace Microsoft.PythonTools.Editor {
             _filename = new Lazy<string>(GetOrCreateFilename);
             _tokenCache = new TokenCache();
             _bufferId = -1;
+            _defaultLanguageVersion = PythonLanguageVersion.None;
 
             ITextDocument doc;
             if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out doc)) {
@@ -175,7 +178,7 @@ namespace Microsoft.PythonTools.Editor {
 
         public PythonEditorServices Services { get; }
 
-        public PythonLanguageVersion LanguageVersion => AnalysisEntry?.Analyzer.LanguageVersion ?? PythonLanguageVersion.None;
+        public PythonLanguageVersion LanguageVersion => AnalysisEntry?.Analyzer.LanguageVersion ?? _defaultLanguageVersion;
 
         #region Events
 

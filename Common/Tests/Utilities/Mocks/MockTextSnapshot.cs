@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 
 namespace TestUtilities.Mocks {
@@ -91,7 +92,7 @@ namespace TestUtilities.Mocks {
                     );
                 }
                 if (endOfLine == -1) {
-                    Debug.Assert(false);
+                    Assert.Fail($"Line {lineNumber} not in snapshot \"{_text}\"");
                     return null;
                 }
                 curPosition = endOfLine + eolChar.Length;

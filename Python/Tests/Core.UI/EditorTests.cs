@@ -505,7 +505,8 @@ pass");
         }
 
         public void AutoIndentExisting(PythonVisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\AutoIndent.sln");
+            var sln = app.CopyProjectForTest(@"TestData\AutoIndent.sln");
+            var project = app.OpenProject(sln);
 
             // http://pytools.codeplex.com/workitem/138
             AutoIndentExistingTest(app, project, "Decorator.py", 4, 4, @"class C:
