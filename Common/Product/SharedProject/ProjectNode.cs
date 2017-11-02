@@ -6268,7 +6268,12 @@ If the files in the existing folder have the same names as files in the folder y
                     dd = Marshal.GetObjectForIUnknown(docData) as IVsPersistDocData;
                     Utilities.CheckNotNull(dd);
 
-                    ErrorHandler.ThrowOnFailure(dd.SaveDocData(saveFlag, out docNew, out cancelled));
+                    var saveResult = dd.SaveDocData(saveFlag, out docNew, out cancelled);
+                    ErrorHandler.ThrowOnFailure(saveResult);
+
+                    // HRESULT can be successful, but with code STG_S_DATALOSS.
+                    // return it so the user gets prompted to save again with unicode.
+                    returnCode = saveResult;
                 }
 
                 // We can be unloaded after the SaveDocData() call if the save caused a designer to add a file and this caused
@@ -6297,18 +6302,18 @@ If the files in the existing folder have the same names as files in the folder y
                         ((saveFlag == VSSAVEFLAGS.VSSAVE_Save) && !emptyOrSamePath);
 
                     if (saveAs) {
-                        returnCode = node.AfterSaveItemAs(docData, docNew);
+                        var afterSaveResult = node.AfterSaveItemAs(docData, docNew);
 
                         // If it has been cancelled recover the old name.
-                        if ((returnCode == (int)OleConstants.OLECMDERR_E_CANCELED || returnCode == VSConstants.E_ABORT)) {
+                        if ((afterSaveResult == (int)OleConstants.OLECMDERR_E_CANCELED || afterSaveResult == VSConstants.E_ABORT)) {
                             // Cleanup.
                             this.DeleteFromStorage(docNew);
 
                             if (ff != null) {
-                                returnCode = shell.SaveDocDataToFile(VSSAVEFLAGS.VSSAVE_SilentSave, ff, existingFileMoniker, out docNew, out cancelled);
+                                afterSaveResult = shell.SaveDocDataToFile(VSSAVEFLAGS.VSSAVE_SilentSave, ff, existingFileMoniker, out docNew, out cancelled);
                             }
-                        } else if (returnCode != VSConstants.S_OK) {
-                            ErrorHandler.ThrowOnFailure(returnCode);
+                        } else if (afterSaveResult != VSConstants.S_OK) {
+                            ErrorHandler.ThrowOnFailure(afterSaveResult);
                         }
                     }
                 }
