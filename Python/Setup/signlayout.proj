@@ -124,8 +124,6 @@
 
   <Target Name="_UpdateLayoutWithSignedBinaries"
           DependsOnTargets="_GetBinariesInLayout"
-          Inputs="%(_BinariesToCopy.FullPath)"
-          Outputs="%(_BinariesToCopy.TargetPath)"
           AfterTargets="SignFiles">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>
