@@ -175,7 +175,6 @@
     <Compile Include="SharedProject\SolutionFolder.cs" />
     <Compile Include="SharedProject\ImportDefinition.cs" />
     <Compile Include="SharedProject\TargetDefinition.cs" />
-    <Compile Include="AzureUtility.cs" />
     <Compile Include="TestData.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestMethod.cs" />
