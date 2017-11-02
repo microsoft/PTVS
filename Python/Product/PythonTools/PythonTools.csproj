@@ -748,6 +748,11 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>ptvsd\repl</VSIXSubPath>
     </Content>
+    <Content Include="ptvsd\repl\jupyter_client-helpers.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ptvsd\repl</VSIXSubPath>
+    </Content>
     <Content Include="ptvsd_repl_launcher.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

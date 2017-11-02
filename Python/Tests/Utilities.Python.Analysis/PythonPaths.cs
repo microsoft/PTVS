@@ -235,13 +235,19 @@ namespace TestUtilities {
         }
 
         public PythonVersion(string version) {
-            var v = System.Version.Parse(version).ToLanguageVersion();
-            var candididates = PythonPaths.Versions.Where(pv => pv.IsCPython && pv.Version == v).ToArray();
             PythonVersion selected;
-            if (candididates.Length > 1) {
-                selected = candididates.FirstOrDefault(c => c.Isx64) ?? candididates.First();
+            if (version == "Anaconda27") {
+                selected = PythonPaths.Anaconda27 ?? PythonPaths.Anaconda27_x64;
+            } else if (version == "Anaconda36") {
+                selected = PythonPaths.Anaconda36 ?? PythonPaths.Anaconda36_x64;
             } else {
-                selected = candididates.FirstOrDefault();
+                var v = System.Version.Parse(version).ToLanguageVersion();
+                var candididates = PythonPaths.Versions.Where(pv => pv.IsCPython && pv.Version == v).ToArray();
+                if (candididates.Length > 1) {
+                    selected = candididates.FirstOrDefault(c => c.Isx64) ?? candididates.First();
+                } else {
+                    selected = candididates.FirstOrDefault();
+                }
             }
             selected.AssertInstalled();
 

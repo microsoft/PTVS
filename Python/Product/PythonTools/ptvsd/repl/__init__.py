@@ -261,10 +261,10 @@ actual inspection and introspection."""
             _debug_write('error in eval')
             _debug_write(traceback.format_exc())
         else:
-            if isinstance(resp, tuple) and len(resp) == 3:
-                self._send_mres(*resp)
-            else:
+            if hasattr(resp, '__call__'):
                 resp(self._send_mres, self._send_merr)
+            else:
+                self._send_mres(*resp)
 
     def _send_mres(self, name, inst_members, type_members):
         with self.send_lock:
@@ -281,30 +281,40 @@ actual inspection and introspection."""
         """gets the signatures for the given expression"""
         expression = read_string(self.conn)
         try:
-            sigs = self.get_signatures(expression)
+            resp = self.get_signatures(expression)
         except:
             with self.send_lock:
                 write_bytes(self.conn, ReplBackend._SERR)
             _debug_write('error in eval')
             _debug_write(traceback.format_exc())
         else:
-            with self.send_lock:
-                write_bytes(self.conn, ReplBackend._SRES)
-                # single overload
-                write_int(self.conn, len(sigs))
-                for doc, args, vargs, varkw, defaults in sigs:
-                    # write overload
-                    write_string(self.conn, (doc or '')[:4096])
-                    arg_count = len(args) + (vargs is not None) + (varkw is not None)
-                    write_int(self.conn, arg_count)
+            if hasattr(resp, '__call__'):
+                resp(self._send_sres, self._send_serr)
+            else:
+                self._send_sres(resp)
 
-                    def_values = [''] * (len(args) - len(defaults)) + ['=' + d for d in defaults]
-                    for arg, def_value in zip(args, def_values):
-                        write_string(self.conn, (arg or '') + def_value)
-                    if vargs is not None:
-                        write_string(self.conn, '*' + vargs)
-                    if varkw is not None:
-                        write_string(self.conn, '**' + varkw)
+    def _send_sres(self, sigs):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._SRES)
+            # single overload
+            write_int(self.conn, len(sigs))
+            for doc, args, vargs, varkw, defaults in sigs:
+                # write overload
+                write_string(self.conn, (doc or '')[:4096])
+                arg_count = len(args) + (vargs is not None) + (varkw is not None)
+                write_int(self.conn, arg_count)
+
+                def_values = [''] * (len(args) - len(defaults)) + ['=' + d for d in defaults]
+                for arg, def_value in zip(args, def_values):
+                    write_string(self.conn, (arg or '') + def_value)
+                if vargs is not None:
+                    write_string(self.conn, '*' + vargs)
+                if varkw is not None:
+                    write_string(self.conn, '**' + varkw)
+
+    def _send_serr(self):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._SERR)
 
     def _cmd_setm(self):
         global exec_mod

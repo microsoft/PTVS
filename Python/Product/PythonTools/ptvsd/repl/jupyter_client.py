@@ -24,6 +24,7 @@ __version__ = "3.2.1.0"
 import ast
 import base64
 import errno
+import os
 import re
 import sys
 import threading
@@ -106,7 +107,6 @@ class IntrospectHandler(object):
                 store_history=False, allow_stdin=False, silent=True,
                 user_expressions={'m': 'getattr(type(_), "__module__", "") + "." + type(_).__name__'},
             )
-            print('suppressing', msg_id)
             self._suppress_io.add(msg_id)
             self._on_reply.setdefault((msg_id, 'execute_reply'), []).append(self.typename_reply)
             msg_id = self._client.complete(expression + '.')
@@ -129,11 +129,14 @@ class IntrospectHandler(object):
             self._respond(False)
             return
         self.members = dict((m.rpartition('.')[-1], '') for m in message.content['matches', ()])
+        omit = [m for m in self.members if m.startswith('__ptvs_repl_')]
+        for m in omit:
+            del self.members[m]
         if self.typename is not None:
             self._respond(True)
 
     def typename_reply(self, message):
-        if message.content.status != 'ok':
+        if message.content.status != 'ok' or message.content.user_expressions.m.status != 'ok':
             self._respond(False)
             return
         self.typename = eval(message.content.user_expressions.m.data['text/plain', '"object"'])
@@ -147,6 +150,58 @@ class IntrospectHandler(object):
         self.callback = success_callback
         self.error = error_callback
 
+class SignaturesHandler(object):
+    def __init__(self, client, on_reply, suppress_io):
+        self._client = client
+        self._on_reply = on_reply
+        self._suppress_io = suppress_io
+        self.callback = None
+        self.error = None
+        self.signatures = None
+        self.responded = False
+
+    def send(self, expression):
+        if not expression:
+            self.signatures = []
+            self._respond(False)
+            return
+
+        msg_id = self._client.execute("pass",
+            store_history=False, allow_stdin=False, silent=True,
+            user_expressions={'sigs': '__ptvs_repl_sig(' + expression + ')'},
+        )
+        self._suppress_io.add(msg_id)
+        self._on_reply.setdefault((msg_id, 'execute_reply'), []).append(self.signatures_reply)
+
+    def _respond(self, success):
+        if self.responded:
+            return
+        if not self.callback:
+            raise RuntimeError("No callback provider to message handler")
+        if success:
+            self.callback(self.signatures)
+        else:
+            self.error()
+        self.responded = True
+
+    def signatures_reply(self, message):
+        if message.content.status != 'ok' or message.content.user_expressions.sigs.status != 'ok':
+            self._respond(False)
+            return
+        self.signatures = eval(message.content.user_expressions.sigs.data['text/plain', '[]'])
+        self._respond(True)
+
+    def set_callback(self, success_callback, error_callback):
+        self.callback = success_callback
+        self.error = error_callback
+
+EXEC_HELPERS_COMMAND = """#nohistory
+def __ptvs_repl_exec_helpers():
+    with open(%r, 'rb') as f:
+        content = f.read().replace('\\r\\n'.encode('ascii'), '\\n'.encode('ascii'))
+    exec(content, globals())
+__ptvs_repl_exec_helpers()
+""" % os.path.join(os.path.dirname(os.path.abspath(__file__)), 'jupyter_client-helpers.py')
 
 class JupyterClientBackend(ReplBackend):
     def __init__(self, mod_name='__main__', launch_file=None):
@@ -161,7 +216,7 @@ class JupyterClientBackend(ReplBackend):
         self.__status = 'idle'
         self.__msg_buffer = []
         self.__execution_count = 0
-        self.__cmd_buffer = []
+        self.__cmd_buffer = [EXEC_HELPERS_COMMAND]
         self.__on_reply = {}
         self.__suppress_io = set()
 
@@ -220,12 +275,16 @@ class JupyterClientBackend(ReplBackend):
 
     def execute_file_ex(self, filetype, filename, args):
         """executes the given filename as a 'script', 'module' or 'process'."""
-        if filetype == 'script':
-            pass
-        elif filetype == 'module':
-            pass
-        elif filetype == 'process':
-            pass
+        if filetype == 'process':
+            command = "!%s %s" % (filename, args)
+        else:
+            command = "__ptvs_repl_exec_%s(%r, %r, globals(), locals())" % (filetype, filename, args)
+        if self.__client:
+            self.__exec(command, silent=False).append(self.__command_executed)
+            return True
+
+        self.__cmd_buffer.append(command)
+        return False
 
     def interrupt_main(self):
         """aborts the current running command"""
@@ -245,19 +304,22 @@ class JupyterClientBackend(ReplBackend):
 
     def get_signatures(self, expression):
         """returns doc, args, vargs, varkw, defaults."""
-        raise NotImplementedError
+        handler = SignaturesHandler(self.__client, self.__on_reply, self.__suppress_io)
+        with self.__lock:
+            handler.send(expression)
+            return handler.set_callback
 
     def set_current_module(self, module):
         """sets the module which code executes against"""
-        raise NotImplementedError
+        pass    # not supported
 
     def set_current_thread_and_frame(self, thread_id, frame_id, frame_kind):
         """sets the current thread and frame which code will execute against"""
-        raise NotImplementedError
+        pass    # not supported
 
     def get_module_names(self):
         """returns a list of module names"""
-        raise NotImplementedError
+        return []   # not supported
 
     def flush(self):
         """flushes the stdout/stderr buffers"""
@@ -269,7 +331,11 @@ class JupyterClientBackend(ReplBackend):
             on_replies = self.__on_reply
             while not self.exit_requested:
                 while self.__cmd_buffer and not self.exit_requested:
-                    self.run_command(self.__cmd_buffer.pop(0))
+                    cmd = self.__cmd_buffer.pop(0)
+                    if cmd.startswith('#nohistory'):
+                        self.__exec(cmd)
+                    else:
+                        self.run_command(cmd)
                 if self.exit_requested:
                     break
 
