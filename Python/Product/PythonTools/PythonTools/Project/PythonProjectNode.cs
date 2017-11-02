@@ -577,7 +577,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string[] CodeFileExtensions {
             get {
-                return new[] { PythonConstants.FileExtension, PythonConstants.WindowsFileExtension };
+                return PythonConstants.SourceFileExtensionsArray;
             }
         }
 

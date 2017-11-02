@@ -20,7 +20,6 @@ using System.ComponentModel.Composition;
 using System.Windows.Media;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Options;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -98,10 +97,6 @@ namespace Microsoft.PythonTools {
         #region IDlrClassifierProvider
 
         public IClassifier GetClassifier(ITextBuffer buffer) {
-            if (buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
-                return null;
-            }
-
             if (_categoryMap == null) {
                 _categoryMap = FillCategoryMap(_classificationRegistry);
             }

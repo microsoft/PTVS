@@ -84,6 +84,9 @@ namespace Microsoft.PythonTools {
 
     struct TrackingTokenInfo {
         internal TrackingTokenInfo(LineToken token, int lineNumber, ITrackingSpan lineSpan) {
+            if (lineNumber < 0) {
+                throw new ArgumentOutOfRangeException(nameof(lineNumber));
+            }
             LineToken = token;
             LineNumber = lineNumber;
             LineSpan = lineSpan;
@@ -146,8 +149,6 @@ namespace Microsoft.PythonTools {
             // within the file, and this will handle it correctly, but when a
             // line is edited the span returned here may not be valid.
             var line = LineSpan.GetSpan(snapshot);
-
-            Debug.Assert(line.Start.GetContainingLine().LineNumber == LineNumber, "Mismatched line number");
 
             int startCol = Math.Min(LineToken.Column, line.Length);
             int endCol = Math.Min(LineToken.Column + LineToken.Length, line.Length);

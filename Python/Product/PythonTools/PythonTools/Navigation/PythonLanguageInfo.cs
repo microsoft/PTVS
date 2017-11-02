@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Navigation {
     /// should be switched over to using our TextViewCreationListener instead).
     /// </summary>
     [Guid(GuidList.guidPythonLanguageService)]
-    internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo {
+    internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo, IVsLanguageDebugInfo2 {
         private readonly IServiceProvider _serviceProvider;
 
         public PythonLanguageInfo(IServiceProvider serviceProvider) {
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Navigation {
         public int GetFileExtensions(out string pbstrExtensions) {
             // This is the same extension the language service was
             // registered as supporting.
-            pbstrExtensions = PythonConstants.FileExtension + ";" + PythonConstants.WindowsFileExtension;
+            pbstrExtensions = PythonConstants.SourceFileExtensions;
             return VSConstants.S_OK;
         }
 
@@ -145,28 +145,34 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {            
-            // per the docs, even if we don't indend to validate, we need to set the span info:
-            // http://msdn.microsoft.com/en-us/library/microsoft.visualstudio.textmanager.interop.ivslanguagedebuginfo.validatebreakpointlocation.aspx
-            // 
-            // Caution
-            // Even if you do not intend to support the ValidateBreakpointLocation method but your 
-            // language does support breakpoints, you must implement this method and return a span 
-            // that contains the specified line and column; otherwise, breakpoints cannot be set 
-            // anywhere except line 1. You can return E_NOTIMPL to indicate that you do not otherwise 
-            // support this method but the span must always be set. The example shows how this can be done.
-
-            // http://pytools.codeplex.com/workitem/787
-            // We were previously returning S_OK here indicating to VS that we have in fact validated
-            // the breakpoint.  Validating breakpoints actually interacts and effectively disables
-            // the "Highlight entire source line for breakpoints and current statement" option as instead
-            // VS highlights the validated region.  So we return E_NOTIMPL here to indicate that we have 
-            // not validated the breakpoint, and then VS will happily respect the option when we're in 
-            // design mode.
+            int len;
+            if (!ErrorHandler.Succeeded(pBuffer.GetLengthOfLine(iLine, out len))) {
+                len = iCol;
+            }
+            if (len <= 0) {
+                return VSConstants.S_FALSE;
+            }
             pCodeSpan[0].iStartLine = iLine;
             pCodeSpan[0].iEndLine = iLine;
+            pCodeSpan[0].iStartIndex = 0;
+            pCodeSpan[0].iEndIndex = len;
+            return VSConstants.S_OK;
+        }
+
+        public int QueryCommonLanguageBlock(IVsTextBuffer pBuffer, int iLine, int iCol, uint dwFlag, out int pfInBlock) {
+            pfInBlock = 0;
             return VSConstants.E_NOTIMPL;
         }
 
-#endregion
+        public int ValidateInstructionpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {
+            return ValidateBreakpointLocation(pBuffer, iLine, iCol, pCodeSpan);
+        }
+
+        public int QueryCatchLineSpan(IVsTextBuffer pBuffer, int iLine, int iCol, out int pfIsInCatch, TextSpan[] ptsCatchLine) {
+            pfIsInCatch = 0;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        #endregion
     }
 }

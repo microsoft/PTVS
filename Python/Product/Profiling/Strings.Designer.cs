@@ -470,7 +470,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*.
+        ///   Looks up a localized string similar to Python files (*.py;*.pyw;*.pyi)|*.py;*.pyw;*.pyi|All Files (*.*)|*.*.
         /// </summary>
         public static string PythonFilesFilter {
             get {

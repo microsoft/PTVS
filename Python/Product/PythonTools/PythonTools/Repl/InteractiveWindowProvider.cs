@@ -19,13 +19,15 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
@@ -259,12 +261,13 @@ namespace Microsoft.PythonTools.Repl {
                 toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
             }
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
-            replWindow.InteractiveWindow.InitializeAsync();
 
             var selectEval = evaluator as SelectableReplEvaluator;
             if (selectEval != null) {
                 selectEval.ProvideInteractiveWindowEvents(InteractiveWindowEvents.GetOrCreate(replWindow));
             }
+
+            _serviceProvider.GetUIThread().InvokeTaskSync(() => replWindow.InteractiveWindow.InitializeAsync(), CancellationToken.None);
 
             return replWindow;
         }

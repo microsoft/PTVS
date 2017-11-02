@@ -92,6 +92,8 @@ namespace Microsoft.PythonTools.Editor {
         private readonly bool _hasChangedOnBackground;
         private bool _replace;
 
+        internal PythonLanguageVersion _defaultLanguageVersion;
+
         private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
             Services = services;
             Buffer = buffer;
@@ -99,6 +101,7 @@ namespace Microsoft.PythonTools.Editor {
             _filename = new Lazy<string>(GetOrCreateFilename);
             _tokenCache = new TokenCache();
             _bufferId = -1;
+            _defaultLanguageVersion = PythonLanguageVersion.None;
 
             ITextDocument doc;
             if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out doc)) {
@@ -175,7 +178,7 @@ namespace Microsoft.PythonTools.Editor {
 
         public PythonEditorServices Services { get; }
 
-        public PythonLanguageVersion LanguageVersion => AnalysisEntry?.Analyzer.LanguageVersion ?? PythonLanguageVersion.None;
+        public PythonLanguageVersion LanguageVersion => AnalysisEntry?.Analyzer.LanguageVersion ?? _defaultLanguageVersion;
 
         #region Events
 
@@ -267,7 +270,21 @@ namespace Microsoft.PythonTools.Editor {
 
         #region Analysis Info
 
-        public AnalysisEntry AnalysisEntry => Volatile.Read(ref _analysisEntry);
+        public AnalysisEntry AnalysisEntry {
+            get {
+                var entry = Volatile.Read(ref _analysisEntry);
+                if (entry != null && (entry.Analyzer == null || !entry.Analyzer.IsActive)) {
+                    // Analyzer has closed, so clear it out from our info.
+                    var previous = TrySetAnalysisEntry(null, entry);
+                    if (previous != entry) {
+                        // The entry has already been updated, so return the new one
+                        return previous;
+                    }
+                    return null;
+                }
+                return entry;
+            }
+        }
 
         /// <summary>
         /// Changes the analysis entry to <paramref name="entry"/> if the current

@@ -1972,8 +1972,10 @@ namespace DebuggerTests {
             var process = processRunInfo.Process;
 
             List<string> receivedFilenames = new List<string>();
+            List<string> receivedNames = new List<string>();
             process.ModuleLoaded += (sender, args) => {
                 receivedFilenames.Add(args.Module.Filename);
+                receivedNames.Add(args.Module.Name);
             };
 
             await StartAndWaitForExitAsync(processRunInfo);
@@ -1985,6 +1987,8 @@ namespace DebuggerTests {
             }
 
             AssertUtil.ContainsAtLeast(set, expectedModulesLoaded);
+
+            Assert.IsFalse(receivedNames.Any(n => n.StartsWith("ptvsd")), "ptvsd should not appear in loaded modules.");
         }
 
         #endregion

@@ -189,7 +189,7 @@ Error:
     <value>Executable files (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|All Files (*.*)|*.*</value>
   </data>
   <data name="PythonFilesFilter" xml:space="preserve">
-    <value>Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*</value>
+    <value>Python files (*.py;*.pyw;*.pyi)|*.py;*.pyw;*.pyi|All Files (*.*)|*.*</value>
   </data>
   <data name="PerformanceReportFilesFilter" xml:space="preserve">
     <value>Performance Report Files (*.vsp;*.vsps)|*.vsp;*.vsps|All Files (*.*)|*.*</value>

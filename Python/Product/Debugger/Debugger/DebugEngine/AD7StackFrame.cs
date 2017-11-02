@@ -268,13 +268,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // and will use it to open the correct source document for this stack frame.
         int IDebugStackFrame2.GetDocumentContext(out IDebugDocumentContext2 docContext) {
             docContext = null;
-            // Assume all lines begin and end at the beginning of the line.
-            TEXT_POSITION begTp = new TEXT_POSITION();
-            begTp.dwColumn = 0;
-            begTp.dwLine = (uint)_stackFrame.LineNo - 1;
-            TEXT_POSITION endTp = new TEXT_POSITION();
-            endTp.dwColumn = 0;
-            endTp.dwLine = (uint)_stackFrame.LineNo - 1;
+
+            var span = _engine.Process.GetStatementSpan(StackFrame.FileName, _stackFrame.LineNo, 0);
+            var begTp = new TEXT_POSITION { dwLine = (uint)(span.Start.Line - 1), dwColumn = (uint)(span.Start.Column - 1) };
+            var endTp = new TEXT_POSITION { dwLine = (uint)(span.End.Line - 1), dwColumn = (uint)(span.End.Column - 1) };
 
             docContext = new AD7DocumentContext(_stackFrame.FileName, begTp, endTp, null, _stackFrame.Kind);
             return VSConstants.S_OK;

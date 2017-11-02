@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -76,11 +77,12 @@ namespace Microsoft.PythonTools {
             );
 
             if (classifications != null) {
-                Debug.WriteLine("Received {0} classifications", classifications.Data.classifications.Length);
+                Debug.WriteLine("Received {0} classifications", classifications.Data.classifications?.Length ?? 0);
 
                 lock (_spanCacheLock) {
                     // sort the spans by starting position so we can use binary search when handing them out
                     _spanCache = classifications.Data.classifications
+                        .MaybeEnumerate()
                         .OrderBy(c => c.start)
                         .Distinct(ClassificationComparer.Instance)
                         .ToArray();
