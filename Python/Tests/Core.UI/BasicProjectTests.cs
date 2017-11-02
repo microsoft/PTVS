@@ -689,6 +689,33 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(project.ProjectItems.Item("NewProgram.py").ProjectItems.Item("NewProgram.xaml"));
         }
 
+        public void PythonSearchPaths(VisualStudioApp app) {
+            var project = app.OpenProject(@"TestData\AddSearchPaths.sln");
+
+            var searchPaths = project.GetPythonProject()._searchPaths;
+            var testDir = TestData.GetTempPath();
+            var testFile = Path.Combine(testDir, "test.py");
+
+            using (var evt = new AutoResetEvent(false)) {
+                searchPaths.Changed += (s, e) => evt.SetIfNotDisposed();
+
+                searchPaths.Add(testDir, false);
+                Assert.IsTrue(evt.WaitOne(TimeSpan.FromSeconds(10)), "Failed to see search path added");
+
+                File.WriteAllText(testFile, "# Content for file\r\n");
+                Assert.IsTrue(evt.WaitOne(TimeSpan.FromSeconds(10)), "Failed to see file created");
+
+                File.AppendAllText(testFile, "# More content for file\r\n");
+                Assert.IsTrue(evt.WaitOne(TimeSpan.FromSeconds(10)), "Failed to see file modified");
+
+                FileUtils.Delete(testFile);
+                Assert.IsTrue(evt.WaitOne(TimeSpan.FromSeconds(10)), "Failed to see file deleted");
+
+                searchPaths.Remove(testDir);
+                Assert.IsTrue(evt.WaitOne(TimeSpan.FromSeconds(10)), "Failed to see search path removed");
+            }
+        }
+
         public void DotNetReferences(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\XamlProject.sln");
 

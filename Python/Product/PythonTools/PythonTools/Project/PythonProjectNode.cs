@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Project {
         private VsProjectAnalyzer _analyzer;
         private readonly HashSet<AnalysisEntry> _warnOnLaunchFiles = new HashSet<AnalysisEntry>();
         private PythonDebugPropertyPage _debugPropPage;
-        internal readonly SearchPathManager _searchPaths = new SearchPathManager();
+        internal readonly SearchPathManager _searchPaths;
         private CommonSearchPathContainerNode _searchPathContainer;
         private InterpretersContainerNode _interpretersContainer;
         private readonly HashSet<string> _validFactories = new HashSet<string>();
@@ -89,6 +89,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
+            _searchPaths = new SearchPathManager(serviceProvider);
             _searchPaths.Changed += SearchPaths_Changed;
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
@@ -1066,6 +1067,8 @@ namespace Microsoft.PythonTools.Project {
 
                 InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
                 InterpreterRegistry.InterpretersChanged -= OnInterpreterRegistryChanged;
+
+                _searchPaths.Dispose();
 
                 if (_interpretersContainer != null) {
                     _interpretersContainer.Dispose();
