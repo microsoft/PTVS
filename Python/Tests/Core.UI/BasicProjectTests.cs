@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -24,6 +24,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
 using EnvDTE80;
@@ -31,7 +32,6 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
@@ -52,6 +52,7 @@ using MessageBoxButton = TestUtilities.MessageBoxButton;
 using Mouse = TestUtilities.UI.Mouse;
 using Thread = System.Threading.Thread;
 using Task = System.Threading.Tasks.Task;
+using System.Text;
 
 namespace PythonToolsUITests {
     public class BasicProjectTests {
@@ -1413,6 +1414,53 @@ namespace PythonToolsUITests {
 
             app.WaitForNoDialog(TimeSpan.FromSeconds(5));
             Assert.AreEqual(0, app.OpenDocumentWindows.Count());
+        }
+
+        public void SaveWithDataLoss(PythonVisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\SaveDataLoss.sln");
+            var project = app.OpenProject(sln);
+
+            // Open a 0-byte file so that encoding isn't detected as Unicode
+            var item = project.ProjectItems.Item("Program.py");
+            var window = item.Open();
+            window.Activate();
+
+            // Wait for document to be ready
+            var filePath = item.Document.FullName;
+            var doc = app.GetDocument(filePath);
+
+            // Add some text that doesn't cause any data loss and save
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                System.Windows.Clipboard.SetText("# hello\n");
+            });
+            app.ExecuteCommand("Edit.Paste");
+            app.ExecuteCommand("File.SaveAll");
+            app.WaitForNoDialog(TimeSpan.FromSeconds(3));
+
+            // Add some text that causes data loss and save
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                System.Windows.Clipboard.SetText("# 丁丂七丄丅丆万丈三龺龻\n");
+            });
+            app.ExecuteCommand("Edit.Paste");
+            using (var dlg = new AutomationDialog(app, AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("File.SaveAll")))) {
+                AssertUtil.Contains(dlg.Text, "Some Unicode characters in this file could not be saved");
+                dlg.ClickButtonAndClose("Yes");
+            }
+
+            // Check that re-save as Unicode occurred and there was no data loss
+            var expected = "# hello\n# 丁丂七丄丅丆万丈三龺龻\n";
+            var text = "";
+            for (var retry = 0; retry < 5; retry++) {
+                try {
+                    text = File.ReadAllText(filePath, Encoding.UTF8);
+                    if (text == expected) {
+                        break;
+                    }
+                } catch (IOException) {
+                }
+                Thread.Sleep(500);
+            }
+            Assert.AreEqual(expected, text);
         }
 
         //[TestMethod, Priority(0)]

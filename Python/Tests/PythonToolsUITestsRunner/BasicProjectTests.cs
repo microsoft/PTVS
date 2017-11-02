@@ -279,5 +279,11 @@ namespace PythonToolsUITestsRunner {
         public void PreviewMissingFile() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.PreviewMissingFile));
         }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void SaveWithDataLoss() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.SaveWithDataLoss));
+        }
     }
 }
