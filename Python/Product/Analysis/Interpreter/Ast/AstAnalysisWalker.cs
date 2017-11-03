@@ -30,7 +30,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private readonly List<AstAnalysisFunctionWalker> _postWalkers;
 
-        private IMember _noneInst;
+        private readonly IPythonType _unknownType;
+        private readonly IMember _noneInst;
 
         public AstAnalysisWalker(
             IPythonInterpreter interpreter,
@@ -49,6 +50,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             );
             _module = module ?? throw new ArgumentNullException(nameof(module));
             _members = members ?? throw new ArgumentNullException(nameof(members));
+            _unknownType = _interpreter.GetBuiltinType(BuiltinTypeId.Unknown) ??
+                new PyAnalysis.FallbackBuiltinPythonType(ast.LanguageVersion, BuiltinTypeId.Unknown);
             _noneInst = new AstPythonConstant(_interpreter.GetBuiltinType(BuiltinTypeId.NoneType));
             _postWalkers = new List<AstAnalysisFunctionWalker>();
         }
@@ -156,7 +159,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         if (node.Names[i].Name == "*") {
                             foreach (var member in mod.GetMemberNames(ctxt)) {
                                 var mem = mod.GetMember(ctxt, member) ?? new AstPythonConstant(
-                                    _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                    _unknownType,
                                     mod.Locations.ToArray()
                                 );
                                 _scope.SetInScope(member, mem);
@@ -167,7 +170,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         var n = node.AsNames?[i] ?? node.Names[i];
                         if (n != null) {
                             var mem = mod.GetMember(ctxt, node.Names[i].Name) ?? new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
+                                _unknownType,
                                 GetLoc(n)
                             );
                             _scope.SetInScope(n.Name, mem);
