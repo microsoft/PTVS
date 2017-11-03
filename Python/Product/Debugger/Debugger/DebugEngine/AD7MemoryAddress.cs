@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _filename = filename;
             _frame = frame;
 
-            var span = _engine.Process.GetStatementSpan(_filename, (int)_lineNo, 0);
+            var span = _engine.Process.GetStatementSpan(_filename, (int)_lineNo + 1, 0);
             var startPos = new TEXT_POSITION { dwLine = (uint)(span.Start.Line - 1), dwColumn = (uint)(span.Start.Column - 1) };
             var endPos = new TEXT_POSITION { dwLine = (uint)(span.End.Line - 1), dwColumn = (uint)(span.End.Column - 1) };
 
