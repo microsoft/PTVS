@@ -355,11 +355,11 @@ namespace DebuggerUITests {
             var modules = ((Process3)app.Dte.Debugger.CurrentProcess).Modules;
             Assert.IsTrue(modules.Count >= 1);
 
-            var module = modules.Item("Program");
+            var module = modules.Item("__main__");
             Assert.IsNotNull(module);
 
             Assert.IsTrue(module.Path.EndsWith("Program.py"));
-            Assert.AreEqual("Program", module.Name);
+            Assert.AreEqual("__main__", module.Name);
             Assert.AreNotEqual((uint)0, module.Order);
 
             app.Dte.Debugger.TerminateAll();
