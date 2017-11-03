@@ -17,13 +17,48 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools {
-    class SearchPathManager {
+    class SearchPathManager : IVsFileChangeEvents, IDisposable {
+        private readonly IVsFileChangeEx _changeService;
+        private readonly Timer _notifyChangeTimer;
         private readonly List<SearchPath> _paths = new List<SearchPath>();
 
         public SearchPathManager() { }
+
+        public SearchPathManager(IServiceProvider site) {
+            _changeService = site.GetService(typeof(SVsFileChangeEx)) as IVsFileChangeEx;
+            _notifyChangeTimer = new Timer(RaiseChanged, null, Timeout.Infinite, Timeout.Infinite);
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~SearchPathManager() {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                lock (_paths) {
+                    foreach (var p in _paths) {
+                        Unwatch(p.Cookie);
+                    }
+                    _paths.Clear();
+                }
+
+                var timer = _notifyChangeTimer;
+                if (timer != null) {
+                    timer.Dispose();
+                }
+            }
+        }
 
         public event EventHandler Changed;
 
@@ -58,7 +93,7 @@ namespace Microsoft.PythonTools {
             }
 
             lock (_paths) {
-                _paths.Add(new SearchPath(absolutePath, persisted, moniker));
+                _paths.Add(new SearchPath(absolutePath, persisted, moniker, Watch(absolutePath)));
             }
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -70,7 +105,7 @@ namespace Microsoft.PythonTools {
             }
 
             lock (_paths) {
-                _paths.Insert(index, new SearchPath(absolutePath, persisted, moniker));
+                _paths.Insert(index, new SearchPath(absolutePath, persisted, moniker, Watch(absolutePath)));
             }
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -125,6 +160,7 @@ namespace Microsoft.PythonTools {
             lock (_paths) {
                 var toRemove = _paths.FirstOrDefault(p => p.Path.Equals(absolutePath, StringComparison.OrdinalIgnoreCase));
                 if (toRemove.Path != null && _paths.Remove(toRemove)) {
+                    Unwatch(toRemove.Cookie);
                     removed = true;
                 }
             }
@@ -153,13 +189,13 @@ namespace Microsoft.PythonTools {
                         any = true;
                         if (!p.Path.Equals(absolutePath, StringComparison.OrdinalIgnoreCase) ||
                             p.Persisted != isPersisted) {
-                            _paths[i] = new SearchPath(absolutePath, isPersisted, moniker);
+                            _paths[i] = new SearchPath(absolutePath, isPersisted, moniker, Watch(absolutePath));
                             changed = true;
                         }
                     }
                 }
                 if (!any) {
-                    _paths.Add(new SearchPath(absolutePath, isPersisted, moniker));
+                    _paths.Add(new SearchPath(absolutePath, isPersisted, moniker, Watch(absolutePath)));
                     changed = true;
                 }
             }
@@ -172,6 +208,11 @@ namespace Microsoft.PythonTools {
         public void RemoveByMoniker(object moniker) {
             bool any;
             lock (_paths) {
+                foreach (var p in _paths) {
+                    if (p.Moniker == moniker) {
+                        Unwatch(p.Cookie);
+                    }
+                }
                 any = _paths.RemoveAll(p => p.Moniker == moniker) > 0;
             }
 
@@ -189,14 +230,20 @@ namespace Microsoft.PythonTools {
                     }
 
                     if (string.IsNullOrEmpty(projectHome)) {
-                        newPaths.Add(new SearchPath(path, true, null));
+                        newPaths.Add(new SearchPath(path, true, null, Watch(path)));
                     } else {
-                        newPaths.Add(new SearchPath(PathUtils.GetAbsoluteFilePath(projectHome, path), true, null));
+                        var absolutePath = PathUtils.GetAbsoluteFilePath(projectHome, path);
+                        newPaths.Add(new SearchPath(absolutePath, true, null, Watch(absolutePath)));
                     }
                 }
             }
 
             lock (_paths) {
+                foreach (var p in _paths) {
+                    if (p.Moniker == null) {
+                        Unwatch(p.Cookie);
+                    }
+                }
                 _paths.RemoveAll(p => p.Moniker == null);
                 _paths.InsertRange(0, newPaths);
             }
@@ -227,12 +274,48 @@ namespace Microsoft.PythonTools {
             public string Path;
             public bool Persisted;
             public object Moniker;
+            public uint Cookie;
 
-            public SearchPath(string path, bool persisted, object moniker) {
+            public SearchPath(string path, bool persisted, object moniker, uint cookie) {
                 Path = path;
                 Persisted = persisted;
                 Moniker = moniker;
+                Cookie = cookie;
             }
+        }
+
+        private uint Watch(string path) {
+            if (_changeService == null) {
+                return 0;
+            }
+
+            uint cookie;
+            if (ErrorHandler.Succeeded(_changeService.AdviseDirChange(path, 1, this, out cookie))) {
+                return cookie;
+            }
+            return 0;
+        }
+
+        private void Unwatch(uint cookie) {
+            if (_changeService == null || cookie == 0) {
+                return;
+            }
+
+            ErrorHandler.ThrowOnFailure(_changeService.UnadviseDirChange(cookie));
+        }
+
+        private void RaiseChanged(object state) {
+            _notifyChangeTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+
+        int IVsFileChangeEvents.FilesChanged(uint cChanges, string[] rgpszFile, uint[] rggrfChange) {
+            return VSConstants.S_OK;
+        }
+
+        int IVsFileChangeEvents.DirectoryChanged(string pszDirectory) {
+            _notifyChangeTimer?.Change(500, Timeout.Infinite);
+            return VSConstants.S_OK;
         }
     }
 }
