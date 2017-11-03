@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools {
             Dispose(false);
         }
 
-        protected void Dispose(bool disposing) {
+        protected virtual void Dispose(bool disposing) {
             if (disposing) {
                 lock (_paths) {
                     foreach (var p in _paths) {
