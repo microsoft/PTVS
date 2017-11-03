@@ -16,17 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.PyAnalysis;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 

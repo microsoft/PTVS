@@ -3093,6 +3093,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Import coverage.py XML file...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[coverage.py XML dosyasını &İçe Aktar...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3108,6 +3111,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Imports an XML file produced by coverage.py.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Coverage.py tarafından oluşturulmuş XML dosyasını içeri aktarır.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3276,6 +3282,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Command Prompt Here]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Komut İstemini Burada Aç]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3841,8 +3850,8 @@
       <Item ItemId=";128" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Files;*.py,*.pyw,*.pyi]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Python Dosyaları;*.py,*.pyw]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python Dosyaları;*.py,*.pyw,*.pyi]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Python Files;*.py,*.pyw]]></Val>
