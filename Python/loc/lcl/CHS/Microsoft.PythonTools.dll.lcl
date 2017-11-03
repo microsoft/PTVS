@@ -3093,6 +3093,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Import coverage.py XML file...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[导入 coverage.py XML 文件(&I)...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3108,6 +3111,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Imports an XML file produced by coverage.py.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[导入由 coverage.py 生成的 XML 文件。]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3276,6 +3282,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Command Prompt Here]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[在此处打开命令提示符]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
