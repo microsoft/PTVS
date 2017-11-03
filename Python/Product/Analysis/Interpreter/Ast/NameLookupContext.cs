@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly Lazy<IPythonModule> _builtinModule;
         private readonly AnalysisLogWriter _log;
 
-        private readonly IPythonType _unknownType;
+        internal readonly IPythonType _unknownType;
 
         public NameLookupContext(
             IPythonInterpreter interpreter,
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             DefaultLookupOptions = LookupOptions.Normal;
 
             _unknownType = Interpreter.GetBuiltinType(BuiltinTypeId.Unknown) ??
-                new PyAnalysis.FallbackBuiltinPythonType(Ast.LanguageVersion, BuiltinTypeId.Unknown);
+                new FallbackBuiltinPythonType(Ast.LanguageVersion, BuiltinTypeId.Unknown);
 
             _scopes = new Stack<Dictionary<string, IMember>>();
             _builtinModule = builtinModule == null ? new Lazy<IPythonModule>(ImportBuiltinModule) : new Lazy<IPythonModule>(() => builtinModule);

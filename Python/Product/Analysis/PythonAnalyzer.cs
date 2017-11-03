@@ -31,7 +31,6 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.PyAnalysis;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
