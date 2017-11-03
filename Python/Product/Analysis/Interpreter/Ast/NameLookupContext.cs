@@ -30,6 +30,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly Lazy<IPythonModule> _builtinModule;
         private readonly AnalysisLogWriter _log;
 
+        private readonly IPythonType _unknownType;
+
         public NameLookupContext(
             IPythonInterpreter interpreter,
             IModuleContext context,
@@ -48,6 +50,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IncludeLocationInfo = includeLocationInfo;
 
             DefaultLookupOptions = LookupOptions.Normal;
+
+            _unknownType = Interpreter.GetBuiltinType(BuiltinTypeId.Unknown) ??
+                new PyAnalysis.FallbackBuiltinPythonType(Ast.LanguageVersion, BuiltinTypeId.Unknown);
 
             _scopes = new Stack<Dictionary<string, IMember>>();
             _builtinModule = builtinModule == null ? new Lazy<IPythonModule>(ImportBuiltinModule) : new Lazy<IPythonModule>(() => builtinModule);
@@ -202,7 +207,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             _log?.Log(TraceLevel.Verbose, "UnknownName", expr.Name);
-            return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Unknown), GetLoc(expr));
+            return new AstPythonConstant(_unknownType, GetLoc(expr));
         }
 
         private IMember GetValueFromMember(MemberExpression expr, LookupOptions options) {
@@ -220,7 +225,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             } else {
                 _log?.Log(TraceLevel.Verbose, "UnknownMemberContainer", expr.Target.ToCodeString(Ast).Trim());
             }
-            return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Unknown), GetLoc(expr));
+            return new AstPythonConstant(_unknownType, GetLoc(expr));
         }
 
         private IMember GetValueFromUnaryOp(UnaryExpression expr, LookupOptions options) {
@@ -291,7 +296,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             _log?.Log(TraceLevel.Verbose, "UnknownIndex", expr.ToCodeString(Ast).Trim());
-            return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Unknown), GetLoc(expr));
+            return new AstPythonConstant(_unknownType, GetLoc(expr));
         }
 
         private IMember GetValueFromConditional(ConditionalExpression expr, LookupOptions options) {
@@ -340,7 +345,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             _log?.Log(TraceLevel.Verbose, "UnknownCallable", expr.Target.ToCodeString(Ast).Trim());
-            return new AstPythonConstant(Interpreter.GetBuiltinType(BuiltinTypeId.Unknown), GetLoc(expr));
+            return new AstPythonConstant(_unknownType, GetLoc(expr));
         }
 
         public IPythonConstant GetConstantFromLiteral(Expression expr, LookupOptions options) {
