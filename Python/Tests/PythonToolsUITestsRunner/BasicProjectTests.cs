@@ -168,6 +168,12 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
+        public void PythonSearchPaths() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.PythonSearchPaths));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
         public void DotNetReferences() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetReferences));
         }

@@ -450,7 +450,7 @@ namespace Microsoft.PythonTools.Debugger {
                     member = (MemberExpression)member.Target;
                 }
                 if (member.Target is NameExpression) {
-                    return expr.ToCodeString(ast);
+                    return expr.ToCodeString(ast).Trim();
                 }
             } else if ((paren = expr as ParenthesisExpression) != null) {
                 return ToDottedNameString(paren.Expression, ast);

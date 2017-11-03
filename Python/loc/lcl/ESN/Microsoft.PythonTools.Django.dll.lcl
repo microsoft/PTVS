@@ -415,9 +415,9 @@
     </Item>
     <Item ItemId=";Menus.ctmenu" ItemType="0" PsrId="240" Leaf="false">
       <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
-      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},4098" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4098" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},4098" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4098" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Django app...]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -427,9 +427,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},4099" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4099" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},4099" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4099" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Go to template source]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -694,7 +694,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17297.1]]></Val>
+        <Val><![CDATA[3.0.17306.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -730,7 +730,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17297.1]]></Val>
+        <Val><![CDATA[3.0.17306.2]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
