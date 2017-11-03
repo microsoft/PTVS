@@ -31,8 +31,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private readonly List<AstAnalysisFunctionWalker> _postWalkers;
 
-        private IMember _noneInst;
-
         private readonly AnalysisLogWriter _log;
 
         public AstAnalysisWalker(
@@ -57,7 +55,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 includeLocationInfo,
                 log: warnAboutUndefinedValues ? _log : null
             );
-            _noneInst = new AstPythonConstant(_interpreter.GetBuiltinType(BuiltinTypeId.NoneType));
             _postWalkers = new List<AstAnalysisFunctionWalker>();
             WarnAboutUndefinedValues = warnAboutUndefinedValues;
         }
@@ -69,6 +66,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private PythonAst _ast => _scope.Ast;
         private string _filePath => _scope.FilePath;
         public NameLookupContext Scope => _scope;
+        private IPythonType _unknownType => _scope._unknownType;
 
         public override bool Walk(PythonAst node) {
             if (_ast != node) {
@@ -185,10 +183,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     // Ensure child modules have been loaded
                     mod.GetChildrenModules();
                     foreach (var member in mod.GetMemberNames(_scope.Context)) {
-                        var mem = mod.GetMember(_scope.Context, member) ?? new AstPythonConstant(
-                            _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                            mod.Locations.ToArray()
-                        );
+                        var mem = mod.GetMember(_scope.Context, member) ?? 
+                            new AstPythonConstant(_unknownType, mod.Locations.ToArray());
                         if (mem.MemberType == PythonMemberType.Unknown && WarnAboutUndefinedValues) {
                             _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, name);
                         }
@@ -198,10 +194,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 } else {
                     IMember mem;
                     if (mod.IsLoaded) {
-                        mem = mod.GetMember(_scope.Context, name.Key) ?? new AstPythonConstant(
-                            _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
-                            GetLoc(name.Value)
-                        );
+                        mem = mod.GetMember(_scope.Context, name.Key) ??
+                            new AstPythonConstant(_unknownType, GetLoc(name.Value));
                         if (mem.MemberType == PythonMemberType.Unknown && WarnAboutUndefinedValues) {
                             _log?.Log(TraceLevel.Warning, "UndefinedImport", modName, name);
                         }

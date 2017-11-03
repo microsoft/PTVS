@@ -111,7 +111,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                             } else if (Directory.Exists(searchPath)) {
                                 mod = LoadModuleFromDirectory(searchPath, name);
                             }
-                        } catch (ArgumentException) {
+                        } catch (ArgumentException ex) {
+                            Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                             return null;
                         }
 
@@ -125,7 +126,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private PythonTypeDatabase EnsureSearchPathDB() {
-            lock (_searchPathDb) {
+            lock (_searchPathDbLock) {
                 if (_searchPathDb == null) {
                     _searchPathDb = new PythonTypeDatabase(_factory, innerDatabase: _typeDb);
                 }

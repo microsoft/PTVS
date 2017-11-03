@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.PyAnalysis {
+namespace Microsoft.PythonTools.Analysis {
     internal interface IKnownPythonTypes {
         IPythonType this[BuiltinTypeId id] { get; }
     }
