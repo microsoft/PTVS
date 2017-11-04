@@ -1996,9 +1996,9 @@
     <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" Path=" \ ;Managed Resources \ 0 \ 0" />
     <Item ItemId=";Menus.ctmenu" ItemType="0" PsrId="240" Leaf="false">
       <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},12289" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},12289" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},12289" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},12289" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[S&et as Startup File]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2007,7 +2007,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},12289" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},12289" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Set Python Startup File]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2016,7 +2016,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},12289" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},12289" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Sets the selected file as the startup file.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2026,9 +2026,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16386" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16386" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16386" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16386" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Add Folder to Search &Path...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2037,7 +2037,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16386" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16386" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Search Path Folder]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2046,7 +2046,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16386" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16386" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Adds a folder to the search path.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2056,9 +2056,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16387" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16387" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16387" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16387" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Add &Zip Archive to Search Path...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2067,7 +2067,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16387" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16387" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Search Path Zip]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2076,7 +2076,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16387" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16387" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Adds a .zip or .egg file to the search path.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2086,9 +2086,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16388" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16388" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16388" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16388" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Start without Debugging]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2097,7 +2097,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16388" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16388" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Start Without Debugging]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2106,7 +2106,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16388" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16388" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Starts executing this file without debugging.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2116,9 +2116,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16389" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16389" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16389" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16389" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Start with &Debugging]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2127,7 +2127,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16389" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16389" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Start With Debugging]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2136,7 +2136,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16389" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16389" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Starts executing this file with debugging.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2146,9 +2146,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16390" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16390" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16390" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16390" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Add/Remove Python &Environments...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2157,7 +2157,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16390" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16390" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Remove Environments]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2166,7 +2166,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16390" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16390" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Allows Python environments to be added or removed from this project.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2176,9 +2176,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16391" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16391" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16391" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16391" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Add &Virtual Environment...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2187,7 +2187,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16391" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16391" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Virtual Environment]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2196,7 +2196,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16391" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16391" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Adds a new or existing virtual environment to this project.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2206,9 +2206,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16392" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16392" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16392" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16392" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Add Existing &Virtual Environment...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2217,7 +2217,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16392" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16392" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Existing Virtual Environment]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2226,7 +2226,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16392" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16392" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Browses for an existing virtual environment to add to this project.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2236,9 +2236,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16393" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16393" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16393" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16393" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Activate Environment]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2247,7 +2247,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16393" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16393" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Activate Environment]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2256,7 +2256,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16393" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16393" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Makes this environment the active environment for the project.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2266,9 +2266,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16394" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16394" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16394" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16394" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Install Python Package...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2277,7 +2277,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16394" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16394" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Install Package]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2286,7 +2286,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16394" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16394" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Installs a package into this environment.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2296,9 +2296,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16395" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16395" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16395" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16395" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Vie&w All Python Environments]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2307,7 +2307,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16395" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16395" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[View Environments]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2316,7 +2316,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16395" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16395" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open the Python Environments window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2326,9 +2326,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16396" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16396" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16396" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16396" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Show &C++ View Nodes]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2337,7 +2337,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16396" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16396" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Show Cpp View Nodes]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2346,7 +2346,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16396" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16396" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Enable C++ view of objects when in Python frames.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2356,9 +2356,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16397" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16397" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16397" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16397" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Show &Python View Nodes]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2367,7 +2367,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16397" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16397" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Show Python View Nodes]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2376,7 +2376,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16397" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16397" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Enable Python view of objects when in C++ frames.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2386,9 +2386,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16398" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16398" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16398" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16398" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Show &Native Python Frames]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2397,7 +2397,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16398" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16398" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Show Native Python Frames]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2406,7 +2406,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16398" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16398" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Enable native Python stack frames.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2416,9 +2416,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16399" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16399" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16399" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16399" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Use Python &Stepping]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2427,7 +2427,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16399" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16399" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Use Python Stepping]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2436,7 +2436,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16399" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16399" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Enable Python semantics for code stepping.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2446,9 +2446,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16400" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16400" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16400" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16400" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Custom Commands]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2458,9 +2458,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16432" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16432" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16432" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16432" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Add P&YTHONPATH to Search Path]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2469,7 +2469,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16432" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16432" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Search Path PYTHONPATH]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2478,7 +2478,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16432" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16432" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Adds the current global value of PYTHONPATH to the search path.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2488,9 +2488,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16433" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16433" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16433" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16433" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Open I&nteractive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2499,7 +2499,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16433" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16433" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Interactive]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2508,7 +2508,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16433" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16433" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens an interactive window for this environment.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2518,9 +2518,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16434" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16434" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16434" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16434" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Attach Debugger (&Python)]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2529,7 +2529,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16434" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16434" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Attach Debugger To Web Site]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2538,7 +2538,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16434" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16434" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Attach the Python debugger to the remote Microsoft Azure App Service site]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2548,9 +2548,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16435" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16435" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16435" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16435" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Ins&tall from requirements.txt]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2559,7 +2559,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16435" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16435" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Install RequirementsTxt]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2568,7 +2568,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16435" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16435" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Installs packages listed in requirements.txt into this environment.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2578,9 +2578,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16436" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16436" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16436" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16436" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Generate requirements.txt]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2589,7 +2589,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16436" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16436" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Generate RequirementsTxt]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2598,7 +2598,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16436" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16436" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Generates or updates a requirements.txt file listing the packages in this environment.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2608,9 +2608,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16437" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16437" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16437" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16437" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open module in editor]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2619,7 +2619,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16437" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16437" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Interactive Scope In Editor]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2628,7 +2628,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16437" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16437" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens the current module in the editor]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2638,9 +2638,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16438" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16438" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16438" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16438" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Ins&tall Project Requirements]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2649,7 +2649,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16438" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16438" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Install Project Requirements]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2658,7 +2658,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16438" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16438" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Installs project requirements.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2668,9 +2668,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16448" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16448" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16448" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16448" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Python products and information]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2679,7 +2679,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16448" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16448" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Python Products Site]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2688,7 +2688,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16448" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16448" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens a web site to help you discover Python-related products and information from Microsoft.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2698,9 +2698,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16449" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16449" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16449" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16449" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Issues and suggestions]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2709,7 +2709,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16449" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16449" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Support Site]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2718,7 +2718,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16449" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16449" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens a web site where you can report issues and suggestions for Python support in Visual Studio.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2728,9 +2728,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16450" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16450" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16450" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16450" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Microsoft &Data products]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2739,7 +2739,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16450" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16450" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Data Products Site]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2748,7 +2748,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16450" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},16450" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens a web site to help you discover data-related products from Microsoft.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2758,9 +2758,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},20480" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},20480" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},20480" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},20480" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Combo Box">
             <Val><![CDATA[Module: ]]></Val>
             <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
@@ -2769,7 +2769,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},20480" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},20480" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Combo Box">
             <Val><![CDATA[Interactive Scope]]></Val>
             <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
@@ -2778,7 +2778,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},20480" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},20480" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Combo Box">
             <Val><![CDATA[Selects the current module scope that the interactive window is using.]]></Val>
             <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
@@ -2788,9 +2788,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},20482" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},20482" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},20482" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},20482" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Combo Box">
             <Val><![CDATA[Environment:]]></Val>
             <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
@@ -2799,7 +2799,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},20482" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},20482" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Combo Box">
             <Val><![CDATA[Interactive Environment]]></Val>
             <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
@@ -2808,7 +2808,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},20482" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},20482" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Combo Box">
             <Val><![CDATA[Select the environment to execute against.]]></Val>
             <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
@@ -2818,9 +2818,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},258" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},258" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},258" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},258" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Execute File in Python &Interactive]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2829,7 +2829,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},258" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},258" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Execute In Interactive]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2838,7 +2838,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},258" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},258" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Execute File in Python Interactive]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2848,9 +2848,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},259" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},259" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},259" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},259" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Send to &Interactive]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2859,7 +2859,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},259" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},259" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Send Selection To Interactive]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2868,7 +2868,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},259" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},259" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Sends the current editor selection to a Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2878,9 +2878,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},261" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},261" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},261" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},261" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Fill Comment Paragraph]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2889,7 +2889,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},261" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},261" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Fill Comment Paragraph]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2898,7 +2898,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},261" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},261" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Reflows the selected paragraph to adjust its width.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2908,9 +2908,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},262" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},262" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},262" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},262" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Diagnostic Info...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2919,7 +2919,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},262" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},262" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Diagnostic Info]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2928,7 +2928,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},262" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},262" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Displays detailed diagnostic information.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2938,9 +2938,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},263" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},263" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},263" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},263" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&All Scopes]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2949,7 +2949,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},263" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},263" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[All Scopes]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2958,7 +2958,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},263" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},263" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Remove unused imports in all scopes.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2968,9 +2968,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},264" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},264" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},264" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},264" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Current &Scope]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -2979,7 +2979,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},264" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},264" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Current Scope]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2988,7 +2988,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},264" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},264" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Remove unused imports in the current scope.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -2998,18 +2998,18 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},265" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},265" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},265" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},265" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Rename...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Renommer...]]></Val>
+              <Val><![CDATA[Reno&mmer...]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},265" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},265" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Refactor Rename]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3018,7 +3018,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},265" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},265" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Rename...]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3028,9 +3028,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},266" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},266" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},266" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},266" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Extract &Method...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3039,7 +3039,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},266" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},266" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Refactor Extract Method]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3048,7 +3048,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},266" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},266" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Extract Method...]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3058,9 +3058,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},269" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},269" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},269" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},269" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Import Existing &Project...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3069,7 +3069,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},269" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},269" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Import Existing Project]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3078,7 +3078,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},269" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},269" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Starts the New Project from Existing Code wizard.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3088,18 +3088,18 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},271" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},271" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Import coverage.py XML file...]]></Val>
-            <Tgt Cat="Button" IgnoreHK="true" Stat="Update" Orig="New">
-              <Val><![CDATA[&Importer le fichier de couverture...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[&Importer le fichier XML coverage.py...]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},271" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Import Coverage]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3108,19 +3108,19 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},271" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Imports an XML file produced by coverage.py.]]></Val>
-            <Tgt Cat="Button" Stat="Update" Orig="New">
-              <Val><![CDATA[Importe un fichier coverage.xml produit par coverage.py.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Importe un fichier XML produit par coverage.py.]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},513" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},513" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},513" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},513" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Interactive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3129,7 +3129,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},513" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},513" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Interactive Open]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3138,7 +3138,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},513" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},513" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3148,9 +3148,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},514" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},514" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},514" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},514" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[New Window]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3159,7 +3159,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},514" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},514" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[New Interactive]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3168,7 +3168,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},514" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},514" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Create a new interactive window]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3178,9 +3178,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},528" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},528" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},528" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},528" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Debug Interactive]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3189,7 +3189,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},528" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},528" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Debug Interactive]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3198,7 +3198,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},528" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},528" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Debug Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3208,9 +3208,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},544" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},544" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},544" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},544" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Python &Environments]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3219,7 +3219,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},544" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},544" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[View All Environments]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3228,7 +3228,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},544" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},544" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[View all Python environments.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3238,9 +3238,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65537" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65537" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65537" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65537" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Existing &Folder...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3249,7 +3249,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65537" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65537" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Add Existing Folder]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3258,7 +3258,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65537" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65537" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Adds a folder, its files and subdirectories to this project.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3268,9 +3268,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65538" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65538" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Open Command &Prompt Here...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3279,16 +3279,16 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65538" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Command Prompt Here]]></Val>
-            <Tgt Cat="Button" Stat="Update" Orig="New">
-              <Val><![CDATA[.Python.Ouvrir l'invite de commandes ici]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[Ouvrir l'invite de commandes ici]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65538" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Opens Command Prompt at the selected file or directory.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3298,9 +3298,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65539" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65539" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65539" ItemType=";Button" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65539" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Copy F&ull Path]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3309,7 +3309,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65539" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65539" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Copy Full Path]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3318,7 +3318,7 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65539" ItemType=";Tooltip" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},65539" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Copies the full path of the selected item to the clipboard.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
@@ -3328,9 +3328,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8192" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8192" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8192" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8192" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item" IgnoreHK="true">
             <Val><![CDATA[P&ython]]></Val>
             <Tgt Cat="Menu Item" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3340,9 +3340,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8193" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8193" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8193" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8193" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item" IgnoreHK="true">
             <Val><![CDATA[&Python]]></Val>
             <Tgt Cat="Menu Item" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3352,9 +3352,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8194" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8194" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8194" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8194" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item" IgnoreHK="true">
             <Val><![CDATA[Rem&ove Imports]]></Val>
             <Tgt Cat="Menu Item" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3364,9 +3364,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8195" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8195" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8195" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8195" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item" IgnoreHK="true">
             <Val><![CDATA[&Refactor]]></Val>
             <Tgt Cat="Menu Item" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3376,9 +3376,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8196" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8196" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8196" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8196" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item" IgnoreHK="true">
             <Val><![CDATA[&Python]]></Val>
             <Tgt Cat="Menu Item" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3388,9 +3388,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8197" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8197" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8197" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8197" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item" IgnoreHK="true">
             <Val><![CDATA[&Python]]></Val>
             <Tgt Cat="Menu Item" IgnoreHK="true" Stat="Loc" Orig="New">
@@ -3400,9 +3400,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8198" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8198" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8198" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8198" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Python Environments]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
@@ -3412,9 +3412,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8199" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8199" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8199" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8199" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Python Environment]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
@@ -3424,9 +3424,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8200" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8200" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8200" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8200" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Installed Package]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
@@ -3436,9 +3436,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8201" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8201" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8201" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8201" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Search Paths]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
@@ -3448,9 +3448,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8202" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8202" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8202" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8202" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Search Path]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
@@ -3460,9 +3460,9 @@
           <Disp Icon="Str" Expand="true" />
         </Item>
       </Item>
-      <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8203" ItemType="0" PsrId="240" Leaf="false">
+      <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8203" ItemType="0" PsrId="240" Leaf="false">
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
-        <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},8203" ItemType=";Menu" PsrId="240" Leaf="true">
+        <Item ItemId=";{5b3281a5-d037-4e84-93aa-a6819304dbd9},8203" ItemType=";Menu" PsrId="240" Leaf="true">
           <Str Cat="Menu Item">
             <Val><![CDATA[Python Interactive Window]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
@@ -6583,7 +6583,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17306.2]]></Val>
+        <Val><![CDATA[3.0.17307.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -6619,7 +6619,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17306.2]]></Val>
+        <Val><![CDATA[3.0.17307.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
