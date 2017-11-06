@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             var companies = GetSubkeys(root);
-            foreach (var company in companies) {
+            foreach (var company in companies.MaybeEnumerate()) {
                 if ("PyLauncher".Equals(company, StringComparison.OrdinalIgnoreCase)) {
                     continue;
                 }
@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     var tags = GetSubkeys(companyKey);
-                    foreach (var tag in tags) {
+                    foreach (var tag in tags.MaybeEnumerate()) {
                         using (var tagKey = companyKey.OpenSubKey(tag))
                         using (var installKey = tagKey?.OpenSubKey("InstallPath")) {
                             var config = TryReadConfiguration(company, tag, tagKey, installKey, pythonCore, assumedArch);
@@ -234,6 +234,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private static IList<string> GetSubkeys(RegistryKey key) {
             string[] subKeyNames = null;
+            int delay = 10;
             for (int retries = 5; subKeyNames == null && retries > 0; --retries) {
                 try {
                     subKeyNames = key.GetSubKeyNames();
@@ -242,7 +243,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     // short period to settle down and try again.
                     // We are almost certainly being called from a background
                     // thread, so sleeping here is fine.
-                    Thread.Sleep(100);
+                    Thread.Sleep(delay);
+                    delay *= 5;
                 }
             }
             return subKeyNames;
