@@ -215,7 +215,6 @@ class JupyterClientBackend(ReplBackend):
         self.__lock = threading.RLock()
         self.__status = 'idle'
         self.__msg_buffer = []
-        self.__execution_count = 0
         self.__cmd_buffer = [EXEC_HELPERS_COMMAND]
         self.__on_reply = {}
         self.__suppress_io = set()
@@ -225,8 +224,12 @@ class JupyterClientBackend(ReplBackend):
         try:
             return self._execution_loop()
         except:
+            # TODO: Better fatal error handling
             traceback.print_exc()
-            input()
+            try:
+                raw_input()
+            except NameError():
+                input()
             raise
 
     def _execution_loop(self):
@@ -362,8 +365,12 @@ class JupyterClientBackend(ReplBackend):
         except KeyboardInterrupt:
             self.exit_process()
         except:
+            # TODO: Better fatal error handling
             traceback.print_exc()
-            input()
+            try:
+                raw_input()
+            except NameError():
+                input()
             self.exit_process()
 
     def __iopub_threadproc(self, client):
@@ -396,8 +403,12 @@ class JupyterClientBackend(ReplBackend):
         except KeyboardInterrupt:
             self.exit_process()
         except:
+            # TODO: Better fatal error handling
             traceback.print_exc()
-            input()
+            try:
+                raw_input()
+            except NameError():
+                input()
             self.exit_process()
 
     def __write_stream(self, content):
@@ -471,8 +482,4 @@ class JupyterClientBackend(ReplBackend):
                 return
             except:
                 pass
-
-if __name__ == '__main__':
-    b = JupyterClientBackend()
-    b.execution_loop()
 
