@@ -67,7 +67,7 @@ except NameError:
     # BaseException not defined until Python 2.5
     BaseException = Exception
 
-DEBUG = os.environ.get('DEBUG_REPL') is not None
+DEBUG = os.environ.get('DEBUG_REPL') or os.environ.get('_PTVS_DEBUG_REPL')
 
 __all__ = ['ReplBackend', 'BasicReplBackend', 'BACKEND']
 
@@ -254,47 +254,67 @@ actual inspection and introspection."""
         """gets the list of members available for the given expression"""
         expression = read_string(self.conn)
         try:
-            name, inst_members, type_members = self.get_members(expression)
+            resp = self.get_members(expression)
         except:
             with self.send_lock:
                 write_bytes(self.conn, ReplBackend._MERR)
             _debug_write('error in eval')
             _debug_write(traceback.format_exc())
         else:
-            with self.send_lock:
-                write_bytes(self.conn, ReplBackend._MRES)
-                write_string(self.conn, name)
-                self._write_member_dict(inst_members)
-                self._write_member_dict(type_members)
+            if hasattr(resp, '__call__'):
+                resp(self._send_mres, self._send_merr)
+            else:
+                self._send_mres(*resp)
+
+    def _send_mres(self, name, inst_members, type_members):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._MRES)
+            write_string(self.conn, name)
+            self._write_member_dict(inst_members)
+            self._write_member_dict(type_members)
+
+    def _send_merr(self):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._MERR)
 
     def _cmd_sigs(self):
         """gets the signatures for the given expression"""
         expression = read_string(self.conn)
         try:
-            sigs = self.get_signatures(expression)
+            resp = self.get_signatures(expression)
         except:
             with self.send_lock:
                 write_bytes(self.conn, ReplBackend._SERR)
             _debug_write('error in eval')
             _debug_write(traceback.format_exc())
         else:
-            with self.send_lock:
-                write_bytes(self.conn, ReplBackend._SRES)
-                # single overload
-                write_int(self.conn, len(sigs))
-                for doc, args, vargs, varkw, defaults in sigs:
-                    # write overload
-                    write_string(self.conn, (doc or '')[:4096])
-                    arg_count = len(args) + (vargs is not None) + (varkw is not None)
-                    write_int(self.conn, arg_count)
+            if hasattr(resp, '__call__'):
+                resp(self._send_sres, self._send_serr)
+            else:
+                self._send_sres(resp)
 
-                    def_values = [''] * (len(args) - len(defaults)) + ['=' + d for d in defaults]
-                    for arg, def_value in zip(args, def_values):
-                        write_string(self.conn, (arg or '') + def_value)
-                    if vargs is not None:
-                        write_string(self.conn, '*' + vargs)
-                    if varkw is not None:
-                        write_string(self.conn, '**' + varkw)
+    def _send_sres(self, sigs):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._SRES)
+            # single overload
+            write_int(self.conn, len(sigs))
+            for doc, args, vargs, varkw, defaults in sigs:
+                # write overload
+                write_string(self.conn, (doc or '')[:4096])
+                arg_count = len(args) + (vargs is not None) + (varkw is not None)
+                write_int(self.conn, arg_count)
+
+                def_values = [''] * (len(args) - len(defaults)) + ['=' + d for d in defaults]
+                for arg, def_value in zip(args, def_values):
+                    write_string(self.conn, (arg or '') + def_value)
+                if vargs is not None:
+                    write_string(self.conn, '*' + vargs)
+                if varkw is not None:
+                    write_string(self.conn, '**' + varkw)
+
+    def _send_serr(self):
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._SERR)
 
     def _cmd_setm(self):
         global exec_mod
@@ -467,7 +487,9 @@ actual inspection and introspection."""
         raise NotImplementedError
 
     def get_members(self, expression):
-        """returns a tuple of the type name, instance members, and type members"""
+        """returns a tuple of the type name, instance members, and type members, or
+        a callable taking a callback function that can be passed the three tuple
+        arguments later."""
         raise NotImplementedError
 
     def get_signatures(self, expression):

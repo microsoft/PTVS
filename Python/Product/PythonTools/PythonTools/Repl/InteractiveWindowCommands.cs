@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
@@ -140,4 +141,23 @@ namespace Microsoft.PythonTools.Repl {
             return ExecutionResult.Success;
         }
     }
+
+#if DEBUG
+    [Export(typeof(IInteractiveWindowCommand))]
+    [ContentType(PythonCoreConstants.ContentType)]
+    class InteractiveDebugCommand : IInteractiveWindowCommand {
+        public string Description => "Enables debug mode for the REPL window";
+        public string CommandLine => "";
+        public IEnumerable<string> DetailedDescription => Enumerable.Repeat(Description, 1);
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription => Enumerable.Empty<KeyValuePair<string, string>>();
+        public IEnumerable<string> Names => Enumerable.Repeat("debugrepl", 1);
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) => Enumerable.Empty<ClassificationSpan>();
+
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
+            System.Environment.SetEnvironmentVariable("_PTVS_DEBUG_REPL", "1");
+            window.WriteLine("You will need to reset this window.");
+            return ExecutionResult.Succeeded;
+        }
+    }
+#endif
 }
