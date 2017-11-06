@@ -442,8 +442,8 @@
       <Item ItemId=";PythonFilesFilter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python files (*.py;*.pyw;*.pyi)|*.py;*.pyw;*.pyi|All Files (*.*)|*.*]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Python 文件(*.py;*.pyw)|*.py;*.pyw|所有文件(*.*)|*.*]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 文件(*.py;*.pyw;*.pyi)|*.py;*.pyw;*.pyi|所有文件(*.*)|*.*]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*]]></Val>
