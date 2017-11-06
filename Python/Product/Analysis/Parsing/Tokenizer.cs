@@ -2699,7 +2699,7 @@ namespace Microsoft.PythonTools.Parsing {
             return new SourceLocation(index, match + 2, index - lineLocations[match].EndIndex + 1);
         }
 
-        public static int LocationToIndex(NewLineLocation[] lineLocations, SourceLocation location) {
+        public static int LocationToIndex(NewLineLocation[] lineLocations, SourceLocation location, int endIndex) {
             if (lineLocations == null) {
                 return 0;
             }
@@ -2720,7 +2720,8 @@ namespace Microsoft.PythonTools.Parsing {
             if (line < lineLocations.Length && location.Column >= (lineLocations[line].EndIndex - index)) {
                 return lineLocations[line].EndIndex;
             }
-            return checked(index + location.Column - 1);
+
+            return (int)Math.Min((long)index + location.Column - 1, endIndex);
         }
     }
 
