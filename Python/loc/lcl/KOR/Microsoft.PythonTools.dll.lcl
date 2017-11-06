@@ -3850,8 +3850,8 @@
       <Item ItemId=";128" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Files;*.py,*.pyw,*.pyi]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Python 파일,*.py,*.pyw]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 파일,*.py,*.pyw,*.pyi]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Python Files;*.py,*.pyw]]></Val>
