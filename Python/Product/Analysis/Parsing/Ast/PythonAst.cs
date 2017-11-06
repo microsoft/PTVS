@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public int LocationToIndex(SourceLocation location) {
-            return NewLineLocation.LocationToIndex(_lineLocations, location);
+            return NewLineLocation.LocationToIndex(_lineLocations, location, EndIndex);
         }
 
         /// <summary>

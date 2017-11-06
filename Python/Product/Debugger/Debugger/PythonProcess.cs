@@ -492,14 +492,9 @@ namespace Microsoft.PythonTools.Debugger {
             var ast = GetAst(filename);
             int len = 0;
             if (ast != null) {
-                try {
-                    int start = ast.LocationToIndex(new SourceLocation(line, 1));
-                    int end = ast.LocationToIndex(new SourceLocation(line, int.MaxValue));
-                    len = end - start;
-                } catch (OverflowException) {
-                    // This happens when we request the end of the last line
-                    len = 0;
-                }
+                int start = ast.LocationToIndex(new SourceLocation(line, 1));
+                int end = ast.LocationToIndex(new SourceLocation(line, int.MaxValue));
+                len = end - start;
             }
 
             return new SourceSpan(new SourceLocation(line, 1), new SourceLocation(line, Math.Max(0, len) + 1));
