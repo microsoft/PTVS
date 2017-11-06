@@ -2497,6 +2497,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static async Task<ExpressionAtPoint> GetExpressionAtPointAsync_BypassTelemetry(SnapshotPoint point, AP.ExpressionAtPointPurpose purpose, TimeSpan timeout) {
             var bi = PythonTextBufferInfo.TryGetForBuffer(point.Snapshot.TextBuffer);
+            if (bi == null) {
+                return null;
+            }
+
             var line = point.GetContainingLine();
 
             var sourceSpan = await GetExpressionSpanAtPointAsync_BypassTelemetry(
@@ -2525,6 +2529,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static async Task<SourceSpan?> GetExpressionSpanAtPointAsync_BypassTelemetry(PythonTextBufferInfo buffer, SourceLocation point, AP.ExpressionAtPointPurpose purpose, TimeSpan timeout) {
+            if (buffer == null) {
+                throw new ArgumentNullException(nameof(buffer));
+            }
+
             if (buffer.AnalysisEntry == null) {
                 return null;
             }
