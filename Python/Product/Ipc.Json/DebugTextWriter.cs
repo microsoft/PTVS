@@ -14,48 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 
 namespace Microsoft.PythonTools.Ipc.Json {
-    public class DebugTextWriter : StreamWriter {
-        public DebugTextWriter() : base(new DebugStream(), Encoding.UTF8, 1024) {
-        }
-    }
-
-    class DebugStream : Stream {
-        public override bool CanRead => false;
-
-        public override bool CanSeek => false;
-
-        public override bool CanWrite => true;
-
-        public override long Length => throw new NotImplementedException();
-
-        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public override void Flush() {
+    public class DebugTextWriter : TextWriter {
+        public override Encoding Encoding => Encoding.UTF8;
+        public override void Write(char value) {
+            // Technically this is the only Write/WriteLine overload we need to
+            // implement. We override the string versions for better performance.
+            Debug.Write(value);
         }
 
-        public override int Read(byte[] buffer, int offset, int count) {
-            throw new NotImplementedException();
+        public override void Write(string value) {
+            Debug.Write(value);
         }
 
-        public override long Seek(long offset, SeekOrigin origin) {
-            throw new NotImplementedException();
-        }
-
-        public override void SetLength(long value) {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count) {
-#if DEBUG
-            var text = UTF8Encoding.UTF8.GetChars(buffer, offset, count);
-            Debug.Write(new string(text));
-#endif
+        public override void WriteLine(string value) {
+            Debug.WriteLine(value);
         }
     }
 }
