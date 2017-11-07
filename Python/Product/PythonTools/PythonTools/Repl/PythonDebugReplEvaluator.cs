@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IServiceProvider _serviceProvider;
         private IInteractiveWindowCommands _commands;
 
-        // This filename is used 
+        // This filename is used for when we do not have a process
         private readonly string _analyzerFilename;
 
         private static readonly string currentPrefix = Strings.DebugReplCurrentIndicator;
