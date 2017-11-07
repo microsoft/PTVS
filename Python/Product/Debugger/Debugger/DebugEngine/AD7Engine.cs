@@ -345,7 +345,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         query += "&" + DebugOptionsKey + "=" + _debugOptions;
                         uriBuilder.Query = query;
 
-                        _process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteProcess.AttachAsync(uriBuilder.Uri, true, ct));
+                        _process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteProcess.AttachAsync(uriBuilder.Uri, true, null, ct));
                     } else {
                         _process = PythonProcess.Attach(processId, _debugOptions);
                     }
@@ -743,7 +743,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _attached = true;
                 _pseudoAttach = true;
             } else {
-                _process = new PythonProcess(_languageVersion, exe, args, dir, env, _interpreterOptions, _debugOptions, _dirMapping);
+                _process = new PythonProcess(_languageVersion, exe, args, dir, env, _interpreterOptions, _debugOptions, dirMapping: _dirMapping);
             }
 
             if (!_debugOptions.HasFlag(PythonDebugOptions.AttachRunning)) {

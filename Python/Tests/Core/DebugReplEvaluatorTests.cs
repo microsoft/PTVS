@@ -369,7 +369,7 @@ NameError: name 'does_not_exist' is not defined
 
         private async Task AttachAsync(string filename, int lineNo) {
             var debugger = new PythonDebugger();
-            PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, async (newproc, newthread) => {
+            PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, null, async (newproc, newthread) => {
                 var breakPoint = newproc.AddBreakpointByFileExtension(lineNo, filename);
                 await breakPoint.AddAsync(TimeoutToken());
             });

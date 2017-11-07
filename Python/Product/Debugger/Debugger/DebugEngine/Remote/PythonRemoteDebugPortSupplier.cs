@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
@@ -33,6 +34,8 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         public const string PortSupplierId = "{FEB76325-D127-4E02-B59D-B16D93D46CF5}";
         public static readonly Guid PortSupplierGuid = new Guid(PortSupplierId);
         private readonly List<IDebugPort2> _ports = new List<IDebugPort2>();
+
+        internal static TextWriter DebugLog { get; set; }
 
         // Qualifier for our transport has one of the following formats:
         //
@@ -71,7 +74,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 return validationError.HResult;
             }
 
-            var port = new PythonRemoteDebugPort(this, pRequest, uri);
+            var port = new PythonRemoteDebugPort(this, pRequest, uri, DebugLog);
 
             // Validate connection early. Debugger automation (DTE) objects are not consistent in error checking from this
             // point on, so errors reported from EnumProcesses and further calls may be ignored and treated as successes

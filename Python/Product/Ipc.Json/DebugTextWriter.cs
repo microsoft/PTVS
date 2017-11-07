@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,17 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Diagnostics;
 using System.IO;
-using Microsoft.PythonTools.Parsing;
+using System.Text;
 
-namespace Microsoft.PythonTools.Debugger {
-    class PythonDebugger {
-        /// <summary>
-        /// Creates a new PythonProcess object for debugging.  The process does not start until Start is called 
-        /// on the returned PythonProcess object.
-        /// </summary>
-        public PythonProcess CreateProcess(PythonLanguageVersion langVersion, string exe, string args, string dir, string env, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, TextWriter debugLog = null) {
-            return new PythonProcess(langVersion, exe, args, dir, env, interpreterOptions, debugOptions, debugLog);
+namespace Microsoft.PythonTools.Ipc.Json {
+    public class DebugTextWriter : TextWriter {
+        public override Encoding Encoding => Encoding.UTF8;
+        public override void Write(char value) {
+            // Technically this is the only Write/WriteLine overload we need to
+            // implement. We override the string versions for better performance.
+            Debug.Write(value);
+        }
+
+        public override void Write(string value) {
+            Debug.Write(value);
+        }
+
+        public override void WriteLine(string value) {
+            Debug.WriteLine(value);
         }
     }
 }

@@ -23,16 +23,36 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace DebuggerTests {
-    public class BaseDebuggerTests {
+    public abstract class BaseDebuggerTests {
         static BaseDebuggerTests() {
             AssertListener.Initialize();
         }
+
+        public TestContext TestContext { get; set; }
+
+        // Change this to null to avoid capturing debug log, and print directly to Debug.Write
+        protected StringWriter DebugLog = new StringWriter();
+
+        [TestInitialize]
+        public void Initialize() {
+            DebugConnectionListener.DebugLog = DebugLog;
+            PythonRemoteDebugPortSupplier.DebugLog = DebugLog;
+        }
+
+        [TestCleanup]
+        public void TearDown() {
+            if (TestContext.CurrentTestOutcome != UnitTestOutcome.Passed && DebugLog != null) {
+                Debug.WriteLine("Debug log:");
+                Debug.WriteLine(DebugLog.ToString());
+            }
+        }
+
 
         protected const int DefaultWaitForExitTimeout = 20000;
 
@@ -181,7 +201,7 @@ namespace DebuggerTests {
         }
 
         internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Func<PythonProcess, PythonThread, Task> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
-            return debugger.DebugProcess(Version, filename, onLoaded, resumeOnProcessLoaded, interpreterOptions, debugOptions, cwd, arguments);
+            return debugger.DebugProcess(Version, filename, DebugLog, onLoaded, resumeOnProcessLoaded, interpreterOptions, debugOptions, cwd, arguments);
         }
 
         internal class BreakpointTest {
@@ -546,7 +566,7 @@ namespace DebuggerTests {
 
             string fullPath = Path.GetFullPath(filename);
             string dir = Path.GetDirectoryName(filename);
-            var process = debugger.CreateProcess(Version.Version, Version.InterpreterPath, "\"" + fullPath + "\" " + (arguments ?? ""), dir, "", null, options);
+            var process = debugger.CreateProcess(Version.Version, Version.InterpreterPath, "\"" + fullPath + "\" " + (arguments ?? ""), dir, "", null, options, DebugLog);
             try {
                 PythonThread thread = null;
                 process.ThreadCreated += (sender, args) => {

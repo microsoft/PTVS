@@ -479,13 +479,13 @@ namespace DebuggerTests {
                 for (int i = 0; i < 20; i++) {
                     Thread.Sleep(50);
 
-                    Debug.WriteLine(String.Format("Breaking {0}", i));
+                    DebugLog?.WriteLine(String.Format("Breaking {0}", i));
                     await process.BreakAsync(TimeoutToken());
                     if (!breakComplete.WaitOne(10000)) {
                         Console.WriteLine("Failed to break");
                     }
                     await process.ResumeAsync(TimeoutToken());
-                    Debug.WriteLine(String.Format("Resumed {0}", i));
+                    DebugLog?.WriteLine(String.Format("Resumed {0}", i));
                 }
             } finally {
                 TerminateProcess(process);
@@ -1044,7 +1044,8 @@ namespace DebuggerTests {
                     "\"" + fullPath + "\"",
                     DebuggerTestPath,
                     "",
-                    debugOptions: steppingStdLib ? (PythonDebugOptions.DebugStdLib | PythonDebugOptions.RedirectOutput) : PythonDebugOptions.RedirectOutput);
+                    debugOptions: steppingStdLib ? (PythonDebugOptions.DebugStdLib | PythonDebugOptions.RedirectOutput) : PythonDebugOptions.RedirectOutput,
+                    debugLog: DebugLog);
 
                 PythonThread thread = null;
                 process.ThreadCreated += (sender, args) => {
@@ -1089,7 +1090,7 @@ namespace DebuggerTests {
                     AssertWaited(processEvent);
                     Assert.IsTrue(stepComplete, "step was not completed");
 
-                    Debug.WriteLine(thread.Frames[thread.Frames.Count - 1].FileName);
+                    DebugLog?.WriteLine(thread.Frames[thread.Frames.Count - 1].FileName);
 
                     if (steppingStdLib) {
                         Assert.IsTrue(thread.Frames[0].FileName.EndsWith("\\os.py"), "did not break in os.py; instead, " + thread.Frames[0].FileName);
@@ -2087,7 +2088,7 @@ namespace DebuggerTests {
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
 
             PythonProcessRunInfo processRunInfo = new PythonProcessRunInfo();
-            processRunInfo.Process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
+            processRunInfo.Process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions, DebugLog);
             processRunInfo.Process.ProcessLoaded += async (sender, args) => {
                 try {
                     if (onLoaded != null) {

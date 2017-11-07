@@ -80,7 +80,7 @@ namespace DebuggerTests {
                         Assert.Fail("Process exited");
                     }
 
-                    var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                     try {
                         var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                         var readyToContinue = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -103,7 +103,7 @@ namespace DebuggerTests {
                         proc.BreakpointHit += async (sender, args) => {
                             if (args.Breakpoint.LineNo == 9) {
                                 // stop running the infinite loop
-                                Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
+                                DebugLog?.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
                                 mainThread = args.Thread;
                                 await args.Thread.Frames[0].ExecuteTextAsync(
                                     "x = False",
@@ -111,12 +111,12 @@ namespace DebuggerTests {
                                     TimeoutToken());
                             } else if (args.Breakpoint.LineNo == 5) {
                                 // we hit the breakpoint on the new thread
-                                Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
+                                DebugLog?.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
                                 bpThread = args.Thread;
                                 threadBreakpointHit.TrySetResult(true);
                                 await proc.ResumeAsync(TimeoutToken());
                             } else {
-                                Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
+                                DebugLog?.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
                                 wrongLine = true;
                                 attached.TrySetResult(true);
                                 threadBreakpointHit.TrySetResult(true);
@@ -157,7 +157,7 @@ namespace DebuggerTests {
                         var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                         var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                        var proc = PythonProcess.Attach(p.Id);
+                        var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
 
                         proc.ProcessLoaded += (sender, args) => {
                             attached.SetResult(true);
@@ -202,7 +202,7 @@ namespace DebuggerTests {
 
                     var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                    var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                     try {
                         proc.ProcessLoaded += (sender, args) => {
                             attached.SetResult(true);
@@ -211,7 +211,7 @@ namespace DebuggerTests {
 
                         await attached.Task.WithTimeout(10000, "Failed to attach within 10s");
                         await proc.ResumeAsync(TimeoutToken());
-                        Debug.WriteLine("Waiting for exit");
+                        DebugLog?.WriteLine("Waiting for exit");
                     } finally {
                         WaitForExit(proc);
                     }
@@ -237,7 +237,7 @@ namespace DebuggerTests {
 
                 var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                var proc = PythonProcess.Attach(p.Id);
+                var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                 try {
                     proc.ProcessLoaded += (sender, args) => {
                         attached.SetResult(true);
@@ -247,7 +247,7 @@ namespace DebuggerTests {
                     using (var dumpWriter = new MiniDumpWriter(p)) {
                         await attached.Task.WithTimeout(10000, "Failed to attach within 10s");
                         await proc.ResumeAsync(TimeoutToken());
-                        Debug.WriteLine("Waiting for exit");
+                        DebugLog?.WriteLine("Waiting for exit");
                         dumpWriter.Cancel();
                     }
                 } finally {
@@ -272,7 +272,7 @@ namespace DebuggerTests {
                         var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                         var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                        var proc = PythonProcess.Attach(p.Id);
+                        var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                         proc.ProcessLoaded += (sender, args) => {
                             attached.SetResult(true);
                         };
@@ -307,7 +307,7 @@ namespace DebuggerTests {
                         var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                         var detached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                        var proc = PythonProcess.Attach(p.Id);
+                        var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                         proc.ProcessLoaded += (sender, args) => {
                             attached.SetResult(true);
                         };
@@ -462,7 +462,7 @@ void main()
                     var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                    var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                     try {
                         proc.ProcessLoaded += (sender, args) => {
                             Console.WriteLine("Process loaded");
@@ -593,7 +593,7 @@ void main()
                     var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     var bpHit = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                    var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                     try {
                         proc.ProcessLoaded += (sender, args) => {
                             Console.WriteLine("Process loaded");
@@ -690,7 +690,7 @@ int main(int argc, char* argv[]) {
                     // because StartListeningAsync waits until debuggee has connected
                     // back (which it won't do until handle is set).
                     var attachTask = Task.Run(async () => {
-                        var proc = PythonProcess.Attach(p.Id);
+                        var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                         try {
                             proc.ProcessLoaded += (sender, args) => {
                                 attachDone.SetResult(true);
@@ -713,7 +713,7 @@ int main(int argc, char* argv[]) {
                     dumpWriter.Cancel();
                 }
             } finally {
-                Debug.WriteLine(String.Format("Process output: {0}", outRecv.Output.ToString()));
+                DebugLog?.WriteLine(String.Format("Process output: {0}", outRecv.Output.ToString()));
                 DisposeProcess(p);
             }
         }
@@ -726,7 +726,7 @@ int main(int argc, char* argv[]) {
             try {
                 using (var dumpWriter = new MiniDumpWriter(p)) {
                     Thread.Sleep(1000);
-                    var proc = PythonProcess.Attach(p.Id);
+                    var proc = PythonProcess.Attach(p.Id, debugLog: DebugLog);
                     try {
                         var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                         proc.ProcessLoaded += async (sender, args) => {
@@ -786,7 +786,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 using (var dumpWriter = new MiniDumpWriter(p)) {
-                    var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput);
+                    var proc = PythonProcess.Attach(p.Id, PythonDebugOptions.RedirectOutput, debugLog: DebugLog);
                     try {
                         var attached = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                         proc.ProcessLoaded += (sender, args) => {
@@ -896,7 +896,7 @@ int main(int argc, char* argv[]) {
                     for (int i = 0; ; ++i) {
                         Thread.Sleep(1000);
                         try {
-                            proc = await PythonRemoteProcess.AttachAsync(uri, false, TimeoutToken());
+                            proc = await PythonRemoteProcess.AttachAsync(uri, false, DebugLog, TimeoutToken());
                             break;
                         } catch (SocketException) {
                             // Failed to connect - the process might have not started yet, so keep trying a few more times.

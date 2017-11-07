@@ -54,6 +54,8 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        internal static TextWriter DebugLog { get; set; }
+
         private static void EnsureListenerSocket() {
             if (_listenerPort < 0) {
                 var socketSource = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
@@ -98,7 +100,7 @@ namespace Microsoft.PythonTools.Debugger {
                 try {
                     socket.Blocking = true;
 
-                    var debugConn = new DebugConnection(stream);
+                    var debugConn = new DebugConnection(stream, DebugLog);
                     try {
                         string debugId = string.Empty;
                         var result = ConnErrorMessages.None;

@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             get { return _version; }
         }
 
-        public static async Task<PythonRemoteDebugProcess> ConnectAsync(PythonRemoteDebugPort port, CancellationToken ct) {
+        public static async Task<PythonRemoteDebugProcess> ConnectAsync(PythonRemoteDebugPort port, TextWriter debugLog, CancellationToken ct) {
             PythonRemoteDebugProcess process = null;
 
             // Connect to the remote debugging server and obtain process information. If any errors occur, display an error dialog, and keep
@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 ConnectionException connEx = null;
                 try {
                     // Process information is not sensitive, so ignore any SSL certificate errors, rather than bugging the user with warning dialogs.
-                    debugConn = await PythonRemoteProcess.ConnectAsync(port.Uri, false, ct);
+                    debugConn = await PythonRemoteProcess.ConnectAsync(port.Uri, false, debugLog, ct);
                 } catch (ConnectionException ex) {
                     connEx = ex;
                 }

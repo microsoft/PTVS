@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
+using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -24,11 +26,13 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         private readonly IDebugPortRequest2 _request;
         private readonly Guid _guid = Guid.NewGuid();
         private readonly Uri _uri;
+        private readonly TextWriter _debugLog;
 
-        public PythonRemoteDebugPort(PythonRemoteDebugPortSupplier supplier, IDebugPortRequest2 request, Uri uri) {
+        public PythonRemoteDebugPort(PythonRemoteDebugPortSupplier supplier, IDebugPortRequest2 request, Uri uri, TextWriter debugLog) {
             _supplier = supplier;
             _request = request;
             _uri = uri;
+            _debugLog = debugLog ?? new DebugTextWriter();
         }
 
         public Uri Uri {
@@ -36,7 +40,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
-            var process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, ct));
+            var process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, _debugLog, ct));
             if (process == null) {
                 ppEnum = null;
                 return VSConstants.E_FAIL;

@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private readonly Func<RequestArgs, Func<Response, Task>, Task> _requestHandler;
         private readonly bool _disposeWriter, _disposeReader;
         private readonly Stream _writer, _reader;
+        private readonly TextWriter _basicLog;
         private readonly TextWriter _logFile;
         private readonly object _logFileLock;
         private int _seq;
@@ -58,6 +59,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// which will include the complete body of the request as a dictionary.
         /// </param>
         /// <param name="connectionLogKey">Name of registry key used to determine if we should log messages and exceptions to disk.</param>
+        /// <param name="basicLog">Text writer to use for basic logging (message ids only). If <c>null</c> then output will go to <see cref="Debug"/>.</param>
         public Connection(
             Stream writer,
             bool disposeWriter,
@@ -65,7 +67,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
             bool disposeReader,
             Func<RequestArgs, Func<Response, Task>, Task> requestHandler = null,
             Dictionary<string, Type> types = null,
-            string connectionLogKey = null
+            string connectionLogKey = null,
+            TextWriter basicLog = null
         ) {
             _requestCache = new Dictionary<int, RequestInfo>();
             _requestHandler = requestHandler;
@@ -74,6 +77,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             _disposeWriter = disposeWriter;
             _reader = reader;
             _disposeReader = disposeReader;
+            _basicLog = basicLog ?? new DebugTextWriter();
             _logFile = OpenLogFile(connectionLogKey);
             // FxCop won't let us lock a MarshalByRefObject, so we create
             // a plain old object that we can log against.
@@ -186,7 +190,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
             T res;
             try {
-                Debug.WriteLine("Sending request {0}: {1}", seq, request.command);
+                _basicLog.WriteLine("Sending request {0}: {1}", seq, request.command);
                 await SendMessage(
                     new RequestMessage() {
                         command = r.Request.command,
@@ -216,7 +220,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// <param name="eventValue">The event value to be sent.</param>
         public async Task SendEventAsync(Event eventValue) {
             int seq = Interlocked.Increment(ref _seq);
-            Debug.WriteLine("Sending event {0}: {1}", seq, eventValue.name);
+            _basicLog.WriteLine("Sending event {0}: {1}", seq, eventValue.name);
             try {
                 await SendMessage(
                     new EventMessage() {
@@ -281,7 +285,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             } catch (ObjectDisposedException) {
             }
 
-            Debug.WriteLine("ProcessMessages ended");
+            _basicLog.WriteLine("ProcessMessages ended");
         }
 
         private void ProcessEvent(JObject packet) {
@@ -320,7 +324,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
             var reqSeq = packet["request_seq"].ToObject<int?>();
 
-            Debug.WriteLine("Received response {0}", reqSeq);
+            _basicLog.WriteLine("Received response {0}", reqSeq);
 
             RequestInfo r;
             lock (_cacheLock) {
@@ -484,7 +488,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
             CancellationToken cancel
         ) {
             int newSeq = Interlocked.Increment(ref _seq);
-            Debug.WriteLine("Sending response {0}", newSeq);
+            _basicLog.WriteLine("Sending response {0}", newSeq);
             await SendMessage(
                 new ResponseMessage() {
                     request_seq = sequence,
