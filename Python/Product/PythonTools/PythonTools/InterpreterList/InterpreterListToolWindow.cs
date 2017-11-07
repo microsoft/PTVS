@@ -33,11 +33,13 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
     sealed class InterpreterListToolWindow : ToolWindowPane {
         private IServiceProvider _site;
+        private UIThreadBase _uiThread;
         private PythonToolsService _pyService;
         private Redirector _outputWindow;
         private IVsStatusbar _statusBar;
@@ -50,6 +52,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             _site = (IServiceProvider)this;
 
             _pyService = _site.GetPythonToolsService();
+            _uiThread = _site.GetUIThread();
 
             // TODO: Get PYEnvironment added to image list
             BitmapImageMoniker = KnownMonikers.DockPanel;
@@ -62,7 +65,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             var list = new ToolWindow();
             list.Site = _site;
             try {
-                list.TelemetryLogger = _site.GetPythonToolsService().Logger;
+                list.TelemetryLogger = _pyService.Logger;
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
@@ -122,12 +125,12 @@ namespace Microsoft.PythonTools.InterpreterList {
                 return null;
             }
 
-            return PythonInteractiveEvaluator.GetScriptsPath(
+            return _uiThread.Invoke(() => PythonInteractiveEvaluator.GetScriptsPath(
                 _site,
                 view.Description,
                 view.Factory.Configuration,
                 false
-            );
+            ));
         }
 
         private void OpenInteractiveScripts_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

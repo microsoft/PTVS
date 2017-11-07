@@ -47,12 +47,16 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IServiceProvider _serviceProvider;
         private IInteractiveWindowCommands _commands;
 
+        // This filename is used 
+        private readonly string _analyzerFilename;
+
         private static readonly string currentPrefix = Strings.DebugReplCurrentIndicator;
         private static readonly string notCurrentPrefix = Strings.DebugReplNotCurrentIndicator;
 
         public PythonDebugReplEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _pyService = serviceProvider.GetPythonToolsService();
+            _analyzerFilename = "{0}.py".FormatInvariant(Guid.NewGuid());
             AD7Engine.EngineAttached += new EventHandler<AD7EngineEventArgs>(OnEngineAttached);
             AD7Engine.EngineDetaching += new EventHandler<AD7EngineEventArgs>(OnEngineDetaching);
 
@@ -200,7 +204,7 @@ namespace Microsoft.PythonTools.Repl {
         public IInteractiveWindow CurrentWindow { get; set; }
 
         public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
-        public string AnalysisFilename => _activeEvaluator?.AnalysisFilename;
+        public string AnalysisFilename => _activeEvaluator?.AnalysisFilename ?? _analyzerFilename;
 
         public bool IsDisconnected => _activeEvaluator?.IsDisconnected ?? true;
 
@@ -312,7 +316,7 @@ namespace Microsoft.PythonTools.Repl {
             if (_evaluators.Keys.Contains(id)) {
                 SwitchProcess(_evaluators[id].Process, verbose);
             } else {
-                CurrentWindow.WriteError(Strings.DebugReplInvalidProcessId.FormatUI(id));
+                CurrentWindow.WriteErrorLine(Strings.DebugReplInvalidProcessId.FormatUI(id));
             }
         }
 
@@ -322,7 +326,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (thread != null) {
                     _activeEvaluator.SwitchThread(thread, verbose);
                 } else {
-                    CurrentWindow.WriteError(Strings.DebugReplInvalidThreadId.FormatUI(id));
+                    CurrentWindow.WriteErrorLine(Strings.DebugReplInvalidThreadId.FormatUI(id));
                 }
             } else {
                 NoProcessError();
@@ -335,7 +339,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (frame != null) {
                     _activeEvaluator.SwitchFrame(frame);
                 } else {
-                    CurrentWindow.WriteError(Strings.DebugReplInvalidFrameId.FormatUI(id));
+                    CurrentWindow.WriteErrorLine(Strings.DebugReplInvalidFrameId.FormatUI(id));
                 }
             } else {
                 NoProcessError();
@@ -495,11 +499,11 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void NoProcessError() {
-            CurrentWindow.WriteError(Strings.DebugReplNoProcessError);
+            CurrentWindow.WriteErrorLine(Strings.DebugReplNoProcessError);
         }
 
         private void NoExecutionIfNotStoppedInDebuggerError() {
-            CurrentWindow.WriteError(Strings.DebugReplNoExecutionIfNotStoppedInDebuggerError);
+            CurrentWindow.WriteErrorLine(Strings.DebugReplNoExecutionIfNotStoppedInDebuggerError);
         }
 
         public Task<ExecutionResult> InitializeAsync() {

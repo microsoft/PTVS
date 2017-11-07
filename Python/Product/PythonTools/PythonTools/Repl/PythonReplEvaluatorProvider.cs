@@ -70,6 +70,8 @@ namespace Microsoft.PythonTools.Repl {
         public event EventHandler EvaluatorsChanged;
 
         public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
+            _serviceProvider.MustBeCalledFromUIThread();
+
             foreach (var interpreter in _interpreterService.Configurations) {
                 yield return new KeyValuePair<string, string>(
                     interpreter.Description,
@@ -136,6 +138,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private IInteractiveEvaluator GetEnvironmentEvaluator(IReadOnlyList<string> args) {
+            _serviceProvider.MustBeCalledFromUIThread();
+
             var config = _interpreterService.FindConfiguration(args.ElementAtOrDefault(1));
 
             var eval = new PythonInteractiveEvaluator(_serviceProvider) {
@@ -149,6 +153,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private IInteractiveEvaluator GetProjectEvaluator(IReadOnlyList<string> args) {
+            _serviceProvider.MustBeCalledFromUIThread();
+
             var project = args.ElementAtOrDefault(1);
 
             var eval = new PythonInteractiveEvaluator(_serviceProvider) {

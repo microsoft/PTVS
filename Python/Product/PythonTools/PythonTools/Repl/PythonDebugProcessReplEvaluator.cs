@@ -46,6 +46,9 @@ namespace Microsoft.PythonTools.Repl {
         private string _currentScopeName;
         private string _currentScopeFileName;
 
+        private string _currentFrameFilename;
+        private CompletionResult[] _currentFrameLocals;
+
         /// <summary>
         /// Backwards compatible and non-localized name for the scope
         /// that represents execution on the current frame.
@@ -126,9 +129,30 @@ namespace Microsoft.PythonTools.Repl {
             return result;
         }
 
+
         private async void OnModulesChanged(object sender, EventArgs e) {
             await RefreshAvailableScopes();
         }
+
+        public override VsProjectAnalyzer Analyzer {
+            get {
+                if (_analyzer != null) {
+                    return _analyzer;
+                }
+
+                if (!string.IsNullOrEmpty(_currentFrameFilename)) {
+                    var project = _serviceProvider.GetProjectContainingFile(_currentFrameFilename);
+                    _analyzer = project?.TryGetAnalyzer();
+                    if (_analyzer != null) {
+                        return _analyzer;
+                    }
+                }
+
+                return base.Analyzer;
+            }
+        }
+
+        public override string AnalysisFilename => _currentFrameFilename ?? base.AnalysisFilename;
 
         internal async Task<KeyValuePair<string, string>[]> RefreshAvailableScopes() {
             var modules = await _process.GetModuleNamesAndPaths();
@@ -251,8 +275,11 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override CompletionResult[] GetMemberNames(string text) {
-            // TODO: implement this
-            return new CompletionResult[0];
+            if (string.IsNullOrEmpty(text) && _currentFrameLocals != null) {
+                return _currentFrameLocals.ToArray();
+            };
+            // TODO: Implement child members
+            return Array.Empty<CompletionResult>();
         }
 
         public override OverloadDoc[] GetSignatureDocumentation(string text) {
@@ -299,6 +326,14 @@ namespace Microsoft.PythonTools.Repl {
             _frameId = frame.FrameId;
             _currentScopeName = CurrentFrameScopeFixedName;
             _currentScopeFileName = null;
+            if (_currentFrameFilename != frame.FileName) {
+                _currentFrameFilename = frame.FileName;
+                _analyzer = null;
+            }
+            _currentFrameLocals = frame.Locals
+                .Where(r => !string.IsNullOrEmpty(r.Expression))
+                .Select(r => new CompletionResult(r.Expression, Interpreter.PythonMemberType.Field))
+                .ToArray();
             if (verbose) {
                 WriteOutput(Strings.DebugReplThreadChanged.FormatUI(_threadId, _frameId));
             }
