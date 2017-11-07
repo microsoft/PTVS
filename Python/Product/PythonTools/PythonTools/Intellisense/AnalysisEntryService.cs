@@ -234,7 +234,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if ((evaluator = textBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
                 analyzer = evaluator.Analyzer;
                 filename = evaluator.AnalysisFilename;
-                return true;
+                return analyzer != null;
             }
 
             // If we find an associated project, use its analyzer

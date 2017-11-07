@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Repl {
         private IInteractiveWindow _window;
         private PythonInteractiveOptions _options;
 
-        private VsProjectAnalyzer _analyzer;
+        protected VsProjectAnalyzer _analyzer;
         private readonly string _analysisFilename;
 
         private bool _enableMultipleScopes;
@@ -141,7 +141,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
 
-        public VsProjectAnalyzer Analyzer {
+        public virtual VsProjectAnalyzer Analyzer {
             get {
                 if (_analyzer != null) {
                     return _analyzer;
@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public string AnalysisFilename => _analysisFilename;
+        public virtual string AnalysisFilename => _analysisFilename;
 
         internal void WriteOutput(string text, bool addNewline = true) {
             var wnd = CurrentWindow;
@@ -351,6 +351,8 @@ namespace Microsoft.PythonTools.Repl {
             InterpreterConfiguration config,
             bool onlyIfExists = true
         ) {
+            provider.MustBeCalledFromUIThread();
+
             var root = provider.GetPythonToolsService().InteractiveOptions.Scripts;
 
             if (string.IsNullOrEmpty(root)) {

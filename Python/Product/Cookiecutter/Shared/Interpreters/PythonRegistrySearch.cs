@@ -16,15 +16,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using Microsoft.Win32;
 using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.Win32;
 
 namespace Microsoft.CookiecutterTools.Interpreters {
     class PythonRegistrySearch {
         public const string PythonCoreCompanyDisplayName = "Python Software Foundation";
         public const string PythonCoreSupportUrl = "https://www.python.org/";
+        public const string PythonCoreCompany = "PythonCore";
 
         public const string CompanyPropertyKey = "Company";
         public const string SupportUrlPropertyKey = "SupportUrl";
@@ -67,11 +69,15 @@ namespace Microsoft.CookiecutterTools.Interpreters {
             }
 
             var companies = GetSubkeys(root);
+            if (companies == null) {
+                return;
+            }
+
             foreach (var company in companies) {
                 if ("PyLauncher".Equals(company, StringComparison.OrdinalIgnoreCase)) {
                     continue;
                 }
-                bool pythonCore = "PythonCore".Equals(company, StringComparison.OrdinalIgnoreCase);
+                bool pythonCore = PythonCoreCompany.Equals(company, StringComparison.OrdinalIgnoreCase);
 
                 using (var companyKey = root.OpenSubKey(company)) {
                     if (companyKey == null) {
@@ -89,6 +95,9 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                     }
 
                     var tags = GetSubkeys(companyKey);
+                    if (tags == null) {
+                        continue;
+                    }
                     foreach (var tag in tags) {
                         using (var tagKey = companyKey.OpenSubKey(tag))
                         using (var installKey = tagKey?.OpenSubKey("InstallPath")) {
@@ -99,6 +108,16 @@ namespace Microsoft.CookiecutterTools.Interpreters {
 
                             if (_seenIds.Add(config.Id)) {
                                 var supportUrl = tagKey.GetValue("SupportUrl") as string ?? companySupportUrl;
+
+                                // We don't want to send people to http://python.org, even
+                                // if that's what is in the registry, so catch and fix it.
+                                if (!string.IsNullOrEmpty(supportUrl)) {
+                                    var url = supportUrl.TrimEnd('/');
+                                    if (url.Equals("http://www.python.org", StringComparison.OrdinalIgnoreCase) ||
+                                        url.Equals("http://python.org", StringComparison.OrdinalIgnoreCase)) {
+                                        supportUrl = PythonCoreSupportUrl;
+                                    }
+                                }
 
                                 var info = new PythonInterpreterInformation(config, companyDisplay, companySupportUrl, supportUrl);
                                 _info.Add(info);
@@ -121,15 +140,27 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                 return null;
             }
 
-            var prefixPath = installKey.GetValue(null) as string;
-            var exePath = installKey.GetValue("ExecutablePath") as string;
-            var exewPath = installKey.GetValue("WindowedExecutablePath") as string;
+            string prefixPath, exePath, exewPath;
+            try {
+                prefixPath = PathUtils.NormalizePath(installKey.GetValue(null) as string);
+                exePath = PathUtils.NormalizePath(installKey.GetValue("ExecutablePath") as string);
+                exewPath = PathUtils.NormalizePath(installKey.GetValue("WindowedExecutablePath") as string);
+            } catch (ArgumentException ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                return null;
+            }
             if (pythonCoreCompatibility && !string.IsNullOrEmpty(prefixPath)) {
                 if (string.IsNullOrEmpty(exePath)) {
-                    exePath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
+                    try {
+                        exePath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
+                    } catch (ArgumentException) {
+                    }
                 }
                 if (string.IsNullOrEmpty(exewPath)) {
-                    exewPath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.WindowsExecutable);
+                    try {
+                        exewPath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.WindowsExecutable);
+                    } catch (ArgumentException) {
+                    }
                 }
             }
 
@@ -178,12 +209,15 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                 tag += "-32";
             }
 
+            var pathVar = tagKey.GetValue("PathEnvironmentVariable") as string ??
+                CPythonInterpreterFactoryConstants.PathEnvironmentVariableName;
+
             var id = CPythonInterpreterFactoryConstants.GetInterpreterId(company, tag);
 
             var description = tagKey.GetValue("DisplayName") as string;
             if (string.IsNullOrEmpty(description)) {
                 if (pythonCoreCompatibility) {
-                    description = "Python {0} {1}".FormatUI(arch, version);
+                    description = "Python {0}{1: ()}".FormatUI(version, arch);
                 } else {
                     description = "{0} {1}".FormatUI(company, tag);
                 }
@@ -195,7 +229,7 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                 prefixPath,
                 exePath,
                 exewPath,
-                CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
+                pathVar,
                 arch,
                 sysVersion
             );
@@ -203,6 +237,7 @@ namespace Microsoft.CookiecutterTools.Interpreters {
 
         private static IList<string> GetSubkeys(RegistryKey key) {
             string[] subKeyNames = null;
+            int delay = 10;
             for (int retries = 5; subKeyNames == null && retries > 0; --retries) {
                 try {
                     subKeyNames = key.GetSubKeyNames();
@@ -211,7 +246,8 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                     // short period to settle down and try again.
                     // We are almost certainly being called from a background
                     // thread, so sleeping here is fine.
-                    Thread.Sleep(100);
+                    Thread.Sleep(delay);
+                    delay *= 5;
                 }
             }
             return subKeyNames;

@@ -155,9 +155,11 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private string GetOrCreateFilename() {
-            var replEval = Buffer.GetInteractiveWindow()?.GetPythonEvaluator();
-            if (replEval != null) {
-                return replEval.AnalysisFilename;
+            var replEval = Buffer.GetInteractiveWindow()?.Evaluator;
+            if (replEval is PythonCommonInteractiveEvaluator pyEval) {
+                return pyEval.AnalysisFilename;
+            } else if (replEval is SelectableReplEvaluator selectEval) {
+                return selectEval.AnalysisFilename;
             }
 
             ITextDocument doc;

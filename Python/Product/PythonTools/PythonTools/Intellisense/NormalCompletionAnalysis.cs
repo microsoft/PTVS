@@ -18,21 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class NormalCompletionAnalysis : CompletionAnalysis {
@@ -153,7 +149,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                if (pyReplEval != null && pyReplEval.Analyzer.ShouldEvaluateForCompletion(text)) {
+                if (pyReplEval?.Analyzer != null && pyReplEval.Analyzer.ShouldEvaluateForCompletion(text)) {
                     replMembers = pyReplEval.GetMemberNames(text);
                 }
 
