@@ -138,7 +138,6 @@ namespace AnalyzerStatusTests {
 
             // We should stop creating new entries well before 10000
             for (int j = 0; j < 10000; ++j) {
-                Console.WriteLine("Creating LotsOfUpdaters{0}", j);
                 var newUpdater = new AnalyzerStatusUpdater("LotsOfUpdaters" + j.ToString());
                 updaters.Add(newUpdater);
             }

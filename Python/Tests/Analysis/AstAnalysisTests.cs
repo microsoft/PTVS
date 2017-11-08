@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -37,12 +38,26 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            AstPythonInterpreterFactory.LogToConsole = true;
         }
 
-        [ClassCleanup]
-        public static void DoCleanup() {
-            AstPythonInterpreterFactory.LogToConsole = false;
+        public TestContext TestContext { get; set; }
+
+        private string _analysisLog = null;
+        private string _moduleCache = null;
+
+        [TestCleanup]
+        public void Cleanup() {
+            if (TestContext.CurrentTestOutcome != UnitTestOutcome.Passed) {
+                if (_analysisLog != null) {
+                    Console.WriteLine("Analysis log:");
+                    Console.WriteLine(_analysisLog);
+                }
+
+                if (_moduleCache != null) {
+                    Console.WriteLine("Module cache:");
+                    Console.WriteLine(_moduleCache);
+                }
+            }
         }
 
         private static PythonAnalysis CreateAnalysis(PythonVersion version) {
@@ -94,7 +109,7 @@ namespace AnalysisTests {
 
             var F1 = (IMemberContainer)mod.GetMember(null, "F1");
             AssertUtil.ContainsExactly(F1.GetMemberNames(null),
-                "F2", "F3", "F6", "__class__"
+                "F2", "F3", "F6", "__class__", "__bases__"
             );
             var F6 = (IPythonType)F1.GetMember(null, "F6");
             Assert.AreEqual("C1", F6.Documentation);
@@ -102,6 +117,7 @@ namespace AnalysisTests {
             Assert.IsInstanceOfType(F1.GetMember(null, "F2"), typeof(AstPythonType));
             Assert.IsInstanceOfType(F1.GetMember(null, "F3"), typeof(AstPythonType));
             Assert.IsInstanceOfType(F1.GetMember(null, "__class__"), typeof(AstPythonType));
+            Assert.IsInstanceOfType(F1.GetMember(null, "__bases__"), typeof(AstPythonSequence));
         }
 
         [TestMethod, Priority(0)]
@@ -126,75 +142,85 @@ namespace AnalysisTests {
 
             var C = (IMemberContainer)mod.GetMember(null, "C");
             AssertUtil.ContainsExactly(C.GetMemberNames(null),
-                "i", "j", "C2", "__class__"
+                "i", "j", "C2", "__class__", "__bases__"
             );
 
             Assert.IsInstanceOfType(C.GetMember(null, "i"), typeof(AstPythonFunction));
             Assert.IsInstanceOfType(C.GetMember(null, "j"), typeof(AstPythonFunction));
             Assert.IsInstanceOfType(C.GetMember(null, "C2"), typeof(AstPythonType));
             Assert.IsInstanceOfType(C.GetMember(null, "__class__"), typeof(AstPythonType));
+            Assert.IsInstanceOfType(C.GetMember(null, "__bases__"), typeof(AstPythonSequence));
 
             var C2 = (IMemberContainer)C.GetMember(null, "C2");
             AssertUtil.ContainsExactly(C2.GetMemberNames(null),
-                "k", "__class__"
+                "k", "__class__", "__bases__"
             );
 
             Assert.IsInstanceOfType(C2.GetMember(null, "k"), typeof(AstPythonFunction));
             Assert.IsInstanceOfType(C2.GetMember(null, "__class__"), typeof(AstPythonType));
+            Assert.IsInstanceOfType(C2.GetMember(null, "__bases__"), typeof(AstPythonSequence));
         }
 
         [TestMethod, Priority(0)]
         public void AstValues() {
             using (var entry = CreateAnalysis()) {
-                entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
-                entry.AddModule("test-module", "from Values import *");
-                entry.WaitForAnalysis();
+                try {
+                    entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                    entry.AddModule("test-module", "from Values import *");
+                    entry.WaitForAnalysis();
 
-                entry.AssertHasAttr("",
-                    "x", "y", "z", "pi", "l", "t", "d", "s",
-                    "X", "Y", "Z", "PI", "L", "T", "D", "S"
-                );
+                    entry.AssertHasAttr("",
+                        "x", "y", "z", "pi", "l", "t", "d", "s",
+                        "X", "Y", "Z", "PI", "L", "T", "D", "S"
+                    );
 
-                entry.AssertIsInstance("x", BuiltinTypeId.Int);
-                entry.AssertIsInstance("y", BuiltinTypeId.Str);
-                entry.AssertIsInstance("z", BuiltinTypeId.Bytes);
-                entry.AssertIsInstance("pi", BuiltinTypeId.Float);
-                entry.AssertIsInstance("l", BuiltinTypeId.List);
-                entry.AssertIsInstance("t", BuiltinTypeId.Tuple);
-                entry.AssertIsInstance("d", BuiltinTypeId.Dict);
-                entry.AssertIsInstance("s", BuiltinTypeId.Set);
-                entry.AssertIsInstance("X", BuiltinTypeId.Int);
-                entry.AssertIsInstance("Y", BuiltinTypeId.Str);
-                entry.AssertIsInstance("Z", BuiltinTypeId.Bytes);
-                entry.AssertIsInstance("PI", BuiltinTypeId.Float);
-                entry.AssertIsInstance("L", BuiltinTypeId.List);
-                entry.AssertIsInstance("T", BuiltinTypeId.Tuple);
-                entry.AssertIsInstance("D", BuiltinTypeId.Dict);
-                entry.AssertIsInstance("S", BuiltinTypeId.Set);
+                    entry.AssertIsInstance("x", BuiltinTypeId.Int);
+                    entry.AssertIsInstance("y", BuiltinTypeId.Str);
+                    entry.AssertIsInstance("z", BuiltinTypeId.Bytes);
+                    entry.AssertIsInstance("pi", BuiltinTypeId.Float);
+                    entry.AssertIsInstance("l", BuiltinTypeId.List);
+                    entry.AssertIsInstance("t", BuiltinTypeId.Tuple);
+                    entry.AssertIsInstance("d", BuiltinTypeId.Dict);
+                    entry.AssertIsInstance("s", BuiltinTypeId.Set);
+                    entry.AssertIsInstance("X", BuiltinTypeId.Int);
+                    entry.AssertIsInstance("Y", BuiltinTypeId.Str);
+                    entry.AssertIsInstance("Z", BuiltinTypeId.Bytes);
+                    entry.AssertIsInstance("PI", BuiltinTypeId.Float);
+                    entry.AssertIsInstance("L", BuiltinTypeId.List);
+                    entry.AssertIsInstance("T", BuiltinTypeId.Tuple);
+                    entry.AssertIsInstance("D", BuiltinTypeId.Dict);
+                    entry.AssertIsInstance("S", BuiltinTypeId.Set);
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
 
         [TestMethod, Priority(0)]
         public void AstMultiValues() {
             using (var entry = CreateAnalysis()) {
-                entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
-                entry.AddModule("test-module", "from MultiValues import *");
-                entry.WaitForAnalysis();
+                try {
+                    entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                    entry.AddModule("test-module", "from MultiValues import *");
+                    entry.WaitForAnalysis();
 
-                entry.AssertHasAttr("",
-                    "x", "y", "z", "l", "t", "s",
-                    "XY", "XYZ", "D"
-                );
+                    entry.AssertHasAttr("",
+                        "x", "y", "z", "l", "t", "s",
+                        "XY", "XYZ", "D"
+                    );
 
-                entry.AssertIsInstance("x", BuiltinTypeId.Int);
-                entry.AssertIsInstance("y", BuiltinTypeId.Str);
-                entry.AssertIsInstance("z", BuiltinTypeId.Bytes);
-                entry.AssertIsInstance("l", BuiltinTypeId.List);
-                entry.AssertIsInstance("t", BuiltinTypeId.Tuple);
-                entry.AssertIsInstance("s", BuiltinTypeId.Set);
-                entry.AssertIsInstance("XY", BuiltinTypeId.Int, BuiltinTypeId.Str);
-                entry.AssertIsInstance("XYZ", BuiltinTypeId.Int, BuiltinTypeId.Str, BuiltinTypeId.Bytes);
-                entry.AssertIsInstance("D", BuiltinTypeId.List, BuiltinTypeId.Tuple, BuiltinTypeId.Dict, BuiltinTypeId.Set);
+                    entry.AssertIsInstance("x", BuiltinTypeId.Int);
+                    entry.AssertIsInstance("y", BuiltinTypeId.Str);
+                    entry.AssertIsInstance("z", BuiltinTypeId.Bytes);
+                    entry.AssertIsInstance("l", BuiltinTypeId.List);
+                    entry.AssertIsInstance("t", BuiltinTypeId.Tuple);
+                    entry.AssertIsInstance("s", BuiltinTypeId.Set);
+                    entry.AssertIsInstance("XY", BuiltinTypeId.Int, BuiltinTypeId.Str);
+                    entry.AssertIsInstance("XYZ", BuiltinTypeId.Int, BuiltinTypeId.Str, BuiltinTypeId.Bytes);
+                    entry.AssertIsInstance("D", BuiltinTypeId.List, BuiltinTypeId.Tuple, BuiltinTypeId.Dict, BuiltinTypeId.Set);
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
 
@@ -209,58 +235,70 @@ namespace AnalysisTests {
         [TestMethod, Priority(0)]
         public void AstReturnTypes() {
             using (var entry = CreateAnalysis()) {
-                entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
-                entry.AddModule("test-module", @"from ReturnValues import *
+                try {
+                    entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                    entry.AddModule("test-module", @"from ReturnValues import *
 R_str = r_str()
 R_object = r_object()
 R_A1 = A()
 R_A2 = A.r_A()
 R_A3 = R_A1.r_A()");
-                entry.WaitForAnalysis();
+                    entry.WaitForAnalysis();
 
-                entry.AssertHasAttr("",
-                    "r_a", "r_b", "r_str", "r_object", "A",
-                    "R_str", "R_object", "R_A1", "R_A2", "R_A3"
-                );
+                    entry.AssertHasAttr("",
+                        "r_a", "r_b", "r_str", "r_object", "A",
+                        "R_str", "R_object", "R_A1", "R_A2", "R_A3"
+                    );
 
-                entry.AssertIsInstance("R_str", BuiltinTypeId.Str);
-                entry.AssertIsInstance("R_object", BuiltinTypeId.Object);
-                entry.AssertIsInstance("R_A1", BuiltinTypeId.Type);
-                entry.AssertIsInstance("R_A2", BuiltinTypeId.Type);
-                entry.AssertIsInstance("R_A3", BuiltinTypeId.Type);
-                entry.AssertDescription("R_A1", "A");
-                entry.AssertDescription("R_A2", "A");
-                entry.AssertDescription("R_A3", "A");
+                    entry.AssertIsInstance("R_str", BuiltinTypeId.Str);
+                    entry.AssertIsInstance("R_object", BuiltinTypeId.Object);
+                    entry.AssertIsInstance("R_A1", BuiltinTypeId.Type);
+                    entry.AssertIsInstance("R_A2", BuiltinTypeId.Type);
+                    entry.AssertIsInstance("R_A3", BuiltinTypeId.Type);
+                    entry.AssertDescription("R_A1", "A");
+                    entry.AssertDescription("R_A2", "A");
+                    entry.AssertDescription("R_A3", "A");
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
 
         [TestMethod, Priority(0)]
         public void AstInstanceMembers() {
             using (var entry = CreateAnalysis()) {
-                entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
-                entry.AddModule("test-module", "from InstanceMethod import f1, f2");
-                entry.WaitForAnalysis();
+                try {
+                    entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                    entry.AddModule("test-module", "from InstanceMethod import f1, f2");
+                    entry.WaitForAnalysis();
 
-                entry.AssertHasAttr("", "f1", "f2");
+                    entry.AssertHasAttr("", "f1", "f2");
 
-                entry.AssertIsInstance("f1", BuiltinTypeId.BuiltinFunction);
-                entry.AssertIsInstance("f2", BuiltinTypeId.BuiltinMethodDescriptor);
+                    entry.AssertIsInstance("f1", BuiltinTypeId.BuiltinFunction);
+                    entry.AssertIsInstance("f2", BuiltinTypeId.BuiltinMethodDescriptor);
 
-                var func = entry.GetValue<BuiltinFunctionInfo>("f1");
-                var method = entry.GetValue<BoundBuiltinMethodInfo>("f2");
+                    var func = entry.GetValue<BuiltinFunctionInfo>("f1");
+                    var method = entry.GetValue<BoundBuiltinMethodInfo>("f2");
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
         [TestMethod, Priority(0)]
         public void AstInstanceMembers_Random() {
             using (var entry = CreateAnalysis()) {
-                entry.AddModule("test-module", "from random import *");
-                entry.WaitForAnalysis();
+                try {
+                    entry.AddModule("test-module", "from random import *");
+                    entry.WaitForAnalysis();
 
-                foreach (var fnName in new[] { "seed", "randrange", "gauss" }) {
-                    entry.AssertIsInstance(fnName, BuiltinTypeId.BuiltinMethodDescriptor);
-                    var func = entry.GetValue<BoundBuiltinMethodInfo>(fnName);
-                    Assert.AreNotEqual(0, func.Overloads.Count(), $"{fnName} overloads");
-                    Assert.AreNotEqual(0, func.Overloads.ElementAt(0).Parameters.Length, $"{fnName} parameters");
+                    foreach (var fnName in new[] { "seed", "randrange", "gauss" }) {
+                        entry.AssertIsInstance(fnName, BuiltinTypeId.BuiltinMethodDescriptor);
+                        var func = entry.GetValue<BoundBuiltinMethodInfo>(fnName);
+                        Assert.AreNotEqual(0, func.Overloads.Count(), $"{fnName} overloads");
+                        Assert.AreNotEqual(0, func.Overloads.ElementAt(0).Parameters.Length, $"{fnName} parameters");
+                    }
+                } finally {
+                    _analysisLog = entry.GetLogContent(CultureInfo.InvariantCulture);
                 }
             }
         }
@@ -269,21 +307,25 @@ R_A3 = R_A1.r_A()");
         public void AstSearchPathsThroughFactory() {
             using (var evt = new ManualResetEvent(false))
             using (var analysis = CreateAnalysis()) {
-                var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
-                var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
+                try {
+                    var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
+                    var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
-                interp.ModuleNamesChanged += (s, e) => evt.Set();
+                    interp.ModuleNamesChanged += (s, e) => evt.Set();
 
-                fact.SetCurrentSearchPaths(new[] { new PythonLibraryPath(TestData.GetPath("TestData\\AstAnalysis"), false, null) });
-                Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
-                AssertUtil.ContainsAtLeast(interp.GetModuleNames(), "Values");
-                Assert.IsNotNull(interp.ImportModule("Values"), "Module was not available");
+                    fact.SetCurrentSearchPaths(new[] { new PythonLibraryPath(TestData.GetPath("TestData\\AstAnalysis"), false, null) });
+                    Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
+                    AssertUtil.ContainsAtLeast(interp.GetModuleNames(), "Values");
+                    Assert.IsNotNull(interp.ImportModule("Values"), "Module was not available");
 
-                evt.Reset();
-                fact.SetCurrentSearchPaths(new PythonLibraryPath[0]);
-                Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
-                AssertUtil.DoesntContain(interp.GetModuleNames(), "Values");
-                Assert.IsNull(interp.ImportModule("Values"), "Module was not removed");
+                    evt.Reset();
+                    fact.SetCurrentSearchPaths(new PythonLibraryPath[0]);
+                    Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
+                    AssertUtil.DoesntContain(interp.GetModuleNames(), "Values");
+                    Assert.IsNull(interp.ImportModule("Values"), "Module was not removed");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
 
@@ -291,20 +333,24 @@ R_A3 = R_A1.r_A()");
         public void AstSearchPathsThroughAnalyzer() {
             using (var evt = new AutoResetEvent(false))
             using (var analysis = CreateAnalysis()) {
-                var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
-                var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
+                try {
+                    var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
+                    var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
-                interp.ModuleNamesChanged += (s, e) => evt.Set();
+                    interp.ModuleNamesChanged += (s, e) => evt.Set();
 
-                analysis.Analyzer.SetSearchPaths(new[] { TestData.GetPath("TestData\\AstAnalysis") });
-                Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
-                AssertUtil.ContainsAtLeast(interp.GetModuleNames(), "Values");
-                Assert.IsNotNull(interp.ImportModule("Values"), "Module was not available");
+                    analysis.Analyzer.SetSearchPaths(new[] { TestData.GetPath("TestData\\AstAnalysis") });
+                    Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
+                    AssertUtil.ContainsAtLeast(interp.GetModuleNames(), "Values");
+                    Assert.IsNotNull(interp.ImportModule("Values"), "Module was not available");
 
-                analysis.Analyzer.SetSearchPaths(new string[0]);
-                Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
-                AssertUtil.DoesntContain(interp.GetModuleNames(), "Values");
-                Assert.IsNull(interp.ImportModule("Values"), "Module was not removed");
+                    analysis.Analyzer.SetSearchPaths(new string[0]);
+                    Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
+                    AssertUtil.DoesntContain(interp.GetModuleNames(), "Values");
+                    Assert.IsNull(interp.ImportModule("Values"), "Module was not removed");
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
 
@@ -344,25 +390,33 @@ R_A3 = R_A1.r_A()");
             version.AssertInstalled();
             Console.WriteLine("Using {0}", version.PrefixPath);
             using (var analysis = CreateAnalysis(version)) {
-                var entry = analysis.AddModule("test-module", "import numpy.core.numeric as NP; ndarray = NP.ndarray");
-                analysis.WaitForAnalysis(CancellationTokens.After15s);
+                try {
+                    var entry = analysis.AddModule("test-module", "import numpy.core.numeric as NP; ndarray = NP.ndarray");
+                    analysis.WaitForAnalysis(CancellationTokens.After15s);
 
-                var cls = analysis.GetValue<BuiltinClassInfo>("ndarray");
-                Assert.IsNotNull(cls);
+                    var cls = analysis.GetValue<BuiltinClassInfo>("ndarray");
+                    Assert.IsNotNull(cls);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
 
         [TestMethod, Priority(0)]
         public void ScrapedSpecialFloats() {
             using (var analysis = CreateAnalysis()) {
-                var entry = analysis.AddModule("test-module", "import math; inf = math.inf; nan = math.nan");
-                analysis.WaitForAnalysis(CancellationTokens.After15s);
+                try {
+                    var entry = analysis.AddModule("test-module", "import math; inf = math.inf; nan = math.nan");
+                    analysis.WaitForAnalysis(CancellationTokens.After15s);
 
-                var inf = analysis.GetValue<ConstantInfo>("inf");
-                Assert.AreEqual(BuiltinTypeId.Float, inf.TypeId);
+                    var inf = analysis.GetValue<ConstantInfo>("inf");
+                    Assert.AreEqual(BuiltinTypeId.Float, inf.TypeId);
 
-                var nan = analysis.GetValue<ConstantInfo>("nan");
-                Assert.AreEqual(BuiltinTypeId.Float, nan.TypeId);
+                    var nan = analysis.GetValue<ConstantInfo>("nan");
+                    Assert.AreEqual(BuiltinTypeId.Float, nan.TypeId);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
 
@@ -399,37 +453,41 @@ R_A3 = R_A1.r_A()");
         private void AstBuiltinScrape(PythonVersion version) {
             version.AssertInstalled();
             using (var analysis = CreateAnalysis(version)) {
-                var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
-                var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
+                try {
+                    var fact = (AstPythonInterpreterFactory)analysis.Analyzer.InterpreterFactory;
+                    var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
-                var mod = interp.ImportModule(interp.BuiltinModuleName);
-                var modPath = fact.GetCacheFilePath(fact.Configuration.InterpreterPath);
-                if (File.Exists(modPath)) {
-                    Console.WriteLine(File.ReadAllText(modPath));
-                }
-                Assert.IsInstanceOfType(mod, typeof(AstBuiltinsPythonModule));
+                    var mod = interp.ImportModule(interp.BuiltinModuleName);
+                    var modPath = fact.GetCacheFilePath(fact.Configuration.InterpreterPath);
+                    if (File.Exists(modPath)) {
+                        _moduleCache = File.ReadAllText(modPath);
+                    }
+                    Assert.IsInstanceOfType(mod, typeof(AstBuiltinsPythonModule));
 
-                var errors = ((AstScrapedPythonModule)mod).ParseErrors ?? Enumerable.Empty<string>();
-                foreach (var err in errors) {
-                    Console.WriteLine(err);
-                }
-                Assert.AreEqual(0, errors.Count(), "Parse errors occurred");
+                    var errors = ((AstScrapedPythonModule)mod).ParseErrors ?? Enumerable.Empty<string>();
+                    foreach (var err in errors) {
+                        Console.WriteLine(err);
+                    }
+                    Assert.AreEqual(0, errors.Count(), "Parse errors occurred");
 
-                // Ensure we can get all the builtin types
-                foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
-                    var type = interp.GetBuiltinType(v);
-                    Assert.IsNotNull(type, v.ToString());
-                    Assert.IsInstanceOfType(type, typeof(AstPythonBuiltinType), $"Did not find {v}");
-                }
+                    // Ensure we can get all the builtin types
+                    foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
+                        var type = interp.GetBuiltinType(v);
+                        Assert.IsNotNull(type, v.ToString());
+                        Assert.IsInstanceOfType(type, typeof(AstPythonBuiltinType), $"Did not find {v}");
+                    }
 
-                // Ensure we cannot see or get builtin types directly
-                AssertUtil.DoesntContain(
-                    mod.GetMemberNames(null),
-                    Enum.GetNames(typeof(BuiltinTypeId)).Select(n => $"__{n}")
-                );
+                    // Ensure we cannot see or get builtin types directly
+                    AssertUtil.DoesntContain(
+                        mod.GetMemberNames(null),
+                        Enum.GetNames(typeof(BuiltinTypeId)).Select(n => $"__{n}")
+                    );
 
-                foreach (var id in Enum.GetNames(typeof(BuiltinTypeId))) {
-                    Assert.IsNull(mod.GetMember(null, $"__{id}"), id);
+                    foreach (var id in Enum.GetNames(typeof(BuiltinTypeId))) {
+                        Assert.IsNull(mod.GetMember(null, $"__{id}"), id);
+                    }
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
                 }
             }
         }
@@ -506,7 +564,7 @@ R_A3 = R_A1.r_A()");
             );
         }
 
-        private static async Task FullStdLibTest(PythonVersion v, params string[] skipModules) {
+        private async Task FullStdLibTest(PythonVersion v, params string[] skipModules) {
             v.AssertInstalled();
             var factory = new AstPythonInterpreterFactory(v.Configuration, new InterpreterFactoryCreationOptions {
                 DatabasePath = TestData.GetTempPath(),
@@ -526,45 +584,49 @@ R_A3 = R_A1.r_A()");
             bool anyParseError = false;
 
             using (var analyzer = new PythonAnalysis(factory)) {
-                var tasks = new List<Task<Tuple<ModulePath, IPythonModule>>>();
+                try {
+                    var tasks = new List<Task<Tuple<ModulePath, IPythonModule>>>();
 
-                var interp = (AstPythonInterpreter)analyzer.Analyzer.Interpreter;
-                foreach (var m in skip) {
-                    interp.AddUnimportableModule(m);
-                }
-
-                foreach (var r in modules
-                    .Where(m => !skip.Contains(m.ModuleName))
-                    .GroupBy(m => {
-                        int i = m.FullName.IndexOf('.');
-                        return i <= 0 ? m.FullName : m.FullName.Remove(i);
-                    })
-                    .AsParallel()
-                    .SelectMany(g => g.Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName))))
-                ) {
-                    var modName = r.Item1;
-                    var mod = r.Item2;
-
-                    anyExtensionSeen |= modName.IsNativeExtension;
-                    if (mod == null) {
-                        Trace.TraceWarning("failed to import {0} from {1}", modName.ModuleName, modName.SourceFile);
-                    } else if (mod is AstScrapedPythonModule smod) {
-                        if (smod.ParseErrors?.Any() ?? false) {
-                            anyParseError = true;
-                            Trace.TraceError("Parse errors in {0}", modName.SourceFile);
-                            foreach (var e in smod.ParseErrors) {
-                                Trace.TraceError(e);
-                            }
-                        } else {
-                            anySuccess = true;
-                            anyExtensionSuccess |= modName.IsNativeExtension;
-                            mod.GetMemberNames(analyzer.ModuleContext).ToList();
-                        }
-                    } else if (mod is AstPythonModule) {
-                        // pass
-                    } else {
-                        Trace.TraceError("imported {0} as type {1}", modName.ModuleName, mod.GetType().FullName);
+                    var interp = (AstPythonInterpreter)analyzer.Analyzer.Interpreter;
+                    foreach (var m in skip) {
+                        interp.AddUnimportableModule(m);
                     }
+
+                    foreach (var r in modules
+                        .Where(m => !skip.Contains(m.ModuleName))
+                        .GroupBy(m => {
+                            int i = m.FullName.IndexOf('.');
+                            return i <= 0 ? m.FullName : m.FullName.Remove(i);
+                        })
+                        .AsParallel()
+                        .SelectMany(g => g.Select(m => Tuple.Create(m, interp.ImportModule(m.ModuleName))))
+                    ) {
+                        var modName = r.Item1;
+                        var mod = r.Item2;
+
+                        anyExtensionSeen |= modName.IsNativeExtension;
+                        if (mod == null) {
+                            Trace.TraceWarning("failed to import {0} from {1}", modName.ModuleName, modName.SourceFile);
+                        } else if (mod is AstScrapedPythonModule smod) {
+                            if (smod.ParseErrors?.Any() ?? false) {
+                                anyParseError = true;
+                                Trace.TraceError("Parse errors in {0}", modName.SourceFile);
+                                foreach (var e in smod.ParseErrors) {
+                                    Trace.TraceError(e);
+                                }
+                            } else {
+                                anySuccess = true;
+                                anyExtensionSuccess |= modName.IsNativeExtension;
+                                mod.GetMemberNames(analyzer.ModuleContext).ToList();
+                            }
+                        } else if (mod is AstPythonModule) {
+                            // pass
+                        } else {
+                            Trace.TraceError("imported {0} as type {1}", modName.ModuleName, mod.GetType().FullName);
+                        }
+                    }
+                } finally {
+                    _analysisLog = analyzer.GetLogContent(CultureInfo.InvariantCulture);
                 }
             }
             Assert.IsTrue(anySuccess, "failed to import any modules at all");
@@ -578,14 +640,18 @@ R_A3 = R_A1.r_A()");
         [TestMethod, Priority(0)]
         public void AstTypeAnnotationConversion() {
             using (var analysis = CreateAnalysis()) {
-                analysis.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
-                analysis.AddModule("test-module", @"from ReturnAnnotations import *
+                try {
+                    analysis.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                    analysis.AddModule("test-module", @"from ReturnAnnotations import *
 x = f()
 y = g()");
-                analysis.WaitForAnalysis();
+                    analysis.WaitForAnalysis();
 
-                analysis.AssertIsInstance("x", BuiltinTypeId.Int);
-                analysis.AssertIsInstance("y", BuiltinTypeId.Str);
+                    analysis.AssertIsInstance("x", BuiltinTypeId.Int);
+                    analysis.AssertIsInstance("y", BuiltinTypeId.Str);
+                } finally {
+                    _analysisLog = analysis.GetLogContent(CultureInfo.InvariantCulture);
+                }
             }
         }
         #endregion
