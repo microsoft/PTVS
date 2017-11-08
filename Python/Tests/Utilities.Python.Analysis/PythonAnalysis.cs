@@ -220,6 +220,11 @@ namespace TestUtilities.Python {
             }
         }
 
+        public string GetLogContent(IFormatProvider culture) {
+            var factory = _factory as IPythonInterpreterFactoryWithLog;
+            return factory?.GetAnalysisLogContent(culture);
+        }
+
         #region Get Analysis Results
 
         public IEnumerable<string> GetMemberNames(string exprText, int index = 0, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
