@@ -495,24 +495,24 @@ namespace Microsoft.PythonTools.Editor {
 
         internal bool IsPossibleExpressionAtPoint(SnapshotPoint point) {
             var line = point.GetContainingLine();
-            int col = point - line.Start + 1;
+            int col = point - line.Start;
             var pt = new SourceLocation(line.LineNumber + 1, col + 1);
             bool anyTokens = false;
 
             foreach (var t in GetTokens(line)) {
                 anyTokens = true;
-                if (!t.Contains(pt)) {
-                    continue;
-                }
 
                 if (t.Category == TokenCategory.LineComment || t.Category == TokenCategory.Comment) {
+                    if (t.IsAtStart(pt)) {
+                        continue;
+                    }
                     // We are in or at the end of a comment
                     return false;
                 }
 
-                // Tokens after this point are possible expressions if we are looking
+                // Tokens after this point are only possible expressions if we are looking
                 // at the very end of the token.
-                if (t.IsAtEnd(pt)) {
+                if (!t.Contains(pt) || t.IsAtEnd(pt)) {
                     continue;
                 }
 
