@@ -43,12 +43,20 @@ namespace AnalysisTests {
         public TestContext TestContext { get; set; }
 
         private string _analysisLog = null;
+        private string _moduleCache = null;
 
         [TestCleanup]
         public void Cleanup() {
-            if (TestContext.CurrentTestOutcome != UnitTestOutcome.Passed && _analysisLog != null) {
-                Console.WriteLine("Analysis log:");
-                Console.WriteLine(_analysisLog);
+            if (TestContext.CurrentTestOutcome != UnitTestOutcome.Passed) {
+                if (_analysisLog != null) {
+                    Console.WriteLine("Analysis log:");
+                    Console.WriteLine(_analysisLog);
+                }
+
+                if (_moduleCache != null) {
+                    Console.WriteLine("Module cache:");
+                    Console.WriteLine(_moduleCache);
+                }
             }
         }
 
@@ -450,12 +458,10 @@ R_A3 = R_A1.r_A()");
                     var interp = (AstPythonInterpreter)analysis.Analyzer.Interpreter;
 
                     var mod = interp.ImportModule(interp.BuiltinModuleName);
-                    // TODO: CreateAnalysis specifies UseExistingCache = false,
-                    // so is there any point in printing this out?
-                    //var modPath = fact.GetCacheFilePath(fact.Configuration.InterpreterPath);
-                    //if (File.Exists(modPath)) {
-                    //    Console.WriteLine(File.ReadAllText(modPath));
-                    //}
+                    var modPath = fact.GetCacheFilePath(fact.Configuration.InterpreterPath);
+                    if (File.Exists(modPath)) {
+                        _moduleCache = File.ReadAllText(modPath);
+                    }
                     Assert.IsInstanceOfType(mod, typeof(AstBuiltinsPythonModule));
 
                     var errors = ((AstScrapedPythonModule)mod).ParseErrors ?? Enumerable.Empty<string>();
@@ -468,7 +474,7 @@ R_A3 = R_A1.r_A()");
                     foreach (BuiltinTypeId v in Enum.GetValues(typeof(BuiltinTypeId))) {
                         var type = interp.GetBuiltinType(v);
                         Assert.IsNotNull(type, v.ToString());
-                        Assert.IsInstanceOfType(type, typeof(AstPythonType), $"Did not find {v}");
+                        Assert.IsInstanceOfType(type, typeof(AstPythonBuiltinType), $"Did not find {v}");
                     }
 
                     // Ensure we cannot see or get builtin types directly
