@@ -77,7 +77,7 @@
         <Str Cat="Text">
           <Val><![CDATA[_Baseline File:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[_Plik linii bazowej:]]></Val>
+            <Val><![CDATA[_Plik punktu odniesienia:]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
