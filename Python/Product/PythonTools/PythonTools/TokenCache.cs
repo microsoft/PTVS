@@ -22,7 +22,6 @@ using System.Text;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools {
     [DebuggerDisplay("{GetDebugView(),nq}")]
@@ -162,21 +161,13 @@ namespace Microsoft.PythonTools {
     internal class TokenCache {
         private LineTokenization[] _map;
 
-        // This lock is only used for reading/writing _map, and not
-        // the contents of the array. Lock the array itself when
-        // using it.
-        private readonly object _mapLock = new object();
-
         internal TokenCache() {
             _map = null;
         }
 
         private LineTokenization[] Map {
             get {
-                LineTokenization[] map;
-                lock (_mapLock) {
-                    map = _map;
-                }
+                var map = _map;
                 if (map == null) {
                     throw new InvalidOperationException("uninitialized token cache");
                 }
@@ -242,16 +233,20 @@ namespace Microsoft.PythonTools {
             _map = null;
         }
 
-        internal void EnsureCapacity(int capacity) {
-            lock (_mapLock) {
-                if (_map == null) {
-                    _map = new LineTokenization[capacity];
-                    return;
-                }
+        [Conditional("DEBUG")]
+        internal void AssertCapacity(int capacity) {
+            Debug.Assert(_map != null);
+            Debug.Assert(_map.Length > capacity);
+        }
 
-                if (capacity > _map.Length) {
-                    Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
-                }
+        internal void EnsureCapacity(int capacity) {
+            if (_map == null) {
+                _map = new LineTokenization[capacity];
+                return;
+            }
+
+            if (capacity > _map.Length) {
+                Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
             }
         }
 
