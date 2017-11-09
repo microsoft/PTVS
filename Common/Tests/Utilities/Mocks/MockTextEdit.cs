@@ -57,8 +57,12 @@ namespace TestUtilities.Mocks {
         }
 
         public bool Replace(int startPosition, int charsToReplace, string replaceWith) {
-            Delete(startPosition, charsToReplace);
-            Insert(startPosition, replaceWith);
+            if (charsToReplace > 0) {
+                Delete(startPosition, charsToReplace);
+            }
+            if (!string.IsNullOrEmpty(replaceWith)) {
+                Insert(startPosition, replaceWith);
+            }
             return true;
         }
 
@@ -115,28 +119,25 @@ namespace TestUtilities.Mocks {
             }
 
             List<MockTextChange> changes = new List<MockTextChange>();
-            adjust = 0;
             foreach(var curEdit in _edits.OrderBy(e => e.Position)) {
                 InsertionEdit insert = curEdit as InsertionEdit;
                 if (insert != null) {
                     changes.Add(
                         new MockTextChange(
                             new SnapshotSpan(_snapshot, insert.Position, 0),
-                            insert.Position + adjust,
+                            insert.Position,
                             insert.Text
                         )
                     );
-                    adjust += insert.Text.Length;
                 } else {
                     DeletionEdit delete = (DeletionEdit)curEdit;
                     changes.Add(
                         new MockTextChange(
                             new SnapshotSpan(_snapshot, delete.Position, delete.Length),
-                            delete.Position + adjust,
+                            delete.Position,
                             ""
                         )
                     );
-                    adjust -= delete.Length;
                 }
             }
 

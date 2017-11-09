@@ -705,8 +705,11 @@ namespace Microsoft.PythonTools.Intellisense {
             public override bool Walk(NameExpression node) {
                 var reference = node.GetVariableReference(_root);
 
-                _allReads.Add(reference);
-                _allReadVariables.Add(reference.Variable);
+                if (reference != null) {
+                    _allReads.Add(reference);
+                    _allReadVariables.Add(reference.Variable);
+                }
+
                 return true;
             }
 

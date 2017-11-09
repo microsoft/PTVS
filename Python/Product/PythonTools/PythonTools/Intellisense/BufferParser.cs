@@ -279,7 +279,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var tasks = new List<Tuple<ITextSnapshot[], Task<AP.FileUpdateResponse>>>();
 
             foreach (var snapshotGroup in snapshots.GroupBy(s => PythonTextBufferInfo.TryGetForBuffer(s.TextBuffer))) {
-                if (snapshotGroup.Key?.AnalysisEntry == null) {
+                var entry = snapshotGroup.Key?.AnalysisEntry;
+                if (entry == null) {
                     continue;
                 }
 
@@ -293,7 +294,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 tasks.Add(Tuple.Create(snapshotGroup.ToArray(), analyzer.SendRequestAsync(
                     new AP.FileUpdateRequest {
-                        fileId = snapshotGroup.Key.AnalysisEntry.FileId,
+                        fileId = entry.FileId,
                         updates = updates
                     }
                 )));
