@@ -98,7 +98,9 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /wait       [identifier]       - wait for the specified analysis to complete.");
             Console.WriteLine(" /repeat     [count]            - repeat up to count times if needed (default 3).");
             Console.WriteLine(" /comment    [comment]          - provide descriptive text about why this analyzed was created");
+#if DEBUG
             Console.WriteLine(" /unittest                      - run from tests, Debug.Listeners will be replaced");
+#endif
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {
@@ -329,9 +331,11 @@ namespace Microsoft.PythonTools.Analysis {
 
             var cwd = Environment.CurrentDirectory;
 
+#if DEBUG
             if (options.ContainsKey("unittest")) {
                 AssertListener.Initialize();
             }
+#endif
             if (options.ContainsKey("interactive")) {
                 interactive = true;
             }
@@ -1486,6 +1490,7 @@ namespace Microsoft.PythonTools.Analysis {
             TraceInformation(message, args);
         }
 
+#if DEBUG
         class AssertListener : TraceListener {
             private AssertListener() {
             }
@@ -1580,5 +1585,6 @@ namespace Microsoft.PythonTools.Analysis {
             public override void Write(string message) {
             }
         }
+#endif
     }
 }
