@@ -433,6 +433,13 @@ namespace Microsoft.PythonTools.Interpreter {
             var logPath = Path.Combine(outPath, "AnalysisLog.txt");
             var glogPath = Path.Combine(CompletionDatabasePath, "AnalysisLog.txt");
 
+            // Tests change Debug.Listeners so look for that to determine if we're running inside a test
+#if DEBUG
+            var inTests = Debug.Listeners["Microsoft.PythonTools.AssertListener"] != null;
+#else
+            var inTests = false;
+#endif
+
             using (var output = ProcessOutput.RunHiddenAndCapture(
                 analyzerPath,
                 "/id", fact.Configuration.Id,
@@ -441,6 +448,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 "/outdir", outPath,
                 "/basedb", baseDb,
                 (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted
+                (inTests ? "/unittest" : null),
                 "/log", logPath,
                 "/glog", glogPath,
                 "/wait", (request.WaitFor != null ? AnalyzerStatusUpdater.GetIdentifier(request.WaitFor) : "")
