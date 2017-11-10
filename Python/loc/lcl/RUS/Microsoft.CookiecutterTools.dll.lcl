@@ -1246,7 +1246,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Explorer]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Обозреватель]]></Val>
+              <Val><![CDATA[Проводник]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -1267,7 +1267,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Home]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Домашняя страница]]></Val>
+              <Val><![CDATA[Домашний]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -1288,7 +1288,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Run]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Выполнить]]></Val>
+              <Val><![CDATA[Запустить]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -1306,7 +1306,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Run]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Выполнить]]></Val>
+              <Val><![CDATA[&Запустить]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -1441,7 +1441,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Update]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Обновление]]></Val>
+              <Val><![CDATA[Обновить]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -1666,7 +1666,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17306.2]]></Val>
+        <Val><![CDATA[3.0.17307.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1702,7 +1702,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17306.2]]></Val>
+        <Val><![CDATA[3.0.17307.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
