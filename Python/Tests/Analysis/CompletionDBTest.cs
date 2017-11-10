@@ -166,6 +166,7 @@ namespace PythonToolsTests {
                 "/version", "2.7",
                 "/outdir", outputPath,
                 "/indir", CompletionDB,
+                "/unittest",
                 "/log", "AnalysisLog.txt")) {
                 output.Wait();
                 Console.WriteLine("* Stdout *");
@@ -210,6 +211,7 @@ namespace PythonToolsTests {
                 "/version", "2.7",
                 "/outdir", outputPath,
                 "/indir", CompletionDB,
+                "/unittest",
                 "/log", "AnalysisLog.txt")) {
                 output.Wait();
                 Console.WriteLine("* Stdout *");

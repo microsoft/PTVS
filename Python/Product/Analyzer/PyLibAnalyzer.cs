@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -97,6 +98,7 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /wait       [identifier]       - wait for the specified analysis to complete.");
             Console.WriteLine(" /repeat     [count]            - repeat up to count times if needed (default 3).");
             Console.WriteLine(" /comment    [comment]          - provide descriptive text about why this analyzed was created");
+            Console.WriteLine(" /unittest                      - run from tests, Debug.Listeners will be replaced");
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {
@@ -327,6 +329,9 @@ namespace Microsoft.PythonTools.Analysis {
 
             var cwd = Environment.CurrentDirectory;
 
+            if (options.ContainsKey("unittest")) {
+                AssertListener.Initialize();
+            }
             if (options.ContainsKey("interactive")) {
                 interactive = true;
             }
@@ -1479,6 +1484,101 @@ namespace Microsoft.PythonTools.Analysis {
         internal void TraceDryRun(string message, params object[] args) {
             Console.WriteLine(message, args);
             TraceInformation(message, args);
+        }
+
+        class AssertListener : TraceListener {
+            private AssertListener() {
+            }
+
+            public override string Name {
+                get { return "Microsoft.PythonTools.AssertListener"; }
+                set { }
+            }
+
+            public static bool LogObjectDisposedExceptions { get; set; } = true;
+
+            public static void Initialize() {
+                var listener = new AssertListener();
+                if (null == Debug.Listeners[listener.Name]) {
+                    Debug.Listeners.Add(listener);
+                    Debug.Listeners.Remove("Default");
+
+                    AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
+                }
+            }
+
+            static void CurrentDomain_FirstChanceException(object sender, FirstChanceExceptionEventArgs e) {
+                if (e.Exception is NullReferenceException || (e.Exception is ObjectDisposedException && LogObjectDisposedExceptions)) {
+                    // Exclude safe handle messages because they are noisy
+                    if (!e.Exception.Message.Contains("Safe handle has been closed")) {
+                        var log = new EventLog("Application");
+                        log.Source = "Application Error";
+                        log.WriteEntry(
+                            "First-chance exception: " + e.Exception.ToString(),
+                            EventLogEntryType.Warning
+                        );
+                    }
+                }
+            }
+
+            public override void Fail(string message) {
+                Fail(message, null);
+            }
+
+            public override void Fail(string message, string detailMessage) {
+                Trace.WriteLine("Debug.Assert failed in analyzer");
+                if (!string.IsNullOrEmpty(message)) {
+                    Trace.WriteLine(message);
+                } else {
+                    Trace.WriteLine("(No message provided)");
+                }
+                if (!string.IsNullOrEmpty(detailMessage)) {
+                    Trace.WriteLine(detailMessage);
+                }
+                var trace = new StackTrace(true);
+                bool seenDebugAssert = false;
+                foreach (var frame in trace.GetFrames()) {
+                    var mi = frame.GetMethod();
+                    if (!seenDebugAssert) {
+                        seenDebugAssert = (mi.DeclaringType == typeof(Debug) &&
+                            (mi.Name == "Assert" || mi.Name == "Fail"));
+                    } else if (mi.DeclaringType == typeof(System.RuntimeMethodHandle)) {
+                        break;
+                    } else {
+                        var filename = frame.GetFileName();
+                        Console.WriteLine(string.Format(
+                            " at {0}.{1}({2}) in {3}:line {4}",
+                            mi.DeclaringType.FullName,
+                            mi.Name,
+                            string.Join(", ", mi.GetParameters().Select(p => p.ToString())),
+                            filename ?? "<unknown>",
+                            frame.GetFileLineNumber()
+                        ));
+                        if (File.Exists(filename)) {
+                            try {
+                                Console.WriteLine(
+                                    "    " +
+                                    File.ReadLines(filename).ElementAt(frame.GetFileLineNumber() - 1).Trim()
+                                );
+                            } catch {
+                            }
+                        }
+                    }
+                }
+
+                message = string.IsNullOrEmpty(message) ? "Debug.Assert failed" : message;
+                if (Debugger.IsAttached) {
+                    Debugger.Break();
+                }
+
+                Console.WriteLine(message);
+            }
+
+            public override void WriteLine(string message) {
+            }
+
+            public override void Write(string message) {
+            }
         }
     }
 }
