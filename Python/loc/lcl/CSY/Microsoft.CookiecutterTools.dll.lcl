@@ -1246,7 +1246,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Explorer]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Explorer]]></Val>
+              <Val><![CDATA[Průzkumník]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -1663,7 +1663,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17306.2]]></Val>
+        <Val><![CDATA[3.0.17307.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -1699,7 +1699,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17306.2]]></Val>
+        <Val><![CDATA[3.0.17307.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>

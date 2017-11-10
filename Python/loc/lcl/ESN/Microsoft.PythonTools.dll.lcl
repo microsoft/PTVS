@@ -3004,7 +3004,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Rename...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Ca&mbiar nombre...]]></Val>
+              <Val><![CDATA[&Cambiar nombre...]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
