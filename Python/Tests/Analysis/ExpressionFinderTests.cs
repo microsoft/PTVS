@@ -147,6 +147,8 @@ C().fff", GetExpressionOptions.Evaluate);
         public void FindExpressionsForRename() {
             var code = Parse(@"class C(object):
     def f(a):
+        global a
+        nonlocal a
         return a
 
 b = C().f(1)
@@ -169,12 +171,20 @@ b = C().f(1)
             AssertExpr(code, 3, 16, "a");
             AssertExpr(code, 3, 17, "a");
 
-            AssertExpr(code, 5, 5, "C");
-            AssertExpr(code, 5, 6, "C");
-            AssertNoExpr(code, 5, 7);
-            AssertExpr(code, 5, 9, "f");
-            AssertExpr(code, 5, 10, "f");
-            AssertNoExpr(code, 5, 11);
+            AssertNoExpr(code, 4, 17);
+            AssertExpr(code, 4, 18, "a");
+            AssertExpr(code, 4, 19, "a");
+
+            AssertNoExpr(code, 5, 15);
+            AssertExpr(code, 5, 16, "a");
+            AssertExpr(code, 5, 17, "a");
+
+            AssertExpr(code, 7, 5, "C");
+            AssertExpr(code, 7, 6, "C");
+            AssertNoExpr(code, 7, 7);
+            AssertExpr(code, 7, 9, "f");
+            AssertExpr(code, 7, 10, "f");
+            AssertNoExpr(code, 7, 11);
         }
 
 
