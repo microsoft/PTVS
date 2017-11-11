@@ -75,7 +75,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     var text = current.GetText();
                     if (IsCellMarker(text)) {
                         // In the cell we just found
-                        return current;
+                        start = current;
+                        break;
                     } else if (string.IsNullOrWhiteSpace(text)) {
                         // Still not sure
                     } else if (text.TrimStart().StartsWith("#")) {
@@ -136,7 +137,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (IsCellMarker(text)) {
                     if (end == null) {
                         // Found the start of the current cell
-                        end = line;
+                        end = current;
                     } else {
                         // Found the start of the next cell, so we're finished
 
