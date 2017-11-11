@@ -540,7 +540,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Connection StartSubprocessConnection(string comment, out AnalysisProcessInfo proc) {
             var libAnalyzer = typeof(AP.FileChangedResponse).Assembly.Location;
-            var psi = new ProcessStartInfo(libAnalyzer, "/interactive /comment \"" + comment + "\"");
+#if DEBUG
+            var testOption = Debug.Listeners["Microsoft.PythonTools.AssertListener"] != null ? "/unittest " : "";
+#else
+            var testOption = "";
+#endif
+            var psi = new ProcessStartInfo(libAnalyzer, testOption + "/interactive /comment \"" + comment + "\"");
             psi.RedirectStandardInput = true;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
