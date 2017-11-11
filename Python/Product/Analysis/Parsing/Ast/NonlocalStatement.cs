@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -32,6 +33,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
+                foreach (var n in _names.MaybeEnumerate()) {
+                    n?.Walk(walker);
+                }
             }
             walker.PostWalk(this);
         }
