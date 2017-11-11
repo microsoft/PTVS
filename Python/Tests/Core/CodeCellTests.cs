@@ -14,17 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Utilities;
 using TestUtilities;
 using TestUtilities.Mocks;
 
@@ -33,6 +29,8 @@ namespace PythonToolsTests {
 
     [TestClass]
     public class CodeCellTests {
+        public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
+
         private static string ShowWhitespace(string s) {
             return s.Replace(' ', '\u00B7').Replace('\t', '\u2409');
         }
@@ -62,6 +60,31 @@ namespace PythonToolsTests {
             }) {
                 Assert.IsFalse(CCA.IsCellMarker(falseMarker), ShowWhitespace(falseMarker));
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void EmptyCodeCell() {
+            var buffer = new MockTextBuffer(@"# comment here
+
+# In[ ]:
+
+#%% next cell
+", PythonContentType);
+
+            AssertCellStart(buffer, 0, 0);
+            AssertCellStart(buffer, 1, 0);
+            AssertCellStart(buffer, 2, 0);
+            AssertCellStart(buffer, 3, 0);
+            AssertCellStart(buffer, 4, 4);
+            AssertCellStart(buffer, 5, 4);
+
+            AssertCellEnd(buffer, 0, 2);
+            AssertCellEnd(buffer, 1, 2);
+            AssertCellEnd(buffer, 2, 2);
+            AssertCellEnd(buffer, 3, 2);
+            AssertCellEnd(buffer, 4, 4);
+            AssertCellEnd(buffer, 5, 4);
+
         }
 
         private static void AssertCellStart(ITextBuffer buffer, int startFromLine, int expectedLine) {
