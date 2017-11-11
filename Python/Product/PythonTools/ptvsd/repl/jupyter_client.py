@@ -30,7 +30,7 @@ import sys
 import threading
 import time
 import traceback
-from ptvsd.repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
+from ptvsd.repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list, DEBUG
 from ptvsd.util import to_bytes
 
 try:
@@ -456,7 +456,7 @@ class JupyterClientBackend(ReplBackend):
             print(p['source'], p)
 
     def __write_content(self, content):
-        if content.status != 'ok':
+        if content['status', 'ok'] != 'ok':
             return
 
         output_xaml = content.data['application/xaml+xml']
@@ -464,22 +464,22 @@ class JupyterClientBackend(ReplBackend):
             try:
                 if isinstance(output_xaml, str) and sys.version_info[0] >= 3:
                     output_xaml = output_xaml.encode('ascii')
-                self.write_stdout(prefix)
                 self.write_xaml(base64.decodestring(output_xaml))
-                self.write_stdout('\n\n')
+                self.write_stdout('\n')
                 return
-            except:
-                pass
+            except Exception:
+                if DEBUG:
+                    raise
 
         output_png = content.data['image/png', None]
         if output_png is not None:
             try:
                 if isinstance(output_png, str) and sys.version_info[0] >= 3:
                     output_png = output_png.encode('ascii')
-                self.write_stdout(prefix)
                 self.write_png(base64.decodestring(output_png))
-                self.write_stdout('\n\n')
+                self.write_stdout('\n')
                 return
-            except:
-                pass
+            except Exception:
+                if DEBUG:
+                    raise
 
