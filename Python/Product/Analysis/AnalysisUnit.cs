@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal static AnalysisUnit EvalUnit = new AnalysisUnit(null, null, null, true);
 
         internal AnalysisUnit(ScopeStatement ast, InterpreterScope scope)
-            : this(ast, (ast != null ? ast.GlobalParent : null), scope, false) {
+            : this(ast, ast?.GlobalParent, scope, false) {
         }
 
         internal AnalysisUnit(Node ast, PythonAst tree, InterpreterScope scope, bool forEval) {
@@ -356,6 +356,10 @@ namespace Microsoft.PythonTools.Analysis {
 
             return new LocationInfo(ProjectEntry.FilePath, span.Start.Line, span.Start.Column, span.End.Line, span.End.Column);
         }
+
+        internal virtual ILocationResolver AlternateResolver => null;
+
+        ILocationResolver ILocationResolver.GetAlternateResolver() => AlternateResolver;
     }
 
     /// <summary>
