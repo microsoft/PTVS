@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
@@ -200,6 +201,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(ClassDefinition node) {
+            // Evaluate decorators for references
+            // TODO: Should apply decorators when assigning the class
+            foreach (var d in (node.Decorators?.Decorators).MaybeEnumerate()) {
+                _eval.Evaluate(d);
+            }
+
             return false;
         }
 

@@ -5067,6 +5067,36 @@ def my_fn():
             entry.AssertIsInstance("fn", text.IndexOf("return"), BuiltinTypeId.Function);
         }
 
+        [TestMethod, Priority(0)]
+        public void DecoratorReferences() {
+            var text = @"
+def d1(f): return f
+class d2:
+    def __call__(self, f): return f
+
+@d1
+def func_d1(): pass
+@d2
+def func_d2(): pass
+
+@d1
+class cls_d1(): pass
+@d2
+class cls_d2(): pass
+";
+            var entry = ProcessText(text);
+            entry.AssertReferences("d1",
+                new VariableLocation(2, 5, VariableType.Definition),
+                new VariableLocation(6, 2, VariableType.Reference),
+                new VariableLocation(11, 2, VariableType.Reference)
+            );
+            entry.AssertReferences("d2",
+                new VariableLocation(3, 7, VariableType.Definition),
+                new VariableLocation(8, 2, VariableType.Reference),
+                new VariableLocation(13, 2, VariableType.Reference)
+            );
+        }
+
 
         [TestMethod, Priority(0)]
         public void ClassInit() {
@@ -5525,7 +5555,7 @@ b2 = r2.b[0]
         }
 
         [TestMethod, Priority(0)]
-        public void DecoratorReferences() {
+        public void FunctoolsDecoratorReferences() {
             var text = @"from functools import wraps
 
 def d(f):
