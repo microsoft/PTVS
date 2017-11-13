@@ -90,6 +90,8 @@ namespace Microsoft.PythonTools.Analysis {
             return this;
         }
 
+        ILocationResolver ILocationResolver.GetAlternateResolver() => null;
+
         #endregion
     }
 }

@@ -6659,6 +6659,27 @@ def f():
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void CrossModuleFunctionCallMemLeak() {
+            var modA = @"from B import h
+def f(x): return h(x)
+
+f(1)";
+            var modB = @"def g(x): pass
+def h(x): return g(x)";
+
+            var analyzer = CreateAnalyzer();
+            var entryA = analyzer.AddModule("A", modA);
+            var entryB = analyzer.AddModule("B", modB);
+            analyzer.WaitForAnalysis(CancellationTokens.After5s);
+            for (int i = 100; i > 0; --i) {
+                entryA.Analyze(CancellationToken.None, true);
+                analyzer.WaitForAnalysis(CancellationTokens.After5s);
+            }
+            var g = analyzer.GetValue<FunctionInfo>(entryB, "g");
+            Assert.AreEqual(1, g.References.Count());
+        }
+
         #endregion
 
         #region Helpers

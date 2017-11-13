@@ -215,11 +215,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             Enqueue();
         }
 
-        public override IVersioned DependencyProject {
-            get {
-                return _agg;
-            }
-        }
+        public override IVersioned DependencyProject => _agg;
+        internal override ILocationResolver AlternateResolver => _originalUnit;
 
         internal override bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
             var defScope = _originalUnit.Scope;
