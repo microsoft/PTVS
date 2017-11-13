@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            var empty = activeView.Selection.IsEmpty;
+            
             Intellisense.VsProjectAnalyzer analyzer;
             if (activeView != null && (analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider)) != null) {
 
