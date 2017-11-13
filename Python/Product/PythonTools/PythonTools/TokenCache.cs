@@ -159,21 +159,10 @@ namespace Microsoft.PythonTools {
     }
 
     internal class TokenCache {
+        private readonly object _lock = new object();
         private LineTokenization[] _map;
 
-        internal TokenCache() {
-            _map = null;
-        }
-
-        private LineTokenization[] Map {
-            get {
-                var map = _map;
-                if (map == null) {
-                    throw new InvalidOperationException("uninitialized token cache");
-                }
-                return map;
-            }
-        }
+        private LineTokenization[] Map => _map ?? throw new InvalidOperationException("uninitialized token cache");
 
         /// <summary>
         /// Looks for the first cached tokenization preceding the given line.
@@ -184,9 +173,8 @@ namespace Microsoft.PythonTools {
                 throw new ArgumentOutOfRangeException("line", "Must be 0 or greater");
             }
 
-            var map = Map;
-
-            lock (map) {
+            lock (_lock) {
+                var map = Map;
                 line--;
                 while (line >= minLine) {
                     if (map[line].Tokens != null) {
@@ -208,55 +196,59 @@ namespace Microsoft.PythonTools {
             tokenization = this[line];
             if (tokenization.Tokens != null) {
                 return true;
-            } else {
-                tokenization = default(LineTokenization);
-                return false;
             }
+
+            tokenization = default(LineTokenization);
+            return false;
         }
 
         internal LineTokenization this[int line] {
             get {
-                var map = Map;
-                lock (map) {
-                    return map[line];
+                lock (_lock) {
+                    return Map[line];
                 }
             }
             set {
-                var map = Map;
-                lock (map) {
-                    map[line] = value;
+                lock (_lock) {
+                    Map[line] = value;
                 }
             }
         }
 
         internal void Clear() {
-            _map = null;
+            lock (_lock) {
+                _map = null;
+            }
         }
 
         [Conditional("DEBUG")]
         internal void AssertCapacity(int capacity) {
-            Debug.Assert(_map != null);
-            Debug.Assert(_map.Length > capacity);
+            lock (_lock) {
+                Debug.Assert(_map != null);
+                Debug.Assert(_map.Length > capacity);
+            }
         }
 
         internal void EnsureCapacity(int capacity) {
-            if (_map == null) {
-                _map = new LineTokenization[capacity];
-                return;
-            }
+            lock (_lock) {
+                if (_map == null) {
+                    _map = new LineTokenization[capacity];
+                    return;
+                }
 
-            if (capacity > _map.Length) {
-                Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
+                if (capacity > _map.Length) {
+                    Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
+                }
             }
         }
 
         internal void DeleteLines(int index, int count) {
-            var map = Map;
-            if (index > map.Length - count) {
-                throw new ArgumentOutOfRangeException("line", "Must be 'count' less than the size of the cache");
-            }
+            lock (_lock) {
+                var map = Map;
+                if (index > map.Length - count) {
+                    throw new ArgumentOutOfRangeException("line", "Must be 'count' less than the size of the cache");
+                }
 
-            lock (map) {
                 Array.Copy(map, index + count, map, index, map.Length - index - count);
                 for (int i = 0; i < count; i++) {
                     map[map.Length - i - 1] = default(LineTokenization);
@@ -265,9 +257,8 @@ namespace Microsoft.PythonTools {
         }
 
         internal void InsertLines(int index, int count) {
-            var map = Map;
-
-            lock (map) {
+            lock (_lock) {
+                var map = Map;
                 Array.Copy(map, index, map, index + count, map.Length - index - count);
                 for (int i = 0; i < count; i++) {
                     map[index + i] = default(LineTokenization);

@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
@@ -478,7 +477,7 @@ namespace Microsoft.PythonTools.Editor {
             for (int line = firstLine; line <= lastLine; ++line) {
                 var lineTokenization = GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), ref tokenizer);
 
-                foreach(var token in lineTokenization.Tokens.MaybeEnumerate()) {
+                foreach (var token in lineTokenization.Tokens.MaybeEnumerate()) {
                     if (line < firstLine || line > lastLine) {
                         continue;
                     }
