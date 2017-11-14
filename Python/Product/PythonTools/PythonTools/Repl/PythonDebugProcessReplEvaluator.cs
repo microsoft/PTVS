@@ -294,29 +294,28 @@ namespace Microsoft.PythonTools.Repl {
             if (_currentScopeName == CurrentFrameScopeFixedName) {
                 var frame = GetFrames().SingleOrDefault(f => f.FrameId == _frameId);
                 if (frame != null) {
-                    AutoResetEvent completion = new AutoResetEvent(false);
-                    PythonEvaluationResult result = null;
+                    using (var completion = new AutoResetEvent(false)) {
+                        PythonEvaluationResult result = null;
 
-                    var expression = string.Format(CultureInfo.InvariantCulture, "str(dir({0}))", text ?? "");
-                    _serviceProvider.GetUIThread().InvokeTaskSync(() => frame.ExecuteTextAsync(expression, PythonEvaluationResultReprKind.Raw, (obj) => {
-                        result = obj;
-                        completion.Set();
-                    }, CancellationToken.None), CancellationToken.None);
+                        var expression = string.Format(CultureInfo.InvariantCulture, "':'.join(dir({0}))", text ?? "");
+                        _serviceProvider.GetUIThread().InvokeTaskSync(() => frame.ExecuteTextAsync(expression, PythonEvaluationResultReprKind.Raw, (obj) => {
+                            result = obj;
+                            try {
+                                completion.Set();
+                            } catch (ObjectDisposedException) {
+                            }
+                        }, CancellationToken.None), CancellationToken.None);
 
-                    if (completion.WaitOne(100) && !_process.HasExited && result?.StringRepr != null) {
-                        var members = result.StringRepr
-                            .Trim('[', ']')
-                            .Split(',')
-                            .Select(r => r.Trim().Trim('\''))
-                            .ToArray();
+                        if (completion.WaitOne(100) && !_process.HasExited && result?.StringRepr != null) {
+                            // We don't really know if it's a field, function or else...
+                            var completionResults = result.StringRepr
+                                .Split(':')
+                                .Where(r => !string.IsNullOrEmpty(r))
+                                .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
+                                .ToArray();
 
-                        // We don't really know if it's a field, function or else...
-                        var completionResults = members
-                            .Where(r => !string.IsNullOrEmpty(r))
-                            .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
-                            .ToArray();
-
-                        return completionResults;
+                            return completionResults;
+                        }
                     }
                 }
             }
