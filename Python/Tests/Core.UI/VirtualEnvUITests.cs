@@ -115,8 +115,11 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
+                // CreateVirtualEnvironment only waits for the environment node.
+                // Give it time here to install the package(s).
                 app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
+                    TimeSpan.FromSeconds(30),
                     Strings.Environments,
                     envName,
                     TestPackageDisplay
