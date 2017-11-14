@@ -184,8 +184,24 @@ namespace Microsoft.PythonTools.Interpreter {
                 )) {
                     try {
                         IsReady = (await proc == 0);
+#if DEBUG
+                        if (!IsReady) {
+                            Trace.WriteLine("import pip failed");
+                            Trace.WriteLine("stdout:");
+                            foreach (var line in proc.StandardOutputLines) {
+                                Trace.WriteLine(line);
+                            }
+                            Trace.WriteLine("stderr:");
+                            foreach (var line in proc.StandardErrorLines) {
+                                Trace.WriteLine(line);
+                            }
+                        }
+#endif
                     } catch (OperationCanceledException) {
                         IsReady = false;
+#if DEBUG
+                        Trace.WriteLine("import pip cancelled");
+#endif
                         return;
                     }
                 }
