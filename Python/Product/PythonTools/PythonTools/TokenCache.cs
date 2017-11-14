@@ -38,12 +38,12 @@ namespace Microsoft.PythonTools {
         }
 
         internal string GetDebugView() {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             if (State != null) {
                 sb.Append(State != null ? "S " : "  ");
             }
             if (Tokens != null) {
-                for (int i = 0; i < Tokens.Length; i++) {
+                for (var i = 0; i < Tokens.Length; i++) {
                     sb.Append('[');
                     sb.Append(Tokens[i].Category);
                     sb.Append(']');
@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools {
         /// <param name="location"></param>
         /// <returns></returns>
         public bool Contains(SourceLocation location) {
-            int col = location.Column - 1;
+            var col = location.Column - 1;
             return location.Line - 1 == LineNumber &&
                 (col >= LineToken.Column && col <= LineToken.Column + LineToken.Length);
         }
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools {
         /// Returns true if the location is on the same line and at either end of this token.
         /// </summary>
         public bool IsAdjacent(SourceLocation location) {
-            int col = location.Column - 1;
+            var col = location.Column - 1;
             return location.Line - 1 == LineNumber &&
                 (col == LineToken.Column || col == LineToken.Column + LineToken.Length);
         }
@@ -150,8 +150,8 @@ namespace Microsoft.PythonTools {
             // line is edited the span returned here may not be valid.
             var line = LineSpan.GetSpan(snapshot);
 
-            int startCol = Math.Min(LineToken.Column, line.Length);
-            int endCol = Math.Min(LineToken.Column + LineToken.Length, line.Length);
+            var startCol = Math.Min(LineToken.Column, line.Length);
+            var endCol = Math.Min(LineToken.Column + LineToken.Length, line.Length);
 
             return new SnapshotSpan(line.Start + startCol, line.Start + endCol);
         }
@@ -162,22 +162,6 @@ namespace Microsoft.PythonTools {
     internal class TokenCache {
         private readonly object _lock = new object();
         private LineTokenization[] _map;
-        private LineTokenization[] Map => _map ?? throw new InvalidOperationException("uninitialized token cache");
-
-        internal bool TryGetTokenization(int line, out LineTokenization tokenization) {
-            if (line < 0 || line >= Map.Length) {
-                throw new ArgumentOutOfRangeException(nameof(line), "Must be 0 or greater and less than number of lines in the cache");
-            }
-            lock (_lock) {
-                tokenization = this[line];
-                if (tokenization.Tokens != null) {
-                    return true;
-                }
-
-                tokenization = default(LineTokenization);
-                return false;
-            }
-        }
 
         /// <summary>
         /// Gets the tokenization for the specified line.
@@ -190,22 +174,20 @@ namespace Microsoft.PythonTools {
             lock (_lock) {
                 EnsureCapacity(line.Snapshot.LineCount);
                 var start = IndexOfPreviousTokenization(lineNumber + 1, 0, out var lineTok);
-                var map = Map;
 
                 while (++start <= lineNumber) {
                     var state = lineTok.State;
 
                     if (!TryGetTokenization(start, out lineTok)) {
                         var tokenizer = getTokenizer();
-                        map[start] = lineTok = tokenizer.TokenizeLine(line.Snapshot.GetLineFromLineNumber(start), state);
+                        _map[start] = lineTok = tokenizer.TokenizeLine(line.Snapshot.GetLineFromLineNumber(start), state);
                     }
                 }
                 return lineTok;
             }
         }
 
-        internal void Update(TextContentChangedEventArgs e, Func<Tokenizer> makeTokenizer) {
-            Tokenizer tokenizer = null;
+        internal void Update(TextContentChangedEventArgs e, Func<Tokenizer> getTokenizer) {
             var snapshot = e.After;
 
             lock (_lock) {
@@ -219,26 +201,29 @@ namespace Microsoft.PythonTools {
                         DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
                     }
 
-                    ApplyChanges(ref tokenizer, makeTokenizer, new SnapshotSpan(snapshot, change.NewSpan));
+                    ApplyChanges(new SnapshotSpan(snapshot, change.NewSpan), getTokenizer);
                 }
             }
         }
 
+        private bool TryGetTokenization(int line, out LineTokenization tokenization) {
+            tokenization = _map[line];
+            if (tokenization.Tokens != null) {
+                return true;
+            }
+            tokenization = default(LineTokenization);
+            return false;
+        }
 
         /// <summary>
         /// Looks for the first cached tokenization preceding the given line.
         /// Returns the line we have a tokenization for or minLine - 1 if there is none.
         /// </summary>
         private int IndexOfPreviousTokenization(int line, int minLine, out LineTokenization tokenization) {
-            if (line < 0) {
-                throw new ArgumentOutOfRangeException(nameof(line), "Must be 0 or greater");
-            }
-
-            var map = Map;
             line--;
             while (line >= minLine) {
-                if (map[line].Tokens != null) {
-                    tokenization = map[line];
+                if (_map[line].Tokens != null) {
+                    tokenization = _map[line];
                     return line;
                 }
                 line--;
@@ -246,8 +231,6 @@ namespace Microsoft.PythonTools {
             tokenization = default(LineTokenization);
             return minLine - 1;
         }
-
-        private LineTokenization this[int line] => Map[line];
 
         internal void Clear() {
             lock (_lock) {
@@ -273,43 +256,37 @@ namespace Microsoft.PythonTools {
         }
 
         private void DeleteLines(int index, int count) {
-            var map = Map;
-            if (index > map.Length - count) {
+            if (index > _map.Length - count) {
                 throw new ArgumentOutOfRangeException(nameof(index), "Must be 'count' less than the size of the cache");
             }
 
-            Array.Copy(map, index + count, map, index, map.Length - index - count);
-            for (int i = 0; i < count; i++) {
-                map[map.Length - i - 1] = default(LineTokenization);
+            Array.Copy(_map, index + count, _map, index, _map.Length - index - count);
+            for (var i = 0; i < count; i++) {
+                _map[_map.Length - i - 1] = default(LineTokenization);
             }
         }
 
         private void InsertLines(int index, int count) {
-            var map = Map;
-            Array.Copy(map, index, map, index + count, map.Length - index - count);
-            for (int i = 0; i < count; i++) {
-                map[index + i] = default(LineTokenization);
+            Array.Copy(_map, index, _map, index + count, _map.Length - index - count);
+            for (var i = 0; i < count; i++) {
+                _map[index + i] = default(LineTokenization);
             }
         }
 
-        private void ApplyChanges(ref Tokenizer tokenizer, Func<Tokenizer> makeTokenizer, SnapshotSpan span) {
+        private void ApplyChanges(SnapshotSpan span, Func<Tokenizer> getTokenizer) {
             var firstLine = span.Start.GetContainingLine().LineNumber;
             var lastLine = span.End.GetContainingLine().LineNumber;
-            var map = Map;
 
-            Debug.Assert(firstLine >= 0);
-            // _tokenCache should be locked by the caller
             AssertCapacity(firstLine);
 
             // find the closest line preceding firstLine for which we know tokenizer state
             firstLine = IndexOfPreviousTokenization(firstLine, 0, out var lineTokenization) + 1;
-            tokenizer = tokenizer ?? makeTokenizer();
 
-            for (int lineNo = firstLine; lineNo < span.Snapshot.LineCount; ++lineNo) {
+            for (var lineNo = firstLine; lineNo < span.Snapshot.LineCount; ++lineNo) {
                 var line = span.Snapshot.GetLineFromLineNumber(lineNo);
 
                 var beforeState = lineTokenization.State;
-                map[lineNo] = lineTokenization = tokenizer.TokenizeLine(line, beforeState);
+                _map[lineNo] = lineTokenization = getTokenizer().TokenizeLine(line, beforeState);
                 var afterState = lineTokenization.State;
 
                 // stop if we visited all affected lines and the current line has no tokenization state
