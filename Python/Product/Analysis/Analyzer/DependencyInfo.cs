@@ -134,6 +134,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         static bool TAKE_COPIES = false;
 
         public bool AddType(AnalysisValue ns) {
+            if (!ns.IsCurrent) {
+                return false;
+            }
+
             bool wasChanged;
             IAnalysisSet prev;
             if (TAKE_COPIES) {
@@ -141,7 +145,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             } else {
                 prev = _types;
             }
-            _types = prev.Add(ns, out wasChanged);
+            if (prev.Any(av => !av.IsCurrent)) {
+                _types = AnalysisSet.Create(prev.Where(av => av.IsCurrent), prev.Comparer).Add(ns, out wasChanged);
+            } else {
+                _types = prev.Add(ns, out wasChanged);
+            }
 #if FULL_VALIDATION
             _changeCount += wasChanged ? 1 : 0;
             // The value doesn't mean anything, we just want to know if a variable is being

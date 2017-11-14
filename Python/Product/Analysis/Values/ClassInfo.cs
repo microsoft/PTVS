@@ -839,6 +839,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public IAnalysisSet GetMemberNoReferences(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            if (addRef) {
+                AddDependency(unit);
+            }
             return GetMemberFromMroNoReferences(this, node, unit, name, addRef);
         }
 

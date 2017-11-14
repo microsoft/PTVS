@@ -117,11 +117,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class SingleIteratorValue : BaseIteratorValue {
         internal readonly VariableDef _indexTypes;
         private readonly IPythonProjectEntry _declModule;
+        private readonly int _declVersion;
 
         public SingleIteratorValue(VariableDef indexTypes, BuiltinClassInfo iterType, IPythonProjectEntry declModule)
             : base(iterType) {
             _indexTypes = indexTypes;
             _declModule = declModule;
+            _declVersion = _declModule.AnalysisVersion;
         }
 
         public override IPythonProjectEntry DeclaringModule {
@@ -129,6 +131,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _declModule;
             }
         }
+
+        public override int DeclaringVersion => _declVersion;
 
         protected override IAnalysisSet IteratorNext(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return _indexTypes.GetTypesNoCopy(unit, DeclaringModule);
