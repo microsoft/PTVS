@@ -1441,7 +1441,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Update]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Aktualizacja]]></Val>
+              <Val><![CDATA[Aktualizuj]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
