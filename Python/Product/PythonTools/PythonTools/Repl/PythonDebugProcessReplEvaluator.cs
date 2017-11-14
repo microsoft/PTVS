@@ -275,10 +275,12 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override CompletionResult[] GetMemberNames(string text) {
-            if (string.IsNullOrEmpty(text) && _currentFrameLocals != null) {
+            if (_currentScopeName == CurrentFrameScopeFixedName && string.IsNullOrEmpty(text) && _currentFrameLocals != null) {
                 return _currentFrameLocals.ToArray();
             };
-            // TODO: Implement child members
+
+            // TODO: Implement child members for current frame, as well as
+            // module members / child members
             return Array.Empty<CompletionResult>();
         }
 
@@ -330,10 +332,7 @@ namespace Microsoft.PythonTools.Repl {
                 _currentFrameFilename = frame.FileName;
                 _analyzer = null;
             }
-            _currentFrameLocals = frame.Locals
-                .Where(r => !string.IsNullOrEmpty(r.Expression))
-                .Select(r => new CompletionResult(r.Expression, Interpreter.PythonMemberType.Field))
-                .ToArray();
+            UpdateFrameLocals(frame);
             if (verbose) {
                 WriteOutput(Strings.DebugReplThreadChanged.FormatUI(_threadId, _frameId));
             }
@@ -343,6 +342,7 @@ namespace Microsoft.PythonTools.Repl {
             _frameId = frame.FrameId;
             _currentScopeName = CurrentFrameScopeFixedName;
             _currentScopeFileName = null;
+            UpdateFrameLocals(frame);
             WriteOutput(Strings.DebugReplFrameChanged.FormatUI(frame.FrameId));
         }
 
@@ -386,6 +386,13 @@ namespace Microsoft.PythonTools.Repl {
         internal void Resume() {
             UpdateDTEDebuggerProcessAndThread();
             _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.Go();
+        }
+
+        private void UpdateFrameLocals(PythonStackFrame frame) {
+            _currentFrameLocals = frame.Locals.Union(frame.Parameters)
+                .Where(r => !string.IsNullOrEmpty(r.Expression))
+                .Select(r => new CompletionResult(r.Expression, Interpreter.PythonMemberType.Field))
+                .ToArray();
         }
 
         private void UpdateDTEDebuggerProcessAndThread() {
