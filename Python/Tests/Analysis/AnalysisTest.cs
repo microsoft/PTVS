@@ -6680,6 +6680,23 @@ def h(x): return g(x)";
             Assert.AreEqual(1, g.References.Count());
         }
 
+        [TestMethod, Priority(0)]
+        public void CrossModuleBaseClasses() {
+            var analyzer = CreateAnalyzer();
+            var entryA = analyzer.AddModule("A", @"class ClsA(object): pass");
+            var entryB = analyzer.AddModule("B", @"from A import ClsA
+class ClsB(ClsA): pass
+
+x = ClsB.x");
+            analyzer.WaitForAnalysis();
+            analyzer.AssertIsInstance(entryB, "x");
+
+            entryA.Parse(entryA.Tree.LanguageVersion, @"class ClsA(object): x = 123");
+            entryA.Analyze(CancellationToken.None, true);
+            analyzer.WaitForAnalysis();
+            analyzer.AssertIsInstance(entryB, "x", BuiltinTypeId.Int);
+        }
+
         #endregion
 
         #region Helpers

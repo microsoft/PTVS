@@ -362,63 +362,14 @@ namespace Microsoft.PythonTools.Analysis {
         ILocationResolver ILocationResolver.GetAlternateResolver() => AlternateResolver;
     }
 
-    /// <summary>
-    /// Handles the re-evaluation of a base class when we have a deferred variable lookup.
-    /// 
-    /// For each base class which a class inherits from we create a new ClassBaseAnalysisUnit.  
-    /// 
-    /// We use this AnalysisUnit for the evaulation of the base class.  The ClassBaseAU is setup
-    /// to have the same set of scopes as the classes outer (defining) analysis unit.  We then
-    /// evaluate the base class inside of this unit.  If any of our dependencies change we will 
-    /// then re-evaluate our base class, and we will also re-evaluate our outer unit as well.
-    /// </summary>
-    class ClassBaseAnalysisUnit : AnalysisUnit {
-        private readonly Expression _baseClassNode;
-        private readonly AnalysisUnit _outerUnit;
-        private readonly int _indexInBasesList;
-
-        public ClassBaseAnalysisUnit(ClassDefinition node, InterpreterScope scope, int indexInBasesList, Expression baseClassNode, AnalysisUnit outerUnit)
-            : base(node, scope) {
-            _indexInBasesList = indexInBasesList;
-            _outerUnit = outerUnit;
-            _baseClassNode = baseClassNode;
-        }
-
-        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
-            ddg.SetCurrentUnit(this);
-
-            InterpreterScope scope;
-            if (!ddg.Scope.TryGetNodeScope(Ast, out scope)) {
-                return;
-            }
-
-            var classInfo = ((ClassScope)scope).Class;
-            var bases = ClassAnalysisUnit.EvaluateBaseClass(
-                ddg,
-                classInfo,
-                _indexInBasesList,
-                _baseClassNode
-            );
-            classInfo.SetBase(_indexInBasesList, bases);
-
-            _outerUnit.Enqueue();
-        }
-    }
-
     class ClassAnalysisUnit : AnalysisUnit {
         private readonly AnalysisUnit _outerUnit;
-        private readonly ClassBaseAnalysisUnit[] _baseEvals;
 
         public ClassAnalysisUnit(ClassDefinition node, InterpreterScope declScope, AnalysisUnit outerUnit)
             : base(node, new ClassScope(new ClassInfo(node, outerUnit), node, declScope)) {
 
             ((ClassScope)Scope).Class.SetAnalysisUnit(this);
             _outerUnit = outerUnit;
-
-            _baseEvals = new ClassBaseAnalysisUnit[node.Bases.Count];
-            for (int i = 0; i < node.Bases.Count; i++) {
-                _baseEvals[i] = new ClassBaseAnalysisUnit(node, outerUnit.Scope, i, node.Bases[i].Expression, this);
-            }
 
             AnalysisLog.NewUnit(this);
         }
@@ -448,23 +399,17 @@ namespace Microsoft.PythonTools.Analysis {
                 for (int i = 0; i < Ast.Bases.Count; i++) {
                     var baseClassArg = Ast.Bases[i];
 
-                    ddg.SetCurrentUnit(_baseEvals[i]);
+                    if (baseClassArg.Name == null) {
+                        bases.Add(EvaluateBaseClass(ddg, classInfo, i, baseClassArg.Expression));
 
-                    if (baseClassArg.Name != null) {
-                        if (baseClassArg.Name == "metaclass") {
-                            var metaClass = baseClassArg.Expression;
-                            metaClass.Walk(ddg);
-                            var metaClassValue = ddg._eval.Evaluate(metaClass);
-                            if (metaClassValue.Count > 0) {
-                                classInfo.GetOrCreateMetaclassVariable().AddTypes(_outerUnit, metaClassValue);
-                            }
+                    } else if (baseClassArg.Name == "metaclass") {
+                        var metaClass = baseClassArg.Expression;
+                        metaClass.Walk(ddg);
+                        var metaClassValue = ddg._eval.Evaluate(metaClass);
+                        if (metaClassValue.Count > 0) {
+                            classInfo.GetOrCreateMetaclassVariable().AddTypes(_outerUnit, metaClassValue);
                         }
-                        continue;
                     }
-
-                    var baseExpr = baseClassArg.Expression;
-                    var baseSet = EvaluateBaseClass(ddg, classInfo, i, baseExpr);
-                    bases.Add(baseSet);
                 }
             }
 
