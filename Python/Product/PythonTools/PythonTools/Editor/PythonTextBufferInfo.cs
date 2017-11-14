@@ -605,12 +605,9 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             // Prevent later updates overwriting our tokenization
-            lock (_tokenCache) {
-                Tokenizer tokenizer = null;
-                _tokenCache.Update(e, () => tokenizer ?? (tokenizer = MakeTokenizer()));
-            }
+            Tokenizer tokenizer = null;
+            _tokenCache.Update(e, () => tokenizer ?? (tokenizer = MakeTokenizer()));
         }
-
         #endregion
     }
 }
