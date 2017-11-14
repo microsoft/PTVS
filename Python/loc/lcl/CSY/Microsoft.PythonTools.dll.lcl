@@ -3313,7 +3313,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Copy Full Path]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Kopírovat úplnou cestu]]></Val>
+              <Val><![CDATA[Zkopírovat úplnou cestu]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
