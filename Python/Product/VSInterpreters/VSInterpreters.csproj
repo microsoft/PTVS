@@ -76,6 +76,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="BuiltInPackageManagers.cs" />
+    <Compile Include="CondaEnvironmentFactoryConstants.cs" />
+    <Compile Include="CondaUtils.cs" />
+    <Compile Include="CondaEnvironmentFactoryProvider.cs" />
+    <Compile Include="CondaPackageManager.cs" />
     <Compile Include="CPythonInterpreterFactoryConstants.cs" />
     <Compile Include="CPythonInterpreterFactoryProvider.cs" />
     <Compile Include="ExperimentalOptions.cs" />

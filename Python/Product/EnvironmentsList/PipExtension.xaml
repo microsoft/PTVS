@@ -123,11 +123,7 @@
                                 Command="{x:Static l:PipExtension.InstallPackage}"
                                 CommandParameter="{Binding View.SearchQuery,Mode=OneWay}"
                                 Margin="3">
-                            <TextBlock>
-                                <!-- TODO: Localization - make this a single string if possible -->
-                                <Run Text="{Binding View.SearchQuery,Mode=OneWay,StringFormat={x:Static l:Resources.PipExtensionPipInstall}}" />
-                                <Run Text="{Binding IndexName,Mode=OneWay,StringFormat={x:Static l:Resources.PipExtensionPipInstallFrom}}" />
-                            </TextBlock>
+                            <TextBlock Text="{Binding View.InstallPackageText,Mode=OneWay}"/>
                         </Button>
                         <DataTemplate.Triggers>
                             <Trigger SourceName="InstallButton" Property="IsEnabled" Value="False">
@@ -196,7 +192,7 @@
                 <Setter Property="Padding" Value="2" />
                 <Setter Property="IsEnabled" Value="{Binding IsPipInstalled,Mode=OneWay}" />
                 <Setter Property="Text" Value="{Binding SearchQuery,UpdateSourceTrigger=PropertyChanged}" />
-                <Setter Property="AutomationProperties.Name" Value="{x:Static l:Resources.PipExtensionSearchPyPILabel}" />
+                <Setter Property="AutomationProperties.Name" Value="{Binding SearchWatermark,Mode=OneWay}" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate>
@@ -218,7 +214,7 @@
                                                     Command="{x:Static l:PipExtension.InstallPackage}"
                                                     CommandParameter="{Binding Text,RelativeSource={RelativeSource TemplatedParent}}" />
                                     </Grid.InputBindings>
-                                    
+
                                     <ScrollViewer Name="PART_ContentHost"
                                                   HorizontalScrollBarVisibility="Hidden"
                                                   VerticalScrollBarVisibility="Hidden" />
@@ -249,7 +245,7 @@
                                                Margin="8 2"
                                                IsHitTestVisible="False"
                                                Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}"
-                                               Text="{x:Static l:Resources.PipExtensionSearchPyPILabel}">
+                                               Text="{Binding SearchWatermark,Mode=OneWay}">
                                         <TextBlock.Visibility>
                                             <MultiBinding Converter="{StaticResource VisibilityIfAll}">
                                                 <Binding Path="IsPipInstalled" Mode="OneWay"  />

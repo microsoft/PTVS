@@ -199,12 +199,6 @@
   <data name="NoDescription" xml:space="preserve">
     <value>(No description)</value>
   </data>
-  <data name="PipDefaultIndexName" xml:space="preserve">
-    <value>PyPI</value>
-  </data>
-  <data name="PipExtensionDisplayName" xml:space="preserve">
-    <value>Packages</value>
-  </data>
   <data name="PipExtensionHelpContent" xml:space="preserve">
     <value>These packages can be managed using your environment's package manager. Type in the search box to install new packages, or use the buttons on existing packages to update or remove them.</value>
   </data>
@@ -377,9 +371,6 @@
   <data name="PipExtensionClearSearchToolTip" xml:space="preserve">
     <value>Clear search filter</value>
   </data>
-  <data name="PipExtensionSearchPyPILabel" xml:space="preserve">
-    <value>Search PyPI and installed packages</value>
-  </data>
   <data name="PipExtensionInstallPipToolTip" xml:space="preserve">
     <value>Install the setuptools and pip packages from PyPI. These packages are required to use this panel.</value>
   </data>
@@ -389,15 +380,6 @@
   <data name="PipExtensionInstallLabel" xml:space="preserve">
     <value>Install {0}</value>
     <comment>{0} is package display name</comment>
-  </data>
-  <data name="PipExtensionPipInstall" xml:space="preserve">
-    <value>"pip install {0}"</value>
-    <comment>Do not translate.
-{0} is the search query</comment>
-  </data>
-  <data name="PipExtensionPipInstallFrom" xml:space="preserve">
-    <value> from {0}</value>
-    <comment>{0} is name of package index. This string is appended to the string resource PipExtensionPipInstall</comment>
   </data>
   <data name="PipPackageUnknownPackageSpec" xml:space="preserve">
     <value>(unknown)</value>

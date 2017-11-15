@@ -80,7 +80,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private void UninstallPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = _provider.CanExecute && e.Parameter is PipPackageView;
+            var view = e.Parameter as PipPackageView;
+            e.CanExecute = _provider.CanExecute && view != null && _provider._packageManager.CanBeUninstalled(view.Package);
             e.Handled = true;
         }
 
@@ -315,12 +316,27 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             new PropertyMetadata(Filter_Changed)
         );
 
+        public string InstallPackageText {
+            get { return (string)GetValue(InstallPackageTextProperty); }
+            set { SetValue(InstallPackageTextProperty, value); }
+        }
+
+        public static readonly DependencyProperty InstallPackageTextProperty = DependencyProperty.Register(
+            "InstallPackageText",
+            typeof(string),
+            typeof(PipEnvironmentView)
+        );
+
+        public string SearchWatermark => _provider._packageManager.SearchHelpText;
+
         private static void Filter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             var view = d as PipEnvironmentView;
             if (view != null) {
                 try {
                     view._installedView.View.Refresh();
                     view._installableViewRefreshTimer.Change(500, Timeout.Infinite);
+
+                    view.InstallPackageText = view._provider._packageManager.GetInstallCommandDisplayName(view.SearchQuery);
                 } catch (ObjectDisposedException) {
                 }
             }
@@ -504,8 +520,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public PipEnvironmentView View { get; }
-
-        public string IndexName => View._provider.IndexName;
     }
 
     class PackageResultView : INotifyPropertyChanged {

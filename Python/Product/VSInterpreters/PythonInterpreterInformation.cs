@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         Factory = InterpreterFactoryCreator.CreateInterpreterFactory(
                             Configuration,
                             new InterpreterFactoryCreationOptions {
-                                PackageManager = new PipPackageManager(),
+                                PackageManager = CreatePackageManager(),
                                 WatchFileSystem = true,
                                 NoDatabase = ExperimentalOptions.NoDatabaseFactory
                             }
@@ -50,6 +50,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
             return Factory;
+        }
+
+        private IPackageManager CreatePackageManager() {
+            if (ExperimentalOptions.UseCondaPackageManager && !string.IsNullOrEmpty(CondaUtils.GetCondaExecutablePath(Configuration.PrefixPath))) {
+                return new CondaPackageManager();
+            } else {
+                return new PipPackageManager();
+            }
         }
     }
 }

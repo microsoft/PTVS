@@ -20,6 +20,16 @@ namespace TestUtilities.Python {
         public event EventHandler InstalledPackagesChanged;
         public event EventHandler IsReadyChanged { add { throw new NotImplementedException(); } remove { } }
 
+        public string ExtensionDisplayName => string.Empty;
+
+        public string IndexDisplayName => string.Empty;
+
+        public string SearchHelpText => string.Empty;
+
+        public string GetInstallCommandDisplayName(string searchQuery) => string.Empty;
+
+        public bool CanBeUninstalled(PackageSpec package) => true;
+
         public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
             Factory = factory;
         }

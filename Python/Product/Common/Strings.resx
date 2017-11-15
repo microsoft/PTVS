@@ -2126,4 +2126,40 @@ Expand selection to the full expression?</value>
   <data name="RegularExpressionClassificationType" xml:space="preserve">
     <value>Python Regular Expression</value>
   </data>
+  <data name="PipDefaultIndexName" xml:space="preserve">
+    <value>PyPI</value>
+  </data>
+  <data name="PipExtensionDisplayName" xml:space="preserve">
+    <value>Packages (PyPI)</value>
+  </data>
+  <data name="CondaDefaultIndexName" xml:space="preserve">
+    <value>Conda</value>
+  </data>
+  <data name="CondaExtensionDisplayName" xml:space="preserve">
+    <value>Packages (Conda)</value>
+  </data>
+  <data name="PipExtensionPipInstall" xml:space="preserve">
+    <value>"pip install {0}"</value>
+    <comment>Do not translate.
+{0} is the search query</comment>
+  </data>
+  <data name="PipExtensionPipInstallFrom" xml:space="preserve">
+    <value> from {0}</value>
+    <comment>{0} is name of package index. This string is appended to the string resource PipExtensionPipInstall</comment>
+  </data>
+  <data name="PipExtensionSearchPyPILabel" xml:space="preserve">
+    <value>Search PyPI and installed packages</value>
+  </data>
+  <data name="CondaExtensionCondaInstall" xml:space="preserve">
+    <value>"conda install {0}"</value>
+    <comment>Do not translate.
+{0} is the search query</comment>
+  </data>
+  <data name="CondaExtensionCondaInstallFrom" xml:space="preserve">
+    <value> from {0}</value>
+    <comment>{0} is name of package index. This string is appended to the string resource CondaExtensionCondaInstall</comment>
+  </data>
+    <data name="CondaExtensionSearchCondaLabel" xml:space="preserve">
+    <value>Search Conda and installed packages</value>
+  </data>
 </root>
