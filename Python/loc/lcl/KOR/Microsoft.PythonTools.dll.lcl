@@ -2592,6 +2592,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},16436" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Generate RequirementsTxt]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[RequirementsTxt 생성]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3090,6 +3093,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Import coverage.py XML file...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[coverage.py XML 파일 가져오기(&I)...]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3105,6 +3111,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},271" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Imports an XML file produced by coverage.py.]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[coverage.py가 생성한 XML 파일을 가져옵니다.]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
@@ -3273,6 +3282,9 @@
         <Item ItemId=";{bdfa79d2-2cd2-474a-a82a-ce8694116825},65538" ItemType=";LocCanonical" PsrId="240" Leaf="true">
           <Str Cat="Button">
             <Val><![CDATA[Open Command Prompt Here]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[여기서 명령 프롬프트 열기]]></Val>
+            </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
