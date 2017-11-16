@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -164,21 +165,41 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private Task<bool> ShouldElevate(IPackageManagerUI ui, string operation) {
-            // Global installation in C:\ProgramData\<prefix>
-            // requires elevation to modify existing files, but our
-            // elevation detection logic in package manager UI only
-            // tries to create a file (which succeeds) so it thinks we
-            // do not need to elevate.
-            //
-            // Conda itself checks for permission against the first file that matches:
+            // Apply the same logic as conda.gateways.disk.test.prefix_is_writable()
+            // Check for errors when opening in append mode for first file that matches:
             // - ./conda-meta/history
             // - ./conda-meta/conda*.json
             // - ./conda-meta/*.json
             // - ./python.exe
-            // It tries to open the file with append mode, if that fails => CondaIOError
+            Task<bool> result = null;
 
-            // TODO: we need to apply the same logic so the user gets prompted for elevation
-            return ui == null ? Task.FromResult(false) : ui.ShouldElevateAsync(this, operation);
+            try {
+                var metaPath = Path.Combine(_factory.Configuration.PrefixPath, "conda-meta");
+                var filePath = Directory.EnumerateFiles(metaPath, "history")
+                    .Union(Directory.EnumerateFiles(metaPath, "conda*.json"))
+                    .Union(Directory.EnumerateFiles(metaPath, "*.json"))
+                    .Union(Directory.EnumerateFiles(_factory.Configuration.PrefixPath, "python.exe"))
+                    .FirstOrDefault();
+                if (filePath != null) {
+                    using (var fileStream = new FileStream(filePath, FileMode.Append)) {
+                        result = Task.FromResult(false);
+                    }
+                }
+            } catch (ArgumentException) {
+            } catch (IOException) {
+            } catch (NotSupportedException) {
+            } catch (UnauthorizedAccessException) {
+                result = Task.FromResult(true);
+            } catch (SecurityException) {
+                result = Task.FromResult(true);
+            }
+
+            if (result == null) {
+                // Inconclusive, so delegate to UI check when possible
+                result = ui == null ? Task.FromResult(false) : ui.ShouldElevateAsync(this, operation);
+            }
+
+            return result;
         }
 
         public bool IsReady {
