@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -275,16 +276,51 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override CompletionResult[] GetMemberNames(string text) {
-            if (string.IsNullOrEmpty(text) && _currentFrameLocals != null) {
+            if (_currentScopeName == CurrentFrameScopeFixedName && string.IsNullOrEmpty(text) && _currentFrameLocals != null) {
                 return _currentFrameLocals.ToArray();
             };
-            // TODO: Implement child members
-            return Array.Empty<CompletionResult>();
+
+            return _serviceProvider.GetUIThread().InvokeTaskSync(async () => await GetMemberNamesAsync(text), CancellationToken.None);
         }
 
         public override OverloadDoc[] GetSignatureDocumentation(string text) {
             // TODO: implement this
             return new OverloadDoc[0];
+        }
+
+        private async Task<CompletionResult[]> GetMemberNamesAsync(string text) {
+            // TODO: implement support for getting members for module scope,
+            // not just for current frame scope
+            if (_currentScopeName == CurrentFrameScopeFixedName) {
+                var frame = GetFrames().SingleOrDefault(f => f.FrameId == _frameId);
+                if (frame != null) {
+                    using (var completion = new AutoResetEvent(false)) {
+                        PythonEvaluationResult result = null;
+
+                        var expression = string.Format(CultureInfo.InvariantCulture, "':'.join(dir({0}))", text ?? "");
+                        _serviceProvider.GetUIThread().InvokeTaskSync(() => frame.ExecuteTextAsync(expression, PythonEvaluationResultReprKind.Raw, (obj) => {
+                            result = obj;
+                            try {
+                                completion.Set();
+                            } catch (ObjectDisposedException) {
+                            }
+                        }, CancellationToken.None), CancellationToken.None);
+
+                        if (completion.WaitOne(100) && !_process.HasExited && result?.StringRepr != null) {
+                            // We don't really know if it's a field, function or else...
+                            var completionResults = result.StringRepr
+                                .Split(':')
+                                .Where(r => !string.IsNullOrEmpty(r))
+                                .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
+                                .ToArray();
+
+                            return completionResults;
+                        }
+                    }
+                }
+            }
+
+            return Array.Empty<CompletionResult>();
         }
 
         public override void SetScope(string scopeName) {
@@ -330,10 +366,7 @@ namespace Microsoft.PythonTools.Repl {
                 _currentFrameFilename = frame.FileName;
                 _analyzer = null;
             }
-            _currentFrameLocals = frame.Locals
-                .Where(r => !string.IsNullOrEmpty(r.Expression))
-                .Select(r => new CompletionResult(r.Expression, Interpreter.PythonMemberType.Field))
-                .ToArray();
+            UpdateFrameLocals(frame);
             if (verbose) {
                 WriteOutput(Strings.DebugReplThreadChanged.FormatUI(_threadId, _frameId));
             }
@@ -343,6 +376,7 @@ namespace Microsoft.PythonTools.Repl {
             _frameId = frame.FrameId;
             _currentScopeName = CurrentFrameScopeFixedName;
             _currentScopeFileName = null;
+            UpdateFrameLocals(frame);
             WriteOutput(Strings.DebugReplFrameChanged.FormatUI(frame.FrameId));
         }
 
@@ -386,6 +420,13 @@ namespace Microsoft.PythonTools.Repl {
         internal void Resume() {
             UpdateDTEDebuggerProcessAndThread();
             _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.Go();
+        }
+
+        private void UpdateFrameLocals(PythonStackFrame frame) {
+            _currentFrameLocals = frame.Locals.Union(frame.Parameters)
+                .Where(r => !string.IsNullOrEmpty(r.Expression))
+                .Select(r => new CompletionResult(r.Expression, Interpreter.PythonMemberType.Field))
+                .ToArray();
         }
 
         private void UpdateDTEDebuggerProcessAndThread() {

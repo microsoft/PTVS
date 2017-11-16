@@ -728,6 +728,43 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public async Task CondaExtension() {
+            var service = MakeEmptyCondaEnv(PythonLanguageVersion.V36);
+
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
+                list.CreatePipExtension = true;
+                list.Service = service;
+                list.Interpreters = service;
+
+                var environment = list.Environments.Single();
+                var pip = list.GetExtensionOrAssert<PipExtensionProvider>(environment);
+
+                // Allow the initial scan to complete
+                var cpm = (CondaPackageManager)pip._packageManager;
+                await Task.Delay(500);
+                await cpm._working.WaitAsync(12500);
+                cpm._working.Release();
+
+                var packages = await pip.GetInstalledPackagesAsync();
+                AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), "pip", "python", "setuptools", "wheel");
+
+                var task = wpf.Invoke(() => pip.InstallPackage(new PackageSpec("requests")).ContinueWith(LogException));
+                Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "conda install resquests timed out");
+                Assert.IsTrue(task.Result, "conda install requests failed");
+                packages = await pip.GetInstalledPackagesAsync();
+                AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), "requests");
+
+                task = wpf.Invoke(() => pip.UninstallPackage(new PackageSpec("requests")).ContinueWith(LogException));
+                Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "conda uninstall requests timed out");
+                Assert.IsTrue(task.Result, "conda uninstall requests failed");
+                packages = await pip.GetInstalledPackagesAsync();
+                AssertUtil.DoesntContain(packages.Select(pv => pv.Name), "requests");
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public async Task SaveLoadCache() {
             var cachePath = Path.Combine(TestData.GetTempPath(), "pip.cache");
             using (var cache = new TestPipPackageCache(cachePath)) {
@@ -903,6 +940,56 @@ namespace PythonToolsUITests {
                 factory.PackageManager = new PipPackageManager(false);
                 factory.PackageManager.SetInterpreterFactory(factory);
             }
+            provider.AddFactory(factory);
+            service.AddProvider(provider);
+            return service;
+        }
+
+        private MockInterpreterOptionsService MakeEmptyCondaEnv(PythonLanguageVersion version) {
+            var python = PythonPaths.AnacondaVersions.FirstOrDefault(p =>
+                p.IsCPython && File.Exists(Path.Combine(p.PrefixPath, "scripts", "conda.exe"))
+            );
+            if (python == null) {
+                Assert.Inconclusive("Requires Anaconda or Miniconda");
+            }
+
+            var env = TestData.GetTempPath();
+            if (env.Length > 140) {
+                env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                DeleteFolder.Add(env);
+            }
+            using (var proc = ProcessOutput.RunHiddenAndCapture(
+                Path.Combine(python.PrefixPath, "scripts", "conda.exe"),
+                "create",
+                "-p",
+                env,
+                "python=={0}".FormatInvariant(version.ToVersion().ToString()),
+                "-y"
+            )) {
+                Console.WriteLine(proc.Arguments);
+                proc.Wait();
+                foreach (var line in proc.StandardOutputLines.Concat(proc.StandardErrorLines)) {
+                    Console.WriteLine(line);
+                }
+                Assert.AreEqual(0, proc.ExitCode ?? -1, "Failed to create conda environment");
+            }
+
+            var service = new MockInterpreterOptionsService();
+            var provider = new MockPythonInterpreterFactoryProvider("Conda Env Provider");
+            var factory = new MockPythonInterpreterFactory(
+                new InterpreterConfiguration(
+                    "Mock;" + Guid.NewGuid().ToString(),
+                    Path.GetFileName(PathUtils.TrimEndSeparator(env)),
+                    env,
+                    PathUtils.FindFile(env, "python.exe"),
+                    PathUtils.FindFile(env, "python.exe"),
+                    "PYTHONPATH",
+                    python.Architecture,
+                    python.Version.ToVersion()
+                )
+            );
+            factory.PackageManager = new CondaPackageManager(false);
+            factory.PackageManager.SetInterpreterFactory(factory);
             provider.AddFactory(factory);
             service.AddProvider(provider);
             return service;

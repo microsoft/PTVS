@@ -20,6 +20,22 @@ namespace TestUtilities.Python {
         public event EventHandler InstalledPackagesChanged;
         public event EventHandler IsReadyChanged { add { throw new NotImplementedException(); } remove { } }
 
+        public string ExtensionDisplayName => string.Empty;
+
+        public string IndexDisplayName => string.Empty;
+
+        public string SearchHelpText => string.Empty;
+
+        public string GetInstallCommandDisplayName(string searchQuery) {
+            if (string.IsNullOrEmpty(searchQuery)) {
+                return string.Empty;
+            }
+
+            return string.Format("pip install {0} from PyPI", searchQuery);
+        }
+
+        public bool CanUninstall(PackageSpec package) => true;
+
         public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
             Factory = factory;
         }
