@@ -25,16 +25,22 @@ namespace Microsoft.PythonTools.Options {
 
         public void Load() {
             NoDatabaseFactory = EO.GetNoDatabaseFactory();
+            AutoDetectCondaEnvironments = EO.GetAutoDetectCondaEnvironments();
+            UseCondaPackageManager = EO.GetUseCondaPackageManager();
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
             EO.NoDatabaseFactory = NoDatabaseFactory;
+            EO.AutoDetectCondaEnvironments = AutoDetectCondaEnvironments;
+            EO.UseCondaPackageManager = UseCondaPackageManager;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
             NoDatabaseFactory = false;
+            AutoDetectCondaEnvironments = false;
+            UseCondaPackageManager = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -45,5 +51,15 @@ namespace Microsoft.PythonTools.Options {
         /// without old-style completion databases.
         /// </summary>
         public bool NoDatabaseFactory { get; set; }
+
+        /// <summary>
+        /// True to auto detect all non-root conda environments on the machine.
+        /// </summary>
+        public bool AutoDetectCondaEnvironments { get; set; }
+
+        /// <summary>
+        /// True to use conda for package management when available.
+        /// </summary>
+        public bool UseCondaPackageManager { get; set; }
     }
 }
