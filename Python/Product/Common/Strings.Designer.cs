@@ -702,16 +702,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &quot;conda install {0}&quot;.
-        /// </summary>
-        public static string CondaExtensionCondaInstall {
-            get {
-                return ResourceManager.GetString("CondaExtensionCondaInstall", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to  from {0}.
+        ///   Looks up a localized string similar to conda install {0} from Conda.
         /// </summary>
         public static string CondaExtensionCondaInstallFrom {
             get {
@@ -3637,16 +3628,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &quot;pip install {0}&quot;.
-        /// </summary>
-        public static string PipExtensionPipInstall {
-            get {
-                return ResourceManager.GetString("PipExtensionPipInstall", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to  from {0}.
+        ///   Looks up a localized string similar to pip install {0} from PyPI.
         /// </summary>
         public static string PipExtensionPipInstallFrom {
             get {

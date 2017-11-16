@@ -52,19 +52,19 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler IsReadyChanged;
 
         /// <summary>
-        /// Name to display for the extension in the environments window.
+        /// Localized name to display for the extension in the environments window.
         /// Example: 'Packages (PyPI)'
         /// </summary>
         string ExtensionDisplayName { get; }
 
         /// <summary>
-        /// Name of the index where packages are fetched from.
+        /// Localized name of the index where packages are fetched from.
         /// Example: 'PyPI'
         /// </summary>
         string IndexDisplayName { get; }
 
         /// <summary>
-        /// Watermark for the search query text box.
+        /// Localized watermark text for the search query text box.
         /// Example: 'Search PyPI and installed packages'
         /// </summary>
         string SearchHelpText { get; }
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Returns if the specified package is allowed to be uninstalled.
         /// </summary>
-        bool CanBeUninstalled(PackageSpec package);
+        bool CanUninstall(PackageSpec package);
 
         /// <summary>
         /// Prepares the package manager for use. This only needs to be called

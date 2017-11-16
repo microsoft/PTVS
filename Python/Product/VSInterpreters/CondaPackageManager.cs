@@ -371,10 +371,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 return string.Empty;
             }
 
-            return Strings.CondaExtensionCondaInstall.FormatUI(searchQuery) + Strings.CondaExtensionCondaInstallFrom.FormatUI(IndexDisplayName);
+            return Strings.CondaExtensionCondaInstallFrom.FormatUI(searchQuery);
         }
 
-        public bool CanBeUninstalled(PackageSpec package) {
+        public bool CanUninstall(PackageSpec package) {
             // Don't make it easy for the users to get themselves in trouble.
             // If they really need to uninstall these packages, they can fall
             // back to command line.

@@ -2128,38 +2128,34 @@ Expand selection to the full expression?</value>
   </data>
   <data name="PipDefaultIndexName" xml:space="preserve">
     <value>PyPI</value>
+    <comment>Do not translate</comment>
   </data>
   <data name="PipExtensionDisplayName" xml:space="preserve">
     <value>Packages (PyPI)</value>
+    <comment>Do not translate 'PyPI'</comment>
   </data>
   <data name="CondaDefaultIndexName" xml:space="preserve">
     <value>Conda</value>
+    <comment>Do not translate</comment>
   </data>
   <data name="CondaExtensionDisplayName" xml:space="preserve">
     <value>Packages (Conda)</value>
-  </data>
-  <data name="PipExtensionPipInstall" xml:space="preserve">
-    <value>"pip install {0}"</value>
-    <comment>Do not translate.
-{0} is the search query</comment>
+    <comment>Do not translate 'Conda'</comment>
   </data>
   <data name="PipExtensionPipInstallFrom" xml:space="preserve">
-    <value> from {0}</value>
-    <comment>{0} is name of package index. This string is appended to the string resource PipExtensionPipInstall</comment>
+    <value>pip install {0} from PyPI</value>
+    <comment>'pip install {0}' is a command-line that should not be translated. Do not translate 'PyPI'</comment>
   </data>
   <data name="PipExtensionSearchPyPILabel" xml:space="preserve">
     <value>Search PyPI and installed packages</value>
-  </data>
-  <data name="CondaExtensionCondaInstall" xml:space="preserve">
-    <value>"conda install {0}"</value>
-    <comment>Do not translate.
-{0} is the search query</comment>
+    <comment>Do not translate 'PyPI'</comment>
   </data>
   <data name="CondaExtensionCondaInstallFrom" xml:space="preserve">
-    <value> from {0}</value>
-    <comment>{0} is name of package index. This string is appended to the string resource CondaExtensionCondaInstall</comment>
+    <value>conda install {0} from Conda</value>
+    <comment>'conda install {0}' is a command-line that should not be translated. Do not translate 'Conda'</comment>
   </data>
     <data name="CondaExtensionSearchCondaLabel" xml:space="preserve">
     <value>Search Conda and installed packages</value>
+    <comment>Do not translate 'Conda'</comment>
   </data>
 </root>

@@ -435,10 +435,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 return string.Empty;
             }
 
-            return Strings.PipExtensionPipInstall.FormatUI(searchQuery) + Strings.PipExtensionPipInstallFrom.FormatUI(IndexDisplayName);
+            return Strings.PipExtensionPipInstallFrom.FormatUI(searchQuery);
         }
 
-        public bool CanBeUninstalled(PackageSpec package) {
+        public bool CanUninstall(PackageSpec package) {
             return true;
         }
 

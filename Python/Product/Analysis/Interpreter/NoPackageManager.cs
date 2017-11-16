@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public event EventHandler IsReadyChanged { add { } remove { } }
 
-        public bool CanBeUninstalled(PackageSpec package) {
+        public bool CanUninstall(PackageSpec package) {
             return true;
         }
 
@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public string GetInstallCommandDisplayName(string searchQuery) {
-            throw new NotImplementedException();
+            return string.Empty;
         }
     }
 }

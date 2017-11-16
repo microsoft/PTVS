@@ -26,9 +26,15 @@ namespace TestUtilities.Python {
 
         public string SearchHelpText => string.Empty;
 
-        public string GetInstallCommandDisplayName(string searchQuery) => string.Empty;
+        public string GetInstallCommandDisplayName(string searchQuery) {
+            if (string.IsNullOrEmpty(searchQuery)) {
+                return string.Empty;
+            }
 
-        public bool CanBeUninstalled(PackageSpec package) => true;
+            return string.Format("pip install {0} from PyPI", searchQuery);
+        }
+
+        public bool CanUninstall(PackageSpec package) => true;
 
         public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
             Factory = factory;

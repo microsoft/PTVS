@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void UninstallPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as PipPackageView;
-            e.CanExecute = _provider.CanExecute && view != null && _provider._packageManager.CanBeUninstalled(view.Package);
+            e.CanExecute = _provider.CanExecute && view != null && _provider._packageManager.CanUninstall(view.Package);
             e.Handled = true;
         }
 

@@ -60,15 +60,18 @@ namespace Microsoft.PythonTools.Interpreter {
             lock (this) {
                 if (!_initialized) {
                     _initialized = true;
-                    _environmentsTxtPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                        ".conda",
-                        "environments.txt"
-                    );
+                    try {
+                        _environmentsTxtPath = Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                            ".conda",
+                            "environments.txt"
+                        );
+                    } catch (ArgumentException) {
+                    }
 
                     DiscoverInterpreterFactories();
 
-                    if (_watchFileSystem) {
+                    if (_watchFileSystem && !string.IsNullOrEmpty(_environmentsTxtPath)) {
                         // Watch the file %HOMEPATH%/.conda/Environments.txt which
                         // is updated by conda after a new environment is created.
                         var watchedPath = Path.GetDirectoryName(_environmentsTxtPath);
@@ -91,10 +94,10 @@ namespace Microsoft.PythonTools.Interpreter {
         private async void _envsTxtWatcherTimer_Elapsed(object state) {
             try {
                 _envsTxtWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                DiscoverInterpreterFactories();
             } catch (ObjectDisposedException) {
             }
-
-            DiscoverInterpreterFactories();
         }
 
         private void _envsTxtWatcher_Changed(object sender, FileSystemEventArgs e) {
@@ -159,9 +162,10 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var factory in globalFactories) {
                 var condaPath = CondaUtils.GetCondaExecutablePath(factory.Configuration.PrefixPath, allowBatch: false);
                 if (!string.IsNullOrEmpty(condaPath)) {
-                    // TODO: check executable version, we want to use the latest
-                    // because older ones may not be able to detect environments
-                    // created by a later conda.
+                    // TODO: need to pick the newest conda.exe on the machine,
+                    // not just the first one found.
+                    // Unfortunately, conda.exe doesn't have a version resource,
+                    // we'll need to figure some other way to determine conda version.
                     mainCondaExePath = condaPath;
                     break;
                 }
