@@ -53,6 +53,58 @@ namespace Microsoft.PythonTools.Interpreter {
             UIMode = uiMode;
         }
 
+        private static string Read(Dictionary<string, object> d, string k) {
+            try {
+                return (string)d[k];
+            } catch (KeyNotFoundException) {
+            } catch (InvalidCastException) {
+            }
+            return null;
+        }
+
+        internal InterpreterConfiguration(Dictionary<string, object> properties) {
+            Id = Read(properties, nameof(Id));
+            _description = Read(properties, nameof(Description)) ?? "";
+            PrefixPath = Read(properties, nameof(PrefixPath));
+            InterpreterPath = Read(properties, nameof(InterpreterPath));
+            WindowsInterpreterPath = Read(properties, nameof(WindowsInterpreterPath));
+            PathEnvironmentVariable = Read(properties, nameof(PathEnvironmentVariable));
+            Architecture = InterpreterArchitecture.TryParse(Read(properties, nameof(Architecture)));
+            try {
+                Version = Version.Parse(Read(properties, nameof(Version)));
+            } catch (ArgumentException) {
+                Version = new Version();
+            } catch (FormatException) {
+                Version = new Version();
+            }
+            UIMode = 0;
+            foreach (var bit in (Read(properties, nameof(UIMode)) ?? "").Split('|')) {
+                InterpreterUIMode m;
+                if (Enum.TryParse(bit, out m)) {
+                    UIMode |= m;
+                }
+            }
+        }
+
+        internal void WriteToDictionary(Dictionary<string, object> properties) {
+            properties[nameof(Id)] = Id;
+            properties[nameof(Description)] = _description;
+            properties[nameof(PrefixPath)] = PrefixPath;
+            properties[nameof(InterpreterPath)] = InterpreterPath;
+            properties[nameof(WindowsInterpreterPath)] = WindowsInterpreterPath;
+            properties[nameof(PathEnvironmentVariable)] = PathEnvironmentVariable;
+            properties[nameof(Architecture)] = Architecture.ToString();
+            if (Version != null) {
+                properties[nameof(Version)] = Version.ToString();
+            }
+            var m = Enum.GetValues(typeof(InterpreterUIMode)).Cast<Enum>()
+                .Where(flag => UIMode.HasFlag(flag))
+                .Select(flag => Enum.GetName(typeof(InterpreterUIMode), flag));
+            if (m.Any()) {
+                properties[nameof(UIMode)] = string.Join("|", m);
+            }
+        }
+
         /// <summary>
         /// Gets a unique and stable identifier for this interpreter.
         /// </summary>

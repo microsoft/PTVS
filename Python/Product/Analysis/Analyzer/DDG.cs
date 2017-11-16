@@ -295,7 +295,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private bool TryImportModule(string modName, bool forceAbsolute, out ModuleReference moduleRef) {
-            if (ProjectState.Limits.CrossModule != null &&
+            if (ProjectState.Limits.CrossModule > 0 &&
                 ProjectState.ModulesByFilename.Count > ProjectState.Limits.CrossModule) {
                 // too many modules loaded, disable cross module analysis by blocking
                 // scripts from seeing other modules.

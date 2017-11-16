@@ -110,6 +110,22 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </returns>
         /// <remarks>New in 2.1</remarks>
         bool UnlockInterpreter(object cookie);
+
+        /// <summary>
+        /// Returns the serialization information for a given factory, allowing
+        /// it to be reconstructed in another AppDomain or process without requiring
+        /// rediscovery. Factories must implement <see cref="ICustomInterpreterSerialization"/>
+        /// to override the values - otherwise, sufficient defaults will be provided
+        /// for very basic analysis.
+        /// </summary>
+        /// <param name="factory">The factory to get information for.</param>
+        /// <param name="assembly">The assembly containing the factory type.</param>
+        /// <param name="typeName">The factory type to load.</param>
+        /// <param name="properties">The only argument to pass to the factory type's constructor.</param>
+        /// <exception cref="InvalidOperationException">
+        /// The factory cannot be serialized, even using the default behavior.
+        /// </exception>
+        void GetSerializationInfo(IPythonInterpreterFactory factory, out string assembly, out string typeName, out Dictionary<string, object> properties);
     }
 
 }

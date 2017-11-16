@@ -68,16 +68,6 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// Creates a new interpreter factory with the specified database. This
-        /// factory is suitable for analysis, but not execution.
-        /// </summary>
-        public static PythonInterpreterFactoryWithDatabase CreateAnalysisInterpreterFactory(
-            Version languageVersion,
-            PythonTypeDatabase database) {
-            return new AnalysisOnlyInterpreterFactory(languageVersion, database);
-        }
-
-        /// <summary>
         /// Creates a new interpreter factory with the specified database path.
         /// This factory is suitable for analysis, but not execution.
         /// </summary>

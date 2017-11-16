@@ -16,8 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +26,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
@@ -51,19 +50,17 @@ namespace Microsoft.PythonTools.Intellisense {
     /// </summary>
     sealed class OutOfProcProjectAnalyzer : IDisposable {
         private readonly AnalysisQueue _analysisQueue;
-        private IPythonInterpreterFactory _interpreterFactory;
         private readonly ProjectEntryMap _projectFiles;
-        private PythonAnalyzer _pyAnalyzer;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
+
+        private IPythonInterpreterFactory _interpreterFactory;
+        private PythonAnalyzer _pyAnalyzer;
         private InterpreterConfiguration[] _allConfigs;
-        private volatile Dictionary<string, AP.TaskPriority> _commentPriorityMap = new Dictionary<string, AP.TaskPriority>() {
-            { "TODO", AP.TaskPriority.normal },
-            { "HACK", AP.TaskPriority.high },
-        };
-        private AP.OptionsChangedEvent _options;
-        private readonly AggregateCatalog _catalog;
-        private readonly CompositionContainer _container;
+        private AP.AnalysisOptions _options;
+        private readonly Dictionary<string, IAnalysisExtension> _extensions;
         internal int _analysisPending;
+
+        private volatile Dictionary<string, AP.TaskPriority> _commentPriorityMap;
 
         private bool _isDisposed;
 
@@ -71,8 +68,6 @@ namespace Microsoft.PythonTools.Intellisense {
         // different sources of items for the same file.
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
-        private readonly HashSet<IAnalysisExtension> _registeredExtensions = new HashSet<IAnalysisExtension>();
-        private readonly Dictionary<string, IAnalysisExtension> _extensionsByName = new Dictionary<string, IAnalysisExtension>();
 
         private readonly Connection _connection;
 
@@ -80,9 +75,10 @@ namespace Microsoft.PythonTools.Intellisense {
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
-            _options = new AP.OptionsChangedEvent() {
-                indentation_inconsistency_severity = Severity.Ignore
-            };
+
+            _options = new AP.AnalysisOptions();
+
+            _extensions = new Dictionary<string, IAnalysisExtension>();
 
             _projectFiles = new ProjectEntryMap();
             _connection = new Connection(
@@ -95,43 +91,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 "Analyzer"
             );
             _connection.EventReceived += ConectionReceivedEvent;
-
-            _catalog = new AggregateCatalog();
-            _container = new CompositionContainer(_catalog);
-            _container.ExportsChanged += ContainerExportsChanged;
         }
 
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
             _connection.Dispose();
-        }
-
-        private void ContainerExportsChanged(object sender, ExportsChangeEventArgs e) {
-            // figure out the new extensions...
-            var extensions = _container.GetExports<IAnalysisExtension, IDictionary<string, object>>();
-            HashSet<IAnalysisExtension> newExtensions = new HashSet<IAnalysisExtension>();
-            lock (_registeredExtensions) {
-                foreach (var extension in extensions) {
-
-                    if (!_registeredExtensions.Contains(extension.Value)) {
-
-                        newExtensions.Add(extension.Value);
-                        if (extension.Metadata.ContainsKey("Name") && extension.Metadata["Name"] is string) {
-                            _extensionsByName[(string)extension.Metadata["Name"]] = extension.Value;
-                        } else {
-                            Console.Error.WriteLine("Extension {0} has no name, will not respond to commands", extension.Value);
-                        }
-                    }
-                }
-
-                _registeredExtensions.UnionWith(newExtensions);
-            }
-
-            if (_pyAnalyzer != null) {
-                // inform them of the analyzer...
-                foreach (var extension in newExtensions) {
-                    extension.Register(_pyAnalyzer);
-                }
-            }
         }
 
         private void ConectionReceivedEvent(object sender, EventReceivedEventArgs e) {
@@ -139,12 +102,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ModulesChangedEvent.Name: OnModulesChanged(this, EventArgs.Empty); break;
                 case AP.OptionsChangedEvent.Name: SetOptions((AP.OptionsChangedEvent)e.Event); break;
                 case AP.SetCommentTaskTokens.Name: _commentPriorityMap = ((AP.SetCommentTaskTokens)e.Event).tokens; break;
-                case AP.ExtensionAddedEvent.Name: AddExtension((AP.ExtensionAddedEvent)e.Event); break;
             }
-        }
-
-        private void AddExtension(AP.ExtensionAddedEvent extensionAdded) {
-            _catalog.Catalogs.Add(new AssemblyCatalog(extensionAdded.path));
         }
 
         private void SetOptions(AP.OptionsChangedEvent options) {
@@ -198,9 +156,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.SetSearchPathRequest.Command: response = SetSearchPath((AP.SetSearchPathRequest)request); break;
                 case AP.ModuleImportsRequest.Command: response = GetModuleImports((AP.ModuleImportsRequest)request); break;
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
+                case AP.LoadExtensionRequest.Command: response = LoadExtensionRequest((AP.LoadExtensionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
-                case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.ExpressionAtPointRequest.Command: response = ExpressionAtPoint((AP.ExpressionAtPointRequest)request); break;
+                case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
                     throw new InvalidOperationException("Unknown command");
@@ -237,115 +196,106 @@ namespace Microsoft.PythonTools.Intellisense {
             throw new InvalidOperationException("Buffer was not valid in file " + _projectFiles[fileId]?.FilePath ?? "(null)");
         }
 
+        private IPythonInterpreterFactory LoadInterpreterFactory(AP.InterpreterInfo info) {
+            if (string.IsNullOrEmpty(info?.assembly) || string.IsNullOrEmpty(info?.typeName)) {
+                return null;
+            }
+
+            return (IPythonInterpreterFactory)Activator.CreateInstance(
+                info.assembly,
+                info.typeName,
+                false,
+                0,
+                null,
+                new object[] { info.properties },
+                CultureInfo.CurrentCulture,
+                new object[0]
+            ).Unwrap();
+        }
+
         private async Task<Response> Initialize(AP.InitializeRequest request) {
-            List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
-
-            HashSet<string> assemblies = new HashSet<string>(request.mefExtensions);
-            assemblies.Add(typeof(IInterpreterRegistryService).Assembly.Location);
-            assemblies.Add(GetType().Assembly.Location);
-
-            List<string> failures = new List<string>();
-            string error = null;
-            foreach (var asm in assemblies) {
-                try {
-                    var asmCatalog = new AssemblyCatalog(asm);
-                    _catalog.Catalogs.Add(asmCatalog);
-                } catch (Exception e) {
-                    failures.Add(String.Format("Failed to load {0}: {1}", asm, e));
-                }
-            }
-
-            if (request.projectFile != null) {
-                var projectContextProvider = _container.GetExportedValue<OutOfProcProjectContextProvider>();
-                projectContextProvider.AddContext(
-                    new InMemoryProject(
-                        request.projectFile,
-                        new Dictionary<string, object>() {
-                            { "InterpreterId", request.interpreterId },
-                            { "ProjectHome", request.projectHome },
-                            {  "Interpreters",
-                                request.derivedInterpreters.Select(
-                                    interp => new Dictionary<string, string>() {
-                                        { "EvaluatedInclude", interp.name },
-                                        { MSBuildConstants.IdKey,              interp.id },
-                                        { MSBuildConstants.VersionKey,         interp.version },
-                                        { MSBuildConstants.DescriptionKey,     interp.description },
-                                        { MSBuildConstants.BaseInterpreterKey, interp.baseInterpreter },
-                                        { MSBuildConstants.InterpreterPathKey, interp.path },
-                                        { MSBuildConstants.WindowsPathKey,     interp.windowsPath },
-                                        { MSBuildConstants.LibraryPathKey,     interp.libPath },
-                                        { MSBuildConstants.PathEnvVarKey,      interp.pathEnvVar },
-                                        { MSBuildConstants.ArchitectureKey,    interp.arch }
-                                    }
-                                ).ToArray()
-                            }
-                        }
-                    )
-                );
-            }
-
-            var registry = _container.GetExportedValue<IInterpreterRegistryService>();
-            IPythonInterpreterFactory factory = null;
-            Version analysisVersion;
-            if (request.interpreterId.StartsWith("AnalysisOnly|")) {
-                int versionStart = request.interpreterId.IndexOf('|') + 1;
-                int versionEnd = request.interpreterId.IndexOf('|', versionStart);
-
-                if (Version.TryParse(request.interpreterId.Substring(versionStart, versionEnd - versionStart), out analysisVersion)) {
-                    string[] dbDirs;
-                    if (versionEnd + 1 != request.interpreterId.Length) {
-                        dbDirs = request.interpreterId.Substring(versionEnd + 1).Split('|');
-                    } else {
-                        dbDirs = null;
-                    }
-                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(analysisVersion, null, dbDirs);
-                }
-            } else {
-                factory = registry.FindInterpreter(request.interpreterId);
-            }
-
-            if (factory == null) {
-                if (_connection != null) {
-                    await _connection.SendEventAsync(
-                        new AP.AnalyzerWarningEvent(string.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId))
-                    );
-                }
-                var db = PythonTypeDatabase.CreateDefaultTypeDatabase();
-                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(db.LanguageVersion, db);
-            }
-
-            _interpreterFactory = factory;
-            _allConfigs = registry.Configurations.ToArray();
-
             try {
-                var interpreter = factory.CreateInterpreter();
-                if (interpreter != null) {
-                    _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                    await _pyAnalyzer.ReloadModulesAsync();
-                    interpreter.ModuleNamesChanged += OnModulesChanged;
+                var factory = LoadInterpreterFactory(request.interpreter);
+
+                if (factory == null) {
+                    if (_connection != null) {
+                        await _connection.SendEventAsync(
+                            new AP.AnalyzerWarningEvent("Using default interpreter")
+                        );
+                    }
+                    var db = PythonTypeDatabase.CreateDefaultTypeDatabase();
+                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(db.LanguageVersion, db);
                 }
+
+                _interpreterFactory = factory;
+
+                var interpreter = factory.CreateInterpreter();
+                if (interpreter == null) {
+                    throw new InvalidOperationException("Failed to create interpreter");
+                }
+                _pyAnalyzer = await PythonAnalyzer.CreateAsync(factory, interpreter);
+            } catch (Exception ex) {
+                return new AP.InitializeResponse {
+                    error = ex.Message,
+                    fullError = ex.ToString()
+                };
             } catch (Exception ex) {
                 // Even "critical" exceptions we want to return here
                 error = ex.ToString();
             }
 
-            return new AP.InitializeResponse() {
-                failedLoads = failures.ToArray(),
-                error = error
-            };
+            return new AP.InitializeResponse();
+        }
+
+        private Response LoadExtensionRequest(AP.LoadExtensionRequest request) {
+            IAnalysisExtension extension, oldExtension;
+
+            if (_pyAnalyzer == null) {
+                return new AP.LoadExtensionResponse {
+                    error = "Uninitialized analyzer",
+                    fullError = $"Uninitialized analyzer{Environment.NewLine}{new StackTrace()}"
+                };
+            }
+
+            try {
+                extension = (IAnalysisExtension)Activator.CreateInstance(request.assembly, request.typeName).Unwrap();
+                extension.Register(_pyAnalyzer);
+            } catch (Exception ex) {
+                return new AP.LoadExtensionResponse {
+                    error = ex.Message,
+                    fullError = ex.ToString()
+                };
+            }
+
+            lock (_extensions) {
+                if (_extensions.TryGetValue(request.extension, out oldExtension)) {
+                    (oldExtension as IDisposable)?.Dispose();
+                }
+                _extensions[request.extension] = extension;
+            }
+
+            return new AP.LoadExtensionResponse();
         }
 
         private Response ExtensionRequest(AP.ExtensionRequest request) {
             IAnalysisExtension extension;
-            lock (_registeredExtensions) {
-                if (!_extensionsByName.TryGetValue(request.extension, out extension)) {
-                    throw new InvalidOperationException("Unknown extension: " + request.extension);
+            lock (_extensions) {
+                if (!_extensions.TryGetValue(request.extension, out extension)) {
+                    return new AP.ExtensionResponse {
+                        error = $"Unknown extension: {request.extension}"
+                    };
                 }
             }
 
-            return new AP.ExtensionResponse() {
-                response = extension.HandleCommand(request.commandId, request.body)
-            };
+            try {
+                return new AP.ExtensionResponse {
+                    response = extension.HandleCommand(request.commandId, request.body)
+                };
+            } catch (Exception ex) {
+                return new AP.ExtensionResponse {
+                    error = ex.ToString()
+                };
+            }
         }
 
         private Response GetValueDescriptions(AP.ValueDescriptionRequest request) {
@@ -2398,10 +2348,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 _pyAnalyzer.Dispose();
             }
 
+            lock (_extensions) {
+                foreach (var extension in _extensions.Values) {
+                    (extension as IDisposable)?.Dispose();
+                }
+            }
+
             _queueActivityEvent.Dispose();
             _connection.Dispose();
-            _container.Dispose();
-            _catalog.Dispose();
         }
 
         #endregion

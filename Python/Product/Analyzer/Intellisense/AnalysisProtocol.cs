@@ -51,23 +51,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override string command => Command;
 
-            public string[] mefExtensions;
-            public string interpreterId, projectFile, projectHome;
-
-            public DerivedInterpreter[] derivedInterpreters;
-
+            public InterpreterInfo interpreter;
         }
 
-        public sealed class DerivedInterpreter {
-            public string name, id, description, version, baseInterpreter, path, windowsPath, libPath, pathEnvVar, arch;
+        public sealed class InterpreterInfo {
+            public string assembly, typeName;
+            public Dictionary<string, object> properties;
         }
 
         public sealed class InitializeResponse : Response {
-            public string[] failedLoads;
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public string error;
-
-            public bool ShouldSerializefailedLoads() => (failedLoads?.Length ?? 0) > 0;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public string fullError;
         }
 
         public sealed class ExitRequest : GenericRequest {
@@ -123,6 +119,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     default: return null;
                 }
             }
+
+        }
+
+        public sealed class SetAnalysisLimitsRequest : Request {
+            public const string Command = "setAnalysisLimits";
+
+            public override string command => Command;
 
         }
 
@@ -711,12 +714,19 @@ namespace Microsoft.PythonTools.Intellisense {
             public int version;
         }
 
-        public sealed class ExtensionAddedEvent : Event {
-            public const string Name = "extensionAdded";
+        public sealed class LoadExtensionRequest : Request<LoadExtensionResponse> {
+            public const string Command = "loadExtensionRequest";
 
-            public string path;
+            public override string command => Command;
 
-            public override string name => Name;
+            public string extension;
+            public string assembly;
+            public string typeName;
+        }
+
+        public sealed class LoadExtensionResponse : Response {
+            public string error;
+            public string fullError;
         }
 
         public sealed class ExtensionRequest : Request<ExtensionResponse> {
@@ -731,6 +741,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class ExtensionResponse : Response {
             public string response;
+            public string error;
         }
 
         /// <summary>
@@ -790,21 +801,19 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public sealed class OptionsChangedEvent : Event {
-            public const string Name = "optionsChanged";
+        public sealed class SetAnalysisOptionsRequest : Request<Response> {
+            public const string Command = "setAnalysisOptions";
 
-            public Severity indentation_inconsistency_severity;
-            public int? crossModuleAnalysisLimit;
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+            public AnalysisOptions options;
 
-            public override string name => Name;
+            public override string command => Command;
         }
 
-        public sealed class SetCommentTaskTokens : Event {
-            public const string Name = "setCommentTaskTokens";
-
-            public Dictionary<string, TaskPriority> tokens;
-
-            public override string name => Name;
+        public sealed class AnalysisOptions {
+            public Severity indentationInconsistencySeverity;
+            public Dictionary<string, TaskPriority> commentTokens;
+            public Dictionary<string, int> analysisLimits;
         }
 
         public sealed class TaskItem : Error {
