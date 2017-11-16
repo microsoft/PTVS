@@ -2132,4 +2132,7 @@ Expand selection to the full expression?</value>
   <data name="WarningInvalidEncoding" xml:space="preserve">
     <value>Encoding name is not recognized: '{0}'</value>
   </data>
+  <data name="WarningEncodingDifferentFromDefault" xml:space="preserve">
+    <value>File is saved in encoding '{0}' which does not match default UTF-8 encoding</value>
+  </data>
 </root>

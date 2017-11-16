@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
@@ -45,18 +46,26 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var chunk = bi.CurrentSnapshot.GetText(new Span(0, Math.Min(bi.CurrentSnapshot.Length, 512)));
             Parser.GetEncodingFromMagicDesignator(chunk, out var encoding, out var magicEncodingName, out var magicEncodingIndex);
+
+            var documentEncoding = bi.Document.Encoding;
             string message = null;
 
             if (encoding != null) {
                 // Encoding is specified and is a valid name. 
                 // Check if it matches encoding set on the document text buffer. 
-                var documentEncoding = bi.Document.Encoding;
                 if (encoding.EncodingName != documentEncoding.EncodingName) {
                     message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingMismatch, documentEncoding.EncodingName);
                 }
-            } else if (encoding == null && !string.IsNullOrEmpty(magicEncodingName)) {
-                // Encoding is specified but not recognized as a valid name
-                message = string.Format(CultureInfo.InvariantCulture, Strings.WarningInvalidEncoding, magicEncodingName);
+            } else if (encoding == null) {
+                if (!string.IsNullOrEmpty(magicEncodingName)) {
+                    // Encoding is specified but not recognized as a valid name
+                    message = string.Format(CultureInfo.InvariantCulture, Strings.WarningInvalidEncoding, magicEncodingName);
+                } else {
+                    // Encoding is not specified. Python assumes UTF-8 so we need to verify it.
+                    if (Encoding.UTF8.EncodingName != documentEncoding.EncodingName) {
+                        message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingDifferentFromDefault, documentEncoding.EncodingName);
+                    }
+                }
             }
 
             if (message != null) {
