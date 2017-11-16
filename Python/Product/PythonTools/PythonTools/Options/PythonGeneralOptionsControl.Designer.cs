@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Options {
             this._unresolvedImportWarning = new System.Windows.Forms.CheckBox();
             this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._resetSuppressDialog = new System.Windows.Forms.Button();
-            this._mismatchedEncodingWarning = new System.Windows.Forms.CheckBox();
+            this._invalidEncodingWarning = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 6);
             this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 4);
             this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 10);
-            this.tableLayoutPanel3.Controls.Add(this._mismatchedEncodingWarning, 0, 7);
+            this.tableLayoutPanel3.Controls.Add(this._invalidEncodingWarning, 0, 7);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             // 
             // _showOutputWindowForVirtualEnvCreate
@@ -133,12 +133,12 @@ namespace Microsoft.PythonTools.Options {
             this._resetSuppressDialog.UseVisualStyleBackColor = true;
             this._resetSuppressDialog.Click += new System.EventHandler(this._resetSuppressDialog_Click);
             // 
-            // _mismatchedEncodingWarning
+            // _invalidEncodingWarning
             // 
-            resources.ApplyResources(this._mismatchedEncodingWarning, "_mismatchedEncodingWarning");
-            this.tableLayoutPanel3.SetColumnSpan(this._mismatchedEncodingWarning, 2);
-            this._mismatchedEncodingWarning.Name = "_mismatchedEncodingWarning";
-            this._mismatchedEncodingWarning.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this._invalidEncodingWarning, "_invalidEncodingWarning");
+            this.tableLayoutPanel3.SetColumnSpan(this._invalidEncodingWarning, 2);
+            this._invalidEncodingWarning.Name = "_invalidEncodingWarning";
+            this._invalidEncodingWarning.UseVisualStyleBackColor = true;
             // 
             // PythonGeneralOptionsControl
             // 
@@ -166,6 +166,6 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _unresolvedImportWarning;
         private System.Windows.Forms.CheckBox _clearGlobalPythonPath;
         private System.Windows.Forms.Button _resetSuppressDialog;
-        private System.Windows.Forms.CheckBox _mismatchedEncodingWarning;
+        private System.Windows.Forms.CheckBox _invalidEncodingWarning;
     }
 }

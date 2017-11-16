@@ -2126,4 +2126,10 @@ Expand selection to the full expression?</value>
   <data name="RegularExpressionClassificationType" xml:space="preserve">
     <value>Python Regular Expression</value>
   </data>
+  <data name="WarningEncodingMismatch" xml:space="preserve">
+    <value>File is saved in encoding '{0}' which does not match encoding in magic comment</value>
+  </data>
+  <data name="WarningInvalidEncoding" xml:space="preserve">
+    <value>Encoding name is not recognized: '{0}'</value>
+  </data>
 </root>

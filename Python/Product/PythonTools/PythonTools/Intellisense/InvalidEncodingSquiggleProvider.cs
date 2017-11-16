@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
@@ -32,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public InvalidEncodingSquiggleProvider(IServiceProvider serviceProvider, TaskProvider taskProvider) :
             base(serviceProvider,
                 taskProvider,
-                o => o.MismatchedEncodingWarning,
+                o => o.InvalidEncodingWarning,
                 new[] { PythonTextBufferInfoEvents.NewAnalysis, PythonTextBufferInfoEvents.DocumentEncodingChanged }) {
         }
 
@@ -44,39 +45,45 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var chunk = bi.CurrentSnapshot.GetText(new Span(0, Math.Min(bi.CurrentSnapshot.Length, 512)));
             Parser.GetEncodingFromMagicDesignator(chunk, out var encoding, out var magicEncodingName, out var magicEncodingIndex);
-            bool valid = true;
+            string message = null;
 
             if (encoding != null) {
                 // Encoding is specified and is a valid name. 
                 // Check if it matches encoding set on the document text buffer. 
                 var documentEncoding = bi.Document.Encoding;
                 if (encoding.EncodingName != documentEncoding.EncodingName) {
-                    valid = false;
+                    message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingMismatch, documentEncoding.EncodingName);
                 }
             } else if (encoding == null && !string.IsNullOrEmpty(magicEncodingName)) {
                 // Encoding is specified but not recognized as a valid name
-                valid = false;
+                message = string.Format(CultureInfo.InvariantCulture, Strings.WarningInvalidEncoding, magicEncodingName);
             }
 
-            if (!valid) {
-                var version = entry.GetAnalysisVersion(bi.Buffer);
-                TaskProvider.ReplaceItems(
-                    bi.Filename, 
-                    VsProjectAnalyzer.InvalidEncodingMoniker,
-                    new List<TaskProviderItem>() {
-                        new TaskProviderItem(
-                            Services.Site,
-                            "Mismatched encoding",
-                            new SnapshotSpan(bi.CurrentSnapshot, magicEncodingIndex, magicEncodingName.Length).ToSourceSpan(),
-                            VSTASKPRIORITY.TP_NORMAL,
-                            VSTASKCATEGORY.CAT_CODESENSE,
-                            true,
-                            new LocationTracker(version, bi.Buffer, version.VersionNumber)
-                        )
-                    });
+            if (message != null) {
+                if (!bi.Buffer.Properties.TryGetProperty<string>(VsProjectAnalyzer.InvalidEncodingMoniker, out var prevMessage)
+                    || prevMessage != message) {
 
+                    bi.Buffer.Properties[VsProjectAnalyzer.InvalidEncodingMoniker] = message;
+                    var version = entry.GetAnalysisVersion(bi.Buffer);
+
+                    TaskProvider.ReplaceItems(
+                        bi.Filename,
+                        VsProjectAnalyzer.InvalidEncodingMoniker,
+                        new List<TaskProviderItem>() {
+                            new TaskProviderItem(
+                                Services.Site,
+                                message,
+                                new SnapshotSpan(bi.CurrentSnapshot, magicEncodingIndex, magicEncodingName.Length).ToSourceSpan(),
+                                VSTASKPRIORITY.TP_NORMAL,
+                                VSTASKCATEGORY.CAT_CODESENSE,
+                                true,
+                                new LocationTracker(version, bi.Buffer, bi.Buffer.CurrentSnapshot.Version.VersionNumber)
+                            )
+                        });
+                }
             } else {
                 TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.InvalidEncodingMoniker);
+                bi.Buffer.Properties.RemoveProperty(VsProjectAnalyzer.InvalidEncodingMoniker);
             }
         }
     }
