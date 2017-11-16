@@ -63,6 +63,7 @@ namespace Microsoft.PythonTools.Options {
             _autoAnalysis.Checked = pyService.GeneralOptions.AutoAnalyzeStandardLibrary;
             _updateSearchPathsForLinkedFiles.Checked = pyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles;
             _unresolvedImportWarning.Checked = pyService.GeneralOptions.UnresolvedImportWarning;
+            _mismatchedEncodingWarning.Checked = pyService.GeneralOptions.MismatchedEncodingWarning;
             _clearGlobalPythonPath.Checked = pyService.GeneralOptions.ClearGlobalPythonPath;
             IndentationInconsistencySeverity = pyService.GeneralOptions.IndentationInconsistencySeverity;
         }
@@ -75,6 +76,7 @@ namespace Microsoft.PythonTools.Options {
             pyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
             pyService.GeneralOptions.IndentationInconsistencySeverity = IndentationInconsistencySeverity;
             pyService.GeneralOptions.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
+            pyService.GeneralOptions.MismatchedEncodingWarning = _mismatchedEncodingWarning.Checked;
             pyService.GeneralOptions.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
         }
 

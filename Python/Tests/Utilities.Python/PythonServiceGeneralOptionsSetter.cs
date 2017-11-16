@@ -23,12 +23,14 @@ namespace TestUtilities.Python {
         private readonly PythonToolsService _pyService;
         private readonly bool? _updateSearchPathsWhenAddingLinkedFiles;
         private readonly bool? _unresolvedImportWarning;
+        private readonly bool? _mismatchedEncodingWarning;
         private readonly bool? _clearGlobalPythonPath;
 
         public PythonServiceGeneralOptionsSetter(
             PythonToolsService pyService,
             bool? updateSearchPathsWhenAddingLinkedFiles = null,
             bool? unresolvedImportWarning = null,
+            bool? mismatchedEncodingWarning = null,
             bool? clearGlobalPythonPath = null
         ) {
             _pyService = pyService;
@@ -42,6 +44,11 @@ namespace TestUtilities.Python {
             if (unresolvedImportWarning.HasValue) {
                 _unresolvedImportWarning = options.UnresolvedImportWarning;
                 options.UnresolvedImportWarning = unresolvedImportWarning.Value;
+            }
+
+            if (mismatchedEncodingWarning.HasValue) {
+                _mismatchedEncodingWarning = options.MismatchedEncodingWarning;
+                options.MismatchedEncodingWarning = mismatchedEncodingWarning.Value;
             }
 
             if (clearGlobalPythonPath.HasValue) {
@@ -59,6 +66,10 @@ namespace TestUtilities.Python {
 
             if (_unresolvedImportWarning.HasValue) {
                 options.UnresolvedImportWarning = _unresolvedImportWarning.Value;
+            }
+
+            if (_mismatchedEncodingWarning.HasValue) {
+                options.MismatchedEncodingWarning = _mismatchedEncodingWarning.Value;
             }
 
             if (_clearGlobalPythonPath.HasValue) {

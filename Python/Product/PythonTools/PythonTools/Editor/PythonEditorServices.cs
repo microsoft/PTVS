@@ -53,7 +53,8 @@ namespace Microsoft.PythonTools.Editor {
             ComponentModel = Site.GetComponentModel();
             _errorTaskProvider = new Lazy<ErrorTaskProvider>(CreateTaskProvider<ErrorTaskProvider>);
             _commentTaskProvider = new Lazy<CommentTaskProvider>(CreateTaskProvider<CommentTaskProvider>);
-            _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateImportSquiggleProvider);
+            _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateSquiggleProvider<UnresolvedImportSquiggleProvider>);
+            _mismatchedEncodingSquiggleProvider = new Lazy<InvalidEncodingSquiggleProvider>(CreateSquiggleProvider<InvalidEncodingSquiggleProvider>);
         }
 
         public readonly IServiceProvider Site;
@@ -139,6 +140,9 @@ namespace Microsoft.PythonTools.Editor {
         public UnresolvedImportSquiggleProvider UnresolvedImportSquiggleProvider => _unresolvedImportSquiggleProvider.Value;
         public UnresolvedImportSquiggleProvider MaybeUnresolvedImportSquiggleProvider => _unresolvedImportSquiggleProvider.IsValueCreated ? _unresolvedImportSquiggleProvider.Value : null;
 
+        private readonly Lazy<InvalidEncodingSquiggleProvider> _mismatchedEncodingSquiggleProvider;
+        public InvalidEncodingSquiggleProvider InvalidEncodingSquiggleProvider => _mismatchedEncodingSquiggleProvider.Value;
+
         private T CreateTaskProvider<T>() where T : class {
             if (VsProjectAnalyzer.SuppressTaskProvider) {
                 return null;
@@ -146,7 +150,7 @@ namespace Microsoft.PythonTools.Editor {
             return (T)Site.GetService(typeof(T));
         }
 
-        private UnresolvedImportSquiggleProvider CreateImportSquiggleProvider() {
+        private T CreateSquiggleProvider<T>() where T : class {
             if (VsProjectAnalyzer.SuppressTaskProvider) {
                 return null;
             }
@@ -154,7 +158,8 @@ namespace Microsoft.PythonTools.Editor {
             if (errorProvider == null) {
                 return null;
             }
-            return new UnresolvedImportSquiggleProvider(Site, errorProvider);
+
+            return (T)Activator.CreateInstance(typeof(T), new object[] { Site, errorProvider });
         }
 
         #endregion

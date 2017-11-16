@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools.Parsing {
                     ast.SetAttribute(keyValue.Key, nodeAttr.Key, nodeAttr.Value);
                 }
             }
-            
+
             PythonNameBinder.BindAst(_langVersion, ast, _errors, _bindReferences);
 
             return ast;
@@ -499,7 +499,7 @@ namespace Microsoft.PythonTools.Parsing {
         //simple_stmt: small_stmt (';' small_stmt)* [';'] Newline
         private Statement ParseSimpleStmt() {
             Statement s = ParseSmallStmt();
-            
+
             string newline = null;
             if (MaybeEat(TokenKind.Semicolon)) {
                 var itemWhiteSpace = MakeWhiteSpaceList();
@@ -751,7 +751,7 @@ namespace Microsoft.PythonTools.Parsing {
             // 3) multiple expression, in which case it's wrapped in a tuple.
             // 4) 'from', in which case we expect a single expression and return YieldFromExpression
             Expression yieldResult;
-            
+
             bool isYieldFrom = PeekToken(TokenKind.KeywordFrom);
             bool suppressSyntaxError = false;
             string fromWhitespace = string.Empty;
@@ -768,7 +768,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             bool trailingComma;
             List<string> itemWhiteSpace;
-            List<Expression> l = ParseTestListAsExpr(null, out itemWhiteSpace, out trailingComma);                
+            List<Expression> l = ParseTestListAsExpr(null, out itemWhiteSpace, out trailingComma);
             if (l.Count == 0) {
                 if (_langVersion < PythonLanguageVersion.V25 && !suppressSyntaxError) {
                     // 2.4 doesn't allow plain yield
@@ -1127,7 +1127,7 @@ namespace Microsoft.PythonTools.Parsing {
             for (; ; ) {
                 if (MaybeEat(TokenKind.Dot)) {
                     if (dotWhiteSpace != null) {
-                        dotWhiteSpace.Add(_tokenWhiteSpace); 
+                        dotWhiteSpace.Add(_tokenWhiteSpace);
                     }
                     dotCount++;
                 } else if (MaybeEat(TokenKind.Ellipsis)) {
@@ -1282,7 +1282,7 @@ namespace Microsoft.PythonTools.Parsing {
                 if (!ateImport) {
                     AddErrorIsIncompleteNode(ret);
                 }
-                
+
             }
             ret.SetLoc(start, GetEnd());
             return ret;
@@ -1339,7 +1339,7 @@ namespace Microsoft.PythonTools.Parsing {
         // import_as_name (',' import_as_name)*
         private void ParseAsNameList(List<NameExpression/*!*/> l, List<NameExpression> las, out List<string> asNamesWhiteSpace) {
             asNamesWhiteSpace = MakeWhiteSpaceList();
-            
+
             var name = ReadName();
             var nameExpr = MakeName(name);
             nameExpr.SetLoc(GetStart(), GetEnd());
@@ -1419,7 +1419,7 @@ namespace Microsoft.PythonTools.Parsing {
             string globalWhiteSpace = _tokenWhiteSpace;
             List<string> commaWhiteSpace;
             List<string> namesWhiteSpace;
-            
+
             var l = ReadNameList(out commaWhiteSpace, out namesWhiteSpace);
             var names = l.ToArray();
             GlobalStatement ret = new GlobalStatement(names);
@@ -1442,7 +1442,7 @@ namespace Microsoft.PythonTools.Parsing {
             var start = GetStart();
             List<string> commaWhiteSpace;
             List<string> namesWhiteSpace;
-            
+
             var l = ReadNameList(out commaWhiteSpace, out namesWhiteSpace);
             var names = l.ToArray();
             NonlocalStatement ret = new NonlocalStatement(names);
@@ -1495,7 +1495,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             if (!NeverTestToken(PeekToken())) {
                 type = ParseExpression();
-                
+
                 if (MaybeEat(TokenKind.Comma)) {
                     var commaStart = GetStart();
                     commaWhiteSpace = _tokenWhiteSpace;
@@ -1514,7 +1514,7 @@ namespace Microsoft.PythonTools.Parsing {
                     isFromForm = true;
 
                     if (_langVersion.Is2x()) {
-                       ReportSyntaxError(fromStart, cause.EndIndex, "invalid syntax, from cause not allowed in 2.x.");
+                        ReportSyntaxError(fromStart, cause.EndIndex, "invalid syntax, from cause not allowed in 2.x.");
                     }
                 }
 
@@ -1604,7 +1604,7 @@ namespace Microsoft.PythonTools.Parsing {
                     exprs = new Expression[0];
                 }
             }
-            
+
             ret = new PrintStatement(dest, exprs, trailingComma);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, printWhiteSpace);
@@ -1665,12 +1665,12 @@ namespace Microsoft.PythonTools.Parsing {
             var nameExpr = MakeName(name);
             nameExpr.SetLoc(GetStart(), GetEnd());
             string nameWhiteSpace = _tokenWhiteSpace;
-            
+
             if (name.RealName == null) {
                 // no name, assume there's no class.
                 return ErrorStmt(_verbatim ? (classWhiteSpace + "class") : null);
             }
-            
+
             bool isParenFree = false;
             string leftParenWhiteSpace = null, rightParenWhiteSpace = null;
             List<string> commaWhiteSpace = null;
@@ -1696,7 +1696,7 @@ namespace Microsoft.PythonTools.Parsing {
                         args[i] = new Arg(l[i]);
                         args[i].SetLoc(l[i].StartIndex, l[i].EndIndex);
                     }
-                    
+
                     ateTerminator = Eat(TokenKind.RightParenthesis);
                     rightParenWhiteSpace = _tokenWhiteSpace;
                 }
@@ -1827,7 +1827,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 decorators.Add(decorator);
             } while (MaybeEat(TokenKind.At));
-             
+
             var res = new DecoratorStatement(decorators.ToArray());
             res.SetLoc(decStart, GetEnd());
             return res;
@@ -1984,7 +1984,7 @@ namespace Microsoft.PythonTools.Parsing {
             ret.SetLoc(start, body.EndIndex);
 
             return ret;
-        }        
+        }
 
         private Parameter ParseParameterName(HashSet<string> names, ParameterKind kind, bool isTyped = false) {
             var start = GetStart();
@@ -2095,7 +2095,7 @@ namespace Microsoft.PythonTools.Parsing {
                         commaWhiteSpace.Add(_tokenWhiteSpace);
                     }
 
-                    
+
                     continue;
                 } else if (MaybeEat(TokenKind.Power)) {
                     string starStarWhiteSpace = _tokenWhiteSpace;
@@ -2322,7 +2322,7 @@ namespace Microsoft.PythonTools.Parsing {
         //Python2.5 -> old_lambdef: 'lambda' [varargslist] ':' old_expression
         private Expression FinishOldLambdef() {
             string whitespace = _tokenWhiteSpace;
-            List<string> commaWhiteSpace; 
+            List<string> commaWhiteSpace;
             bool ateTerminator;
             FunctionDefinition func = ParseLambdaHelperStart(out commaWhiteSpace, out ateTerminator);
             string colonWhiteSpace = _tokenWhiteSpace;
@@ -2425,7 +2425,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
             return ret;
         }
-        
+
         //with_stmt: 'with' with_item (',' with_item)* ':' suite
         //with_item: test ['as' expr]
         private WithStatement ParseWithStmt(bool isAsync) {
@@ -2509,7 +2509,7 @@ namespace Microsoft.PythonTools.Parsing {
             int header, elseIndex = -1;
             string newlineWhiteSpace = "";
             int end;
-            if ((lhs is ErrorExpression && MaybeEatNewLine(out newlineWhiteSpace)) || !Eat(TokenKind.KeywordIn)) {                
+            if ((lhs is ErrorExpression && MaybeEatNewLine(out newlineWhiteSpace)) || !Eat(TokenKind.KeywordIn)) {
                 // error handling
                 else_ = null;
                 end = header = GetEnd();
@@ -2593,7 +2593,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (itemWhiteSpace != null) {
                 itemWhiteSpace.Add(_tokenWhiteSpace);
             }
-            
+
             var start = GetStart();
             List<IfStatementTest> l = new List<IfStatementTest>();
             l.Add(ParseIfStmtTest());
@@ -2694,7 +2694,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (handler.Test == null) {
                         dh = handler;
                     }
-                } 
+                }
 
                 if (MaybeEat(TokenKind.KeywordElse)) {
                     elseWhiteSpace = _tokenWhiteSpace;
@@ -2726,7 +2726,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
             ret.SetLoc(start, end);
-            
+
             return ret;
         }
 
@@ -2836,7 +2836,7 @@ namespace Microsoft.PythonTools.Parsing {
                     return ErrorStmt(_verbatim ? (colonWhiteSpace + ':' + suiteStartWhiteSpace) : null);
                 } else if (_verbatim) {
                     // indent white space belongs to the statement we're about to parse
-                    _lookaheadWhiteSpace = suiteStartWhiteSpace + _tokenWhiteSpace + _token.Token.VerbatimImage +_lookaheadWhiteSpace;
+                    _lookaheadWhiteSpace = suiteStartWhiteSpace + _tokenWhiteSpace + _token.Token.VerbatimImage + _lookaheadWhiteSpace;
                 }
 
                 while (true) {
@@ -2985,7 +2985,7 @@ namespace Microsoft.PythonTools.Parsing {
                 PythonOperator op;
                 string whitespaceBeforeOperator = _lookaheadWhiteSpace;
                 string secondWhiteSpace = null;
-                bool isLessThanGreaterThan = false, isIncomplete = false;                
+                bool isLessThanGreaterThan = false, isIncomplete = false;
                 switch (PeekToken().Kind) {
                     case TokenKind.LessThan: NextToken(); op = PythonOperator.LessThan; break;
                     case TokenKind.LessThanOrEqual: NextToken(); op = PythonOperator.LessThanOrEqual; break;
@@ -3350,7 +3350,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             var res = FinishBytesPlus(s, verbatimImagesList, verbatimWhiteSpaceList);
-            
+
             if (_verbatim) {
                 verbatimWhiteSpace = verbatimWhiteSpaceList.ToArray();
                 verbatimImages = verbatimImagesList.ToArray();
@@ -3673,7 +3673,7 @@ namespace Microsoft.PythonTools.Parsing {
             Debug.Assert(_token.Token.Kind == TokenKind.Assign);
             string equalWhiteSpace = _tokenWhiteSpace;
             NameExpression n = t as NameExpression;
-            
+
             string name;
             if (n == null) {
                 ReportSyntaxError(t.StartIndex, t.EndIndex, "expected name");
@@ -3853,7 +3853,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Expression ParseTestListAsExpr(Expression expr) {
-            
+
             List<string> itemWhiteSpace;
             bool trailingComma;
             List<Expression> l = ParseTestListAsExpr(expr, out itemWhiteSpace, out trailingComma);
@@ -3953,7 +3953,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
                 Eat(TokenKind.KeywordYield);
                 ret = new ParenthesisExpression(ParseYieldExpression());
-                hasRightParenthesis = Eat(TokenKind.RightParenthesis);                
+                hasRightParenthesis = Eat(TokenKind.RightParenthesis);
             } else {
                 bool prevAllow = _allowIncomplete;
                 try {
@@ -4306,7 +4306,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             Expression lhs = MakeTupleOrExpr(l, listWhiteSpace, trailingComma, true);
             bool ateIn = Eat(TokenKind.KeywordIn);
-            
+
             string inWhiteSpace;
             Expression list;
             if (ateIn) {
@@ -4361,10 +4361,10 @@ namespace Microsoft.PythonTools.Parsing {
                         List<string> listWhiteSpace;
                         var l = ParseTestListAsExpr(t0, out listWhiteSpace, out trailingComma);
                         ateRightBracket = Eat(TokenKind.RightBracket);
-                        
+
                         ret = new ListExpression(l.ToArray());
-                        
-                        if (listWhiteSpace != null) {                            
+
+                        if (listWhiteSpace != null) {
                             AddListWhiteSpace(ret, listWhiteSpace.ToArray());
                         }
                     } else if (PeekTokenForOrAsyncFor) {
@@ -4409,7 +4409,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             while (true) {
                 ComprehensionIterator iterator;
-                
+
                 if (PeekTokenForOrAsyncFor) {
                     iterator = ParseListCompFor();
                 } else if (PeekToken(Tokens.KeywordIfToken)) {
@@ -5033,6 +5033,49 @@ namespace Microsoft.PythonTools.Parsing {
             return GetStreamReaderWithEncoding(stream, new UTF8Encoding(false), ErrorSink.Null).CurrentEncoding;
         }
 
+        /// <summary>
+        /// Fetches encoding specified in the magic comment as per
+        /// https://www.python.org/dev/peps/pep-0263/
+        /// </summary>
+        /// <param name="text">Chunk of text to analyze (typically first two lines)</param>
+        /// <param name="encoding">Encoding if present and valid or null otherwise</param>
+        /// <param name="encodingName">Encoding name as specified in the commend (may not be a valid name)</param>
+        /// <param name="encodingIndex">Index of the encoding name in the buffer</param>
+        public static void GetEncodingFromMagicDesignator(string text, out Encoding encoding, out string encodingName, out int encodingIndex) {
+            encoding = null;
+            encodingName = null;
+            encodingIndex = 0;
+
+            var lineBreakLength = 0;
+            var i = 0;
+            var lines = new[] { text, string.Empty };
+
+            for (; i < text.Length && lineBreakLength == 0; i++) {
+                if (text[i] == '\r') {
+                    lineBreakLength++;
+                    if (i < text.Length - 1 && text[i + 1] == '\n') {
+                        lineBreakLength++;
+                    }
+                } else if (text[i] == '\n') {
+                    lineBreakLength++;
+                }
+            }
+
+            // magic encoding must be on line 1 or 2
+            if (lineBreakLength > 0) {
+                lines[0] = text.Substring(0, i);
+                lines[1] = text.Substring(lines[0].Length + lineBreakLength);
+            }
+
+            for (i = 0; i < lines.Length; i++) {
+                TryGetEncoding(lines[i], ref encoding, out encodingName, out encodingIndex);
+                if (encoding != null || !string.IsNullOrEmpty(encodingName)) {
+                    break;
+                }
+            }
+            encodingIndex += i == 0 ? 0 : lines[0].Length + lineBreakLength;
+        }
+
         private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {
             // Python 2.x should pass ASCII as the default
             // Python 3.x should pass UTF-8
@@ -5063,11 +5106,11 @@ namespace Microsoft.PythonTools.Parsing {
                 // magic encoding must be on line 1 or 2
                 int lineNo = 1;
                 int encodingIndex = 0;
-                if ((gotEncoding = TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName, out encodingIndex)) == false) {
+                if ((gotEncoding = TryGetEncoding(line, ref encoding, out encodingName, out encodingIndex)) == false) {
                     var prevLineLength = lineLength;
                     line = ReadOneLine(readBytes, ref bytesRead, stream, out lineLength);
                     lineNo = 2;
-                    gotEncoding = TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName, out encodingIndex);
+                    gotEncoding = TryGetEncoding(line, ref encoding, out encodingName, out encodingIndex);
                     encodingIndex += prevLineLength;
                 }
 
@@ -5147,7 +5190,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// Returns true if we successfully parse the encoding line and get the encoding, false if there's no encoding line, or
         /// null if the encoding line exists but the codec is unknown.
         /// </summary>
-        internal static bool? TryGetEncoding(Encoding defaultEncoding, string line, ref Encoding enc, out string encName, out int index) {
+        internal static bool? TryGetEncoding(string line, ref Encoding enc, out string encName, out int index) {
             // encoding is "# coding: <encoding name>
             // minimum length is 18
             encName = null;
@@ -5165,7 +5208,7 @@ namespace Microsoft.PythonTools.Parsing {
             Match match;
             if (!(match = _codingRegex.Match(line)).Success) {
                 return false;
-            }            
+            }
 
             // get the encoding string name
             index = match.Groups[1].Index;
@@ -5226,7 +5269,7 @@ namespace Microsoft.PythonTools.Parsing {
                             d["utf16"] = new EncodingInfoWrapper(encs[i], encs[i].GetEncoding().GetPreamble());
                             break;
                         case "unicodefffe": // big endian unicode                    
-                            // strip off the pre-amble, CPython doesn't include it.
+                                            // strip off the pre-amble, CPython doesn't include it.
                             d["utf_16_be"] = d["utf_16be"] = new EncodingInfoWrapper(encs[i], new byte[0]);
                             break;
                         case "gb2312":
@@ -5450,7 +5493,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// </summary>
         private static string ReadOneLine(List<byte> previewedBytes, ref int curIndex, Stream reader, out int lineLength) {
             lineLength = 0;
-            byte[] buffer = new byte[256];            
+            byte[] buffer = new byte[256];
             int bufferReadCount = reader.Read(buffer, 0, buffer.Length);
             for (int i = 0; i < bufferReadCount; i++) {
                 previewedBytes.Add(buffer[i]);
@@ -5483,9 +5526,9 @@ namespace Microsoft.PythonTools.Parsing {
                         var res = MakeString(previewedBytes).Substring(startIndex, i - startIndex);
                         lineLength += res.Length;
                         return res;
-                    }                    
+                    }
                 }
-                
+
                 bufferReadCount = reader.Read(buffer, 0, buffer.Length);
                 for (int i = 0; i < bufferReadCount; i++) {
                     previewedBytes.Add(buffer[i]);
