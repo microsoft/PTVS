@@ -4281,6 +4281,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to get analysis for the selected expression..
+        /// </summary>
+        public static string RenameVariable_UnableGetExpressionAnalysis {
+            get {
+                return ResourceManager.GetString("RenameVariable_UnableGetExpressionAnalysis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to read file &apos;{0}&apos;.
         /// </summary>
         public static string ReplCannotReadFile {

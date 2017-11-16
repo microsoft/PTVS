@@ -2126,4 +2126,7 @@ Expand selection to the full expression?</value>
   <data name="RegularExpressionClassificationType" xml:space="preserve">
     <value>Python Regular Expression</value>
   </data>
+  <data name="RenameVariable_UnableGetExpressionAnalysis" xml:space="preserve">
+    <value>Unable to get analysis for the selected expression.</value>
+  </data>
 </root>

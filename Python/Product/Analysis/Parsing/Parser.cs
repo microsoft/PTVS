@@ -20,9 +20,11 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Parsing {
@@ -1910,7 +1912,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             List<string> commaWhiteSpace = null;
             bool ateTerminator = false;
-            Parameter[] parameters = ateLeftParen ? ParseVarArgsList(TokenKind.RightParenthesis, out commaWhiteSpace, out ateTerminator, true) : null;
+            var parameters = ateLeftParen ? ParseVarArgsList(TokenKind.RightParenthesis, true, out commaWhiteSpace, out ateTerminator) : null;
             string closeParenWhiteSpace = _tokenWhiteSpace;
             FunctionDefinition ret;
             if (parameters == null) {
@@ -1941,7 +1943,11 @@ namespace Microsoft.PythonTools.Parsing {
             Expression returnAnnotation = null;
             if (MaybeEat(TokenKind.Arrow)) {
                 arrowWhiteSpace = _tokenWhiteSpace;
+                var arrStart = GetStart();
                 returnAnnotation = ParseExpression();
+                if (_langVersion.Is2x()) {
+                    ReportSyntaxError(arrStart, returnAnnotation.EndIndex, "invalid syntax, return annotations require 3.x");
+                }
             }
 
             var rStart = GetStart();
@@ -1986,338 +1992,268 @@ namespace Microsoft.PythonTools.Parsing {
             return ret;
         }        
 
-        private Parameter ParseParameterName(HashSet<string> names, ParameterKind kind, bool isTyped = false) {
-            var start = GetStart();
-            var name = ReadName();
-            string nameWhiteSpace = _tokenWhiteSpace;
-            if (name.RealName != null) {
-                CheckUniqueParameter(start, names, name.RealName);
-            } else {
-                return null;
-            }
-            Parameter parameter = new Parameter(name.RealName, kind);
-            if (_verbatim) {
-                AddSecondPreceedingWhiteSpace(parameter, nameWhiteSpace);
-                AddVerbatimName(name, parameter);
-            }
-            parameter.SetLoc(GetStart(), GetEnd());
-
-            start = GetStart();
-            if (isTyped && MaybeEat(TokenKind.Colon)) {
-                string colonWhiteSpace = _tokenWhiteSpace;
-                if (_langVersion.Is2x()) {
-                    ReportSyntaxError(start, GetEnd(), "invalid syntax, parameter annotations require 3.x");
-                }
-                parameter.Annotation = ParseExpression();
-                if (_verbatim) {
-                    AddThirdPreceedingWhiteSpace(parameter, colonWhiteSpace);
-                }
-            }
-            return parameter;
-        }
-
-        private void CheckUniqueParameter(int start, HashSet<string> names, string name) {
-            if (names.Contains(name)) {
-                ReportSyntaxError(start, GetEnd(), String.Format(
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    "duplicate argument '{0}' in function definition",
-                    name));
-            }
-            names.Add(name);
-        }
-
         //varargslist: (fpdef ['=' expression ] ',')* ('*' NAME [',' '**' NAME] | '**' NAME) | fpdef ['=' expression] (',' fpdef ['=' expression])* [',']
         //fpdef: NAME | '(' fplist ')'
         //fplist: fpdef (',' fpdef)* [',']
-        private Parameter[] ParseVarArgsList(TokenKind terminator, out List<string> commaWhiteSpace, out bool ateTerminator, bool isTyped = false) {
-            // parameters not doing * or ** today
-            List<Parameter> pl = new List<Parameter>();
+        private Parameter[] ParseVarArgsList(TokenKind terminator, bool allowAnnotations, out List<string> commaWhiteSpace, out bool ateTerminator) {
+            var parameters = new List<Parameter>();
             commaWhiteSpace = MakeWhiteSpaceList();
-            HashSet<string> names = new HashSet<string>(StringComparer.Ordinal);
-            bool needDefault = false, parsedStarArgs = false;
-            string namedOnlyText = null;
-            for (int position = 0; ; position++) {
-                if (MaybeEat(terminator)) {
-                    ateTerminator = true;
+
+            bool namedOnly = false;
+            bool lastComma = true;
+
+            int lastStart = -1;
+
+            // First we parse all parameter names, as leniently as possible.
+            for (int pos = 0; !(ateTerminator = MaybeEat(terminator)) && !MaybeEat(TokenKind.EndOfFile); ++pos) {
+                Parameter p;
+
+                if (!lastComma || lastStart == GetStart()) {
+                    // No progress is being made, so we're probably in invalid code.
                     break;
                 }
+                lastStart = GetStart();
 
-                Parameter parameter;
+                if (MaybeEat(TokenKind.LeftParenthesis)) {
+                    p = ParseSublistParameter(pos);
+                } else {
+                    var kind = namedOnly ? ParameterKind.KeywordOnly : ParameterKind.Normal;
+                    string preStarWhitespace = null;
 
-                var lookahead = _lookahead;
-                if (MaybeEat(TokenKind.Multiply)) {
-                    string starWhiteSpace = _tokenWhiteSpace;
-                    if (parsedStarArgs) {
-                        ReportSyntaxError(lookahead.Span.Start, GetEnd(), "duplicate * args arguments");
-                    }
-                    parsedStarArgs = true;
+                    int start = -1;
 
-                    if (_langVersion.Is3x()) {
-                        if (MaybeEat(TokenKind.Comma)) {
-                            string namedOnlyWhiteSpace = _tokenWhiteSpace;
-                            // bare *
-                            if (MaybeEat(terminator)) {
-                                ReportSyntaxError(lookahead.Span.Start, GetEnd(), "named arguments must follow bare *");
-                                ateTerminator = true;
-                                break;
-                            }
-                            if (_verbatim) {
-                                namedOnlyText = starWhiteSpace + "*" + namedOnlyWhiteSpace + ",";
-                            }
-                            continue;
-                        }
+                    if (MaybeEat(TokenKind.Multiply)) {
+                        start = GetStart();
+                        kind = ParameterKind.List;
+                        namedOnly = _langVersion.Is3x();
+                        preStarWhitespace = _tokenWhiteSpace;
+                    } else if (MaybeEat(TokenKind.Power)) {
+                        start = GetStart();
+                        kind = ParameterKind.Dictionary;
+                        preStarWhitespace = _tokenWhiteSpace;
                     }
 
-                    parameter = ParseParameterName(names, ParameterKind.List, isTyped);
-                    if (parameter == null) {
-                        // no parameter name, syntax error
-                        parameter = new ErrorParameter(Error(starWhiteSpace + "*" + _lookaheadWhiteSpace + _lookahead.Token.VerbatimImage));
+                    var name = TokenToName(PeekToken());
+                    if (name.HasName) {
                         NextToken();
-                    } else if (_verbatim) {
-                        AddPreceedingWhiteSpace(parameter, starWhiteSpace);
+                        var ne = new NameExpression(name.RealName);
+                        ne.SetLoc(GetStart(), GetEnd());
+                        AddVerbatimName(name, ne);
+                        AddPreceedingWhiteSpace(ne);
+                        p = new Parameter(ne, kind);
+                    } else if (kind == ParameterKind.List) {
+                        // bare lists are allowed
+                        p = new Parameter(null, kind);
+                    } else {
+                        var expr = ParseExpression();
+                        p = new ErrorParameter(expr, kind);
+                    }
+                    p.SetLoc(start < 0 ? GetStart() : start, GetEnd());
+
+                    if (preStarWhitespace != null) {
+                        AddPreceedingWhiteSpace(p, preStarWhitespace);
                     }
 
-                    if (namedOnlyText != null) {
-                        if (_verbatim) {
-                            AddExtraVerbatimText(parameter, namedOnlyText);
-                        }
-                        namedOnlyText = null;
+                    if (allowAnnotations && MaybeEat(TokenKind.Colon)) {
+                        p.Annotation = ParseExpression();
+                        p.SetLoc(p.StartIndex, GetEnd());
                     }
-
-                    pl.Add(parameter);
-
-                    if (!MaybeEat(TokenKind.Comma)) {
-                        ateTerminator = Eat(terminator);
-                        break;
-                    }
-
-                    if (commaWhiteSpace != null) {
-                        commaWhiteSpace.Add(_tokenWhiteSpace);
-                    }
-
-                    
-                    continue;
-                } else if (MaybeEat(TokenKind.Power)) {
-                    string starStarWhiteSpace = _tokenWhiteSpace;
-                    parameter = ParseParameterName(names, ParameterKind.Dictionary, isTyped);
-                    if (parameter == null) {
-                        // no parameter name, syntax error
-                        parameter = new ErrorParameter(Error(starStarWhiteSpace + "**" + _lookaheadWhiteSpace + _lookahead.Token.VerbatimImage));
-                        NextToken();
-                    }
-                    pl.Add(parameter);
-                    if (_verbatim) {
-                        AddPreceedingWhiteSpace(parameter, starStarWhiteSpace);
-                    }
-                    ateTerminator = Eat(terminator);
-
-                    if (namedOnlyText != null) {
-                        if (_verbatim) {
-                            AddExtraVerbatimText(parameter, namedOnlyText);
-                        }
-                        namedOnlyText = null;
-                    }
-                    break;
                 }
 
-                //
-                //  Parsing defparameter:
-                //
-                //  defparameter ::=
-                //      parameter ["=" expression]
-
-                parameter = ParseParameter(position, names, parsedStarArgs ? ParameterKind.KeywordOnly : ParameterKind.Normal, isTyped);
-                pl.Add(parameter);
                 if (MaybeEat(TokenKind.Assign)) {
                     if (_verbatim) {
-                        GetNodeAttributes(parameter)[Parameter.WhitespacePrecedingAssign] = _tokenWhiteSpace;
+                        GetNodeAttributes(p)[Parameter.WhitespacePrecedingAssign] = _tokenWhiteSpace;
                     }
-                    needDefault = true;
-                    parameter.DefaultValue = ParseExpression();
-                    parameter.EndIndex = parameter.DefaultValue.EndIndex;
-                } else if (needDefault && !parsedStarArgs) {
-                    ReportSyntaxError(parameter.StartIndex, parameter.EndIndex, "default value must be specified here");
+                    p.DefaultValue = ParseExpression();
+                    p.SetLoc(p.StartIndex, GetEnd());
                 }
 
-                if (namedOnlyText != null) {
-                    if (_verbatim) {
-                        AddExtraVerbatimText(parameter, namedOnlyText);
-                    }
-                    namedOnlyText = null;
-                }
+                parameters.Add(p);
 
-                if (parsedStarArgs && _langVersion.Is2x()) {
-                    ReportSyntaxError(parameter.StartIndex, GetEnd(), "positional parameter after * args not allowed");
-                }
-
-                if (!MaybeEat(TokenKind.Comma)) {
-                    ateTerminator = Eat(terminator);
-                    break;
-                }
-
-                if (commaWhiteSpace != null) {
-                    commaWhiteSpace.Add(_tokenWhiteSpace);
+                lastComma = MaybeEat(TokenKind.Comma);
+                if (lastComma) {
+                    commaWhiteSpace?.Add(_tokenWhiteSpace);
                 }
             }
 
-            return pl.ToArray();
-        }
-
-        //  parameter ::=
-        //      identifier | "(" sublist ")"
-        private Parameter ParseParameter(int position, HashSet<string> names, ParameterKind kind, bool isTyped = false) {
-            Name name;
-            Parameter parameter;
-
-            if (PeekToken().Kind == TokenKind.LeftParenthesis) {
-                // sublist
-                string parenWhiteSpace = _lookaheadWhiteSpace;
-
-                NextToken();
-                var parenStart = GetStart();
-                Expression ret = ParseSublist(names, true);
-
-                if (_langVersion.Is3x()) {
-                    ReportSyntaxError(parenStart, GetEnd(), "sublist parameters are not supported in 3.x");
+            // Now we validate the parameters
+            bool seenListArg = false, seenDictArg = false, seenDefault = false;
+            var seenNames = new HashSet<string>();
+            foreach (var p in parameters) {
+                if (p.Annotation != null) {
+                    if (_langVersion.Is2x()) {
+                        ReportSyntaxError(p.StartIndex, p.EndIndex, "invalid syntax, parameter annotations require 3.x");
+                        continue;
+                    } else if (!allowAnnotations) {
+                        ReportSyntaxError(p.StartIndex, p.EndIndex, "invalid syntax");
+                        continue;
+                    }
                 }
 
-                bool ateRightParen = Eat(TokenKind.RightParenthesis);
-                string closeParenWhiteSpace = _tokenWhiteSpace;
-
-                TupleExpression tret = ret as TupleExpression;
-                NameExpression nameRet;
-
-                if (tret != null) {
-                    parameter = new SublistParameter(position, tret);
-                    if (_verbatim) {
-                        AddPreceedingWhiteSpace(tret, parenWhiteSpace);
-                        AddSecondPreceedingWhiteSpace(tret, closeParenWhiteSpace);
-                        if (!ateRightParen) {
-                            AddErrorMissingCloseGrouping(parameter);
-                        }
-                    }
-                } else if ((nameRet = ret as NameExpression) != null) {
-                    parameter = new Parameter(nameRet.Name, kind);
-                    if (_verbatim) {
-                        AddThirdPreceedingWhiteSpace(parameter, (string)_attributes[nameRet][NodeAttributes.PreceedingWhiteSpace]);
-                        AddIsAltForm(parameter);
-                        if (!ateRightParen) {
-                            AddErrorMissingCloseGrouping(parameter);
-                        }
+                if (p.DefaultValue == null) {
+                    if (seenDefault && p.Kind == ParameterKind.Normal) {
+                        ReportSyntaxError(p.StartIndex, p.EndIndex, "default value must be specified here");
                     }
                 } else {
-                    Debug.Assert(ret is ErrorExpression);
-                    ReportSyntaxError(_lookahead);
-
-                    parameter = new ErrorParameter((ErrorExpression)ret);
-                    AddIsAltForm(parameter);
+                    seenDefault = true;
                 }
 
-                if (parameter != null) {
-                    parameter.SetLoc(ret.IndexSpan);
-                }
-                if (_verbatim) {
-                    AddPreceedingWhiteSpace(parameter, parenWhiteSpace);
-                    AddSecondPreceedingWhiteSpace(parameter, closeParenWhiteSpace);
-                    if (!ateRightParen) {
-                        AddErrorMissingCloseGrouping(parameter);
+                if (p is SublistParameter sp) {
+                    if (_langVersion.Is3x()) {
+                        ReportSyntaxError(p.StartIndex, p.EndIndex, "sublist parameters are not supported in 3.x");
+                    } else {
+                        ValidateSublistParameter(sp.Tuple?.Items, seenNames);
                     }
+                    continue;
                 }
-            } else if ((name = TokenToName(PeekToken())).HasName) {
-                NextToken();
-                var paramStart = GetStart();
-                parameter = new Parameter(name.RealName, kind);
-                if (_verbatim) {
-                    AddPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
-                    AddVerbatimName(name, parameter);
-                }
-                if (isTyped && MaybeEat(TokenKind.Colon)) {
-                    if (_verbatim) {
-                        AddThirdPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
-                    }
 
-                    var start = GetStart();
-                    parameter.Annotation = ParseExpression();
-
-                    if (_langVersion.Is2x()) {
-                        ReportSyntaxError(start, parameter.Annotation.EndIndex, "invalid syntax, parameter annotations require 3.x");
-                    }
+                if (p is ErrorParameter) {
+                    ReportSyntaxError(p.StartIndex, p.EndIndex, "invalid parameter");
+                    continue;
                 }
-                CompleteParameterName(parameter, name.RealName, names, paramStart);
-            } else {
-                ReportSyntaxError(_lookahead);
-                NextToken();
-                parameter = new ErrorParameter(_verbatim ? Error(_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
+
+                if (string.IsNullOrEmpty(p.Name)) {
+                    if (p.Kind != ParameterKind.List || !_langVersion.Is3x()) {
+                        ReportSyntaxError(p.StartIndex, p.EndIndex, "invalid syntax");
+                        continue;
+                    }
+                } else if (!seenNames.Add(p.Name)) {
+                    ReportSyntaxError(p.StartIndex, p.EndIndex, $"duplicate argument '{p.Name}' in function definition");
+                }
+
+                if (p.Kind == ParameterKind.List) {
+                    if (seenListArg) {
+                        ReportSyntaxError(p.StartIndex, p.EndIndex, "duplicate * args arguments");
+                    }
+                    seenListArg = true;
+                } else if (p.Kind == ParameterKind.Dictionary) {
+                    if (seenDictArg) {
+                        ReportSyntaxError(p.StartIndex, p.EndIndex, "duplicate ** args arguments");
+                    }
+                    seenDictArg = true;
+                } else if (seenListArg && p.Kind != ParameterKind.KeywordOnly) {
+                    ReportSyntaxError(p.StartIndex, p.EndIndex, "positional parameter after * args not allowed");
+                } else if (seenDictArg) {
+                    ReportSyntaxError(p.StartIndex, p.EndIndex, "invalid syntax");
+                }
             }
 
-            return parameter;
+            if (parameters.Count > 0 && seenListArg) {
+                var p = parameters.Last();
+                if (p.Kind == ParameterKind.List && string.IsNullOrEmpty(p.Name)) {
+                    ReportSyntaxError(p.StartIndex, p.EndIndex, "named arguments must follow bare *");
+                }
+            }
+
+            return parameters.ToArray();
         }
 
-        private void CompleteParameterName(Node node, string name, HashSet<string> names, int paramStart) {
-            CheckUniqueParameter(paramStart, names, name);
-            node.SetLoc(paramStart, GetEnd());
-        }
 
         //  parameter ::=
         //      identifier | "(" sublist ")"
-        private Expression ParseSublistParameter(HashSet<string> names) {
-            Token t = NextToken();
-            Expression ret = null;
-            switch (t.Kind) {
-                case TokenKind.LeftParenthesis: // sublist
-                    string parenWhiteSpace = _tokenWhiteSpace;
-                    ret = ParseSublist(names, false);
-                    Eat(TokenKind.RightParenthesis);
-                    if (_verbatim && ret is TupleExpression) {
-                        AddPreceedingWhiteSpace(ret, parenWhiteSpace);
-                        AddSecondPreceedingWhiteSpace(ret, _tokenWhiteSpace);
-                    }
-                    break;
-                case TokenKind.Name:  // identifier
-                    string name = FixName((string)t.Value);
-                    NameExpression ne = MakeName(TokenToName(t));
-                    if (_verbatim) {
-                        AddPreceedingWhiteSpace(ne, _tokenWhiteSpace);
-                    }
-                    CompleteParameterName(ne, name, names, GetStart());
-                    return ne;
-                default:
-                    ReportSyntaxError(_token);
-                    ret = Error(_verbatim ? (_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
-                    break;
+        private Parameter ParseSublistParameter(int position) {
+            Parameter p = null;
+            var sublist = FinishTupleOrGenExp();
+
+            if (sublist is TupleExpression te) {
+                p = new SublistParameter(position, te);
+                p.SetLoc(te.StartIndex, te.EndIndex);
+            } else if ((sublist as ParenthesisExpression)?.Expression is NameExpression ne && _langVersion.Is2x()) {
+                p = new Parameter(ne, ParameterKind.Normal);
+                p.SetLoc(ne.StartIndex, ne.EndIndex);
+                MoveNodeAttributes(p, sublist, NodeAttributes.PreceedingWhiteSpace);
+                MoveNodeAttributes(p, sublist, NodeAttributes.SecondPreceedingWhiteSpace);
+                MoveNodeAttributes(p, sublist, NodeAttributes.ErrorMissingCloseGrouping);
+                AddIsAltForm(p);
+            } else {
+                ReportSyntaxError(sublist.StartIndex, sublist.EndIndex, "invalid sublist parameter");
+                p = new ErrorParameter(sublist, ParameterKind.Normal);
+                p.SetLoc(sublist.StartIndex, sublist.EndIndex);
+                if (!(sublist is ParenthesisExpression) && !(sublist is TupleExpression)) {
+                    AddIsAltForm(p);
+                }
             }
-            return ret;
+            return p;
         }
+
+        private void ValidateSublistParameter(IEnumerable<Expression> parameters, HashSet<string> seenNames) {
+            if (parameters == null) {
+                return;
+            }
+
+            foreach (var e in parameters) {
+                if (e is TupleExpression te) {
+                    ValidateSublistParameter(te.Items, seenNames);
+                } else if (e is NameExpression ne) {
+                    if (string.IsNullOrEmpty(ne.Name)) {
+                        ReportSyntaxError(e.StartIndex, e.EndIndex, "invalid sublist parameter");
+                    } else if (!seenNames.Add(ne.Name)) {
+                        ReportSyntaxError(e.StartIndex, e.EndIndex, $"duplicate argument '{ne.Name}' in function definition");
+                    }
+                } else {
+                    ReportSyntaxError(e.StartIndex, e.EndIndex, "invalid sublist parameter");
+                }
+            }
+        }
+
+        //private Expression LEGACY_ParseSublistParameter(HashSet<string> names) {
+        //    Token t = NextToken();
+        //    Expression ret = null;
+        //    switch (t.Kind) {
+        //        case TokenKind.LeftParenthesis: // sublist
+        //            string parenWhiteSpace = _tokenWhiteSpace;
+        //            ret = ParseSublist(names, false);
+        //            Eat(TokenKind.RightParenthesis);
+        //            if (_verbatim && ret is TupleExpression) {
+        //                AddPreceedingWhiteSpace(ret, parenWhiteSpace);
+        //                AddSecondPreceedingWhiteSpace(ret, _tokenWhiteSpace);
+        //            }
+        //            break;
+        //        case TokenKind.Name:  // identifier
+        //            string name = FixName((string)t.Value);
+        //            NameExpression ne = MakeName(TokenToName(t));
+        //            if (_verbatim) {
+        //                AddPreceedingWhiteSpace(ne, _tokenWhiteSpace);
+        //            }
+        //            CompleteParameterName(ne, name, names, GetStart());
+        //            return ne;
+        //        default:
+        //            ReportSyntaxError(_token);
+        //            ret = Error(_verbatim ? (_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
+        //            break;
+        //    }
+        //    return ret;
+        //}
 
         //  sublist ::=
         //      parameter ("," parameter)* [","]
-        private Expression ParseSublist(HashSet<string> names, bool parenFreeTuple) {
-            bool trailingComma;
-            List<Expression> list = new List<Expression>();
-            List<string> itemWhiteSpace = MakeWhiteSpaceList();
-            for (; ; ) {
-                trailingComma = false;
-                list.Add(ParseSublistParameter(names));
-                if (MaybeEat(TokenKind.Comma)) {
-                    if (itemWhiteSpace != null) {
-                        itemWhiteSpace.Add(_tokenWhiteSpace);
-                    }
-                    trailingComma = true;
-                    switch (PeekToken().Kind) {
-                        case TokenKind.LeftParenthesis:
-                        case TokenKind.Name:
-                            continue;
-                        default:
-                            break;
-                    }
-                    break;
-                } else {
-                    trailingComma = false;
-                    break;
-                }
-            }
-            return MakeTupleOrExpr(list, itemWhiteSpace, trailingComma, parenFreeTuple);
-        }
+        //private Expression ParseSublist(HashSet<string> names, bool parenFreeTuple) {
+        //    bool trailingComma;
+        //    List<Expression> list = new List<Expression>();
+        //    List<string> itemWhiteSpace = MakeWhiteSpaceList();
+        //    for (; ; ) {
+        //        trailingComma = false;
+        //        list.Add(ParseSublistParameter(names));
+        //        if (MaybeEat(TokenKind.Comma)) {
+        //            if (itemWhiteSpace != null) {
+        //                itemWhiteSpace.Add(_tokenWhiteSpace);
+        //            }
+        //            trailingComma = true;
+        //            switch (PeekToken().Kind) {
+        //                case TokenKind.LeftParenthesis:
+        //                case TokenKind.Name:
+        //                    continue;
+        //                default:
+        //                    break;
+        //            }
+        //            break;
+        //        } else {
+        //            trailingComma = false;
+        //            break;
+        //        }
+        //    }
+        //    return MakeTupleOrExpr(list, itemWhiteSpace, trailingComma, parenFreeTuple);
+        //}
 
         //Python2.5 -> old_lambdef: 'lambda' [varargslist] ':' old_expression
         private Expression FinishOldLambdef() {
@@ -2351,12 +2287,11 @@ namespace Microsoft.PythonTools.Parsing {
         //   return ParseLambdaHelperEnd(f, expr);
         private FunctionDefinition ParseLambdaHelperStart(out List<string> commaWhiteSpace, out bool ateTerminator) {
             var start = GetStart();
-            Parameter[] parameters;
 
-            parameters = ParseVarArgsList(TokenKind.Colon, out commaWhiteSpace, out ateTerminator);
+            var parameters = ParseVarArgsList(TokenKind.Colon, false, out commaWhiteSpace, out ateTerminator);
             var mid = GetEnd();
 
-            FunctionDefinition func = new FunctionDefinition(null, parameters ?? new Parameter[0]); // new Parameter[0] for error handling of incomplete lambda
+            FunctionDefinition func = new FunctionDefinition(null, parameters.MaybeEnumerate().ToArray());
             func.HeaderIndex = mid;
             func.DefIndex = func.StartIndex = start;
 
@@ -5606,6 +5541,14 @@ namespace Microsoft.PythonTools.Parsing {
 
         private void AddErrorIsIncompleteNode(Node expr) {
             GetNodeAttributes(expr)[NodeAttributes.ErrorIncompleteNode] = NodeAttributes.ErrorIncompleteNode;
+        }
+
+        private void MoveNodeAttributes(Node target, Node source, object key) {
+            var s = GetNodeAttributes(source);
+            if (s.TryGetValue(key, out object o)) {
+                GetNodeAttributes(target)[key] = o;
+                s.Remove(key);
+            }
         }
 
         #endregion

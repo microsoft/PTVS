@@ -1788,10 +1788,13 @@ namespace Microsoft.PythonTools.Intellisense {
             try {
                 res = await conn.SendRequestAsync(request, cancel).ConfigureAwait(false);
             } catch (OperationCanceledException) {
+                Debug.WriteLine($"Request cancelled");
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled, null);
-            } catch (IOException) {
+            } catch (IOException e) {
+                Debug.WriteLine($"Request failed: {e}");
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled, null);
             } catch (FailedRequestException e) {
+                Debug.WriteLine($"Request failed: {e}");
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
             } catch (ObjectDisposedException) {
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled, null);
