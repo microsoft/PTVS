@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Intellisense {
             for (int retries = 3; retries > 0 && entry == null; --retries) {
                 // Likely in the process of changing analyzer, so we'll delay slightly and retry.
                 await Task.Delay(100);
-                entry = await AnalyzeXamlFileAsync(textView, bi);
+                entry = bi.AnalysisEntry ?? await AnalyzeXamlFileAsync(textView, bi);
             }
 
             if (entry == null) {
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static async Task<AnalysisEntry> AnalyzeXamlFileAsync(ITextView textView, PythonTextBufferInfo bufferInfo) {
             var services = bufferInfo.Services;
             var analyzer = services.AnalysisEntryService.GetVsAnalyzer(textView, null);
-            if (analyzer == null || bufferInfo.AnalysisEntry == null) {
+            if (analyzer != null) {
                 return await analyzer.AnalyzeFileAsync(bufferInfo.Filename);
             }
             return null;
