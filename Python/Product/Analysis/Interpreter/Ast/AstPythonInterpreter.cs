@@ -50,6 +50,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             BuiltinModuleName = _factory.LanguageVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
             _noneType = new AstPythonBuiltinType("NoneType", BuiltinTypeId.NoneType);
             _builtinTypes[BuiltinTypeId.NoneType] = _noneType;
+            _builtinTypes[BuiltinTypeId.Unknown] = new AstPythonBuiltinType("Unknown", BuiltinTypeId.Unknown);
         }
 
         public void Dispose() {
