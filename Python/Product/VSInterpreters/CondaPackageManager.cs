@@ -164,42 +164,38 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private Task<bool> ShouldElevate(IPackageManagerUI ui, string operation) {
-            // Apply the same logic as conda.gateways.disk.test.prefix_is_writable()
-            // Check for errors when opening in append mode for first file that matches:
-            // - ./conda-meta/history
-            // - ./conda-meta/conda*.json
-            // - ./conda-meta/*.json
-            // - ./python.exe
-            Task<bool> result = null;
-
-            try {
-                var metaPath = Path.Combine(_factory.Configuration.PrefixPath, "conda-meta");
-                var filePath = Directory.EnumerateFiles(metaPath, "history")
-                    .Union(Directory.EnumerateFiles(metaPath, "conda*.json"))
-                    .Union(Directory.EnumerateFiles(metaPath, "*.json"))
-                    .Union(Directory.EnumerateFiles(_factory.Configuration.PrefixPath, "python.exe"))
-                    .FirstOrDefault();
-                if (filePath != null) {
-                    using (var fileStream = new FileStream(filePath, FileMode.Append)) {
-                        result = Task.FromResult(false);
+        private async Task<bool> ShouldElevate(IPackageManagerUI ui, string operation) {
+            // Check with the UI first, as it takes into account global elevation options
+            var elevate = ui == null ? false : await ui.ShouldElevateAsync(this, operation);
+            if (!elevate) {
+                // Package manager UI thinks we don't need to elevate, but we may have to.
+                // Apply the same logic as conda.gateways.disk.test.prefix_is_writable()
+                // Check for errors when opening in append mode for first file that matches:
+                // - ./conda-meta/history
+                // - ./conda-meta/conda*.json
+                // - ./conda-meta/*.json
+                // - ./python.exe
+                try {
+                    var metaPath = Path.Combine(_factory.Configuration.PrefixPath, "conda-meta");
+                    var filePath = Directory.EnumerateFiles(metaPath, "history")
+                        .Union(Directory.EnumerateFiles(metaPath, "conda*.json"))
+                        .Union(Directory.EnumerateFiles(metaPath, "*.json"))
+                        .Union(Directory.EnumerateFiles(_factory.Configuration.PrefixPath, "python.exe"))
+                        .FirstOrDefault();
+                    if (filePath != null) {
+                        using (new FileStream(filePath, FileMode.Append)) {
+                        }
                     }
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                } catch (NotSupportedException) {
+                } catch (SecurityException) {
+                } catch (UnauthorizedAccessException) {
+                    elevate = true;
                 }
-            } catch (ArgumentException) {
-            } catch (IOException) {
-            } catch (NotSupportedException) {
-            } catch (UnauthorizedAccessException) {
-                result = Task.FromResult(true);
-            } catch (SecurityException) {
-                result = Task.FromResult(true);
             }
 
-            if (result == null) {
-                // Inconclusive, so delegate to UI check when possible
-                result = ui == null ? Task.FromResult(false) : ui.ShouldElevateAsync(this, operation);
-            }
-
-            return result;
+            return elevate;
         }
 
         public bool IsReady {

@@ -337,13 +337,13 @@
     <value>6, 3, 6, 3</value>
   </data>
   <data name="_elevatePip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>170, 17</value>
+    <value>248, 17</value>
   </data>
   <data name="_elevatePip.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="_elevatePip.Text" xml:space="preserve">
-    <value>Always run &amp;pip as administrator</value>
+    <value>Always run &amp;package managers as Administrator</value>
   </data>
   <data name="&gt;&gt;_elevatePip.Name" xml:space="preserve">
     <value>_elevatePip</value>
