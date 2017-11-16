@@ -2196,65 +2196,6 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        //private Expression LEGACY_ParseSublistParameter(HashSet<string> names) {
-        //    Token t = NextToken();
-        //    Expression ret = null;
-        //    switch (t.Kind) {
-        //        case TokenKind.LeftParenthesis: // sublist
-        //            string parenWhiteSpace = _tokenWhiteSpace;
-        //            ret = ParseSublist(names, false);
-        //            Eat(TokenKind.RightParenthesis);
-        //            if (_verbatim && ret is TupleExpression) {
-        //                AddPreceedingWhiteSpace(ret, parenWhiteSpace);
-        //                AddSecondPreceedingWhiteSpace(ret, _tokenWhiteSpace);
-        //            }
-        //            break;
-        //        case TokenKind.Name:  // identifier
-        //            string name = FixName((string)t.Value);
-        //            NameExpression ne = MakeName(TokenToName(t));
-        //            if (_verbatim) {
-        //                AddPreceedingWhiteSpace(ne, _tokenWhiteSpace);
-        //            }
-        //            CompleteParameterName(ne, name, names, GetStart());
-        //            return ne;
-        //        default:
-        //            ReportSyntaxError(_token);
-        //            ret = Error(_verbatim ? (_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
-        //            break;
-        //    }
-        //    return ret;
-        //}
-
-        //  sublist ::=
-        //      parameter ("," parameter)* [","]
-        //private Expression ParseSublist(HashSet<string> names, bool parenFreeTuple) {
-        //    bool trailingComma;
-        //    List<Expression> list = new List<Expression>();
-        //    List<string> itemWhiteSpace = MakeWhiteSpaceList();
-        //    for (; ; ) {
-        //        trailingComma = false;
-        //        list.Add(ParseSublistParameter(names));
-        //        if (MaybeEat(TokenKind.Comma)) {
-        //            if (itemWhiteSpace != null) {
-        //                itemWhiteSpace.Add(_tokenWhiteSpace);
-        //            }
-        //            trailingComma = true;
-        //            switch (PeekToken().Kind) {
-        //                case TokenKind.LeftParenthesis:
-        //                case TokenKind.Name:
-        //                    continue;
-        //                default:
-        //                    break;
-        //            }
-        //            break;
-        //        } else {
-        //            trailingComma = false;
-        //            break;
-        //        }
-        //    }
-        //    return MakeTupleOrExpr(list, itemWhiteSpace, trailingComma, parenFreeTuple);
-        //}
-
         //Python2.5 -> old_lambdef: 'lambda' [varargslist] ':' old_expression
         private Expression FinishOldLambdef() {
             string whitespace = _tokenWhiteSpace;
