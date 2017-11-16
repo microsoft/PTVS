@@ -26,9 +26,10 @@ namespace Microsoft.PythonTools.Options {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonExperimentalOptionsControl));
             this._noDatabaseFactory = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this._mustRestartLabel = new System.Windows.Forms.Label();
-            this._condaPackageManager = new System.Windows.Forms.CheckBox();
             this._condaEnvironments = new System.Windows.Forms.CheckBox();
+            this._condaPackageManager = new System.Windows.Forms.CheckBox();
+            this._mustRestartLabel = new System.Windows.Forms.Label();
+            this._useNewPtvsDebugger = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -45,13 +46,15 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2.Controls.Add(this._condaEnvironments, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this._condaPackageManager, 0, 2);
             this.tableLayoutPanel2.Controls.Add(this._noDatabaseFactory, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this._mustRestartLabel, 0, 4);
+            this.tableLayoutPanel2.Controls.Add(this._mustRestartLabel, 0, 5);
+            this.tableLayoutPanel2.Controls.Add(this._useNewPtvsDebugger, 0, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
-            // _mustRestartLabel
+            // _condaEnvironments
             // 
-            resources.ApplyResources(this._mustRestartLabel, "_mustRestartLabel");
-            this._mustRestartLabel.Name = "_mustRestartLabel";
+            resources.ApplyResources(this._condaEnvironments, "_condaEnvironments");
+            this._condaEnvironments.Name = "_condaEnvironments";
+            this._condaEnvironments.UseVisualStyleBackColor = true;
             // 
             // _condaPackageManager
             // 
@@ -59,11 +62,16 @@ namespace Microsoft.PythonTools.Options {
             this._condaPackageManager.Name = "_condaPackageManager";
             this._condaPackageManager.UseVisualStyleBackColor = true;
             // 
-            // _condaEnvironments
+            // _mustRestartLabel
             // 
-            resources.ApplyResources(this._condaEnvironments, "_condaEnvironments");
-            this._condaEnvironments.Name = "_condaEnvironments";
-            this._condaEnvironments.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this._mustRestartLabel, "_mustRestartLabel");
+            this._mustRestartLabel.Name = "_mustRestartLabel";
+            // 
+            // _useNewPtvsDebugger
+            // 
+            resources.ApplyResources(this._useNewPtvsDebugger, "_useNewPtvsDebugger");
+            this._useNewPtvsDebugger.Name = "_useNewPtvsDebugger";
+            this._useNewPtvsDebugger.UseVisualStyleBackColor = true;
             // 
             // PythonExperimentalOptionsControl
             // 
@@ -85,5 +93,6 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.Label _mustRestartLabel;
         private System.Windows.Forms.CheckBox _condaEnvironments;
         private System.Windows.Forms.CheckBox _condaPackageManager;
+        private System.Windows.Forms.CheckBox _useNewPtvsDebugger;
     }
 }
