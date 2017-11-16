@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -194,6 +195,20 @@ namespace Microsoft.PythonTools.Interpreter {
             return factory != null &&
                 factory.Configuration != null &&
                 !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeConfigured);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if neither interpreter executable exist.
+        /// </summary>
+        public static bool ExecutableExists(this InterpreterConfiguration config) {
+            return File.Exists(config?.InterpreterPath) || File.Exists(config?.WindowsInterpreterPath);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if neither interpreter executable exist.
+        /// </summary>
+        public static bool ExecutableExists(this IPythonInterpreterFactory factory) {
+            return factory?.Configuration.ExecutableExists() ?? false;
         }
     }
 }

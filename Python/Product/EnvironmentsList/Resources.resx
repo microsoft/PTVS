@@ -368,6 +368,9 @@
   <data name="EnvironmentPathsExtensionSupportInformationLabel" xml:space="preserve">
     <value>Visit the distributor's website</value>
   </data>
+  <data name="EnvironmentPathsExtensionBrokenEnvironmentLabel" xml:space="preserve">
+    <value>Help me fix this broken environment</value>
+  </data>
   <data name="PipExtensionClearSearchToolTip" xml:space="preserve">
     <value>Clear search filter</value>
   </data>

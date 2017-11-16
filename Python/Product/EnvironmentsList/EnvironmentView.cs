@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -60,6 +59,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public InterpreterConfiguration Configuration { get; }
         public string LocalizedDisplayName { get; }
         public string LocalizedHelpText { get; }
+        public string BrokenEnvironmentHelpUrl { get; }
 
         private EnvironmentView(string id, string localizedName, string localizedHelpText) {
             Configuration = new InterpreterConfiguration(id, id);
@@ -92,6 +92,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Factory = factory;
             Configuration = Factory.Configuration;
             LocalizedDisplayName = Configuration.Description;
+            IsBroken = !Configuration.ExecutableExists();
+            BrokenEnvironmentHelpUrl = "https://go.microsoft.com/fwlink/?linkid=863373";
 
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
             if (_withDb != null) {
@@ -118,7 +120,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 Extensions.Add(new ConfigurationExtensionProvider(_service, alwaysCreateNew: false));
             }
 
-            CanBeDefault = Factory.CanBeDefault();
+            CanBeDefault = Factory.CanBeDefault() && !IsBroken;
 
             Company = _registry.GetProperty(Factory.Configuration.Id, CompanyKey) as string ?? "";
             SupportUrl = _registry.GetProperty(Factory.Configuration.Id, SupportUrlKey) as string ?? "";
@@ -174,6 +176,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private static readonly DependencyPropertyKey IsDefaultPropertyKey = DependencyProperty.RegisterReadOnly("IsDefault", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey IsCurrentPropertyKey = DependencyProperty.RegisterReadOnly("IsCurrent", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(true));
         private static readonly DependencyPropertyKey IsCheckingDatabasePropertyKey = DependencyProperty.RegisterReadOnly("IsCheckingDatabase", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
+        private static readonly DependencyPropertyKey IsBrokenPropertyKey = DependencyProperty.RegisterReadOnly("IsBroken", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey RefreshDBProgressPropertyKey = DependencyProperty.RegisterReadOnly("RefreshDBProgress", typeof(int), typeof(EnvironmentView), new PropertyMetadata(0));
         private static readonly DependencyPropertyKey RefreshDBMessagePropertyKey = DependencyProperty.RegisterReadOnly("RefreshDBMessage", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey IsRefreshingDBPropertyKey = DependencyProperty.RegisterReadOnly("IsRefreshingDB", typeof(bool), typeof(EnvironmentView), new PropertyMetadata(false, RefreshingDBChanged));
@@ -186,6 +189,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly DependencyProperty IsDefaultProperty = IsDefaultPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsCurrentProperty = IsCurrentPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsCheckingDatabaseProperty = IsCheckingDatabasePropertyKey.DependencyProperty;
+        public static readonly DependencyProperty IsBrokenProperty = IsBrokenPropertyKey.DependencyProperty;
         public static readonly DependencyProperty RefreshDBMessageProperty = RefreshDBMessagePropertyKey.DependencyProperty;
         public static readonly DependencyProperty RefreshDBProgressProperty = RefreshDBProgressPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsRefreshingDBProperty = IsRefreshingDBPropertyKey.DependencyProperty;
@@ -216,6 +220,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public bool IsCheckingDatabase {
             get { return Factory == null ? false : (bool)GetValue(IsCheckingDatabaseProperty); }
             internal set { if (Factory != null) { SetValue(IsCheckingDatabasePropertyKey, value); } }
+        }
+
+        public bool IsBroken {
+            get { return Factory == null ? false : (bool)GetValue(IsBrokenProperty); }
+            internal set { if (Factory != null) { SetValue(IsBrokenPropertyKey, value); } }
         }
 
         public int RefreshDBProgress {

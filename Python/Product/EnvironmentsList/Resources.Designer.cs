@@ -457,6 +457,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help me fix this broken environment.
+        /// </summary>
+        public static string EnvironmentPathsExtensionBrokenEnvironmentLabel {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsExtensionBrokenEnvironmentLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This environment cannot be made the default..
         /// </summary>
         public static string EnvironmentPathsExtensionCannotBeDefaultLabel {
