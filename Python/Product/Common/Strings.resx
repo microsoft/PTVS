@@ -2154,8 +2154,11 @@ Expand selection to the full expression?</value>
     <value>conda install {0} from Conda</value>
     <comment>'conda install {0}' is a command-line that should not be translated. Do not translate 'Conda'</comment>
   </data>
-    <data name="CondaExtensionSearchCondaLabel" xml:space="preserve">
+  <data name="CondaExtensionSearchCondaLabel" xml:space="preserve">
     <value>Search Conda and installed packages</value>
     <comment>Do not translate 'Conda'</comment>
+  </data>
+  <data name="RenameVariable_UnableGetExpressionAnalysis" xml:space="preserve">
+    <value>Unable to get analysis for the selected expression.</value>
   </data>
 </root>

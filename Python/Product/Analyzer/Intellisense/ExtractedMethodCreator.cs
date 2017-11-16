@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public ExtractMethodResult GetExtractionResult() {
             bool isStaticMethod = false, isClassMethod = false;
             var parameters = new List<Parameter>();
-            string selfParam = null;
+            NameExpression selfParam = null;
             if (_targetScope is ClassDefinition) {
                 var fromScope = _scopes[_scopes.Length - 1] as FunctionDefinition;
                 Debug.Assert(fromScope != null);  // we don't allow extracting from classes, so we have to be coming from a function
@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     if (!isStaticMethod) {
                         if (fromScope.Parameters.Count > 0) {
-                            selfParam = fromScope.Parameters[0].Name;
+                            selfParam = fromScope.Parameters[0].NameExpression;
                             parameters.Add(new Parameter(selfParam, ParameterKind.Normal));
                         }
                     }
@@ -85,10 +85,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             foreach (var param in _parameters) {
-                var newParam = new Parameter(param, ParameterKind.Normal);
+                var paramName = new NameExpression(param);
                 if (parameters.Count > 0) {
-                    newParam.AddPreceedingWhiteSpace(_ast, " ");
+                    paramName.AddPreceedingWhiteSpace(_ast, " ");
                 }
+                var newParam = new Parameter(paramName, ParameterKind.Normal);
                 parameters.Add(newParam);
             }
 
@@ -102,12 +103,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     parentScope = parentScope.Parent;
                 }
 
-                if (parentScope == null && input.Name != selfParam) {
+                if (parentScope == null && input.Name != selfParam.Name) {
                     // we can either close over or pass these in as parameters, add them to the list
-                    var newParam = new Parameter(input.Name, ParameterKind.Normal);
+                    var paramName = new NameExpression(input.Name);
                     if (parameters.Count > 0) {
-                        newParam.AddPreceedingWhiteSpace(_ast, " ");
+                        paramName.AddPreceedingWhiteSpace(_ast, " ");
                     }
+                    var newParam = new Parameter(paramName, ParameterKind.Normal);
                     parameters.Add(newParam);
                 }
             }
@@ -251,7 +253,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             comma = "";
             foreach (var param in parameters) {
-                if (param.Name != selfParam) {
+                if (param.Name != selfParam.Name) {
                     newCall.Append(comma);
                     newCall.Append(param.Name);
                     comma = ", ";

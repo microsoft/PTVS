@@ -182,8 +182,8 @@ namespace AnalysisTests {
                 new ErrorInfo("only one ** allowed", 162, 10, 11, 165, 10, 14),
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
-                new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                new ErrorInfo("invalid sublist parameter", 217, 17, 11, 219, 17, 13),
+                new ErrorInfo("invalid parameter", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -211,16 +211,16 @@ namespace AnalysisTests {
                 new ErrorInfo("unexpected token 'blazzz'", 797, 82, 10, 803, 82, 16),
                 new ErrorInfo("invalid syntax, from cause not allowed in 2.x.", 837, 87, 11, 845, 87, 19),
                 new ErrorInfo("invalid syntax, class decorators require 2.6 or later.", 861, 93, 1, 866, 93, 6),
-                new ErrorInfo("invalid syntax, parameter annotations require 3.x", 890, 96, 8, 894, 96, 12),
+                new ErrorInfo("invalid syntax, parameter annotations require 3.x", 889, 96, 7, 894, 96, 12),
                 new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
                 new ErrorInfo("positional parameter after * args not allowed", 953, 102, 13, 959, 102, 19),
-                new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
-                new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
-                new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                new ErrorInfo("duplicate * args arguments", 987, 105, 13, 989, 105, 15),
+                new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1019, 108, 15),
+                new ErrorInfo("invalid syntax", 1044, 111, 10, 1045, 111, 11),
+                new ErrorInfo("invalid sublist parameter", 1107, 117, 11, 1109, 117, 13),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
-                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                new ErrorInfo("invalid parameter", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
                 new ErrorInfo("invalid syntax", 1398, 147, 2, 1403, 147, 7),
@@ -232,7 +232,7 @@ namespace AnalysisTests {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                new ErrorInfo("invalid parameter", 1476, 156, 7, 1482, 156, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -249,8 +249,8 @@ namespace AnalysisTests {
                 new ErrorInfo("only one ** allowed", 162, 10, 11, 165, 10, 14),
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
-                new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                new ErrorInfo("invalid sublist parameter", 217, 17, 11, 219, 17, 13),
+                new ErrorInfo("invalid parameter", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -278,16 +278,16 @@ namespace AnalysisTests {
                 new ErrorInfo("unexpected token 'blazzz'", 797, 82, 10, 803, 82, 16),
                 new ErrorInfo("invalid syntax, from cause not allowed in 2.x.", 837, 87, 11, 845, 87, 19),
                 new ErrorInfo("invalid syntax, class decorators require 2.6 or later.", 861, 93, 1, 866, 93, 6),
-                new ErrorInfo("invalid syntax, parameter annotations require 3.x", 890, 96, 8, 894, 96, 12),
+                new ErrorInfo("invalid syntax, parameter annotations require 3.x", 889, 96, 7, 894, 96, 12),
                 new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
                 new ErrorInfo("positional parameter after * args not allowed", 953, 102, 13, 959, 102, 19),
-                new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
-                new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
-                new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                new ErrorInfo("duplicate * args arguments", 987, 105, 13, 989, 105, 15),
+                new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1019, 108, 15),
+                new ErrorInfo("invalid syntax", 1044, 111, 10, 1045, 111, 11),
+                new ErrorInfo("invalid sublist parameter", 1107, 117, 11, 1109, 117, 13),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
-                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                new ErrorInfo("invalid parameter", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
                 new ErrorInfo("invalid syntax", 1398, 147, 2, 1403, 147, 7),
@@ -299,7 +299,7 @@ namespace AnalysisTests {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                new ErrorInfo("invalid parameter", 1476, 156, 7, 1482, 156, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -316,8 +316,8 @@ namespace AnalysisTests {
                 new ErrorInfo("only one ** allowed", 162, 10, 11, 165, 10, 14),
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
-                new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                new ErrorInfo("invalid sublist parameter", 217, 17, 11, 219, 17, 13),
+                new ErrorInfo("invalid parameter", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -344,16 +344,16 @@ namespace AnalysisTests {
                 new ErrorInfo("from __future__ imports must occur at the beginning of the file", 749, 78, 1, 780, 78, 32),
                 new ErrorInfo("unexpected token 'blazzz'", 797, 82, 10, 803, 82, 16),
                 new ErrorInfo("invalid syntax, from cause not allowed in 2.x.", 837, 87, 11, 845, 87, 19),
-                new ErrorInfo("invalid syntax, parameter annotations require 3.x", 890, 96, 8, 894, 96, 12),
+                new ErrorInfo("invalid syntax, parameter annotations require 3.x", 889, 96, 7, 894, 96, 12),
                 new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
                 new ErrorInfo("positional parameter after * args not allowed", 953, 102, 13, 959, 102, 19),
-                new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
-                new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
-                new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                new ErrorInfo("duplicate * args arguments", 987, 105, 13, 989, 105, 15),
+                new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1019, 108, 15),
+                new ErrorInfo("invalid syntax", 1044, 111, 10, 1045, 111, 11),
+                new ErrorInfo("invalid sublist parameter", 1107, 117, 11, 1109, 117, 13),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
-                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                new ErrorInfo("invalid parameter", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
@@ -361,7 +361,7 @@ namespace AnalysisTests {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                new ErrorInfo("invalid parameter", 1476, 156, 7, 1482, 156, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -378,8 +378,8 @@ namespace AnalysisTests {
                 new ErrorInfo("only one ** allowed", 162, 10, 11, 165, 10, 14),
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
-                new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                new ErrorInfo("invalid sublist parameter", 217, 17, 11, 219, 17, 13),
+                new ErrorInfo("invalid parameter", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -406,16 +406,16 @@ namespace AnalysisTests {
                 new ErrorInfo("from __future__ imports must occur at the beginning of the file", 749, 78, 1, 780, 78, 32),
                 new ErrorInfo("unexpected token 'blazzz'", 797, 82, 10, 803, 82, 16),
                 new ErrorInfo("invalid syntax, from cause not allowed in 2.x.", 837, 87, 11, 845, 87, 19),
-                new ErrorInfo("invalid syntax, parameter annotations require 3.x", 890, 96, 8, 894, 96, 12),
+                new ErrorInfo("invalid syntax, parameter annotations require 3.x", 889, 96, 7, 894, 96, 12),
                 new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
                 new ErrorInfo("positional parameter after * args not allowed", 953, 102, 13, 959, 102, 19),
-                new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
-                new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
-                new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                new ErrorInfo("duplicate * args arguments", 987, 105, 13, 989, 105, 15),
+                new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1019, 108, 15),
+                new ErrorInfo("invalid syntax", 1044, 111, 10, 1045, 111, 11),
+                new ErrorInfo("invalid sublist parameter", 1107, 117, 11, 1109, 117, 13),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
-                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                new ErrorInfo("invalid parameter", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
@@ -423,7 +423,7 @@ namespace AnalysisTests {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                new ErrorInfo("invalid parameter", 1476, 156, 7, 1482, 156, 13),
                 new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
             );
@@ -441,9 +441,8 @@ namespace AnalysisTests {
                     new ErrorInfo("only one ** allowed", 162, 10, 11, 165, 10, 14),
                     new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                     new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
-                    new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 222, 17, 16),
-                    new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 223, 17, 17),
+                    new ErrorInfo("invalid parameter", 251, 20, 10, 253, 20, 12),
                     new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                     new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                     new ErrorInfo("'continue' not supported inside 'finally' clause", 374, 34, 9, 382, 34, 17),
@@ -470,16 +469,14 @@ namespace AnalysisTests {
                     new ErrorInfo("nonlocal declaration not allowed at module level", 788, 82, 1, 796, 82, 9),
                     new ErrorInfo("invalid syntax, only exception value is allowed in 3.x.", 814, 83, 10, 819, 83, 15),
                     new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
-                    new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
-                    new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
-                    new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1048, 111, 14),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1077, 114, 15),
-                    new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1112, 117, 16),
+                    new ErrorInfo("duplicate * args arguments", 987, 105, 13, 989, 105, 15),
+                    new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1019, 108, 15),
+                    new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1045, 111, 11),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1078, 114, 16),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1113, 117, 17),
                     new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
-                    new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
-                    new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1181, 123, 20),
+                    new ErrorInfo("invalid parameter", 1208, 127, 7, 1210, 127, 9),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
                     new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
@@ -491,7 +488,7 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                     new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                     new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                    new ErrorInfo("invalid parameter", 1476, 156, 7, 1482, 156, 13),
                     new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
                     new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
                 );
@@ -510,9 +507,8 @@ namespace AnalysisTests {
                     new ErrorInfo("only one ** allowed", 162, 10, 11, 165, 10, 14),
                     new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                     new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
-                    new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 222, 17, 16),
-                    new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 223, 17, 17),
+                    new ErrorInfo("invalid parameter", 251, 20, 10, 253, 20, 12),
                     new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                     new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                     new ErrorInfo("'continue' not supported inside 'finally' clause", 374, 34, 9, 382, 34, 17),
@@ -536,16 +532,14 @@ namespace AnalysisTests {
                     new ErrorInfo("nonlocal declaration not allowed at module level", 788, 82, 1, 796, 82, 9),
                     new ErrorInfo("invalid syntax, only exception value is allowed in 3.x.", 814, 83, 10, 819, 83, 15),
                     new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
-                    new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
-                    new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
-                    new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1048, 111, 14),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1077, 114, 15),
-                    new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1112, 117, 16),
+                    new ErrorInfo("duplicate * args arguments", 987, 105, 13, 989, 105, 15),
+                    new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1019, 108, 15),
+                    new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1045, 111, 11),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1078, 114, 16),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1113, 117, 17),
                     new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
-                    new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
-                    new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1181, 123, 20),
+                    new ErrorInfo("invalid parameter", 1208, 127, 7, 1210, 127, 9),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
                     new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
@@ -557,14 +551,15 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                     new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                     new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                    new ErrorInfo("invalid parameter", 1476, 156, 7, 1482, 156, 13),
                     new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
                     new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
                 );
             }
 
-            ParseErrors("AllErrors.py",
-                    PythonLanguageVersion.V35,
+            foreach (var version in V35AndUp) {
+                ParseErrors("AllErrors.py",
+                    version,
                     new ErrorInfo("future statement does not support import *", 0, 1, 1, 24, 1, 25),
                     new ErrorInfo("future feature is not defined: *", 0, 1, 1, 24, 1, 25),
                     new ErrorInfo("not a chance", 26, 2, 1, 55, 2, 30),
@@ -572,9 +567,8 @@ namespace AnalysisTests {
                     new ErrorInfo("default value must be specified here", 106, 5, 16, 107, 5, 17),
                     new ErrorInfo("positional argument follows keyword argument", 134, 8, 12, 135, 8, 13),
                     new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
-                    new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 222, 17, 16),
-                    new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 223, 17, 17),
+                    new ErrorInfo("invalid parameter", 251, 20, 10, 253, 20, 12),
                     new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                     new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                     new ErrorInfo("'continue' not supported inside 'finally' clause", 374, 34, 9, 382, 34, 17),
@@ -598,16 +592,14 @@ namespace AnalysisTests {
                     new ErrorInfo("nonlocal declaration not allowed at module level", 788, 82, 1, 796, 82, 9),
                     new ErrorInfo("invalid syntax, only exception value is allowed in 3.x.", 814, 83, 10, 819, 83, 15),
                     new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
-                    new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
-                    new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
-                    new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1048, 111, 14),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1077, 114, 15),
-                    new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1112, 117, 16),
+                    new ErrorInfo("duplicate * args arguments", 987, 105, 13, 989, 105, 15),
+                    new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1019, 108, 15),
+                    new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1045, 111, 11),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1078, 114, 16),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1113, 117, 17),
                     new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
-                    new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
-                    new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1181, 123, 20),
+                    new ErrorInfo("invalid parameter", 1208, 127, 7, 1210, 127, 9),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
                     new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
@@ -619,10 +611,11 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                     new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                     new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                    new ErrorInfo("invalid parameter", 1476, 156, 7, 1482, 156, 13),
                     new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
                     new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
                 );
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -2190,7 +2183,7 @@ namespace AnalysisTests {
         public void FuncDefV2() {
             foreach (var version in V2Versions) {
                 CheckAst(
-                    ParseFile("FuncDefV2.py", ErrorSink.Null, version),
+                    ParseFileNoErrors("FuncDefV2.py", version),
                     CheckSuite(
                         CheckFuncDef("f", new[] { CheckParameter("a"), CheckSublistParameter("b", "c"), CheckParameter("d") }, CheckSuite(Pass))
                     )
@@ -2199,7 +2192,7 @@ namespace AnalysisTests {
 
             foreach (var version in V3Versions) {
                 ParseErrors("FuncDefV2.py", version,
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 9, 1, 10, 14, 1, 15)
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 9, 1, 10, 15, 1, 16)
                 );
             }
         }
@@ -2208,7 +2201,7 @@ namespace AnalysisTests {
         public void FuncDefV3() {
             foreach (var version in V3Versions) {
                 CheckAst(
-                    ParseFile("FuncDefV3.py", ErrorSink.Null, version),
+                    ParseFileNoErrors("FuncDefV3.py", version),
                     CheckSuite(
                         CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List), CheckParameter("x", ParameterKind.KeywordOnly) }, CheckSuite(Pass)),
                         CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List), CheckParameter("x", ParameterKind.KeywordOnly, defaultValue: One) }, CheckSuite(Pass)),
@@ -2223,7 +2216,7 @@ namespace AnalysisTests {
                         CheckFuncDef("f", new[] { CheckParameter("a", annotation: One) }, CheckSuite(Pass), returnAnnotation: One),
 
                         CheckFuncDef("f", new[] { CheckParameter("a", defaultValue: Two, annotation: One) }, CheckSuite(Pass)),
-                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.KeywordOnly) }, CheckSuite(Pass))
+                        CheckFuncDef("f", new[] { CheckParameter(null, ParameterKind.List), CheckParameter("a", ParameterKind.KeywordOnly) }, CheckSuite(Pass))
 
                     )
                 );
@@ -2233,27 +2226,17 @@ namespace AnalysisTests {
                 ParseErrors("FuncDefV3.py", version,
                     new ErrorInfo("positional parameter after * args not allowed", 10, 1, 11, 11, 1, 12),
                     new ErrorInfo("positional parameter after * args not allowed", 30, 2, 11, 35, 2, 16),
-                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 53, 4, 8, 56, 4, 11),
-                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 72, 5, 8, 74, 5, 10),
-                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 93, 6, 9, 95, 6, 11),
-                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 113, 7, 8, 116, 7, 11),
-                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 119, 7, 14, 121, 7, 16),
-                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 127, 7, 22, 129, 7, 24),
-                    new ErrorInfo("unexpected token '-'", 151, 9, 9, 152, 9, 10),
-                    new ErrorInfo("unexpected token '>'", 152, 9, 10, 153, 9, 11),
-                    new ErrorInfo("invalid syntax", 154, 9, 12, 155, 9, 13),
-                    new ErrorInfo("unexpected token ':'", 155, 9, 13, 156, 9, 14),
-                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 172, 11, 8, 175, 11, 11),
-                    new ErrorInfo("unexpected token '-'", 177, 11, 13, 178, 11, 14),
-                    new ErrorInfo("unexpected token '>'", 178, 11, 14, 179, 11, 15),
-                    new ErrorInfo("invalid syntax", 180, 11, 16, 181, 11, 17),
-                    new ErrorInfo("unexpected token ':'", 181, 11, 17, 182, 11, 18),
-                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 198, 13, 8, 201, 13, 11),
-                    new ErrorInfo("unexpected token ','", 223, 15, 8, 224, 15, 9),
-                    new ErrorInfo("unexpected token 'a'", 225, 15, 10, 226, 15, 11),
-                    new ErrorInfo("unexpected token 'a'", 225, 15, 10, 226, 15, 11),
-                    new ErrorInfo("unexpected token ')'", 226, 15, 11, 227, 15, 12),
-                    new ErrorInfo("unexpected token ':'", 227, 15, 12, 228, 15, 13)
+                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 52, 4, 7, 56, 4, 11),
+                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 71, 5, 7, 76, 5, 12),
+                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 91, 6, 7, 97, 6, 13),
+                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 112, 7, 7, 116, 7, 11),
+                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 118, 7, 13, 123, 7, 18),
+                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 125, 7, 20, 131, 7, 26),
+                    new ErrorInfo("invalid syntax, return annotations require 3.x", 151, 9, 9, 155, 9, 13),
+                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 171, 11, 7, 175, 11, 11),
+                    new ErrorInfo("invalid syntax, return annotations require 3.x", 177, 11, 13, 181, 11, 17),
+                    new ErrorInfo("invalid syntax, parameter annotations require 3.x", 197, 13, 7, 205, 13, 15),
+                    new ErrorInfo("invalid syntax", 222, 15, 7, 223, 15, 8)
                 );
             }
         }
@@ -2262,9 +2245,24 @@ namespace AnalysisTests {
         public void FuncDefV3Illegal() {
             foreach (var version in V3Versions) {
                 ParseErrors("FuncDefV3Illegal.py", version,
-                    new ErrorInfo("unexpected token ')'", 7, 1, 8, 8, 1, 9),
-                    new ErrorInfo("unexpected token ':'", 8, 1, 9, 9, 1, 10),
-                    new ErrorInfo("named arguments must follow bare *", 22, 2, 7, 26, 2, 11)
+                    new ErrorInfo("named arguments must follow bare *", 6, 1, 7, 7, 1, 8),
+                    new ErrorInfo("named arguments must follow bare *", 22, 2, 7, 23, 2, 8)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void FuncDefTrailingComma() {
+            foreach (var version in AllVersions) {
+                CheckAst(
+                    ParseFileNoErrors("FuncDefTrailingComma.py", version),
+                    CheckSuite(
+                        CheckFuncDef("f", new[] { CheckParameter("a") }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a"), CheckParameter("b", ParameterKind.List) }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a"), CheckParameter("b", ParameterKind.List), CheckParameter("c", ParameterKind.Dictionary) }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List) }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.Dictionary) }, CheckSuite(Pass))
+                    )
                 );
             }
         }
@@ -2861,9 +2859,7 @@ namespace AnalysisTests {
                 switch (curVersion.Version) {
                     case PythonLanguageVersion.V36:
                         if (// https://github.com/Microsoft/PTVS/issues/1637
-                            filename.Equals("test_unicode_identifiers.py", StringComparison.OrdinalIgnoreCase) ||
-                            // https://github.com/Microsoft/PTVS/issues/1645
-                            filename.Equals("test_grammar.py", StringComparison.OrdinalIgnoreCase)
+                            filename.Equals("test_unicode_identifiers.py", StringComparison.OrdinalIgnoreCase)
                             ) {
                             continue;
                         }
@@ -3383,7 +3379,7 @@ namespace AnalysisTests {
 
         private static Action<Parameter> CheckParameter(string name, ParameterKind kind = ParameterKind.Normal, Action<Expression> defaultValue = null, Action<Expression> annotation = null) {
             return param => {
-                Assert.AreEqual(name, param.Name);
+                Assert.AreEqual(name ?? "", param.Name ?? "");
                 Assert.AreEqual(kind, param.Kind);
 
                 if (defaultValue != null) {

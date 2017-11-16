@@ -1689,7 +1689,7 @@ namespace Microsoft.PythonTools.Parsing {
                 case '-':
                     if (NextChar('=')) {
                         return Tokens.SubtractEqualToken;
-                    } else if (_langVersion.Is3x() && NextChar('>')) {
+                    } else if (NextChar('>')) {
                         return Tokens.ArrowToken;
                     }
                     return Tokens.SubtractToken;
@@ -2717,7 +2717,7 @@ namespace Microsoft.PythonTools.Parsing {
                 index = lineLocations[line - 1].EndIndex;
             }
 
-            if (line < lineLocations.Length && location.Column >= (lineLocations[line].EndIndex - index)) {
+            if (line < lineLocations.Length && location.Column > (lineLocations[line].EndIndex - index)) {
                 return lineLocations[line].EndIndex;
             }
 

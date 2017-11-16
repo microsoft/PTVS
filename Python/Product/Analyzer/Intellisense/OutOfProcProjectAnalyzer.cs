@@ -324,7 +324,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     await _pyAnalyzer.ReloadModulesAsync();
                     interpreter.ModuleNamesChanged += OnModulesChanged;
                 }
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
+            } catch (Exception ex) {
+                // Even "critical" exceptions we want to return here
                 error = ex.ToString();
             }
 

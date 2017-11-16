@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -52,27 +53,24 @@ namespace Microsoft.PythonTools.Refactoring {
                 input.CannotRename(Strings.RenameVariable_UnableGetAnalysisCurrentTextView);
                 return;
             }
-            var analysis = await entry.Analyzer.AnalyzeExpressionAsync(entry, caret.Value);
-            if (analysis == null) {
-                input.CannotRename(Strings.RenameVariable_UnableGetAnalysisCurrentTextView);
+            var analysis = await entry.Analyzer.AnalyzeExpressionAsync(entry, caret.Value, ExpressionAtPointPurpose.Rename);
+            if (analysis == null || string.IsNullOrEmpty(analysis.Expression)) {
+                input.CannotRename(Strings.RenameVariable_UnableGetExpressionAnalysis);
                 return;
             }
             
-            string originalName = null;
             string privatePrefix = null;
-            if (!String.IsNullOrWhiteSpace(analysis.Expression)) {
-                originalName = analysis.MemberName;
+            var originalName = analysis.MemberName;
 
-                if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWith("_" + analysis.PrivatePrefix)) {
-                    originalName = originalName.Substring(analysis.PrivatePrefix.Length + 1);
-                    privatePrefix = analysis.PrivatePrefix;
-                }
+            if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWith("_" + analysis.PrivatePrefix)) {
+                originalName = originalName.Substring(analysis.PrivatePrefix.Length + 1);
+                privatePrefix = analysis.PrivatePrefix;
+            }
 
-                if (originalName != null && _view.Selection.IsActive && !_view.Selection.IsEmpty) {
-                    if (_view.Selection.Start.Position < analysis.Span.GetStartPoint(_view.TextBuffer.CurrentSnapshot) ||
-                        _view.Selection.End.Position > analysis.Span.GetEndPoint(_view.TextBuffer.CurrentSnapshot)) {
-                        originalName = null;
-                    }
+            if (originalName != null && _view.Selection.IsActive && !_view.Selection.IsEmpty) {
+                if (_view.Selection.Start.Position < analysis.Span.GetStartPoint(_view.TextBuffer.CurrentSnapshot) ||
+                    _view.Selection.End.Position > analysis.Span.GetEndPoint(_view.TextBuffer.CurrentSnapshot)) {
+                    originalName = null;
                 }
             }
 

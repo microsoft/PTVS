@@ -2813,6 +2813,49 @@ def f(a):
 
 
         [TestMethod, Priority(0)]
+        public void ListDictArgReferences() {
+            var text = @"
+def f(*a, **k):
+    x = a[1]
+    y = k['a']
+
+#out
+a = 1
+k = 2
+";
+            var entry = ProcessText(text);
+            entry.AssertReferences("a", text.IndexOf("a["),
+                new VariableLocation(2, 8, VariableType.Definition),
+                new VariableLocation(3, 9, VariableType.Reference)
+            );
+            entry.AssertReferences("k", text.IndexOf("k["),
+                new VariableLocation(2, 12, VariableType.Definition),
+                new VariableLocation(4, 9, VariableType.Reference)
+            );
+            entry.AssertReferences("a", text.IndexOf("#out"),
+                new VariableLocation(7, 1, VariableType.Definition)
+            );
+            entry.AssertReferences("k", text.IndexOf("#out"),
+                new VariableLocation(8, 1, VariableType.Definition)
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void KeywordArgReferences() {
+            var text = @"
+def f(a):
+    pass
+
+f(a=1)
+";
+            var entry = ProcessText(text);
+            entry.AssertReferences("a", text.IndexOf("a"),
+                new VariableLocation(2, 7, VariableType.Definition),
+                new VariableLocation(5, 3, VariableType.Reference)
+            );
+        }
+
+        [TestMethod, Priority(0)]
         public void ReferencesCrossModule() {
             var fobText = @"
 from oar import abc

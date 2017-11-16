@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             private bool Save(Node node, bool baseWalk, bool ifTrue) {
-                if (baseWalk && !(node.StartIndex <= _endLocation && _endLocation <= node.EndIndex)) {
+                if (node == null || baseWalk && !(node.StartIndex <= _endLocation && _endLocation <= node.EndIndex)) {
                     return false;
                 }
 
@@ -129,9 +129,18 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool Walk(ConstantExpression node) => Save(node, base.Walk(node), _options.Literals);
             public override bool Walk(IndexExpression node) => Save(node, base.Walk(node), _options.Indexing);
             public override bool Walk(NameExpression node) => Save(node, base.Walk(node), _options.Names);
-            public override bool Walk(Parameter node) => Save(node, base.Walk(node), _options.ParameterNames && Location <= node.StartIndex + node.Name.Length);
             public override bool Walk(ParenthesisExpression node) => Save(node, base.Walk(node), _options.ParenthesisedExpression);
             public override bool Walk(FunctionDefinition node) => Save(node, base.Walk(node), _options.FunctionDefinition && BeforeBody(node.Body));
+
+            public override bool Walk(Parameter node) {
+                if (base.Walk(node)) {
+                    if (node.NameExpression != null) {
+                        Save(node.NameExpression, base.Walk(node.NameExpression), _options.ParameterNames);
+                    }
+                    return true;
+                }
+                return false;
+            }
 
             public override bool Walk(MemberExpression node) {
                 if (Save(node, base.Walk(node), _options.Members && Location >= node.NameHeader)) {
