@@ -5428,7 +5428,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File is saved in encoding &apos;{0}&apos; which does not match encoding in magic comment.
+        ///   Looks up a localized string similar to File is saved in encoding &apos;{0}&apos; which does not match encoding in the magic comment.
         /// </summary>
         public static string WarningEncodingMismatch {
             get {

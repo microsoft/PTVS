@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         protected override async Task OnNewAnalysis(PythonTextBufferInfo bi, AnalysisEntry entry) {
-            if (!Enabled && !_alwaysCreateSquiggle || entry == null) {
+            if (!Enabled && !_alwaysCreateSquiggle) {
                 TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.InvalidEncodingMoniker);
                 return;
             }
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     || prevMessage != message) {
 
                     bi.Buffer.Properties[VsProjectAnalyzer.InvalidEncodingMoniker] = message;
-                    var version = entry.GetAnalysisVersion(bi.Buffer);
+                    var version = bi.Buffer.CurrentSnapshot.Version;
 
                     TaskProvider.ReplaceItems(
                         bi.Filename,
@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 VSTASKPRIORITY.TP_NORMAL,
                                 VSTASKCATEGORY.CAT_CODESENSE,
                                 true,
-                                new LocationTracker(version, bi.Buffer, bi.Buffer.CurrentSnapshot.Version.VersionNumber)
+                                new LocationTracker(version, bi.Buffer, version.VersionNumber)
                             )
                         });
                 }
