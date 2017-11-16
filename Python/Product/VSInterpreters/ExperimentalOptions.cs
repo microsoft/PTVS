@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Interpreter {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {
                 var value = root?.GetValue(NoDatabaseFactoryKey);
                 if (value == null) {
-                    return true;
+                    return false;
                 }
                 int? asInt = value as int?;
                 if (asInt.HasValue) {
