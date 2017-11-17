@@ -25,8 +25,9 @@
                     <wpf:Lambda x:Key="BoolToCollapsed">(bool b) => b ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
 
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentIsDefault">
-                        <Grid Margin="6">
+                        <Grid>
                             <Button x:Name="MakeDefaultButton"
+                                    Margin="6 9 6 6"
                                     Style="{StaticResource NavigationButton}"
                                     HorizontalAlignment="Stretch"
                                     Command="{x:Static l:EnvironmentView.MakeGlobalDefault}"
@@ -48,6 +49,7 @@
                             </Button>
                             <Label x:Name="IsDefaultMessage"
                                    Visibility="Collapsed"
+                                   Margin="6 9 6 6"
                                    Padding="0"
                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}">
                                 <Grid>
@@ -67,6 +69,7 @@
                             </Label>
                             <Label x:Name="CannotBeDefaultMessage"
                                    Visibility="Collapsed"
+                                   Margin="6 9 6 6"
                                    Padding="0"
                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionCannotBeDefaultLabel}">
                                 <Grid>
@@ -95,6 +98,9 @@
                                 <Setter TargetName="MakeDefaultButton" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="IsDefaultMessage" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="CannotBeDefaultMessage" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsBroken}" Value="True">
+                                <Setter TargetName="MakeDefaultButton" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
@@ -329,12 +335,12 @@
 
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="SupportInformation">
                         <StackPanel Orientation="Vertical">
-                            <Button x:Name="BrokenEnvironment"
-                                    Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
+                            <Button x:Name="BrokenEnvironmentUrl"
+                                Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
                                     CommandParameter="{Binding BrokenEnvironmentHelpUrl,Mode=OneWay}"
                                     ToolTip="{Binding BrokenEnvironmentHelpUrl,Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
-                                    Margin="6 9 6 9"
+                                    Margin="6 9 6 4"
                                     HorizontalAlignment="Left"
                                     AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionBrokenEnvironmentLabel}"
                                     AutomationProperties.HelpText="{Binding SupportUrl,Mode=OneWay}">
@@ -357,7 +363,7 @@
                                     CommandParameter="{Binding SupportUrl,Mode=OneWay}"
                                     ToolTip="{Binding SupportUrl,Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
-                                    Margin="6 4 6 4"
+                                    Margin="6 9 6 4"
                                     HorizontalAlignment="Left"
                                     AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"
                                     AutomationProperties.HelpText="{Binding SupportUrl,Mode=OneWay}">
@@ -381,8 +387,8 @@
                             <DataTrigger Binding="{Binding SupportUrl,Mode=OneWay}" Value="">
                                 <Setter TargetName="SupportUrl" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding IsBroken,Mode=OneWay}" Value="False">
-                                <Setter TargetName="BrokenEnvironment" Property="Visibility" Value="Collapsed" />
+                            <DataTrigger Binding="{Binding IsBroken}" Value="False">
+                                <Setter TargetName="BrokenEnvironmentUrl" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
@@ -399,10 +405,10 @@
                     <Setter Property="Focusable" Value="False"/>
                 </Style>
             </StackPanel.Resources>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentIsDefault}" Margin="0 3" Visibility="{Binding IsBroken, Converter={StaticResource BoolToCollapsed}}"/>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentIsDefault}" Margin="0" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SupportInformation}" Margin="0" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InteractiveLinks}" Margin="0 3" Visibility="{Binding IsBroken, Converter={StaticResource BoolToCollapsed}}" />
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentLinks}" Margin="0 3" Visibility="{Binding IsBroken, Converter={StaticResource BoolToCollapsed}}" />
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentLinks}" Margin="0 3" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 Extensions.Add(new ConfigurationExtensionProvider(_service, alwaysCreateNew: false));
             }
 
-            CanBeDefault = Factory.CanBeDefault() && !IsBroken;
+            CanBeDefault = Factory.CanBeDefault();
 
             Company = _registry.GetProperty(Factory.Configuration.Id, CompanyKey) as string ?? "";
             SupportUrl = _registry.GetProperty(Factory.Configuration.Id, SupportUrlKey) as string ?? "";
