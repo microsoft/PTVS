@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Repl {
         public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
             _serviceProvider.MustBeCalledFromUIThread();
 
-            foreach (var interpreter in _interpreterService.Configurations.Where(PythonInterpreterFactoryRunnableExtensions.IsRunnable)) {
+            foreach (var interpreter in _interpreterService.Configurations.Where(PythonInterpreterFactoryExtensions.IsRunnable)) {
                 yield return new KeyValuePair<string, string>(
                     interpreter.Description,
                     GetEvaluatorId(interpreter)

@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools {
 
             var res = knownProviders.Configurations
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
-                .Where(PythonInterpreterFactoryRunnableExtensions.IsRunnable)
+                .Where(PythonInterpreterFactoryExtensions.IsRunnable)
                 .OrderBy(c => c.Description)
                 .ThenBy(c => c.Version)
                 .Select(c => new InterpreterView(c.Id, c.Description, project));

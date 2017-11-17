@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools {
             var interpreters = compModel.GetService<IInterpreterRegistryService>();
 
             var factory = interpreters.Configurations
-                .Where(PythonInterpreterFactoryRunnableExtensions.IsRunnable)
+                .Where(PythonInterpreterFactoryExtensions.IsRunnable)
                 .FirstOrDefault(f => f.Description.Equals(description, StringComparison.CurrentCultureIgnoreCase));
             if (factory == null) {
                 throw new KeyNotFoundException("Could not create interactive window with name: " + description);

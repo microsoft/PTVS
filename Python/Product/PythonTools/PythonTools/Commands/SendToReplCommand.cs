@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -25,6 +26,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -62,7 +64,13 @@ namespace Microsoft.PythonTools.Commands {
             ITextSelection selection = activeView.Selection;
             ITextSnapshot snapshot = activeView.TextBuffer.CurrentSnapshot;
 
-            var repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project);
+            IVsInteractiveWindow repl;
+            try {
+                repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project);
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return;
+            }
 
             string input;
             bool focusRepl = false, alwaysSubmit = false;
@@ -141,14 +149,6 @@ namespace Microsoft.PythonTools.Commands {
             e.TextView.Caret.PositionChanged -= Caret_PositionChanged;
         }
 
-        private bool IsRealInterpreter(IPythonInterpreterFactory factory) {
-            if (factory == null) {
-                return false;
-            }
-            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            return interpreterService != null && interpreterService.NoInterpretersValue != factory;
-        }
-
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             
@@ -156,8 +156,7 @@ namespace Microsoft.PythonTools.Commands {
             if (activeView != null && (analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider)) != null) {
 
                 if (activeView.Selection.Mode == TextSelectionMode.Box ||
-                    analyzer == null ||
-                    !IsRealInterpreter(analyzer.InterpreterFactory)) {
+                    analyzer?.InterpreterFactory?.IsRunnable() != true) {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
                 } else {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);

@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (newDefault == null) {
                 var defaultConfig = _registryService.Value.Configurations
-                    .Where(PythonInterpreterFactoryExtensions.CanBeRun)
+                    .Where(PythonInterpreterFactoryExtensions.IsRunnable)
                     .LastOrDefault(c => c.CanBeAutoDefault());
                 id = defaultConfig?.Id;
             

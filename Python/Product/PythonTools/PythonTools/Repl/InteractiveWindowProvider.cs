@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Repl {
 
         private bool EnsureInterpretersAvailable() {
             var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            if (registry.Configurations.Where(PythonInterpreterFactoryRunnableExtensions.IsRunnable).Any()) {
+            if (registry.Configurations.Where(PythonInterpreterFactoryExtensions.IsRunnable).Any()) {
                 return true;
             }
 

@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Factory = factory;
             Configuration = Factory.Configuration;
             LocalizedDisplayName = Configuration.Description;
-            IsBroken = !Configuration.CanBeRun();
+            IsBroken = !Configuration.IsRunnable();
             BrokenEnvironmentHelpUrl = "https://go.microsoft.com/fwlink/?linkid=863373";
 
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
