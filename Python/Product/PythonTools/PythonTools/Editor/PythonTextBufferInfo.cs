@@ -410,8 +410,8 @@ namespace Microsoft.PythonTools.Editor {
         /// Returns tokens for the specified line.
         /// </summary>
         public IEnumerable<TrackingTokenInfo> GetTokens(ITextSnapshotLine line) {
-            using (var cache = _tokenCache.Use()) {
-                var lineTokenization = cache.Lines.GetLineTokenization(line, GetTokenizerLazy());
+            using (var cacheSnapshot = _tokenCache.GetSnapshot()) {
+                var lineTokenization = cacheSnapshot.GetLineTokenization(line, GetTokenizerLazy());
                 var lineNumber = line.LineNumber;
                 var lineSpan = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
                 return lineTokenization.Tokens.Select(t => new TrackingTokenInfo(t, lineNumber, lineSpan));
@@ -474,9 +474,9 @@ namespace Microsoft.PythonTools.Editor {
             int endCol = span.End - span.End.GetContainingLine().Start;
 
             // We need current state of the cache since it can change from a background thread
-            using (var cache = _tokenCache.Use()) {
+            using (var cacheSnapshot = _tokenCache.GetSnapshot()) {
                 for (int line = firstLine; line <= lastLine; ++line) {
-                    var lineTokenization = cache.Lines.GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), GetTokenizerLazy());
+                    var lineTokenization = cacheSnapshot.GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), GetTokenizerLazy());
 
                     foreach (var token in lineTokenization.Tokens.MaybeEnumerate()) {
                         if (line == firstLine && token.Column + token.Length < startCol) {

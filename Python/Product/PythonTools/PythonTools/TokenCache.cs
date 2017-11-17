@@ -159,29 +159,45 @@ namespace Microsoft.PythonTools {
         public string GetText(ITextSnapshot snapshot) => ToSnapshotSpan(snapshot).GetText();
     }
 
-    internal interface ILineTokenizationMap {
-        LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer);
-    }
-
+    /// <summary>
+    /// Represents cached information on line tokens from a given snapshot.
+    /// </summary>
+    /// <remarks>The tokenization snapshot is immutable in relation 
+    /// to the text buffer snapshot. If text buffer is updated, 
+    /// tokenization snapshot continues using buffer snapshot it was
+    /// created on.</remarks>
     internal interface ILineTokenizationSnapshot: IDisposable {
-        ILineTokenizationMap Lines { get; }
+        /// <summary>
+        /// Gets the tokenization for the specified line.
+        /// </summary>
+        /// <param name="line">The line to get tokenization for.</param>
+        /// <param name="lazyTokenizer">Tokenizer factory</param>
+        LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer);
     }
 
     internal class TokenCache {
         private readonly object _lock = new object();
         private LineTokenizationMap _map = new LineTokenizationMap();
-        private int _useCount;
+        
+        // Controls 'copy on write' when buffer changes from a background thread
+        private int _useCount; 
 
-        internal TokenCache() { }
-
-        internal ILineTokenizationSnapshot Use() {
+        /// <summary>
+        /// Obtains tokenization snapshot that is immutable 
+        /// in relation to the text buffer snapshot.
+        /// </summary>
+        /// <returns></returns>
+        internal ILineTokenizationSnapshot GetSnapshot() {
             lock(_lock) {
                 _useCount++;
                 return new LineTokenizationSnapshot(this, _map);
             }
         }
 
-        internal void Release(ILineTokenizationMap map) {
+        /// <summary>
+        /// Releases tokenization snapshot
+        /// </summary>
+        internal void Release(LineTokenizationMap map) {
             lock (_lock) {
                 if (_map == map) {
                     if(_useCount == 0) {
@@ -199,9 +215,8 @@ namespace Microsoft.PythonTools {
         }
 
         internal void Update(TextContentChangedEventArgs e, Lazy<Tokenizer> lazyTokenizer) {
-            var snapshot = e.After;
             lock (_lock) {
-                // Copy on write
+                // Copy on write. No need to copy if no one is using the map.
                 if (_useCount > 0) {
                     _map = _map.Clone();
                     _useCount = 0;
@@ -212,16 +227,19 @@ namespace Microsoft.PythonTools {
 
         internal class LineTokenizationSnapshot : ILineTokenizationSnapshot {
             private readonly TokenCache _cache;
+            private readonly LineTokenizationMap _map;
 
-            public LineTokenizationSnapshot(TokenCache cache, ILineTokenizationMap map) {
+            internal LineTokenizationSnapshot(TokenCache cache, LineTokenizationMap map) {
                 _cache = cache;
-                Lines = map;
+                _map = map;
             }
-            public void Dispose() => _cache.Release(Lines);
-            public ILineTokenizationMap Lines { get; }
+            void IDisposable.Dispose() => _cache.Release(_map);
+
+            LineTokenization ILineTokenizationSnapshot.GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer)
+                => _map.GetLineTokenization(line, lazyTokenizer);
         }
 
-        private class LineTokenizationMap: ILineTokenizationMap {
+        internal class LineTokenizationMap {
             private readonly object _lock = new object();
             private LineTokenization[] _map;
 
@@ -242,12 +260,7 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            /// <summary>
-            /// Gets the tokenization for the specified line.
-            /// </summary>
-            /// <param name="line">The line to get tokenization for.</param>
-            /// <param name="getTokenizer">Tokenizer factory</param>
-            public LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer) {
+            internal LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer) {
                 var lineNumber = line.LineNumber;
 
                 lock (_lock) {
@@ -268,7 +281,6 @@ namespace Microsoft.PythonTools {
             internal void Update(TextContentChangedEventArgs e, Lazy<Tokenizer> lazyTokenizer) {
                 var snapshot = e.After;
                 lock (_lock) {
-                    // Copy on write
                     EnsureCapacity(snapshot.LineCount);
 
                     foreach (var change in e.Changes) {
