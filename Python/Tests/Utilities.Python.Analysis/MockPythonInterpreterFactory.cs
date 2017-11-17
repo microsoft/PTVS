@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockPythonInterpreterFactory : IPythonInterpreterFactoryWithDatabase, IDisposable {
+    public class MockPythonInterpreterFactory : IPythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization, IDisposable {
         readonly InterpreterConfiguration _config;
         private bool _useUpdater;
         private AnalyzerStatusUpdater _updater;
@@ -48,6 +48,16 @@ namespace TestUtilities.Python {
 
             _useUpdater = withStatusUpdater;
             PackageManager = packageManager;
+        }
+
+        private MockPythonInterpreterFactory(Dictionary<string, object> properties) {
+            _config = new InterpreterConfiguration(properties);
+
+            _isCurrent = true;
+            IsCurrentReason = null;
+
+            _useUpdater = false;
+            PackageManager = null;
         }
 
         public void Dispose() {
@@ -193,6 +203,14 @@ namespace TestUtilities.Python {
 
         public IEnumerable<string> GetUpToDateModules() {
             yield break;
+        }
+
+        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+            assembly = GetType().Assembly.Location;
+            typeName = GetType().FullName;
+            properties = new Dictionary<string, object>();
+            Configuration.WriteToDictionary(properties);
+            return true;
         }
     }
 }

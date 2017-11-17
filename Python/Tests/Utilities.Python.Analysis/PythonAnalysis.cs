@@ -74,14 +74,13 @@ namespace TestUtilities.Python {
 
         public PythonAnalysis(
             IPythonInterpreterFactory factory,
-            IPythonInterpreter interpreter = null,
-            string builtinName = null
+            IPythonInterpreter interpreter = null
         ) {
             if (factory == null) {
                 Assert.Inconclusive("Expected interpreter is not installed");
             }
             _factory = factory;
-            _analyzer = PythonAnalyzer.CreateSynchronously(factory, interpreter, builtinName);
+            _analyzer = PythonAnalyzer.CreateSynchronously(factory, interpreter);
             _entries = new Dictionary<string, IPythonProjectEntry>(StringComparer.OrdinalIgnoreCase);
             _tasks = new ConcurrentDictionary<IPythonProjectEntry, TaskCompletionSource<CollectingErrorSink>>();
             _cachedMembers = new Dictionary<BuiltinTypeId, string[]>();

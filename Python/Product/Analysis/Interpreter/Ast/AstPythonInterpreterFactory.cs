@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, IDisposable {
+    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
         private readonly string _databasePath;
         private readonly object _searchPathsLock = new object();
         private PythonLibraryPath[] _searchPaths;
@@ -98,6 +98,38 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
         }
+
+        public bool GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+            assembly = GetType().Assembly.Location;
+            typeName = GetType().FullName;
+            properties = new Dictionary<string, object> {
+                { "DatabasePath", _databasePath }
+            };
+            if (_log != null) {
+                properties[nameof(TraceLevel)] = _log.MinimumLevel;
+            }
+            Configuration.WriteToDictionary(properties);
+            return true;
+        }
+
+        private static InterpreterFactoryCreationOptions ReadCreationOptions(Dictionary<string, object> properties) {
+            object o;
+            var opts = new InterpreterFactoryCreationOptions {
+                DatabasePath = properties.TryGetValue("DatabasePath", out o) ? (o as string) : null,
+                PackageManager = null,
+                WatchFileSystem = false
+            };
+
+            TraceLevel level;
+            if (properties.TryGetValue(nameof(TraceLevel), out o) && Enum.TryParse(o as string, out level)) {
+                opts.TraceLevel = level;
+            }
+
+            return opts;
+        }
+
+        internal AstPythonInterpreterFactory(Dictionary<string, object> properties) :
+            this(new InterpreterConfiguration(properties), ReadCreationOptions(properties)) { }
 
         public InterpreterConfiguration Configuration { get; }
 

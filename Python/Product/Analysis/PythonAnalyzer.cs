@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly HashSet<ModuleInfo> _modulesWithUnresolvedImports;
         private readonly object _modulesWithUnresolvedImportsLock = new object();
         private readonly Dictionary<object, AnalysisValue> _itemCache;
-        private readonly string _builtinName;
+        internal readonly string _builtinName;
         internal BuiltinModule _builtinModule;
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
         internal ConstantInfo _noneInst;
@@ -85,8 +85,7 @@ namespace Microsoft.PythonTools.Analysis {
         // Test helper method
         internal static PythonAnalyzer CreateSynchronously(
             IPythonInterpreterFactory factory,
-            IPythonInterpreter interpreter = null,
-            string builtinName = null
+            IPythonInterpreter interpreter = null
         ) {
             var res = new PythonAnalyzer(factory, interpreter);
             try {

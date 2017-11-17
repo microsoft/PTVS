@@ -83,6 +83,7 @@
     <Compile Include="Interpreter\Ast\AstScrapedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstTypeAnnotationConverter.cs" />
     <Compile Include="Interpreter\Ast\NameLookupContext.cs" />
+    <Compile Include="Interpreter\ICustomInterpreterSerialization.cs" />
     <Compile Include="Interpreter\ILazyMember.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithLog.cs" />
     <Compile Include="Interpreter\SentinelModule.cs" />

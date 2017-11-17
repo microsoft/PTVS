@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             };
         }
 
-        private CPythonInterpreterFactory(Dictionary<string, object> properties) :
+        internal CPythonInterpreterFactory(Dictionary<string, object> properties) :
             base(new InterpreterConfiguration(properties), ReadCreationOptions(properties)) { }
     }
 }

@@ -449,6 +449,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (!serializer.GetSerializationInfo(out assembly, out typeName, out properties)) {
                     throw new InvalidOperationException($"Unable to serialize {factory.Configuration.Id}");
                 }
+                return;
+            }
+
+            var fallback = typeof(Default.AnalysisOnlyInterpreterFactory);
+            assembly = fallback.Assembly.Location;
+            typeName = fallback.FullName;
+            properties = new Dictionary<string, object>();
+            if (factory.Configuration?.Version != null) {
+                properties[nameof(Version)] = factory.Configuration.Version.ToString();
             }
         }
     }

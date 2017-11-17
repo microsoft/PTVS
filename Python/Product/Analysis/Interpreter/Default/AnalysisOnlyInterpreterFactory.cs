@@ -21,7 +21,6 @@ using System.Linq;
 namespace Microsoft.PythonTools.Interpreter.Default {
     class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
         readonly IEnumerable<string> _actualDatabasePaths;
-        readonly PythonTypeDatabase _actualDatabase;
 
         private readonly static InterpreterFactoryCreationOptions CreationOptions = new InterpreterFactoryCreationOptions {
             WatchFileSystem = false
@@ -35,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _actualDatabasePaths = databasePaths?.ToList();
         }
 
-        private AnalysisOnlyInterpreterFactory(Dictionary<string, object> properties)
+        internal AnalysisOnlyInterpreterFactory(Dictionary<string, object> properties)
             : base(GetConfiguration(properties), CreationOptions){
             _actualDatabasePaths = GetDatabasePaths(properties);
         }
@@ -100,9 +99,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
-            if (_actualDatabase != null) {
-                return _actualDatabase;
-            } else if (_actualDatabasePaths != null) {
+            if (_actualDatabasePaths != null) {
                 return new PythonTypeDatabase(this, _actualDatabasePaths);
             } else {
                 return PythonTypeDatabase.CreateDefaultTypeDatabase(this);

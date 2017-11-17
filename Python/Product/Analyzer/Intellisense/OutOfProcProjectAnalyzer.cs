@@ -55,12 +55,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private IPythonInterpreterFactory _interpreterFactory;
         private PythonAnalyzer _pyAnalyzer;
-        private InterpreterConfiguration[] _allConfigs;
-        private AP.AnalysisOptions _options;
         private readonly Dictionary<string, IAnalysisExtension> _extensions;
         internal int _analysisPending;
-
-        private volatile Dictionary<string, AP.TaskPriority> _commentPriorityMap;
 
         private bool _isDisposed;
 
@@ -76,7 +72,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
 
-            _options = new AP.AnalysisOptions();
+            Options = new AP.AnalysisOptions();
 
             _extensions = new Dictionary<string, IAnalysisExtension>();
 
@@ -100,16 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void ConectionReceivedEvent(object sender, EventReceivedEventArgs e) {
             switch (e.Event.name) {
                 case AP.ModulesChangedEvent.Name: OnModulesChanged(this, EventArgs.Empty); break;
-                case AP.OptionsChangedEvent.Name: SetOptions((AP.OptionsChangedEvent)e.Event); break;
-                case AP.SetCommentTaskTokens.Name: _commentPriorityMap = ((AP.SetCommentTaskTokens)e.Event).tokens; break;
             }
-        }
-
-        private void SetOptions(AP.OptionsChangedEvent options) {
-            if (_pyAnalyzer != null) {
-                _pyAnalyzer.Limits.CrossModule = options.crossModuleAnalysisLimit;
-            }
-            _options = options;
         }
 
         private async Task RequestHandler(RequestArgs requestArgs, Func<Response, Task> done) {
@@ -160,6 +147,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
                 case AP.ExpressionAtPointRequest.Command: response = ExpressionAtPoint((AP.ExpressionAtPointRequest)request); break;
                 case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
+                case AP.SetAnalysisOptionsRequest.Command: response = SetAnalysisOptions((AP.SetAnalysisOptionsRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
                     throw new InvalidOperationException("Unknown command");
@@ -201,16 +189,33 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
+            var assembly = File.Exists(info.assembly) ? AssemblyName.GetAssemblyName(info.assembly) : new AssemblyName(info.assembly);
+            var type = Assembly.Load(assembly).GetType(info.typeName, true);
+
             return (IPythonInterpreterFactory)Activator.CreateInstance(
-                info.assembly,
-                info.typeName,
-                false,
-                0,
+                type,
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance,
                 null,
                 new object[] { info.properties },
-                CultureInfo.CurrentCulture,
-                new object[0]
-            ).Unwrap();
+                CultureInfo.CurrentCulture
+            );
+        }
+
+        private IAnalysisExtension LoadAnalysisExtension(AP.LoadExtensionRequest info) {
+            if (string.IsNullOrEmpty(info?.assembly) || string.IsNullOrEmpty(info?.typeName)) {
+                return null;
+            }
+
+            var assembly = File.Exists(info.assembly) ? AssemblyName.GetAssemblyName(info.assembly) : new AssemblyName(info.assembly);
+            var type = Assembly.Load(assembly).GetType(info.typeName, true);
+
+            return (IAnalysisExtension)Activator.CreateInstance(
+                type,
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new object[0],
+                CultureInfo.CurrentCulture
+            );
         }
 
         private async Task<Response> Initialize(AP.InitializeRequest request) {
@@ -223,8 +228,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             new AP.AnalyzerWarningEvent("Using default interpreter")
                         );
                     }
-                    var db = PythonTypeDatabase.CreateDefaultTypeDatabase();
-                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(db.LanguageVersion, db);
+                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version());
                 }
 
                 _interpreterFactory = factory;
@@ -239,9 +243,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     error = ex.Message,
                     fullError = ex.ToString()
                 };
-            } catch (Exception ex) {
-                // Even "critical" exceptions we want to return here
-                error = ex.ToString();
             }
 
             return new AP.InitializeResponse();
@@ -258,7 +259,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             try {
-                extension = (IAnalysisExtension)Activator.CreateInstance(request.assembly, request.typeName).Unwrap();
+                extension = LoadAnalysisExtension(request);
                 extension.Register(_pyAnalyzer);
             } catch (Exception ex) {
                 return new AP.LoadExtensionResponse {
@@ -1811,11 +1812,15 @@ namespace Microsoft.PythonTools.Intellisense {
             return _connection.ProcessMessages();
         }
 
-        public AP.OptionsChangedEvent Options {
-            get {
-                return _options;
-            }
+        private Response SetAnalysisOptions(AP.SetAnalysisOptionsRequest request) {
+            Options = request.options ?? new AP.AnalysisOptions();
+
+            _pyAnalyzer.Limits = new AnalysisLimits(Options.analysisLimits);
+
+            return new Response();
         }
+
+        public AP.AnalysisOptions Options { get; set; }
 
         private async void AnalysisQueue_Complete(object sender, EventArgs e) {
             if (_connection == null) {
@@ -1836,16 +1841,6 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var entry in _pyAnalyzer.ModulesByFilename) {
                 _analysisQueue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
-        }
-
-        private bool ShouldAnalyzePath(string path) {
-            foreach (var config in _allConfigs) {
-                if (PathUtils.IsValidPath(config.InterpreterPath) &&
-                    PathUtils.IsSubpathOf(Path.GetDirectoryName(config.InterpreterPath), path)) {
-                    return false;
-                }
-            }
-            return true;
         }
 
         private IProjectEntry AddNewFile(string path, string addingFromDirectory, out int fileId) {
@@ -2190,10 +2185,13 @@ namespace Microsoft.PythonTools.Intellisense {
         private ParserOptions MakeParserOptions(CollectingErrorSink errorSink, List<AP.TaskItem> tasks) {
             var options = new ParserOptions {
                 ErrorSink = errorSink,
-                IndentationInconsistencySeverity = _options.indentation_inconsistency_severity,
+                IndentationInconsistencySeverity = Options.indentationInconsistencySeverity,
                 BindReferences = true
             };
-            options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text);
+            var commentMap = Options.commentTokens;
+            if (commentMap != null) {
+                options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text, commentMap);
+            }
             return options;
         }
 
@@ -2214,27 +2212,25 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         // Tokenizer callback. Extracts comment tasks (like "TODO" or "HACK") from comments.
-        private void ProcessComment(List<AP.TaskItem> commentTasks, SourceSpan span, string text) {
-            if (text.Length > 0) {
-                var tokens = _commentPriorityMap;
-                if (tokens != null) {
-                    foreach (var kv in tokens) {
-                        if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
-                            commentTasks.Add(
-                                new AP.TaskItem() {
-                                    message = text.Substring(1).Trim(),
-                                    startLine = span.Start.Line,
-                                    startColumn = span.Start.Column,
-                                    endLine = span.End.Line,
-                                    endColumn = span.End.Column,
-                                    length = text.Length,
-                                    priority = kv.Value,
-                                    category = AP.TaskCategory.comments,
-                                    squiggle = false
-                                }
-                            );
+        private void ProcessComment(List<AP.TaskItem> commentTasks, SourceSpan span, string text, Dictionary<string, AP.TaskPriority> commentMap) {
+            if (string.IsNullOrEmpty(text) || commentMap == null) {
+                return;
+            }
+            foreach (var kv in commentMap) {
+                if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
+                    commentTasks.Add(
+                        new AP.TaskItem() {
+                            message = text.TrimStart('#').Trim(),
+                            startLine = span.Start.Line,
+                            startColumn = span.Start.Column,
+                            endLine = span.End.Line,
+                            endColumn = span.End.Column,
+                            length = text.Length,
+                            priority = kv.Value,
+                            category = AP.TaskCategory.comments,
+                            squiggle = false
                         }
-                    }
+                    );
                 }
             }
         }
