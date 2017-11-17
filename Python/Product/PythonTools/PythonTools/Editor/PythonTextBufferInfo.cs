@@ -475,8 +475,9 @@ namespace Microsoft.PythonTools.Editor {
 
             // We need current state of the cache since it can change from a background thread
             using (var cacheSnapshot = _tokenCache.GetSnapshot()) {
+                var tokenizerLazy = GetTokenizerLazy();
                 for (int line = firstLine; line <= lastLine; ++line) {
-                    var lineTokenization = cacheSnapshot.GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), GetTokenizerLazy());
+                    var lineTokenization = cacheSnapshot.GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), tokenizerLazy);
 
                     foreach (var token in lineTokenization.Tokens.MaybeEnumerate()) {
                         if (line == firstLine && token.Column + token.Length < startCol) {
@@ -575,7 +576,7 @@ namespace Microsoft.PythonTools.Editor {
         #endregion
 
         #region Token Cache Management
-        private Lazy<Tokenizer> GetTokenizerLazy() 
+        private Lazy<Tokenizer> GetTokenizerLazy()
             => new Lazy<Tokenizer>(() => new Tokenizer(LanguageVersion, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins));
 
         private void ClearTokenCache() => _tokenCache.Clear();

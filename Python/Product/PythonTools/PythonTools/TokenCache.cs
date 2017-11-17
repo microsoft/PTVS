@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools {
     /// to the text buffer snapshot. If text buffer is updated, 
     /// tokenization snapshot continues using buffer snapshot it was
     /// created on.</remarks>
-    internal interface ILineTokenizationSnapshot: IDisposable {
+    internal interface ILineTokenizationSnapshot : IDisposable {
         /// <summary>
         /// Gets the tokenization for the specified line.
         /// </summary>
@@ -178,9 +178,9 @@ namespace Microsoft.PythonTools {
     internal class TokenCache {
         private readonly object _lock = new object();
         private LineTokenizationMap _map = new LineTokenizationMap();
-        
+
         // Controls 'copy on write' when buffer changes from a background thread
-        private int _useCount; 
+        private int _useCount;
 
         /// <summary>
         /// Obtains tokenization snapshot that is immutable 
@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools {
         /// </summary>
         /// <returns></returns>
         internal ILineTokenizationSnapshot GetSnapshot() {
-            lock(_lock) {
+            lock (_lock) {
                 _useCount++;
                 return new LineTokenizationSnapshot(this, _map);
             }
@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools {
         internal void Release(LineTokenizationMap map) {
             lock (_lock) {
                 if (_map == map) {
-                    if(_useCount == 0) {
+                    if (_useCount == 0) {
                         throw new InvalidOperationException("Line tokenization map is not in use");
                     }
                     _useCount--;
