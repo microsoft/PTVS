@@ -23,16 +23,16 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string NoDatabaseFactoryKey = "NoDatabaseFactory";
         internal const string AutoDetectCondaEnvironmentsKey = "AutoDetectCondaEnvironments";
         internal const string UseCondaPackageManagerKey = "UseCondaPackageManager";
-        internal const string UseNewPtvsDebuggerKey = "UseNewPtvsDebugger";
+        internal const string UseVsCodeDebuggerKey = "UseVsCodeDebugger";
         internal static readonly Lazy<bool> _noDatabaseFactory = new Lazy<bool>(GetNoDatabaseFactory);
         internal static readonly Lazy<bool> _autoDetectCondaEnvironments = new Lazy<bool>(GetAutoDetectCondaEnvironments);
         internal static readonly Lazy<bool> _useCondaPackageManager = new Lazy<bool>(GetUseCondaPackageManager);
-        internal static readonly Lazy<bool> _useNewPtvsDebugger = new Lazy<bool>(GetUseNewPtvsDebugger);
+        internal static readonly Lazy<bool> _useVsCodeDebugger = new Lazy<bool>(GetUseNewPtvsDebugger);
 
         public static bool GetNoDatabaseFactory() => GetBooleanFlag(NoDatabaseFactoryKey, defaultVal: true);
         public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: false);
         public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: false);
-        public static bool GetUseNewPtvsDebugger() => GetBooleanFlag(UseNewPtvsDebuggerKey, defaultVal: false);
+        public static bool GetUseNewPtvsDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: false);
 
         private static bool GetBooleanFlag(string keyName, bool defaultVal) {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {
@@ -85,9 +85,9 @@ namespace Microsoft.PythonTools.Interpreter {
             set => SetBooleanFlag(UseCondaPackageManagerKey, value);
         }
 
-        public static bool UseNewPtvsDebugger {
-            get => _useNewPtvsDebugger.Value;
-            set => SetBooleanFlag(UseNewPtvsDebuggerKey, value);
+        public static bool UseVsCodeDebugger {
+            get => _useVsCodeDebugger.Value;
+            set => SetBooleanFlag(UseVsCodeDebuggerKey, value);
         }
     }
 }

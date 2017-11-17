@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Options {
             this._condaEnvironments = new System.Windows.Forms.CheckBox();
             this._condaPackageManager = new System.Windows.Forms.CheckBox();
             this._mustRestartLabel = new System.Windows.Forms.Label();
-            this._useNewPtvsDebugger = new System.Windows.Forms.CheckBox();
+            this._useVsCodeDebugger = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2.Controls.Add(this._condaPackageManager, 0, 2);
             this.tableLayoutPanel2.Controls.Add(this._noDatabaseFactory, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._mustRestartLabel, 0, 5);
-            this.tableLayoutPanel2.Controls.Add(this._useNewPtvsDebugger, 0, 3);
+            this.tableLayoutPanel2.Controls.Add(this._useVsCodeDebugger, 0, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
             // _condaEnvironments
@@ -67,11 +67,11 @@ namespace Microsoft.PythonTools.Options {
             resources.ApplyResources(this._mustRestartLabel, "_mustRestartLabel");
             this._mustRestartLabel.Name = "_mustRestartLabel";
             // 
-            // _useNewPtvsDebugger
+            // _useVsCodeDebugger
             // 
-            resources.ApplyResources(this._useNewPtvsDebugger, "_useNewPtvsDebugger");
-            this._useNewPtvsDebugger.Name = "_useNewPtvsDebugger";
-            this._useNewPtvsDebugger.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this._useVsCodeDebugger, "_useVsCodeDebugger");
+            this._useVsCodeDebugger.Name = "_useVsCodeDebugger";
+            this._useVsCodeDebugger.UseVisualStyleBackColor = true;
             // 
             // PythonExperimentalOptionsControl
             // 
@@ -93,6 +93,6 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.Label _mustRestartLabel;
         private System.Windows.Forms.CheckBox _condaEnvironments;
         private System.Windows.Forms.CheckBox _condaPackageManager;
-        private System.Windows.Forms.CheckBox _useNewPtvsDebugger;
+        private System.Windows.Forms.CheckBox _useVsCodeDebugger;
     }
 }

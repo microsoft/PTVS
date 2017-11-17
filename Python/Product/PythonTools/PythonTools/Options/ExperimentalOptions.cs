@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Options {
             NoDatabaseFactory = EO.GetNoDatabaseFactory();
             AutoDetectCondaEnvironments = EO.GetAutoDetectCondaEnvironments();
             UseCondaPackageManager = EO.GetUseCondaPackageManager();
-            UseNewPtvsDebugger = EO.UseNewPtvsDebugger;
+            UseVsCodeDebugger = EO.UseVsCodeDebugger;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Options {
             EO.NoDatabaseFactory = NoDatabaseFactory;
             EO.AutoDetectCondaEnvironments = AutoDetectCondaEnvironments;
             EO.UseCondaPackageManager = UseCondaPackageManager;
-            EO.UseNewPtvsDebugger = UseNewPtvsDebugger;
+            EO.UseVsCodeDebugger = UseVsCodeDebugger;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Options {
             NoDatabaseFactory = false;
             AutoDetectCondaEnvironments = false;
             UseCondaPackageManager = false;
-            UseNewPtvsDebugger = false;
+            UseVsCodeDebugger = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Options {
         /// <summary>
         /// True to use new Ptvs debugger built to run on VS Code Debug Adapter Host
         /// </summary>
-        public bool UseNewPtvsDebugger { get; set; }
+        public bool UseVsCodeDebugger { get; set; }
 
     }
 }
