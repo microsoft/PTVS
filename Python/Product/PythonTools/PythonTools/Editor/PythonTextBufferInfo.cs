@@ -410,11 +410,12 @@ namespace Microsoft.PythonTools.Editor {
         /// Returns tokens for the specified line.
         /// </summary>
         public IEnumerable<TrackingTokenInfo> GetTokens(ITextSnapshotLine line) {
-            Tokenizer tokenizer = null;
-            var lineTokenization = _tokenCache.GetLineTokenization(line, () => tokenizer ?? (tokenizer = MakeTokenizer()));
-            var lineNumber = line.LineNumber;
-            var lineSpan = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
-            return lineTokenization.Tokens.Select(t => new TrackingTokenInfo(t, lineNumber, lineSpan));
+            using (var cacheSnapshot = _tokenCache.GetSnapshot()) {
+                var lineTokenization = cacheSnapshot.GetLineTokenization(line, GetTokenizerLazy());
+                var lineNumber = line.LineNumber;
+                var lineSpan = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
+                return lineTokenization.Tokens.Select(t => new TrackingTokenInfo(t, lineNumber, lineSpan));
+            }
         }
 
         public IEnumerable<TrackingTokenInfo> GetTokens(SnapshotSpan span) {
@@ -472,31 +473,20 @@ namespace Microsoft.PythonTools.Editor {
             int startCol = span.Start - span.Start.GetContainingLine().Start;
             int endCol = span.End - span.End.GetContainingLine().Start;
 
+            // We need current state of the cache since it can change from a background thread
+            using (var cacheSnapshot = _tokenCache.GetSnapshot()) {
+                for (int line = firstLine; line <= lastLine; ++line) {
+                    var lineTokenization = cacheSnapshot.GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), GetTokenizerLazy());
 
-            // Cache may change from background thread during enumeration
-            // so make sure we track that snapshot version is still the same.
-            var spanSnapshot = span.Snapshot;
-
-            Tokenizer tokenizer = null;
-            for (int line = firstLine; line <= lastLine; ++line) {
-                var currentBufferSpanshot = span.Snapshot.TextBuffer.CurrentSnapshot;
-                if (spanSnapshot.Version != currentBufferSpanshot.Version) {
-                    yield break;
-                }
-
-                var lineTokenization = _tokenCache.GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), () => tokenizer ?? (tokenizer = MakeTokenizer()));
-
-                foreach (var token in lineTokenization.Tokens.MaybeEnumerate()) {
-                    if (line < firstLine || line > lastLine) {
-                        continue;
+                    foreach (var token in lineTokenization.Tokens.MaybeEnumerate()) {
+                        if (line == firstLine && token.Column + token.Length < startCol) {
+                            continue;
+                        }
+                        if (line == lastLine && token.Column > endCol) {
+                            continue;
+                        }
+                        yield return new TrackingTokenInfo(token, line, lineTokenization.Line);
                     }
-                    if (line == firstLine && token.Column + token.Length < startCol) {
-                        continue;
-                    }
-                    if (line == lastLine && token.Column > endCol) {
-                        continue;
-                    }
-                    yield return new TrackingTokenInfo(token, line, lineTokenization.Line);
                 }
             }
         }
@@ -585,9 +575,8 @@ namespace Microsoft.PythonTools.Editor {
         #endregion
 
         #region Token Cache Management
-        private Tokenizer MakeTokenizer() {
-            return new Tokenizer(LanguageVersion, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
-        }
+        private Lazy<Tokenizer> GetTokenizerLazy() 
+            => new Lazy<Tokenizer>(() => new Tokenizer(LanguageVersion, options: TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins));
 
         private void ClearTokenCache() => _tokenCache.Clear();
 
@@ -605,8 +594,7 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             // Prevent later updates overwriting our tokenization
-            Tokenizer tokenizer = null;
-            _tokenCache.Update(e, () => tokenizer ?? (tokenizer = MakeTokenizer()));
+            _tokenCache.Update(e, GetTokenizerLazy());
         }
         #endregion
     }
