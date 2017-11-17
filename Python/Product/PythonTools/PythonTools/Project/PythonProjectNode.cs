@@ -1789,9 +1789,9 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (factory == null) {
-                    config = service.Configurations.FirstOrDefault(
-                        c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
-                    );
+                    config = service.Configurations
+                        .Where(PythonInterpreterFactoryRunnableExtensions.IsRunnable)
+                        .FirstOrDefault(c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase));
                     if (config != null) {
                         factory = service.FindInterpreter(config.Id);
                     }

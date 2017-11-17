@@ -198,17 +198,17 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// Returns <c>true</c> if neither interpreter executable exist.
+        /// Returns <c>true</c> if the interpreter executable exists.
         /// </summary>
-        public static bool ExecutableExists(this InterpreterConfiguration config) {
-            return File.Exists(config?.InterpreterPath) || File.Exists(config?.WindowsInterpreterPath);
+        public static bool CanBeRun(this InterpreterConfiguration config) {
+            return File.Exists(config?.InterpreterPath);
         }
 
         /// <summary>
-        /// Returns <c>true</c> if neither interpreter executable exist.
+        /// Returns <c>true</c> if the interpreter executable exists.
         /// </summary>
-        public static bool ExecutableExists(this IPythonInterpreterFactory factory) {
-            return factory?.Configuration.ExecutableExists() ?? false;
+        public static bool CanBeRun(this IPythonInterpreterFactory factory) {
+            return factory?.Configuration.CanBeRun() ?? false;
         }
     }
 }
