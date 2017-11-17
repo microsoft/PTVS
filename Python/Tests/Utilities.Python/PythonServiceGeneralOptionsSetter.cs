@@ -30,7 +30,7 @@ namespace TestUtilities.Python {
             PythonToolsService pyService,
             bool? updateSearchPathsWhenAddingLinkedFiles = null,
             bool? unresolvedImportWarning = null,
-            bool? _invalidEncodingWarning = null,
+            bool? invalidEncodingWarning = null,
             bool? clearGlobalPythonPath = null
         ) {
             _pyService = pyService;
@@ -46,9 +46,9 @@ namespace TestUtilities.Python {
                 options.UnresolvedImportWarning = unresolvedImportWarning.Value;
             }
 
-            if (_invalidEncodingWarning.HasValue) {
+            if (invalidEncodingWarning.HasValue) {
                 _invalidEncodingWarning = options.InvalidEncodingWarning;
-                options.InvalidEncodingWarning = _invalidEncodingWarning.Value;
+                options.InvalidEncodingWarning = invalidEncodingWarning.Value;
             }
 
             if (clearGlobalPythonPath.HasValue) {

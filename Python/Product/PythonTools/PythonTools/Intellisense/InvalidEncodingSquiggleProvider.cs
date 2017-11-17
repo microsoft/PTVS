@@ -44,30 +44,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            var chunk = bi.CurrentSnapshot.GetText(new Span(0, Math.Min(bi.CurrentSnapshot.Length, 512)));
-            Parser.GetEncodingFromMagicDesignator(chunk, out var encoding, out var magicEncodingName, out var magicEncodingIndex);
-
-            var documentEncoding = bi.Document.Encoding;
-            string message = null;
-
-            if (encoding != null) {
-                // Encoding is specified and is a valid name. 
-                // Check if it matches encoding set on the document text buffer. 
-                if (encoding.EncodingName != documentEncoding.EncodingName) {
-                    message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingMismatch, documentEncoding.EncodingName);
-                }
-            } else if (encoding == null) {
-                if (!string.IsNullOrEmpty(magicEncodingName)) {
-                    // Encoding is specified but not recognized as a valid name
-                    message = string.Format(CultureInfo.InvariantCulture, Strings.WarningInvalidEncoding, magicEncodingName);
-                } else {
-                    // Encoding is not specified. Python assumes UTF-8 so we need to verify it.
-                    if (Encoding.UTF8.EncodingName != documentEncoding.EncodingName) {
-                        message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingDifferentFromDefault, documentEncoding.EncodingName);
-                    }
-                }
-            }
-
+            var message = CheckEncoding(bi.CurrentSnapshot, bi.Document.Encoding, out var magicEncodingName, out var magicEncodingIndex);
             if (message != null) {
                 if (!bi.Buffer.Properties.TryGetProperty<string>(VsProjectAnalyzer.InvalidEncodingMoniker, out var prevMessage)
                     || prevMessage != message) {
@@ -78,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     TaskProvider.ReplaceItems(
                         bi.Filename,
                         VsProjectAnalyzer.InvalidEncodingMoniker,
-                        new List<TaskProviderItem>() {
+                        new List<TaskProviderItem> {
                             new TaskProviderItem(
                                 Services.Site,
                                 message,
@@ -94,6 +71,31 @@ namespace Microsoft.PythonTools.Intellisense {
                 TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.InvalidEncodingMoniker);
                 bi.Buffer.Properties.RemoveProperty(VsProjectAnalyzer.InvalidEncodingMoniker);
             }
+        }
+
+        internal static string CheckEncoding(ITextSnapshot snapshot, Encoding documentEncoding, out string magicEncodingName, out int magicEncodingIndex) {
+            var chunk = snapshot.GetText(new Span(0, Math.Min(snapshot.Length, 512)));
+            Parser.GetEncodingFromMagicDesignator(chunk, out var encoding, out magicEncodingName, out magicEncodingIndex);
+
+            string message = null;
+            if (encoding != null) {
+                // Encoding is specified and is a valid name. 
+                // Check if it matches encoding set on the document text buffer. 
+                if (encoding.EncodingName != documentEncoding.EncodingName) {
+                    message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingMismatch, documentEncoding.EncodingName, magicEncodingName);
+                }
+            } else {
+                if (!string.IsNullOrEmpty(magicEncodingName)) {
+                    // Encoding is specified but not recognized as a valid name
+                    message = string.Format(CultureInfo.InvariantCulture, Strings.WarningInvalidEncoding, magicEncodingName);
+                } else {
+                    // Encoding is not specified. Python assumes UTF-8 so we need to verify it.
+                    if (Encoding.UTF8.EncodingName != documentEncoding.EncodingName) {
+                        message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingDifferentFromDefault, documentEncoding.EncodingName);
+                    }
+                }
+            }
+            return message;
         }
     }
 }

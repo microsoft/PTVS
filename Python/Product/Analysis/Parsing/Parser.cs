@@ -5063,8 +5063,8 @@ namespace Microsoft.PythonTools.Parsing {
 
             // magic encoding must be on line 1 or 2
             if (lineBreakLength > 0) {
-                lines[0] = text.Substring(0, i);
-                lines[1] = text.Substring(lines[0].Length + lineBreakLength);
+                lines[0] = text.Substring(0, i + lineBreakLength - 1);
+                lines[1] = text.Substring(lines[0].Length);
             }
 
             for (i = 0; i < lines.Length; i++) {
@@ -5073,7 +5073,7 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
                 }
             }
-            encodingIndex += i == 0 ? 0 : lines[0].Length + lineBreakLength;
+            encodingIndex += i == 0 ? 0 : lines[0].Length;
         }
 
         private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {
