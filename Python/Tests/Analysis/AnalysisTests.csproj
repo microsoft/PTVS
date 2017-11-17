@@ -75,6 +75,7 @@
     <Compile Include="ModuleTableTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="MutateStdLibTest.cs" />
+    <Compile Include="StringListReaderTests.cs" />
     <Compile Include="TestExpressions.cs" />
     <Compile Include="TestRunner.cs" />
     <Compile Include="AnalysisSetTest.cs" />

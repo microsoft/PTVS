@@ -43,14 +43,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infrastructure\CancellationTokens.cs" />
     <Compile Include="Infrastructure\COMEnumerator.cs" />
     <Compile Include="Infrastructure\ICatalogLog.cs" />
-    <Compile Include="Infrastructure\InterpreterCatalog.cs" />
     <Compile Include="Infrastructure\NativeMethods.cs" />
     <Compile Include="Infrastructure\ObservableCollectionExtensions.cs" />
     <Compile Include="Infrastructure\PathUtils.cs" />
@@ -60,6 +58,7 @@
     <Compile Include="Infrastructure\ProcessOutput.cs" />
     <Compile Include="Infrastructure\PythonToolsInstallPath.cs" />
     <Compile Include="Infrastructure\StringExtensions.cs" />
+    <Compile Include="Infrastructure\StringListReader.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Strings.Designer.cs">
