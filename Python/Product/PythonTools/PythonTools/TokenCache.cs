@@ -159,140 +159,213 @@ namespace Microsoft.PythonTools {
         public string GetText(ITextSnapshot snapshot) => ToSnapshotSpan(snapshot).GetText();
     }
 
+    internal interface ILineTokenizationMap {
+        LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer);
+    }
+
+    internal interface ILineTokenizationSnapshot: IDisposable {
+        ILineTokenizationMap Lines { get; }
+    }
+
     internal class TokenCache {
         private readonly object _lock = new object();
-        private LineTokenization[] _map;
+        private LineTokenizationMap _map = new LineTokenizationMap();
+        private int _useCount;
 
-        /// <summary>
-        /// Gets the tokenization for the specified line.
-        /// </summary>
-        /// <param name="line">The line to get tokenization for.</param>
-        /// <param name="getTokenizer">Tokenizer factory</param>
-        internal LineTokenization GetLineTokenization(ITextSnapshotLine line, Func<Tokenizer> getTokenizer) {
-            var lineNumber = line.LineNumber;
+        internal TokenCache() { }
 
+        internal ILineTokenizationSnapshot Use() {
+            lock(_lock) {
+                _useCount++;
+                return new LineTokenizationSnapshot(this, _map);
+            }
+        }
+
+        internal void Release(ILineTokenizationMap map) {
             lock (_lock) {
-                EnsureCapacity(line.Snapshot.LineCount);
-                var start = IndexOfPreviousTokenization(lineNumber + 1, 0, out var lineTok);
-
-                while (++start <= lineNumber) {
-                    var state = lineTok.State;
-
-                    if (!TryGetTokenization(start, out lineTok)) {
-                        var tokenizer = getTokenizer();
-                        _map[start] = lineTok = tokenizer.TokenizeLine(line.Snapshot.GetLineFromLineNumber(start), state);
+                if (_map == map) {
+                    if(_useCount == 0) {
+                        throw new InvalidOperationException("Line tokenization map is not in use");
                     }
-                }
-                return lineTok;
-            }
-        }
-
-        internal void Update(TextContentChangedEventArgs e, Func<Tokenizer> getTokenizer) {
-            var snapshot = e.After;
-
-            lock (_lock) {
-                EnsureCapacity(snapshot.LineCount);
-
-                foreach (var change in e.Changes) {
-                    var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
-                    if (change.LineCountDelta > 0) {
-                        InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
-                    } else if (change.LineCountDelta < 0) {
-                        DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
-                    }
-
-                    ApplyChanges(new SnapshotSpan(snapshot, change.NewSpan), getTokenizer);
+                    _useCount--;
                 }
             }
-        }
-
-        private bool TryGetTokenization(int line, out LineTokenization tokenization) {
-            tokenization = _map[line];
-            if (tokenization.Tokens != null) {
-                return true;
-            }
-            tokenization = default(LineTokenization);
-            return false;
-        }
-
-        /// <summary>
-        /// Looks for the first cached tokenization preceding the given line.
-        /// Returns the line we have a tokenization for or minLine - 1 if there is none.
-        /// </summary>
-        private int IndexOfPreviousTokenization(int line, int minLine, out LineTokenization tokenization) {
-            line--;
-            while (line >= minLine) {
-                if (_map[line].Tokens != null) {
-                    tokenization = _map[line];
-                    return line;
-                }
-                line--;
-            }
-            tokenization = default(LineTokenization);
-            return minLine - 1;
         }
 
         internal void Clear() {
             lock (_lock) {
-                _map = null;
+                _map = new LineTokenizationMap();
             }
         }
 
-        [Conditional("DEBUG")]
-        private void AssertCapacity(int capacity) {
-            Debug.Assert(_map != null);
-            Debug.Assert(_map.Length > capacity);
-        }
-
-        private void EnsureCapacity(int capacity) {
-            if (_map == null) {
-                _map = new LineTokenization[capacity];
-                return;
-            }
-
-            if (capacity > _map.Length) {
-                Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
+        internal void Update(TextContentChangedEventArgs e, Lazy<Tokenizer> lazyTokenizer) {
+            var snapshot = e.After;
+            lock (_lock) {
+                // Copy on write
+                if (_useCount > 0) {
+                    _map = _map.Clone();
+                    _useCount = 0;
+                }
+                _map.Update(e, lazyTokenizer);
             }
         }
 
-        private void DeleteLines(int index, int count) {
-            if (index > _map.Length - count) {
-                throw new ArgumentOutOfRangeException(nameof(index), "Must be 'count' less than the size of the cache");
-            }
+        internal class LineTokenizationSnapshot : ILineTokenizationSnapshot {
+            private readonly TokenCache _cache;
 
-            Array.Copy(_map, index + count, _map, index, _map.Length - index - count);
-            for (var i = 0; i < count; i++) {
-                _map[_map.Length - i - 1] = default(LineTokenization);
+            public LineTokenizationSnapshot(TokenCache cache, ILineTokenizationMap map) {
+                _cache = cache;
+                Lines = map;
             }
+            public void Dispose() => _cache.Release(Lines);
+            public ILineTokenizationMap Lines { get; }
         }
 
-        private void InsertLines(int index, int count) {
-            Array.Copy(_map, index, _map, index + count, _map.Length - index - count);
-            for (var i = 0; i < count; i++) {
-                _map[index + i] = default(LineTokenization);
+        private class LineTokenizationMap: ILineTokenizationMap {
+            private readonly object _lock = new object();
+            private LineTokenization[] _map;
+
+            internal LineTokenizationMap() { }
+
+            private LineTokenizationMap(LineTokenization[] map) {
+                _map = map;
             }
-        }
 
-        private void ApplyChanges(SnapshotSpan span, Func<Tokenizer> getTokenizer) {
-            var firstLine = span.Start.GetContainingLine().LineNumber;
-            var lastLine = span.End.GetContainingLine().LineNumber;
+            internal LineTokenizationMap Clone() {
+                lock (_lock) {
+                    LineTokenization[] map = null;
+                    if (_map != null) {
+                        map = new LineTokenization[_map.Length];
+                        Array.Copy(map, _map, map.Length);
+                    }
+                    return new LineTokenizationMap(map);
+                }
+            }
 
-            AssertCapacity(firstLine);
+            /// <summary>
+            /// Gets the tokenization for the specified line.
+            /// </summary>
+            /// <param name="line">The line to get tokenization for.</param>
+            /// <param name="getTokenizer">Tokenizer factory</param>
+            public LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer) {
+                var lineNumber = line.LineNumber;
 
-            // find the closest line preceding firstLine for which we know tokenizer state
-            firstLine = IndexOfPreviousTokenization(firstLine, 0, out var lineTokenization) + 1;
+                lock (_lock) {
+                    EnsureCapacity(line.Snapshot.LineCount);
+                    var start = IndexOfPreviousTokenization(lineNumber + 1, 0, out var lineTok);
 
-            for (var lineNo = firstLine; lineNo < span.Snapshot.LineCount; ++lineNo) {
-                var line = span.Snapshot.GetLineFromLineNumber(lineNo);
+                    while (++start <= lineNumber) {
+                        var state = lineTok.State;
 
-                var beforeState = lineTokenization.State;
-                _map[lineNo] = lineTokenization = getTokenizer().TokenizeLine(line, beforeState);
-                var afterState = lineTokenization.State;
+                        if (!TryGetTokenization(start, out lineTok)) {
+                            _map[start] = lineTok = lazyTokenizer.Value.TokenizeLine(line.Snapshot.GetLineFromLineNumber(start), state);
+                        }
+                    }
+                    return lineTok;
+                }
+            }
 
-                // stop if we visited all affected lines and the current line has no tokenization state
-                // or its previous state is the same as the new state.
-                if (lineNo > lastLine && (beforeState == null || beforeState.Equals(afterState))) {
-                    break;
+            internal void Update(TextContentChangedEventArgs e, Lazy<Tokenizer> lazyTokenizer) {
+                var snapshot = e.After;
+                lock (_lock) {
+                    // Copy on write
+                    EnsureCapacity(snapshot.LineCount);
+
+                    foreach (var change in e.Changes) {
+                        var endLine = snapshot.GetLineNumberFromPosition(change.NewEnd) + 1;
+                        if (change.LineCountDelta > 0) {
+                            InsertLines(endLine - change.LineCountDelta, change.LineCountDelta);
+                        } else if (change.LineCountDelta < 0) {
+                            DeleteLines(endLine, Math.Min(-change.LineCountDelta, snapshot.LineCount - endLine));
+                        }
+
+                        ApplyChanges(new SnapshotSpan(snapshot, change.NewSpan), lazyTokenizer);
+                    }
+                }
+            }
+
+            private void ApplyChanges(SnapshotSpan span, Lazy<Tokenizer> lazyTokenizer) {
+                var firstLine = span.Start.GetContainingLine().LineNumber;
+                var lastLine = span.End.GetContainingLine().LineNumber;
+
+                AssertCapacity(firstLine);
+
+                // find the closest line preceding firstLine for which we know tokenizer state
+                firstLine = IndexOfPreviousTokenization(firstLine, 0, out var lineTokenization) + 1;
+
+                for (var lineNo = firstLine; lineNo < span.Snapshot.LineCount; ++lineNo) {
+                    var line = span.Snapshot.GetLineFromLineNumber(lineNo);
+
+                    var beforeState = lineTokenization.State;
+                    _map[lineNo] = lineTokenization = lazyTokenizer.Value.TokenizeLine(line, beforeState);
+                    var afterState = lineTokenization.State;
+
+                    // stop if we visited all affected lines and the current line has no tokenization state
+                    // or its previous state is the same as the new state.
+                    if (lineNo > lastLine && (beforeState == null || beforeState.Equals(afterState))) {
+                        break;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Looks for the first cached tokenization preceding the given line.
+            /// Returns the line we have a tokenization for or minLine - 1 if there is none.
+            /// </summary>
+            private int IndexOfPreviousTokenization(int line, int minLine, out LineTokenization tokenization) {
+                line--;
+                while (line >= minLine) {
+                    if (_map[line].Tokens != null) {
+                        tokenization = _map[line];
+                        return line;
+                    }
+                    line--;
+                }
+                tokenization = default(LineTokenization);
+                return minLine - 1;
+            }
+
+            private bool TryGetTokenization(int line, out LineTokenization tokenization) {
+                tokenization = _map[line];
+                if (tokenization.Tokens != null) {
+                    return true;
+                }
+                tokenization = default(LineTokenization);
+                return false;
+            }
+
+            [Conditional("DEBUG")]
+            private void AssertCapacity(int capacity) {
+                Debug.Assert(_map != null);
+                Debug.Assert(_map.Length > capacity);
+            }
+
+            private void EnsureCapacity(int capacity) {
+                if (_map == null) {
+                    _map = new LineTokenization[capacity];
+                    return;
+                }
+
+                if (capacity > _map.Length) {
+                    Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
+                }
+            }
+
+            private void DeleteLines(int index, int count) {
+                if (index > _map.Length - count) {
+                    throw new ArgumentOutOfRangeException(nameof(index), "Must be 'count' less than the size of the cache");
+                }
+
+                Array.Copy(_map, index + count, _map, index, _map.Length - index - count);
+                for (var i = 0; i < count; i++) {
+                    _map[_map.Length - i - 1] = default(LineTokenization);
+                }
+            }
+
+            private void InsertLines(int index, int count) {
+                Array.Copy(_map, index, _map, index + count, _map.Length - index - count);
+                for (var i = 0; i < count; i++) {
+                    _map[index + i] = default(LineTokenization);
                 }
             }
         }
