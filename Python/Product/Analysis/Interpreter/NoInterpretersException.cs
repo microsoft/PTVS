@@ -16,9 +16,8 @@
 
 using System;
 using System.Runtime.Serialization;
-using Microsoft.PythonTools.Project;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools.Interpreter {
     [Serializable]
     public class NoInterpretersException : Exception {
         private readonly string _helpPage;

@@ -97,6 +97,10 @@
                 </Grid>
 
                 <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsBroken}" Value="True">
+                        <Setter TargetName="Name_IsDefault" Property="TextBlock.TextDecorations" Value="Strikethrough" />
+                        <Setter TargetName="Name_IsNotDefault" Property="TextBlock.TextDecorations" Value="Strikethrough" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding IsDefault}" Value="True">
                         <Setter TargetName="Name_IsDefault" Property="Visibility" Value="Visible" />
                         <Setter TargetName="Name_IsNotDefault" Property="Visibility" Value="Collapsed" />
