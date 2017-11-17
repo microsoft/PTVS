@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
@@ -22,26 +21,15 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
             base(configuration, options) { }
 
-        public bool GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
             assembly = GetType().Assembly.Location;
             typeName = GetType().FullName;
-            properties = new Dictionary<string, object> {
-                { "DatabasePath", DatabasePath }
-            };
+            properties = CreationOptions.ToDictionary();
             Configuration.WriteToDictionary(properties);
             return true;
         }
 
-        private static InterpreterFactoryCreationOptions ReadCreationOptions(Dictionary<string, object> properties) {
-            object o;
-            return new InterpreterFactoryCreationOptions {
-                DatabasePath = properties.TryGetValue("DatabasePath", out o) ? (o as string) : null,
-                PackageManager = null,
-                WatchFileSystem = false
-            };
-        }
-
         internal CPythonInterpreterFactory(Dictionary<string, object> properties) :
-            base(new InterpreterConfiguration(properties), ReadCreationOptions(properties)) { }
+            base(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)) { }
     }
 }

@@ -37,5 +37,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
             return null;
         }
+
+        internal static bool HasConda(string prefixPath) {
+            return !string.IsNullOrEmpty(GetCondaExecutablePath(prefixPath));
+        }
     }
 }

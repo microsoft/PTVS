@@ -51,7 +51,7 @@ namespace TestUtilities.Python {
         }
 
         private MockPythonInterpreterFactory(Dictionary<string, object> properties) {
-            _config = new InterpreterConfiguration(properties);
+            _config = InterpreterConfiguration.FromDictionary(properties);
 
             _isCurrent = true;
             IsCurrentReason = null;

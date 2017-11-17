@@ -201,7 +201,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
 #if DEBUG
-            Locations = new[] { new LocationInfo(fact.GetCacheFilePath(_filePath), 1, 1) };
+            var cachePath = fact.GetCacheFilePath(_filePath);
+            if (!string.IsNullOrEmpty(cachePath)) {
+                Locations = new[] { new LocationInfo(cachePath, 1, 1) };
+            }
 #endif
 
             var walker = PrepareWalker(interp, ast);

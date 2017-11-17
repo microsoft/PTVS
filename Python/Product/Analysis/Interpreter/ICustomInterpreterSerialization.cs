@@ -17,7 +17,7 @@
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
-    interface ICustomInterpreterSerialization {
+    public interface ICustomInterpreterSerialization {
         bool GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties);
     }
 }

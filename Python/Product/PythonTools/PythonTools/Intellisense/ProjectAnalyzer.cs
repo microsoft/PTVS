@@ -197,8 +197,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var initResponse = await SendRequestAsync(initialize);
             if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
-                Debug.Fail("Analyzer initialization failed with " + initResponse?.error ?? "(null)");
-                if (initResponse != null) {
+                if (initResponse?.error != null) {
                     _logger?.LogEvent(PythonLogEvent.AnalysisOperationFailed, "Initialization: " + initResponse.error);
                 } else {
                     _logger?.LogEvent(PythonLogEvent.AnalysisOperationFailed, "Initialization");

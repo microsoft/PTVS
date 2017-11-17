@@ -14,9 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+
 namespace Microsoft.PythonTools.Interpreter {
     class PythonInterpreterInformation {
-        IPythonInterpreterFactory Factory;
+        private IPythonInterpreterFactory _factory;
+
         public readonly InterpreterConfiguration Configuration;
         public readonly string Vendor;
         public readonly string VendorUrl;
@@ -34,22 +37,15 @@ namespace Microsoft.PythonTools.Interpreter {
             SupportUrl = supportUrl;
         }
 
-        public IPythonInterpreterFactory EnsureFactory() {
-            if (Factory == null) {
+        public IPythonInterpreterFactory GetOrCreateFactory(Func<PythonInterpreterInformation, IPythonInterpreterFactory> creator) {
+            if (_factory == null) {
                 lock (this) {
-                    if (Factory == null) {
-                        Factory = InterpreterFactoryCreator.CreateInterpreterFactory(
-                            Configuration,
-                            new InterpreterFactoryCreationOptions {
-                                PackageManager = CreatePackageManager(),
-                                WatchFileSystem = true,
-                                NoDatabase = ExperimentalOptions.NoDatabaseFactory
-                            }
-                        );
+                    if (_factory == null) {
+                        _factory = creator(this);
                     }
                 }
             }
-            return Factory;
+            return _factory;
         }
 
         private IPackageManager CreatePackageManager() {

@@ -22,20 +22,20 @@ namespace Microsoft.PythonTools.Interpreter.Default {
     class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
         readonly IEnumerable<string> _actualDatabasePaths;
 
-        private readonly static InterpreterFactoryCreationOptions CreationOptions = new InterpreterFactoryCreationOptions {
+        private readonly static InterpreterFactoryCreationOptions DefaultCreationOptions = new InterpreterFactoryCreationOptions {
             WatchFileSystem = false
         };
 
         public AnalysisOnlyInterpreterFactory(Version version, string description = null)
-            : base(GetConfiguration(version), CreationOptions) { }
+            : base(GetConfiguration(version), DefaultCreationOptions) { }
 
         public AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
-            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), CreationOptions) {
+            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), DefaultCreationOptions) {
             _actualDatabasePaths = databasePaths?.ToList();
         }
 
         internal AnalysisOnlyInterpreterFactory(Dictionary<string, object> properties)
-            : base(GetConfiguration(properties), CreationOptions){
+            : base(GetConfiguration(properties), DefaultCreationOptions) {
             _actualDatabasePaths = GetDatabasePaths(properties);
         }
 

@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Shell;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -43,6 +44,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     public sealed class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
+        private readonly IServiceProvider _site;
         private readonly Dictionary<string, ProjectInfo> _projects = new Dictionary<string, ProjectInfo>();
         private readonly Lazy<IInterpreterLog>[] _loggers;
         private readonly Lazy<IProjectContextProvider>[] _contextProviders;
@@ -60,7 +62,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public MSBuildProjectInterpreterFactoryProvider(
             [ImportMany]Lazy<IProjectContextProvider>[] contextProviders,
             [ImportMany]Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] factoryProviders,
-            [ImportMany]Lazy<IInterpreterLog>[] loggers) {
+            [ImportMany]Lazy<IInterpreterLog>[] loggers,
+            [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null) {
+            _site = site;
             _factoryProviders = factoryProviders;
             _loggers = loggers;
             _contextProviders = contextProviders;
@@ -490,9 +494,11 @@ namespace Microsoft.PythonTools.Interpreter {
                     Config,
                     new InterpreterFactoryCreationOptions {
                         PackageManager = new PipPackageManager(),
-                        DatabasePath = dbPath,
                         WatchFileSystem = true,
-                        NoDatabase = ExperimentalOptions.NoDatabaseFactory
+                        NoDatabase = ExperimentalOptions.NoDatabaseFactory,
+                        DatabasePath = ExperimentalOptions.NoDatabaseFactory ?
+                            DatabasePathSelector.CalculateProjectLocalDatabasePath(_factoryProvider._site, Config, 1) :
+                            DatabasePathSelector.CalculateProjectLocalDatabasePath(_factoryProvider._site, Config, 0)
                     }
                 );
             }

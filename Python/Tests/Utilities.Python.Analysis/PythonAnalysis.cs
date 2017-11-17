@@ -48,7 +48,7 @@ namespace TestUtilities.Python {
             : this(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion())) { }
 
         private static IPythonInterpreterFactory TryFindFactory(string idOrDescription) {
-            var provider = new CPythonInterpreterFactoryProvider(watchRegistry: false);
+            var provider = new CPythonInterpreterFactoryProvider(null, watchRegistry: false);
             var factory = provider.GetInterpreterFactory(idOrDescription);
             if (factory == null) {
                 var config = provider.GetInterpreterConfigurations().FirstOrDefault(c => idOrDescription.Equals(c.Description, StringComparison.OrdinalIgnoreCase));

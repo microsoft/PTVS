@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        internal InterpreterConfiguration(Dictionary<string, object> properties) {
+        private InterpreterConfiguration(Dictionary<string, object> properties) {
             Id = Read(properties, nameof(Id));
             _description = Read(properties, nameof(Description)) ?? "";
             PrefixPath = Read(properties, nameof(PrefixPath));
@@ -103,6 +103,22 @@ namespace Microsoft.PythonTools.Interpreter {
             if (m.Any()) {
                 properties[nameof(UIMode)] = string.Join("|", m);
             }
+        }
+
+        /// <summary>
+        /// Reconstructs an interpreter configuration from a dictionary.
+        /// </summary>
+        public static InterpreterConfiguration FromDictionary(Dictionary<string, object> properties) {
+            return new InterpreterConfiguration(properties);
+        }
+
+        /// <summary>
+        /// Serializes an interpreter configuration to a dictionary.
+        /// </summary>
+        public Dictionary<string, object> ToDictionary() {
+            var d = new Dictionary<string, object>();
+            WriteToDictionary(d);
+            return d;
         }
 
         /// <summary>
