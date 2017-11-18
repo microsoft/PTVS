@@ -52,6 +52,35 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler IsReadyChanged;
 
         /// <summary>
+        /// Localized name to display for the extension in the environments window.
+        /// Example: 'Packages (PyPI)'
+        /// </summary>
+        string ExtensionDisplayName { get; }
+
+        /// <summary>
+        /// Localized name of the index where packages are fetched from.
+        /// Example: 'PyPI'
+        /// </summary>
+        string IndexDisplayName { get; }
+
+        /// <summary>
+        /// Localized watermark text for the search query text box.
+        /// Example: 'Search PyPI and installed packages'
+        /// </summary>
+        string SearchHelpText { get; }
+
+        /// <summary>
+        /// Returns a description for the command that appears in search result.
+        /// Example: 'pip install mypackage from PyPI'
+        /// </summary>
+        string GetInstallCommandDisplayName(string searchQuery);
+
+        /// <summary>
+        /// Returns if the specified package is allowed to be uninstalled.
+        /// </summary>
+        bool CanUninstall(PackageSpec package);
+
+        /// <summary>
         /// Prepares the package manager for use. This only needs to be called
         /// if <see cref="IsReady"/> is false. After successful completion,
         /// <see cref="IsReady"/> should be true.

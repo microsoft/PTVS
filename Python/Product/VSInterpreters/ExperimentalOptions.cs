@@ -21,15 +21,21 @@ namespace Microsoft.PythonTools.Interpreter {
     public static class ExperimentalOptions {
         private const string ExperimentSubkey = @"Software\Microsoft\PythonTools\Experimental";
         internal const string NoDatabaseFactoryKey = "NoDatabaseFactory";
+        internal const string AutoDetectCondaEnvironmentsKey = "AutoDetectCondaEnvironments";
+        internal const string UseCondaPackageManagerKey = "UseCondaPackageManager";
         internal static readonly Lazy<bool> _noDatabaseFactory = new Lazy<bool>(GetNoDatabaseFactory);
+        internal static readonly Lazy<bool> _autoDetectCondaEnvironments = new Lazy<bool>(GetAutoDetectCondaEnvironments);
+        internal static readonly Lazy<bool> _useCondaPackageManager = new Lazy<bool>(GetUseCondaPackageManager);
 
-        public static bool GetNoDatabaseFactory() => GetBooleanFactoryFlag(NoDatabaseFactoryKey);
+        public static bool GetNoDatabaseFactory() => GetBooleanFlag(NoDatabaseFactoryKey, defaultVal: true);
+        public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: false);
+        public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: false);
 
-        private static bool GetBooleanFactoryFlag(string keyName) {
+        private static bool GetBooleanFlag(string keyName, bool defaultVal) {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {
-                var value = root?.GetValue(NoDatabaseFactoryKey);
+                var value = root?.GetValue(keyName);
                 if (value == null) {
-                    return true;
+                    return defaultVal;
                 }
                 int? asInt = value as int?;
                 if (asInt.HasValue) {
@@ -45,7 +51,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return true;
         }
 
-        private static void SetBooleanFactoryFlag(string keyName, bool value) {
+        private static void SetBooleanFlag(string keyName, bool value) {
             using (var root = Registry.CurrentUser.CreateSubKey(ExperimentSubkey, true)) {
                 if (root == null) {
                     throw new UnauthorizedAccessException();
@@ -70,7 +76,25 @@ namespace Microsoft.PythonTools.Interpreter {
                 return _noDatabaseFactory.Value;
             }
             set {
-                SetBooleanFactoryFlag(NoDatabaseFactoryKey, value);
+                SetBooleanFlag(NoDatabaseFactoryKey, value);
+            }
+        }
+
+        public static bool AutoDetectCondaEnvironments {
+            get {
+                return _autoDetectCondaEnvironments.Value;
+            }
+            set {
+                SetBooleanFlag(AutoDetectCondaEnvironmentsKey, value);
+            }
+        }
+
+        public static bool UseCondaPackageManager {
+            get {
+                return _useCondaPackageManager.Value;
+            }
+            set {
+                SetBooleanFlag(UseCondaPackageManagerKey, value);
             }
         }
     }

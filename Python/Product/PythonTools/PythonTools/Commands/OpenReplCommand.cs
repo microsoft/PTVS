@@ -55,7 +55,9 @@ namespace Microsoft.PythonTools.Commands {
                         !string.IsNullOrEmpty(description)
                     ) {
                         var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                        config = service.Configurations.FirstOrDefault(
+                        config = service.Configurations
+                            .Where(PythonInterpreterFactoryExtensions.IsRunnable)
+                            .FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
                             f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
                         );
@@ -66,7 +68,10 @@ namespace Microsoft.PythonTools.Commands {
             if (config == null) {
                 var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
                 var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                config = service.DefaultInterpreter?.Configuration ?? registry.Configurations.FirstOrDefault();
+                config = service.DefaultInterpreter?.Configuration ?? 
+                    registry.Configurations
+                    .Where(PythonInterpreterFactoryExtensions.IsRunnable)
+                    .FirstOrDefault();
             }
 
             // This command is project-insensitive

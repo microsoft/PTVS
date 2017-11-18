@@ -61,12 +61,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             for (int i = 0; i < astParams.Count; ++i) {
                 VariableDef param;
                 if (!TryGetVariable(astParams[i].Name, out param)) {
+                    var n = (Node)astParams[i].NameExpression ?? astParams[i];
                     if (astParams[i].Kind == ParameterKind.List) {
-                        param = _seqParameters = _seqParameters ?? new ListParameterVariableDef(unit, astParams[i]);
+                        param = _seqParameters = _seqParameters ?? new ListParameterVariableDef(unit, n);
                     } else if (astParams[i].Kind == ParameterKind.Dictionary) {
-                        param = _dictParameters = _dictParameters ?? new DictParameterVariableDef(unit, astParams[i]);
+                        param = _dictParameters = _dictParameters ?? new DictParameterVariableDef(unit, n);
                     } else {
-                        param = new LocatedVariableDef(unit.ProjectEntry, astParams[i]);
+                        param = new LocatedVariableDef(unit.ProjectEntry, n);
                     }
                     AddVariable(astParams[i].Name, param);
                 }

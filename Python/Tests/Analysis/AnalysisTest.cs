@@ -2813,6 +2813,49 @@ def f(a):
 
 
         [TestMethod, Priority(0)]
+        public void ListDictArgReferences() {
+            var text = @"
+def f(*a, **k):
+    x = a[1]
+    y = k['a']
+
+#out
+a = 1
+k = 2
+";
+            var entry = ProcessText(text);
+            entry.AssertReferences("a", text.IndexOf("a["),
+                new VariableLocation(2, 8, VariableType.Definition),
+                new VariableLocation(3, 9, VariableType.Reference)
+            );
+            entry.AssertReferences("k", text.IndexOf("k["),
+                new VariableLocation(2, 12, VariableType.Definition),
+                new VariableLocation(4, 9, VariableType.Reference)
+            );
+            entry.AssertReferences("a", text.IndexOf("#out"),
+                new VariableLocation(7, 1, VariableType.Definition)
+            );
+            entry.AssertReferences("k", text.IndexOf("#out"),
+                new VariableLocation(8, 1, VariableType.Definition)
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void KeywordArgReferences() {
+            var text = @"
+def f(a):
+    pass
+
+f(a=1)
+";
+            var entry = ProcessText(text);
+            entry.AssertReferences("a", text.IndexOf("a"),
+                new VariableLocation(2, 7, VariableType.Definition),
+                new VariableLocation(5, 3, VariableType.Reference)
+            );
+        }
+
+        [TestMethod, Priority(0)]
         public void ReferencesCrossModule() {
             var fobText = @"
 from oar import abc
@@ -6657,6 +6700,44 @@ def f():
 
                 Assert.AreEqual(item.Expected, walker.ImportedName);
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void CrossModuleFunctionCallMemLeak() {
+            var modA = @"from B import h
+def f(x): return h(x)
+
+f(1)";
+            var modB = @"def g(x): pass
+def h(x): return g(x)";
+
+            var analyzer = CreateAnalyzer();
+            var entryA = analyzer.AddModule("A", modA);
+            var entryB = analyzer.AddModule("B", modB);
+            analyzer.WaitForAnalysis(CancellationTokens.After5s);
+            for (int i = 100; i > 0; --i) {
+                entryA.Analyze(CancellationToken.None, true);
+                analyzer.WaitForAnalysis(CancellationTokens.After5s);
+            }
+            var g = analyzer.GetValue<FunctionInfo>(entryB, "g");
+            Assert.AreEqual(1, g.References.Count());
+        }
+
+        [TestMethod, Priority(0)]
+        public void CrossModuleBaseClasses() {
+            var analyzer = CreateAnalyzer();
+            var entryA = analyzer.AddModule("A", @"class ClsA(object): pass");
+            var entryB = analyzer.AddModule("B", @"from A import ClsA
+class ClsB(ClsA): pass
+
+x = ClsB.x");
+            analyzer.WaitForAnalysis();
+            analyzer.AssertIsInstance(entryB, "x");
+
+            entryA.Parse(entryA.Tree.LanguageVersion, @"class ClsA(object): x = 123");
+            entryA.Analyze(CancellationToken.None, true);
+            analyzer.WaitForAnalysis();
+            analyzer.AssertIsInstance(entryB, "x", BuiltinTypeId.Int);
         }
 
         #endregion

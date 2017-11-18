@@ -225,10 +225,9 @@ import System
 
             sw.Start();
             long start0 = sw.ElapsedMilliseconds;
-            // Explicitly specify the builtins name because we are using a 2.7
-            // interpreter for all versions.
+
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-            var projectState = new PythonAnalyzer(fact, fact.CreateInterpreter(), "__builtin__");
+            var projectState = new PythonAnalyzer(fact, fact.CreateInterpreter());
             projectState.ReloadModulesAsync().WaitAndUnwrapExceptions();
 
             projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -42,6 +43,11 @@ namespace Microsoft.PythonTools.Analysis {
             if (resolver == null && !(location is LocationInfo)) {
                 throw new ArgumentNullException(nameof(resolver));
             }
+
+            for (var r = resolver; r != null; r = r.GetAlternateResolver()) {
+                resolver = r;
+            }
+            Debug.Assert(resolver != null);
 
             Resolver = resolver;
             Location = location;

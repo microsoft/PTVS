@@ -45,6 +45,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
+using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 using MSBuild = Microsoft.Build.Evaluation;
 
@@ -52,6 +53,7 @@ namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
+        internal readonly PythonEditorServices _services;
         private AnalysisProcessInfo _analysisProcess;
         private Connection _conn;
 
@@ -67,7 +69,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal readonly SearchPathManager _searchPaths = new SearchPathManager();
 
-        private readonly bool _implicitProject;
         private readonly StringBuilder _stdErr = new StringBuilder();
 
         private readonly IPythonInterpreterFactory _interpreterFactory;
@@ -82,9 +83,10 @@ namespace Microsoft.PythonTools.Intellisense {
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
         internal bool _analysisComplete;
 
+        private AP.AnalysisOptions _analysisOptions;
+
         private int _userCount;
 
-        internal readonly PythonEditorServices _services;
         private readonly CancellationTokenSource _processExitedCancelSource = new CancellationTokenSource();
         private readonly HashSet<ProjectReference> _references = new HashSet<ProjectReference>();
         private bool _disposing;
@@ -98,6 +100,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal int _parsePending;
 
+        private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
+            @"\Analysis\Project";
+
         // Used by tests to avoid creating TaskProvider objects
         internal static bool SuppressTaskProvider = false;
 
@@ -106,7 +111,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInterpreterFactory factory,
             bool inProcess = false
         ) {
-            var analyzer = new VsProjectAnalyzer(services, factory, true);
+            var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, null, null);
             return analyzer;
         }
@@ -117,7 +122,7 @@ namespace Microsoft.PythonTools.Intellisense {
             MSBuild.Project project,
             bool inProcess = false
         ) {
-            var analyzer = new VsProjectAnalyzer(services, factory, false);
+            var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, project.FullPath, project);
             return analyzer;
         }
@@ -129,7 +134,7 @@ namespace Microsoft.PythonTools.Intellisense {
             MSBuild.Project project = null,
             bool inProcess = false
         ) {
-            var analyzer = new VsProjectAnalyzer(services, factory, true);
+            var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, $"{displayName} Interactive", project);
             return analyzer;
         }
@@ -139,23 +144,29 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInterpreterFactory factory,
             bool inProcess = true
         ) {
-            var analyzer = new VsProjectAnalyzer(services, factory, true);
+            var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, "PTVS_TEST", null);
             return analyzer;
         }
 
         private VsProjectAnalyzer(
             PythonEditorServices services,
-            IPythonInterpreterFactory factory,
-            bool implicitProject
+            IPythonInterpreterFactory factory
         ) {
             _services = services ?? throw new ArgumentNullException(nameof(services));
-            _implicitProject = implicitProject;
             _interpreterFactory = factory ?? throw new ArgumentNullException(nameof(factory));
             var withDb = _interpreterFactory as IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 withDb.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
             }
+
+            _analysisOptions = new AP.AnalysisOptions {
+                indentationInconsistencySeverity = Severity.Ignore,
+                commentTokens = new Dictionary<string, AP.TaskPriority>() {
+                    { "TODO", AP.TaskPriority.normal },
+                    { "HACK", AP.TaskPriority.high },
+                }
+            };
 
             _projectFiles = new ConcurrentDictionary<string, AnalysisEntry>();
             _projectFilesById = new ConcurrentDictionary<int, AnalysisEntry>();
@@ -167,7 +178,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private string DefaultComment => _implicitProject ? "Global Analysis" : "Misc. Non Project Analysis";
+        private string DefaultComment => "Global Analysis";
 
         private async Task InitializeAsync(bool outOfProc, string comment, MSBuild.Project projectFile) {
             if (outOfProc) {
@@ -179,46 +190,15 @@ namespace Microsoft.PythonTools.Intellisense {
             Task.Run(() => _conn.ProcessMessages()).DoNotWait();
 
             _userCount = 1;
-            // load the interpreter factories available inside of VS into the remote process
-            var providers = new HashSet<string>(
-                _services.ComponentModel.GetExtensions<IPythonInterpreterFactoryProvider>()
-                    .Select(x => x.GetType().Assembly.Location),
-                StringComparer.OrdinalIgnoreCase
-            );
-            providers.Add(typeof(IInterpreterOptionsService).Assembly.Location);
 
-            var initialize = new AP.InitializeRequest() {
-                interpreterId = _interpreterFactory.Configuration.Id,
-                mefExtensions = providers.ToArray()
-            };
+            var interp = new AP.InterpreterInfo();
+            _services.InterpreterRegistryService.GetSerializationInfo(_interpreterFactory, out interp.assembly, out interp.typeName, out interp.properties);
+            var initialize = new AP.InitializeRequest { interpreter = interp };
 
-            if (projectFile != null) {
-                initialize.projectFile = projectFile.FullPath;
-                initialize.projectHome = CommonUtils.GetAbsoluteDirectoryPath(
-                    Path.GetDirectoryName(projectFile.FullPath),
-                    projectFile.GetPropertyValue(CommonConstants.ProjectHome)
-                );
-                initialize.derivedInterpreters = projectFile.GetItems(MSBuildConstants.InterpreterItem).Select(
-                    interp => new AP.DerivedInterpreter() {
-                        name = interp.EvaluatedInclude,
-                        id = interp.GetMetadataValue(MSBuildConstants.IdKey),
-                        description = interp.GetMetadataValue(MSBuildConstants.DescriptionKey),
-                        version = interp.GetMetadataValue(MSBuildConstants.VersionKey),
-                        baseInterpreter = interp.GetMetadataValue(MSBuildConstants.BaseInterpreterKey),
-                        path = interp.GetMetadataValue(MSBuildConstants.InterpreterPathKey),
-                        windowsPath = interp.GetMetadataValue(MSBuildConstants.WindowsPathKey),
-                        arch = interp.GetMetadataValue(MSBuildConstants.ArchitectureKey),
-                        libPath = interp.GetMetadataValue(MSBuildConstants.LibraryPathKey),
-                        pathEnvVar = interp.GetMetadataValue(MSBuildConstants.PathEnvVarKey)
-                    }
-                ).ToArray();
-            }
-
-            var result = await SendRequestAsync(initialize);
-            if (result == null || !string.IsNullOrWhiteSpace(result.error)) {
-                Debug.Fail("Analyzer initialization failed with " + result?.error ?? "(null)");
-                if (result != null) {
-                    _logger?.LogEvent(PythonLogEvent.AnalysisOperationFailed, "Initialization: " + result.error);
+            var initResponse = await SendRequestAsync(initialize);
+            if (initResponse == null || !string.IsNullOrWhiteSpace(initResponse.error)) {
+                if (initResponse?.error != null) {
+                    _logger?.LogEvent(PythonLogEvent.AnalysisOperationFailed, "Initialization: " + initResponse.error);
                 } else {
                     _logger?.LogEvent(PythonLogEvent.AnalysisOperationFailed, "Initialization");
                 }
@@ -228,17 +208,25 @@ namespace Microsoft.PythonTools.Intellisense {
                 _conn.Dispose();
                 _conn = null;
                 throw new InvalidOperationException("Failed to initialize analyzer");
-            } 
+            }
 
-            SendEvent(
-                new AP.OptionsChangedEvent() {
-                    indentation_inconsistency_severity = _services.Python?.GeneralOptions.IndentationInconsistencySeverity ?? Severity.Ignore
-                }
-            );
+            _analysisOptions.indentationInconsistencySeverity = _services.Python?.GeneralOptions.IndentationInconsistencySeverity ?? Severity.Ignore;
 
             if (_services.CommentTaskProvider != null) {
-                CommentTaskTokensChanged(_services.CommentTaskProvider, EventArgs.Empty);
+                foreach (var keyValue in (_services.CommentTaskProvider.Tokens).MaybeEnumerate()) {
+                    _analysisOptions.commentTokens[keyValue.Key] = GetPriority(keyValue.Value);
+                }
             }
+
+            if (_analysisOptions.analysisLimits == null) {
+                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                    _analysisOptions.analysisLimits = AnalysisLimits.LoadFromStorage(key).ToDictionary();
+                }
+            }
+
+            var resp = await SendRequestAsync(new AP.SetAnalysisOptionsRequest {
+                options = _analysisOptions
+            });
         }
 
         public event EventHandler AnalyzerNeedsRestart;
@@ -327,14 +315,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-            #region ProjectAnalyzer overrides
+        #region ProjectAnalyzer overrides
 
-        public override void RegisterExtension(string path) {
-            SendEvent(
-                new AP.ExtensionAddedEvent() {
-                    path = path
-                }
-            );
+        public override async Task RegisterExtensionAsync(Type extensionType) {
+            var extensionName = extensionType.GetCustomAttributes(false)
+                .OfType<AnalysisExtensionNameAttribute>()
+                .FirstOrDefault()?.Name ?? extensionType.Name;
+
+            await SendRequestAsync(new AP.LoadExtensionRequest {
+                assembly = extensionType.Assembly.Location,
+                typeName = extensionType.FullName,
+                extension = extensionName
+            });
         }
 
         /// <summary>
@@ -1405,16 +1397,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        /// <summary>
-        /// True if the project is an implicit project and it should model files on disk in addition
-        /// to files which are explicitly added.
-        /// </summary>
-        internal bool ImplicitProject {
-            get {
-                return _implicitProject;
-            }
-        }
-
         internal IPythonInterpreterFactory InterpreterFactory {
             get {
                 return _interpreterFactory;
@@ -1788,10 +1770,13 @@ namespace Microsoft.PythonTools.Intellisense {
             try {
                 res = await conn.SendRequestAsync(request, cancel).ConfigureAwait(false);
             } catch (OperationCanceledException) {
+                Debug.WriteLine($"Request cancelled");
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled, null);
-            } catch (IOException) {
+            } catch (IOException e) {
+                Debug.WriteLine($"Request failed: {e}");
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled, null);
             } catch (FailedRequestException e) {
+                Debug.WriteLine($"Request failed: {e}");
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
             } catch (ObjectDisposedException) {
                 _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled, null);
@@ -2235,16 +2220,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void CommentTaskTokensChanged(object sender, EventArgs e) {
             var provider = (CommentTaskProvider)sender;
-            var priorities = new Dictionary<string, AP.TaskPriority>();
 
-            foreach (var keyValue in (provider?.Tokens).MaybeEnumerate()) {
-                priorities[keyValue.Key] = GetPriority(keyValue.Value);
-            }
-            SendEvent(
-                new AP.SetCommentTaskTokens() {
-                    tokens = priorities
+            lock (_analysisOptions) {
+                foreach (var keyValue in (provider?.Tokens).MaybeEnumerate()) {
+                    _analysisOptions.commentTokens[keyValue.Key] = GetPriority(keyValue.Value);
                 }
-            );
+            }
+            SendRequestAsync(new AP.SetAnalysisOptionsRequest { options = _analysisOptions })
+                .HandleAllExceptions(Site, GetType())
+                .DoNotWait();
         }
 
         internal async Task<NavigationInfo> GetNavigationsAsync(ITextView view) {

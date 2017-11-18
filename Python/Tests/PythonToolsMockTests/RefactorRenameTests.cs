@@ -2514,7 +2514,7 @@ def g(a, b, c):
             }
 
             public RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion) {
-                Assert.IsTrue(_originalName.StartsWith(originalName), $"Selected text {originalName} did not match {_originalName}");
+                Assert.IsTrue(_originalName.StartsWith(originalName) || originalName.StartsWith("__") && _originalName.EndsWith(originalName), $"Selected text {originalName} did not match {_originalName}");
 
                 var requestView = new RenameVariableRequestView(originalName, languageVersion);
                 requestView.Name = _name;

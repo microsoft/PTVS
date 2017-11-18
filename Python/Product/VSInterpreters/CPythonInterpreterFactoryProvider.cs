@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -29,6 +30,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(CPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
+        private readonly IServiceProvider _site;
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         const string PythonPath = "Software\\Python";
         internal const string FactoryProviderName = "Global";
@@ -44,10 +46,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         [ImportingConstructor]
         public CPythonInterpreterFactoryProvider(
+            [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null,
             [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
-        ) : this(isMockVs == null) { }
+        ) : this(site, isMockVs == null) {
+        }
 
-        public CPythonInterpreterFactoryProvider(bool watchRegistry) {
+        public CPythonInterpreterFactoryProvider(IServiceProvider site, bool watchRegistry) {
+            _site = site;
             _watchRegistry = watchRegistry;
             _registryTags = _watchRegistry ? new HashSet<object>() : null;
         }
@@ -200,6 +205,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     PythonInterpreterInformation existingInfo;
                     if (!_factories.TryGetValue(info.Configuration.Id, out existingInfo) ||
                         info.Configuration != existingInfo.Configuration) {
+
                         _factories[info.Configuration.Id] = info;
                         anyChanged = true;
                     }
@@ -236,7 +242,21 @@ namespace Microsoft.PythonTools.Interpreter {
                 _factories.TryGetValue(id, out info);
             }
 
-            return info?.EnsureFactory();
+            return info?.GetOrCreateFactory(CreateFactory);
+        }
+
+        private IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
+            return InterpreterFactoryCreator.CreateInterpreterFactory(
+                info.Configuration,
+                new InterpreterFactoryCreationOptions {
+                    PackageManager = CondaUtils.HasConda(info.Configuration.PrefixPath) ? BuiltInPackageManagers.Conda : BuiltInPackageManagers.Pip,
+                    WatchFileSystem = true,
+                    NoDatabase = ExperimentalOptions.NoDatabaseFactory,
+                    DatabasePath = ExperimentalOptions.NoDatabaseFactory ?
+                        DatabasePathSelector.CalculateVSLocalDatabasePath(_site, info.Configuration, 1) :
+                        DatabasePathSelector.CalculateGlobalDatabasePath(info.Configuration, PythonTypeDatabase.FormatVersion)
+                }
+            );
         }
 
         private EventHandler _interpFactoriesChanged;

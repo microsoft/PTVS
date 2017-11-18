@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.ExceptionServices;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
@@ -31,7 +30,6 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -46,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly HashSet<ModuleInfo> _modulesWithUnresolvedImports;
         private readonly object _modulesWithUnresolvedImportsLock = new object();
         private readonly Dictionary<object, AnalysisValue> _itemCache;
-        private readonly string _builtinName;
+        internal readonly string _builtinName;
         internal BuiltinModule _builtinModule;
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
         internal ConstantInfo _noneInst;
@@ -64,9 +62,6 @@ namespace Microsoft.PythonTools.Analysis {
         private ExceptionDispatchInfo _loadKnownTypesException;
         private Dictionary<IProjectEntry[], AggregateProjectEntry> _aggregates = new Dictionary<IProjectEntry[], AggregateProjectEntry>(AggregateComparer.Instance);
 
-        private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
-            @"\Analysis\Project";
-
         /// <summary>
         /// Creates a new analyzer that is ready for use.
         /// </summary>
@@ -74,7 +69,7 @@ namespace Microsoft.PythonTools.Analysis {
             IPythonInterpreterFactory factory,
             IPythonInterpreter interpreter = null
         ) {
-            var res = new PythonAnalyzer(factory, interpreter, null);
+            var res = new PythonAnalyzer(factory, interpreter);
             try {
                 await res.ReloadModulesAsync().ConfigureAwait(false);
                 var r = res;
@@ -90,10 +85,9 @@ namespace Microsoft.PythonTools.Analysis {
         // Test helper method
         internal static PythonAnalyzer CreateSynchronously(
             IPythonInterpreterFactory factory,
-            IPythonInterpreter interpreter = null,
-            string builtinName = null
+            IPythonInterpreter interpreter = null
         ) {
-            var res = new PythonAnalyzer(factory, interpreter, null);
+            var res = new PythonAnalyzer(factory, interpreter);
             try {
                 res.ReloadModulesAsync().WaitAndUnwrapExceptions();
                 var r = res;
@@ -111,31 +105,21 @@ namespace Microsoft.PythonTools.Analysis {
         /// wait for <see cref="ReloadModulesAsync"/> to complete before using.
         /// </summary>
         public static PythonAnalyzer Create(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null) {
-            return new PythonAnalyzer(factory, interpreter, null);
+            return new PythonAnalyzer(factory, interpreter);
         }
 
-        internal PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter pythonInterpreter, string builtinName) {
+        internal PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter pythonInterpreter) {
             _interpreterFactory = factory;
             _langVersion = factory.GetLanguageVersion();
             _disposeInterpreter = pythonInterpreter == null;
             _interpreter = pythonInterpreter ?? factory.CreateInterpreter();
-            _builtinName = builtinName ?? (_langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x);
+            _builtinName = _langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
             _modules = new ModuleTable(this, _interpreter);
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _modulesWithUnresolvedImports = new HashSet<ModuleInfo>();
             _itemCache = new Dictionary<object, AnalysisValue>();
 
-            try {
-                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                    Limits = AnalysisLimits.LoadFromStorage(key);
-                }
-            } catch (SecurityException) {
-                Limits = new AnalysisLimits();
-            } catch (UnauthorizedAccessException) {
-                Limits = new AnalysisLimits();
-            } catch (IOException) {
-                Limits = new AnalysisLimits();
-            }
+            Limits = AnalysisLimits.GetDefaultLimits();
 
             _queue = new Deque<AnalysisUnit>();
 

@@ -358,7 +358,6 @@
     <Compile Include="PythonTools\Options\DebuggerOptions.cs" />
     <Compile Include="PythonTools\Options\AdvancedEditorOptions.cs" />
     <Compile Include="Legacy\ObsoleteResources.cs" />
-    <Compile Include="NoInterpretersException.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsService.cs" />
     <Compile Include="PythonTools\AzureToolsContracts.cs" />
@@ -432,7 +431,6 @@
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifier.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
-    <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowEvents.cs" />
     <Compile Include="PythonTools\Logging\VsTelemetryLogger.cs" />

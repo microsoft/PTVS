@@ -85,6 +85,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return AnalysisSet.Empty;
             }
 
+            mro.AddDependency(unit);
+
             // First item in MRO list is always the class itself.
             var member = Values.Mro.GetMemberFromMroNoReferences(mro.Skip(1), node, unit, name, addRef: true);
             if (member == null) {

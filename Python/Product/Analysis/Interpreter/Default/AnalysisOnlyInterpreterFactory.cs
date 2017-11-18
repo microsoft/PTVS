@@ -19,25 +19,65 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase {
+    class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
         readonly IEnumerable<string> _actualDatabasePaths;
-        readonly PythonTypeDatabase _actualDatabase;
 
-        private readonly static InterpreterFactoryCreationOptions CreationOptions = new InterpreterFactoryCreationOptions {
+        private readonly static InterpreterFactoryCreationOptions DefaultCreationOptions = new InterpreterFactoryCreationOptions {
             WatchFileSystem = false
         };
 
         public AnalysisOnlyInterpreterFactory(Version version, string description = null)
-            : base(GetConfiguration(version), CreationOptions) { }
+            : base(GetConfiguration(version), DefaultCreationOptions) { }
 
         public AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
-            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), CreationOptions) {
+            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), DefaultCreationOptions) {
             _actualDatabasePaths = databasePaths?.ToList();
         }
 
-        public AnalysisOnlyInterpreterFactory(Version version, PythonTypeDatabase database, string description = null)
-            : base(GetConfiguration(version, database.DatabaseDirectory), CreationOptions) {
-            _actualDatabase = database;
+        internal AnalysisOnlyInterpreterFactory(Dictionary<string, object> properties)
+            : base(GetConfiguration(properties), DefaultCreationOptions) {
+            _actualDatabasePaths = GetDatabasePaths(properties);
+        }
+
+        public bool GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+            assembly = GetType().Assembly.Location;
+            typeName = GetType().FullName;
+            properties = new Dictionary<string, object> {
+                { nameof(Version), Configuration.Version.ToString() }
+            };
+            if (_actualDatabasePaths != null && _actualDatabasePaths.Any()) {
+                properties[nameof(DatabasePath)] = _actualDatabasePaths.ToArray();
+            }
+            return true;
+        }
+
+        private static InterpreterConfiguration GetConfiguration(Dictionary<string, object> properties) {
+            Version version = null;
+            object o;
+            string s;
+
+            if (properties.TryGetValue(nameof(Version), out o) && (s = o as string) != null) {
+                try {
+                    version = Version.Parse(s);
+                } catch (FormatException) {
+                }
+            }
+
+            var databasePaths = GetDatabasePaths(properties);
+
+            return GetConfiguration(version ?? new Version(), databasePaths ?? Array.Empty<string>());
+        }
+
+        private static string[] GetDatabasePaths(Dictionary<string, object> properties) {
+            if (properties.TryGetValue(nameof(DatabasePath), out object o)) {
+                if (o is IEnumerable<string> e) {
+                    return e.ToArray();
+                } else if (o is string s) {
+                    return new[] { s };
+                }
+            }
+
+            return null;
         }
 
         private static InterpreterConfiguration GetConfiguration(Version version, params string[] databasePaths) {
@@ -59,9 +99,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
-            if (_actualDatabase != null) {
-                return _actualDatabase;
-            } else if (_actualDatabasePaths != null) {
+            if (_actualDatabasePaths != null) {
                 return new PythonTypeDatabase(this, _actualDatabasePaths);
             } else {
                 return PythonTypeDatabase.CreateDefaultTypeDatabase(this);

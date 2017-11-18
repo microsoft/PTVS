@@ -24,11 +24,15 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
-            _noDatabaseFactory.Checked = pyService.ExperimentalOptions.NoDatabaseFactory; ;
+            _noDatabaseFactory.Checked = pyService.ExperimentalOptions.NoDatabaseFactory;
+            _condaEnvironments.Checked = pyService.ExperimentalOptions.AutoDetectCondaEnvironments;
+            _condaPackageManager.Checked = pyService.ExperimentalOptions.UseCondaPackageManager;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
             pyService.ExperimentalOptions.NoDatabaseFactory = _noDatabaseFactory.Checked;
+            pyService.ExperimentalOptions.AutoDetectCondaEnvironments = _condaEnvironments.Checked;
+            pyService.ExperimentalOptions.UseCondaPackageManager = _condaPackageManager.Checked;
         }
     }
 }

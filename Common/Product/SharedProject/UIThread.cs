@@ -190,8 +190,12 @@ namespace Microsoft.VisualStudioTools {
         /// </remarks>
         public override void InvokeTaskSync(Func<Task> func, CancellationToken cancellationToken) {
             _factory.RunAsync(async () => {
-                await _factory.SwitchToMainThreadAsync();
-                await func();
+                // Convert assertions to exceptions while joining on a task
+                // or the message box will deadlock.
+                using (ThrowOnAssertListener.Push()) {
+                    await _factory.SwitchToMainThreadAsync(cancellationToken);
+                    await func();
+                }
             }).Join(cancellationToken);
         }
 
@@ -205,10 +209,69 @@ namespace Microsoft.VisualStudioTools {
         /// synchronously.
         /// </remarks>
         public override T InvokeTaskSync<T>(Func<Task<T>> func, CancellationToken cancellationToken) {
-            return _factory.RunAsync(async() => {
-                await _factory.SwitchToMainThreadAsync();
-                return await func();
+            return _factory.RunAsync(async () => {
+                // Convert assertions to exceptions while joining on a task
+                // or the message box will deadlock.
+                using (ThrowOnAssertListener.Push()) {
+                    await _factory.SwitchToMainThreadAsync(cancellationToken);
+                    return await func();
+                }
             }).Join(cancellationToken);
         }
+
+        #region ThrowOnAssertListener class
+
+        class ThrowOnAssertListener : TraceListener {
+            TraceListener[] _inner;
+
+            public static IDisposable Push() {
+#if DEBUG
+                var inner = new TraceListener[Trace.Listeners.Count];
+                Trace.Listeners.CopyTo(inner, 0);
+                Trace.Listeners.Clear();
+                var res = new ThrowOnAssertListener(inner);
+                Trace.Listeners.Add(res);
+                return res;
+#else
+                return null;
+#endif
+            }
+
+            protected ThrowOnAssertListener(TraceListener[] inner) : base(nameof(ThrowOnAssertListener)) {
+                _inner = inner;
+            }
+
+            protected override void Dispose(bool disposing) {
+                if (disposing) {
+                    Trace.Listeners.Remove(this);
+                    Trace.Listeners.AddRange(_inner);
+                }
+                base.Dispose(disposing);
+            }
+
+            public override bool IsThreadSafe => true;
+
+            public override void Write(string message) {
+                foreach (var listener in _inner) {
+                    listener.Write(message);
+                }
+            }
+
+            public override void WriteLine(string message) {
+                foreach (var listener in _inner) {
+                    listener.WriteLine(message);
+                }
+            }
+
+            public override void Fail(string message) {
+                throw new Exception(message);
+            }
+
+            public override void Fail(string message, string detailMessage) {
+                throw new Exception(message + Environment.NewLine + detailMessage);
+            }
+        }
+
+#endregion
     }
 }

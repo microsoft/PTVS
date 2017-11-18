@@ -26,21 +26,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly IAnalysisSet[] _args;
         private readonly NameExpression[] _keywordArgNames;
         private readonly IPythonProjectEntry _declProjEntry;
+        private readonly int _declVersion;
         private IAnalysisSet _argsTuple;
         private IAnalysisSet _keywordsDict;
 
         public PartialFunctionInfo(ProjectEntry declProjEntry, IAnalysisSet function, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _declProjEntry = declProjEntry;
+            _declVersion = _declProjEntry.AnalysisVersion;
             _function = function;
             _args = args;
             _keywordArgNames = keywordArgNames;
         }
 
-        public override IPythonProjectEntry DeclaringModule {
-            get {
-                return _declProjEntry;
-            }
-        }
+        public override IPythonProjectEntry DeclaringModule => _declProjEntry;
+        public override int DeclaringVersion => _declVersion;
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var newArgs = _args.Take(_args.Length - _keywordArgNames.Length)

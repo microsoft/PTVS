@@ -50,6 +50,12 @@ namespace Microsoft.PythonTools.Commands {
             var projectId = project != null ? PythonReplEvaluatorProvider.GetEvaluatorId(project) : null;
             var configId = config != null ? PythonReplEvaluatorProvider.GetEvaluatorId(config) : null;
 
+            if (config?.IsRunnable() == false) {
+                throw new MissingInterpreterException(
+                    Strings.MissingEnvironment.FormatUI(config.Description, config.Version)
+                );
+            }
+
             IVsInteractiveWindow window;
 
             // If we find an open window for the project, prefer that to a per-config one
@@ -174,9 +180,15 @@ namespace Microsoft.PythonTools.Commands {
                 return;
             }
 
-            var window = EnsureReplWindow(_serviceProvider, config.Interpreter, pyProj);
-            window.Show(true);
+            IVsInteractiveWindow window;
+            try {
+                window = EnsureReplWindow(_serviceProvider, config.Interpreter, pyProj);
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                return;
+            }
 
+            window.Show(true);
             var eval = (IPythonInteractiveEvaluator)window.InteractiveWindow.Evaluator;
 
             // The interpreter may take some time to startup, do this off the UI thread.

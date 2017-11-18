@@ -424,6 +424,24 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private bool SupportsDashMPip => _factory.Configuration.Version > new Version(2, 7);
 
+        public string ExtensionDisplayName => Strings.PipExtensionDisplayName;
+
+        public string IndexDisplayName => Strings.PipDefaultIndexName;
+
+        public string SearchHelpText => Strings.PipExtensionSearchPyPILabel;
+
+        public string GetInstallCommandDisplayName(string searchQuery) {
+            if (string.IsNullOrEmpty(searchQuery)) {
+                return string.Empty;
+            }
+
+            return Strings.PipExtensionPipInstallFrom.FormatUI(searchQuery);
+        }
+
+        public bool CanUninstall(PackageSpec package) {
+            return true;
+        }
+
         private async Task CacheInstalledPackagesAsync(
             bool alreadyHasLock,
             bool alreadyHasConcurrencyLock,

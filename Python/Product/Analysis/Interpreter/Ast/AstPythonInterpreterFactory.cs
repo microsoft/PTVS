@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, IDisposable {
+    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
         private readonly string _databasePath;
         private readonly object _searchPathsLock = new object();
         private PythonLibraryPath[] _searchPaths;
@@ -53,20 +53,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             InterpreterFactoryCreationOptions options
         ) {
             Configuration = config ?? throw new ArgumentNullException(nameof(config));
+            CreationOptions = options ?? new InterpreterFactoryCreationOptions();
             LanguageVersion = Configuration.Version.ToLanguageVersion();
 
-            options = options ?? new InterpreterFactoryCreationOptions();
-            _databasePath = options.DatabasePath;
+            _databasePath = CreationOptions.DatabasePath;
             if (!string.IsNullOrEmpty(_databasePath)) {
                 _log = new AnalysisLogWriter(PathUtils.GetAbsoluteFilePath(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
                 _log.Rotate(LogRotationSize);
-                _log.MinimumLevel = options.TraceLevel;
+                _log.MinimumLevel = CreationOptions.TraceLevel;
             }
-            _skipCache = !options.UseExistingCache;
+            _skipCache = !CreationOptions.UseExistingCache;
 
             if (!GlobalInterpreterOptions.SuppressPackageManagers) {
                 try {
-                    var pm = options.PackageManager;
+                    var pm = CreationOptions.PackageManager;
                     if (pm != null) {
                         pm.SetInterpreterFactory(this);
                         pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
@@ -99,7 +99,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
+        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+            assembly = GetType().Assembly.Location;
+            typeName = GetType().FullName;
+            properties = CreationOptions.ToDictionary();
+            Configuration.WriteToDictionary(properties);
+            return true;
+        }
+
+        internal AstPythonInterpreterFactory(Dictionary<string, object> properties) :
+            this(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)) { }
+
         public InterpreterConfiguration Configuration { get; }
+
+        public InterpreterFactoryCreationOptions CreationOptions { get; }
 
         public PythonLanguageVersion LanguageVersion { get; }
 
@@ -151,7 +164,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             ), ".pyi");
         }
 
-#region Cache File Management
+        #region Cache File Management
 
         public Stream ReadCachedModule(string filePath) {
             if (_skipCache) {
@@ -275,7 +288,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-#endregion
+        #endregion
 
         public IReadOnlyDictionary<string, string> GetImportableModules() {
             var spp = _searchPathPackages;
