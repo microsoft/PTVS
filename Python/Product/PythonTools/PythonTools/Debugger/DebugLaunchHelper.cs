@@ -29,6 +29,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
     public static class DebugLaunchHelper {
@@ -84,10 +85,61 @@ namespace Microsoft.PythonTools.Debugger {
             return SubstitutionPattern.Replace(
                 str,
                 m => {
-                    string value;
-                    return environment.TryGetValue(m.Groups[1].Value, out value) ? value : "";
+                    return environment.TryGetValue(m.Groups[1].Value, out string value) ? value : "";
                 }
             );
+        }
+
+        private static string GetArgs(LaunchConfiguration config) {
+            var args = string.Join(" ", new[] {
+                    config.InterpreterArguments,
+                    config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                    config.ScriptArguments
+                }.Where(s => !string.IsNullOrEmpty(s)));
+
+            if (config.Environment != null) {
+                args = DoSubstitutions(config.Environment, args);
+            }
+            return args;
+        }
+
+        private static string GetOptions(IServiceProvider provider, LaunchConfiguration config) {
+            var pyService = provider.GetPythonToolsService();
+            return string.Join(";", GetGlobalDebuggerOptions(pyService)
+                .Concat(GetLaunchConfigurationOptions(config))
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Select(s => s.Replace(";", ";;"))
+            );
+        }
+
+        private static string GetLaunchJsonForVsCodeDebugAdapter(IServiceProvider provider, LaunchConfiguration config) {
+            bool nativeDebug = config.GetLaunchOption(PythonConstants.EnableNativeCodeDebugging).IsTrue();
+
+            JArray envArray = new JArray();
+            foreach (var kv in provider.GetPythonToolsService().GetFullEnvironment(config)) {
+                JObject pair = new JObject {
+                    ["name"] = kv.Key,
+                    ["value"] = kv.Value
+                };
+                envArray.Add(pair);
+            }
+
+            JObject jsonObj = new JObject {
+                ["exe"] = config.GetInterpreterPath(),
+                ["curDir"] = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory,
+                ["remoteMachine"] = "",
+                ["args"] = GetArgs(config),
+                ["options"] = nativeDebug ? "" : GetOptions(provider, config),
+                ["env"] = envArray
+            };
+            
+            // Note: these are optional, but sepcial. These override the pkgdef version of the adapter settings
+            // for other settings see the documentation for VSCodeDebugAdapterHost Launch Configuration
+            // jsonObj["$adapter"] = "{path - to - adapter executable}";
+            // jsonObj["$adapterArgs"] = "";
+            // jsonObj["$adapterRuntime"] = "";
+            
+            return jsonObj.ToString();
         }
 
         public static unsafe DebugTargetInfo CreateDebugTargetInfo(IServiceProvider provider, LaunchConfiguration config) {
@@ -96,28 +148,19 @@ namespace Microsoft.PythonTools.Debugger {
                 throw new NotSupportedException(Strings.DebuggerPythonVersionNotSupported);
             }
 
-            var pyService = provider.GetPythonToolsService();
             var dti = new DebugTargetInfo(provider);
 
             try {
                 dti.Info.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
                 dti.Info.bstrExe = config.GetInterpreterPath();
-                dti.Info.bstrCurDir = config.WorkingDirectory;
-                if (string.IsNullOrEmpty(dti.Info.bstrCurDir)) {
-                    dti.Info.bstrCurDir = PathUtils.GetParent(config.ScriptName);
-                }
+                dti.Info.bstrCurDir = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory;
 
                 dti.Info.bstrRemoteMachine = null;
                 dti.Info.fSendStdoutToOutputWindow = 0;
 
                 bool nativeDebug = config.GetLaunchOption(PythonConstants.EnableNativeCodeDebugging).IsTrue();
                 if (!nativeDebug) {
-                    dti.Info.bstrOptions = string.Join(";",
-                        GetGlobalDebuggerOptions(pyService)
-                            .Concat(GetLaunchConfigurationOptions(config))
-                            .Where(s => !string.IsNullOrEmpty(s))
-                            .Select(s => s.Replace(";", ";;"))
-                    );
+                    dti.Info.bstrOptions = GetOptions(provider, config);
                 }
 
                 // Environment variables should be passed as a 
@@ -132,27 +175,24 @@ namespace Microsoft.PythonTools.Debugger {
                     dti.Info.bstrEnv = buf.ToString();
                 }
 
-                var args = string.Join(" ", new[] {
-                    config.InterpreterArguments,
-                    config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
-                    config.ScriptArguments
-                }.Where(s => !string.IsNullOrEmpty(s)));
+                dti.Info.bstrArg = GetArgs(config);
 
-                if (config.Environment != null) {
-                    args = DoSubstitutions(config.Environment, args);
-                }
-                dti.Info.bstrArg = args;
+                var engineGuid = ExperimentalOptions.UseVsCodeDebugger ?  DebugAdapterLauncher.VSCodeDebugEngine : AD7Engine.DebugEngineGuid;
 
                 if (nativeDebug) {
                     dti.Info.dwClsidCount = 2;
                     dti.Info.pClsidList = Marshal.AllocCoTaskMem(sizeof(Guid) * 2);
                     var engineGuids = (Guid*)dti.Info.pClsidList;
                     engineGuids[0] = dti.Info.clsidCustom = DkmEngineId.NativeEng;
-                    engineGuids[1] = AD7Engine.DebugEngineGuid;
+                    engineGuids[1] = engineGuid;
                 } else {
                     // Set the Python debugger
-                    dti.Info.clsidCustom = new Guid(AD7Engine.DebugEngineId);
+                    dti.Info.clsidCustom = engineGuid;
                     dti.Info.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd;
+                }
+
+                if (ExperimentalOptions.UseVsCodeDebugger) {
+                    dti.Info.bstrOptions = GetLaunchJsonForVsCodeDebugAdapter(provider, config);
                 }
 
                 // Null out dti so that it is not disposed before we return.
