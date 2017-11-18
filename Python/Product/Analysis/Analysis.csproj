@@ -85,6 +85,7 @@
     <Compile Include="Interpreter\ICustomInterpreterSerialization.cs" />
     <Compile Include="Interpreter\ILazyMember.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithLog.cs" />
+    <Compile Include="Interpreter\NoInterpretersException.cs" />
     <Compile Include="Interpreter\SentinelModule.cs" />
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\ICanFindModuleMembers.cs" />

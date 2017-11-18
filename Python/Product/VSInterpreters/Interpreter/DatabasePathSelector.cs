@@ -51,12 +51,6 @@ namespace Microsoft.PythonTools.Interpreter {
             return Convert.ToBase64String(new UTF8Encoding(false).GetBytes(s));
         }
 
-        private static string ToBase64Hash(string s) {
-            using (var hash = SHA256.Create()) {
-                return Convert.ToBase64String(hash.ComputeHash(new UTF8Encoding(false).GetBytes(s)));
-            }
-        }
-
         private static bool TryGetShellProperty<T>(this IServiceProvider provider, __VSSPROPID propId, out T value) {
             object obj;
             var shell = (IVsShell)provider.GetService(typeof(SVsShell));

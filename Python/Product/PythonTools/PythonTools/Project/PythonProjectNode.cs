@@ -1789,9 +1789,9 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (factory == null) {
-                    config = service.Configurations.FirstOrDefault(
-                        c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
-                    );
+                    config = service.Configurations
+                        .Where(PythonInterpreterFactoryExtensions.IsRunnable)
+                        .FirstOrDefault(c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase));
                     if (config != null) {
                         factory = service.FindInterpreter(config.Id);
                     }
@@ -1927,6 +1927,8 @@ namespace Microsoft.PythonTools.Project {
                 ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory?.Configuration, this).Show(true);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
+            } catch (MissingInterpreterException ex) {
+                MessageBox.Show(ex.Message, Strings.ProductTitle);
             }
             return VSConstants.S_OK;
         }
