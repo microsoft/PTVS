@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -36,6 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(CondaEnvironmentFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class CondaEnvironmentFactoryProvider : IPythonInterpreterFactoryProvider {
+        private readonly IServiceProvider _site;
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         internal const string FactoryProviderName = "CondaEnv";
         internal const string EnvironmentCompanyName = "CondaEnv";
@@ -50,8 +52,10 @@ namespace Microsoft.PythonTools.Interpreter {
         [ImportingConstructor]
         public CondaEnvironmentFactoryProvider(
             [Import] CPythonInterpreterFactoryProvider globalProvider,
+            [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null,
             [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
         ) {
+            _site = site;
             _watchFileSystem = isMockVs == null;
             _globalProvider = globalProvider;
         }
@@ -322,7 +326,21 @@ namespace Microsoft.PythonTools.Interpreter {
                 _factories.TryGetValue(id, out info);
             }
 
-            return info?.EnsureFactory();
+            return info?.GetOrCreateFactory(CreateFactory);
+        }
+
+        private IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
+            return InterpreterFactoryCreator.CreateInterpreterFactory(
+                info.Configuration,
+                new InterpreterFactoryCreationOptions {
+                    PackageManager = BuiltInPackageManagers.Conda,
+                    WatchFileSystem = true,
+                    NoDatabase = ExperimentalOptions.NoDatabaseFactory,
+                    DatabasePath = ExperimentalOptions.NoDatabaseFactory ?
+                        DatabasePathSelector.CalculateVSLocalDatabasePath(_site, info.Configuration, 1) :
+                        DatabasePathSelector.CalculateGlobalDatabasePath(info.Configuration, PythonTypeDatabase.FormatVersion)
+                }
+            );
         }
 
         private EventHandler _interpFactoriesChanged;

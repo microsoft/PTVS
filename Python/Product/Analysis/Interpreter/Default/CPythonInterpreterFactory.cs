@@ -14,11 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
+    class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
         public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
             base(configuration, options) { }
+
+        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+            assembly = GetType().Assembly.Location;
+            typeName = GetType().FullName;
+            properties = CreationOptions.ToDictionary();
+            Configuration.WriteToDictionary(properties);
+            return true;
+        }
+
+        internal CPythonInterpreterFactory(Dictionary<string, object> properties) :
+            base(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)) { }
     }
 }

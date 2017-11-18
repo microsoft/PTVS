@@ -59,6 +59,9 @@
     <Reference Include="Microsoft.Build.Tasks.$(MicrosoftBuildAssemblyVersionSuffix), Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Utilities.$(MicrosoftBuildAssemblyVersionSuffix), Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -82,6 +85,7 @@
     <Compile Include="CondaPackageManager.cs" />
     <Compile Include="CPythonInterpreterFactoryConstants.cs" />
     <Compile Include="CPythonInterpreterFactoryProvider.cs" />
+    <Compile Include="DatabasePathSelector.cs" />
     <Compile Include="ExperimentalOptions.cs" />
     <Compile Include="IInterpreterOptionsService.cs" />
     <Compile Include="InterpreterOptionsService.cs" />

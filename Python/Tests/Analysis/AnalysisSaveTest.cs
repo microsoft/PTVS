@@ -475,7 +475,7 @@ x = unittest.skipIf(False)
 
             var dbFolder = TestData.GetTempPath();
 
-            var state = new PythonAnalysis(fact, interp, SharedDatabaseState.BuiltinName2x);
+            var state = new PythonAnalysis(fact, interp);
             state.CreateProjectOnDisk = true;
             for (int i = 0; i < modules.Length; i++) {
                 state.AddModule(modules[i].ModuleName, modules[i].Code, modules[i].Filename);
@@ -486,8 +486,8 @@ x = unittest.skipIf(False)
             new SaveAnalysis().Save(state.Analyzer, dbFolder);
 
             File.Copy(
-                Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"),
-                Path.Combine(dbFolder, "__builtin__.idb"),
+                Path.Combine(PythonTypeDatabase.BaselineDatabasePath, state.Analyzer._builtinName + ".idb"),
+                Path.Combine(dbFolder, state.Analyzer._builtinName + ".idb"),
                 true
             );
 

@@ -28,7 +28,6 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
 
 namespace Microsoft.PythonTools.Django.Analysis {
-    [Export(typeof(IAnalysisExtension))]
     [AnalysisExtensionName(Name)]
     partial class DjangoAnalyzer : IDisposable, IAnalysisExtension {
         internal const string Name = "django";

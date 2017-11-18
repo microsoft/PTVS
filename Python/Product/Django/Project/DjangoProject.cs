@@ -153,8 +153,10 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        private static void RegisterExtension(VsProjectAnalyzer newAnalyzer) {
-            newAnalyzer.RegisterExtension(typeof(DjangoAnalyzer).Assembly.Location);
+        private void RegisterExtension(VsProjectAnalyzer newAnalyzer) {
+            newAnalyzer.RegisterExtensionAsync(typeof(DjangoAnalyzer))
+                .HandleAllExceptions(serviceProvider, GetType(), allowUI: false)
+                .DoNotWait();
         }
 
         private void AddCommand(OleMenuCommand menuItem) {

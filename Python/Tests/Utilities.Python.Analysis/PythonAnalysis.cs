@@ -48,7 +48,7 @@ namespace TestUtilities.Python {
             : this(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion())) { }
 
         private static IPythonInterpreterFactory TryFindFactory(string idOrDescription) {
-            var provider = new CPythonInterpreterFactoryProvider(watchRegistry: false);
+            var provider = new CPythonInterpreterFactoryProvider(null, watchRegistry: false);
             var factory = provider.GetInterpreterFactory(idOrDescription);
             if (factory == null) {
                 var config = provider.GetInterpreterConfigurations().FirstOrDefault(c => idOrDescription.Equals(c.Description, StringComparison.OrdinalIgnoreCase));
@@ -74,14 +74,13 @@ namespace TestUtilities.Python {
 
         public PythonAnalysis(
             IPythonInterpreterFactory factory,
-            IPythonInterpreter interpreter = null,
-            string builtinName = null
+            IPythonInterpreter interpreter = null
         ) {
             if (factory == null) {
                 Assert.Inconclusive("Expected interpreter is not installed");
             }
             _factory = factory;
-            _analyzer = PythonAnalyzer.CreateSynchronously(factory, interpreter, builtinName);
+            _analyzer = PythonAnalyzer.CreateSynchronously(factory, interpreter);
             _entries = new Dictionary<string, IPythonProjectEntry>(StringComparer.OrdinalIgnoreCase);
             _tasks = new ConcurrentDictionary<IPythonProjectEntry, TaskCompletionSource<CollectingErrorSink>>();
             _cachedMembers = new Dictionary<BuiltinTypeId, string[]>();
