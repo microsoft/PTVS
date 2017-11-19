@@ -84,9 +84,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             return SubstitutionPattern.Replace(
                 str,
-                m => {
-                    return environment.TryGetValue(m.Groups[1].Value, out string value) ? value : "";
-                }
+                m => environment.TryGetValue(m.Groups[1].Value, out string value) ? value : ""
             );
         }
 
@@ -113,8 +111,6 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static string GetLaunchJsonForVsCodeDebugAdapter(IServiceProvider provider, LaunchConfiguration config) {
-            bool nativeDebug = config.GetLaunchOption(PythonConstants.EnableNativeCodeDebugging).IsTrue();
-
             JArray envArray = new JArray();
             foreach (var kv in provider.GetPythonToolsService().GetFullEnvironment(config)) {
                 JObject pair = new JObject {
@@ -129,7 +125,7 @@ namespace Microsoft.PythonTools.Debugger {
                 ["curDir"] = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory,
                 ["remoteMachine"] = "",
                 ["args"] = GetArgs(config),
-                ["options"] = nativeDebug ? "" : GetOptions(provider, config),
+                ["options"] = GetOptions(provider, config),
                 ["env"] = envArray
             };
             
@@ -177,24 +173,22 @@ namespace Microsoft.PythonTools.Debugger {
 
                 dti.Info.bstrArg = GetArgs(config);
 
-                var engineGuid = ExperimentalOptions.UseVsCodeDebugger ?  DebugAdapterLauncher.VSCodeDebugEngine : AD7Engine.DebugEngineGuid;
-
                 if (nativeDebug) {
                     dti.Info.dwClsidCount = 2;
                     dti.Info.pClsidList = Marshal.AllocCoTaskMem(sizeof(Guid) * 2);
                     var engineGuids = (Guid*)dti.Info.pClsidList;
                     engineGuids[0] = dti.Info.clsidCustom = DkmEngineId.NativeEng;
-                    engineGuids[1] = engineGuid;
+                    engineGuids[1] = AD7Engine.DebugEngineGuid;
                 } else {
                     // Set the Python debugger
-                    dti.Info.clsidCustom = engineGuid;
+                    dti.Info.clsidCustom = ExperimentalOptions.UseVsCodeDebugger ? DebugAdapterLauncher.VSCodeDebugEngine : AD7Engine.DebugEngineGuid;
                     dti.Info.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd;
-                }
 
-                if (ExperimentalOptions.UseVsCodeDebugger) {
-                    dti.Info.bstrOptions = GetLaunchJsonForVsCodeDebugAdapter(provider, config);
+                    if (ExperimentalOptions.UseVsCodeDebugger) {
+                        dti.Info.bstrOptions = GetLaunchJsonForVsCodeDebugAdapter(provider, config);
+                    }
                 }
-
+                
                 // Null out dti so that it is not disposed before we return.
                 var result = dti;
                 dti = null;

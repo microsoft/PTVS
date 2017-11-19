@@ -26,13 +26,15 @@ namespace Microsoft.VisualStudioTools {
         private readonly string _adapterLauncherCLSID;
         private readonly string _languageName;
         private readonly string _languageId;
+        private readonly Type _adapterLauncherType;
 
-        public ProvideDebugAdapterAttribute(string name, string engineId, string adapterLauncherCLSID, string languageName, string languageId) {
+        public ProvideDebugAdapterAttribute(string name, string engineId, string adapterLauncherCLSID, string languageName, string languageId, Type adapterLauncherType) {
             _name = name;
             _engineId = engineId;
             _adapterLauncherCLSID = adapterLauncherCLSID;
             _languageName = languageName;
             _languageId = languageId;
+            _adapterLauncherType = adapterLauncherType;
         }
 
         public override void Register(RegistrationContext context)
@@ -100,7 +102,7 @@ namespace Microsoft.VisualStudioTools {
             /*
              * Path to the debug adapter executable
              */
-            engineKey.SetValue("Adapter", @"$PackageFolder$\DebugAdapter.exe");
+            // engineKey.SetValue("Adapter", @"$PackageFolder$\DebugAdapter.exe");
 
             /*
              * Arguments for the debug adapter executable (optional)
@@ -118,9 +120,11 @@ namespace Microsoft.VisualStudioTools {
              * Adapter launcher registration 
              */
             var adapterKey = context.CreateKey($"CLSID\\{_adapterLauncherCLSID}");
-            adapterKey.SetValue("Assembly", "Microsoft.PythonTools.Debugger");
-            adapterKey.SetValue("Class", "Microsoft.PythonTools.DebugAdapterLauncher");
-            adapterKey.SetValue("CodeBase", @"$PackageFolder$\Microsoft.PythonTools.Debugger.dll");
+            var assembly = _adapterLauncherType.Assembly.GetName().Name;
+            var className = _adapterLauncherType.FullName;
+            adapterKey.SetValue("Assembly", assembly);
+            adapterKey.SetValue("Class", className);
+            adapterKey.SetValue("CodeBase", $@"$PackageFolder$\{assembly}.dll");
         }
 
         public override void Unregister(RegistrationContext context) {

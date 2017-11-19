@@ -14,12 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.DkmDebugger;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost;
-using System.Diagnostics;
 
 namespace Microsoft.PythonTools
 {
@@ -36,8 +33,12 @@ namespace Microsoft.PythonTools
         }
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
-            string path = launchInfo.GetMetricString("Adapter");
-            return targetInterop.ExecuteCommandAsync(path, "");
+            string path = "DebugAdapter.exe";
+            // ITargetHostInterop provides a convenience wrapper to start the process
+            // return targetInterop.ExecuteCommandAsync(path, "");
+
+            // If you need more control use the DebugAdapterProcess
+            return DebugAdapterProcess.Start(path);
         }
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
         }
