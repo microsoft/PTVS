@@ -15,13 +15,19 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
+    class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
         public IronPythonInterpreterFactory(InterpreterArchitecture arch)
             : base(GetConfiguration(arch), GetCreationOptions(arch)) { }
+
+        private IronPythonInterpreterFactory(Dictionary<string, object> properties)
+            : base(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)){
+        }
 
         private static string GetInterpreterId(InterpreterArchitecture arch) {
             if (arch == InterpreterArchitecture.x64) {
@@ -62,6 +68,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             return new IronPythonInterpreter(factory);
+        }
+
+        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+            assembly = GetType().Assembly.Location;
+            typeName = GetType().FullName;
+            properties = Configuration.ToDictionary();
+            foreach (var kv in CreationOptions.ToDictionary()) {
+                properties[kv.Key] = kv.Value;
+            }
+            return true;
         }
     }
 }

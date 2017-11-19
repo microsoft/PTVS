@@ -70,15 +70,10 @@ namespace Microsoft.PythonTools.Interpreter {
             InterpreterConfiguration config,
             InterpreterFactoryCreationOptions options
         ) {
-            if (config == null) {
-                throw new ArgumentNullException(nameof(config));
-            }
-            if (options == null) {
-                options = new InterpreterFactoryCreationOptions();
-            }
-            Configuration = config;
+            Configuration = config ?? throw new ArgumentNullException(nameof(config));
+            CreationOptions = options ?? new InterpreterFactoryCreationOptions();
 
-            _databasePath = options.DatabasePath;
+            _databasePath = CreationOptions.DatabasePath;
 
             // Avoid creating a interpreter with an unsupported version.
             // https://github.com/Microsoft/PTVS/issues/706
@@ -88,7 +83,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new ArgumentException(ex.Message, ex);
             }
 
-            if (!GlobalInterpreterOptions.SuppressFileSystemWatchers && options.WatchFileSystem && !string.IsNullOrEmpty(DatabasePath)) {
+            if (!GlobalInterpreterOptions.SuppressFileSystemWatchers && CreationOptions.WatchFileSystem && !string.IsNullOrEmpty(DatabasePath)) {
                 // Assume the database is valid if the version is up to date, then
                 // switch to invalid after we've checked.
                 _isValid = PythonTypeDatabase.IsDatabaseVersionCurrent(DatabasePath);
@@ -113,7 +108,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (!GlobalInterpreterOptions.SuppressPackageManagers) {
                 try {
-                    var pm = options.PackageManager;
+                    var pm = CreationOptions.PackageManager;
                     if (pm != null) {
                         pm.SetInterpreterFactory(this);
                         pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
@@ -136,6 +131,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public InterpreterConfiguration Configuration { get; }
+
+        public InterpreterFactoryCreationOptions CreationOptions { get; }
 
         public IPackageManager PackageManager { get; }
 

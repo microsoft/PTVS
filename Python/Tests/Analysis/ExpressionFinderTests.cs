@@ -146,7 +146,7 @@ C().fff", GetExpressionOptions.Evaluate);
         [TestMethod]
         public void FindExpressionsForRename() {
             var code = Parse(@"class C(object):
-    def f(a):
+    def f(a, *b, **c = True):
         global a
         nonlocal a
         return a
@@ -166,6 +166,11 @@ b = C().f(1)
             AssertNoExpr(code, 2, 5);
             AssertExpr(code, 2, 9, 2, 10, "f");
             AssertExpr(code, 2, 11, "a");
+            AssertNoExpr(code, 2, 14);
+            AssertExpr(code, 2, 15, "b");
+            AssertNoExpr(code, 2, 19);
+            AssertExpr(code, 2, 20, "c");
+            AssertNoExpr(code, 2, 22);
 
             AssertNoExpr(code, 3, 15);
             AssertExpr(code, 3, 16, "a");
@@ -214,7 +219,10 @@ b = C().f(1)
             int start = ast.LocationToIndex(new SourceLocation(startLine, 1));
             int end = ast.LocationToIndex(new SourceLocation(endLine + 1, 1));
             var fullLine = code.Substring(start);
-            fullLine = fullLine.Remove("\r\n".Select(c => fullLine.LastIndexOf(c, end - start - 1)).Where(i => i > 0).Min());
+            int lastNewline = "\r\n".Select(c => fullLine.LastIndexOf(c, end - start - 1)).Where(i => i > 0).DefaultIfEmpty(-1).Min();
+            if (lastNewline > 0) {
+                fullLine = fullLine.Remove(lastNewline);
+            }
 
             var finder = new ExpressionFinder(ast, options);
             var range = new SourceSpan(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn));
@@ -241,7 +249,10 @@ b = C().f(1)
             int start = ast.LocationToIndex(new SourceLocation(startLine, 1));
             int end = ast.LocationToIndex(new SourceLocation(endLine + 1, 1));
             var fullLine = code.Substring(start);
-            fullLine = fullLine.Remove("\r\n".Select(c => fullLine.LastIndexOf(c, end - start - 1)).Where(i => i > 0).Min());
+            int lastNewline = "\r\n".Select(c => fullLine.LastIndexOf(c, end - start - 1)).Where(i => i > 0).DefaultIfEmpty(-1).Min();
+            if (lastNewline > 0) {
+                fullLine = fullLine.Remove(lastNewline);
+            }
 
             var finder = new ExpressionFinder(ast, options);
             var range = new SourceSpan(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn));

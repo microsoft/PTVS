@@ -16,8 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +26,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
@@ -51,18 +50,12 @@ namespace Microsoft.PythonTools.Intellisense {
     /// </summary>
     sealed class OutOfProcProjectAnalyzer : IDisposable {
         private readonly AnalysisQueue _analysisQueue;
-        private IPythonInterpreterFactory _interpreterFactory;
         private readonly ProjectEntryMap _projectFiles;
-        private PythonAnalyzer _pyAnalyzer;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
-        private InterpreterConfiguration[] _allConfigs;
-        private volatile Dictionary<string, AP.TaskPriority> _commentPriorityMap = new Dictionary<string, AP.TaskPriority>() {
-            { "TODO", AP.TaskPriority.normal },
-            { "HACK", AP.TaskPriority.high },
-        };
-        private AP.OptionsChangedEvent _options;
-        private readonly AggregateCatalog _catalog;
-        private readonly CompositionContainer _container;
+
+        private IPythonInterpreterFactory _interpreterFactory;
+        private PythonAnalyzer _pyAnalyzer;
+        private readonly Dictionary<string, IAnalysisExtension> _extensions;
         internal int _analysisPending;
 
         private bool _isDisposed;
@@ -71,8 +64,6 @@ namespace Microsoft.PythonTools.Intellisense {
         // different sources of items for the same file.
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
-        private readonly HashSet<IAnalysisExtension> _registeredExtensions = new HashSet<IAnalysisExtension>();
-        private readonly Dictionary<string, IAnalysisExtension> _extensionsByName = new Dictionary<string, IAnalysisExtension>();
 
         private readonly Connection _connection;
 
@@ -80,9 +71,10 @@ namespace Microsoft.PythonTools.Intellisense {
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
-            _options = new AP.OptionsChangedEvent() {
-                indentation_inconsistency_severity = Severity.Ignore
-            };
+
+            Options = new AP.AnalysisOptions();
+
+            _extensions = new Dictionary<string, IAnalysisExtension>();
 
             _projectFiles = new ProjectEntryMap();
             _connection = new Connection(
@@ -95,63 +87,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 "Analyzer"
             );
             _connection.EventReceived += ConectionReceivedEvent;
-
-            _catalog = new AggregateCatalog();
-            _container = new CompositionContainer(_catalog);
-            _container.ExportsChanged += ContainerExportsChanged;
         }
 
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
             _connection.Dispose();
         }
 
-        private void ContainerExportsChanged(object sender, ExportsChangeEventArgs e) {
-            // figure out the new extensions...
-            var extensions = _container.GetExports<IAnalysisExtension, IDictionary<string, object>>();
-            HashSet<IAnalysisExtension> newExtensions = new HashSet<IAnalysisExtension>();
-            lock (_registeredExtensions) {
-                foreach (var extension in extensions) {
-
-                    if (!_registeredExtensions.Contains(extension.Value)) {
-
-                        newExtensions.Add(extension.Value);
-                        if (extension.Metadata.ContainsKey("Name") && extension.Metadata["Name"] is string) {
-                            _extensionsByName[(string)extension.Metadata["Name"]] = extension.Value;
-                        } else {
-                            Console.Error.WriteLine("Extension {0} has no name, will not respond to commands", extension.Value);
-                        }
-                    }
-                }
-
-                _registeredExtensions.UnionWith(newExtensions);
-            }
-
-            if (_pyAnalyzer != null) {
-                // inform them of the analyzer...
-                foreach (var extension in newExtensions) {
-                    extension.Register(_pyAnalyzer);
-                }
-            }
-        }
-
         private void ConectionReceivedEvent(object sender, EventReceivedEventArgs e) {
             switch (e.Event.name) {
                 case AP.ModulesChangedEvent.Name: OnModulesChanged(this, EventArgs.Empty); break;
-                case AP.OptionsChangedEvent.Name: SetOptions((AP.OptionsChangedEvent)e.Event); break;
-                case AP.SetCommentTaskTokens.Name: _commentPriorityMap = ((AP.SetCommentTaskTokens)e.Event).tokens; break;
-                case AP.ExtensionAddedEvent.Name: AddExtension((AP.ExtensionAddedEvent)e.Event); break;
             }
-        }
-
-        private void AddExtension(AP.ExtensionAddedEvent extensionAdded) {
-            _catalog.Catalogs.Add(new AssemblyCatalog(extensionAdded.path));
-        }
-
-        private void SetOptions(AP.OptionsChangedEvent options) {
-            if (_pyAnalyzer != null) {
-                _pyAnalyzer.Limits.CrossModule = options.crossModuleAnalysisLimit;
-            }
-            _options = options;
         }
 
         private async Task RequestHandler(RequestArgs requestArgs, Func<Response, Task> done) {
@@ -198,9 +143,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.SetSearchPathRequest.Command: response = SetSearchPath((AP.SetSearchPathRequest)request); break;
                 case AP.ModuleImportsRequest.Command: response = GetModuleImports((AP.ModuleImportsRequest)request); break;
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
+                case AP.LoadExtensionRequest.Command: response = LoadExtensionRequest((AP.LoadExtensionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
-                case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.ExpressionAtPointRequest.Command: response = ExpressionAtPoint((AP.ExpressionAtPointRequest)request); break;
+                case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
+                case AP.SetAnalysisOptionsRequest.Command: response = SetAnalysisOptions((AP.SetAnalysisOptionsRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
                     throw new InvalidOperationException("Unknown command");
@@ -237,114 +184,119 @@ namespace Microsoft.PythonTools.Intellisense {
             throw new InvalidOperationException("Buffer was not valid in file " + _projectFiles[fileId]?.FilePath ?? "(null)");
         }
 
+        private IPythonInterpreterFactory LoadInterpreterFactory(AP.InterpreterInfo info) {
+            if (string.IsNullOrEmpty(info?.assembly) || string.IsNullOrEmpty(info?.typeName)) {
+                return null;
+            }
+
+            var assembly = File.Exists(info.assembly) ? AssemblyName.GetAssemblyName(info.assembly) : new AssemblyName(info.assembly);
+            var type = Assembly.Load(assembly).GetType(info.typeName, true);
+
+            return (IPythonInterpreterFactory)Activator.CreateInstance(
+                type,
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new object[] { info.properties },
+                CultureInfo.CurrentCulture
+            );
+        }
+
+        private IAnalysisExtension LoadAnalysisExtension(AP.LoadExtensionRequest info) {
+            if (string.IsNullOrEmpty(info?.assembly) || string.IsNullOrEmpty(info?.typeName)) {
+                return null;
+            }
+
+            var assembly = File.Exists(info.assembly) ? AssemblyName.GetAssemblyName(info.assembly) : new AssemblyName(info.assembly);
+            var type = Assembly.Load(assembly).GetType(info.typeName, true);
+
+            return (IAnalysisExtension)Activator.CreateInstance(
+                type,
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance,
+                null,
+                new object[0],
+                CultureInfo.CurrentCulture
+            );
+        }
+
         private async Task<Response> Initialize(AP.InitializeRequest request) {
-            List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
+            try {
+                var factory = LoadInterpreterFactory(request.interpreter);
 
-            HashSet<string> assemblies = new HashSet<string>(request.mefExtensions);
-            assemblies.Add(typeof(IInterpreterRegistryService).Assembly.Location);
-            assemblies.Add(GetType().Assembly.Location);
-
-            List<string> failures = new List<string>();
-            string error = null;
-            foreach (var asm in assemblies) {
-                try {
-                    var asmCatalog = new AssemblyCatalog(asm);
-                    _catalog.Catalogs.Add(asmCatalog);
-                } catch (Exception e) {
-                    failures.Add(String.Format("Failed to load {0}: {1}", asm, e));
-                }
-            }
-
-            if (request.projectFile != null) {
-                var projectContextProvider = _container.GetExportedValue<OutOfProcProjectContextProvider>();
-                projectContextProvider.AddContext(
-                    new InMemoryProject(
-                        request.projectFile,
-                        new Dictionary<string, object>() {
-                            { "InterpreterId", request.interpreterId },
-                            { "ProjectHome", request.projectHome },
-                            {  "Interpreters",
-                                request.derivedInterpreters.Select(
-                                    interp => new Dictionary<string, string>() {
-                                        { "EvaluatedInclude", interp.name },
-                                        { MSBuildConstants.IdKey,              interp.id },
-                                        { MSBuildConstants.VersionKey,         interp.version },
-                                        { MSBuildConstants.DescriptionKey,     interp.description },
-                                        { MSBuildConstants.BaseInterpreterKey, interp.baseInterpreter },
-                                        { MSBuildConstants.InterpreterPathKey, interp.path },
-                                        { MSBuildConstants.WindowsPathKey,     interp.windowsPath },
-                                        { MSBuildConstants.LibraryPathKey,     interp.libPath },
-                                        { MSBuildConstants.PathEnvVarKey,      interp.pathEnvVar },
-                                        { MSBuildConstants.ArchitectureKey,    interp.arch }
-                                    }
-                                ).ToArray()
-                            }
-                        }
-                    )
-                );
-            }
-
-            var registry = _container.GetExportedValue<IInterpreterRegistryService>();
-            IPythonInterpreterFactory factory = null;
-            Version analysisVersion;
-            if (request.interpreterId.StartsWith("AnalysisOnly|")) {
-                int versionStart = request.interpreterId.IndexOf('|') + 1;
-                int versionEnd = request.interpreterId.IndexOf('|', versionStart);
-
-                if (Version.TryParse(request.interpreterId.Substring(versionStart, versionEnd - versionStart), out analysisVersion)) {
-                    string[] dbDirs;
-                    if (versionEnd + 1 != request.interpreterId.Length) {
-                        dbDirs = request.interpreterId.Substring(versionEnd + 1).Split('|');
-                    } else {
-                        dbDirs = null;
+                if (factory == null) {
+                    if (_connection != null) {
+                        await _connection.SendEventAsync(
+                            new AP.AnalyzerWarningEvent("Using default interpreter")
+                        );
                     }
-                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(analysisVersion, null, dbDirs);
+                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version());
                 }
-            } else {
-                factory = registry.FindInterpreter(request.interpreterId);
+
+                _interpreterFactory = factory;
+
+                var interpreter = factory.CreateInterpreter();
+                if (interpreter == null) {
+                    throw new InvalidOperationException("Failed to create interpreter");
+                }
+                _pyAnalyzer = await PythonAnalyzer.CreateAsync(factory, interpreter);
+            } catch (Exception ex) {
+                return new AP.InitializeResponse {
+                    error = ex.Message,
+                    fullError = ex.ToString()
+                };
             }
 
-            if (factory == null) {
-                if (_connection != null) {
-                    await _connection.SendEventAsync(
-                        new AP.AnalyzerWarningEvent(string.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId))
-                    );
-                }
-                var db = PythonTypeDatabase.CreateDefaultTypeDatabase();
-                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(db.LanguageVersion, db);
-            }
+            return new AP.InitializeResponse();
+        }
 
-            _interpreterFactory = factory;
-            _allConfigs = registry.Configurations.ToArray();
+        private Response LoadExtensionRequest(AP.LoadExtensionRequest request) {
+            IAnalysisExtension extension, oldExtension;
+
+            if (_pyAnalyzer == null) {
+                return new AP.LoadExtensionResponse {
+                    error = "Uninitialized analyzer",
+                    fullError = $"Uninitialized analyzer{Environment.NewLine}{new StackTrace()}"
+                };
+            }
 
             try {
-                var interpreter = factory.CreateInterpreter();
-                if (interpreter != null) {
-                    _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                    await _pyAnalyzer.ReloadModulesAsync();
-                    interpreter.ModuleNamesChanged += OnModulesChanged;
-                }
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                error = ex.ToString();
+                extension = LoadAnalysisExtension(request);
+                extension.Register(_pyAnalyzer);
+            } catch (Exception ex) {
+                return new AP.LoadExtensionResponse {
+                    error = ex.Message,
+                    fullError = ex.ToString()
+                };
             }
 
-            return new AP.InitializeResponse() {
-                failedLoads = failures.ToArray(),
-                error = error
-            };
+            lock (_extensions) {
+                if (_extensions.TryGetValue(request.extension, out oldExtension)) {
+                    (oldExtension as IDisposable)?.Dispose();
+                }
+                _extensions[request.extension] = extension;
+            }
+
+            return new AP.LoadExtensionResponse();
         }
 
         private Response ExtensionRequest(AP.ExtensionRequest request) {
             IAnalysisExtension extension;
-            lock (_registeredExtensions) {
-                if (!_extensionsByName.TryGetValue(request.extension, out extension)) {
-                    throw new InvalidOperationException("Unknown extension: " + request.extension);
+            lock (_extensions) {
+                if (!_extensions.TryGetValue(request.extension, out extension)) {
+                    return new AP.ExtensionResponse {
+                        error = $"Unknown extension: {request.extension}"
+                    };
                 }
             }
 
-            return new AP.ExtensionResponse() {
-                response = extension.HandleCommand(request.commandId, request.body)
-            };
+            try {
+                return new AP.ExtensionResponse {
+                    response = extension.HandleCommand(request.commandId, request.body)
+                };
+            } catch (Exception ex) {
+                return new AP.ExtensionResponse {
+                    error = ex.ToString()
+                };
+            }
         }
 
         private Response GetValueDescriptions(AP.ValueDescriptionRequest request) {
@@ -1860,11 +1812,15 @@ namespace Microsoft.PythonTools.Intellisense {
             return _connection.ProcessMessages();
         }
 
-        public AP.OptionsChangedEvent Options {
-            get {
-                return _options;
-            }
+        private Response SetAnalysisOptions(AP.SetAnalysisOptionsRequest request) {
+            Options = request.options ?? new AP.AnalysisOptions();
+
+            _pyAnalyzer.Limits = new AnalysisLimits(Options.analysisLimits);
+
+            return new Response();
         }
+
+        public AP.AnalysisOptions Options { get; set; }
 
         private async void AnalysisQueue_Complete(object sender, EventArgs e) {
             if (_connection == null) {
@@ -1885,16 +1841,6 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var entry in _pyAnalyzer.ModulesByFilename) {
                 _analysisQueue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
             }
-        }
-
-        private bool ShouldAnalyzePath(string path) {
-            foreach (var config in _allConfigs) {
-                if (PathUtils.IsValidPath(config.InterpreterPath) &&
-                    PathUtils.IsSubpathOf(Path.GetDirectoryName(config.InterpreterPath), path)) {
-                    return false;
-                }
-            }
-            return true;
         }
 
         private IProjectEntry AddNewFile(string path, string addingFromDirectory, out int fileId) {
@@ -2239,10 +2185,13 @@ namespace Microsoft.PythonTools.Intellisense {
         private ParserOptions MakeParserOptions(CollectingErrorSink errorSink, List<AP.TaskItem> tasks) {
             var options = new ParserOptions {
                 ErrorSink = errorSink,
-                IndentationInconsistencySeverity = _options.indentation_inconsistency_severity,
+                IndentationInconsistencySeverity = Options.indentationInconsistencySeverity,
                 BindReferences = true
             };
-            options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text);
+            var commentMap = Options.commentTokens;
+            if (commentMap != null) {
+                options.ProcessComment += (sender, e) => ProcessComment(tasks, e.Span, e.Text, commentMap);
+            }
             return options;
         }
 
@@ -2263,27 +2212,25 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         // Tokenizer callback. Extracts comment tasks (like "TODO" or "HACK") from comments.
-        private void ProcessComment(List<AP.TaskItem> commentTasks, SourceSpan span, string text) {
-            if (text.Length > 0) {
-                var tokens = _commentPriorityMap;
-                if (tokens != null) {
-                    foreach (var kv in tokens) {
-                        if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
-                            commentTasks.Add(
-                                new AP.TaskItem() {
-                                    message = text.Substring(1).Trim(),
-                                    startLine = span.Start.Line,
-                                    startColumn = span.Start.Column,
-                                    endLine = span.End.Line,
-                                    endColumn = span.End.Column,
-                                    length = text.Length,
-                                    priority = kv.Value,
-                                    category = AP.TaskCategory.comments,
-                                    squiggle = false
-                                }
-                            );
+        private void ProcessComment(List<AP.TaskItem> commentTasks, SourceSpan span, string text, Dictionary<string, AP.TaskPriority> commentMap) {
+            if (string.IsNullOrEmpty(text) || commentMap == null) {
+                return;
+            }
+            foreach (var kv in commentMap) {
+                if (text.IndexOf(kv.Key, StringComparison.OrdinalIgnoreCase) >= 0) {
+                    commentTasks.Add(
+                        new AP.TaskItem() {
+                            message = text.TrimStart('#').Trim(),
+                            startLine = span.Start.Line,
+                            startColumn = span.Start.Column,
+                            endLine = span.End.Line,
+                            endColumn = span.End.Column,
+                            length = text.Length,
+                            priority = kv.Value,
+                            category = AP.TaskCategory.comments,
+                            squiggle = false
                         }
-                    }
+                    );
                 }
             }
         }
@@ -2397,10 +2344,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 _pyAnalyzer.Dispose();
             }
 
+            lock (_extensions) {
+                foreach (var extension in _extensions.Values) {
+                    (extension as IDisposable)?.Dispose();
+                }
+            }
+
             _queueActivityEvent.Dispose();
             _connection.Dispose();
-            _container.Dispose();
-            _catalog.Dispose();
         }
 
         #endregion

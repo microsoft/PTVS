@@ -725,6 +725,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Function]);
         }
 
+        public override bool Equals(object obj) {
+            if (obj is FunctionInfo fi) {
+                return fi.FunctionDefinition == FunctionDefinition;
+            }
+            return false;
+        }
+
+        public override int GetHashCode() => FunctionDefinition.GetHashCode();
+
         internal override bool UnionEquals(AnalysisValue av, int strength) {
             if (strength >= MergeStrength.ToObject) {
                 return av is FunctionInfo || av is BuiltinFunctionInfo || av == ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;

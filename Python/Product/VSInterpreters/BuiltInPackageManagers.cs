@@ -26,5 +26,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// the -X:Frames option
         /// </summary>
         public static IPackageManager PipXFrames => new PipPackageManager(extraInterpreterArgs: new[] { "-E", "-X:Frames" });
+
+        /// <summary>
+        /// Gets an instance of a package manager based on conda.
+        /// </summary>
+        public static IPackageManager Conda => ExperimentalOptions.UseCondaPackageManager ? new CondaPackageManager() : Pip;
     }
 }

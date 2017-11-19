@@ -27,5 +27,11 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     interface ILocationResolver {
         LocationInfo ResolveLocation(object location);
+
+        /// <summary>
+        /// Returns an alternate resolver, or <c>null</c> if this is the
+        /// best resolver to use.
+        /// </summary>
+        ILocationResolver GetAlternateResolver();
     }
 }

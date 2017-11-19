@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -32,6 +33,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static AnalysisLimits GetStandardLibraryLimits() {
             var limits = new AnalysisLimits();
+            limits.CrossModule = 0;
             limits.CallDepth = 2;
             limits.DecreaseCallDepth = 20;
             limits.NormalArgumentTypes = 10;
@@ -49,6 +51,7 @@ namespace Microsoft.PythonTools.Analysis {
             return limits;
         }
 
+        private const string CrossModuleId = "CrossModule";
         private const string CallDepthId = "CallDepth";
         private const string DecreaseCallDepthId = "DecreaseCallDepth";
         private const string NormalArgumentTypesId = "NormalArgumentTypes";
@@ -81,6 +84,7 @@ namespace Microsoft.PythonTools.Analysis {
             var limits = defaultToStdLib ? GetStandardLibraryLimits() : new AnalysisLimits();
 
             if (key != null) {
+                limits.CrossModule = (key.GetValue(CrossModuleId) as int?) ?? limits.CrossModule;
                 limits.CallDepth = (key.GetValue(CallDepthId) as int?) ?? limits.CallDepth;
                 limits.DecreaseCallDepth = (key.GetValue(DecreaseCallDepthId) as int?) ?? limits.DecreaseCallDepth;
                 limits.NormalArgumentTypes = (key.GetValue(NormalArgumentTypesId) as int?) ?? limits.NormalArgumentTypes;
@@ -104,6 +108,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Saves the current instance's settings to the specified registry key.
         /// </summary>
         public void SaveToStorage(RegistryKey key) {
+            key.SetValue(CrossModuleId, CrossModule, RegistryValueKind.DWord);
             key.SetValue(CallDepthId, CallDepth, RegistryValueKind.DWord);
             key.SetValue(DecreaseCallDepthId, DecreaseCallDepth, RegistryValueKind.DWord);
             key.SetValue(NormalArgumentTypesId, NormalArgumentTypes, RegistryValueKind.DWord);
@@ -127,6 +132,7 @@ namespace Microsoft.PythonTools.Analysis {
         public static readonly object CallDepthKey = new object();
 
         public AnalysisLimits() {
+            CrossModule = 0;
             CallDepth = 3;
             DecreaseCallDepth = 30;
             NormalArgumentTypes = 50;
@@ -139,18 +145,58 @@ namespace Microsoft.PythonTools.Analysis {
             DictValueTypes = 30;
             IndexTypes = 30;
             AssignedTypes = 100;
+            UnifyCallsToNew = true;
             ProcessCustomDecorators = true;
+        }
+
+        public AnalysisLimits(Dictionary<string, int> limits) : this() {
+            int i;
+            if (limits.TryGetValue(CrossModuleId, out i)) CrossModule = i;
+            if (limits.TryGetValue(CallDepthId, out i)) CallDepth = i;
+            if (limits.TryGetValue(DecreaseCallDepthId, out i)) DecreaseCallDepth = i;
+            if (limits.TryGetValue(NormalArgumentTypesId, out i)) NormalArgumentTypes = i;
+            if (limits.TryGetValue(ListArgumentTypesId, out i)) ListArgumentTypes = i;
+            if (limits.TryGetValue(DictArgumentTypesId, out i)) DictArgumentTypes = i;
+            if (limits.TryGetValue(ReturnTypesId, out i)) ReturnTypes = i;
+            if (limits.TryGetValue(YieldTypesId, out i)) YieldTypes = i;
+            if (limits.TryGetValue(InstanceMembersId, out i)) InstanceMembers = i;
+            if (limits.TryGetValue(DictKeyTypesId, out i)) DictKeyTypes = i;
+            if (limits.TryGetValue(DictValueTypesId, out i)) DictValueTypes = i;
+            if (limits.TryGetValue(IndexTypesId, out i)) IndexTypes = i;
+            if (limits.TryGetValue(AssignedTypesId, out i)) AssignedTypes = i;
+            if (limits.TryGetValue(UnifyCallsToNewId, out i)) UnifyCallsToNew = i != 0;
+            if (limits.TryGetValue(ProcessCustomDecoratorsId, out i)) ProcessCustomDecorators = i != 0;
+        }
+
+        public Dictionary<string, int> ToDictionary() {
+            return new Dictionary<string, int> {
+                { CrossModuleId, CrossModule },
+                { CallDepthId, CallDepth },
+                { DecreaseCallDepthId, DecreaseCallDepth },
+                { NormalArgumentTypesId, NormalArgumentTypes },
+                { ListArgumentTypesId, ListArgumentTypes },
+                { DictArgumentTypesId, DictArgumentTypes },
+                { ReturnTypesId, ReturnTypes },
+                { YieldTypesId, YieldTypes },
+                { InstanceMembersId, InstanceMembers },
+                { DictKeyTypesId, DictKeyTypes },
+                { DictValueTypesId, DictValueTypes },
+                { IndexTypesId, IndexTypes },
+                { AssignedTypesId, AssignedTypes },
+                { UnifyCallsToNewId, UnifyCallsToNew ? 1 : 0 },
+                { ProcessCustomDecoratorsId, ProcessCustomDecorators ? 1 : 0 },
+            };
         }
 
         /// <summary>
         /// The maximum number of files which will be used for cross module
         /// analysis.
         /// 
-        /// If null, cross module analysis will not be limited. Otherwise, a
-        /// value will cause cross module analysis to be disabled after that
-        /// number of files have been loaded.
+        /// If less than zero, cross module analysis will not be limited.
+        /// Otherwise, cross module analysis will be disabled after the
+        /// specified number of files have been loaded.
         /// </summary>
-        public int? CrossModule { get; set; }
+        public int CrossModule { get; set; }
 
         /// <summary>
         /// The initial call stack depth to compare for reusing function

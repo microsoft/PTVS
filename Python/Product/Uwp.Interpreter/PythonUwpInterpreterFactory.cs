@@ -15,11 +15,12 @@
 // permissions and limitations under the License.
 
 using Microsoft.PythonTools.Interpreter;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
-    class PythonUwpInterpreterFactory : PythonInterpreterFactoryWithDatabase {
-        private static readonly InterpreterFactoryCreationOptions CreationOptions = new InterpreterFactoryCreationOptions {
+    class PythonUwpInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
+        private static readonly InterpreterFactoryCreationOptions DefaultCreationOptions = new InterpreterFactoryCreationOptions {
             PackageManager = BuiltInPackageManagers.Pip,
             WatchFileSystem = true
         };
@@ -31,6 +32,19 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                 WatchFileSystem = true
             }) {
         }
+
+        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
+            assembly = GetType().Assembly.Location;
+            typeName = GetType().FullName;
+            properties = Configuration.ToDictionary();
+            foreach (var kv in CreationOptions.ToDictionary()) {
+                properties[kv.Key] = kv.Value;
+            }
+            return true;
+        }
+
+        PythonUwpInterpreterFactory(Dictionary<string, object> properties)
+            : base(InterpreterConfiguration.FromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties)) { }
 
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             return new PythonUwpInterpreter(factory);

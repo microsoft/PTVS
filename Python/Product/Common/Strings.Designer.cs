@@ -693,6 +693,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Conda.
+        /// </summary>
+        public static string CondaDefaultIndexName {
+            get {
+                return ResourceManager.GetString("CondaDefaultIndexName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to conda install {0} from Conda.
+        /// </summary>
+        public static string CondaExtensionCondaInstallFrom {
+            get {
+                return ResourceManager.GetString("CondaExtensionCondaInstallFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Packages (Conda).
+        /// </summary>
+        public static string CondaExtensionDisplayName {
+            get {
+                return ResourceManager.GetString("CondaExtensionDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search Conda and installed packages.
+        /// </summary>
+        public static string CondaExtensionSearchCondaLabel {
+            get {
+                return ResourceManager.GetString("CondaExtensionSearchCondaLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot create thread in debuggee process.
         /// </summary>
         public static string ConnErrorMessages_CannotInjectThread {
@@ -3574,6 +3610,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PyPI.
+        /// </summary>
+        public static string PipDefaultIndexName {
+            get {
+                return ResourceManager.GetString("PipDefaultIndexName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Packages (PyPI).
+        /// </summary>
+        public static string PipExtensionDisplayName {
+            get {
+                return ResourceManager.GetString("PipExtensionDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to pip install {0} from PyPI.
+        /// </summary>
+        public static string PipExtensionPipInstallFrom {
+            get {
+                return ResourceManager.GetString("PipExtensionPipInstallFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search PyPI and installed packages.
+        /// </summary>
+        public static string PipExtensionSearchPyPILabel {
+            get {
+                return ResourceManager.GetString("PipExtensionSearchPyPILabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;pip&apos; failed to install. Exit code: {0}.
         /// </summary>
         public static string PipInstallFailedExitCode {
@@ -4277,6 +4349,15 @@ namespace Microsoft.PythonTools {
         public static string RenameVariable_UnableGetAnalysisCurrentTextView {
             get {
                 return ResourceManager.GetString("RenameVariable_UnableGetAnalysisCurrentTextView", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get analysis for the selected expression..
+        /// </summary>
+        public static string RenameVariable_UnableGetExpressionAnalysis {
+            get {
+                return ResourceManager.GetString("RenameVariable_UnableGetExpressionAnalysis", resourceCulture);
             }
         }
         

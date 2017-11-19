@@ -183,5 +183,12 @@ namespace TestUtilities.Python {
             }
             return null;
         }
+
+        public void GetSerializationInfo(IPythonInterpreterFactory factory, out string assembly, out string typeName, out Dictionary<string, object> properties) {
+            var f = (ICustomInterpreterSerialization)((factory as MockPythonInterpreterFactory) ?? new MockPythonInterpreterFactory(factory.Configuration));
+            if (!f.GetSerializationInfo(out assembly, out typeName, out properties)) {
+                throw new InvalidOperationException($"Failed to serialize {factory.Configuration.Id}");
+            }
+        }
     }
 }

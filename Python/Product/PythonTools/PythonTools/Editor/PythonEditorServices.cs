@@ -17,6 +17,7 @@
 using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -92,6 +93,9 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         private Lazy<AnalysisEntryService> _analysisEntryService = null;
         public AnalysisEntryService AnalysisEntryService => _analysisEntryService.Value;
+
+        [Import]
+        public IInterpreterRegistryService InterpreterRegistryService;
 
         [Import]
         private Lazy<IVsEditorAdaptersFactoryService> _editorAdaptersFactoryService = null;

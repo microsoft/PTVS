@@ -25,14 +25,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// <summary>
         /// Position of the parameter: 0-based index
         /// </summary>
-        private readonly string/*!*/ _name;
+        private readonly NameExpression _name;
         internal readonly ParameterKind _kind;
         internal Expression _defaultValue, _annotation;
 
         internal static readonly object WhitespacePrecedingAssign = new object();
 
-        public Parameter(string name, ParameterKind kind) {
-            _name = name ?? "";
+        public Parameter(NameExpression name, ParameterKind kind) {
+            _name = name;
             _kind = kind;
         }
 
@@ -45,9 +45,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// <summary>
         /// Parameter name
         /// </summary>
-        public string/*!*/ Name {
-            get { return _name; }
-        }
+        public virtual string/*!*/ Name => _name?.Name ?? "";
+
+        public NameExpression NameExpression => _name;
+        internal IndexSpan NameSpan => _name?.IndexSpan ?? IndexSpan;
 
         public Expression DefaultValue {
             get { return _defaultValue; }
@@ -115,6 +116,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             AppendCodeString(res, ast, format, null);
         }
 
+        internal virtual void AppendParameterName(StringBuilder res, PythonAst ast, CodeFormattingOptions format, string leadingWhiteSpace) {
+            _name?.AppendCodeString(res, ast, format, leadingWhiteSpace);
+        }
+
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, string leadingWhiteSpace) {
             string kwOnlyText = this.GetExtraVerbatimText(ast);
             if (kwOnlyText != null) {
@@ -126,43 +131,45 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     res.Append(kwOnlyText);
                 }
             }
+
+            bool writeName = true;
             switch (Kind) {
                 case ParameterKind.Dictionary:
-                    res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpace(ast));
+                    res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpaceDefaultNull(ast) ?? "");
+                    leadingWhiteSpace = null;
                     res.Append("**");
-                    res.Append(this.GetSecondWhiteSpace(ast));
-                    res.Append(this.GetVerbatimImage(ast) ?? _name);
-                    AppendAnnotation(res, ast, format);
                     break;
                 case ParameterKind.List:
-                    res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpace(ast));
+                    res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpaceDefaultNull(ast) ?? "");
+                    leadingWhiteSpace = null;
                     res.Append('*');
-                    res.Append(this.GetSecondWhiteSpace(ast));
-                    res.Append(this.GetVerbatimImage(ast) ?? _name);
-                    AppendAnnotation(res, ast, format);
                     break;
                 case ParameterKind.Normal:
                     if (this.IsAltForm(ast)) {
-                        res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpace(ast));
+                        res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpaceDefaultNull(ast) ?? "");
+                        leadingWhiteSpace = null;
                         res.Append('(');
-                        res.Append(this.GetThirdWhiteSpace(ast));
-                        res.Append(this.GetVerbatimImage(ast) ?? _name);
+                        AppendParameterName(res, ast, format, leadingWhiteSpace);
                         if (!this.IsMissingCloseGrouping(ast)) {
                             res.Append(this.GetSecondWhiteSpace(ast));
                             res.Append(')');
                         }
-                    } else {
-                        res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpaceDefaultNull(ast));
-                        res.Append(this.GetVerbatimImage(ast) ?? _name);
-                        AppendAnnotation(res, ast, format);
+                        writeName = false;
                     }
                     break;
                 case ParameterKind.KeywordOnly:
-                    res.Append(leadingWhiteSpace ?? this.GetPreceedingWhiteSpace(ast));
-                    res.Append(this.GetVerbatimImage(ast) ?? _name);
-                    AppendAnnotation(res, ast, format);
                     break;
                 default: throw new InvalidOperationException();
+            }
+
+            if (writeName) {
+                AppendParameterName(res, ast, format, leadingWhiteSpace);
+            }
+
+            if (_annotation != null) {
+                res.Append(this.GetThirdWhiteSpaceDefaultNull(ast) ?? "");
+                res.Append(':');
+                _annotation.AppendCodeString(res, ast, format);
             }
 
             if (_defaultValue != null) {
@@ -180,14 +187,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 } else {
                     _defaultValue.AppendCodeString(res, ast, format);
                 }
-            }
-        }
-
-        private void AppendAnnotation(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            if (_annotation != null) {
-                res.Append(this.GetThirdWhiteSpace(ast));
-                res.Append(':');
-                _annotation.AppendCodeString(res, ast, format);
             }
         }
     }

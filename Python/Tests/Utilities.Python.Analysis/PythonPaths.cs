@@ -196,6 +196,15 @@ namespace TestUtilities {
             return null;
         }
 
+        public static IEnumerable<PythonVersion> AnacondaVersions {
+            get {
+                if (Anaconda36 != null) yield return Anaconda36;
+                if (Anaconda36_x64 != null) yield return Anaconda36_x64;
+                if (Anaconda27 != null) yield return Anaconda27;
+                if (Anaconda27_x64 != null) yield return Anaconda27_x64;
+            }
+        }
+
         public static IEnumerable<PythonVersion> Versions {
             get {
                 if (Python26 != null) yield return Python26;

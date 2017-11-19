@@ -214,10 +214,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
                 _analyzer = _project.Analyzer;
                 if (_analyzer != null) {
-                    _analyzer.RegisterExtension(typeof(TestAnalyzer).Assembly.Location);
                     _analyzer.AnalysisComplete += AnalysisComplete;
-
-                    await UpdateTestCasesAsync(_analyzer.Files, false);
+                    await _analyzer.RegisterExtensionAsync(typeof(TestAnalyzer)).ConfigureAwait(false);
+                    await UpdateTestCasesAsync(_analyzer.Files, false).ConfigureAwait(false);
                 }
             }
 

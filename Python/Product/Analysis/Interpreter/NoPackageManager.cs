@@ -28,10 +28,20 @@ namespace Microsoft.PythonTools.Interpreter {
         public bool IsReady => true;
         public IPythonInterpreterFactory Factory => null;
 
+        public string ExtensionDisplayName => string.Empty;
+
+        public string IndexDisplayName => string.Empty;
+
+        public string SearchHelpText => throw new NotImplementedException();
+
         public event EventHandler InstalledFilesChanged { add { } remove { } }
         public event EventHandler InstalledPackagesChanged { add { } remove { } }
 
         public event EventHandler IsReadyChanged { add { } remove { } }
+
+        public bool CanUninstall(PackageSpec package) {
+            return true;
+        }
 
         public Task<PackageSpec> GetInstalledPackageAsync(string name, CancellationToken cancellationToken) {
             return Task.FromResult(new PackageSpec());
@@ -79,6 +89,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public Task<PackageSpec> GetInstallablePackageAsync(PackageSpec package, CancellationToken cancellationToken) {
             return Task.FromResult(new PackageSpec());
+        }
+
+        public string GetInstallCommandDisplayName(string searchQuery) {
+            return string.Empty;
         }
     }
 }
