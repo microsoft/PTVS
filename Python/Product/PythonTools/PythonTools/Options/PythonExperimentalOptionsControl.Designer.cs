@@ -43,22 +43,24 @@ namespace Microsoft.PythonTools.Options {
             // tableLayoutPanel2
             // 
             resources.ApplyResources(this.tableLayoutPanel2, "tableLayoutPanel2");
+            this.tableLayoutPanel2.Controls.Add(this._noDatabaseFactory, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._condaEnvironments, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this._condaPackageManager, 0, 2);
-            this.tableLayoutPanel2.Controls.Add(this._noDatabaseFactory, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this._mustRestartLabel, 0, 5);
             this.tableLayoutPanel2.Controls.Add(this._useVsCodeDebugger, 0, 3);
+            this.tableLayoutPanel2.Controls.Add(this._mustRestartLabel, 0, 5);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
             // _condaEnvironments
             // 
             resources.ApplyResources(this._condaEnvironments, "_condaEnvironments");
+            this._condaEnvironments.AutoEllipsis = true;
             this._condaEnvironments.Name = "_condaEnvironments";
             this._condaEnvironments.UseVisualStyleBackColor = true;
             // 
             // _condaPackageManager
             // 
             resources.ApplyResources(this._condaPackageManager, "_condaPackageManager");
+            this._condaPackageManager.AutoEllipsis = true;
             this._condaPackageManager.Name = "_condaPackageManager";
             this._condaPackageManager.UseVisualStyleBackColor = true;
             // 
@@ -70,6 +72,7 @@ namespace Microsoft.PythonTools.Options {
             // _useVsCodeDebugger
             // 
             resources.ApplyResources(this._useVsCodeDebugger, "_useVsCodeDebugger");
+            this._useVsCodeDebugger.AutoEllipsis = true;
             this._useVsCodeDebugger.Name = "_useVsCodeDebugger";
             this._useVsCodeDebugger.UseVisualStyleBackColor = true;
             // 

@@ -181,7 +181,7 @@
     <value>221, 17</value>
   </data>
   <data name="_condaEnvironments.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="_condaEnvironments.Text" xml:space="preserve">
     <value>Automatically detect Conda &amp;environments</value>
@@ -250,7 +250,7 @@
     <value>320, 13</value>
   </data>
   <data name="_mustRestartLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="_mustRestartLabel.Text" xml:space="preserve">
     <value>You will need to restart Visual Studio after modifying these settings.</value>
@@ -283,7 +283,7 @@
     <value>135, 17</value>
   </data>
   <data name="_useVsCodeDebugger.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="_useVsCodeDebugger.Text" xml:space="preserve">
     <value>Use VSCode &amp;debugger</value>

@@ -264,6 +264,7 @@
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
+    <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttrributes.cs" />
     <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
     <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />
     <Compile Include="PythonTools\Editor\PythonTextBufferInfo.cs" />
@@ -692,7 +693,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPage.cs" />
-    <Compile Include="SharedProject\Debugger\ProvideDebugAdapterAttribute.cs" />
     <Compile Include="VsCredentials.cs" />
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
     <Compile Include="PythonTools\Commands\ShowNativePythonFrames.cs" />
@@ -955,6 +955,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonExperimentalOptionsControl.resx">
       <DependentUpon>PythonExperimentalOptionsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonDiagnosticsOptionsControl.resx">
       <DependentUpon>PythonDiagnosticsOptionsControl.cs</DependentUpon>

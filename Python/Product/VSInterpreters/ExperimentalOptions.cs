@@ -27,12 +27,12 @@ namespace Microsoft.PythonTools.Interpreter {
         internal static readonly Lazy<bool> _noDatabaseFactory = new Lazy<bool>(GetNoDatabaseFactory);
         internal static readonly Lazy<bool> _autoDetectCondaEnvironments = new Lazy<bool>(GetAutoDetectCondaEnvironments);
         internal static readonly Lazy<bool> _useCondaPackageManager = new Lazy<bool>(GetUseCondaPackageManager);
-        internal static readonly Lazy<bool> _useVsCodeDebugger = new Lazy<bool>(GetUseNewPtvsDebugger);
+        internal static readonly Lazy<bool> _useVsCodeDebugger = new Lazy<bool>(GetUseVsCodeDebugger);
 
         public static bool GetNoDatabaseFactory() => GetBooleanFlag(NoDatabaseFactoryKey, defaultVal: true);
         public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: false);
         public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: false);
-        public static bool GetUseNewPtvsDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: false);
+        public static bool GetUseVsCodeDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: false);
 
         private static bool GetBooleanFlag(string keyName, bool defaultVal) {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {

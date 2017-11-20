@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Debugger {
                 ["env"] = envArray
             };
             
-            // Note: these are optional, but sepcial. These override the pkgdef version of the adapter settings
+            // Note: these are optional, but special. These override the pkgdef version of the adapter settings
             // for other settings see the documentation for VSCodeDebugAdapterHost Launch Configuration
             // jsonObj["$adapter"] = "{path - to - adapter executable}";
             // jsonObj["$adapterArgs"] = "";

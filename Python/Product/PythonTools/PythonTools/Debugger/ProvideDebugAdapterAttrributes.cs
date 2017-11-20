@@ -37,8 +37,7 @@ namespace Microsoft.VisualStudioTools {
             _adapterLauncherType = adapterLauncherType;
         }
 
-        public override void Register(RegistrationContext context)
-        {
+        public override void Register(RegistrationContext context) {
             var engineKey = context.CreateKey("AD7Metrics\\Engine\\" + _engineId);
 
 

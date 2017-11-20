@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Options {
         public bool UseCondaPackageManager { get; set; }
 
         /// <summary>
-        /// True to use new Ptvs debugger built to run on VS Code Debug Adapter Host
+        /// True to use a debugger built to run on VS Code Debug Adapter Host
         /// </summary>
         public bool UseVsCodeDebugger { get; set; }
 

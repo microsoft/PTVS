@@ -18,8 +18,7 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost;
 
-namespace Microsoft.PythonTools
-{
+namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]
     [Guid("C2990BF1-A87B-4459-9478-322482C535D6")]
     public sealed class DebugAdapterLauncher : IAdapterLauncher {

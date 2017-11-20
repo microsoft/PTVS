@@ -19,7 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools.Debugger {
     public sealed class DebugAdapterProcess : ITargetHostProcess {
         private readonly Process _process;
         private DebugAdapterProcess(ProcessStartInfo psi) {
