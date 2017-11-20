@@ -23,13 +23,16 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string NoDatabaseFactoryKey = "NoDatabaseFactory";
         internal const string AutoDetectCondaEnvironmentsKey = "AutoDetectCondaEnvironments";
         internal const string UseCondaPackageManagerKey = "UseCondaPackageManager";
+        internal const string UseVsCodeDebuggerKey = "UseVsCodeDebugger";
         internal static readonly Lazy<bool> _noDatabaseFactory = new Lazy<bool>(GetNoDatabaseFactory);
         internal static readonly Lazy<bool> _autoDetectCondaEnvironments = new Lazy<bool>(GetAutoDetectCondaEnvironments);
         internal static readonly Lazy<bool> _useCondaPackageManager = new Lazy<bool>(GetUseCondaPackageManager);
+        internal static readonly Lazy<bool> _useVsCodeDebugger = new Lazy<bool>(GetUseVsCodeDebugger);
 
         public static bool GetNoDatabaseFactory() => GetBooleanFlag(NoDatabaseFactoryKey, defaultVal: true);
         public static bool GetAutoDetectCondaEnvironments() => GetBooleanFlag(AutoDetectCondaEnvironmentsKey, defaultVal: false);
         public static bool GetUseCondaPackageManager() => GetBooleanFlag(UseCondaPackageManagerKey, defaultVal: false);
+        public static bool GetUseVsCodeDebugger() => GetBooleanFlag(UseVsCodeDebuggerKey, defaultVal: false);
 
         private static bool GetBooleanFlag(string keyName, bool defaultVal) {
             using (var root = Registry.CurrentUser.OpenSubKey(ExperimentSubkey, false)) {
@@ -56,11 +59,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (root == null) {
                     throw new UnauthorizedAccessException();
                 }
-                if (value) {
-                    root.SetValue(keyName, 1);
-                } else {
-                    root.SetValue(keyName, 0);
-                }
+                root.SetValue(keyName, (value ? 1 : 0));
             }
         }
 
@@ -72,30 +71,23 @@ namespace Microsoft.PythonTools.Interpreter {
         /// cannot be modified while running.
         /// </remarks>
         public static bool NoDatabaseFactory {
-            get {
-                return _noDatabaseFactory.Value;
-            }
-            set {
-                SetBooleanFlag(NoDatabaseFactoryKey, value);
-            }
+            get => _noDatabaseFactory.Value;
+            set => SetBooleanFlag(NoDatabaseFactoryKey, value);
         }
 
         public static bool AutoDetectCondaEnvironments {
-            get {
-                return _autoDetectCondaEnvironments.Value;
-            }
-            set {
-                SetBooleanFlag(AutoDetectCondaEnvironmentsKey, value);
-            }
+            get => _autoDetectCondaEnvironments.Value;
+            set => SetBooleanFlag(AutoDetectCondaEnvironmentsKey, value);
         }
 
         public static bool UseCondaPackageManager {
-            get {
-                return _useCondaPackageManager.Value;
-            }
-            set {
-                SetBooleanFlag(UseCondaPackageManagerKey, value);
-            }
+            get => _useCondaPackageManager.Value;
+            set => SetBooleanFlag(UseCondaPackageManagerKey, value);
+        }
+
+        public static bool UseVsCodeDebugger {
+            get => _useVsCodeDebugger.Value;
+            set => SetBooleanFlag(UseVsCodeDebuggerKey, value);
         }
     }
 }
