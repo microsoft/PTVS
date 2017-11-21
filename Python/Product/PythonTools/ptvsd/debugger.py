@@ -1653,7 +1653,7 @@ def add_break_point(bp):
     cur_bp[(bp.filename, bp.breakpoint_id)] = bp
 
 def try_bind_break_point(mod_filename, module, bp):
-    if module.filename.lower() == path.abspath(bp.filename).lower():
+    if breakpoint_path_match(bp.filename,module.filename):
         bp.filename = mod_filename
         bp.is_bound = True
         add_break_point(bp)
