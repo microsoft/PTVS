@@ -355,8 +355,6 @@ namespace Microsoft.PythonTools {
                 if (capacity > _map.Length) {
                     Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
                 }
-                tokenization = default(LineTokenization);
-                return false;
             }
 
             [Conditional("DEBUG")]
