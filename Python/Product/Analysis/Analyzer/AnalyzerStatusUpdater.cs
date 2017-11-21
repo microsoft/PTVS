@@ -454,6 +454,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             accessor.Write(0, ref me);
                         }
                     }
+                } catch (IOException) {
+                    // Lose one message, but it's okay. This is a lossy protocol
                 } finally {
                     try {
                         globalLock.ReleaseMutex();
