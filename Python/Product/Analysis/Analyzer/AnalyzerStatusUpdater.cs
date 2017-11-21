@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
