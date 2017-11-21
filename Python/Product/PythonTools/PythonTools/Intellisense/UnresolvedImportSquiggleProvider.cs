@@ -18,61 +18,19 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Intellisense {
-    sealed class UnresolvedImportSquiggleProvider : IPythonTextBufferInfoEventSink {
-        // Allows test cases to skip checking user options
-        internal static bool _alwaysCreateSquiggle;
-        private readonly PythonEditorServices _services;
-        private readonly TaskProvider _taskProvider;
-        private bool _enabled;
+    sealed class UnresolvedImportSquiggleProvider : BufferAnalysisSquiggleProviderBase<UnresolvedImportSquiggleProvider> {
 
-        public UnresolvedImportSquiggleProvider(IServiceProvider serviceProvider, TaskProvider taskProvider) {
-            if (taskProvider == null) {
-                throw new ArgumentNullException(nameof(taskProvider));
-            }
-            _services = serviceProvider.GetComponentModel().GetService<PythonEditorServices>();
-            _taskProvider = taskProvider;
-            var options = _services.Python?.GeneralOptions;
-            if (options != null) {
-                _enabled = options.UnresolvedImportWarning;
-                options.Changed += GeneralOptions_Changed;
-            }
+        public UnresolvedImportSquiggleProvider(IServiceProvider serviceProvider, TaskProvider taskProvider):
+            base(serviceProvider, taskProvider, o => o.UnresolvedImportWarning, new[] { PythonTextBufferInfoEvents.NewAnalysis }) {
         }
 
-        private void GeneralOptions_Changed(object sender, EventArgs e) {
-            var options = sender as GeneralOptions;
-            if (options != null) {
-                _enabled = options.UnresolvedImportWarning;
-            }
-        }
-
-        public void AddBuffer(PythonTextBufferInfo buffer) {
-            buffer.AddSink(typeof(UnresolvedImportSquiggleProvider), this);
-            if (buffer.AnalysisEntry?.IsAnalyzed == true) {
-                OnNewAnalysis(buffer, buffer.AnalysisEntry)
-                    .HandleAllExceptions(_services.Site, GetType())
-                    .DoNotWait();
-            }
-        }
-
-        public void RemoveBuffer(PythonTextBufferInfo buffer) {
-            buffer.RemoveSink(typeof(UnresolvedImportSquiggleProvider));
-        }
-
-        async Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
-            if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
-                await OnNewAnalysis(sender, e.AnalysisEntry);
-            }
-        }
-
-        private async Task OnNewAnalysis(PythonTextBufferInfo bi, AnalysisEntry entry) {
-            if (!_enabled && !_alwaysCreateSquiggle || entry == null) {
-                _taskProvider.Clear(bi.Filename, VsProjectAnalyzer.UnresolvedImportMoniker);
+        protected override async Task OnNewAnalysis(PythonTextBufferInfo bi, AnalysisEntry entry) {
+            if (!Enabled && !_alwaysCreateSquiggle || entry == null) {
+                TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.UnresolvedImportMoniker);
                 return;
             }
 
@@ -86,11 +44,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (translator != null) {
                     var f = new TaskProviderItemFactory(translator);
 
-                    _taskProvider.ReplaceItems(
+                    TaskProvider.ReplaceItems(
                         bi.Filename,
                         VsProjectAnalyzer.UnresolvedImportMoniker,
                         missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
-                            _services.Site,
+                            Services.Site,
                             entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
                             t.name,
                             new SourceSpan(
@@ -101,7 +59,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     );
                 }
             } else {
-                _taskProvider.Clear(bi.Filename, VsProjectAnalyzer.UnresolvedImportMoniker);
+                TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.UnresolvedImportMoniker);
             }
         }
     }

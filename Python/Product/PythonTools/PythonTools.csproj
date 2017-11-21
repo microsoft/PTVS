@@ -270,6 +270,7 @@
     <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />
     <Compile Include="PythonTools\Editor\PythonTextBufferInfo.cs" />
     <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />
+    <Compile Include="PythonTools\Editor\TokenizerExtensions.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
@@ -278,6 +279,7 @@
     <Compile Include="PythonTools\Intellisense\ExpansionCompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisEntryService.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAtPoint.cs" />
+    <Compile Include="PythonTools\Intellisense\BufferAnalysisSquiggleProviderBase.cs" />
     <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSourceProvider.cs" />
@@ -288,6 +290,7 @@
     <Compile Include="PythonTools\Intellisense\IIntellisenseCookie.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisEntry.cs" />
     <Compile Include="PythonTools\Intellisense\QuickInfo.cs" />
+    <Compile Include="PythonTools\Intellisense\InvalidEncodingSquiggleProvider.cs" />
     <Compile Include="PythonTools\Intellisense\VersionedResponse.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />

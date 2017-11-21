@@ -73,6 +73,7 @@
     <Compile Include="ExpressionFinderTests.cs" />
     <Compile Include="ModulePathTests.cs" />
     <Compile Include="ModuleTableTests.cs" />
+    <Compile Include="ParserEncodingTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="MutateStdLibTest.cs" />
     <Compile Include="StringListReaderTests.cs" />

@@ -5509,6 +5509,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File is saved in encoding &apos;{0}&apos; which does not match default UTF-8 encoding.
+        /// </summary>
+        public static string WarningEncodingDifferentFromDefault {
+            get {
+                return ResourceManager.GetString("WarningEncodingDifferentFromDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File is saved in encoding &apos;{0}&apos; which does not match encoding &apos;{1}&apos; specified in the magic comment.
+        /// </summary>
+        public static string WarningEncodingMismatch {
+            get {
+                return ResourceManager.GetString("WarningEncodingMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Encoding name is not recognized: &apos;{0}&apos;.
+        /// </summary>
+        public static string WarningInvalidEncoding {
+            get {
+                return ResourceManager.GetString("WarningInvalidEncoding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The type of this expression is unknown..
         /// </summary>
         public static string WarningUnknownType {

@@ -205,7 +205,7 @@
     <value>259, 17</value>
   </data>
   <data name="_autoAnalysis.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="_autoAnalysis.Text" xml:space="preserve">
     <value>&amp;Automatically generate completion DB on first use</value>
@@ -262,7 +262,7 @@
     <value>True</value>
   </data>
   <data name="_indentationInconsistentLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 168</value>
+    <value>6, 191</value>
   </data>
   <data name="_indentationInconsistentLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>
@@ -271,7 +271,7 @@
     <value>167, 13</value>
   </data>
   <data name="_indentationInconsistentLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="_indentationInconsistentLabel.Text" xml:space="preserve">
     <value>&amp;Report inconsistent indentation as</value>
@@ -304,7 +304,7 @@
     <value>Don't</value>
   </data>
   <data name="_indentationInconsistentCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>185, 164</value>
+    <value>185, 187</value>
   </data>
   <data name="_indentationInconsistentCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 3, 6, 3</value>
@@ -313,7 +313,7 @@
     <value>190, 21</value>
   </data>
   <data name="_indentationInconsistentCombo.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;_indentationInconsistentCombo.Name" xml:space="preserve">
     <value>_indentationInconsistentCombo</value>
@@ -406,7 +406,7 @@
     <value>238, 17</value>
   </data>
   <data name="_clearGlobalPythonPath.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="_clearGlobalPythonPath.Text" xml:space="preserve">
     <value>&amp;Ignore system-wide PYTHONPATH variables</value>
@@ -432,14 +432,17 @@
   <data name="_resetSuppressDialog.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
     <value>GrowAndShrink</value>
   </data>
+  <data name="_resetSuppressDialog.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="_resetSuppressDialog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>96, 191</value>
+    <value>96, 214</value>
   </data>
   <data name="_resetSuppressDialog.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 23</value>
   </data>
   <data name="_resetSuppressDialog.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>10</value>
   </data>
   <data name="_resetSuppressDialog.Text" xml:space="preserve">
     <value>Reset all permanently hidden dialogs</value>
@@ -456,6 +459,42 @@
   <data name="&gt;&gt;_resetSuppressDialog.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
+  <data name="_invalidEncodingWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_invalidEncodingWarning.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_invalidEncodingWarning.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_invalidEncodingWarning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 164</value>
+  </data>
+  <data name="_invalidEncodingWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_invalidEncodingWarning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>279, 17</value>
+  </data>
+  <data name="_invalidEncodingWarning.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="_invalidEncodingWarning.Text" xml:space="preserve">
+    <value>Warn when file &amp;encoding does match magic comment</value>
+  </data>
+  <data name="&gt;&gt;_invalidEncodingWarning.Name" xml:space="preserve">
+    <value>_invalidEncodingWarning</value>
+  </data>
+  <data name="&gt;&gt;_invalidEncodingWarning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_invalidEncodingWarning.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_invalidEncodingWarning.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
   <data name="tableLayoutPanel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -466,7 +505,7 @@
     <value>3, 4, 3, 4</value>
   </data>
   <data name="tableLayoutPanel3.RowCount" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="tableLayoutPanel3.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 290</value>
@@ -487,7 +526,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel3.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_autoAnalysis" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_updateSearchPathsForLinkedFiles" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indentationInconsistentLabel" Row="7" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indentationInconsistentCombo" Row="7" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_elevatePip" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_unresolvedImportWarning" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="9" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_autoAnalysis" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_updateSearchPathsForLinkedFiles" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indentationInconsistentLabel" Row="8" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indentationInconsistentCombo" Row="8" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_elevatePip" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_unresolvedImportWarning" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="10" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_invalidEncodingWarning" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
