@@ -2161,4 +2161,13 @@ Expand selection to the full expression?</value>
   <data name="RenameVariable_UnableGetExpressionAnalysis" xml:space="preserve">
     <value>Unable to get analysis for the selected expression.</value>
   </data>
+  <data name="WarningEncodingMismatch" xml:space="preserve">
+    <value>File is saved in encoding '{0}' which does not match encoding '{1}' specified in the magic comment</value>
+  </data>
+  <data name="WarningInvalidEncoding" xml:space="preserve">
+    <value>Encoding name is not recognized: '{0}'</value>
+  </data>
+  <data name="WarningEncodingDifferentFromDefault" xml:space="preserve">
+    <value>File is saved in encoding '{0}' which does not match default UTF-8 encoding</value>
+  </data>
 </root>

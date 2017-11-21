@@ -81,6 +81,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
+        internal const string InvalidEncodingMoniker = "InvalidEncoding";
         internal bool _analysisComplete;
 
         private AP.AnalysisOptions _analysisOptions;
@@ -398,6 +399,7 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var path in _projectFiles.Keys) {
                 _services.ErrorTaskProvider?.Clear(path, ParserTaskMoniker);
                 _services.ErrorTaskProvider?.Clear(path, UnresolvedImportMoniker);
+                _services.ErrorTaskProvider?.Clear(path, InvalidEncodingMoniker);
                 _services.CommentTaskProvider?.Clear(path, ParserTaskMoniker);
             }
 
@@ -890,8 +892,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
             buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, UnresolvedImportMoniker, buffer.Buffer);
+            buffer.Services.ErrorTaskProvider?.AddBufferForErrorSource(buffer.Filename, InvalidEncodingMoniker, buffer.Buffer);
             buffer.Services.CommentTaskProvider?.AddBufferForErrorSource(buffer.Filename, ParserTaskMoniker, buffer.Buffer);
+
             buffer.Services.UnresolvedImportSquiggleProvider?.AddBuffer(buffer);
+            buffer.Services.InvalidEncodingSquiggleProvider?.AddBuffer(buffer);
         }
 
         internal static void DisconnectErrorList(PythonTextBufferInfo buffer) {

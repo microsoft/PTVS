@@ -361,6 +361,14 @@ namespace Microsoft.PythonTools {
                 if (capacity > _map.Length) {
                     Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
                 }
+                tokenization = default(LineTokenization);
+                return false;
+            }
+
+            [Conditional("DEBUG")]
+            private void AssertCapacity(int capacity) {
+                Debug.Assert(_map != null);
+                Debug.Assert(_map.Length > capacity);
             }
 
             private void DeleteLines(int index, int count) {
