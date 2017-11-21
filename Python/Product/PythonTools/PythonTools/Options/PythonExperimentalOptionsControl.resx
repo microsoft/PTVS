@@ -181,7 +181,7 @@
     <value>221, 17</value>
   </data>
   <data name="_condaEnvironments.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="_condaEnvironments.Text" xml:space="preserve">
     <value>Automatically detect Conda &amp;environments</value>
@@ -250,7 +250,7 @@
     <value>320, 13</value>
   </data>
   <data name="_mustRestartLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="_mustRestartLabel.Text" xml:space="preserve">
     <value>You will need to restart Visual Studio after modifying these settings.</value>
@@ -267,6 +267,39 @@
   <data name="&gt;&gt;_mustRestartLabel.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="_useVsCodeDebugger.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_useVsCodeDebugger.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_useVsCodeDebugger.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 72</value>
+  </data>
+  <data name="_useVsCodeDebugger.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_useVsCodeDebugger.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 17</value>
+  </data>
+  <data name="_useVsCodeDebugger.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="_useVsCodeDebugger.Text" xml:space="preserve">
+    <value>Use VSCode &amp;debugger</value>
+  </data>
+  <data name="&gt;&gt;_useVsCodeDebugger.Name" xml:space="preserve">
+    <value>_useVsCodeDebugger</value>
+  </data>
+  <data name="&gt;&gt;_useVsCodeDebugger.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_useVsCodeDebugger.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_useVsCodeDebugger.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="tableLayoutPanel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -274,7 +307,7 @@
     <value>0, 0</value>
   </data>
   <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
     <value>381, 290</value>
@@ -295,7 +328,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_condaEnvironments" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_condaPackageManager" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_noDatabaseFactory" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_mustRestartLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,Percent,100,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_condaEnvironments" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_condaPackageManager" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_noDatabaseFactory" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_mustRestartLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_useVsCodeDebugger" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Percent,100,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

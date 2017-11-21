@@ -646,6 +646,42 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";CondaDefaultIndexName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Conda]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Conda]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CondaExtensionCondaInstallFrom" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[conda install {0} from Conda]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[來自 Conda 的 Conda 安裝 {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CondaExtensionDisplayName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Packages (Conda)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[套件 (Conda)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CondaExtensionSearchCondaLabel" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Search Conda and installed packages]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[搜尋 Conda 與已安裝的套件]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";ConnErrorMessages_CannotInjectThread" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot create thread in debuggee process]]></Val>
@@ -1803,6 +1839,15 @@
           <Val><![CDATA[Text Files (*.txt)|*.txt|All Files (*.*)|*.*]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[文字檔 (*.txt)|*.txt|所有檔案 (*.*)|*.*]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python Documentation]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 文件]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3466,6 +3511,42 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";PipDefaultIndexName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[PyPI]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[PyPI]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PipExtensionDisplayName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Packages (PyPI)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[套件 (PyPI)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PipExtensionPipInstallFrom" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[pip install {0} from PyPI]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[來自 PyPI 的 pip 安裝 {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PipExtensionSearchPyPILabel" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Search PyPI and installed packages]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[搜尋 PyPI 與已安裝的套件]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";PipInstallFailedExitCode" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA['pip' failed to install. Exit code: {0}]]></Val>
@@ -3970,6 +4051,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";RegularExpressionClassificationType" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python Regular Expression]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 規則運算式]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";RememberMySelection" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Remember my selection]]></Val>
@@ -4155,6 +4245,15 @@
           <Val><![CDATA[Unable to get analysis for current text view.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[無法取得目前文字檢視的分析。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RenameVariable_UnableGetExpressionAnalysis" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to get analysis for the selected expression.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[無法取得所選運算式的分析。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5341,7 +5440,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17297.1]]></Val>
+        <Val><![CDATA[3.0.17324.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5377,7 +5476,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17297.1]]></Val>
+        <Val><![CDATA[3.0.17324.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
