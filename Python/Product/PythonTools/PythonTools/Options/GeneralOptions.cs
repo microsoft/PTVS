@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Options {
         private const string ShowOutputWindowForPackageInstallationSetting = "ShowOutputWindowForPackageInstallation";
         private const string ElevatePipSetting = "ElevatePip";
         private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
+        private const string InvalidEncodingWarningSetting = "InvalidEncodingWarningWarning";
         private const string ClearGlobalPythonPathSetting = "ClearGlobalPythonPath";
 
         private const string DefaultSurveyNewsFeedUrl = "https://go.microsoft.com/fwlink/?LinkId=303967";
@@ -48,6 +49,7 @@ namespace Microsoft.PythonTools.Options {
             ShowOutputWindowForPackageInstallation = _pyService.LoadBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory) ?? true;
             ElevatePip = _pyService.LoadBool(ElevatePipSetting, GeneralCategory) ?? false;
             UnresolvedImportWarning = _pyService.LoadBool(UnresolvedImportWarningSetting, GeneralCategory) ?? true;
+            InvalidEncodingWarning = _pyService.LoadBool(InvalidEncodingWarningSetting, GeneralCategory) ?? true;
             ClearGlobalPythonPath = _pyService.LoadBool(ClearGlobalPythonPathSetting, GeneralCategory) ?? true;
 
 
@@ -224,6 +226,16 @@ namespace Microsoft.PythonTools.Options {
         /// </summary>
         /// <remarks>New in 2.1</remarks>
         public bool ClearGlobalPythonPath {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// True to warn when a file encoding does not match Python 
+        /// 'coding' designation in the beginning of the file.
+        /// </summary>
+        /// <remarks>New in 3.3</remarks>
+        public bool InvalidEncodingWarning {
             get;
             set;
         }

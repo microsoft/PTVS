@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Options {
             this._unresolvedImportWarning = new System.Windows.Forms.CheckBox();
             this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._resetSuppressDialog = new System.Windows.Forms.Button();
+            this._invalidEncodingWarning = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -45,12 +46,13 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForPackageInstallation, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._autoAnalysis, 0, 3);
             this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 5);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 7);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 7);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 8);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 8);
             this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 6);
             this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 4);
-            this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 9);
+            this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 10);
+            this.tableLayoutPanel3.Controls.Add(this._invalidEncodingWarning, 0, 7);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             // 
             // _showOutputWindowForVirtualEnvCreate
@@ -131,6 +133,13 @@ namespace Microsoft.PythonTools.Options {
             this._resetSuppressDialog.UseVisualStyleBackColor = true;
             this._resetSuppressDialog.Click += new System.EventHandler(this._resetSuppressDialog_Click);
             // 
+            // _invalidEncodingWarning
+            // 
+            resources.ApplyResources(this._invalidEncodingWarning, "_invalidEncodingWarning");
+            this.tableLayoutPanel3.SetColumnSpan(this._invalidEncodingWarning, 2);
+            this._invalidEncodingWarning.Name = "_invalidEncodingWarning";
+            this._invalidEncodingWarning.UseVisualStyleBackColor = true;
+            // 
             // PythonGeneralOptionsControl
             // 
             resources.ApplyResources(this, "$this");
@@ -157,5 +166,6 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _unresolvedImportWarning;
         private System.Windows.Forms.CheckBox _clearGlobalPythonPath;
         private System.Windows.Forms.Button _resetSuppressDialog;
+        private System.Windows.Forms.CheckBox _invalidEncodingWarning;
     }
 }
