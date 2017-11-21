@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
             var set = new HashSet<T>();
             foreach (var i in items) {
                 if (i.IsAlive) {
-                    seenNewItem |= object.ReferenceEquals(i, newItem);
+                    seenNewItem = seenNewItem || i.Equals(newItem);
                     set.Add(i);
                 }
             }
@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return UnionInternal(out _set, set2, item);
             }
             if (_set is T t) {
-                if (t.IsAlive && !ReferenceEquals(t, item)) {
+                if (t.IsAlive && !t.Equals(item)) {
                     _set = new SetOfTwo<T>(t, item);
                 } else if (!t.IsAlive) {
                     _set = item;

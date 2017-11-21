@@ -2829,7 +2829,7 @@ k = 2
                 new VariableLocation(3, 9, VariableType.Reference)
             );
             entry.AssertReferences("k", text.IndexOf("k["),
-                new VariableLocation(2, 12, VariableType.Definition),
+                new VariableLocation(2, 13, VariableType.Definition),
                 new VariableLocation(4, 9, VariableType.Reference)
             );
             entry.AssertReferences("a", text.IndexOf("#out"),
