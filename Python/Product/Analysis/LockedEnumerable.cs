@@ -42,7 +42,11 @@ namespace Microsoft.PythonTools.Analysis {
                 bool enumeratorReturned = false;
 
                 try {
-                    Monitor.Enter(_lockObject, ref lockTaken);
+                    if (_lockObject == null) {
+                        lockTaken = false;
+                    } else {
+                        Monitor.Enter(_lockObject, ref lockTaken);
+                    }
 
                     var enumerator = new LockedEnumeratorObject<T>(_source.GetEnumerator(), _lockObject);
                     enumeratorReturned = true;
@@ -84,7 +88,9 @@ namespace Microsoft.PythonTools.Analysis {
                 try {
                     _source.Dispose();
                 } finally {
-                    Monitor.Exit(_lockObject);
+                    if (_lockObject != null) {
+                        Monitor.Exit(_lockObject);
+                    }
                 }
             }
 

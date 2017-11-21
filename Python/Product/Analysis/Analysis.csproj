@@ -59,6 +59,8 @@
     <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisLogWriter.cs" />
     <Compile Include="ExpressionFinder.cs" />
+    <Compile Include="SmallSetWithExpiry.cs" />
+    <Compile Include="ICanExpire.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisWalker.cs" />
     <Compile Include="IHasRichDescription.cs" />

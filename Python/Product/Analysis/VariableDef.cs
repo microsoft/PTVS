@@ -546,20 +546,14 @@ namespace Microsoft.PythonTools.Analysis {
                 var dependencies = keyValue.Value;
 
                 anyChange |= to.AddTypes(projEntry, dependencies.Types, false);
-                if (dependencies.DependentUnits != null) {
-                    foreach (var unit in dependencies.DependentUnits) {
-                        anyChange |= to.AddDependency(unit);
-                    }
+                foreach (var unit in dependencies.DependentUnits) {
+                    anyChange |= to.AddDependency(unit);
                 }
-                if (dependencies._references != null) {
-                    foreach (var encodedLoc in dependencies._references) {
-                        anyChange |= to.AddReference(encodedLoc, projEntry);
-                    }
+                foreach (var encodedLoc in dependencies._references) {
+                    anyChange |= to.AddReference(encodedLoc, projEntry);
                 }
-                if (dependencies._assignments != null) {
-                    foreach (var assignment in dependencies._assignments) {
-                        anyChange |= to.AddAssignment(assignment, projEntry);
-                    }
+                foreach (var assignment in dependencies._assignments) {
+                    anyChange |= to.AddAssignment(assignment, projEntry);
                 }
             }
             return anyChange;

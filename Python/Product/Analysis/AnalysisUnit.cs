@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// AnalysisUnit which is dependent upon the variable.  If the value of a variable changes then all of the dependent
     /// AnalysisUnit's will be re-enqueued.  This proceeds until we reach a fixed point.
     /// </summary>
-    public class AnalysisUnit : ISet<AnalysisUnit>, ILocationResolver {
+    public class AnalysisUnit : ISet<AnalysisUnit>, ILocationResolver, ICanExpire {
         internal InterpreterScope _scope;
         private ModuleInfo _declaringModule;
 #if DEBUG
@@ -71,6 +71,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// mode we don't track references or re-queue items.
         /// </summary>
         internal readonly bool ForEval;
+
+        public virtual bool IsAlive => _scope?.AnalysisValue?.IsAlive ?? true;
 
         internal virtual ModuleInfo GetDeclaringModule() {
             if (_scope != null) {

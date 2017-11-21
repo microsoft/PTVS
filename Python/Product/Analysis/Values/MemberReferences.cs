@@ -83,21 +83,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return builtinRef;
         }
 
-        public IEnumerable<LocationInfo> AllReferences {
-            get {
-                lock (this) {
-                    return AllReferencesNoLock.ToList();
-                }
-            }
-        }
+        public IEnumerable<LocationInfo> AllReferences => AllReferencesNoLock.AsLockedEnumerable(this).ToList();
 
         private IEnumerable<LocationInfo> AllReferencesNoLock {
             get {
                 foreach (var keyValue in this) {
-                    if (keyValue.Value.References != null) {
-                        foreach (var reference in keyValue.Value.References) {
-                            yield return reference.GetLocationInfo();
-                        }
+                    foreach (var reference in keyValue.Value.References) {
+                        yield return reference.GetLocationInfo();
                     }
                 }
             }
@@ -110,17 +102,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class ReferenceList : IReferenceable {
         public readonly int Version;
         public readonly string Project;
-        public ISet<EncodedLocation> References;
+        public SmallSetWithExpiry<EncodedLocation> References;
 
         public ReferenceList(IProjectEntry project) {
             Version = project.AnalysisVersion;
             Project = project.FilePath;
-            References = new HashSet<EncodedLocation>();
         }
 
         public void AddReference(EncodedLocation location) {
             lock (this) {
-                HashSetExtensions.AddValue(ref References, location);
+                References.Add(location);
             }
         }
 
@@ -130,20 +121,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { yield break; }
         }
 
-        IEnumerable<EncodedLocation> IReferenceable.References {
-            get {
-                return ReferencesNoLock.AsLockedEnumerable(this);
-            }
-        }
-
-        IEnumerable<EncodedLocation> ReferencesNoLock {
-            get {
-                if (References != null) {
-                    return References;
-                }
-                return Enumerable.Empty<EncodedLocation>();
-            }
-        }
+        IEnumerable<EncodedLocation> IReferenceable.References => References.AsLockedEnumerable(this);
+        IEnumerable<EncodedLocation> ReferencesNoLock => References;
 
         #endregion
     }

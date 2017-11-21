@@ -80,11 +80,11 @@ namespace Microsoft.PythonTools.Analysis {
                 MultipleMemberInfo multipleMembers = v as MultipleMemberInfo;
                 if (multipleMembers != null) {
                     foreach (var member in multipleMembers.Members) {
-                        if (member.IsCurrent) {
+                        if (member.IsAlive) {
                             res = res.Add(member);
                         }
                     }
-                } else if (v.IsCurrent) {
+                } else if (v.IsAlive) {
                     res = res.Add(v);
                 }
             }
