@@ -346,12 +346,6 @@ namespace Microsoft.PythonTools {
                 return false;
             }
 
-            [Conditional("DEBUG")]
-            private void AssertCapacity(int capacity) {
-                Debug.Assert(_map != null);
-                Debug.Assert(_map.Length > capacity);
-            }
-
             private void EnsureCapacity(int capacity) {
                 if (_map == null) {
                     _map = new LineTokenization[capacity];
