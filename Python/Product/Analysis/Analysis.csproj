@@ -44,7 +44,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
@@ -121,9 +120,7 @@
     <Compile Include="Interpreter\IInterpreterLog.cs" />
     <Compile Include="Interpreter\IInterpreterRegistryService.cs" />
     <Compile Include="Interpreter\InMemoryProject.cs" />
-    <Compile Include="Interpreter\InterpreterFactoryIdAttribute.cs" />
     <Compile Include="Interpreter\InterpreterRegistryConstants.cs" />
-    <Compile Include="Interpreter\InterpreterRegistryService.cs" />
     <Compile Include="Interpreter\InterpreterUIMode.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
@@ -233,7 +230,6 @@
     <Compile Include="Interpreter\IPythonEvent.cs" />
     <Compile Include="Interpreter\IPythonInterpreter.cs" />
     <Compile Include="Interpreter\IPythonInterpreterFactory.cs" />
-    <Compile Include="Interpreter\IPythonInterpreterFactoryProvider.cs" />
     <Compile Include="Interpreter\IPythonModule.cs" />
     <Compile Include="Interpreter\IPythonType.cs" />
     <Compile Include="Interpreter\PythonMemberType.cs" />

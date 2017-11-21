@@ -16,10 +16,10 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace VSInterpretersTests {
+namespace AnalysisTests {
     [TestClass]
     public class StringListReaderTests {
         private static void AssertReadLines(IList<string> lines) {

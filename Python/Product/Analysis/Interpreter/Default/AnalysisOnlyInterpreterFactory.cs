@@ -19,17 +19,17 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
+    public class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
         readonly IEnumerable<string> _actualDatabasePaths;
 
         private readonly static InterpreterFactoryCreationOptions DefaultCreationOptions = new InterpreterFactoryCreationOptions {
             WatchFileSystem = false
         };
 
-        public AnalysisOnlyInterpreterFactory(Version version, string description = null)
+        internal AnalysisOnlyInterpreterFactory(Version version, string description = null)
             : base(GetConfiguration(version), DefaultCreationOptions) { }
 
-        public AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
+        internal AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
             : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), DefaultCreationOptions) {
             _actualDatabasePaths = databasePaths?.ToList();
         }

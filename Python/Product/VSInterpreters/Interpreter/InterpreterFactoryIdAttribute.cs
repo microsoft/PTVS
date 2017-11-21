@@ -20,7 +20,6 @@ using System.ComponentModel.Composition;
 namespace Microsoft.PythonTools.Interpreter {
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Field, AllowMultiple = false)]
-
     public sealed class InterpreterFactoryIdAttribute : Attribute {
         private readonly string _id;
 

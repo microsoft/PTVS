@@ -20,7 +20,7 @@ using System.Linq;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter {
-    sealed class NoInterpretersFactory : IPythonInterpreterFactory {
+    public sealed class NoInterpretersFactory : IPythonInterpreterFactory {
         public NoInterpretersFactory() {
             Configuration = new InterpreterConfiguration(
                 InterpreterRegistryConstants.NoInterpretersFactoryId,

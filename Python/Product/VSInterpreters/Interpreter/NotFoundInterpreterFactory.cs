@@ -17,11 +17,9 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
-using System.Reflection;
 using Microsoft.PythonTools.Infrastructure;
 
-namespace Microsoft.PythonTools.Interpreter
-{
+namespace Microsoft.PythonTools.Interpreter {
     sealed class NotFoundInterpreter : IPythonInterpreter {
         public void Dispose() { }
         public void Initialize(PythonAnalyzer state) { }
