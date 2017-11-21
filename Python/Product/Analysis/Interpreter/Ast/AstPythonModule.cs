@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -71,7 +72,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             string moduleFullName
         ) {
             PythonAst ast;
-            using (var parser = Parser.CreateParser(sourceFile, langVersion)) {
+            using (var parser = Parser.CreateParser(sourceFile, langVersion, new ParserOptions {
+                StubFile = fileName?.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase) ?? false,
+                Verbatim = true
+            })) {
                 ast = parser.ParseFile();
             }
 

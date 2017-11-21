@@ -98,6 +98,26 @@ namespace Microsoft.PythonTools {
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
+        public void AddRange(IEnumerable<string> absolutePaths, bool persisted, object moniker = null) {
+            var newPaths = new List<SearchPath>();
+            foreach (var path in absolutePaths) {
+                var absolutePath = PathUtils.TrimEndSeparator(path);
+                if (string.IsNullOrEmpty(absolutePath)) {
+                    foreach (var p in newPaths) {
+                        Unwatch(p.Cookie);
+                    }
+                    throw new ArgumentException("cannot be null or empty", nameof(absolutePath));
+                }
+                newPaths.Add(new SearchPath(absolutePath, persisted, moniker, Watch(absolutePath)));
+            }
+            if (newPaths.Any()) {
+                lock (_paths) {
+                    _paths.AddRange(newPaths);
+                }
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
         public void Insert(int index, string absolutePath, bool persisted, object moniker = null) {
             absolutePath = PathUtils.TrimEndSeparator(absolutePath);
             if (string.IsNullOrEmpty(absolutePath)) {
@@ -108,6 +128,26 @@ namespace Microsoft.PythonTools {
                 _paths.Insert(index, new SearchPath(absolutePath, persisted, moniker, Watch(absolutePath)));
             }
             Changed?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void InsertRange(int index, IEnumerable<string> absolutePaths, bool persisted, object moniker = null) {
+            var newPaths = new List<SearchPath>();
+            foreach (var path in absolutePaths) {
+                var absolutePath = PathUtils.TrimEndSeparator(path);
+                if (string.IsNullOrEmpty(absolutePath)) {
+                    foreach (var p in newPaths) {
+                        Unwatch(p.Cookie);
+                    }
+                    throw new ArgumentException("cannot be null or empty", nameof(absolutePath));
+                }
+                newPaths.Add(new SearchPath(absolutePath, persisted, moniker, Watch(absolutePath)));
+            }
+            if (newPaths.Any()) {
+                lock (_paths) {
+                    _paths.InsertRange(index, newPaths);
+                }
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public bool Contains(string absolutePath) {

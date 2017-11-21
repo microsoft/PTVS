@@ -66,7 +66,7 @@
       </_VSIXSourceItem>
 
       <!-- Include any content that was marked for inclusion in the VSIX -->
-      <_VSIXSourceItem Include="@(Content->'%(FullPath)')" Condition="$([msbuild]::ValueOrDefault(%(Content.IncludeInVSIX), `false`))">
+      <_VSIXSourceItem Include="@(Content->'%(FullPath)')" Condition="'%(Content.IncludeInVSIX)' == 'true'">
         <VSIXSubPath Condition="'%(Content.VSIXSubPath)' == ''">%(Content.RelativeDir)</VSIXSubPath>
       </_VSIXSourceItem>
 

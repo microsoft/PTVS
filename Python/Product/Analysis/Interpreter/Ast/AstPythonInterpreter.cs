@@ -238,7 +238,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             // Do normal searches
-            mod = ImportFromBuiltins(name) ?? ImportFromSearchPaths(name);
+            mod = ImportFromSearchPaths(name) ?? ImportFromBuiltins(name);
 
             // Replace our sentinel, or if we raced, get the current
             // value and abandon the one we just created.

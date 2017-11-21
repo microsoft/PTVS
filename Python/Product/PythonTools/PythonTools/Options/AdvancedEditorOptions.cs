@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Options {
         private const string ColorNamesSetting = "ColorNames";
         private const string ColorNamesWithAnalysisSetting = "ColorNamesWithAnalysis";
         private const string AutoListIdentifiersSetting = "AutoListIdentifiers";
+        private const string TypeShedPathSetting = "TypeShedPath";
 
         private const string _oldDefaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
         private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#@\\";
@@ -58,6 +59,7 @@ namespace Microsoft.PythonTools.Options {
             ColorNames = _service.LoadBool(ColorNamesSetting, Category) ?? true;
             ColorNamesWithAnalysis = _service.LoadBool(ColorNamesWithAnalysisSetting, Category) ?? true;
             AutoListIdentifiers = _service.LoadBool(AutoListIdentifiersSetting, Category) ?? true;
+            TypeShedPath = _service.LoadString(TypeShedPathSetting, Category);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -73,6 +75,7 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(ColorNamesSetting, Category, ColorNames);
             _service.SaveBool(ColorNamesWithAnalysisSetting, Category, ColorNamesWithAnalysis);
             _service.SaveBool(AutoListIdentifiersSetting, Category, AutoListIdentifiers);
+            _service.SaveString(TypeShedPathSetting, Category, TypeShedPath);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -88,6 +91,7 @@ namespace Microsoft.PythonTools.Options {
             ColorNames = true;
             ColorNamesWithAnalysis = true;
             AutoListIdentifiers = true;
+            TypeShedPath = null;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -172,6 +176,11 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public bool AutoListIdentifiers {
+            get;
+            set;
+        }
+
+        public string TypeShedPath {
             get;
             set;
         }

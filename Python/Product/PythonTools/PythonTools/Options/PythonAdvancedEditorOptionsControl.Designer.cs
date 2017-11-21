@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Options {
             this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
             this._colorNames = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this._typeShedPath = new System.Windows.Forms.TextBox();
             this._selectionInCompletionGroupBox.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this._completionResultsGroupBox.SuspendLayout();
@@ -111,6 +112,7 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2.Controls.Add(this._intersectMembers, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._filterCompletions, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this._autoListIdentifiers, 0, 2);
+            this.tableLayoutPanel2.Controls.Add(this._typeShedPath, 0, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
             // _filterCompletions
@@ -171,6 +173,11 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel1.Controls.Add(this._miscOptionsGroupBox, 0, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
+            // _typeShedPath
+            // 
+            resources.ApplyResources(this._typeShedPath, "_typeShedPath");
+            this._typeShedPath.Name = "_typeShedPath";
+            // 
             // PythonAdvancedEditorOptionsControl
             // 
             resources.ApplyResources(this, "$this");
@@ -215,5 +222,6 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _filterCompletions;
         private System.Windows.Forms.CheckBox _colorNames;
         private System.Windows.Forms.CheckBox _autoListIdentifiers;
+        private System.Windows.Forms.TextBox _typeShedPath;
     }
 }

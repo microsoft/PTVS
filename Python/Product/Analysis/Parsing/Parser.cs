@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.Parsing {
         private Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();  // attributes for each node, currently just round tripping information
 
         private bool _alwaysAllowContextDependentSyntax;
+        private bool _stubFile;
 
         private static Encoding _utf8throwing;
         private static Regex _codingRegex;
@@ -103,7 +104,9 @@ namespace Microsoft.PythonTools.Parsing {
             Parser parser = null;
             var tokenizer = new Tokenizer(
                 version, options.ErrorSink,
-                (options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None) | TokenizerOptions.GroupingRecovery,
+                (options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None) |
+                    TokenizerOptions.GroupingRecovery |
+                    (options.StubFile ? TokenizerOptions.StubFile : 0),
                 (span, text) => options.RaiseProcessComment(parser, new CommentEventArgs(span, text)));
             tokenizer.Initialize(null, reader, SourceLocation.MinValue);
             tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;
@@ -115,7 +118,7 @@ namespace Microsoft.PythonTools.Parsing {
                 options.Verbatim,
                 options.BindReferences,
                 options.PrivatePrefix
-            ) { _sourceReader = reader };
+            ) { _sourceReader = reader, _stubFile = options.StubFile };
             return parser;
         }
 
@@ -1945,7 +1948,7 @@ namespace Microsoft.PythonTools.Parsing {
                 arrowWhiteSpace = _tokenWhiteSpace;
                 var arrStart = GetStart();
                 returnAnnotation = ParseExpression();
-                if (_langVersion.Is2x()) {
+                if (!_stubFile && _langVersion.Is2x()) {
                     ReportSyntaxError(arrStart, returnAnnotation.EndIndex, "invalid syntax, return annotations require 3.x");
                 }
             }
@@ -2081,7 +2084,7 @@ namespace Microsoft.PythonTools.Parsing {
             var seenNames = new HashSet<string>();
             foreach (var p in parameters) {
                 if (p.Annotation != null) {
-                    if (_langVersion.Is2x()) {
+                    if (!_stubFile && _langVersion.Is2x()) {
                         ReportSyntaxError(p.StartIndex, p.EndIndex, "invalid syntax, parameter annotations require 3.x");
                         continue;
                     } else if (!allowAnnotations) {

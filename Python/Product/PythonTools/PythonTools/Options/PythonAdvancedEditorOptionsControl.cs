@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Options {
             _enterCommits.Checked = pyService.AdvancedOptions.EnterCommitsIntellisense;
             _intersectMembers.Checked = pyService.AdvancedOptions.IntersectMembers;
             _filterCompletions.Checked = pyService.AdvancedOptions.FilterCompletions;
+            _typeShedPath.Text = pyService.AdvancedOptions.TypeShedPath ?? string.Empty;
             _completionCommitedBy.Text = pyService.AdvancedOptions.CompletionCommittedBy;
             _newLineAfterCompleteCompletion.Checked = pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord;
             _outliningOnOpen.Checked = pyService.AdvancedOptions.EnterOutliningModeOnOpen;
@@ -39,6 +40,7 @@ namespace Microsoft.PythonTools.Options {
             pyService.AdvancedOptions.EnterCommitsIntellisense = _enterCommits.Checked;
             pyService.AdvancedOptions.IntersectMembers = _intersectMembers.Checked;
             pyService.AdvancedOptions.FilterCompletions = _filterCompletions.Checked;
+            pyService.AdvancedOptions.TypeShedPath = string.IsNullOrEmpty(_typeShedPath.Text) ? null : _typeShedPath.Text;
             pyService.AdvancedOptions.CompletionCommittedBy = _completionCommitedBy.Text;
             pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = _newLineAfterCompleteCompletion.Checked;
             pyService.AdvancedOptions.EnterOutliningModeOnOpen = _outliningOnOpen.Checked;
