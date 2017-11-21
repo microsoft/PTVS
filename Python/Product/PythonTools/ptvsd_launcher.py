@@ -28,41 +28,30 @@ import os.path
 import sys
 import traceback
 
-try:
-    ptvs_lib_path = os.path.dirname(__file__)
-    sys.path.insert(0, ptvs_lib_path)
-    import ptvsd.debugger as vspd
-except:
-    traceback.print_exc()
-    print('''
-Internal error detected. Please copy the above traceback and report at
-https://go.microsoft.com/fwlink/?LinkId=293415
-
-Press Enter to close. . .''')
-    try:
-        raw_input()
-    except NameError:
-        input()
-    sys.exit(1)
-finally:
-    sys.path.remove(ptvs_lib_path)
-
 # Arguments are:
 # 1. Working directory.
 # 2. VS debugger port to connect to.
 # 3. GUID for the debug session.
 # 4. Debug options (as list of names - see enum PythonDebugOptions).
-# 5. '-m' or '-c' to override the default run-as mode. [optional]
-# 6. Startup script name.
-# 7. Script arguments.
+# 5. '-g' to use the installed ptvsd package, rather than bundled one.
+# 6. '-m' or '-c' to override the default run-as mode. [optional]
+# 7. Startup script name.
+# 8. Script arguments.
 
 # change to directory we expected to start from
 os.chdir(sys.argv[1])
 
 port_num = int(sys.argv[2])
 debug_id = sys.argv[3]
-debug_options = vspd.parse_debug_options(sys.argv[4])
+debug_options = set([opt.strip() for opt in sys.argv[4].split(',')])
+
 del sys.argv[0:5]
+
+# Use bundled ptvsd or not?
+bundled_ptvsd = True
+if sys.argv and sys.argv[0] == '-g':
+    bundled_ptvsd = False
+    del sys.argv[0]
 
 # set run_as mode appropriately
 run_as = 'script'
@@ -79,11 +68,29 @@ filename = sys.argv[0]
 # fix sys.path to be the script file dir
 sys.path[0] = ''
 
-# exclude ourselves from being debugged
-vspd.DONT_DEBUG.append(os.path.normcase(__file__))
+# Load the debugger package
+try:
+    if bundled_ptvsd:
+        ptvs_lib_path = os.path.dirname(__file__)
+        sys.path.insert(0, ptvs_lib_path)
+    import ptvsd
+    import ptvsd.debugger as vspd
+    vspd.DONT_DEBUG.append(os.path.normcase(__file__))
+except:
+    traceback.print_exc()
+    print('''
+Internal error detected. Please copy the above traceback and report at
+https://go.microsoft.com/fwlink/?LinkId=293415
 
-# remove all state we imported
-del sys, os, traceback
+Press Enter to close. . .''')
+    try:
+        raw_input()
+    except NameError:
+        input()
+    sys.exit(1)
+finally:
+    if bundled_ptvsd:
+        sys.path.remove(ptvs_lib_path)
 
 # and start debugging
 vspd.debug(filename, port_num, debug_id, debug_options, run_as)
