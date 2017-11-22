@@ -93,6 +93,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public IAnalysisSet EvaluateAnnotation(Expression annotation) {
+            // Ensure that the annotation references are evaluated, but we
+            // don't care about the result.
+            Evaluate(annotation);
+
             return new TypeAnnotation(_unit.ProjectState.LanguageVersion, annotation)
                 .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ??
                 AnalysisSet.Empty;

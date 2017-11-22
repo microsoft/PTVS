@@ -170,9 +170,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (annoInst?.Any() == true) {
                         _eval.AssignTo(node, annoExpr.Expression, annoInst);
                     }
-                } else {
-                    _eval.AssignTo(node, left, valueType);
                 }
+
+                _eval.AssignTo(node, left, valueType);
             }
             return false;
         }

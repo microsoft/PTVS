@@ -72,11 +72,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     }
                 }
 
-                if (!stack.Any()) {
-                    return default(T);
+                if (stack.Count == 1) {
+                    return converter.Finalize(stack.Pop().Value);
                 }
-                Debug.Assert(stack.Count == 1);
-                return converter.Finalize(stack.Pop().Value);
+                return default(T);
             }
 
             public override bool Walk(ConstantExpression node) {
