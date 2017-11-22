@@ -35,22 +35,30 @@ namespace Microsoft.PythonTools.Intellisense {
             base(serviceProvider,
                 taskProvider,
                 o => o.InvalidEncodingWarning,
-                new[] { PythonTextBufferInfoEvents.NewAnalysis, PythonTextBufferInfoEvents.DocumentEncodingChanged }) {
+                new[] { PythonTextBufferInfoEvents.TextContentChangedLowPriority, PythonTextBufferInfoEvents.NewAnalysis, PythonTextBufferInfoEvents.DocumentEncodingChanged }) {
         }
 
         protected override async Task OnNewAnalysis(PythonTextBufferInfo bi, AnalysisEntry entry) {
-            if (!Enabled && !_alwaysCreateSquiggle) {
+            if (!Enabled && !_alwaysCreateSquiggle || bi?.Document == null || bi.Buffer?.Properties == null) {
                 TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.InvalidEncodingMoniker);
                 return;
             }
 
-            var message = CheckEncoding(bi.CurrentSnapshot, bi.Document.Encoding, out var magicEncodingName, out var magicEncodingIndex);
+            var snapshot = bi.CurrentSnapshot;
+
+            var message = CheckEncoding(snapshot, bi.Document.Encoding, out var magicEncodingName, out var magicEncodingIndex);
             if (message != null) {
                 if (!bi.Buffer.Properties.TryGetProperty<string>(VsProjectAnalyzer.InvalidEncodingMoniker, out var prevMessage)
                     || prevMessage != message) {
 
                     bi.Buffer.Properties[VsProjectAnalyzer.InvalidEncodingMoniker] = message;
-                    var version = bi.Buffer.CurrentSnapshot.Version;
+                    SourceSpan span;
+                    if (string.IsNullOrEmpty(magicEncodingName)) {
+                        var pt = new SnapshotPoint(snapshot, magicEncodingIndex).ToSourceLocation();
+                        span = new SourceSpan(pt, new SourceLocation(pt.Line, int.MaxValue));
+                    } else {
+                        span = new SnapshotSpan(snapshot, magicEncodingIndex, magicEncodingName.Length).ToSourceSpan();
+                    }
 
                     TaskProvider.ReplaceItems(
                         bi.Filename,
@@ -59,11 +67,11 @@ namespace Microsoft.PythonTools.Intellisense {
                             new TaskProviderItem(
                                 Services.Site,
                                 message,
-                                new SnapshotSpan(bi.CurrentSnapshot, magicEncodingIndex, magicEncodingName.Length).ToSourceSpan(),
+                                span,
                                 VSTASKPRIORITY.TP_NORMAL,
                                 VSTASKCATEGORY.CAT_CODESENSE,
                                 true,
-                                new LocationTracker(version, bi.Buffer, version.VersionNumber)
+                                new LocationTracker(snapshot.Version, bi.Buffer, snapshot.Version.VersionNumber)
                             )
                         });
                 }

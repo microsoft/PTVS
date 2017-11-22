@@ -67,8 +67,6 @@ namespace Microsoft.PythonTools.Intellisense {
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_pathInZipFile] contains the path of the item inside the archive.
         private static readonly object _pathInZipFile = new { Name = "PathInZipFile" };
 
-        internal readonly SearchPathManager _searchPaths = new SearchPathManager();
-
         private readonly StringBuilder _stdErr = new StringBuilder();
 
         private readonly IPythonInterpreterFactory _interpreterFactory;
