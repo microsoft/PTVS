@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -29,18 +28,14 @@ namespace Microsoft.PythonTools.Analysis {
     /// An analysis value represents a set of variables and code.  Examples of 
     /// analysis values include top-level code, classes, and functions.
     /// </summary>
-    public class AnalysisValue : IAnalysisSet {
+    public class AnalysisValue : IAnalysisSet, ICanExpire {
         [ThreadStatic]
         private static HashSet<AnalysisValue> _processing;
 
         protected AnalysisValue() { }
 
 
-        internal bool IsAlive {
-            get {
-                return true;
-            }
-        }
+        public virtual bool IsAlive => DeclaringModule == null || DeclaringVersion == DeclaringModule.AnalysisVersion;
 
         /// <summary>
         /// Returns an immutable set which contains just this AnalysisValue.
@@ -160,12 +155,6 @@ namespace Microsoft.PythonTools.Analysis {
         public virtual int DeclaringVersion {
             get {
                 return -1;
-            }
-        }
-
-        public bool IsCurrent {
-            get {
-                return DeclaringModule == null || DeclaringVersion == DeclaringModule.AnalysisVersion;
             }
         }
 

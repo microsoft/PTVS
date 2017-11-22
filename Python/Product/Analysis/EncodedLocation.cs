@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// storing the line/column info directly while still allowing multiple schemes
     /// to be used.
     /// </summary>
-    struct EncodedLocation : IEquatable<EncodedLocation> {
+    struct EncodedLocation : IEquatable<EncodedLocation>, ICanExpire {
         public readonly ILocationResolver Resolver;
         public readonly object Location;
 
@@ -52,6 +52,8 @@ namespace Microsoft.PythonTools.Analysis {
             Resolver = resolver;
             Location = location;
         }
+
+        bool ICanExpire.IsAlive => (Resolver as ICanExpire)?.IsAlive ?? true;
 
         public override int GetHashCode() {
             return (Resolver?.GetHashCode() ?? 0) ^ (Location?.GetHashCode() ?? 0);
