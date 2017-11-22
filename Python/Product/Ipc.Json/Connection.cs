@@ -230,7 +230,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                         type = PacketType.Event
                     },
                     CancellationToken.None
-                );
+                ).ConfigureAwait(false);
             } catch (ObjectDisposedException) {
             }
         }

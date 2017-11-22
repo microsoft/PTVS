@@ -25,13 +25,14 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
-    class AnalysisLogWriter {
+    class AnalysisLogWriter : IDisposable {
         private readonly DateTime _startTime;
         private readonly string _outputFile;
         private List<LogItem> _items;
         private readonly bool _csv, _console;
         private readonly int _cache;
         private readonly SemaphoreSlim _dumping = new SemaphoreSlim(1);
+        private bool _disposed;
 
         public struct LogItem {
             public TimeSpan Time;
@@ -47,6 +48,26 @@ namespace Microsoft.PythonTools.Analysis {
             _cache = cacheSize;
             _items = new List<LogItem>(_cache + 2);
             _items.Add(new LogItem { Event = "Start", Time = TimeSpan.Zero, Args = new object[] { _startTime } });
+        }
+
+        protected void Dispose(bool disposing) {
+            if (_disposed) {
+                return;
+            }
+
+            _disposed = true;
+            if (disposing) {
+                _dumping.Dispose();
+            }
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~AnalysisLogWriter() {
+            Dispose(false);
         }
 
         public bool CSV => _csv;

@@ -92,6 +92,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _log?.Flush(!disposing);
 
                 if (disposing) {
+                    if (_log != null) {
+                        _log.Dispose();
+                    }
                     if (PackageManager != null) {
                         PackageManager.InstalledPackagesChanged -= PackageManager_InstalledFilesChanged;
                     }

@@ -70,6 +70,7 @@ namespace Microsoft.PythonTools.Analysis {
             var oldLog = _log;
             _log = new AnalysisLogWriter(Output, AsCSV, OutputToConsole);
             oldLog?.Flush();
+            oldLog?.Dispose();
             LastDisplayedTime = null;
         }
 
