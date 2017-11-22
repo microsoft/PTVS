@@ -73,6 +73,7 @@
     <Content>
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -179,24 +180,19 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="License_en-US.rtf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <None Include="source.extension.vsixmanifest" />
-    <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll">
-      <VSIXSubPath>.</VSIXSubPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost.dll">
-      <VSIXSubPath>.</VSIXSubPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
+    <Content Include="License_en-US.rtf" />
+    <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <!-- Temporary workaround for the interop DLL not being available in 15.5 -->
+  <Target Name="_IncludeVSCodeInterop" Condition="!$(ReleaseBuild) and $(DeployExtension)" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <_InteropDll Include="$(DevEnvDir)Extensions\*\Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost.dll" />
+      <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost.dll;VSCodeInterop.pkgdef" Condition="@(_InteropDll) == ''" />
+    </ItemGroup>
+  </Target>
 </Project>

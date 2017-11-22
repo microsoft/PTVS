@@ -145,8 +145,32 @@ namespace Microsoft.PythonTools {
                 spanTranslator = _spanTranslator;
             }
 
-            if (span.Length <= 0 || span.Snapshot.IsReplBufferWithCommand() || spans == null || spanTranslator == null) {
+            if (span.Length <= 0 || span.Snapshot.IsReplBufferWithCommand() || spans?.Length == 0) {
                 return classifications;
+            }
+
+            if (spans == null || spanTranslator == null) {
+                if (_provider._colorNames) {
+                    var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
+                    if (bi?.AnalysisEntry != null && bi.AnalysisEntry.IsAnalyzed) {
+                        lock (_spanCacheLock) {
+                            spans = _spanCache;
+                            spanTranslator = _spanTranslator;
+                            if (spans == null) {
+                                // Put something in the cache so we don't retrigger too often
+                                _spanCache = new AP.AnalysisClassification[0];
+                            }
+                        }
+                        if (spans == null) {
+                            // Trigger the request so we get info on first open
+                            OnNewAnalysisAsync(bi, bi.AnalysisEntry).HandleAllExceptions(bi.Services.Site, GetType()).DoNotWait();
+                        }
+                    }
+                }
+
+                if (spans == null || spanTranslator == null) {
+                    return classifications;
+                }
             }
 
             // find where in the spans we should start scanning from (they're sorted by

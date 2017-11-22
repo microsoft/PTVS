@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    class ProvideDiffSupportedContentTypeAttribute : RegistrationAttribute {
+    class ProvidePeekSupportedContentTypeAttribute : RegistrationAttribute {
         private readonly string _contentType, _mappedType;
         
         /// <summary>
@@ -30,13 +30,13 @@ namespace Microsoft {
         ///  ".foboar"           -> ";"          .foboar files will use the normal editor factory & content type (but be forced to open as copy). 
         ///  ".foboar"           -> ""
         /// </summary>
-        public ProvideDiffSupportedContentTypeAttribute(string contentType, string mappedType) {
+        public ProvidePeekSupportedContentTypeAttribute(string contentType, string mappedType) {
             _contentType = contentType;
             _mappedType = mappedType;
         }
 
         public override void Register(RegistrationContext context) {
-            using (Key key = context.CreateKey("Diff\\SupportedContentTypes")) {
+            using (Key key = context.CreateKey("Peek\\SupportedContentTypes")) {
                 key.SetValue(_contentType, _mappedType);
             }
         }
