@@ -184,14 +184,20 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
                 var dirname = PathUtils.GetFileOrDirectoryName(dir);
                 var match = PythonPackageRegex.Match(dirname);
-                var withInitPy = Path.Combine(dir, "__init__.py");
-                bool hasInitPy = File.Exists(withInitPy);
-                if (match.Success && (!requireInitPy || hasInitPy)) {
-                    directories.Add(new ModulePath(
-                        baseModule + match.Groups["name"].Value,
-                        hasInitPy ? withInitPy : dir,
-                        dir
-                    ));
+                if (match.Success) {
+                    bool hasInitPy = true;
+                    var modulePath = dir;
+                    if (requireInitPy) {
+                        modulePath = GetPackageInitPy(dir);
+                        hasInitPy = File.Exists(modulePath);
+                    }
+                    if (hasInitPy) {
+                        directories.Add(new ModulePath(
+                            baseModule + match.Groups["name"].Value,
+                            modulePath,
+                            dir
+                        ));
+                    }
                 }
             }
 
@@ -494,7 +500,8 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 var name = Path.GetFileName(path);
                 return name.Equals("__init__.py", StringComparison.OrdinalIgnoreCase) ||
-                    name.Equals("__init__.pyw", StringComparison.OrdinalIgnoreCase);
+                    name.Equals("__init__.pyw", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("__init__.pyi", StringComparison.OrdinalIgnoreCase);
             } catch (ArgumentException) {
                 return false;
             }
@@ -577,7 +584,7 @@ namespace Microsoft.PythonTools.Analysis {
                 // We know that f will be the result of GetParent() and always
                 // ends with a directory separator, so just concatenate to avoid
                 // potential path length problems.
-                isPackage = f => File.Exists(f + "__init__.py");
+                isPackage = f => File.Exists(f + "__init__.py") || File.Exists(f + "__init__.pyw") || File.Exists(f + "__init__.pyi");
             }
 
             while (
@@ -672,6 +679,26 @@ namespace Microsoft.PythonTools.Analysis {
             return m.Groups["name"].Value == mod;
         }
 
+        internal static string GetPackageInitPy(string path) {
+            if (!Directory.Exists(path)) {
+                return null;
+            }
+            var package = PathUtils.GetAbsoluteFilePath(path, "__init__.py");
+            if (File.Exists(package)) {
+                return package;
+            }
+            package = PathUtils.GetAbsoluteFilePath(path, "__init__.pyw");
+            if (File.Exists(package)) {
+                return package;
+            }
+            package = PathUtils.GetAbsoluteFilePath(path, "__init__.pyi");
+            if (File.Exists(package)) {
+                return package;
+            }
+            return null;
+        }
+
+
         internal static bool FromBasePathAndName_NoThrow(
             string basePath,
             string moduleName,
@@ -691,11 +718,11 @@ namespace Microsoft.PythonTools.Analysis {
             var lastBit = bits.Last();
 
             if (isPackage == null) {
-                isPackage = f => Directory.Exists(f) && File.Exists(PathUtils.GetAbsoluteFilePath(f, "__init__.py"));
+                isPackage = f => !string.IsNullOrEmpty(GetPackageInitPy(f));
             }
             if (getModule == null) {
                 getModule = (dir, mod) => {
-                    var pack = PathUtils.GetAbsoluteFilePath(PathUtils.GetAbsoluteFilePath(dir, mod), "__init__.py");
+                    var pack = GetPackageInitPy(PathUtils.GetAbsoluteDirectoryPath(dir, mod));
                     if (File.Exists(pack)) {
                         return pack;
                     }

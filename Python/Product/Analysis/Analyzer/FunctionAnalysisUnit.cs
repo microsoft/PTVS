@@ -163,7 +163,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             VariableDef param;
             for (int i = 0; i < Ast.Parameters.Count; ++i) {
                 var p = Ast.Parameters[i];
-                ddg._eval.EvaluateMaybeNull(p.Annotation);
+                if (p.Annotation != null) {
+                    var val = ddg._eval.EvaluateAnnotation(p.Annotation).GetInstanceType();
+                    if (val?.Any() == true && Scope.TryGetVariable(p.Name, out param)) {
+                        param.AddTypes(this, val, false);
+                    }
+                }
 
                 if (p.DefaultValue != null && p.Kind != ParameterKind.List && p.Kind != ParameterKind.Dictionary &&
                     Scope.TryGetVariable(p.Name, out param)) {
@@ -173,7 +178,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
             }
-            ddg._eval.EvaluateMaybeNull(Ast.ReturnAnnotation);
+            if (Ast.ReturnAnnotation != null) {
+                ((FunctionScope)Scope).AddReturnTypes(
+                    Ast.ReturnAnnotation,
+                    ddg._unit,
+                    ddg._eval.EvaluateAnnotation(Ast.ReturnAnnotation).GetInstanceType()
+                );
+            }
         }
 
         public override string ToString() {

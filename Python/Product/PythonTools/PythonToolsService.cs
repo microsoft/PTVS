@@ -276,31 +276,6 @@ namespace Microsoft.PythonTools {
             return opts;
         }
 
-        public IEnumerable<string> GetTypeShedPaths(InterpreterConfiguration config) {
-            var path = AdvancedOptions?.TypeShedPath;
-            if (!Directory.Exists(path)) {
-                yield break;
-            }
-
-            var version = config.Version;
-            var stdlib = PathUtils.GetAbsoluteDirectoryPath(path, "stdlib");
-            var thirdParty = PathUtils.GetAbsoluteDirectoryPath(path, "third_party");
-
-            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = PathUtils.GetAbsoluteDirectoryPath(stdlib, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
-
-            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = PathUtils.GetAbsoluteDirectoryPath(thirdParty, subdir);
-                if (Directory.Exists(candidate)) {
-                    yield return candidate;
-                }
-            }
-        }
-
         #endregion
 
         internal SuppressDialogOptions SuppressDialogOptions => _suppressDialogOptions.Value;

@@ -102,6 +102,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 (ProjectState.Limits.UnifyCallsToNew && Name == "__new__") ||
                 _callDepthLimit == 0) {
                 calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
+            } else if (FunctionDefinition.ReturnAnnotation != null) {
+                // TODO: Reevaluate return annotation in context of arguments
+                calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
             } else {
                 if (_allCalls == null) {
                     _allCalls = new CallChainSet();

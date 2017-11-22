@@ -14,12 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+// Setting this variable will enable the typeshed package to override
+// imports. However, this generally makes completions worse, so it's
+// turned off for now.
+//#define USE_TYPESHED
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -41,6 +46,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyDictionary<string, string> _userSearchPathPackages;
         private HashSet<string> _userSearchPathImported;
 
+#if USE_TYPESHED
+        private readonly object _typeShedPathsLock = new object();
+        private IReadOnlyList<string> _typeShedPaths;
+#endif
+
         public AstPythonInterpreter(AstPythonInterpreterFactory factory, AnalysisLogWriter log = null) {
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
             _log = log;
@@ -59,6 +69,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private void Factory_ImportableModulesChanged(object sender, EventArgs e) {
             _modules.Clear();
+#if USE_TYPESHED
+            lock (_typeShedPathsLock) {
+                _typeShedPaths = null;
+            }
+#endif
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -143,7 +158,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             IReadOnlyDictionary<string, string> packages,
             string name
         ) {
-            if (searchPaths == null || packages == null) {
+            if (searchPaths == null) {
                 return null;
             }
 
@@ -153,7 +168,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             ModulePath mp;
 
-            if (packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
+            if (packages != null && packages.TryGetValue(firstBit, out searchPath) && !string.IsNullOrEmpty(searchPath)) {
                 if (ModulePath.FromBasePathAndName_NoThrow(searchPath, name, out mp)) {
                     return mp;
                 }
@@ -294,6 +309,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var mp = mmp.Value;
 
+#if USE_TYPESHED
+            lock (_typeShedPathsLock) {
+                if (_typeShedPaths == null) {
+                    var typeshed = FindModuleInSearchPath(_factory.GetSearchPaths(), _factory.GetImportableModules(), "typeshed");
+                    if (typeshed.HasValue) {
+                        _typeShedPaths = GetTypeShedPaths(PathUtils.GetParent(typeshed.Value.SourceFile)).ToArray();
+                    } else {
+                        _typeShedPaths = Array.Empty<string>();
+                    }
+                }
+                if (_typeShedPaths.Any()) {
+                    var mtsp = FindModuleInSearchPath(_typeShedPaths, null, mp.FullName);
+                    if (mtsp.HasValue) {
+                        mp = mtsp.Value;
+                    }
+                }
+            }
+#endif
+
             if (mp.IsCompiled) {
                 _log?.Log(TraceLevel.Verbose, "ImportScraped", mp.FullName, _factory.FastRelativePath(mp.SourceFile));
                 return new AstScrapedPythonModule(mp.FullName, mp.SourceFile);
@@ -364,5 +398,26 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             yield break;
         }
+
+        private IEnumerable<string> GetTypeShedPaths(string path) {
+            var version = _factory.Configuration.Version;
+            var stdlib = PathUtils.GetAbsoluteDirectoryPath(path, "stdlib");
+            var thirdParty = PathUtils.GetAbsoluteDirectoryPath(path, "third_party");
+
+            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
+                var candidate = PathUtils.GetAbsoluteDirectoryPath(stdlib, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+
+            foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
+                var candidate = PathUtils.GetAbsoluteDirectoryPath(thirdParty, subdir);
+                if (Directory.Exists(candidate)) {
+                    yield return candidate;
+                }
+            }
+        }
+
     }
 }

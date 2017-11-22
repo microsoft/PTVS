@@ -58,6 +58,7 @@
     <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisLogWriter.cs" />
+    <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />

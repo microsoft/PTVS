@@ -478,6 +478,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return null;
         }
 
+        private static bool IsUnknown(IMember value) {
+            return (value as IPythonType)?.TypeId == BuiltinTypeId.Unknown ||
+                (value as IPythonConstant)?.Type?.TypeId == BuiltinTypeId.Unknown;
+        }
+
         public void SetInScope(string name, IMember value, bool mergeWithExisting = true) {
             var s = _scopes.Peek();
             if (value == null) {
@@ -485,7 +490,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return;
             }
             if (mergeWithExisting && s.TryGetValue(name, out IMember existing) && existing != null) {
-                s[name] = AstPythonMultipleMembers.Combine(existing, value);
+                if (IsUnknown(existing)) {
+                    s[name] = value;
+                } else if (!IsUnknown(value)) {
+                    s[name] = AstPythonMultipleMembers.Combine(existing, value);
+                }
             } else {
                 s[name] = value;
             }

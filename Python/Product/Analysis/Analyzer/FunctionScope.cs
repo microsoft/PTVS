@@ -46,6 +46,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
+            if (types?.Any() != true) {
+                return;
+            }
             if (Coroutine != null) {
                 Coroutine.AddReturn(node, unit, types, enqueue);
             } else if (Generator != null) {

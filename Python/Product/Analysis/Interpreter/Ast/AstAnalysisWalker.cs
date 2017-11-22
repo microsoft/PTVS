@@ -119,6 +119,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if ((value == null || value.MemberType == PythonMemberType.Unknown) && WarnAboutUndefinedValues) {
                 _log?.Log(TraceLevel.Warning, "UndefinedValue", node.Right.ToCodeString(_ast).Trim());
             }
+            if ((value as IPythonConstant)?.Type?.TypeId == BuiltinTypeId.Ellipsis) {
+                value = _unknownType;
+            }
+
+            foreach(var expr in node.Left.OfType<ExpressionWithAnnotation>()) {
+                if (expr.Expression is NameExpression ne) {
+                    var annType = _scope.GetValueFromExpression(expr.Annotation) as IPythonType;
+                    if (annType != null) {
+                        _scope.SetInScope(ne.Name, new AstPythonConstant(annType, GetLoc(expr.Expression)));
+                    } else {
+                        _scope.SetInScope(ne.Name, _unknownType);
+                    }
+                }
+            }
 
             foreach (var ne in node.Left.OfType<NameExpression>()) {
                 _scope.SetInScope(ne.Name, Clone(value));

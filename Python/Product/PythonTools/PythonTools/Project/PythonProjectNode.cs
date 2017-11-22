@@ -712,26 +712,12 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (!this.IsAppxPackageableProject()) {
-                var pyService = Site.GetPythonToolsService();
-                ActiveInterpreterChanged += TypeShedPaths_Changed;
-                pyService.AdvancedOptions.Changed += TypeShedPaths_Changed;
-                TypeShedPaths_Changed(pyService, EventArgs.Empty);
-
                 _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
             }
 
             ReanalyzeProject()
                 .HandleAllExceptions(Site, GetType(), allowUI: false)
                 .DoNotWait();
-        }
-
-        private void TypeShedPaths_Changed(object sender, EventArgs e) {
-            _searchPaths.RemoveByMoniker("TypeShed");
-            _searchPaths.AddRange(
-                ((PythonToolsService)sender).GetTypeShedPaths(ActiveInterpreter.Configuration).MaybeEnumerate(),
-                false,
-                "TypeShed"
-            );
         }
 
         private void RefreshCurrentWorkingDirectory() {

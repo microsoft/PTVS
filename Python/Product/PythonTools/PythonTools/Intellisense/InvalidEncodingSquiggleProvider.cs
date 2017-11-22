@@ -35,12 +35,13 @@ namespace Microsoft.PythonTools.Intellisense {
             base(serviceProvider,
                 taskProvider,
                 o => o.InvalidEncodingWarning,
-                new[] { PythonTextBufferInfoEvents.NewAnalysis, PythonTextBufferInfoEvents.DocumentEncodingChanged }) {
+                new[] { PythonTextBufferInfoEvents.TextContentChangedLowPriority, PythonTextBufferInfoEvents.DocumentEncodingChanged }) {
         }
 
         protected override async Task OnNewAnalysis(PythonTextBufferInfo bi, AnalysisEntry entry) {
-            if (!Enabled && !_alwaysCreateSquiggle) {
+            if (!Enabled && !_alwaysCreateSquiggle || bi?.Document == null) {
                 TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.InvalidEncodingMoniker);
+                bi.Buffer.Properties.RemoveProperty(VsProjectAnalyzer.InvalidEncodingMoniker);
                 return;
             }
 
@@ -52,6 +53,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     bi.Buffer.Properties[VsProjectAnalyzer.InvalidEncodingMoniker] = message;
                     var version = bi.Buffer.CurrentSnapshot.Version;
 
+                    var startPoint = new SnapshotPoint(bi.CurrentSnapshot, magicEncodingIndex).ToSourceLocation();
+                    var span = new SourceSpan(
+                        startPoint,
+                        new SourceLocation(startPoint.Line, string.IsNullOrEmpty(magicEncodingName) ? int.MaxValue : (startPoint.Column + magicEncodingName.Length))
+                    );
+
                     TaskProvider.ReplaceItems(
                         bi.Filename,
                         VsProjectAnalyzer.InvalidEncodingMoniker,
@@ -59,7 +66,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             new TaskProviderItem(
                                 Services.Site,
                                 message,
-                                new SnapshotSpan(bi.CurrentSnapshot, magicEncodingIndex, magicEncodingName.Length).ToSourceSpan(),
+                                span,
                                 VSTASKPRIORITY.TP_NORMAL,
                                 VSTASKCATEGORY.CAT_CODESENSE,
                                 true,

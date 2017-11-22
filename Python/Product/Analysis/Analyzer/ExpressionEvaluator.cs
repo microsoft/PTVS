@@ -92,6 +92,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return Evaluate(node);
         }
 
+        public IAnalysisSet EvaluateAnnotation(Expression annotation) {
+            return new TypeAnnotation(_unit.ProjectState.LanguageVersion, annotation)
+                .GetValue(new ExpressionEvaluatorAnnotationConverter(this, annotation, _unit)) ??
+                AnalysisSet.Empty;
+        }
+
         /// <summary>
         /// Returns a sequence of possible types associated with the name in the expression evaluators scope.
         /// </summary>
