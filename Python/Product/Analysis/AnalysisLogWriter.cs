@@ -211,7 +211,10 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
             } finally {
-                _dumping.Release();
+                try {
+                    _dumping.Release();
+                } catch (ObjectDisposedException) {
+                }
             }
         }
 
