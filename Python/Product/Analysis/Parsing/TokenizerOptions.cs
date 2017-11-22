@@ -45,7 +45,8 @@ namespace Microsoft.PythonTools.Parsing {
         /// </summary>
         GroupingRecovery = 0x04,
         /// <summary>
-        /// Enables parsing of stub files.
+        /// Enables parsing of stub files. Stub files act like Python 3.6 or later, regardless
+        /// of the specified version.
         /// </summary>
         StubFile = 0x08,
     }

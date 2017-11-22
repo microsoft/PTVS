@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonMultipleMembers : IPythonMultipleMembers {
+    class AstPythonMultipleMembers : IPythonMultipleMembers, ILocatedMember {
         private IList<IMember> _members;
         private bool _checkForLazy;
 
@@ -84,5 +86,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public PythonMemberType MemberType => PythonMemberType.Multiple;
+
+        public IEnumerable<LocationInfo> Locations => _members.OfType<ILocatedMember>().SelectMany(m => m.Locations.MaybeEnumerate());
     }
 }
