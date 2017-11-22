@@ -254,6 +254,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ProvidePeekSupportedContentTypeAttribute.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageFileInfo.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageHit.cs" />
