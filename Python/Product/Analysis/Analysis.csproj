@@ -206,6 +206,8 @@
     <Compile Include="Values\SpecializedInstanceInfo.cs" />
     <Compile Include="Values\SyntheticDefinitionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
+    <Compile Include="Values\TypingModuleInfo.cs" />
+    <Compile Include="Values\TypingTypeInfo.cs" />
     <Compile Include="VariableDef.cs" />
     <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\Default\CPythonMethodDescriptor.cs" />

@@ -37,6 +37,8 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly ConcurrentDictionary<IPythonModule, BuiltinModule> _builtinModuleTable = new ConcurrentDictionary<IPythonModule, BuiltinModule>();
         private readonly ConcurrentDictionary<string, ModuleReference> _modules = new ConcurrentDictionary<string, ModuleReference>(StringComparer.Ordinal);
 
+        private readonly ConcurrentDictionary<string, Func<BuiltinModule, BuiltinModule>> _builtinModuleType = new ConcurrentDictionary<string, Func<BuiltinModule, BuiltinModule>>();
+
         public ModuleTable(PythonAnalyzer analyzer, IPythonInterpreter interpreter) {
             _analyzer = analyzer;
             _interpreter = interpreter;
@@ -44,6 +46,10 @@ namespace Microsoft.PythonTools.Analysis {
 
         public bool Contains(string name) {
             return _modules.ContainsKey(name);
+        }
+
+        public void AddBuiltinModuleWrapper(string moduleName, Func<BuiltinModule, BuiltinModule> moduleWrapper) {
+            _builtinModuleType[moduleName] = moduleWrapper;
         }
 
         /// <summary>
@@ -191,7 +197,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
             BuiltinModule res;
             if (!_builtinModuleTable.TryGetValue(attr, out res)) {
-                _builtinModuleTable[attr] = res = new BuiltinModule(attr, _analyzer);
+                Func<BuiltinModule, BuiltinModule> wrap;
+                res = new BuiltinModule(attr, _analyzer);
+                if (_builtinModuleType.TryGetValue(attr.Name, out wrap) && wrap != null) {
+                    res = wrap(res);
+                }
+                _builtinModuleTable[attr] = res;
             }
             return res;
         }

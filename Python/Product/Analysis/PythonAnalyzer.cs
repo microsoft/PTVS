@@ -170,15 +170,10 @@ namespace Microsoft.PythonTools.Analysis {
                 Modules[_builtinName] = new ModuleReference(_builtinModule, _builtinName);
             }
 
-            FinishLoadKnownTypes(null);
+            Modules.AddBuiltinModuleWrapper("sys", SysModuleInfo.Wrap);
+            Modules.AddBuiltinModuleWrapper("typing", TypingModuleInfo.Wrap);
 
-            var sysModule = await _modules.TryImportAsync("sys").ConfigureAwait(false);
-            if (sysModule != null) {
-                var bm = sysModule.AnalysisModule as BuiltinModule;
-                if (bm != null) {
-                    sysModule.Module = new SysModuleInfo(bm);
-                }
-            }
+            FinishLoadKnownTypes(null);
         }
 
         private void FinishLoadKnownTypes(PythonTypeDatabase db) {

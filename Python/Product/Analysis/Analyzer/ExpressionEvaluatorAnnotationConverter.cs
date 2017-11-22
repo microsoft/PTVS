@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
@@ -32,7 +33,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet Finalize(IAnalysisSet type) {
-            return type;
+            // Filter out any TypingTypeInfo items that have leaked through
+            return AnalysisSet.Create(
+                type.SelectMany(n => (n as TypingTypeInfo)?.Finalize(_eval, _node, _unit) ?? n)
+                .Where(n => !(n is TypingTypeInfo))
+            );
         }
 
         public override IAnalysisSet LookupName(string name) {
@@ -40,7 +45,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet GetTypeMember(IAnalysisSet baseType, string member) {
+            var tmi = baseType.OfType<TypingModuleInfo>().FirstOrDefault();
+            if (tmi != null) {
+                return tmi.GetTypingMember(_node, _unit, member);
+            }
+
             return baseType.GetMember(_node, _unit, member);
+        }
+
+        public override IAnalysisSet MakeGeneric(IAnalysisSet baseType, IReadOnlyList<IAnalysisSet> args) {
+            var tti = baseType.OfType<TypingTypeInfo>().FirstOrDefault();
+            if (tti != null) {
+                return tti.MakeGeneric(args);
+            }
+            return baseType;
         }
 
         public override IAnalysisSet MakeUnion(IReadOnlyList<IAnalysisSet> types) {
