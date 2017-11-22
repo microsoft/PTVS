@@ -21,6 +21,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -90,16 +91,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 // Encoding is specified and is a valid name. 
                 // Check if it matches encoding set on the document text buffer. 
                 if (encoding.EncodingName != documentEncoding.EncodingName) {
-                    message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingMismatch, documentEncoding.EncodingName, magicEncodingName);
+                    message = Strings.WarningEncodingMismatch.FormatUI(documentEncoding.EncodingName, magicEncodingName);
                 }
             } else {
                 if (!string.IsNullOrEmpty(magicEncodingName)) {
                     // Encoding is specified but not recognized as a valid name
-                    message = string.Format(CultureInfo.InvariantCulture, Strings.WarningInvalidEncoding, magicEncodingName);
+                    message = Strings.WarningInvalidEncoding.FormatUI(magicEncodingName);
                 } else {
                     // Encoding is not specified. Python assumes UTF-8 so we need to verify it.
                     if (Encoding.UTF8.EncodingName != documentEncoding.EncodingName) {
-                        message = string.Format(CultureInfo.InvariantCulture, Strings.WarningEncodingDifferentFromDefault, documentEncoding.EncodingName);
+                        message = Strings.WarningEncodingDifferentFromDefault.FormatUI(documentEncoding.EncodingName);
                     }
                 }
             }
