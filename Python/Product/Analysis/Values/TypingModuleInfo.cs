@@ -70,27 +70,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "FrozenSet":
                 case "NamedTuple":
                 case "Generator":
+                case "ClassVar":
                     res = new TypingTypeInfo(name);
                     break;
 
-                case "ClassVar": break;
                 case "AbstractSet": break;
                 case "GenericMeta": break;
 
+                // As our purposes are purely informational, it's okay to
+                // "round up" to the nearest type. That said, proper protocol
+                // support would be nice to implement.
                 case "ContextManager": break;
                 case "Hashable": break;
                 case "Reversible": break;
                 case "SupportsAbs": break;
-                case "SupportsBytes": break;
-                case "SupportsComplex": break;
-                case "SupportsFloat": break;
-                case "SupportsInt": break;
+                case "SupportsBytes": res = GetBuiltin(BuiltinTypeId.Bytes); break;
+                case "SupportsComplex": res = GetBuiltin(BuiltinTypeId.Complex); break;
+                case "SupportsFloat": res = GetBuiltin(BuiltinTypeId.Float); break;
+                case "SupportsInt": res = GetBuiltin(BuiltinTypeId.Int); break;
                 case "SupportsRound": break;
                 case "Sized": break;
 
                 case "Counter": res = Import("collections", "Counter", node, unit); break;
-                case "Deque": res = Import("collections", "Deque", node, unit); break;
-                case "DefaultDict": res = Import("collections", "DefaultDict", node, unit); break;
+                case "Deque": res = Import("collections", "deque", node, unit); break;
+                case "DefaultDict": res = Import("collections", "defaultdict", node, unit); break;
                 case "Type": res = GetBuiltin(BuiltinTypeId.Type); break;
                 case "ByteString": res = GetBuiltin(BuiltinTypeId.Bytes); break;
                 case "AnyStr": res = GetBuiltin(BuiltinTypeId.Unicode).Union(GetBuiltin(BuiltinTypeId.Bytes), canMutate: false); break;

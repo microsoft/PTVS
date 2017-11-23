@@ -106,6 +106,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// Returns a sequence of possible types associated with the name in the expression evaluators scope.
         /// </summary>
         public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true) {
+            InterpreterScope createIn = null;
+
             if (_mergeScopes) {
                 var scope = Scope.EnumerateTowardsGlobal
                     .FirstOrDefault(s => (s == Scope || s.VisibleToChildren) && s.ContainsVariable(name));
@@ -121,16 +123,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                                 scope.AddReferenceToLinkedVariables(node, _unit, name);
                             }
                             return refs.Types;
-                        } else if (scope.ContainsImportStar && addRef) {
+                        } else if (addRef && createIn == null && scope.ContainsImportStar) {
                             // create the variable so that we can appropriately
                             // add any dependent reads to it.
-                            scope.CreateVariable(node, _unit, name, addRef);
+                            createIn = scope;
                         }
                     }
                 }
             }
 
-            return ProjectState.BuiltinModule.GetMember(node, _unit, name);
+            var res = ProjectState.BuiltinModule.GetMember(node, _unit, name);
+            if (createIn != null && !res.Any()) {
+                createIn.CreateVariable(node, _unit, name, addRef);
+            }
+            return res;
         }
 
         #endregion
@@ -467,6 +473,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal void AssignTo(Node assignStmt, Expression left, IAnalysisSet values) {
             if (left is ExpressionWithAnnotation) {
                 left = ((ExpressionWithAnnotation)left).Expression;
+                // "x:t=..." is a recommended pattern - we do not want to
+                // actually assign the ellipsis in this case.
+                if (values.Any(v => v.TypeId == BuiltinTypeId.Ellipsis)) {
+                    values = AnalysisSet.Create(values.Where(v => v.TypeId != BuiltinTypeId.Ellipsis), values.Comparer);
+                }
             }
 
             if (left is NameExpression) {

@@ -34,29 +34,43 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override IAnalysisSet Finalize(IAnalysisSet type) {
             // Filter out any TypingTypeInfo items that have leaked through
-            return AnalysisSet.Create(
-                type.SelectMany(n => (n as TypingTypeInfo)?.Finalize(_eval, _node, _unit) ?? n)
-                .Where(n => !(n is TypingTypeInfo))
-            );
+            if (type.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out IAnalysisSet rest)) {
+                return rest.UnionAll(typeInfo.Select(n => n.Finalize(_eval, _node, _unit)));
+            }
+
+            return type;
         }
 
         public override IAnalysisSet LookupName(string name) {
-            return _eval.LookupAnalysisSetByName(_node, name);
+            var value = _eval.LookupAnalysisSetByName(_node, name);
+
+            if (!_unit.ProjectState.Modules.TryGetImportedModule("typing", out var modRef)) {
+                // typing hasn't been imported, so we can't be using any of its members
+                return value;
+            }
+
+            if (value.Any(v => v.DeclaringModule == null && v.PythonType?.DeclaringModule.Name == "typing") &&
+                modRef.AnalysisModule is TypingModuleInfo typing) {
+                return typing.GetTypingMember(_node, _unit, name) ?? value;
+            }
+            return value;
         }
 
         public override IAnalysisSet GetTypeMember(IAnalysisSet baseType, string member) {
-            var tmi = baseType.OfType<TypingModuleInfo>().FirstOrDefault();
-            if (tmi != null) {
-                return tmi.GetTypingMember(_node, _unit, member);
+            if (baseType.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out var rest)) {
+                return rest.GetMember(_node, _unit, member).UnionAll(
+                    typeInfo.Select(tti => tti.GetTypeMember(_node, _unit, member))
+                );
             }
 
             return baseType.GetMember(_node, _unit, member);
         }
 
         public override IAnalysisSet MakeGeneric(IAnalysisSet baseType, IReadOnlyList<IAnalysisSet> args) {
-            var tti = baseType.OfType<TypingTypeInfo>().FirstOrDefault();
-            if (tti != null) {
-                return tti.MakeGeneric(args);
+            if (baseType.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out var rest)) {
+                return rest.UnionAll(
+                    typeInfo.Select(tti => tti.MakeGeneric(args))
+                );
             }
             return baseType;
         }
@@ -65,8 +79,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return AnalysisSet.UnionAll(types);
         }
 
+        public override IAnalysisSet MakeOptional(IAnalysisSet type) {
+            return type.Add(_unit.ProjectState._noneInst);
+        }
+
+        public override IAnalysisSet GetNonOptionalType(IAnalysisSet optionalType) {
+            if (optionalType.Split(v => v.TypeId != Interpreter.BuiltinTypeId.NoneType, out var notNone, out _)) {
+                return notNone;
+            }
+            return AnalysisSet.Empty;
+        }
+
         public override IReadOnlyList<IAnalysisSet> GetUnionTypes(IAnalysisSet unionType) {
-            return unionType.ToArray();
+            return unionType.ToArray<IAnalysisSet>();
         }
     }
 }

@@ -251,7 +251,7 @@ namespace TestUtilities.Python {
                 if (m.TypeId != BuiltinTypeId.Unknown) {
                     return m.TypeId;
                 }
-                if (m.PythonType.TypeId != BuiltinTypeId.Unknown) {
+                if ((m.PythonType?.TypeId ?? BuiltinTypeId.Unknown) != BuiltinTypeId.Unknown) {
                     return m.PythonType.TypeId;
                 }
 

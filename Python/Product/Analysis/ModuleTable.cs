@@ -49,7 +49,13 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void AddBuiltinModuleWrapper(string moduleName, Func<BuiltinModule, BuiltinModule> moduleWrapper) {
-            _builtinModuleType[moduleName] = moduleWrapper;
+            if (_modules.TryGetValue(moduleName, out var modRef) &&
+                modRef.Module is IPythonModule pm &&
+                _builtinModuleTable.TryGetValue(pm, out var existing)) {
+                _builtinModuleTable[pm] = moduleWrapper(existing);
+            } else {
+                _builtinModuleType[moduleName] = moduleWrapper;
+            }
         }
 
         /// <summary>

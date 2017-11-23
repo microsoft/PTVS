@@ -26,6 +26,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public SetInfo(PythonAnalyzer projectState, Node node, ProjectEntry entry)
             : base(VariableDef.EmptyArray, projectState.ClassInfos[BuiltinTypeId.Set], node, entry) { }
 
+        internal SetInfo(BuiltinClassInfo seqType, Node node, ProjectEntry entry, VariableDef[] indexTypes)
+            : base(indexTypes, seqType, node, entry) { }
+
         public void AddTypes(AnalysisUnit unit, IAnalysisSet types) {
             base.AddTypes(unit, new[] { types });
         }

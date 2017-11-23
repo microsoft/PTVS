@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.AnalysisSetDetails;
@@ -69,6 +70,8 @@ namespace AnalysisTests {
             return string.Format("{0}:{1}", Name, Value);
         }
     }
+
+    class SubTestAnalysisValue : TestAnalysisValue { }
 
     [TestClass]
     public class AnalysisSetTest {
@@ -406,6 +409,69 @@ namespace AnalysisTests {
             Assert.IsInstanceOfType(set2, typeof(AnalysisHashSet));
             AssertUtil.ContainsExactly(set2, nsA1, nsB1, nsCU1);
             Assert.IsTrue(added);
+        }
+
+        [TestMethod, Priority(0)]
+        public void Set_PredicateSplit() {
+            IAnalysisSet trueSet, falseSet;
+            Assert.IsTrue(nsA1.Split(v => v.Name == "A", out trueSet, out falseSet));
+            Assert.AreSame(nsA1, trueSet);
+            Assert.AreEqual(0, falseSet.Count);
+
+            Assert.IsFalse(nsA1.Split(v => v.Name != "A", out trueSet, out falseSet));
+            Assert.AreEqual(0, trueSet.Count);
+            Assert.AreSame(nsA1, falseSet);
+
+            foreach (var cmp in new IEqualityComparer<AnalysisValue>[] { ObjectComparer.Instance, UnionComparer.Instances[0] }) {
+                var set = AnalysisSet.Create(new[] { nsA1, nsB1, nsC1 }, cmp);
+
+                Assert.IsTrue(set.Split(v => v.Name == "A", out trueSet, out falseSet));
+                Assert.AreEqual(1, trueSet.Count);
+                Assert.AreEqual(set.Count - 1, falseSet.Count);
+                Assert.AreSame(set.Comparer, trueSet.Comparer);
+                Assert.AreSame(set.Comparer, falseSet.Comparer);
+
+                Assert.IsFalse(set.Split(v => v.Name == "X", out trueSet, out falseSet));
+                Assert.AreEqual(0, trueSet.Count);
+                Assert.AreEqual(set.Count, falseSet.Count);
+                Assert.AreSame(set.Comparer, trueSet.Comparer);
+                Assert.AreSame(set.Comparer, falseSet.Comparer);
+
+                Assert.IsTrue(set.Split(v => v.Name != null, out trueSet, out falseSet));
+                Assert.AreEqual(set.Count, trueSet.Count);
+                Assert.AreEqual(0, falseSet.Count);
+                Assert.AreSame(set.Comparer, trueSet.Comparer);
+                Assert.AreSame(set.Comparer, falseSet.Comparer);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void Set_TypeSplit() {
+            IReadOnlyList<SubTestAnalysisValue> ofType;
+            IAnalysisSet rest;
+
+            var testAv = new TestAnalysisValue { _name = "A", Value = "A" };
+            var subTestAv = new SubTestAnalysisValue { _name = "B", Value = "B" };
+
+            Assert.IsTrue(subTestAv.Split(out ofType, out rest));
+            Assert.AreEqual(1, ofType.Count);
+            Assert.AreSame(subTestAv, ofType[0]);
+            Assert.AreEqual(0, rest.Count);
+
+            Assert.IsFalse(testAv.Split(out ofType, out rest));
+            Assert.AreEqual(0, ofType.Count);
+            Assert.AreSame(testAv, rest);
+
+            var set = AnalysisSet.Create(new[] { testAv, subTestAv });
+
+            Assert.IsTrue(set.Split(out ofType, out rest));
+            Assert.AreEqual(1, ofType.Count);
+            Assert.AreSame(testAv, rest);
+
+            set = AnalysisSet.Create(new[] { nsA1, nsB1, nsC1 });
+            Assert.IsFalse(set.Split(out ofType, out rest));
+            Assert.AreEqual(0, ofType.Count);
+            Assert.AreSame(set, rest);
         }
     }
 }

@@ -18,14 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace AnalysisTests {
     [TestClass]
-    public class TypeAnnotationTests {
+    public class TypeAnnotationTests : BaseAnalysisTest {
         internal static TypeAnnotation Parse(string expr, PythonLanguageVersion version = PythonLanguageVersion.V36) {
             var errors = new CollectingErrorSink();
             var ops = new ParserOptions { ErrorSink = errors };
@@ -58,11 +61,11 @@ namespace AnalysisTests {
         public void AnnotationParsing() {
             AssertTransform("List", "NameOp:List");
             AssertTransform("List[Int]", "NameOp:List", "NameOp:Int", "MakeGenericOp");
-            AssertTransform("Dict[Int, Str]", "NameOp:Dict", "StartUnionOp", "NameOp:Int", "NameOp:Str", "EndUnionOp", "MakeGenericOp");
+            AssertTransform("Dict[Int, Str]", "NameOp:Dict", "StartUnionOp", "NameOp:Int", "NameOp:Str", "MakeGenericOp");
 
             AssertTransform("'List'", "NameOp:List");
             AssertTransform("List['Int']", "NameOp:List", "NameOp:Int", "MakeGenericOp");
-            AssertTransform("Dict['Int, Str']", "NameOp:Dict", "StartUnionOp", "NameOp:Int", "NameOp:Str", "EndUnionOp", "MakeGenericOp");
+            AssertTransform("Dict['Int, Str']", "NameOp:Dict", "StartUnionOp", "NameOp:Int", "NameOp:Str", "MakeGenericOp");
         }
 
         [TestMethod, Priority(0)]
@@ -107,6 +110,38 @@ namespace AnalysisTests {
 
                 return genericType.Substring(i + 1, genericType.Length - i - 2).Split(',').Select(n => n.Trim()).ToArray();
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleAnalysis() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+            );
+            analyzer.AddModule("test-module", @"from typing import *
+
+i : SupportsInt = ...
+lst : List = ...
+lst_i : List[int] = ...
+lst_i_0 = lst_i[0]
+dct : Union[Mapping, MappingView, MutableMapping] = ...
+dct_s_i : Mapping[str, int] = ...
+dct_s_i_a = dct_s_i['a']
+dct_s_i_key = next(dct_s_i.keys())
+dct_s_i_value = next(dct_s_i.values())
+");
+            analyzer.WaitForAnalysis();
+
+            analyzer.AssertIsInstance("i", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("lst", BuiltinTypeId.List);
+            analyzer.AssertIsInstance("lst_i", BuiltinTypeId.List);
+            analyzer.AssertIsInstance("lst_i_0", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("dct", BuiltinTypeId.Dict);
+            analyzer.AssertIsInstance("dct_s_i", BuiltinTypeId.Dict);
+            analyzer.AssertIsInstance("dct_s_i_a", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("dct_s_i_key", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("dct_s_i_value", BuiltinTypeId.Int);
         }
     }
 }

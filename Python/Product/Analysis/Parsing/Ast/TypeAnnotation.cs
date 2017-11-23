@@ -111,7 +111,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             public override void PostWalk(IndexExpression node) {
-                _ops.Add(new MakeGenericOp());
+                if (_ops.LastOrDefault() is EndUnionOp) {
+                    _ops[_ops.Count - 1] = new MakeGenericOp(true);
+                } else {
+                    _ops.Add(new MakeGenericOp(false));
+                }
                 base.PostWalk(node);
             }
 
@@ -207,23 +211,42 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             class MakeGenericOp : Op {
+                private readonly bool _multipleArgs;
+
+                public MakeGenericOp(bool multipleArgs) {
+                    _multipleArgs = multipleArgs;
+                }
+
                 public override bool Apply<T>(TypeAnnotationConverter<T> converter, Stack<KeyValuePair<string, T>> stack) {
-                    if (stack.Count < 2) {
+                    var items = new List<T>();
+                    if (!stack.Any()) {
                         return false;
                     }
-                    var args = stack.Pop();
-                    if (args.Key != null) {
+                    var t = stack.Pop();
+                    if (t.Value == null) {
                         return false;
+                    }
+                    if (_multipleArgs) {
+                        while (t.Key != nameof(StartUnionOp)) {
+                            items.Add(t.Value);
+                            if (!stack.Any()) {
+                                return false;
+                            }
+                            t = stack.Pop();
+                        }
+                        items.Reverse();
+                    } else if (t.Key != nameof(StartUnionOp)) {
+                        items.Add(t.Value);
                     }
                     var baseType = stack.Pop();
                     if (baseType.Key != null) {
                         return false;
                     }
-                    var t = converter.MakeGeneric(baseType.Value, converter.GetUnionTypes(args.Value) ?? new[] { args.Value });
-                    if (t == null) {
+                    t = new KeyValuePair<string, T>(null, converter.MakeGeneric(baseType.Value, items));
+                    if (t.Value == null) {
                         return false;
                     }
-                    stack.Push(new KeyValuePair<string, T>(null, t));
+                    stack.Push(t);
                     return true;
                 }
             }
