@@ -27,7 +27,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace IpcJsonTests {
     [TestClass]
@@ -111,46 +110,46 @@ namespace IpcJsonTests {
 
         [TestMethod, Priority(0)]
         public async Task PythonHandleRequest() {
-            InitConnection(PythonSocketHandleRequest);
+            using (InitConnection(PythonSocketHandleRequest)) {
+                _client.EventReceived += (object sender, EventReceivedEventArgs e) => {
+                    Assert.Fail();
+                };
 
-            _client.EventReceived += (object sender, EventReceivedEventArgs e) => {
-                Assert.Fail();
-            };
+                var response = await _client.SendRequestAsync(new TestDataProtocol.TestRequest() {
+                    dataText = "request data text",
+                    dataTextList = new string[] { "value 1", "value 2" },
+                }, StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s);
 
-            var response = await _client.SendRequestAsync(new TestDataProtocol.TestRequest() {
-                dataText = "request data text",
-                dataTextList = new string[] { "value 1", "value 2" },
-            }, StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s);
+                await _client.SendRequestAsync(
+                    new TestDataProtocol.DisconnectRequest(),
+                    StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s
+                );
 
-            await _client.SendRequestAsync(
-                new TestDataProtocol.DisconnectRequest(),
-                StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s
-            );
-
-            Assert.AreEqual("request data text", response.requestText);
-            Assert.AreEqual("test response text", response.responseText);
+                Assert.AreEqual("request data text", response.requestText);
+                Assert.AreEqual("test response text", response.responseText);
+            }
         }
 
         [TestMethod, Priority(0)]
         public async Task PythonHandleRequestUnicode() {
-            InitConnection(PythonSocketHandleRequest);
+            using (InitConnection(PythonSocketHandleRequest)) {
+                _client.EventReceived += (object sender, EventReceivedEventArgs e) => {
+                    Assert.Fail();
+                };
 
-            _client.EventReceived += (object sender, EventReceivedEventArgs e) => {
-                Assert.Fail();
-            };
+                var response = await _client.SendRequestAsync(new TestDataProtocol.TestRequest() {
+                    dataText = "データテキストを要求する 请输入",
+                    dataTextList = new string[] { "value 1", "value 2" },
+                }, StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s);
 
-            var response = await _client.SendRequestAsync(new TestDataProtocol.TestRequest() {
-                dataText = "データテキストを要求する 请输入",
-                dataTextList = new string[] { "value 1", "value 2" },
-            }, StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s);
+                await _client.SendRequestAsync(
+                    new TestDataProtocol.DisconnectRequest(),
+                    StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s
+                );
 
-            await _client.SendRequestAsync(
-                new TestDataProtocol.DisconnectRequest(),
-                StartPythonProcessManually ? CancellationTokens.After60s : CancellationTokens.After5s
-            );
-
-            Assert.AreEqual("データテキストを要求する 请输入", response.requestText);
-            Assert.AreEqual("test response text", response.responseText);
+                Assert.AreEqual("データテキストを要求する 请输入", response.requestText);
+                Assert.AreEqual("test response text", response.responseText);
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -182,23 +181,23 @@ namespace IpcJsonTests {
 
         [TestMethod, Priority(0)]
         public async Task PythonSendEvent() {
-            InitConnection(PythonSocketSendEventPath);
+            using (InitConnection(PythonSocketSendEventPath)) {
+                var eventReceived = new AutoResetEvent(false);
+                var eventsReceived = new List<EventReceivedEventArgs>();
+                _client.EventReceived += (object sender, EventReceivedEventArgs e) => {
+                    eventsReceived.Add(e);
+                    if (eventsReceived.Count == 1) {
+                        eventReceived.Set();
+                    }
+                };
 
-            var eventReceived = new AutoResetEvent(false);
-            var eventsReceived = new List<EventReceivedEventArgs>();
-            _client.EventReceived += (object sender, EventReceivedEventArgs e) => {
-                eventsReceived.Add(e);
-                if (eventsReceived.Count == 1) {
-                    eventReceived.Set();
-                }
-            };
+                eventReceived.WaitOne(2000);
 
-            eventReceived.WaitOne(2000);
-
-            Assert.AreEqual(1, eventsReceived.Count);
-            Assert.AreEqual(TestDataProtocol.TestEvent.Name, eventsReceived[0].Name);
-            Assert.AreEqual("python event data text", ((TestDataProtocol.TestEvent)eventsReceived[0].Event).dataText);
-            Assert.AreEqual(76, ((TestDataProtocol.TestEvent)eventsReceived[0].Event).dataInt32);
+                Assert.AreEqual(1, eventsReceived.Count);
+                Assert.AreEqual(TestDataProtocol.TestEvent.Name, eventsReceived[0].Name);
+                Assert.AreEqual("python event data text", ((TestDataProtocol.TestEvent)eventsReceived[0].Event).dataText);
+                Assert.AreEqual(76, ((TestDataProtocol.TestEvent)eventsReceived[0].Event).dataInt32);
+            }
         }
 
         private void InitConnection(Func<RequestArgs, Func<Response, Task>, Task> serverRequestHandler) {
@@ -213,7 +212,20 @@ namespace IpcJsonTests {
             _connected.WaitOne();
         }
 
-        private void InitConnection(string serverScriptPath) {
+        private sealed class KillAndDisposeProcess : IDisposable {
+            public KillAndDisposeProcess(ProcessOutput process) {
+                Process = process;
+            }
+
+            public void Dispose() {
+                Process.Kill();
+                Process.Dispose();
+            }
+
+            public ProcessOutput Process { get; }
+        }
+
+        private IDisposable InitConnection(string serverScriptPath) {
             // Client sends requests, receives responses and events
             // Server receives requests, sends back responses and events
             // Client creates the socket on an available port,
@@ -236,29 +248,39 @@ namespace IpcJsonTests {
                 arguments.Add(serverScriptPath);
                 arguments.Add("-r");
                 arguments.Add(portNum.ToString());
-                using (var proc = ProcessOutput.Run(
+                var proc = ProcessOutput.Run(
                     PythonPaths.Python27.InterpreterPath,
                     arguments,
                     workingDir,
                     env,
                     false,
                     null
-                )) {
+                );
+                try {
                     if (proc.ExitCode.HasValue) {
                         // Process has already exited
                         proc.Wait();
                         if (proc.StandardErrorLines.Any()) {
                             Assert.Fail(String.Join(Environment.NewLine, proc.StandardErrorLines));
                         }
+                        return null;
+                    } else {
+                        _connected.WaitOne();
+                        var p = proc;
+                        proc = null;
+                        return new KillAndDisposeProcess(p);
+                    }
+                } finally {
+                    if (proc != null) {
+                        proc.Dispose();
                     }
                 }
             } else {
                 // Check the port number variable assigned above if you want to
                 // start the python process manually
                 Debugger.Break();
+                return null;
             }
-
-            _connected.WaitOne();
         }
 
         internal static string PtvsdSearchPath {
