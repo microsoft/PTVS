@@ -5368,6 +5368,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";WarningEncodingDifferentFromDefault" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[File is saved in encoding '{0}' which does not match default UTF-8 encoding]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[以编码“{0}”保存的文件与默认 UTF-8 编码不匹配]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WarningEncodingMismatch" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[File is saved in encoding '{0}' which does not match encoding '{1}' specified in the coding comment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[以编码“{0}”保存的文件与编码注释中指定的编码“{1}”不匹配]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WarningInvalidEncoding" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Encoding name is not recognized: '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[未识别编码名称:“{0}”]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";WarningUnknownType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The type of this expression is unknown.]]></Val>
@@ -5440,7 +5467,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17324.1]]></Val>
+        <Val><![CDATA[3.0.17326.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5476,7 +5503,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17324.1]]></Val>
+        <Val><![CDATA[3.0.17326.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
