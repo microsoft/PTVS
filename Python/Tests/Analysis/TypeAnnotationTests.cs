@@ -130,6 +130,8 @@ dct_s_i : Mapping[str, int] = ...
 dct_s_i_a = dct_s_i['a']
 dct_s_i_key = next(dct_s_i.keys())
 dct_s_i_value = next(dct_s_i.values())
+call_i_s : Callable[int, str] = ...
+call_i_s_ret = call_i_s()
 ");
             analyzer.WaitForAnalysis();
 
@@ -142,6 +144,8 @@ dct_s_i_value = next(dct_s_i.values())
             analyzer.AssertIsInstance("dct_s_i_a", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("dct_s_i_key", BuiltinTypeId.Str);
             analyzer.AssertIsInstance("dct_s_i_value", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("call_i_s", BuiltinTypeId.Function);
+            analyzer.AssertIsInstance("call_i_s_ret", BuiltinTypeId.Str);
         }
     }
 }

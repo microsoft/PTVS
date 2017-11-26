@@ -168,7 +168,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return null;
                     }
 
-                case "Callable": return null;
+                case "Callable":
+                    if (args.Count == 0) {
+                        return null;
+                    }
+                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.None, n => new CallableInfo(
+                        Types[BuiltinTypeId.Function],
+                        State,
+                        args.Take(args.Count - 1).Select(ToInstance).ToArray(),
+                        ToInstance(args.Last()),
+                        new EncodedLocation(_unit.AlternateResolver ?? _unit, n)
+                    ));
+
                 case "ItemsView": return null;
                 case "Iterable": return null;
                 case "Iterator": return null;
