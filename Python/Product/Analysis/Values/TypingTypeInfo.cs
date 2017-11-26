@@ -136,6 +136,35 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     } catch (KeyNotFoundException) {
                         return null;
                     }
+                case "KeysView":
+                    if (args.Count < 1) {
+                        return null;
+                    }
+                    return (Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
+                        var di = new DictionaryInfo(Entry, n);
+                        di.AddTypes(
+                            n,
+                            _unit,
+                            ToInstance(args[0]),
+                            None
+                        );
+                        return di;
+                    }) as DictionaryInfo)?.GetKeysView(_unit);
+                case "ValuesView":
+                    if (args.Count < 1) {
+                        return null;
+                    }
+                    return (Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
+                        var di = new DictionaryInfo(Entry, n);
+                        di.AddTypes(
+                            n,
+                            _unit,
+                            None,
+                            ToInstance(args[0])
+                        );
+                        return di;
+                    }) as DictionaryInfo)?.GetValuesView(_unit);
+
                 case "MutableSet":
                 case "Set":
                 case "FrozenSet":
@@ -155,15 +184,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "MappingView":
                 case "MutableMapping":
                 case "Dict":
+                case "ItemsView":
                     try {
                         if (args.Count < 2) {
                             return null;
                         }
-                        return Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
+                        var d = Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
                             var di = new DictionaryInfo(Entry, n);
                             di.AddTypes(n, _unit, ToInstance(args[0]), ToInstance(args[1]));
                             return di;
                         });
+                        if (name == "ItemsView") {
+                            return (d as DictionaryInfo).GetItemsView(_unit);
+                        }
+                        return d;
                     } catch (KeyNotFoundException) {
                         return null;
                     }
@@ -180,11 +214,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         new EncodedLocation(_unit.AlternateResolver ?? _unit, n)
                     ));
 
-                case "ItemsView": return null;
                 case "Iterable": return null;
                 case "Iterator": return null;
-                case "KeysView": return null;
-                case "ValuesView": return null;
                 case "NamedTuple": return null;
                 case "Generator": return null;
             }

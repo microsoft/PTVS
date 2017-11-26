@@ -128,8 +128,20 @@ lst_i_0 = lst_i[0]
 dct : Union[Mapping, MappingView, MutableMapping] = ...
 dct_s_i : Mapping[str, int] = ...
 dct_s_i_a = dct_s_i['a']
-dct_s_i_key = next(dct_s_i.keys())
-dct_s_i_value = next(dct_s_i.values())
+dct_s_i_keys = dct_s_i.keys()
+dct_s_i_key = next(dct_s_i_keys)
+dct_s_i_values = dct_s_i.values()
+dct_s_i_value = next(dct_s_i_values)
+dct_s_i_items = dct_s_i.items()
+dct_s_i_item_1, dct_s_i_item_2 = next(dct_s_i_items)
+
+dctv_s_i_keys : KeysView[str] = ...
+dctv_s_i_key = next(dctv_s_i_keys)
+dctv_s_i_values : ValuesView[int] = ...
+dctv_s_i_value = next(dctv_s_i_values)
+dctv_s_i_items : ItemsView[str, int] = ...
+dctv_s_i_item_1, dctv_s_i_item_2 = next(dctv_s_i_items)
+
 call_i_s : Callable[int, str] = ...
 call_i_s_ret = call_i_s()
 ");
@@ -142,8 +154,20 @@ call_i_s_ret = call_i_s()
             analyzer.AssertIsInstance("dct", BuiltinTypeId.Dict);
             analyzer.AssertIsInstance("dct_s_i", BuiltinTypeId.Dict);
             analyzer.AssertIsInstance("dct_s_i_a", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("dct_s_i_keys", BuiltinTypeId.DictKeys);
             analyzer.AssertIsInstance("dct_s_i_key", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("dct_s_i_values", BuiltinTypeId.DictValues);
             analyzer.AssertIsInstance("dct_s_i_value", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("dct_s_i_items", BuiltinTypeId.DictItems);
+            analyzer.AssertIsInstance("dct_s_i_item_1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("dct_s_i_item_2", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("dctv_s_i_keys", BuiltinTypeId.DictKeys);
+            analyzer.AssertIsInstance("dctv_s_i_key", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("dctv_s_i_values", BuiltinTypeId.DictValues);
+            analyzer.AssertIsInstance("dctv_s_i_value", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("dctv_s_i_items", BuiltinTypeId.DictItems);
+            analyzer.AssertIsInstance("dctv_s_i_item_1", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("dctv_s_i_item_2", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("call_i_s", BuiltinTypeId.Function);
             analyzer.AssertIsInstance("call_i_s_ret", BuiltinTypeId.Str);
         }

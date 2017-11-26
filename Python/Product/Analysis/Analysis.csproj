@@ -201,7 +201,6 @@
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
     <Compile Include="Values\CallableInfo.cs" />
-    <Compile Include="Values\CallableInstanceInfo.cs" />
     <Compile Include="Values\CoroutineInfo.cs" />
     <Compile Include="Values\DictBuiltinClassInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
