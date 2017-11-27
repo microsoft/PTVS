@@ -97,5 +97,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
             return str;
         }
+
+        public static string AddQuotes(this string str) => "\"" + str + "\"";
     }
 }

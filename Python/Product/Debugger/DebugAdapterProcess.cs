@@ -21,18 +21,23 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
     public sealed class DebugAdapterProcess : ITargetHostProcess {
+        private const int _debuggerConnectionTimeout = 5000; // 5000 ms
+        private const int _connectionCloseTimeout = 5000; // 5000 ms
+
         private Process _process;
         private readonly Guid _processGuid;
         private PythonDebugOptions _debugOptions;
         private string _interpreterOptions;
         private int _listenerPort = -1;
         private Stream _stream;
+        private Socket _socket;
         private ManualResetEvent _connectedEvent = new ManualResetEvent(false);
 
         public DebugAdapterProcess() {
@@ -44,6 +49,7 @@ namespace Microsoft.PythonTools.Debugger {
             debugProcess.StartProcess(launchJson);
             return debugProcess;
         }
+
         private void StartProcess(string launchJson) {
             InitializeListenerSocket();
 
@@ -53,18 +59,21 @@ namespace Microsoft.PythonTools.Debugger {
             var cwd = json["cwd"].Value<string>();
             ParseOptions(json["options"].Value<string>());
 
-            var arguments = (String.IsNullOrWhiteSpace(_interpreterOptions) ? "" : (_interpreterOptions + " ")) +
-                "\"" + PythonToolsInstallPath.GetFile("ptvsd_launcher.py") + "\" " +
-                "\"" + cwd + "\" " +
-                " " + _listenerPort + " " +
-                " " + _processGuid + " " +
-                "\"" + _debugOptions + "\" " +
-                "-g " +
-                args;
+            List<string> argsList = new List<string> {
+                string.IsNullOrWhiteSpace(_interpreterOptions) ? "" : _interpreterOptions,
+                PythonToolsInstallPath.GetFile("ptvsd_launcher.py").AddQuotes(),
+                cwd.Trim('\\').AddQuotes(),
+                _listenerPort.ToString(),
+                _processGuid.ToString(),
+                _debugOptions.ToString().AddQuotes(),
+                "-g",
+                args
+            };
+            var arguments = string.Join(" ", argsList);
 
             ProcessStartInfo psi = new ProcessStartInfo {
                 FileName = exe,
-                Arguments = args,
+                Arguments = arguments,
                 WorkingDirectory = cwd,
                 RedirectStandardError = true,
                 RedirectStandardInput = false,
@@ -74,7 +83,7 @@ namespace Microsoft.PythonTools.Debugger {
             };
 
             var env = json["env"].Value<JArray>();
-            if (env.Count>0) {
+            if (env.Count > 0) {
                 foreach (JObject curValue in env) {
                     var name = curValue["name"].Value<string>();
                     var value = curValue["value"].Value<string>();
@@ -88,21 +97,23 @@ namespace Microsoft.PythonTools.Debugger {
                 EnableRaisingEvents = true,
                 StartInfo = psi
             };
+
             _process.Exited += OnExited;
             _process.ErrorDataReceived += OnErrorDataReceived;
             _process.Start();
             _process.BeginErrorReadLine();
-            if (!_connectedEvent.WaitOne()){
-                Debug.WriteLine("Connection with debugger timedout.");
+            if (!_connectedEvent.WaitOne(_debuggerConnectionTimeout)){
+                Debug.WriteLine("Timed out waiting for debuggee to connect.", nameof(DebugAdapterProcess));
             }
         }
 
         private void OnErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            Debug.WriteLine("Adapter process error: {0}", e.Data);
+            Debug.WriteLine($"Debug adapter stderr: {e.Data}", nameof(DebugAdapterProcess));
         }
 
         private void OnExited(object sender, EventArgs e) {
-            Debug.WriteLine("Python process exited with code: {0}", _process.ExitCode);
+            Debug.WriteLine($"Debug adapter exited with code: {_process.ExitCode}", nameof(DebugAdapterProcess));
+            _socket?.Close(_connectionCloseTimeout);
         }
 
         public IntPtr Handle => _process.Handle;
@@ -137,26 +148,26 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void AcceptConnection(IAsyncResult iar) {
-            Socket socket = null;
             var socketSource = ((Socket)iar.AsyncState);
             try {
-                socket = socketSource.EndAccept(iar);
+                _socket = socketSource.EndAccept(iar);
             } catch (SocketException ex) {
-                Debug.WriteLine("DebugConnectionListener socket failed");
+                Debug.WriteLine("Debug Adapter Host socket failed");
                 Debug.WriteLine(ex);
             } catch (ObjectDisposedException) {
-                Debug.WriteLine("DebugConnectionListener socket closed");
+                Debug.WriteLine("Debug Adapter Host socket closed");
             }
 
-            if (socket != null) {
-                _stream = new NetworkStream(socket, ownsSocket: true);
+            if (_socket != null) {
+                _stream = new NetworkStream(_socket, ownsSocket: true);
                 _connectedEvent.Set();
             }
-            socketSource.BeginAccept(AcceptConnection, socketSource);
         }
 
+        
+
         /***************************************************************************************************************
-        * Thew code below should go into refactored PythonDebugOptions class
+        * The code below should go into refactored PythonDebugOptions class. See AD7Engine ParseOptions for more info
         ****************************************************************************************************************/
 
 
@@ -180,108 +191,59 @@ namespace Microsoft.PythonTools.Debugger {
             return res.ToArray();
         }
 
-
-        /// <summary>
-        /// Specifies whether the process should prompt for input before exiting on an abnormal exit.
-        /// </summary>
-        public const string WaitOnAbnormalExitSetting = "WAIT_ON_ABNORMAL_EXIT";
-
-        /// <summary>
-        /// Specifies whether the process should prompt for input before exiting on a normal exit.
-        /// </summary>
-        public const string WaitOnNormalExitSetting = "WAIT_ON_NORMAL_EXIT";
-
-        /// <summary>
-        /// Specifies if the output should be redirected to the visual studio output window.
-        /// </summary>
-        public const string RedirectOutputSetting = "REDIRECT_OUTPUT";
-
-        /// <summary>
-        /// Specifies if the debugger should break on SystemExit exceptions with an exit code of zero.
-        /// </summary>
-        public const string BreakSystemExitZero = "BREAK_SYSTEMEXIT_ZERO";
-
-        /// <summary>
-        /// Specifies if the debugger should step/break into std lib code.
-        /// </summary>
-        public const string DebugStdLib = "DEBUG_STDLIB";
-
-        /// <summary>
-        /// Specifies if the debugger should treat the application as if it doesn't have a console.
-        /// </summary>
-        /// <remarks>
-        /// Currently, the only effect this has is suppressing <see cref="WaitOnAbnormalExitSetting"/>
-        /// and <see cref="WaitOnNormalExitSetting"/> if they're set.
-        /// </remarks>
-        public const string IsWindowsApplication = "IS_WINDOWS_APPLICATION";
-
-        /// <summary>
-        /// Specifies options which should be passed to the Python interpreter before the script.  If
-        /// the interpreter options should include a semicolon then it should be escaped as a double
-        /// semi-colon.
-        /// </summary>
-        public const string InterpreterOptions = "INTERPRETER_OPTIONS";
-
-        public const string AttachRunning = "ATTACH_RUNNING";
-
-        /// <summary>
-        /// True if Django debugging is enabled.
-        /// </summary>
-        public const string EnableDjangoDebugging = "DJANGO_DEBUG";
-
         private void ParseOptions(string options) {
             foreach (var optionSetting in SplitOptions(options)) {
                 var setting = optionSetting.Split(new[] { '=' }, 2);
                 if (setting.Length == 2) {
                     switch (setting[0]) {
-                        case WaitOnAbnormalExitSetting:
+                        case AD7Engine.WaitOnAbnormalExitSetting:
                             bool value;
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.WaitOnAbnormalExit;
                             }
                             break;
 
-                        case WaitOnNormalExitSetting:
+                        case AD7Engine.WaitOnNormalExitSetting:
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.WaitOnNormalExit;
                             }
                             break;
 
-                        case RedirectOutputSetting:
+                        case AD7Engine.RedirectOutputSetting:
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.RedirectOutput;
                             }
                             break;
 
-                        case BreakSystemExitZero:
+                        case AD7Engine.BreakSystemExitZero:
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.BreakOnSystemExitZero;
                             }
                             break;
 
-                        case DebugStdLib:
+                        case AD7Engine.DebugStdLib:
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.DebugStdLib;
                             }
                             break;
 
-                        case IsWindowsApplication:
+                        case AD7Engine.IsWindowsApplication:
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.IsWindowsApplication;
                             }
                             break;
 
-                        case InterpreterOptions:
+                        case AD7Engine.InterpreterOptions:
                             _interpreterOptions = setting[1];
                             break;
 
-                        case AttachRunning:
+                        case AD7Engine.AttachRunning:
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.AttachRunning;
                             }
                             break;
 
-                        case EnableDjangoDebugging:
+                        case AD7Engine.EnableDjangoDebugging:
                             if (Boolean.TryParse(setting[1], out value) && value) {
                                 _debugOptions |= PythonDebugOptions.DjangoDebugging;
                             }
