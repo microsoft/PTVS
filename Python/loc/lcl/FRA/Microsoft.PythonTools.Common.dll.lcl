@@ -5368,6 +5368,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";WarningEncodingDifferentFromDefault" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[File is saved in encoding '{0}' which does not match default UTF-8 encoding]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Le fichier est enregistré en encodage « {0} », qui ne correspond pas à l'encodage UTF-8 par défaut]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WarningEncodingMismatch" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[File is saved in encoding '{0}' which does not match encoding '{1}' specified in the coding comment]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Le fichier est enregistré en encodage « {0} », qui ne correspond pas à l'encodage « {1} » spécifié dans le commentaire de code]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WarningInvalidEncoding" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Encoding name is not recognized: '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Le nom d'encodage n'est pas reconnu : « {0} »]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";WarningUnknownType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The type of this expression is unknown.]]></Val>
@@ -5440,7 +5467,7 @@
     </Item>
     <Item ItemId=";FileVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17324.1]]></Val>
+        <Val><![CDATA[3.0.17326.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
@@ -5476,7 +5503,7 @@
     </Item>
     <Item ItemId=";ProductVersion" ItemType="0" PsrId="211" Leaf="true">
       <Str Cat="Text" DevLk="true">
-        <Val><![CDATA[3.0.17324.1]]></Val>
+        <Val><![CDATA[3.0.17326.1]]></Val>
       </Str>
       <Disp Icon="Str" />
     </Item>
