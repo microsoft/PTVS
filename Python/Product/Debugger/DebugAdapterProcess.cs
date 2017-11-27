@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -59,17 +60,17 @@ namespace Microsoft.PythonTools.Debugger {
             var cwd = json["cwd"].Value<string>();
             ParseOptions(json["options"].Value<string>());
 
-            List<string> argsList = new List<string> {
+            var argsList = new List<string> {
                 string.IsNullOrWhiteSpace(_interpreterOptions) ? "" : _interpreterOptions,
-                PythonToolsInstallPath.GetFile("ptvsd_launcher.py").AddQuotes(),
-                cwd.Trim('\\').AddQuotes(),
-                _listenerPort.ToString(),
-                _processGuid.ToString(),
-                _debugOptions.ToString().AddQuotes(),
+                PythonToolsInstallPath.GetFile("ptvsd_launcher.py"),
+                cwd.Trim('\\'),
+                $"{_listenerPort}",
+                $"{_processGuid}",
+                $"{_debugOptions}",
                 "-g",
                 args
             };
-            var arguments = string.Join(" ", argsList);
+            var arguments = string.Join(" ", argsList.Where(a => !string.IsNullOrWhiteSpace(a)).Select(ProcessOutput.QuoteSingleArgument));
 
             ProcessStartInfo psi = new ProcessStartInfo {
                 FileName = exe,
@@ -83,13 +84,11 @@ namespace Microsoft.PythonTools.Debugger {
             };
 
             var env = json["env"].Value<JArray>();
-            if (env.Count > 0) {
-                foreach (JObject curValue in env) {
-                    var name = curValue["name"].Value<string>();
-                    var value = curValue["value"].Value<string>();
-                    if (!string.IsNullOrWhiteSpace(name)) {
-                        psi.EnvironmentVariables[name] = value;
-                    }
+            foreach (JObject curValue in env) {
+                var name = curValue["name"].Value<string>();
+                var value = curValue["value"].Value<string>();
+                if (!string.IsNullOrWhiteSpace(name)) {
+                    psi.EnvironmentVariables[name] = value;
                 }
             }
 
