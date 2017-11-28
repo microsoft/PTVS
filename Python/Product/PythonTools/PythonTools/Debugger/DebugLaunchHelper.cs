@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             JObject jsonObj = new JObject {
                 ["exe"] = config.GetInterpreterPath(),
-                ["curDir"] = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory,
+                ["cwd"] = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory,
                 ["remoteMachine"] = "",
                 ["args"] = GetArgs(config),
                 ["options"] = GetOptions(provider, config),

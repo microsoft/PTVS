@@ -32,12 +32,11 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
-            string path = "DebugAdapter.exe";
             // ITargetHostInterop provides a convenience wrapper to start the process
             // return targetInterop.ExecuteCommandAsync(path, "");
 
             // If you need more control use the DebugAdapterProcess
-            return DebugAdapterProcess.Start(path);
+            return DebugAdapterProcess.Start(launchInfo.LaunchJson);
         }
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
         }
