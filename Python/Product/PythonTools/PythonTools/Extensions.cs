@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools {
             var snapshot = buffer.CurrentSnapshot;
             var triggerPoint = session.GetTriggerPoint(buffer);
 
-            var span = snapshot.GetApplicableSpan(triggerPoint);
+            var span = snapshot.GetApplicableSpan(triggerPoint, session.IsCompleteWordMode());
             if (span != null) {
                 return span;
             }
@@ -124,8 +124,8 @@ namespace Microsoft.PythonTools {
         /// </summary>
         /// <returns>A tracking span, or null if there is no token at the
         /// provided position.</returns>
-        internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, ITrackingPoint point) {
-            return snapshot.GetApplicableSpan(point.GetPosition(snapshot));
+        internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, ITrackingPoint point, bool completeWord) {
+            return snapshot.GetApplicableSpan(point.GetPosition(snapshot), completeWord);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools {
         /// </summary>
         /// <returns>A tracking span, or null if there is no token at the
         /// provided position.</returns>
-        internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, int position) {
+        internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, int position, bool completeWord) {
             var classifier = snapshot.TextBuffer.GetPythonClassifier();
             var line = snapshot.GetLineFromPosition(position);
             if (classifier == null || line == null) {
@@ -165,13 +165,17 @@ namespace Microsoft.PythonTools {
                     var span = StringLiteralCompletionList.GetStringContentSpan(text, lastToken.Span.Start) ?? lastToken.Span;
 
                     return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
-                } else if (lastToken.CanComplete()) {
-                    // Handle "fo|o"
-                    return snapshot.CreateTrackingSpan(lastToken.Span, SpanTrackingMode.EdgeInclusive);
-                } else {
-                    // Handle "<|="
-                    return null;
                 }
+
+                if (lastToken.CanComplete()) {
+                    // Handle "fo|o" : when it is 'show member' or 'complete word' use complete token.
+                    // When it is autocompletion (as when typing in front of the existing contruct), take left part only.
+                    var span = completeWord ? lastToken.Span : Span.FromBounds(lastToken.Span.Start, position);
+                    return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
+                } 
+
+                // Handle "<|="
+                return null;
             }
 
             var secondLastToken = classifications.Count >= 2 ? classifications[classifications.Count - 2] : null;

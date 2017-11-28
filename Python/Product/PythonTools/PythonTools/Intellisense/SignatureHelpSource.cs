@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (curSig != null) {
                     // save the current sig so we don't need to recalculate it (we can't set it until
                     // the signatures are added by our caller).
-                    session.Properties.AddProperty(typeof(PythonSignature), curSig);
+                    session.Properties?.AddProperty(typeof(PythonSignature), curSig);
                 }
             }
         }

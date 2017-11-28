@@ -876,22 +876,29 @@ namespace Microsoft.PythonTools.Intellisense {
             DismissCompletionSession();
 
             var session = _services.CompletionBroker.TriggerCompletion(_textView);
-
             if (session == null) {
                 Volatile.Write(ref _activeSession, null);
-            } else if (completeWord && SelectSingleBestCompletion(session)) {
-                session.Commit();
-            } else {
-                if (commitByDefault.HasValue) {
-                    foreach (var s in session.CompletionSets.OfType<FuzzyCompletionSet>()) {
-                        s.CommitByDefault = commitByDefault.GetValueOrDefault();
-                    }
-                }
-                session.Filter();
-                session.Dismissed += OnCompletionSessionDismissedOrCommitted;
-                session.Committed += OnCompletionSessionDismissedOrCommitted;
-                Volatile.Write(ref _activeSession, session);
+                return;
             }
+
+            if (completeWord && SelectSingleBestCompletion(session)) {
+                session.Commit();
+                return;
+            }
+
+            if (completeWord) {
+                session.SetCompleteWordMode();
+            }
+
+            if (commitByDefault.HasValue) {
+                foreach (var s in session.CompletionSets.OfType<FuzzyCompletionSet>()) {
+                    s.CommitByDefault = commitByDefault.GetValueOrDefault();
+                }
+            }
+            session.Filter();
+            session.Dismissed += OnCompletionSessionDismissedOrCommitted;
+            session.Committed += OnCompletionSessionDismissedOrCommitted;
+            Volatile.Write(ref _activeSession, session);
         }
 
         internal void TriggerSignatureHelp() {

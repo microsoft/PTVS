@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var snapshot = TextBuffer.CurrentSnapshot;
-            var span = snapshot.GetApplicableSpan(Span.GetStartPoint(snapshot));
+            var span = snapshot.GetApplicableSpan(Span.GetStartPoint(snapshot), completeWord: false);
             var classifier = snapshot.TextBuffer.GetPythonClassifier();
             if (span == null || classifier == null) {
                 // Not a valid Python text buffer, which should not happen

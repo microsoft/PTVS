@@ -22,6 +22,8 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Intellisense {
     public static class CompletionSessionExtensions {
+        private const string CompleteWord = nameof(CompleteWord);
+
         public static CompletionOptions GetOptions(this ICompletionSession session, IServiceProvider serviceProvider) {
             var pyService = serviceProvider.GetPythonToolsService();
 
@@ -37,6 +39,12 @@ namespace Microsoft.PythonTools.Intellisense {
             options.SearchMode = pyService.AdvancedOptions.SearchMode;
             return options;
         }
+
+        public static void SetCompleteWordMode(this IIntellisenseSession session) 
+            => session.Properties[CompleteWord] = true;
+
+        public static bool IsCompleteWordMode(this IIntellisenseSession session) 
+            => session.Properties.TryGetProperty(CompleteWord, out bool prop) && prop;
     }
 
     class CompletionSource : ICompletionSource {
