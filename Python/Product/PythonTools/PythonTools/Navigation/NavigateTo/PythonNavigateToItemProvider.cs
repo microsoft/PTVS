@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text.PatternMatching;
 using AP = Microsoft.PythonTools.Intellisense.AnalysisProtocol;
 
 namespace Microsoft.PythonTools.Navigation.NavigateTo {
@@ -96,16 +97,15 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         }
 
         private async Task FindMatchesAsync(INavigateToCallback callback, string searchValue, CancellationToken token) {
-            var matchers = new List<Tuple<FuzzyStringMatcher, string, MatchKind>> {
-                    Tuple.Create(new FuzzyStringMatcher(FuzzyMatchMode.Prefix), searchValue, MatchKind.Prefix),
-                    Tuple.Create(new FuzzyStringMatcher(_matchMode), searchValue, MatchKind.Regular)
+            var matchers = new List<Tuple<FuzzyStringMatcher, string>> {
+                    Tuple.Create(new FuzzyStringMatcher(FuzzyMatchMode.Prefix), searchValue),
+                    Tuple.Create(new FuzzyStringMatcher(_matchMode), searchValue)
                 };
 
             if (searchValue.Length > 2 && searchValue.StartsWith("/") && searchValue.EndsWith("/")) {
                 matchers.Insert(0, Tuple.Create(
                     new FuzzyStringMatcher(FuzzyMatchMode.RegexIgnoreCase),
-                    searchValue.Substring(1, searchValue.Length - 2),
-                    MatchKind.Regular
+                    searchValue.Substring(1, searchValue.Length - 2)
                 ));
             }
 
@@ -137,17 +137,17 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         private IEnumerable<NavigateToItem> FilterResults(
             string projectName,
             IEnumerable<AP.Completion> completions,
-            IEnumerable<Tuple<FuzzyStringMatcher, string, MatchKind>> matchers
+            IEnumerable<Tuple<FuzzyStringMatcher, string>> matchers
         ) {
             foreach (var c in completions) {
-                MatchKind matchKind = MatchKind.None;
+                PatternMatch? patternMatch = null;
                 foreach (var m in matchers) {
                     if (m.Item1.IsCandidateMatch(c.name, m.Item2)) {
-                        matchKind = m.Item3;
+                        patternMatch = m.Item1.PatternMatch;
                         break;
                     }
                 }
-                if (matchKind == MatchKind.None) {
+                if (!patternMatch.HasValue) {
                     continue;
                 }
 
@@ -164,7 +164,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                     "Python",
                     "",
                     itemTag,
-                    matchKind,
+                    patternMatch.Value,
                     PythonNavigateToItemDisplayFactory.Instance
                 );
             }

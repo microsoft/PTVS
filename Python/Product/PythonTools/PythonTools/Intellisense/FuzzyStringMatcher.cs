@@ -18,6 +18,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.VisualStudio.Text.PatternMatching;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -54,9 +55,42 @@ namespace Microsoft.PythonTools.Intellisense {
             RegexMatch, RegexMatch
         };
 
+        public PatternMatch? PatternMatch { get; }
+
         public FuzzyStringMatcher(FuzzyMatchMode mode) {
             _ignoreCase = _ignoreCaseMap[(int)mode];
             _matcher = _matcherMap[(int)mode];
+            switch (mode) {
+                case FuzzyMatchMode.Prefix:
+                case FuzzyMatchMode.PrefixIgnoreCase:
+                    PatternMatch = new PatternMatch(
+                        PatternMatchKind.Prefix,
+                        punctuationStripped: false,
+                        isCaseSensitive: !_ignoreCase
+                    );
+                    break;
+                case FuzzyMatchMode.Substring:
+                case FuzzyMatchMode.SubstringIgnoreCase:
+                    PatternMatch = new PatternMatch(
+                        PatternMatchKind.Substring,
+                        punctuationStripped: false,
+                        isCaseSensitive: !_ignoreCase
+                    );
+                    break;
+                case FuzzyMatchMode.Fuzzy:
+                case FuzzyMatchMode.FuzzyIgnoreCase:
+                case FuzzyMatchMode.FuzzyIgnoreLowerCase:
+                case FuzzyMatchMode.Regex:
+                case FuzzyMatchMode.RegexIgnoreCase:
+                    PatternMatch = new PatternMatch(
+                        PatternMatchKind.Fuzzy,
+                        punctuationStripped: false,
+                        isCaseSensitive: !_ignoreCase
+                    );
+                    break;
+                default:
+                    break;
+            }
         }
 
         /// <summary>

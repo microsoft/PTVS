@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             // If no items are affected, change is unsafe only if new region contains left side separators.
             if (item == null) {
                 // Simple optimization for whitespace insertion
-                if (oldLength == 0 && string.IsNullOrWhiteSpace(newText.GetText(new TextRange(start, newLength)))) {
+                if (oldLength == 0 && string.IsNullOrWhiteSpace(newText.GetText(start, newLength))) {
                     return false;
                 }
 
@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 // { and % or added { to the existing % so extend search range accordingly.
                 int fragmentStart = Math.Max(0, start - leftSeparator.Length + 1);
                 int fragmentEnd = Math.Min(newText.Length, start + newLength + leftSeparator.Length - 1);
-                return newText.IndexOf(leftSeparator, TextRange.FromBounds(fragmentStart, fragmentEnd), true) >= 0;
+                return newText.IndexOf(leftSeparator, fragmentStart, fragmentEnd - fragmentStart, true) >= 0;
             }
 
             // Is change completely inside an existing item?
@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 // Check that change does not affect item left separator (whitespace is fine)
                 if (item.Start + leftSeparator.Length == start) {
                     if (oldLength == 0) {
-                        string text = newText.GetText(new TextRange(start, newLength));
+                        string text = newText.GetText(start, newLength);
                         if (String.IsNullOrWhiteSpace(text)) {
                             return false;
                         }
@@ -142,8 +142,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 int changeLength = newLength - oldLength;
                 int fragmentEnd = item.End + changeLength;
                 fragmentEnd = Math.Min(fragmentEnd, start + newLength + separatorInfo.RightSeparator.Length - 1);
-
-                if (newText.IndexOf(separatorInfo.RightSeparator, TextRange.FromBounds(fragmentStart, fragmentEnd), true) >= 0) {
+                if (newText.IndexOf(separatorInfo.RightSeparator, fragmentStart, fragmentEnd - fragmentStart, true) >= 0) {
                     return true;
                 }
 
