@@ -30,15 +30,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _klass = klass;
         }
 
-        public BuiltinClassInfo ClassInfo {
-            get {
-                return _klass;
-            }
-        }
+        public BuiltinClassInfo ClassInfo => _klass;
 
-        public override IPythonType PythonType {
-            get { return _type; }
-        }
+        public override IPythonType PythonType => _type;
 
         public override IAnalysisSet GetInstanceType() {
             if (_klass.TypeId == BuiltinTypeId.Type) {
@@ -47,17 +41,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetInstanceType();
         }
 
-        public override string Description {
-            get {
-                return _klass._type.Name;
-            }
-        }
-
-        public override string Documentation {
-            get {
-                return _klass.Documentation;
-            }
-        }
+        public override string Description => _klass.Name;
+        public override string ShortDescription => _klass.Name;
+        public override string Documentation => _klass.Documentation;
 
         public override PythonMemberType MemberType {
             get {

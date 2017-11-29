@@ -113,7 +113,7 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TypingModuleAnalysis() {
+        public void TypingModuleContainerAnalysis() {
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
@@ -141,9 +141,6 @@ dctv_s_i_values : ValuesView[int] = ...
 dctv_s_i_value = next(dctv_s_i_values)
 dctv_s_i_items : ItemsView[str, int] = ...
 dctv_s_i_item_1, dctv_s_i_item_2 = next(dctv_s_i_items)
-
-call_i_s : Callable[int, str] = ...
-call_i_s_ret = call_i_s()
 ");
             analyzer.WaitForAnalysis();
 
@@ -168,6 +165,32 @@ call_i_s_ret = call_i_s()
             analyzer.AssertIsInstance("dctv_s_i_items", BuiltinTypeId.DictItems);
             analyzer.AssertIsInstance("dctv_s_i_item_1", BuiltinTypeId.Str);
             analyzer.AssertIsInstance("dctv_s_i_item_2", BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleProtocolAnalysis() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+            );
+            analyzer.AddModule("test-module", @"from typing import *
+
+i : Iterable = ...
+ii : Iterator = ...
+i_int : Iterable[int] = ...
+ii_int : Iterator[int] = ...
+
+call_i_s : Callable[int, str] = ...
+call_i_s_ret = call_i_s()
+");
+            analyzer.WaitForAnalysis();
+
+            analyzer.AssertDescription("i", "iterable");
+            analyzer.AssertDescription("ii", "iterator");
+            analyzer.AssertDescription("i_int", "iterable[int]");
+            analyzer.AssertDescription("ii_int", "iterator[int]");
+
             analyzer.AssertIsInstance("call_i_s", BuiltinTypeId.Function);
             analyzer.AssertIsInstance("call_i_s_ret", BuiltinTypeId.Str);
         }

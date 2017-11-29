@@ -206,18 +206,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (args.Count == 0) {
                         return null;
                     }
-                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.None, n => new CallableInfo(
-                        Types[BuiltinTypeId.Function],
-                        State,
-                        args.Take(args.Count - 1).Select(ToInstance).ToArray(),
-                        ToInstance(args.Last()),
-                        new EncodedLocation(_unit.AlternateResolver ?? _unit, n)
-                    ));
+                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.None, n => {
+                        var p = new ProtocolInfo(_unit.ProjectEntry);
+                        p.AddReference(n, _unit);
+                        p.AddProtocol(new CallableProtocol(
+                            p,
+                            null,
+                            args.Take(args.Count - 1).Select(ToInstance).ToArray(),
+                            ToInstance(args.Last())
+                        ));
+                        return p;
+                    });
 
-                case "Iterable": return null;
-                case "Iterator": return null;
-                case "NamedTuple": return null;
+
+                case "Iterable":
+                case "Iterator": {
+                        var iter = Scope.GetOrMakeNodeValue(_node, NodeValueKind.Iterator, n => {
+                            var p = new ProtocolInfo(_unit.ProjectEntry);
+                            p.AddReference(n, _unit);
+                            p.AddProtocol(new IterableProtocol(p, AnalysisSet.UnionAll(args.Select(ToInstance))));
+                            return p;
+                        });
+                        return (name == "Iterator") ? iter.GetIterator(_node, _unit) : iter;
+                    }
+
                 case "Generator": return null;
+                case "NamedTuple": return null;
             }
 
             return null;
@@ -233,15 +247,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "Tuple": return ClassInfo[BuiltinTypeId.Tuple];
                 case "Container": return ClassInfo[BuiltinTypeId.List];
                 case "ItemsView": return ClassInfo[BuiltinTypeId.DictItems];
-                case "Iterable": return ClassInfo[BuiltinTypeId.Tuple];
-                case "Iterator": return ClassInfo[BuiltinTypeId.TupleIterator];
+                case "Iterable": {
+                        var p = new ProtocolInfo(Entry);
+                        p.AddReference(_node, _unit);
+                        p.AddProtocol(new IterableProtocol(p, AnalysisSet.Empty));
+                        return p;
+                    }
+                case "Iterator": {
+                        var p = new ProtocolInfo(Entry);
+                        p.AddReference(_node, _unit);
+                        p.AddProtocol(new IteratorProtocol(p, AnalysisSet.Empty));
+                        return p;
+                    }
                 case "KeysView": return ClassInfo[BuiltinTypeId.DictKeys];
                 case "Mapping": return ClassInfo[BuiltinTypeId.Dict];
                 case "MappingView": return ClassInfo[BuiltinTypeId.Dict];
                 case "MutableMapping": return ClassInfo[BuiltinTypeId.Dict];
                 case "MutableSequence": return ClassInfo[BuiltinTypeId.List];
                 case "MutableSet": return ClassInfo[BuiltinTypeId.Set];
-                case "Sequence": return ClassInfo[BuiltinTypeId.Tuple];
+                case "Sequence": return ClassInfo[BuiltinTypeId.List];
                 case "ValuesView": return ClassInfo[BuiltinTypeId.DictValues];
                 case "Dict": return ClassInfo[BuiltinTypeId.Dict];
                 case "List": return ClassInfo[BuiltinTypeId.List];
