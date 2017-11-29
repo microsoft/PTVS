@@ -30,13 +30,13 @@ namespace Microsoft.PythonTools.Intellisense {
             var options = new CompletionOptions {
                 ConvertTabsToSpaces = session.TextView.Options.IsConvertTabsToSpacesEnabled(),
                 IndentSize = session.TextView.Options.GetIndentSize(),
-                TabSize = session.TextView.Options.GetTabSize()
+                TabSize = session.TextView.Options.GetTabSize(),
+                IntersectMembers = pyService.AdvancedOptions.IntersectMembers,
+                HideAdvancedMembers = pyService.LangPrefs.HideAdvancedMembers,
+                FilterCompletions = pyService.AdvancedOptions.FilterCompletions,
+                SearchMode = pyService.AdvancedOptions.SearchMode
             };
 
-            options.IntersectMembers = pyService.AdvancedOptions.IntersectMembers;
-            options.HideAdvancedMembers = pyService.LangPrefs.HideAdvancedMembers;
-            options.FilterCompletions = pyService.AdvancedOptions.FilterCompletions;
-            options.SearchMode = pyService.AdvancedOptions.SearchMode;
             return options;
         }
 
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Intellisense {
             => session.Properties[CompleteWord] = true;
 
         public static bool IsCompleteWordMode(this IIntellisenseSession session) 
-            => session.Properties.TryGetProperty(CompleteWord, out bool prop) && prop;
+            => (session.Properties.TryGetProperty(CompleteWord, out bool prop) && prop) || IntellisenseController.ForceCompletions;
     }
 
     class CompletionSource : ICompletionSource {

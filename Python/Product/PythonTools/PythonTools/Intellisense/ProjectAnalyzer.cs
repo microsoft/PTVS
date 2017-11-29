@@ -2380,12 +2380,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                    snapshot,
-                    span.Start,
-                    span.End,
-                    headerIndex
-                );
+                if (span.Length > 0) {
+                    yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
+                        snapshot,
+                        span.Start,
+                        span.End,
+                        headerIndex
+                    );
+                }
             }
         }
 
