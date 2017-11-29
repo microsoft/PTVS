@@ -43,12 +43,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return null;
             }
 
+            // IronPython 2.7.8 changed the executable names for 64-bit vs 32-bit
+            var ipyExe = arch == InterpreterArchitecture.x64 ? "ipy64.exe" : "ipy.exe";
+            var ipywExec = arch == InterpreterArchitecture.x64 ? "ipyw64.exe" : "ipyw.exe";
+            if (File.Exists(Path.Combine(prefixPath, "ipy32.exe"))) {
+                ipyExe = arch == InterpreterArchitecture.x64 ? "ipy.exe" : "ipy32.exe";
+                ipywExec = arch == InterpreterArchitecture.x64 ? "ipyw.exe" : "ipyw32.exe";
+            }
+
             return new InterpreterConfiguration(
                 GetInterpreterId(arch),
                 string.Format("IronPython 2.7{0: ()}", arch),
                 prefixPath,
-                Path.Combine(prefixPath, arch == InterpreterArchitecture.x64 ? "ipy64.exe" : "ipy.exe"),
-                Path.Combine(prefixPath, arch == InterpreterArchitecture.x64 ? "ipyw64.exe" : "ipyw.exe"),
+                Path.Combine(prefixPath, ipyExe),
+                Path.Combine(prefixPath, ipywExe),
                 "IRONPYTHONPATH",
                 arch,
                 new Version(2, 7),
