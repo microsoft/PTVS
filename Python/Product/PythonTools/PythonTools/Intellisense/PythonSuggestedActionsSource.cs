@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     .Distinct()
                     .ToArray();
                 if (actions.Any()) {
-                    suggestions.Add(new SuggestedActionSet(actions));
+                    suggestions.Add(new SuggestedActionSet(PredefinedSuggestedActionCategoryNames.CodeFix, actions));
                 }
             }
 

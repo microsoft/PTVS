@@ -95,6 +95,8 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             }
         }
 
+#pragma warning disable 618 // TODO: deal with 15.6 MatchKind deprecation later
+
         private async Task FindMatchesAsync(INavigateToCallback callback, string searchValue, CancellationToken token) {
             var matchers = new List<Tuple<FuzzyStringMatcher, string, MatchKind>> {
                     Tuple.Create(new FuzzyStringMatcher(FuzzyMatchMode.Prefix), searchValue, MatchKind.Prefix),
@@ -169,6 +171,8 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 );
             }
         }
+
+#pragma warning restore 618
 
         public void StopSearch() {
             try {
