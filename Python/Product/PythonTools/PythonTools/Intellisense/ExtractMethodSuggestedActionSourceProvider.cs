@@ -82,6 +82,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (MethodExtractor.CanExtract(_view) == true) {
                     return new SuggestedActionSet[] {
                     new SuggestedActionSet(
+                        PredefinedSuggestedActionCategoryNames.Refactoring,
                         new [] {  new SuggestedAction(_parent, _view) },
                         SuggestedActionSetPriority.High
                     )
