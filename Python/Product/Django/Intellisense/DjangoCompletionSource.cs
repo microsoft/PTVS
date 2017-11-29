@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 return;
             }
 
-            var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+            var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange.Start, artifact.InnerRange.Length);
             artifact.Parse(artifactText);
 
             ITrackingSpan applicableSpan;
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             var artifacts = doc.HtmlEditorTree.ArtifactCollection.ItemsInRange(new TextRange(0, triggerPoint.Position));
             foreach (var artifact in artifacts.OfType<TemplateBlockArtifact>().Reverse()) {
-                var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+                var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange.Start, artifact.InnerRange.Length);
                 artifact.Parse(artifactText);
                 if (artifact.Block != null) {
                     yield return artifact.Block;
