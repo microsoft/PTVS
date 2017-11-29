@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             var artifacts = doc.HtmlEditorTree.ArtifactCollection;
             foreach (var artifact in artifacts.OfType<TemplateBlockArtifact>()) {
-                var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+                var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange.Start, artifact.InnerRange.Length);
                 artifact.Parse(artifactText);
                 if (artifact.Block != null) {
                     var varNames = artifact.Block.GetVariables();

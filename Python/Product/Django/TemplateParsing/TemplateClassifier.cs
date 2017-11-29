@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
 
             int artifactStart = artifact.InnerRange.Start;
-            var artifactText = _htmlDoc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+            var artifactText = _htmlDoc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange.Start, artifact.InnerRange.Length);
             artifact.Parse(artifactText);
 
             var classifications = artifact.GetClassifications();
