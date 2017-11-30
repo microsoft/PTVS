@@ -179,10 +179,21 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
             if (Ast.ReturnAnnotation != null) {
+                var ann = ddg._eval.EvaluateAnnotation(Ast.ReturnAnnotation);
+                var resType = AnalysisSet.Empty;
+                if (Ast.IsGenerator && ann.Split<GeneratorInfo>(out var gens, out resType)) {
+                    var gen = ((FunctionScope)Scope).Generator;
+                    foreach (var g in gens) {
+                        g.Yields.CopyTo(gen.Yields);
+                        g.Sends.CopyTo(gen.Sends);
+                        g.Returns.CopyTo(gen.Returns);
+                    }
+                }
+
                 ((FunctionScope)Scope).AddReturnTypes(
                     Ast.ReturnAnnotation,
                     ddg._unit,
-                    ddg._eval.EvaluateAnnotation(Ast.ReturnAnnotation).GetInstanceType()
+                    resType.GetInstanceType()
                 );
             }
         }

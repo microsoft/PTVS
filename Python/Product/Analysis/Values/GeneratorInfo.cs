@@ -135,6 +135,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        internal override bool UnionEquals(AnalysisValue ns, int strength) {
+            if (ns is GeneratorInfo other) {
+                return Yields.Types.SetEquals(other.Yields.Types);
+            }
+            return false;
+        }
+
+        internal override int UnionHashCode(int strength) {
+            // Arbitrarily selected prime number
+            return 968897;
+        }
+
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
+            if (ns is GeneratorInfo other) {
+                other.Yields.CopyTo(Yields);
+                other.Sends.CopyTo(Sends);
+                other.Returns.CopyTo(Returns);
+            }
+            return this;
+        }
+
         public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             var desc = new List<KeyValuePair<string, string>> {
                 new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, "generator")
@@ -142,14 +163,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             bool needClosingBracket = false;
 
-            var yieldTypes = Yields.Types.GetRichDescriptions().ToList();
+            var yieldTypes = Yields.Types.GetRichDescriptions(unionPrefix: "{", unionSuffix: "}").ToList();
             if (yieldTypes.Any()) {
                 needClosingBracket = true;
                 desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "["));
                 desc.AddRange(yieldTypes);
             }
 
-            var sendTypes = Sends.Types.GetRichDescriptions().ToList();
+            var sendTypes = Sends.Types.GetRichDescriptions(unionPrefix: "{", unionSuffix: "}").ToList();
             if (sendTypes.Any()) {
                 if (!needClosingBracket) {
                     needClosingBracket = true;
@@ -160,12 +181,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 desc.AddRange(sendTypes);
             }
 
-            var resTypes = Returns.Types.GetRichDescriptions().ToList();
+            var resTypes = Returns.Types.GetRichDescriptions(unionPrefix: "{", unionSuffix: "}").ToList();
             if (resTypes.Any()) {
                 if (!needClosingBracket) {
                     needClosingBracket = true;
                     desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "["));
                     desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, "..."));
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, "..."));
+                } else if (!sendTypes.Any()) {
                     desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
                     desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, "..."));
                 }
