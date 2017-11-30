@@ -180,10 +180,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var p = FunctionDefinition.Parameters[i];
 
                 var name = MakeParameterName(p);
+                var annotation = GetAnnotation(ProjectState, p, DeclaringModule.Tree);
                 var defaultValue = GetDefaultValue(ProjectState, p, DeclaringModule.Tree);
 
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Parameter, name);
-                if (!String.IsNullOrWhiteSpace(defaultValue)) {
+                if (!string.IsNullOrWhiteSpace(annotation)) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " : ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, annotation);
+                }
+                if (!string.IsNullOrWhiteSpace(defaultValue)) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " = ");
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, defaultValue);
                 }
@@ -270,22 +275,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ":");
                 }
 
-                if (FunctionDefinition.IsGenerator) {
-                    var lambdaExpr = ((ExpressionStatement)FunctionDefinition.Body).Expression;
-                    Expression yieldExpr = null;
-                    YieldExpression ye;
-                    YieldFromExpression yfe;
-                    if ((ye = lambdaExpr as YieldExpression) != null) {
-                        yieldExpr = ye.Expression;
-                    } else if ((yfe = lambdaExpr as YieldFromExpression) != null) {
-                        yieldExpr = yfe.Expression;
-                    } else {
-                        Debug.Assert(false, "lambdaExpr is not YieldExpression or YieldFromExpression");
-                    }
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, yieldExpr.ToCodeString(DeclaringModule.Tree));
-                } else {
-                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ((ReturnStatement)FunctionDefinition.Body).Expression.ToCodeString(DeclaringModule.Tree));
-                }
+                yield return new KeyValuePair<string, string>(
+                    WellKnownRichDescriptionKinds.Misc, 
+                    (
+                        (FunctionDefinition.Body as ReturnStatement)?.Expression ??
+                        (Node)(FunctionDefinition.Body as ExpressionStatement)?.Expression ??
+                        FunctionDefinition.Body
+                    ).ToCodeString(DeclaringModule.Tree)
+                );
             } else {
                 if (FunctionDefinition.IsCoroutine) {
                     yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "async ");
@@ -497,54 +494,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal static string GetDefaultValue(PythonAnalyzer state, Parameter curParam, PythonAst tree) {
-            if (curParam.DefaultValue != null) {
-                // TODO: Support all possible expressions for default values, we should
-                // probably have a PythonAst walker for expressions or we should add ToCodeString()
-                // onto Python ASTs so they can round trip
-                ConstantExpression defaultValue = curParam.DefaultValue as ConstantExpression;
-                if (defaultValue != null) {
-                    return defaultValue.GetConstantRepr(state.LanguageVersion);
-                } else {
-
-                    NameExpression nameExpr = curParam.DefaultValue as NameExpression;
-                    if (nameExpr != null) {
-                        return nameExpr.Name;
-                    } else {
-
-                        DictionaryExpression dict = curParam.DefaultValue as DictionaryExpression;
-                        if (dict != null) {
-                            if (dict.Items.Count == 0) {
-                                return "{}";
-                            } else {
-                                return "{...}";
-                            }
-                        } else {
-
-                            ListExpression list = curParam.DefaultValue as ListExpression;
-                            if (list != null) {
-                                if (list.Items.Count == 0) {
-                                    return "[]";
-                                } else {
-                                    return "[...]";
-                                }
-                            } else {
-
-                                TupleExpression tuple = curParam.DefaultValue as TupleExpression;
-                                if (tuple != null) {
-                                    if (tuple.Items.Count == 0) {
-                                        return "()";
-                                    } else {
-                                        return "(...)";
-                                    }
-                                } else {
-                                    return curParam.DefaultValue.ToCodeString(tree).Trim();
-                                }
-                            }
-                        }
-                    }
-                }
+            var v = curParam.DefaultValue;
+            if (v == null) {
+                return null;
+            } else if (v is ConstantExpression ce) {
+                return ce.GetConstantRepr(state.LanguageVersion);
+            } else if (v is NameExpression ne) {
+                return ne.Name;
+            } else if (v is DictionaryExpression dict) {
+                return dict.Items.Any() ? "{...}" : "{}";
+            } else if (v is ListExpression list) {
+                return list.Items.Any() ? "[...]" : "[]";
+            } else if (v is TupleExpression tuple) {
+                return tuple.Items.Any() ? "(...)" : "()";
+            } else {
+                return v.ToCodeString(tree, CodeFormattingOptions.Traditional).Trim();
             }
-            return null;
+        }
+
+        internal static string GetAnnotation(PythonAnalyzer state, Parameter curParam, PythonAst tree) {
+            var a = curParam.Annotation;
+            if (a == null) {
+                return null;
+            }
+            return a.ToCodeString(tree, CodeFormattingOptions.Traditional).Trim();
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {

@@ -41,8 +41,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetInstanceType();
         }
 
-        public override string Description => _klass.Name;
-        public override string ShortDescription => _klass.Name;
+        public override string Description => _klass.InstanceDescription;
+        public override string ShortDescription => _klass.ShortInstanceDescription;
         public override string Documentation => _klass.Documentation;
 
         public override PythonMemberType MemberType {

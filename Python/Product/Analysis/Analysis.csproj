@@ -204,6 +204,7 @@
     <Compile Include="Values\DictBuiltinClassInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
     <Compile Include="Values\ProtocolInfo.cs" />
+    <Compile Include="Values\Protocols.cs" />
     <Compile Include="Values\SpecializedInstanceInfo.cs" />
     <Compile Include="Values\SyntheticDefinitionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />

@@ -102,10 +102,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     res.Append(' ');
                 }
             } else {
-                var listWhiteSpace = this.GetListWhiteSpace(ast);
+                var listWhiteSpace = format.SpaceBeforeComma == null ? this.GetListWhiteSpace(ast) : null;
+                var spaceAfterComma = format.SpaceAfterComma.HasValue ? (format.SpaceAfterComma.Value ? " " : "") : (string)null;
                 for (int i = 0; i < _args.Length; i++) {
                     if (i > 0) {
-                        if (listWhiteSpace != null) {
+                        if (format.SpaceBeforeComma == true) {
+                            res.Append(' ');
+                        } else if (listWhiteSpace != null) {
                             res.Append(listWhiteSpace[i - 1]);
                         }
                         res.Append(',');
@@ -114,7 +117,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         continue;
                     }
 
-                    _args[i].AppendCodeString(res, ast, format);
+                    _args[i].AppendCodeString(res, ast, format, spaceAfterComma);
                 }
 
                 if (listWhiteSpace != null && listWhiteSpace.Length == _args.Length) {

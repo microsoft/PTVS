@@ -68,11 +68,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Instance.SelfSet;
         }
 
-        public override string Name {
+        public override string Name => _type.Name;
+        public string InstanceDescription {
             get {
+                switch (TypeId) {
+                    case BuiltinTypeId.NoneType:
+                        return "None";
+                    case BuiltinTypeId.Unknown:
+                        return "<unknown>";
+                }
                 return _type.Name;
             }
         }
+
+        public string ShortInstanceDescription => InstanceDescription;
 
         public override IEnumerable<IAnalysisSet> Mro {
             get {

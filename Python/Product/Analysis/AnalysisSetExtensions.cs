@@ -258,5 +258,54 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
+        class DotsLastStringComparer : IComparer<string> {
+            public readonly static IComparer<string> Instance = new DotsLastStringComparer();
+
+            private DotsLastStringComparer() { }
+
+            public int Compare(string x, string y) {
+                if (x == "...") {
+                    return y == "..." ? 0 : 1;
+                } else if (y == "...") {
+                    return -1;
+                }
+
+                return x.CompareTo(y);
+            }
+        }
+
+        public static IEnumerable<string> GetDescriptions(this IAnalysisSet self) {
+            return self
+                .Select(v => {
+                    if (v.Push()) {
+                        try {
+                            return v.Description;
+                        } finally {
+                            v.Pop();
+                        }
+                    }
+                    return "...";
+                })
+                .Where(d => !string.IsNullOrEmpty(d))
+                .OrderBy(d => d, DotsLastStringComparer.Instance)
+                .Distinct();
+        }
+
+        public static IEnumerable<string> GetShortDescriptions(this IAnalysisSet self) {
+            return self
+                .Select(v => {
+                    if (v.Push()) {
+                        try {
+                            return v.ShortDescription;
+                        } finally {
+                            v.Pop();
+                        }
+                    }
+                    return "...";
+                })
+                .Where(d => !string.IsNullOrEmpty(d))
+                .OrderBy(d => d, DotsLastStringComparer.Instance)
+                .Distinct();
+        }
     }
 }
