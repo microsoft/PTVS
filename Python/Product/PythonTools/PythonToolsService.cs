@@ -158,7 +158,10 @@ namespace Microsoft.PythonTools {
                 }
 
                 _logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
-                    { "NoDatabaseFactory", ExperimentalOptions.NoDatabaseFactory }
+                    { "NoDatabaseFactory", ExperimentalOptions.NoDatabaseFactory },
+                    { "AutoDetectCondaEnvironments", ExperimentalOptions.AutoDetectCondaEnvironments },
+                    { "UseCondaPackageManager", ExperimentalOptions.UseCondaPackageManager },
+                    { "UseVsCodeDebugger", ExperimentalOptions.UseVsCodeDebugger }
                 });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
