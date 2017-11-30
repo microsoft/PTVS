@@ -23,11 +23,19 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     abstract class Protocol : AnalysisValue, IHasRichDescription {
-        public readonly ProtocolInfo Self;
         private Dictionary<string, IAnalysisSet> _members;
 
         public Protocol(ProtocolInfo self) {
             Self = self;
+        }
+
+        public ProtocolInfo Self { get; private set; }
+
+        public virtual Protocol Clone(ProtocolInfo newSelf) {
+            var p = ((Protocol)MemberwiseClone());
+            p._members = null;
+            p.Self = Self;
+            return p;
         }
 
         protected void EnsureMembers() {
@@ -47,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         protected IAnalysisSet MakeMethod(string qualname, IReadOnlyList<IAnalysisSet> arguments, IAnalysisSet returnValue) {
             var v = new ProtocolInfo(Self.DeclaringModule as ProjectEntry);
-            v.AddProtocol(new CallableProtocol(v, qualname, arguments, returnValue));
+            v.AddProtocol(new CallableProtocol(v, qualname, arguments, returnValue, PythonMemberType.Method));
             return v;
         }
 
@@ -75,17 +83,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class CallableProtocol : Protocol {
         private readonly Lazy<OverloadResult[]> _overloads;
 
-        public CallableProtocol(ProtocolInfo self, string qualname, IReadOnlyList<IAnalysisSet> arguments, IAnalysisSet returnType)
+        public CallableProtocol(ProtocolInfo self, string qualname, IReadOnlyList<IAnalysisSet> arguments, IAnalysisSet returnType, PythonMemberType memberType = PythonMemberType.Function)
             : base(self) {
             Name = qualname ?? "callable";
             Arguments = arguments;
             ReturnType = returnType;
             _overloads = new Lazy<OverloadResult[]>(GenerateOverloads);
+            MemberType = memberType;
         }
 
         public override string Name { get; }
 
         internal override BuiltinTypeId TypeId => BuiltinTypeId.Function;
+        public override PythonMemberType MemberType { get; }
 
         protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
             members["__call__"] = Self;
@@ -145,13 +155,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _iterator = iterator;
         }
 
-        private void EnsureMembers(Dictionary<string, IAnalysisSet> members) {
+        protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
             members["__iter__"] = MakeMethod("__iter__", _iterator);
         }
 
-        public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
-            return _iterator;
-        }
+        public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) => _iterator;
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) => _yielded;
 
         public override string Name => "iterable";
 
@@ -174,7 +183,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _yielded = yielded;
         }
 
-        private void EnsureMembers(Dictionary<string, IAnalysisSet> members) {
+        protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
             if (Self.DeclaringModule?.Tree?.LanguageVersion.Is3x() ?? true) {
                 members["__next__"] = MakeMethod("__next__", _yielded);
             } else {

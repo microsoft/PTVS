@@ -180,9 +180,12 @@ i : Iterable = ...
 ii : Iterator = ...
 i_int : Iterable[int] = ...
 ii_int : Iterator[int] = ...
+g_int : Generator[int] = ...
 
-call_i_s : Callable[int, str] = ...
+call_i_s : Callable[[int], str] = ...
 call_i_s_ret = call_i_s()
+call_iis_i : Callable[[int, int, str], int] = ...
+call_iis_i_ret = call_iis_i()
 ");
             analyzer.WaitForAnalysis();
 
@@ -190,9 +193,12 @@ call_i_s_ret = call_i_s()
             analyzer.AssertDescription("ii", "iterator");
             analyzer.AssertDescription("i_int", "iterable[int]");
             analyzer.AssertDescription("ii_int", "iterator[int]");
+            analyzer.AssertDescription("g_int", "generator[int]");
 
             analyzer.AssertIsInstance("call_i_s", BuiltinTypeId.Function);
             analyzer.AssertIsInstance("call_i_s_ret", BuiltinTypeId.Str);
+            analyzer.AssertIsInstance("call_iis_i", BuiltinTypeId.Function);
+            analyzer.AssertIsInstance("call_iis_i_ret", BuiltinTypeId.Int);
         }
     }
 }

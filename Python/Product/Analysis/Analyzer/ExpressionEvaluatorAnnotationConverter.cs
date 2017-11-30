@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
@@ -77,6 +78,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override IAnalysisSet MakeUnion(IReadOnlyList<IAnalysisSet> types) {
             return AnalysisSet.UnionAll(types);
+        }
+
+        public override IAnalysisSet MakeList(IReadOnlyList<IAnalysisSet> types) {
+            return new TypingTypeInfo(" List").MakeGeneric(types);
         }
 
         public override IAnalysisSet MakeOptional(IAnalysisSet type) {

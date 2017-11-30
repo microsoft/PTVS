@@ -33,8 +33,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private IAnalysisSet _instance;
         private Dictionary<string, IAnalysisSet> _members;
         private BuiltinTypeId? _typeId;
+        private PythonMemberType? _memberType;
 
-        public ProtocolInfo(ProjectEntry declaringModule) {
+        public ProtocolInfo(IPythonProjectEntry declaringModule) {
             _protocols = new List<Protocol>();
             DeclaringModule = declaringModule;
             DeclaringVersion = declaringModule?.AnalysisVersion ?? -1;
@@ -46,11 +47,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _instance = null;
             _members = null;
             _typeId = null;
+            _memberType = null;
         }
 
         public override string Name => string.Join(", ", _protocols.Select(p => p.Name));
         public override IEnumerable<OverloadResult> Overloads => _protocols.SelectMany(p => p.Overloads);
-        public override PythonMemberType MemberType => PythonMemberType.Instance;
         public override IPythonProjectEntry DeclaringModule { get; }
         public override int DeclaringVersion { get; }
 
@@ -80,6 +81,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _typeId.GetValueOrDefault();
             }
         }
+
+        public override PythonMemberType MemberType {
+            get {
+                if (_memberType == null) {
+                    foreach (var p in _protocols) {
+                        if (p.MemberType == PythonMemberType.Unknown) {
+                            continue;
+                        }
+
+                        if (_memberType == null) {
+                            _memberType = p.MemberType;
+                        } else if (_memberType != p.MemberType) {
+                            _memberType = PythonMemberType.Multiple;
+                            break;
+                        }
+                    }
+                    if (_memberType == null) {
+                        _memberType = PythonMemberType.Unknown;
+                    }
+                }
+                return _memberType.GetValueOrDefault();
+            }
+        }
+
 
         internal override void AddReference(Node node, AnalysisUnit analysisUnit) {
             _references.GetReferences(analysisUnit.ProjectEntry).AddReference(new EncodedLocation(analysisUnit, node));
@@ -210,7 +235,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override bool UnionEquals(AnalysisValue av, int strength) {
-            return av.GetType() == GetType();
+            return av.GetType() == GetType() && av.DeclaringModule == DeclaringModule;
         }
 
         internal override int UnionHashCode(int strength) {
@@ -218,7 +243,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
-            // TODO: Merge properly
+            if (av is ProtocolInfo other) {
+                var pi = new ProtocolInfo(DeclaringModule);
+                foreach (var p in _protocols.Concat(other._protocols).GroupBy(p => p.GetType())) {
+                    var newP = p.FirstOrDefault()?.Clone(pi);
+                    if (newP != null) {
+                        pi.AddProtocol(newP);
+                    }
+                }
+                return pi;
+            }
             return this;
         }
 

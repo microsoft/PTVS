@@ -61,6 +61,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             return $"<Typing:{_baseName}>";
         }
+
+        public IReadOnlyList<IAnalysisSet> ToTypeList() {
+            if (_baseName == " List") {
+                return _args;
+            }
+            return null;
+        }
     }
 
     sealed class TypingTypeInfoFinalizer {
@@ -81,6 +88,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private AnalysisValue NoneType => ClassInfo[BuiltinTypeId.NoneType];
         private AnalysisValue None => State._noneInst;
         private ProjectEntry Entry => _unit.ProjectEntry;
+
+
+        private static IReadOnlyList<IAnalysisSet> GetTypeList(IAnalysisSet item) {
+            return item.OfType<TypingTypeInfo>().FirstOrDefault()?.ToTypeList();
+        }
 
         private SequenceBuiltinClassInfo GetSequenceType(string name) {
             switch (name) {
@@ -209,11 +221,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return Scope.GetOrMakeNodeValue(_node, NodeValueKind.None, n => {
                         var p = new ProtocolInfo(_unit.ProjectEntry);
                         p.AddReference(n, _unit);
+                        var callArgs = GetTypeList(args[0]) ?? new[] { args[0] };
                         p.AddProtocol(new CallableProtocol(
                             p,
                             null,
-                            args.Take(args.Count - 1).Select(ToInstance).ToArray(),
-                            ToInstance(args.Last())
+                            callArgs,
+                            ToInstance(args.ElementAtOrDefault(1) ?? AnalysisSet.Empty)
                         ));
                         return p;
                     });
@@ -230,7 +243,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return (name == "Iterator") ? iter.GetIterator(_node, _unit) : iter;
                     }
 
-                case "Generator": return null;
+                case "Generator":
+                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.Iterator, n => {
+                        var gi = new GeneratorInfo(State, Entry);
+                        if (args.Count >= 1) {
+                            gi.AddYield(n, _unit, ToInstance(args[0]), false);
+                        }
+                        if (args.Count >= 2) {
+                            gi.AddSend(n, _unit, ToInstance(args[1]), false);
+                        }
+                        if (args.Count >= 3) {
+                            gi.AddReturn(n, _unit, ToInstance(args[2]), false);
+                        }
+                        return gi;
+                    });
                 case "NamedTuple": return null;
             }
 
@@ -273,6 +299,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "FrozenSet": return ClassInfo[BuiltinTypeId.FrozenSet];
                 case "NamedTuple": return ClassInfo[BuiltinTypeId.Tuple];
                 case "Generator": return ClassInfo[BuiltinTypeId.Generator];
+                case "NoReturn": return AnalysisSet.Empty;
+                case " List": return null;
             }
 
             return null;

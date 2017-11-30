@@ -110,6 +110,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 base.PostWalk(node);
             }
 
+            public override bool Walk(ListExpression node) {
+                _ops.Add(new StartUnionOp());
+                return base.Walk(node);
+            }
+
+            public override void PostWalk(ListExpression node) {
+                _ops.Add(new EndUnionOp(ordered: true));
+                base.PostWalk(node);
+            }
+
             public override void PostWalk(IndexExpression node) {
                 if (_ops.LastOrDefault() is EndUnionOp) {
                     _ops[_ops.Count - 1] = new MakeGenericOp(true);
@@ -187,6 +197,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             class EndUnionOp : Op {
+                private readonly bool _ordered;
+
+                public EndUnionOp(bool ordered = false) {
+                    _ordered = ordered;
+                }
+
                 public override bool Apply<T>(TypeAnnotationConverter<T> converter, Stack<KeyValuePair<string, T>> stack) {
                     var items = new List<T>();
                     if (!stack.Any()) {
@@ -201,7 +217,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         t = stack.Pop();
                     }
                     items.Reverse();
-                    t = new KeyValuePair<string, T>(null, converter.MakeUnion(items));
+                    t = new KeyValuePair<string, T>(null, _ordered ? converter.MakeList(items) : converter.MakeUnion(items));
                     if (t.Value == null) {
                         return false;
                     }
@@ -280,6 +296,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// Returns the types as a single union type.
         /// </summary>
         public virtual T MakeUnion(IReadOnlyList<T> types) => default(T);
+
+        /// <summary>
+        /// Returns the types as a single list type.
+        /// </summary>
+        public virtual T MakeList(IReadOnlyList<T> types) => default(T);
 
         /// <summary>
         /// Ensure the final result is a suitable type. Return null
