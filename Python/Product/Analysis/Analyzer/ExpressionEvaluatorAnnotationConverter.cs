@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
@@ -43,18 +44,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet LookupName(string name) {
-            var value = _eval.LookupAnalysisSetByName(_node, name);
-
-            if (!_unit.ProjectState.Modules.TryGetImportedModule("typing", out var modRef)) {
-                // typing hasn't been imported, so we can't be using any of its members
-                return value;
-            }
-
-            if (value.Any(v => v.DeclaringModule == null && v.PythonType?.DeclaringModule.Name == "typing") &&
-                modRef.AnalysisModule is TypingModuleInfo typing) {
-                return typing.GetTypingMember(_node, _unit, name) ?? value;
-            }
-            return value;
+            return _eval.LookupAnalysisSetByName(_node, name);
         }
 
         public override IAnalysisSet GetTypeMember(IAnalysisSet baseType, string member) {
@@ -62,6 +52,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return rest.GetMember(_node, _unit, member).UnionAll(
                     typeInfo.Select(tti => tti.GetTypeMember(_node, _unit, member))
                 );
+            } else if (baseType.Split(out IReadOnlyList<TypingModuleInfo> typingModule, out rest)) {
+                return AnalysisSet.UnionAll(typingModule.Select(tm => tm.GetTypingMember(_node, _unit, member)));
             }
 
             return baseType.GetMember(_node, _unit, member);
