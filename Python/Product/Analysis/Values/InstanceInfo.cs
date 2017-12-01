@@ -392,42 +392,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetAsyncEnumeratorTypes(node, unit);
         }
 
-        public override IPythonProjectEntry DeclaringModule {
-            get {
-                return _classInfo.DeclaringModule;
-            }
-        }
+        public ClassInfo ClassInfo => _classInfo;
 
-        public override int DeclaringVersion {
-            get {
-                return _classInfo.DeclaringVersion;
-            }
-        }
-
-        public override string Description {
-            get {
-                return ClassInfo.ClassDefinition.Name + " instance";
-            }
-        }
-
-        public override string Documentation {
-            get {
-                return ClassInfo.Documentation;
-            }
-        }
-
-        public override PythonMemberType MemberType {
-            get {
-                return PythonMemberType.Instance;
-            }
-        }
+        public override IPythonProjectEntry DeclaringModule => ClassInfo.DeclaringModule;
+        public override int DeclaringVersion => ClassInfo.DeclaringVersion;
+        public override string Description => ClassInfo.Name;
+        public override string Documentation => ClassInfo.Documentation;
+        public override PythonMemberType MemberType => PythonMemberType.Instance;
 
         internal override bool IsOfType(IAnalysisSet klass) {
             return klass.Contains(ClassInfo) || klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Object]);
-        }
-
-        public ClassInfo ClassInfo {
-            get { return _classInfo; }
         }
 
         public override string ToString() {

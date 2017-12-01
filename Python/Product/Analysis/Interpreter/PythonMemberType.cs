@@ -96,6 +96,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// The member represents a code snippet
         /// </summary>
-        CodeSnippet
+        CodeSnippet,
+
+        /// <summary>
+        /// The member represents a named argument
+        /// </summary>
+        NamedArgument
     }
 }

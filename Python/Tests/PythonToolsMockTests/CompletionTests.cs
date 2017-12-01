@@ -829,8 +829,8 @@ class Baz(Fob, Oar):
                     view3.GetCompletionListAfter("def ").Select(x => x.InsertionText),
                 @"capitalize(self):
         return super().capitalize()",
-                @"index(self, v):
-        return super().index(v)"
+                @"index(self, sub, start, end):
+        return super().index(sub, start, end)"
                 );
 
                 view2.Text = view3.Text = @"class Fob(str, list):
@@ -844,8 +844,8 @@ class Baz(Fob, Oar):
                 );
                 AssertUtil.Contains(
                     view3.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, v):
-        return super().index(v)"
+                    @"index(self, sub, start, end):
+        return super().index(sub, start, end)"
                 );
 
                 view2.Text = view3.Text = @"class Fob(list, str):
@@ -858,8 +858,8 @@ class Baz(Fob, Oar):
                 );
                 AssertUtil.Contains(
                     view3.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, v):
-        return super().index(v)"
+                    @"index(self, item, start, stop):
+        return super().index(item, start, stop)"
                 );
             }
         }
@@ -1047,7 +1047,7 @@ x = f(";
 
             using (var view = new PythonEditor(code)) {
                 view.Text = view.Text;
-                AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "param1", "param2");
+                AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "param1=", "param2=");
                 AssertUtil.DoesntContain(view.GetCompletions(0), "param1");
             }
         }
@@ -1071,8 +1071,8 @@ x = m.f(";
                     Console.WriteLine("Retry {0}", retries);
                     view.Text = view.Text;
                 }
-                AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "param1", "param2");
-                AssertUtil.DoesntContain(view.GetCompletions(0), "param1");
+                AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "param1=", "param2=");
+                AssertUtil.DoesntContain(view.GetCompletions(0), "param1=");
             }
         }
 

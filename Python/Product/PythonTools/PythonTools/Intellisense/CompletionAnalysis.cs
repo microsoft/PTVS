@@ -103,10 +103,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal AnalysisEntry GetAnalysisEntry() {
+        internal PythonTextBufferInfo GetBufferInfo() {
             var bi = PythonTextBufferInfo.TryGetForBuffer(TextBuffer);
             Debug.Assert(bi != null, "Getting completions from uninitialized buffer " + TextBuffer.ToString());
-            return bi?.AnalysisEntry;
+            return bi;
+        }
+
+        internal AnalysisEntry GetAnalysisEntry() {
+            return GetBufferInfo()?.AnalysisEntry;
         }
 
         private static Stopwatch MakeStopWatch() {

@@ -871,6 +871,7 @@ import fob");
             // Lambda Expression
 
             TestOneString(PythonLanguageVersion.V27, "lambda");
+            TestOneString(PythonLanguageVersion.V27, "lambda ");
             TestOneString(PythonLanguageVersion.V27, "lambda :");
             TestOneString(PythonLanguageVersion.V27, "lambda pass");
             TestOneString(PythonLanguageVersion.V27, "lambda : pass"); 
@@ -1521,6 +1522,8 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V35, "@fob\r\n\r\nasync def f(): pass");
             TestOneString(PythonLanguageVersion.V35, "@fob(2)\r\nasync \\\r\ndef f(): pass");
 
+            TestOneString(PythonLanguageVersion.V35, "def f(a, ");
+
             // Variable annotations
             TestOneString(PythonLanguageVersion.V36, "a:b");
             TestOneString(PythonLanguageVersion.V36, "a:b = 1");
@@ -1544,6 +1547,11 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "exec(f, g, h) in i, j");
             TestOneString(PythonLanguageVersion.V27, "exec f in g");
             TestOneString(PythonLanguageVersion.V27, "exec(f,g)");
+        }
+
+        [TestMethod, Priority(0)]
+        public void RoundTripErrorParameter() {
+            TestOneString(PythonLanguageVersion.V35, "def inner(_it, _timer{init}): pass");
         }
 
 
