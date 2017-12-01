@@ -149,9 +149,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return null;
                     }
                 case "KeysView":
-                    if (args.Count < 1) {
-                        return null;
-                    }
                     return (Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
                         var di = new DictionaryInfo(Entry, n);
                         di.AddTypes(
@@ -163,9 +160,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return di;
                     }) as DictionaryInfo)?.GetKeysView(_unit);
                 case "ValuesView":
-                    if (args.Count < 1) {
-                        return null;
-                    }
                     return (Scope.GetOrMakeNodeValue(_node, NodeValueKind.DictLiteral, n => {
                         var di = new DictionaryInfo(Entry, n);
                         di.AddTypes(
@@ -215,9 +209,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
 
                 case "Callable":
-                    if (args.Count == 0) {
-                        return null;
-                    }
                     return Scope.GetOrMakeNodeValue(_node, NodeValueKind.None, n => {
                         var p = new ProtocolInfo(_unit.ProjectEntry);
                         p.AddReference(n, _unit);
@@ -246,9 +237,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "Generator":
                     return Scope.GetOrMakeNodeValue(_node, NodeValueKind.Iterator, n => {
                         var gi = new GeneratorInfo(State, Entry);
-                        if (args.Count >= 1) {
-                            gi.AddYield(n, _unit, ToInstance(args[0]), false);
-                        }
+                        gi.AddYield(n, _unit, ToInstance(args[0]), false);
                         if (args.Count >= 2) {
                             gi.AddSend(n, _unit, ToInstance(args[1]), false);
                         }
@@ -273,16 +262,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "Tuple": return ClassInfo[BuiltinTypeId.Tuple];
                 case "Container": return ClassInfo[BuiltinTypeId.List];
                 case "ItemsView": return ClassInfo[BuiltinTypeId.DictItems];
-                case "Iterable": {
-                        var p = new ProtocolInfo(Entry);
-                        p.AddReference(_node, _unit);
-                        p.AddProtocol(new IterableProtocol(p, AnalysisSet.Empty));
-                        return p;
-                    }
+                case "Iterable":
                 case "Iterator": {
                         var p = new ProtocolInfo(Entry);
                         p.AddReference(_node, _unit);
-                        p.AddProtocol(new IteratorProtocol(p, AnalysisSet.Empty));
+                        p.AddProtocol(name == "Iterable" ? (Protocol)new IterableProtocol(p, AnalysisSet.Empty) : new IteratorProtocol(p, AnalysisSet.Empty));
                         return p;
                     }
                 case "KeysView": return ClassInfo[BuiltinTypeId.DictKeys];

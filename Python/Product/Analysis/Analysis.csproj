@@ -378,7 +378,7 @@
     <Compile Include="Values\BoundMethodInfo.cs" />
     <Compile Include="Values\ModuleInfo.cs" />
     <Compile Include="Values\MultipleMemberInfo.cs" />
-    <Compile Include="AnalysisSetExtensions.cs" />
+    <Compile Include="AnalysisValueSetExtensions.cs" />
     <Compile Include="Values\NumericInstanceInfo.cs" />
     <Compile Include="Values\RangeInfo.cs" />
     <Compile Include="Values\ReflectedNamespace.cs" />

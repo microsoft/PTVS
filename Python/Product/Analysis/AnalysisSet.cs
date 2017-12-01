@@ -460,6 +460,10 @@ namespace Microsoft.PythonTools.Analysis {
         /// if there are any values in <paramref name="trueSet"/> on return.
         /// </summary>
         public static bool Split(this IAnalysisSet set, Func<AnalysisValue, bool> predicate, out IAnalysisSet trueSet, out IAnalysisSet falseSet) {
+            if (predicate == null) {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
             IAnalysisSet empty;
             if (set.Comparer is UnionComparer uc) {
                 empty = CreateUnion(uc);

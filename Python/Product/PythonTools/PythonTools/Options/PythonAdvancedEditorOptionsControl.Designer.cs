@@ -23,7 +23,6 @@ namespace Microsoft.PythonTools.Options {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonAdvancedEditorOptionsControl));
             this._completionCommitedBy = new System.Windows.Forms.TextBox();
             this._completionCommitedByLabel = new System.Windows.Forms.Label();
@@ -42,7 +41,6 @@ namespace Microsoft.PythonTools.Options {
             this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
             this._colorNames = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this._selectionInCompletionGroupBox.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this._completionResultsGroupBox.SuspendLayout();
@@ -173,12 +171,6 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel1.Controls.Add(this._miscOptionsGroupBox, 0, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
-            // contextMenuStrip1
-            // 
-            this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(32, 32);
-            this.contextMenuStrip1.Name = "contextMenuStrip1";
-            resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
-            // 
             // PythonAdvancedEditorOptionsControl
             // 
             resources.ApplyResources(this, "$this");
@@ -223,6 +215,5 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _filterCompletions;
         private System.Windows.Forms.CheckBox _colorNames;
         private System.Windows.Forms.CheckBox _autoListIdentifiers;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
     }
 }

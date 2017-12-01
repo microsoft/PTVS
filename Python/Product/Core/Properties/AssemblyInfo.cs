@@ -41,6 +41,3 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSCommon", CodeBase = "Microsoft.PythonTools.VSCommon.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSInterpreters", CodeBase = "Microsoft.PythonTools.VSInterpreters.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Workspace", CodeBase = "Microsoft.PythonTools.Workspace.dll", Version = AssemblyVersionInfo.StableVersion)]
-
-// HACK: Helps running on 15.5
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost", CodeBase = "Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost.dll")]
