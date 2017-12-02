@@ -711,15 +711,10 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
                         var controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
                         if (controller != null) {
-                            IntellisenseController.ForceCompletions = true;
-                            try {
-                                controller.TriggerCompletionSession(
-                                    (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
-                                    true
-                                );
-                            } finally {
-                                IntellisenseController.ForceCompletions = false;
-                            }
+                            controller.TriggerCompletionSession(
+                                (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
+                                true
+                            );
                             return VSConstants.S_OK;
                         }
                         break;

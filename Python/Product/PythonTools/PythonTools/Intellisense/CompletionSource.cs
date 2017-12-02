@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Intellisense {
             => session.Properties[CompleteWord] = true;
 
         public static bool IsCompleteWordMode(this IIntellisenseSession session) 
-            => (session.Properties.TryGetProperty(CompleteWord, out bool prop) && prop) || IntellisenseController.ForceCompletions;
+            => session.Properties.TryGetProperty(CompleteWord, out bool prop) && prop;
     }
 
     class CompletionSource : ICompletionSource {
