@@ -70,6 +70,11 @@ namespace TestUtilities {
                             if (installPath != null) {
                                 var res = installPath.GetValue("") as string;
                                 if (res != null) {
+                                    // IronPython changed to Any CPU for ipy.exe and ipy32.exe for 32-bit in 2.7.8
+                                    if (File.Exists(Path.Combine(res, "ipy32.exe"))) {
+                                        exeName = x64 ? "ipy.exe" : "ipy32.exe";
+                                    }
+
                                     return new PythonVersion(
                                         new InterpreterConfiguration(
                                             x64 ? "IronPython|2.7-64" : "IronPython|2.7-32",

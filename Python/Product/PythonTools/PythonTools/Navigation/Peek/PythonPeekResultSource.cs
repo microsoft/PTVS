@@ -86,8 +86,7 @@ namespace Microsoft.PythonTools.Navigation.Peek {
                 location.Column - 1,
                 location.Line - 1,
                 location.Column - 1,
-                isReadOnly: false,
-                editorDestination: new Guid(PythonConstants.EditorFactoryGuid)
+                isReadOnly: false
             );
         }
     }
