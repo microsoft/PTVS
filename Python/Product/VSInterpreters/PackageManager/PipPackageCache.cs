@@ -530,6 +530,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var resp = req.GetResponse()) {
                     return new Uri(resp.Headers.Get("Location") ?? uri);
                 }
+            } catch (WebException) {
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Debug.Fail(ex.ToString());
                 // Nowhere else to report this error, so just swallow it

@@ -1913,7 +1913,7 @@ namespace Microsoft.PythonTools.Parsing {
             List<string> commaWhiteSpace = null;
             bool ateTerminator = false;
             var parameters = ateLeftParen ? ParseVarArgsList(TokenKind.RightParenthesis, true, out commaWhiteSpace, out ateTerminator) : null;
-            string closeParenWhiteSpace = _tokenWhiteSpace;
+            string closeParenWhiteSpace = ateTerminator || PeekToken(TokenKind.EndOfFile) ? _tokenWhiteSpace : null;
             FunctionDefinition ret;
             if (parameters == null) {
                 // error in parameters
@@ -1941,7 +1941,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             string arrowWhiteSpace = null;
             Expression returnAnnotation = null;
-            if (MaybeEat(TokenKind.Arrow)) {
+            if (ateTerminator && MaybeEat(TokenKind.Arrow)) {
                 arrowWhiteSpace = _tokenWhiteSpace;
                 var arrStart = GetStart();
                 returnAnnotation = ParseExpression();
@@ -2202,7 +2202,7 @@ namespace Microsoft.PythonTools.Parsing {
             List<string> commaWhiteSpace;
             bool ateTerminator;
             FunctionDefinition func = ParseLambdaHelperStart(out commaWhiteSpace, out ateTerminator);
-            string colonWhiteSpace = _tokenWhiteSpace;
+            string colonWhiteSpace = ateTerminator || PeekToken(TokenKind.EndOfFile) ? _tokenWhiteSpace : null;
 
             Expression expr = ateTerminator ? ParseOldExpression() : Error("");
             return ParseLambdaHelperEnd(func, expr, whitespace, colonWhiteSpace, commaWhiteSpace, ateTerminator);
@@ -2214,7 +2214,7 @@ namespace Microsoft.PythonTools.Parsing {
             List<string> commaWhiteSpace;
             bool ateTerminator;
             FunctionDefinition func = ParseLambdaHelperStart(out commaWhiteSpace, out ateTerminator);
-            string colonWhiteSpace = _tokenWhiteSpace;
+            string colonWhiteSpace = ateTerminator || PeekToken(TokenKind.EndOfFile) ? _tokenWhiteSpace : null;
 
             Expression expr = ateTerminator ? ParseExpression() : Error("");
             return ParseLambdaHelperEnd(func, expr, whitespace, colonWhiteSpace, commaWhiteSpace, ateTerminator);

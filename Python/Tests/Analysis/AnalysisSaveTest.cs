@@ -173,7 +173,7 @@ Overloaded = test.Overloaded
 
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
-                Assert.AreEqual("class test.Aliased\r\nclass doc\r\n\r\nfunction Aliased(fob)\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
+                Assert.AreEqual("class test.Aliased or function Aliased(fob)\r\n\r\nclass test.Aliased: class doc\r\n\r\nfunction Aliased(fob): function doc", allMembers.First(x => x.Name == "Aliased").Documentation);
                 newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");
 
                 //var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First();
@@ -402,7 +402,7 @@ def m(x = math.atan2(1, 0)): pass
                 new { FuncName = "j", ParamName="x", DefaultValue="[...]" },
                 new { FuncName = "k", ParamName="x", DefaultValue = "()" },
                 new { FuncName = "l", ParamName="x", DefaultValue = "(...)" },
-                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1,0)" },
+                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1, 0)" },
             };
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {

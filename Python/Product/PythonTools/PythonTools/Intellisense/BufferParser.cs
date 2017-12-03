@@ -317,16 +317,23 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.WriteLine("Changes for version {0}", curVersion.VersionNumber);
             var changes = new List<AP.ChangeInfo>();
             if (curVersion.Changes != null) {
+                AP.ChangeInfo prev = null;
                 foreach (var change in curVersion.Changes) {
                     Debug.WriteLine("Changes for version {0} {1} {2}", change.OldPosition, change.OldLength, change.NewText);
 
-                    changes.Add(
-                        new AP.ChangeInfo() {
-                            start = change.OldPosition,
-                            length = change.OldLength,
-                            newText = change.NewText
-                        }
-                    );
+                    if (prev != null && !string.IsNullOrEmpty(prev.newText) &&
+                        change.OldLength == 0 && prev.length == 0 && prev.start + prev.newText.Length == change.OldPosition) {
+                        // we can merge the two changes together
+                        prev.newText += change.NewText;
+                        continue;
+                    }
+
+                    prev = new AP.ChangeInfo() {
+                        start = change.OldPosition,
+                        length = change.OldLength,
+                        newText = change.NewText
+                    };
+                    changes.Add(prev);
                 }
             }
             return changes.ToArray();

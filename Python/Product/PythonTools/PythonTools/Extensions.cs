@@ -88,6 +88,7 @@ namespace Microsoft.PythonTools {
                 case PythonMemberType.Event: group = StandardGlyphGroup.GlyphGroupEvent; break;
                 case PythonMemberType.Keyword: group = StandardGlyphGroup.GlyphKeyword; break;
                 case PythonMemberType.CodeSnippet: group = StandardGlyphGroup.GlyphCSharpExpansion; break;
+                case PythonMemberType.NamedArgument: group = StandardGlyphGroup.GlyphGroupMapItem; break;
                 case PythonMemberType.Function:
                 case PythonMemberType.Method:
                 default:
