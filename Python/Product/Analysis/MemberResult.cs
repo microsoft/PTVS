@@ -78,53 +78,90 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _completion; }
         }
 
+        private static string GetDescription(AnalysisValue ns) {
+            var d = ns?.ShortDescription;
+            if (string.IsNullOrEmpty(d)) {
+                return null;
+            }
+            switch (ns.MemberType) {
+                case PythonMemberType.Instance:
+                    return "instance of " + d;
+                case PythonMemberType.Constant:
+                    return "constant " + d;
+            }
+            return d;
+        }
+
+        private static IEnumerable<AnalysisValue> SeparateMultipleMembers(IEnumerable<AnalysisValue> values) {
+            foreach (var v in values) {
+                if (v is MultipleMemberInfo mm) {
+                    foreach (var m in mm.Members) {
+                        yield return m;
+                    }
+                } else {
+                    yield return v;
+                }
+            }
+        }
+
         public string Documentation {
             get {
-                var docSeen = new HashSet<string>();
-                var typeSeen = new HashSet<string>();
-                var docs = new List<string>();
-                var types = new List<string>();
+                var docs = new Dictionary<string, HashSet<string>>();
+                var allTypes = new HashSet<string>();
+
+                foreach (var ns in SeparateMultipleMembers(Values)) {
+                    var docString = ns.Documentation?.TrimDocumentation();
+                    var typeString = GetDescription(ns);
+                    if (string.IsNullOrEmpty(docString)) {
+                        docString = "";
+                    }
+                    if (!docs.TryGetValue(docString, out var docTypes)) {
+                        docs[docString] = docTypes = new HashSet<string>();
+                    }
+                    if (!string.IsNullOrEmpty(typeString)) {
+                        docTypes.Add(typeString);
+                        allTypes.Add(typeString);
+                    }
+                }
 
                 var doc = new StringBuilder();
 
-                foreach (var ns in Values) {
-                    var docString = ns.Description ?? string.Empty;
-                    if (docSeen.Add(docString)) {
-                        docs.Add(docString);
-                    }
-                    var typeString = ns.ShortDescription ?? string.Empty;
-                    if (typeSeen.Add(typeString)) {
-                        types.Add(typeString);
-                    }
+                if (allTypes.Count == 0) {
+                    return "unknown type";
+                } else if (allTypes.Count == 1) {
+                    doc.AppendLine(allTypes.First());
+                    doc.AppendLine();
+                } else {
+                    var types = allTypes.OrderBy(s => s).ToList();
+                    var orStr = types.Count == 2 ? " or " : ", or ";
+                    doc.AppendLine(string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last());
+                    doc.AppendLine();
                 }
 
-                var mt = MemberType;
-                if (mt == PythonMemberType.Instance || mt == PythonMemberType.Constant) {
-                    switch (mt) {
-                        case PythonMemberType.Instance:
-                            doc.Append("Instance of ");
-                            break;
-                        case PythonMemberType.Constant:
-                            doc.Append("Constant ");
-                            break;
-                        default:
-                            doc.Append("Value of ");
-                            break;
+                var typeToDoc = new Dictionary<string, string>();
+                foreach (var docType in docs) {
+                    if (string.IsNullOrEmpty(docType.Key)) {
+                        continue;
                     }
+
+                    string typeDisplay = "unknown type";
+                    var types = docType.Value.OrderBy(s => s).ToList();
                     if (types.Count == 0) {
-                        doc.AppendLine("unknown type");
+                        typeDisplay = "";
                     } else if (types.Count == 1) {
-                        doc.AppendLine(types[0]);
+                        typeDisplay = types[0] + ": ";
                     } else {
                         var orStr = types.Count == 2 ? " or " : ", or ";
-                        doc.AppendLine(string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last());
+                        typeDisplay = string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last() + ": ";
                     }
+                    typeToDoc[typeDisplay] = docType.Key;
+                }
+
+                foreach (var typeDoc in typeToDoc.OrderBy(kv => kv.Key)) {
+                    doc.AppendLine(typeDoc.Key + typeDoc.Value);
                     doc.AppendLine();
                 }
-                foreach (var str in docs.OrderBy(s => s)) {
-                    doc.AppendLine(str);
-                    doc.AppendLine();
-                }
+
                 return Utils.CleanDocumentation(doc.ToString());
             }
         }

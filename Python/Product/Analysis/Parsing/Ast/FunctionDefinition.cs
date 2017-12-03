@@ -319,19 +319,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(namedOnly);
                     }
 
-                    if (!this.IsMissingCloseGrouping(ast)) {                        
-                        format.Append(
-                            res,
-                            Parameters.Count != 0 ? 
-                                format.SpaceWithinFunctionDeclarationParens :
-                                format.SpaceWithinEmptyParameterList,
-                            " ",
-                            "",
-                            this.GetFourthWhiteSpaceDefaultNull(ast)
-                        ); 
-                        
+                    format.Append(
+                        res,
+                        Parameters.Count != 0 ? 
+                            format.SpaceWithinFunctionDeclarationParens :
+                            format.SpaceWithinEmptyParameterList,
+                        " ",
+                        "",
+                        this.GetFourthWhiteSpaceDefaultNull(ast)
+                    ); 
+
+                    if (!this.IsMissingCloseGrouping(ast)) {
                         res.Append(')');
                     }
+
                     if (ReturnAnnotation != null) {
                         format.Append(
                             res,

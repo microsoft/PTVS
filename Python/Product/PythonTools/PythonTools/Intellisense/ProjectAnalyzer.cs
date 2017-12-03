@@ -1229,8 +1229,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 var fromPoint = new SnapshotPoint(fromSnapshot, index);
                 var toPoint = fromPoint.TranslateTo(analysisSnapshot, PointTrackingMode.Negative);
-
-                return toPoint.ToSourceLocation();
+                return new SourceLocation(
+                    toPoint.GetContainingLine().LineNumber + 1,
+                    (fromPoint - fromPoint.GetContainingLine().Start) + 1
+                );
             } else if (fromSnapshot != null) {
                 return new SnapshotPoint(fromSnapshot, index).ToSourceLocation();
             } else {

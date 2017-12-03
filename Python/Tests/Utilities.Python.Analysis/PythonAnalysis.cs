@@ -425,6 +425,22 @@ namespace TestUtilities.Python {
             AssertUtil.AreEqual(module.Analysis.GetSignaturesByIndex(expr, index).Single().Parameters.Select(p => p.Name), paramNames);
         }
 
+        public void AssertIsInstance(string expr) {
+            AssertIsInstance(expr, 0);
+        }
+
+        public void AssertIsInstance(string expr, int index) {
+            AssertIsInstance(_entries[DefaultModule], expr, index);
+        }
+
+        public void AssertIsInstance(IPythonProjectEntry module, string expr) {
+            AssertIsInstance(module, expr, 0);
+        }
+
+        public void AssertIsInstance(IPythonProjectEntry module, string expr, int index) {
+            AssertIsInstance(module, expr, index, Array.Empty<BuiltinTypeId>());
+        }
+
         public void AssertIsInstance(string expr, params BuiltinTypeId[] types) {
             AssertIsInstance(_entries[DefaultModule], expr, 0, types);
         }
@@ -449,6 +465,23 @@ namespace TestUtilities.Python {
             AssertUtil.ContainsExactly(GetTypeIds(module, expr, index), fixedTypes);
         }
 
+        public void AssertIsInstance(string expr, params string[] className) {
+            AssertIsInstance(_entries[DefaultModule], expr, 0, className);
+        }
+
+        public void AssertIsInstance(string expr, int index, params string[] className) {
+            AssertIsInstance(_entries[DefaultModule], expr, index, className);
+        }
+
+        public void AssertIsInstance(IPythonProjectEntry module, string expr, params string[] className) {
+            AssertIsInstance(module, expr, 0, className);
+        }
+
+        public void AssertIsInstance(IPythonProjectEntry module, string expr, int index, params string[] className) {
+            var vars = GetValues(module, expr, index);
+            AssertUtil.ContainsAtLeast(vars.Select(v => v.MemberType), PythonMemberType.Instance);
+            AssertUtil.ContainsExactly(vars.Select(v => v.ShortDescription), className);
+        }
         public void AssertAttrIsType(string variable, string memberName, params PythonMemberType[] types) {
             AssertAttrIsType(_entries[DefaultModule], variable, memberName, 0, types);
         }

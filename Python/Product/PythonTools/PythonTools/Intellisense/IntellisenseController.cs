@@ -981,6 +981,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (int)VSConstants.VSStd2KCmdID.TYPECHAR) {
                 var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
+                bool suppressChar = false;
 
                 if (session != null && !session.IsDismissed) {
                     if (session.SelectedCompletionSet != null &&
@@ -993,6 +994,9 @@ namespace Microsoft.PythonTools.Intellisense {
                             // be retriggered after the slash is inserted.
                             session.Dismiss();
                         } else {
+                            if (ch == session.SelectedCompletionSet.SelectionStatus.Completion.InsertionText.LastOrDefault()) {
+                                suppressChar = true;
+                            }
                             session.Commit();
                         }
                     } else if (!Tokenizer.IsIdentifierChar(ch)) {
@@ -1000,12 +1004,15 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
+                int res = VSConstants.S_OK;
+                if (!suppressChar) {
+                    res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
 
-                HandleChar((char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn));
+                    HandleChar(ch);
 
-                if (session != null && !session.IsDismissed) {
-                    session.Filter();
+                    if (session != null && !session.IsDismissed) {
+                        session.Filter();
+                    }
                 }
 
                 return res;
