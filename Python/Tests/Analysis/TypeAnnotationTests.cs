@@ -144,6 +144,9 @@ dctv_s_i_item_1, dctv_s_i_item_2 = next(dctv_s_i_items)
 ");
             analyzer.WaitForAnalysis();
 
+            Assert.IsTrue(analyzer.Analyzer.Modules.TryGetImportedModule("typing", out var mod));
+            Assert.IsInstanceOfType(mod.AnalysisModule.Single(), typeof(Microsoft.PythonTools.Analysis.Values.TypingModuleInfo));
+
             analyzer.AssertIsInstance("i", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("lst", BuiltinTypeId.List);
             analyzer.AssertIsInstance("lst_i", BuiltinTypeId.List);
