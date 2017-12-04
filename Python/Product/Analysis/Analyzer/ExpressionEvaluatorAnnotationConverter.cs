@@ -46,23 +46,26 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override IAnalysisSet LookupName(string name) {
             var res = _eval.LookupAnalysisSetByName(_node, name);
 
-            TypingModuleInfo typing;
-            if (!_unit.ProjectState.Modules.TryGetImportedModule("typing", out var typingMod) ||
-                (typing = typingMod.AnalysisModule as TypingModuleInfo) == null) {
-                // User has not imported our special typing module, so return the original value
+            if (_unit.ProjectState.Modules.TryGetImportedModule("typing", out var typingMod) &&
+                (typingMod.AnalysisModule is TypingModuleInfo typing) &&
+                res.Any(v => v.PythonType?.DeclaringModule?.Name == "typing")) {
+                // Values has come from our special typing module
+
+                var realRes = typing.GetTypingMember(_node, _unit, name);
+                if (realRes.Any()) {
+                    return realRes;
+                }
+            }
+
+            if (res.Any()) {
                 return res;
             }
 
-            if (!res.Any(v => v.PythonType?.DeclaringModule?.Name == "typing")) {
-                // Value was not imported from typing, so return it
-                return res;
-            }
+            return null;
+        }
 
-            var realRes = typing.GetTypingMember(_node, _unit, name);
-            if (!realRes.Any()) {
-                return res;
-            }
-            return realRes;
+        public override IAnalysisSet MakeNameType(string name) {
+            return new ConstantInfo(_unit.ProjectState.ClassInfos[BuiltinTypeId.Unicode], name, PythonMemberType.Constant);
         }
 
         public override IAnalysisSet GetTypeMember(IAnalysisSet baseType, string member) {

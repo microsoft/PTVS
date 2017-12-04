@@ -203,5 +203,26 @@ call_iis_i_ret = call_iis_i()
             analyzer.AssertIsInstance("call_iis_i", BuiltinTypeId.Function);
             analyzer.AssertIsInstance("call_iis_i_ret", BuiltinTypeId.Int);
         }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleNamedTupleAnalysis() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+            );
+            analyzer.AddModule("test-module", @"from typing import *
+
+n : NamedTuple = ...
+n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
+");
+            analyzer.WaitForAnalysis();
+
+            analyzer.AssertDescription("n", "tuple");
+            analyzer.AssertDescription("n1", "n1(x, y)");
+
+            analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("n1.y", BuiltinTypeId.Str);
+        }
     }
 }

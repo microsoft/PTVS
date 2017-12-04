@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -65,6 +66,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IReadOnlyList<IAnalysisSet> ToTypeList() {
             if (_baseName == " List") {
                 return _args;
+            }
+            return null;
+        }
+
+        public static IReadOnlyList<IAnalysisSet> ToTypeList(IAnalysisSet set) {
+            if (set.Split(out IReadOnlyList<TypingTypeInfo> tti, out _)) {
+                return tti.Select(t => t.ToTypeList()).FirstOrDefault(t => t != null);
             }
             return null;
         }
@@ -246,10 +254,45 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
                         return gi;
                     });
-                case "NamedTuple": return null;
+                case "NamedTuple":
+                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.StrDict, n => CreateNamedTuple(n, _unit, args[0]));
+                case " List":
+                    return AnalysisSet.UnionAll(args.Select(ToInstance));
             }
 
             return null;
+        }
+
+        private static IAnalysisSet CreateNamedTuple(Node node, AnalysisUnit unit, IAnalysisSet namedTupleArgs) {
+            var args = TypingTypeInfo.ToTypeList(namedTupleArgs);
+
+            var res = new ProtocolInfo(unit.ProjectEntry);
+
+            if (args.Count >= 1) {
+                var np = new NameProtocol(res, args[0].GetConstantValueAsString().FirstOrDefault() ?? "tuple");
+                res.AddProtocol(np);
+            }
+
+            if (args.Count >= 2) {
+                foreach (var a in TypingTypeInfo.ToTypeList(args[1]).MaybeEnumerate()) {
+                    // each arg is going to be either a union containing a string literal and type,
+                    // or a list with string literal and type.
+                    var u = a;
+                    if (a is TypingTypeInfo tti) {
+                        u = AnalysisSet.UnionAll(tti.ToTypeList());
+                    }
+
+                    if (u.Split(out IReadOnlyList<ConstantInfo> names, out var rest)) {
+                        var name = names.Select(n => n.GetConstantValueAsString()).FirstOrDefault() ?? "unnamed";
+
+                        var p = new NamespaceProtocol(res, name);
+                        p.SetMember(node, unit, name, rest.GetInstanceType());
+                        res.AddProtocol(p);
+                    }
+                }
+            }
+
+            return res;
         }
 
         public IAnalysisSet Finalize(string name) {
