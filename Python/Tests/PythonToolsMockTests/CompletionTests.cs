@@ -65,7 +65,7 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(0)]
-        public void GetApplicableSpanTest() {
+        public void GetApplicableSpanCompleteWordTest() {
             var text = "if fob.oar(eggs, spam<=ham) :";
 
             using (var view = new PythonEditor(text)) {
@@ -87,13 +87,23 @@ namespace PythonToolsMockTests {
                 };
 
                 for (int i = 0; i < text.Length; ++i) {
-                    var span = snapshot.GetApplicableSpan(i);
+                    var span = snapshot.GetApplicableSpan(i, completeWord: true);
                     if (span == null) {
                         Assert.AreEqual(expected[i], "", text.Substring(0, i) + "|" + text.Substring(i));
                     } else {
                         Assert.AreEqual(expected[i], span.GetText(snapshot), text.Substring(0, i) + "|" + text.Substring(i));
                     }
                 }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void GetApplicableSpanAutoTest() {
+            using (var view = new PythonEditor("x = id")) {
+                var snapshot = view.CurrentSnapshot;
+                var span = snapshot.GetApplicableSpan(5, completeWord: false);
+                Assert.AreEqual(4, span.GetStartPoint(snapshot).Position);
+                Assert.AreEqual(5, span.GetEndPoint(snapshot).Position);
             }
         }
 
@@ -1218,7 +1228,7 @@ async def g():
                     null,
                     view.View.TextView,
                     snapshot,
-                    snapshot.GetApplicableSpan(index) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
+                    snapshot.GetApplicableSpan(index, completeWord: true) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
                     snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
                     new CompletionOptions()
                 );

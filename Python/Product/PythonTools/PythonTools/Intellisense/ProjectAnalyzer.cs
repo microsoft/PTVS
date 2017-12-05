@@ -1669,7 +1669,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
             var span = applicableSpan.GetSpan(snapshot);
 
-            if (IsSpaceCompletion(snapshot, point) && !IntellisenseController.ForceCompletions) {
+            if (IsSpaceCompletion(snapshot, point) && !session.IsCompleteWordMode()) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
 
@@ -2382,12 +2382,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                    snapshot,
-                    span.Start,
-                    span.End,
-                    headerIndex
-                );
+                if (span.Length > 0) {
+                    yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
+                        snapshot,
+                        span.Start,
+                        span.End,
+                        headerIndex
+                    );
+                }
             }
         }
 
