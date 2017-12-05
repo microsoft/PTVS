@@ -140,8 +140,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 foreach (var a in node.Args.MaybeEnumerate()) {
                     a.Walk(this);
                 }
-                _ops.Add(new EndListOp());
-                _ops.Add(new MakeGenericOp(false));
+                _ops.Add(new MakeGenericOp(true));
                 return false;
             }
 

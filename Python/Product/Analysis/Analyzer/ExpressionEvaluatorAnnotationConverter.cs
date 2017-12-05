@@ -27,16 +27,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private readonly ExpressionEvaluator _eval;
         private readonly Node _node;
         private readonly AnalysisUnit _unit;
+        private readonly bool _returnInternalTypes;
 
-        public ExpressionEvaluatorAnnotationConverter(ExpressionEvaluator eval, Node node, AnalysisUnit unit) {
+        public ExpressionEvaluatorAnnotationConverter(ExpressionEvaluator eval, Node node, AnalysisUnit unit, bool returnInternalTypes = false) {
             _eval = eval ?? throw new ArgumentNullException(nameof(eval));
             _node = node ?? throw new ArgumentNullException(nameof(node));
             _unit = unit ?? throw new ArgumentNullException(nameof(unit));
+            _returnInternalTypes = returnInternalTypes;
         }
 
         public override IAnalysisSet Finalize(IAnalysisSet type) {
             // Filter out any TypingTypeInfo items that have leaked through
-            if (type.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out IAnalysisSet rest)) {
+            if (!_returnInternalTypes && type.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out IAnalysisSet rest)) {
                 return rest.UnionAll(typeInfo.Select(n => n.Finalize(_eval, _node, _unit)));
             }
 
@@ -45,17 +47,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override IAnalysisSet LookupName(string name) {
             var res = _eval.LookupAnalysisSetByName(_node, name);
-
-            if (_unit.ProjectState.Modules.TryGetImportedModule("typing", out var typingMod) &&
-                (typingMod.AnalysisModule is TypingModuleInfo typing) &&
-                res.Any(v => v.PythonType?.DeclaringModule?.Name == "typing")) {
-                // Values has come from our special typing module
-
-                var realRes = typing.GetTypingMember(_node, _unit, name);
-                if (realRes.Any()) {
-                    return realRes;
-                }
-            }
 
             if (res.Any()) {
                 return res;
@@ -69,14 +60,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet GetTypeMember(IAnalysisSet baseType, string member) {
-            if (baseType.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out var rest)) {
-                return rest.GetMember(_node, _unit, member).UnionAll(
-                    typeInfo.Select(tti => tti.GetTypeMember(_node, _unit, member))
-                );
-            } else if (baseType.Split(out IReadOnlyList<TypingModuleInfo> typingModule, out rest)) {
-                return AnalysisSet.UnionAll(typingModule.Select(tm => tm.GetTypingMember(_node, _unit, member)));
-            }
-
             return baseType.GetMember(_node, _unit, member);
         }
 

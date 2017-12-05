@@ -42,6 +42,52 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return this;
         }
 
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (_args == null && node is CallExpression ce) {
+                return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.TypeAnnotation, n => {
+                    // Use annotation converter and reparse the arguments
+                    var newArgs = new List<IAnalysisSet>();
+                    var eval = new ExpressionEvaluatorAnnotationConverter(
+                        new ExpressionEvaluator(unit),
+                        node,
+                        unit,
+                        returnInternalTypes: true
+                    );
+                    foreach (var type in ce.Args.MaybeEnumerate().Where(e => e?.Expression != null).Select(e => new TypeAnnotation(unit.ProjectState.LanguageVersion, e.Expression))) {
+                        newArgs.Add(type.GetValue(eval) ?? AnalysisSet.Empty);
+                    }
+                    return new TypingTypeInfo(_baseName, newArgs);
+                });
+            }
+            return this;
+        }
+
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
+            if (node is IndexExpression ie) {
+                return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.TypeAnnotation, n => {
+                    // Use annotation converter and reparse the index
+                    var exprs = new List<Expression>();
+                    if (ie.Index is SequenceExpression te) {
+                        exprs.AddRange(te.Items.MaybeEnumerate());
+                    } else {
+                        exprs.Add(ie.Index);
+                    }
+                    var newArgs = new List<IAnalysisSet>();
+                    var eval = new ExpressionEvaluatorAnnotationConverter(
+                        new ExpressionEvaluator(unit),
+                        node,
+                        unit,
+                        returnInternalTypes: true
+                    );
+                    foreach (var type in exprs.Select(e => new TypeAnnotation(unit.ProjectState.LanguageVersion, e))) {
+                        newArgs.Add(type.GetValue(eval) ?? AnalysisSet.Empty);
+                    }
+                    return new TypingTypeInfo(_baseName, newArgs);
+                });
+            }
+            return this;
+        }
+
         public IAnalysisSet Finalize(ExpressionEvaluator eval, Node node, AnalysisUnit unit) {
             if (Push()) {
                 try {
@@ -255,7 +301,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return gi;
                     });
                 case "NamedTuple":
-                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.StrDict, n => CreateNamedTuple(n, _unit, args[0]));
+                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.StrDict, n => CreateNamedTuple(
+                        n, _unit, args.ElementAtOrDefault(0), args.ElementAtOrDefault(1)
+                    ));
                 case " List":
                     return AnalysisSet.UnionAll(args.Select(ToInstance));
             }
@@ -263,18 +311,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        private static IAnalysisSet CreateNamedTuple(Node node, AnalysisUnit unit, IAnalysisSet namedTupleArgs) {
-            var args = TypingTypeInfo.ToTypeList(namedTupleArgs);
+        private static IAnalysisSet CreateNamedTuple(Node node, AnalysisUnit unit, IAnalysisSet namedTupleName, IAnalysisSet namedTupleArgs) {
+            var args = namedTupleArgs == null ? null : TypingTypeInfo.ToTypeList(namedTupleArgs);
 
             var res = new ProtocolInfo(unit.ProjectEntry);
 
-            if (args.Count >= 1) {
-                var np = new NameProtocol(res, args[0].GetConstantValueAsString().FirstOrDefault() ?? "tuple");
+            if (namedTupleName != null) {
+                var np = new NameProtocol(res, namedTupleName.GetConstantValueAsString().FirstOrDefault() ?? "tuple");
                 res.AddProtocol(np);
             }
 
-            if (args.Count >= 2) {
-                foreach (var a in TypingTypeInfo.ToTypeList(args[1]).MaybeEnumerate()) {
+            if (args != null && args.Any()) {
+                foreach (var a in args) {
                     // each arg is going to be either a union containing a string literal and type,
                     // or a list with string literal and type.
                     var u = a;

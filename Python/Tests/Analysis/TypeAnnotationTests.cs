@@ -224,5 +224,33 @@ n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
             analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
             analyzer.AssertIsInstance("n1.y", BuiltinTypeId.Str);
         }
+
+        [TestMethod, Priority(0)]
+        public void TypingModuleNamedTypeAlias() {
+            var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+            python.AssertInstalled();
+            var analyzer = CreateAnalyzer(
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+            );
+            analyzer.AddModule("test-module", @"from typing import *
+
+MyInt = int
+MyStrList = List[str]
+MyNamedTuple = NamedTuple('MyNamedTuple', [('x', MyInt)])
+
+i : MyInt = ...
+sl : MyStrList = ...
+sl_0 = sl[0]
+n1 : MyNamedTuple = ...
+");
+            analyzer.WaitForAnalysis();
+
+            analyzer.AssertIsInstance("i", BuiltinTypeId.Int);
+            analyzer.AssertIsInstance("sl", BuiltinTypeId.List);
+            analyzer.AssertIsInstance("sl_0", BuiltinTypeId.Str);
+            analyzer.AssertDescription("n1", "MyNamedTuple(x)");
+
+            analyzer.AssertIsInstance("n1.x", BuiltinTypeId.Int);
+        }
     }
 }
