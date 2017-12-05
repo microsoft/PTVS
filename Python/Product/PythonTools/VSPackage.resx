@@ -326,28 +326,34 @@
     <value>A sample for working with the Pyvot library for Excel</value>
   </data>
   <data name="5018" xml:space="preserve">
-    <value>Classifier Project</value>
+    <value>Classifier Project (cookiecutter)</value>
   </data>
   <data name="5019" xml:space="preserve">
     <value>A project for testing scikit-learn classifiers.
 
-This project requires the pandas, numpy, scikit-learn, and matplotlib packages.</value>
+This project requires the pandas, numpy, scikit-learn, and matplotlib packages.
+
+Opens Cookiecutter window where you can create the project from a cookiecutter template available online.</value>
   </data>
   <data name="5020" xml:space="preserve">
-    <value>Clustering Project</value>
+    <value>Clustering Project (cookiecutter)</value>
   </data>
   <data name="5021" xml:space="preserve">
     <value>A project for testing scikit-learn clustering learners.
 
-This project requires the pandas, numpy, scikit-learn, and matplotlib packages.</value>
+This project requires the pandas, numpy, scikit-learn, and matplotlib packages.
+
+Opens Cookiecutter window where you can create the project from a cookiecutter template available online.</value>
   </data>
   <data name="5022" xml:space="preserve">
-    <value>Regression Project</value>
+    <value>Regression Project (cookiecutter)</value>
   </data>
   <data name="5023" xml:space="preserve">
     <value>A project for testing scikit-learn regression learners.
 
-This project requires the pandas, numpy, scikit-learn, and matplotlib packages.</value>
+This project requires the pandas, numpy, scikit-learn, and matplotlib packages.
+
+Opens Cookiecutter window where you can create the project from a cookiecutter template available online.</value>
   </data>
   <data name="5024" xml:space="preserve">
     <value>Python Extension Module</value>
