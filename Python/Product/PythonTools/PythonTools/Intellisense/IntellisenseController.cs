@@ -854,9 +854,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        [ThreadStatic]
-        internal static bool ForceCompletions;
-
         private bool SelectSingleBestCompletion(ICompletionSession session) {
             if (session.CompletionSets.Count != 1) {
                 return false;
@@ -875,23 +872,32 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void TriggerCompletionSession(bool completeWord, bool? commitByDefault = null) {
             DismissCompletionSession();
 
-            var session = _services.CompletionBroker.TriggerCompletion(_textView);
-
-            if (session == null) {
-                Volatile.Write(ref _activeSession, null);
-            } else if (completeWord && SelectSingleBestCompletion(session)) {
-                session.Commit();
-            } else {
-                if (commitByDefault.HasValue) {
-                    foreach (var s in session.CompletionSets.OfType<FuzzyCompletionSet>()) {
-                        s.CommitByDefault = commitByDefault.GetValueOrDefault();
-                    }
-                }
-                session.Filter();
-                session.Dismissed += OnCompletionSessionDismissedOrCommitted;
-                session.Committed += OnCompletionSessionDismissedOrCommitted;
-                Volatile.Write(ref _activeSession, session);
+            var caretPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition, PointTrackingMode.Positive);
+            var session = _services.CompletionBroker.CreateCompletionSession(_textView, caretPoint, true);
+            if (completeWord) {
+                session.SetCompleteWordMode();
             }
+
+            session.Start();
+            if (!session.IsStarted) {
+                Volatile.Write(ref _activeSession, null);
+                return;
+            }
+
+            if (completeWord && SelectSingleBestCompletion(session)) {
+                session.Commit();
+                return;
+            }
+
+            if (commitByDefault.HasValue) {
+                foreach (var s in session.CompletionSets.OfType<FuzzyCompletionSet>()) {
+                    s.CommitByDefault = commitByDefault.GetValueOrDefault();
+                }
+            }
+            session.Filter();
+            session.Dismissed += OnCompletionSessionDismissedOrCommitted;
+            session.Committed += OnCompletionSessionDismissedOrCommitted;
+            Volatile.Write(ref _activeSession, session);
         }
 
         internal void TriggerSignatureHelp() {
