@@ -1119,7 +1119,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 var openProjCmd = _postCommands?.FirstOrDefault(cmd => cmd.Name == "File.OpenProject");
                 if (openProjCmd != null) {
                     if (_solutionLoaded) {
-                        _projectSystemClient.AddToSolution(openProjCmd.Args);
+                        _projectSystemClient.AddToSolution(openProjCmd.Args.Trim('"'));
                     } else {
                         _executeCommand(openProjCmd.Name, openProjCmd.Args);
                     }
