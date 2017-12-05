@@ -37,6 +37,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         public virtual bool IsAlive => DeclaringModule == null || DeclaringVersion == DeclaringModule.AnalysisVersion;
 
+        bool ICanExpire.IsAlive => IsAlive;
+
         /// <summary>
         /// Returns an immutable set which contains just this AnalysisValue.
         /// 

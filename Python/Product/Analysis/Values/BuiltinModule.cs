@@ -89,6 +89,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _interpreterModule.MemberType; }
         }
 
+        internal override BuiltinTypeId TypeId => BuiltinTypeId.Module;
+
         #region IReferenceableContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {

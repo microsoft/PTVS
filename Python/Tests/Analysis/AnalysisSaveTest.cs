@@ -391,7 +391,7 @@ def k(x = ()): pass
 
 def l(x = (2, )): pass
 
-def m(x = math.atan2(1, 0)): pass
+def m(x = math.atan2( 1 , 0 )): pass
 ";
 
             var tests = new[] {
@@ -409,10 +409,10 @@ def m(x = math.atan2(1, 0)): pass
                 var entry = newPs.NewModule("test2", "from test import *");
                 foreach (var test in tests) {
                     var result = entry.Analysis.GetSignaturesByIndex(test.FuncName, 1).ToArray();
-                    Assert.AreEqual(result.Length, 1);
-                    Assert.AreEqual(result[0].Parameters.Length, 1);
-                    Assert.AreEqual(result[0].Parameters[0].Name, test.ParamName);
-                    Assert.AreEqual(result[0].Parameters[0].DefaultValue, test.DefaultValue);
+                    Assert.AreEqual(1, result.Length);
+                    Assert.AreEqual(1, result[0].Parameters.Length);
+                    Assert.AreEqual(test.ParamName, result[0].Parameters[0].Name);
+                    Assert.AreEqual(test.DefaultValue, result[0].Parameters[0].DefaultValue);
                 }
             }
         }

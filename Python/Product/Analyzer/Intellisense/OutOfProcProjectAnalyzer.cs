@@ -1650,12 +1650,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
         class StreamCodeInfo : CodeInfo {
             private readonly Stream _stream;
+            private readonly bool _isStubFile;
 
-            public StreamCodeInfo(int version, Stream stream) : base(version) {
+            public StreamCodeInfo(int version, Stream stream, bool isStubFile) : base(version) {
                 _stream = stream;
+                _isStubFile = isStubFile;
             }
 
             public override Parser CreateParser(PythonLanguageVersion version, ParserOptions options) {
+                if (_isStubFile) {
+                    options = options?.Clone() ?? new ParserOptions();
+                    options.StubFile = true;
+                }
                 return Parser.CreateParser(_stream, version, options);
             }
 
@@ -1666,11 +1672,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
         class TextCodeInfo : CodeInfo {
             private readonly TextReader _text;
-            public TextCodeInfo(int version, TextReader text) : base(version) {
+            private readonly bool _isStubFile;
+
+            public TextCodeInfo(int version, TextReader text, bool isStubFile) : base(version) {
                 _text = text;
+                _isStubFile = isStubFile;
             }
 
             public override Parser CreateParser(PythonLanguageVersion version, ParserOptions options) {
+                if (_isStubFile) {
+                    options = options?.Clone() ?? new ParserOptions();
+                    options.StubFile = true;
+                }
                 return Parser.CreateParser(_text, version, options);
             }
 
@@ -1777,7 +1790,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
                             codeByBuffer[update.bufferId] = new TextCodeInfo(
                                 update.version,
-                                new StringReader(newCodeStr)
+                                new StringReader(newCodeStr),
+                                entry.FilePath.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase)
                             );
 #if DEBUG
                             newCode[update.bufferId] = newCodeStr;
@@ -1788,7 +1802,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         entry.SetCurrentCode(update.content, update.bufferId, update.version);
                         codeByBuffer[update.bufferId] = new TextCodeInfo(
                             update.version,
-                            new StringReader(update.content)
+                            new StringReader(update.content),
+                            entry.FilePath.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase)
                         );
 #if DEBUG
                         newCode[update.bufferId] = update.content;
@@ -2278,7 +2293,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             ParseFile(
                                 projEntry,
                                 new Dictionary<int, CodeInfo> {
-                                    { 0, new StreamCodeInfo(0, reader) }
+                                    { 0, new StreamCodeInfo(0, reader, filename.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase)) }
                                 }
                             );
                             return;

@@ -97,6 +97,8 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
+        private bool StubFile => _options.HasFlag(TokenizerOptions.StubFile);
+
         /// <summary>
         /// Get all tokens over a block of the stream.
         /// </summary>
@@ -572,7 +574,7 @@ namespace Microsoft.PythonTools.Parsing {
                         ch = Peek();
                         if (ch >= '0' && ch <= '9') {
                             return ReadFraction();
-                        } else if (ch == '.' && _langVersion.Is3x()) {
+                        } else if (ch == '.' && (StubFile || _langVersion.Is3x())) {
                             NextChar();
                             if (Peek() == '.') {
                                 NextChar();
@@ -998,7 +1000,7 @@ namespace Microsoft.PythonTools.Parsing {
             } else if (isBytes) {
                 makeUnicode = false;
             } else {
-                makeUnicode = _langVersion.Is3x() || UnicodeLiterals;
+                makeUnicode = _langVersion.Is3x() || UnicodeLiterals || StubFile;
             }
 
             if (makeUnicode) {
@@ -1501,7 +1503,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 } else if (ch == 'r') {
                     if (NextChar() == 'i' && NextChar() == 'n' && NextChar() == 't' && !IsNamePart(Peek())) {
-                        if (!_printFunction && !_langVersion.Is3x()) {
+                        if (!_printFunction && !_langVersion.Is3x() && !StubFile) {
                             return TransformStatementToken(Tokens.KeywordPrintToken);
                         }
                     }
@@ -1644,12 +1646,12 @@ namespace Microsoft.PythonTools.Parsing {
                     MarkTokenEnd();
                     return Tokens.KeywordLambdaToken;
                 }
-            } else if (_langVersion.Is3x() && ch == 'T') {
+            } else if ((_langVersion.Is3x() || StubFile) && ch == 'T') {
                 if (NextChar() == 'r' && NextChar() == 'u' && NextChar() == 'e' && !IsNamePart(Peek())) {
                     MarkTokenEnd();
                     return Tokens.KeywordTrueToken;
                 }
-            } else if (_langVersion.Is3x() && ch == 'F') {
+            } else if ((_langVersion.Is3x() || StubFile) && ch == 'F') {
                 if (NextChar() == 'a' && NextChar() == 'l' && NextChar() == 's' && NextChar() == 'e' && !IsNamePart(Peek())) {
                     MarkTokenEnd();
                     return Tokens.KeywordFalseToken;

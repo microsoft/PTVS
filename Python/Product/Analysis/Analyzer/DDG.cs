@@ -163,13 +163,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
 
-            foreach (var left in node.Left.OfType<ExpressionWithAnnotation>()) {
-                if (left.Annotation != null) {
-                    _eval.Evaluate(left.Annotation);
-                }
-            }
-
             foreach (var left in node.Left) {
+                if (left is ExpressionWithAnnotation annoExpr && annoExpr.Annotation != null) {
+                    var annoType = _eval.EvaluateAnnotation(annoExpr.Annotation);
+                    var annoInst = annoType?.GetInstanceType();
+                    if (annoInst?.Any() == true) {
+                        _eval.AssignTo(node, annoExpr.Expression, annoInst);
+                    }
+                }
+
                 _eval.AssignTo(node, left, valueType);
             }
             return false;
@@ -337,6 +339,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
             return result;
         }
+
 
         public override bool Walk(FunctionDefinition node) {
             InterpreterScope funcScope;

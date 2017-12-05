@@ -338,6 +338,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return packageDict;
         }
 
+
         private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath) {
             return ModulePath.GetModulesInPath(
                 searchPath,

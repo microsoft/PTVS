@@ -368,9 +368,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        internal IAnalysisSet GetItemsView(AnalysisUnit unit) {
+            return DictionaryIterItems(null, unit, null, null);
+        }
+
+        internal IAnalysisSet GetKeysView(AnalysisUnit unit) {
+            return DictionaryIterKeys(null, unit, null, null);
+        }
+
+        internal IAnalysisSet GetValuesView(AnalysisUnit unit) {
+            return DictionaryIterValues(null, unit, null, null);
+        }
+
+
         #region Specialized functions
 
-        private IAnalysisSet DictionaryUpdate(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        private IAnalysisSet DictionaryUpdate(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length >= 1) {
                 foreach (var otherDict in args[0].OfType<DictionaryInfo>()) {
                     if (!Object.ReferenceEquals(otherDict, this)) {
@@ -383,19 +396,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return AnalysisSet.Empty;
         }
 
-        private IAnalysisSet DictionaryPopItem(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        private IAnalysisSet DictionaryPopItem(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             return KeyValueTuple;
         }
 
-        private IAnalysisSet DictionaryPop(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        private IAnalysisSet DictionaryPop(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             return _keysAndValues.AllValueTypes;
         }
 
-        private IAnalysisSet DictionaryItems(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        private IAnalysisSet DictionaryItems(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             if (_itemsList == null) {
@@ -410,7 +423,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _itemsList;
         }
 
-        private IAnalysisSet DictionaryIterItems(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        private IAnalysisSet DictionaryIterItems(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             if (_itemsIter == null) {
@@ -423,7 +436,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _itemsIter;
         }
 
-        private IAnalysisSet DictionaryKeys(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        private IAnalysisSet DictionaryKeys(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             if (_keysList == null) {
@@ -437,7 +450,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _keysList;
         }
 
-        private IAnalysisSet DictionaryIterKeys(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        internal IAnalysisSet DictionaryIterKeys(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             if (_keysIter == null) {
@@ -450,7 +463,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _keysIter;
         }
 
-        private IAnalysisSet DictionaryValues(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        private IAnalysisSet DictionaryValues(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             if (_valuesList == null) {
@@ -464,7 +477,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _valuesList;
         }
 
-        private IAnalysisSet DictionaryIterValues(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        internal IAnalysisSet DictionaryIterValues(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             if (_valuesIter == null) {
@@ -477,7 +490,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _valuesIter;
         }
 
-        private IAnalysisSet DictionaryGet(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        private IAnalysisSet DictionaryGet(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             _keysAndValues.AddDependency(unit);
 
             if (args.Length == 1) {

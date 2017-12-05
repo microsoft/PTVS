@@ -6284,9 +6284,9 @@ def f(s: s = 123):
 ";
             var entry = ProcessTextV3(text);
 
-            entry.AssertIsInstance("s", text.IndexOf("s:"), BuiltinTypeId.Int);
+            entry.AssertIsInstance("s", text.IndexOf("s:"), BuiltinTypeId.Int, BuiltinTypeId.NoneType);
             entry.AssertIsInstance("s", text.IndexOf("s ="), BuiltinTypeId.NoneType);
-            entry.AssertIsInstance("s", text.IndexOf("return"), BuiltinTypeId.Int);
+            entry.AssertIsInstance("s", text.IndexOf("return"), BuiltinTypeId.Int, BuiltinTypeId.NoneType);
         }
 
         [TestMethod, Priority(0)]

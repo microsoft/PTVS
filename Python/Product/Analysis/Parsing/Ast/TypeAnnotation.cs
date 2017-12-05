@@ -72,11 +72,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     }
                 }
 
-                if (!stack.Any()) {
-                    return default(T);
+                if (stack.Count == 1) {
+                    return converter.Finalize(stack.Pop().Value);
                 }
-                Debug.Assert(stack.Count == 1);
-                return converter.Finalize(stack.Pop().Value);
+                return default(T);
             }
 
             public override bool Walk(ConstantExpression node) {
@@ -111,8 +110,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 base.PostWalk(node);
             }
 
+            public override bool Walk(ListExpression node) {
+                _ops.Add(new StartUnionOp());
+                return base.Walk(node);
+            }
+
+            public override void PostWalk(ListExpression node) {
+                _ops.Add(new EndUnionOp(ordered: true));
+                base.PostWalk(node);
+            }
+
             public override void PostWalk(IndexExpression node) {
-                _ops.Add(new MakeGenericOp());
+                if (_ops.LastOrDefault() is EndUnionOp) {
+                    _ops[_ops.Count - 1] = new MakeGenericOp(true);
+                } else {
+                    _ops.Add(new MakeGenericOp(false));
+                }
                 base.PostWalk(node);
             }
 
@@ -184,6 +197,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             class EndUnionOp : Op {
+                private readonly bool _ordered;
+
+                public EndUnionOp(bool ordered = false) {
+                    _ordered = ordered;
+                }
+
                 public override bool Apply<T>(TypeAnnotationConverter<T> converter, Stack<KeyValuePair<string, T>> stack) {
                     var items = new List<T>();
                     if (!stack.Any()) {
@@ -198,7 +217,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         t = stack.Pop();
                     }
                     items.Reverse();
-                    t = new KeyValuePair<string, T>(null, converter.MakeUnion(items));
+                    t = new KeyValuePair<string, T>(null, _ordered ? converter.MakeList(items) : converter.MakeUnion(items));
                     if (t.Value == null) {
                         return false;
                     }
@@ -208,23 +227,42 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             class MakeGenericOp : Op {
+                private readonly bool _multipleArgs;
+
+                public MakeGenericOp(bool multipleArgs) {
+                    _multipleArgs = multipleArgs;
+                }
+
                 public override bool Apply<T>(TypeAnnotationConverter<T> converter, Stack<KeyValuePair<string, T>> stack) {
-                    if (stack.Count < 2) {
+                    var items = new List<T>();
+                    if (!stack.Any()) {
                         return false;
                     }
-                    var args = stack.Pop();
-                    if (args.Key != null) {
+                    var t = stack.Pop();
+                    if (t.Value == null) {
                         return false;
+                    }
+                    if (_multipleArgs) {
+                        while (t.Key != nameof(StartUnionOp)) {
+                            items.Add(t.Value);
+                            if (!stack.Any()) {
+                                return false;
+                            }
+                            t = stack.Pop();
+                        }
+                        items.Reverse();
+                    } else if (t.Key != nameof(StartUnionOp)) {
+                        items.Add(t.Value);
                     }
                     var baseType = stack.Pop();
                     if (baseType.Key != null) {
                         return false;
                     }
-                    var t = converter.MakeGeneric(baseType.Value, converter.GetUnionTypes(args.Value) ?? new[] { args.Value });
-                    if (t == null) {
+                    t = new KeyValuePair<string, T>(null, converter.MakeGeneric(baseType.Value, items));
+                    if (t.Value == null) {
                         return false;
                     }
-                    stack.Push(new KeyValuePair<string, T>(null, t));
+                    stack.Push(t);
                     return true;
                 }
             }
@@ -258,6 +296,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// Returns the types as a single union type.
         /// </summary>
         public virtual T MakeUnion(IReadOnlyList<T> types) => default(T);
+
+        /// <summary>
+        /// Returns the types as a single list type.
+        /// </summary>
+        public virtual T MakeList(IReadOnlyList<T> types) => default(T);
 
         /// <summary>
         /// Ensure the final result is a suitable type. Return null
