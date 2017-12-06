@@ -4,8 +4,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
-using Microsoft.DotNet.PlatformAbstractions;
-
 namespace ExternalProfilerDriver
 {
     public class VTuneInvoker
@@ -18,8 +16,11 @@ namespace ExternalProfilerDriver
         {
             // expecting something like "C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017";
             string envvarval;
-            if (RuntimeEnvironment.OperatingSystemPlatform == Platform.Windows ||
-                 RuntimeEnvironment.OperatingSystemPlatform == Platform.Linux)
+	    var os = Environment.OSVersion.Platform;
+            if (os == PlatformID.Win32NT ||
+	        os == PlatformID.Win32Windows ||
+	        os == PlatformID.Unix
+		 )
             {
                 envvarval = Environment.GetEnvironmentVariable(_vtune17Envvar);
                 if (envvarval == null)
@@ -51,7 +52,7 @@ namespace ExternalProfilerDriver
         private string _baseOutDir = "";  // user data dir
         private readonly string _resultDir = "";   // path of directory to store/retrieve collected results
                                                    // empty if collection has not started
-        private readonly string _profiledCL;
+        // private readonly string _profiledCL;
 
         // VTune organizes its collections in a two-level hierarchy: BaseOutDir/ResultDir
         public string BaseOutDir { get { return _baseOutDir; } }

@@ -77,7 +77,9 @@ namespace ExternalProfilerDriver
                 bool processRunning = true;
                 t.ContinueWith((p) => { processRunning = false; });
 
+#if false
                 int count = 0;
+#endif
                 while (processRunning)
                 {
 #if false
