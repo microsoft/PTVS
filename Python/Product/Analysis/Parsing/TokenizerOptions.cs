@@ -43,6 +43,11 @@ namespace Microsoft.PythonTools.Parsing {
         /// To successfully parse the function defintion even though we have no idea we should
         /// be looking at indents/dedents after the open grouping starts.
         /// </summary>
-        GroupingRecovery = 0x04
+        GroupingRecovery = 0x04,
+        /// <summary>
+        /// Enables parsing of stub files. Stub files act like Python 3.6 or later, regardless
+        /// of the specified version.
+        /// </summary>
+        StubFile = 0x08,
     }
 }

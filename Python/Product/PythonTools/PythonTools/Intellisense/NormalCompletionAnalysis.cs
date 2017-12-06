@@ -96,7 +96,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var interactiveWindow = _snapshot.TextBuffer.GetInteractiveWindow();
             var pyReplEval = interactiveWindow?.Evaluator as IPythonInteractiveIntellisense;
 
-            var analysis = GetAnalysisEntry();
+            var bufferInfo = GetBufferInfo();
+            var analysis = bufferInfo?.AnalysisEntry;
             var analyzer = analysis?.Analyzer;
 
             if (analyzer == null) {
@@ -113,7 +114,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var expansionCompletionsTask = pyReplEval == null ? EditorServices.Python?.GetExpansionCompletionsAsync() : null;
 
                 if (analysis != null) {
-                    members = GetAvailableCompletions(analysis, statementRange.Start);
+                    members = GetAvailableCompletions(bufferInfo, statementRange.Start);
                 }
 
                 if (pyReplEval != null) {
@@ -205,7 +206,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        private IEnumerable<CompletionResult> GetAvailableCompletions(AnalysisEntry analysis, SnapshotPoint point) {
+        private IEnumerable<CompletionResult> GetAvailableCompletions(PythonTextBufferInfo bufferInfo, SnapshotPoint point) {
+            var analysis = bufferInfo.AnalysisEntry;
+            if (analysis == null) {
+                return Enumerable.Empty<CompletionResult>();
+            }
+
             var analyzer = analysis.Analyzer;
 
             lock (analyzer) {
@@ -221,7 +227,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         .SelectMany(s => s.Parameters)
                         .Select(p => p.Name)
                         .Distinct()
-                        .Select(n => new CompletionResult(n, PythonMemberType.Field));
+                        .Select(n => new CompletionResult(n + "=", PythonMemberType.NamedArgument));
                 }
                 return analyzer.WaitForRequest(analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions), "GetCompletions.GetAllAvailableMembers")
                     .MaybeEnumerate()

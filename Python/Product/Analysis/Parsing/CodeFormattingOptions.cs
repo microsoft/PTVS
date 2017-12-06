@@ -42,6 +42,32 @@ namespace Microsoft.PythonTools.Parsing {
 
         public string NewLineFormat { get; set; }
 
+        internal static CodeFormattingOptions Traditional = new CodeFormattingOptions {
+            SpaceAfterComma = true,
+            SpaceAroundAnnotationArrow = true,
+            SpaceAroundDefaultValueEquals = true,
+            SpaceBeforeCallParen = false,
+            SpaceBeforeClassDeclarationParen = false,
+            SpaceBeforeComma = false,
+            SpaceBeforeFunctionDeclarationParen = false,
+            SpaceBeforeIndexBracket = false,
+            SpacesAroundAssignmentOperator = true,
+            SpacesAroundBinaryOperators = true,
+            SpacesWithinEmptyListExpression = false,
+            SpacesWithinListExpression = false,
+            SpacesWithinParenthesisedTupleExpression = false,
+            SpacesWithinParenthesisExpression = false,
+            SpaceWithinCallParens = false,
+            SpaceWithinClassDeclarationParens = false,
+            SpaceWithinEmptyBaseClassList =false,
+            SpaceWithinEmptyCallArgumentList = false,
+            SpaceWithinEmptyParameterList = false,
+            SpaceWithinEmptyTupleExpression = false,
+            SpaceWithinFunctionDeclarationParens = false,
+            SpaceWithinIndexBrackets = false,
+            RemoveTrailingSemicolons = true
+        };
+
         #region Class Definition Options
 
         /// <summary>
@@ -197,6 +223,9 @@ namespace Microsoft.PythonTools.Parsing {
         [CodeFormattingDescription("SpaceWithinIndexBracketsShort", "SpaceWithinIndexBracketsLong")]
         [CodeFormattingDefaultValue(false)]
         public bool? SpaceWithinIndexBrackets { get; set; }
+
+        public bool? SpaceBeforeComma { get; set; }
+        public bool? SpaceAfterComma { get; set; }
 
         #endregion
 

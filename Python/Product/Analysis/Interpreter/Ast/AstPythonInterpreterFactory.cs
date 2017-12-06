@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         protected void Dispose(bool disposing) {
             if (!_disposed) {
                 _disposed = true;
-                _log?.Flush(!disposing);
+                _log?.Flush(synchronous: true);
 
                 if (disposing) {
                     if (_log != null) {
@@ -337,6 +337,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             return packageDict;
         }
+
 
         private static IReadOnlyCollection<string> GetPackagesFromDirectory(string searchPath) {
             return ModulePath.GetModulesInPath(

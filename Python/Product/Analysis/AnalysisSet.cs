@@ -455,6 +455,73 @@ namespace Microsoft.PythonTools.Analysis {
             return set;
         }
 
+        /// <summary>
+        /// Splits values in the set according to the predicate. Returns true
+        /// if there are any values in <paramref name="trueSet"/> on return.
+        /// </summary>
+        public static bool Split(this IAnalysisSet set, Func<AnalysisValue, bool> predicate, out IAnalysisSet trueSet, out IAnalysisSet falseSet) {
+            if (predicate == null) {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
+            IAnalysisSet empty;
+            if (set.Comparer is UnionComparer uc) {
+                empty = CreateUnion(uc);
+            } else {
+                empty = Create();
+            }
+
+            if (set.Count == 0) {
+                trueSet = falseSet = empty;
+                return false;
+            } else if (set is AnalysisValue av) {
+                if (predicate(av)) {
+                    trueSet = av;
+                    falseSet = empty;
+                    return true;
+                }
+                trueSet = empty;
+                falseSet = av;
+                return false;
+            }
+
+            trueSet = empty.Union(set.Where(predicate), out bool res);
+            falseSet = empty.Union(set.Where(v => !predicate(v)));
+            return res;
+        }
+
+        /// <summary>
+        /// Splits values in the set according to type. Returns true if there are
+        /// any values of type T in <paramref name="ofType"/>.
+        /// </summary>
+        public static bool Split<T>(this IAnalysisSet set, out IReadOnlyList<T> ofType, out IAnalysisSet rest) {
+            IAnalysisSet empty;
+            if (set.Comparer is UnionComparer uc) {
+                empty = CreateUnion(uc);
+            } else {
+                empty = Create();
+            }
+
+            if (set is T t) {
+                ofType = new[] { t };
+                rest = empty;
+                return true;
+            } else if (set is AnalysisValue) {
+                ofType = Array.Empty<T>();
+                rest = set;
+                return false;
+            }
+
+            ofType = set.OfType<T>().ToArray();
+            if (!ofType.Any()) {
+                rest = set;
+                return false;
+            }
+
+            rest = Create(set.Where(av => !(av is T)), set.Comparer);
+            return true;
+        }
+
         #endregion
     }
 

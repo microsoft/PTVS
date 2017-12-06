@@ -68,11 +68,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Instance.SelfSet;
         }
 
-        public override string Name {
+        public override string Name => _type.Name;
+        public string InstanceDescription {
             get {
+                switch (TypeId) {
+                    case BuiltinTypeId.NoneType:
+                        return "None";
+                    case BuiltinTypeId.Unknown:
+                        return "<unknown>";
+                }
                 return _type.Name;
             }
         }
+
+        public string ShortInstanceDescription => InstanceDescription;
 
         public override IEnumerable<IAnalysisSet> Mro {
             get {
@@ -94,7 +103,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Instance;
         }
 
-        private BuiltinInstanceInfo MakeInstance() {
+        protected virtual BuiltinInstanceInfo MakeInstance() {
             if (_type.TypeId == BuiltinTypeId.Int || _type.TypeId == BuiltinTypeId.Long || _type.TypeId == BuiltinTypeId.Float || _type.TypeId == BuiltinTypeId.Complex) {
                 return new NumericInstanceInfo(this);
             } else if (_type.TypeId == BuiltinTypeId.Str || _type.TypeId == BuiltinTypeId.Unicode || _type.TypeId == BuiltinTypeId.Bytes) {

@@ -29,7 +29,7 @@ namespace AnalysisTests {
     /// </summary>
     public class BaseAnalysisTest {
         private readonly IPythonInterpreterFactory _defaultFactoryV2 = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
-        private readonly IPythonInterpreterFactory _defaultFactoryV3 = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 5));
+        private readonly IPythonInterpreterFactory _defaultFactoryV3 = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 6));
 
         private List<IDisposable> _toDispose;
 

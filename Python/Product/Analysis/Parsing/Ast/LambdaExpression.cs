@@ -48,8 +48,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (namedOnlyText != null) {
                 res.Append(namedOnlyText);
             }
+            res.Append(this.GetSecondWhiteSpace(ast));
             if (!this.IsIncompleteNode(ast)) {
-                res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append(":");
                 if (_function.Body is ReturnStatement) {
                     ((ReturnStatement)_function.Body).Expression.AppendCodeString(res, ast, format);

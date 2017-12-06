@@ -23,9 +23,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class SysModuleInfo : BuiltinModule {
         public SysModulesDictionaryInfo _modules;
         
-        public SysModuleInfo(BuiltinModule inner)
+        private SysModuleInfo(BuiltinModule inner)
             : base(inner.InterpreterModule, inner.ProjectState) {
         }
+
+        public static BuiltinModule Wrap(BuiltinModule inner) => new SysModuleInfo(inner);
 
         public Dictionary<string, IAnalysisSet> Modules { get; private set; }
 

@@ -1,10 +1,27 @@
-﻿using System;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonMultipleMembers : IPythonMultipleMembers {
+    class AstPythonMultipleMembers : IPythonMultipleMembers, ILocatedMember {
         private IList<IMember> _members;
         private bool _checkForLazy;
 
@@ -51,6 +68,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void AddMember(IMember member) {
+            if (member == this) {
+                return;
+            } else if (member is IPythonMultipleMembers mm) {
+                AddMembers(mm.Members);
+                return;
+            }
             var old = _members;
             if (!old.Contains(member)) {
                 _members = old.Concat(Enumerable.Repeat(member, 1)).ToArray();
@@ -64,10 +87,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public void AddMembers(IEnumerable<IMember> members) {
             var old = _members;
             if (old.Any()) {
-                _members = old.Union(members).ToArray();
+                _members = old.Union(members.Where(m => m != this)).ToArray();
                 _checkForLazy = true;
             } else {
-                _members = members.ToArray();
+                _members = members.Where(m => m != this).ToArray();
                 _checkForLazy = true;
             }
         }
@@ -76,7 +99,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IList<IMember> Members {
             get {
                 if (_checkForLazy) {
-                    _members = _members.Select(m => (m as ILazyMember)?.Get() ?? m).ToArray();
+                    _members = _members.Select(m => (m as ILazyMember)?.Get() ?? m).Where(m => m != this).ToArray();
                     _checkForLazy = false;
                 }
                 return _members;
@@ -84,5 +107,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public PythonMemberType MemberType => PythonMemberType.Multiple;
+
+        public IEnumerable<LocationInfo> Locations => _members.OfType<ILocatedMember>().SelectMany(m => m.Locations.MaybeEnumerate());
     }
 }

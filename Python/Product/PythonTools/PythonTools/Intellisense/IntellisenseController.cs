@@ -854,9 +854,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        [ThreadStatic]
-        internal static bool ForceCompletions;
-
         private bool SelectSingleBestCompletion(ICompletionSession session) {
             if (session.CompletionSets.Count != 1) {
                 return false;
@@ -875,23 +872,32 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void TriggerCompletionSession(bool completeWord, bool? commitByDefault = null) {
             DismissCompletionSession();
 
-            var session = _services.CompletionBroker.TriggerCompletion(_textView);
-
-            if (session == null) {
-                Volatile.Write(ref _activeSession, null);
-            } else if (completeWord && SelectSingleBestCompletion(session)) {
-                session.Commit();
-            } else {
-                if (commitByDefault.HasValue) {
-                    foreach (var s in session.CompletionSets.OfType<FuzzyCompletionSet>()) {
-                        s.CommitByDefault = commitByDefault.GetValueOrDefault();
-                    }
-                }
-                session.Filter();
-                session.Dismissed += OnCompletionSessionDismissedOrCommitted;
-                session.Committed += OnCompletionSessionDismissedOrCommitted;
-                Volatile.Write(ref _activeSession, session);
+            var caretPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition, PointTrackingMode.Positive);
+            var session = _services.CompletionBroker.CreateCompletionSession(_textView, caretPoint, true);
+            if (completeWord) {
+                session.SetCompleteWordMode();
             }
+
+            session.Start();
+            if (!session.IsStarted) {
+                Volatile.Write(ref _activeSession, null);
+                return;
+            }
+
+            if (completeWord && SelectSingleBestCompletion(session)) {
+                session.Commit();
+                return;
+            }
+
+            if (commitByDefault.HasValue) {
+                foreach (var s in session.CompletionSets.OfType<FuzzyCompletionSet>()) {
+                    s.CommitByDefault = commitByDefault.GetValueOrDefault();
+                }
+            }
+            session.Filter();
+            session.Dismissed += OnCompletionSessionDismissedOrCommitted;
+            session.Committed += OnCompletionSessionDismissedOrCommitted;
+            Volatile.Write(ref _activeSession, session);
         }
 
         internal void TriggerSignatureHelp() {
@@ -981,6 +987,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (int)VSConstants.VSStd2KCmdID.TYPECHAR) {
                 var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
+                bool suppressChar = false;
 
                 if (session != null && !session.IsDismissed) {
                     if (session.SelectedCompletionSet != null &&
@@ -993,6 +1000,9 @@ namespace Microsoft.PythonTools.Intellisense {
                             // be retriggered after the slash is inserted.
                             session.Dismiss();
                         } else {
+                            if (ch == session.SelectedCompletionSet.SelectionStatus.Completion.InsertionText.LastOrDefault()) {
+                                suppressChar = true;
+                            }
                             session.Commit();
                         }
                     } else if (!Tokenizer.IsIdentifierChar(ch)) {
@@ -1000,12 +1010,15 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
+                int res = VSConstants.S_OK;
+                if (!suppressChar) {
+                    res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
 
-                HandleChar((char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn));
+                    HandleChar(ch);
 
-                if (session != null && !session.IsDismissed) {
-                    session.Filter();
+                    if (session != null && !session.IsDismissed) {
+                        session.Filter();
+                    }
                 }
 
                 return res;

@@ -62,23 +62,23 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 return;
             }
 
-            var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+            var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange.Start, artifact.InnerRange.Length);
             artifact.Parse(artifactText);
 
-            ITrackingSpan applicableSpan;
-            var completionSet = GetCompletionSet(session.GetOptions(_serviceProvider), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out applicableSpan);
+            var completionSet = GetCompletionSet(session.GetOptions(_serviceProvider), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out _);
             completionSets.Add(completionSet);
         }
 
         protected override IEnumerable<DjangoBlock> GetBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint) {
-            var doc = HtmlEditorDocument.FromTextBuffer(_buffer);
+            var buffers = _buffer.GetContributingBuffers().Where(b => b.ContentType.IsOfType(TemplateHtmlContentType.ContentTypeName));
+            var doc = HtmlEditorDocument.FromTextBuffer(buffers.FirstOrDefault() ?? _buffer);
             if (doc == null) {
                 yield break;
             }
 
             var artifacts = doc.HtmlEditorTree.ArtifactCollection.ItemsInRange(new TextRange(0, triggerPoint.Position));
             foreach (var artifact in artifacts.OfType<TemplateBlockArtifact>().Reverse()) {
-                var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+                var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange.Start, artifact.InnerRange.Length);
                 artifact.Parse(artifactText);
                 if (artifact.Block != null) {
                     yield return artifact.Block;

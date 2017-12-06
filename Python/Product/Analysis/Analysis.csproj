@@ -58,6 +58,7 @@
     <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisLogWriter.cs" />
+    <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
@@ -202,9 +203,13 @@
     <Compile Include="Values\CoroutineInfo.cs" />
     <Compile Include="Values\DictBuiltinClassInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
+    <Compile Include="Values\ProtocolInfo.cs" />
+    <Compile Include="Values\Protocols.cs" />
     <Compile Include="Values\SpecializedInstanceInfo.cs" />
     <Compile Include="Values\SyntheticDefinitionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
+    <Compile Include="Values\TypingModuleInfo.cs" />
+    <Compile Include="Values\TypingTypeInfo.cs" />
     <Compile Include="VariableDef.cs" />
     <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\Default\CPythonMethodDescriptor.cs" />
@@ -373,7 +378,7 @@
     <Compile Include="Values\BoundMethodInfo.cs" />
     <Compile Include="Values\ModuleInfo.cs" />
     <Compile Include="Values\MultipleMemberInfo.cs" />
-    <Compile Include="AnalysisSetExtensions.cs" />
+    <Compile Include="AnalysisValueSetExtensions.cs" />
     <Compile Include="Values\NumericInstanceInfo.cs" />
     <Compile Include="Values\RangeInfo.cs" />
     <Compile Include="Values\ReflectedNamespace.cs" />

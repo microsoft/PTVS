@@ -163,7 +163,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             VariableDef param;
             for (int i = 0; i < Ast.Parameters.Count; ++i) {
                 var p = Ast.Parameters[i];
-                ddg._eval.EvaluateMaybeNull(p.Annotation);
+                if (p.Annotation != null) {
+                    var val = ddg._eval.EvaluateAnnotation(p.Annotation).GetInstanceType();
+                    if (val?.Any() == true && Scope.TryGetVariable(p.Name, out param)) {
+                        param.AddTypes(this, val, false);
+                    }
+                }
 
                 if (p.DefaultValue != null && p.Kind != ParameterKind.List && p.Kind != ParameterKind.Dictionary &&
                     Scope.TryGetVariable(p.Name, out param)) {
@@ -173,7 +178,24 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
             }
-            ddg._eval.EvaluateMaybeNull(Ast.ReturnAnnotation);
+            if (Ast.ReturnAnnotation != null) {
+                var ann = ddg._eval.EvaluateAnnotation(Ast.ReturnAnnotation);
+                var resType = AnalysisSet.Empty;
+                if (Ast.IsGenerator && ann.Split<GeneratorInfo>(out var gens, out resType)) {
+                    var gen = ((FunctionScope)Scope).Generator;
+                    foreach (var g in gens) {
+                        g.Yields.CopyTo(gen.Yields);
+                        g.Sends.CopyTo(gen.Sends);
+                        g.Returns.CopyTo(gen.Returns);
+                    }
+                }
+
+                ((FunctionScope)Scope).AddReturnTypes(
+                    Ast.ReturnAnnotation,
+                    ddg._unit,
+                    resType.GetInstanceType()
+                );
+            }
         }
 
         public override string ToString() {

@@ -1855,7 +1855,7 @@ a = C()
 a.count";
             var entry = ProcessTextV2(text);
 
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("a", text.IndexOf("a =")), "C instance");
+            entry.AssertIsInstance("a", text.IndexOf("a ="), "C");
             var result = entry.GetSignatures("a.count");
             Assert.AreEqual(1, result.Length);
             Assert.AreEqual(1, result[0].Parameters.Length);
@@ -2028,7 +2028,7 @@ def g():
             var entry = ProcessTextV2(text);
 
             AssertUtil.ContainsExactly(entry.GetTypes("e1", text.IndexOf(", e1")), entry.GetBuiltin("TypeError"));
-            entry.AssertDescription("e2", text.IndexOf(", e2"), "MyException instance");
+            entry.AssertIsInstance("e2", text.IndexOf(", e2"), "MyException");
         }
 
         [TestMethod, Priority(0)]
@@ -2224,8 +2224,8 @@ b = {1}{1}C()
                 Console.WriteLine(test.Operator);
                 var entry = ProcessText(String.Format(text, test.Method, test.Operator));
 
-                AssertUtil.ContainsExactly(entry.GetShortDescriptions("a", text.IndexOf("a =")), "Result instance");
-                AssertUtil.ContainsExactly(entry.GetShortDescriptions("b", text.IndexOf("b =")), "Result instance");
+                entry.AssertIsInstance("a", text.IndexOf("a ="), "Result");
+                entry.AssertIsInstance("b", text.IndexOf("b ="), "Result");
             }
         }
 
@@ -2303,20 +2303,20 @@ m {1}= m
                     code = code.Replace("42L", "42");
                 }
                 using (var state = ProcessText(code, test.Version)) {
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("a", text.IndexOf("a =")), "ForwardResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("b", text.IndexOf("b =")), "ReverseResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("c", text.IndexOf("c =")), "ReverseResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("d", text.IndexOf("d =")), "ForwardResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("e", text.IndexOf("e =")), "ReverseResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("f", text.IndexOf("f =")), "ForwardResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("g", text.IndexOf("g =")), "ForwardResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("h", text.IndexOf("h =")), "ReverseResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("i", text.IndexOf("i =")), "ForwardResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("j", text.IndexOf("j =")), "ReverseResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("k", text.IndexOf("k =")), "ForwardResult instance");
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("l", text.IndexOf("l =")), "ReverseResult instance");
+                    state.AssertIsInstance("a", text.IndexOf("a ="), "ForwardResult");
+                    state.AssertIsInstance("b", text.IndexOf("b ="), "ReverseResult");
+                    state.AssertIsInstance("c", text.IndexOf("c ="), "ReverseResult");
+                    state.AssertIsInstance("d", text.IndexOf("d ="), "ForwardResult");
+                    state.AssertIsInstance("e", text.IndexOf("e ="), "ReverseResult");
+                    state.AssertIsInstance("f", text.IndexOf("f ="), "ForwardResult");
+                    state.AssertIsInstance("g", text.IndexOf("g ="), "ForwardResult");
+                    state.AssertIsInstance("h", text.IndexOf("h ="), "ReverseResult");
+                    state.AssertIsInstance("i", text.IndexOf("i ="), "ForwardResult");
+                    state.AssertIsInstance("j", text.IndexOf("j ="), "ReverseResult");
+                    state.AssertIsInstance("k", text.IndexOf("k ="), "ForwardResult");
+                    state.AssertIsInstance("l", text.IndexOf("l ="), "ReverseResult");
                     // We assume that augmented assignments keep their type
-                    AssertUtil.ContainsExactly(state.GetShortDescriptions("m", code.IndexOf("m " + test.Operator)), "C instance");
+                    state.AssertIsInstance("m", code.IndexOf("m " + test.Operator), "C");
                 }
             }
         }
@@ -3129,8 +3129,8 @@ mod1.l.append(a)
                 mod2.Analyze(CancellationToken.None, true);
                 state.WaitForAnalysis();
 
-                state.AssertDescription("l", "list of C instance");
-                state.AssertDescription("l[0]", "C instance");
+                state.AssertDescription("l", "list of C");
+                state.AssertIsInstance("l[0]", "C");
             }
         }
 
@@ -4116,7 +4116,7 @@ val = next(it)
             // Ensure the returned generators are distinct
             var entry = ProcessText(text);
             entry.AssertIsInstance("it", BuiltinTypeId.Generator);
-            entry.AssertDescription("val", "S0 instance");
+            entry.AssertIsInstance("val", "S0");
         }
 
         [TestMethod, Priority(0)]
@@ -4510,7 +4510,7 @@ oar = C().x
             entry.AssertIsInstance("C.x", BuiltinTypeId.Int);
 
             entry.AssertIsInstance("ctx", text.IndexOf("return"), BuiltinTypeId.Type);
-            AssertUtil.ContainsExactly(entry.GetShortDescriptions("inst", text.IndexOf("return 42")), "None", "C instance");
+            entry.AssertIsInstance("inst", text.IndexOf("return 42"), "None", "C");
 
             text = @"
 class mydesc(object):
@@ -4526,7 +4526,7 @@ oar = C().x
 ";
 
             entry = ProcessText(text);
-            entry.AssertDescription("inst", text.IndexOf("return 42"), "C instance");
+            entry.AssertIsInstance("inst", text.IndexOf("return 42"), "C");
             entry.AssertHasAttr("inst", text.IndexOf("return 42"), "instfunc");
         }
 
@@ -5233,8 +5233,8 @@ a = X(2)
             var entry = ProcessText(text);
             entry.AssertDescription("cls", text.IndexOf("= value"), "X");
             entry.AssertIsInstance("value", text.IndexOf("res.value = "), BuiltinTypeId.Int);
-            entry.AssertDescription("res", text.IndexOf("res.value = "), "X instance");
-            entry.AssertDescription("a", text.IndexOf("a = "), "X instance");
+            entry.AssertIsInstance("res", text.IndexOf("res.value = "), "X");
+            entry.AssertIsInstance("a", text.IndexOf("a = "), "X");
             entry.AssertIsInstance("a.value", BuiltinTypeId.Int);
         }
 
@@ -5500,7 +5500,7 @@ def f(a):
 ";
 
             var entry = ProcessText(text);
-            entry.AssertDescription("a", text.IndexOf("print(a)"), "C instance");
+            entry.AssertIsInstance("a", text.IndexOf("print(a)"), "C");
         }
 
         [TestMethod, Priority(0)]
@@ -5721,7 +5721,7 @@ def with_params_default_starargs(*args, **kwargs):
 ";
             var entry = ProcessTextV2(text);
 
-            entry.AssertDescription("fob()", "fob instance");
+            entry.AssertIsInstance("fob()", "fob");
             entry.AssertDescription("int()", "int");
             entry.AssertDescription("a", "float");
             entry.AssertDescription("a", "float");
@@ -5734,7 +5734,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDescription("list.append", "built-in method list.append(item)\r\nappend(self: list, item: object)");
             entry.AssertIsInstance("\"abc\".Length");
             entry.AssertIsInstance("c.Length");
-            entry.AssertDescription("d", "fob instance");
+            entry.AssertIsInstance("d", "fob");
             entry.AssertDescription("sys", "built-in module sys");
             entry.AssertDescription("f", "def test-module.f() -> str");
             entry.AssertDescription("fob.f", "def test-module.fob.f(self)\r\ndeclared in fob");
@@ -5791,7 +5791,7 @@ def g():
 ";
             var entry = ProcessText(text);
 
-            AssertUtil.Contains(entry.GetCompletionDocumentation("f", "func_name", 1).First(), "of type str");
+            AssertUtil.Contains(entry.GetCompletionDocumentation("", "d", 1).First(), "instance of fob");
             AssertUtil.Contains(entry.GetCompletionDocumentation("", "int", 1).First(), "integer");
             AssertUtil.Contains(entry.GetCompletionDocumentation("", "min", 1).First(), "min(");
         }
@@ -5990,8 +5990,8 @@ abc = f(())
 class Fob(object):
     def oar(self, a):
         pass
-        
-        
+
+
     def fob(self): 
         pass
 
@@ -6000,8 +6000,29 @@ x.oar(100)
 ";
 
             var entry = ProcessText(text);
+            var mod = entry.Modules[entry.DefaultModule].Analysis;
 
-            entry.AssertIsInstance("a", text.IndexOf("pass") + 14, BuiltinTypeId.Int);
+            AssertUtil.ContainsAtLeast(mod.GetAllAvailableMembers(new SourceLocation(6, 9)).Select(mr => mr.Name), "a");
+        }
+
+        [TestMethod, Priority(0)]
+        public void TypeAtEndOfIncompleteMethod() {
+            string text = @"
+class Fob(object):
+    def oar(self, a):
+
+
+
+
+
+x = Fob()
+x.oar(100)
+";
+
+            var entry = ProcessText(text, allowParseErrors: true);
+            var mod = entry.Modules[entry.DefaultModule].Analysis;
+
+            AssertUtil.ContainsAtLeast(mod.GetAllAvailableMembers(new SourceLocation(6, 9)).Select(mr => mr.Name), "a");
         }
 
         [TestMethod, Priority(0)]
@@ -6263,9 +6284,9 @@ def f(s: s = 123):
 ";
             var entry = ProcessTextV3(text);
 
-            entry.AssertIsInstance("s", text.IndexOf("s:"), BuiltinTypeId.Int);
+            entry.AssertIsInstance("s", text.IndexOf("s:"), BuiltinTypeId.Int, BuiltinTypeId.NoneType);
             entry.AssertIsInstance("s", text.IndexOf("s ="), BuiltinTypeId.NoneType);
-            entry.AssertIsInstance("s", text.IndexOf("return"), BuiltinTypeId.Int);
+            entry.AssertIsInstance("s", text.IndexOf("return"), BuiltinTypeId.Int, BuiltinTypeId.NoneType);
         }
 
         [TestMethod, Priority(0)]

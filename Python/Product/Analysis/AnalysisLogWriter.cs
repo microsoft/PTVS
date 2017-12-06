@@ -168,9 +168,14 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private void Dump() {
-            if (!_dumping.Wait(0)) {
+            try {
+                if (!_dumping.Wait(0)) {
+                    return;
+                }
+            } catch (ObjectDisposedException) {
                 return;
             }
+
             try {
                 // Once triggered, allow any more immediate messages to be added.
                 Thread.Sleep(50);

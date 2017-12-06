@@ -173,7 +173,7 @@ Overloaded = test.Overloaded
 
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
-                Assert.AreEqual("class test.Aliased\r\nclass doc\r\n\r\nfunction Aliased(fob)\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
+                Assert.AreEqual("class test.Aliased or function Aliased(fob)\r\n\r\nclass test.Aliased: class doc\r\n\r\nfunction Aliased(fob): function doc", allMembers.First(x => x.Name == "Aliased").Documentation);
                 newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");
 
                 //var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First();
@@ -391,7 +391,7 @@ def k(x = ()): pass
 
 def l(x = (2, )): pass
 
-def m(x = math.atan2(1, 0)): pass
+def m(x = math.atan2( 1 , 0 )): pass
 ";
 
             var tests = new[] {
@@ -402,17 +402,17 @@ def m(x = math.atan2(1, 0)): pass
                 new { FuncName = "j", ParamName="x", DefaultValue="[...]" },
                 new { FuncName = "k", ParamName="x", DefaultValue = "()" },
                 new { FuncName = "l", ParamName="x", DefaultValue = "(...)" },
-                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1,0)" },
+                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1, 0)" },
             };
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
                 var entry = newPs.NewModule("test2", "from test import *");
                 foreach (var test in tests) {
                     var result = entry.Analysis.GetSignaturesByIndex(test.FuncName, 1).ToArray();
-                    Assert.AreEqual(result.Length, 1);
-                    Assert.AreEqual(result[0].Parameters.Length, 1);
-                    Assert.AreEqual(result[0].Parameters[0].Name, test.ParamName);
-                    Assert.AreEqual(result[0].Parameters[0].DefaultValue, test.DefaultValue);
+                    Assert.AreEqual(1, result.Length);
+                    Assert.AreEqual(1, result[0].Parameters.Length);
+                    Assert.AreEqual(test.ParamName, result[0].Parameters[0].Name);
+                    Assert.AreEqual(test.DefaultValue, result[0].Parameters[0].DefaultValue);
                 }
             }
         }

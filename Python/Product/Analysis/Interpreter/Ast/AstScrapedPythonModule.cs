@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             using (code) {
                 var sink = new CollectingErrorSink();
                 using (var sr = new StreamReader(code, Encoding.UTF8, true, 4096, true))
-                using (var parser = Parser.CreateParser(sr, fact.GetLanguageVersion(), new ParserOptions { ErrorSink = sink })) {
+                using (var parser = Parser.CreateParser(sr, fact.GetLanguageVersion(), new ParserOptions { ErrorSink = sink, StubFile = true })) {
                     ast = parser.ParseFile();
                 }
 

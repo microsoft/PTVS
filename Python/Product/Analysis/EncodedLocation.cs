@@ -76,9 +76,6 @@ namespace Microsoft.PythonTools.Analysis {
         #endregion
 
         public LocationInfo GetLocationInfo() {
-            if (Location == null) {
-                return null;
-            }
             if (Resolver == null) {
                 return Location as LocationInfo;
             }

@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.Parsing {
         private Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();  // attributes for each node, currently just round tripping information
 
         private bool _alwaysAllowContextDependentSyntax;
+        private bool _stubFile;
 
         private static Encoding _utf8throwing;
         private static Regex _codingRegex;
@@ -103,7 +104,9 @@ namespace Microsoft.PythonTools.Parsing {
             Parser parser = null;
             var tokenizer = new Tokenizer(
                 version, options.ErrorSink,
-                (options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None) | TokenizerOptions.GroupingRecovery,
+                (options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None) |
+                    TokenizerOptions.GroupingRecovery |
+                    (options.StubFile ? TokenizerOptions.StubFile : 0),
                 (span, text) => options.RaiseProcessComment(parser, new CommentEventArgs(span, text)));
             tokenizer.Initialize(null, reader, SourceLocation.MinValue);
             tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;
@@ -115,7 +118,7 @@ namespace Microsoft.PythonTools.Parsing {
                 options.Verbatim,
                 options.BindReferences,
                 options.PrivatePrefix
-            ) { _sourceReader = reader };
+            ) { _sourceReader = reader, _stubFile = options.StubFile };
             return parser;
         }
 
@@ -960,7 +963,7 @@ namespace Microsoft.PythonTools.Parsing {
             Expression ret = ParseTestListAsExpr();
             bool hasAnnotation = false;
 
-            if (PeekToken(TokenKind.Colon) && _langVersion >= PythonLanguageVersion.V36) {
+            if (PeekToken(TokenKind.Colon) && (_stubFile || _langVersion >= PythonLanguageVersion.V36)) {
                 ret = ParseNameAnnotation(ret);
                 hasAnnotation = true;
                 if (!PeekToken(TokenKind.Assign)) {
@@ -1913,7 +1916,7 @@ namespace Microsoft.PythonTools.Parsing {
             List<string> commaWhiteSpace = null;
             bool ateTerminator = false;
             var parameters = ateLeftParen ? ParseVarArgsList(TokenKind.RightParenthesis, true, out commaWhiteSpace, out ateTerminator) : null;
-            string closeParenWhiteSpace = _tokenWhiteSpace;
+            string closeParenWhiteSpace = ateTerminator || PeekToken(TokenKind.EndOfFile) ? _tokenWhiteSpace : null;
             FunctionDefinition ret;
             if (parameters == null) {
                 // error in parameters
@@ -1941,11 +1944,11 @@ namespace Microsoft.PythonTools.Parsing {
 
             string arrowWhiteSpace = null;
             Expression returnAnnotation = null;
-            if (MaybeEat(TokenKind.Arrow)) {
+            if (ateTerminator && MaybeEat(TokenKind.Arrow)) {
                 arrowWhiteSpace = _tokenWhiteSpace;
                 var arrStart = GetStart();
                 returnAnnotation = ParseExpression();
-                if (_langVersion.Is2x()) {
+                if (!_stubFile && _langVersion.Is2x()) {
                     ReportSyntaxError(arrStart, returnAnnotation.EndIndex, "invalid syntax, return annotations require 3.x");
                 }
             }
@@ -2081,7 +2084,7 @@ namespace Microsoft.PythonTools.Parsing {
             var seenNames = new HashSet<string>();
             foreach (var p in parameters) {
                 if (p.Annotation != null) {
-                    if (_langVersion.Is2x()) {
+                    if (!_stubFile && _langVersion.Is2x()) {
                         ReportSyntaxError(p.StartIndex, p.EndIndex, "invalid syntax, parameter annotations require 3.x");
                         continue;
                     } else if (!allowAnnotations) {
@@ -2202,7 +2205,7 @@ namespace Microsoft.PythonTools.Parsing {
             List<string> commaWhiteSpace;
             bool ateTerminator;
             FunctionDefinition func = ParseLambdaHelperStart(out commaWhiteSpace, out ateTerminator);
-            string colonWhiteSpace = _tokenWhiteSpace;
+            string colonWhiteSpace = ateTerminator || PeekToken(TokenKind.EndOfFile) ? _tokenWhiteSpace : null;
 
             Expression expr = ateTerminator ? ParseOldExpression() : Error("");
             return ParseLambdaHelperEnd(func, expr, whitespace, colonWhiteSpace, commaWhiteSpace, ateTerminator);
@@ -2214,7 +2217,7 @@ namespace Microsoft.PythonTools.Parsing {
             List<string> commaWhiteSpace;
             bool ateTerminator;
             FunctionDefinition func = ParseLambdaHelperStart(out commaWhiteSpace, out ateTerminator);
-            string colonWhiteSpace = _tokenWhiteSpace;
+            string colonWhiteSpace = ateTerminator || PeekToken(TokenKind.EndOfFile) ? _tokenWhiteSpace : null;
 
             Expression expr = ateTerminator ? ParseExpression() : Error("");
             return ParseLambdaHelperEnd(func, expr, whitespace, colonWhiteSpace, commaWhiteSpace, ateTerminator);

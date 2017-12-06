@@ -23,6 +23,10 @@ namespace Microsoft.PythonTools.Parsing {
             ErrorSink = ErrorSink.Null;
         }
 
+        public ParserOptions Clone() {
+            return (ParserOptions)MemberwiseClone();
+        }
+
         public ErrorSink ErrorSink { get; set; }
 
         public Severity IndentationInconsistencySeverity { set; get; }
@@ -42,6 +46,11 @@ namespace Microsoft.PythonTools.Parsing {
         /// For example __fob would turn into _C__fob if PrivatePrefix is set to C.
         /// </summary>
         public string PrivatePrefix { get; set; }
+
+        /// <summary>
+        /// When true, parses with all stub file features.
+        /// </summary>
+        public bool StubFile { get; set; }
 
         /// <summary>
         /// An event that is raised for every comment in the source as it is parsed.

@@ -225,7 +225,7 @@ namespace Microsoft.PythonTools.Debugger {
                 throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing);
             }
             if (!Directory.Exists(psi.WorkingDirectory)) {
-                throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing_Path.FormatUI(psi.FileName));
+                throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing_Path.FormatUI(psi.WorkingDirectory));
             }
 
             foreach (var kv in provider.GetPythonToolsService().GetFullEnvironment(config)) {

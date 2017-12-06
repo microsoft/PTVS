@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -24,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Represents a generator instance - either constructed using a generator expression or
     /// by calling a function definition which contains yield expressions.
     /// </summary>
-    internal class GeneratorInfo : BuiltinInstanceInfo {
+    internal class GeneratorInfo : BuiltinInstanceInfo, IHasRichDescription {
         private AnalysisValue _nextMethod;
         private AnalysisValue _sendMethod;
         private readonly IPythonProjectEntry _declaringModule;
@@ -45,6 +46,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IPythonProjectEntry DeclaringModule { get { return _declaringModule; } }
         public override int DeclaringVersion { get { return _declaringVersion; } }
+
+        public override string Description => string.Join("", GetRichDescription().Select(kv => kv.Value));
+        public override string ShortDescription => string.Join("", GetRichDescription().TakeWhile(kv => kv.Key != WellKnownRichDescriptionKinds.EndOfDeclaration).Select(kv => kv.Value));
 
         private IAnalysisSet GeneratorNext(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return GetEnumeratorTypes(node, unit);
@@ -129,6 +133,75 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     AddReturn(node, unit, gen.Returns.Types, enqueue);
                 }
             }
+        }
+
+        internal override bool UnionEquals(AnalysisValue ns, int strength) {
+            if (ns is GeneratorInfo other) {
+                return Yields.Types.SetEquals(other.Yields.Types);
+            }
+            return false;
+        }
+
+        internal override int UnionHashCode(int strength) {
+            // Arbitrarily selected prime number
+            return 968897;
+        }
+
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
+            if (ns is GeneratorInfo other) {
+                other.Yields.CopyTo(Yields);
+                other.Sends.CopyTo(Sends);
+                other.Returns.CopyTo(Returns);
+            }
+            return this;
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            var desc = new List<KeyValuePair<string, string>> {
+                new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, "generator")
+            };
+
+            bool needClosingBracket = false;
+
+            var yieldTypes = Yields.Types.GetRichDescriptions(unionPrefix: "{", unionSuffix: "}").ToList();
+            if (yieldTypes.Any()) {
+                needClosingBracket = true;
+                desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "["));
+                desc.AddRange(yieldTypes);
+            }
+
+            var sendTypes = Sends.Types.GetRichDescriptions(unionPrefix: "{", unionSuffix: "}").ToList();
+            if (sendTypes.Any()) {
+                if (!needClosingBracket) {
+                    needClosingBracket = true;
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "["));
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, "..."));
+                }
+                desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                desc.AddRange(sendTypes);
+            }
+
+            var resTypes = Returns.Types.GetRichDescriptions(unionPrefix: "{", unionSuffix: "}").ToList();
+            if (resTypes.Any()) {
+                if (!needClosingBracket) {
+                    needClosingBracket = true;
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "["));
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, "..."));
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, "..."));
+                } else if (!sendTypes.Any()) {
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                    desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, "..."));
+                }
+                desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+                desc.AddRange(resTypes);
+            }
+
+            if (needClosingBracket) {
+                desc.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]"));
+            }
+
+            return desc;
         }
     }
 }

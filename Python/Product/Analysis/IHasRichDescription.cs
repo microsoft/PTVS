@@ -33,4 +33,33 @@ namespace Microsoft.PythonTools.Analysis {
         public const string Parameter = "param";
         public const string EndOfDeclaration = "enddecl";
     }
+
+    static class RichDescriptionExtensions {
+        public static IEnumerable<KeyValuePair<string, string>> GetRichDescriptions(this IAnalysisSet set, string prefix = null, bool useLongDescription = false, string unionPrefix = null, string unionSuffix = null) {
+            var items = new List<KeyValuePair<string, string>>();
+            foreach (var d in (useLongDescription ? set.GetDescriptions() : set.GetShortDescriptions())) {
+                items.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, d));
+                items.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", "));
+            }
+
+            if (items.Count == 2) {
+                items.RemoveAt(1);
+            }
+
+            if (items.Count > 2) {
+                if (!string.IsNullOrEmpty(unionPrefix)) {
+                    items.Insert(0, new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, unionPrefix));
+                }
+                if (!string.IsNullOrEmpty(unionSuffix)) {
+                    items.Add(new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, unionSuffix));
+                }
+            }
+
+            if (items.Count > 0 && !string.IsNullOrEmpty(prefix)) {
+                items.Insert(0, new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, prefix));
+            }
+
+            return items;
+        }
+    }
 }
