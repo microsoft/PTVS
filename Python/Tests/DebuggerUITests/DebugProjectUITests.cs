@@ -715,6 +715,20 @@ namespace DebuggerUITests {
             }
         }
 
+        public void WebProjectLauncherNoStartupFile(VisualStudioApp app, DotNotWaitOnNormalExit optionSetter) {
+            var project = app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                PythonVisualStudioApp.EmptyWebProjectTemplate,
+                TestData.GetTempPath(),
+                "NewWebProject"
+            );
+
+            foreach (var cmd in new[] { "Debug.Start", "Debug.StartWithoutDebugging" }) {
+                app.Dte.ExecuteCommand(cmd);
+                app.CheckMessageBox("The project cannot be launched because the startup file is not specified.");
+            }
+        }
+
         #endregion
 
         #region Helpers

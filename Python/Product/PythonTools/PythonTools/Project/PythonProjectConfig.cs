@@ -78,7 +78,8 @@ namespace Microsoft.PythonTools.Project {
                 var td = new TaskDialog(ProjectMgr.Site) {
                     Title = Strings.ProductTitle,
                     MainInstruction = Strings.FailedToLaunchDebugger,
-                    Content = errorMessage
+                    Content = errorMessage,
+                    AllowCancellation = true
                 };
                 td.Buttons.Add(TaskDialogButton.Close);
                 td.ShowModal();

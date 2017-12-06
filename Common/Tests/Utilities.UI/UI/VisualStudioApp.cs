@@ -566,6 +566,13 @@ namespace TestUtilities.UI {
             }
         }
 
+        /// <summary>
+        /// Checks the text of a dialog and dismisses it.
+        /// </summary>
+        /// <remarks>
+        /// Task dialog will be dismissed only if it was created with
+        /// AllowCancellation=true (ensures window pattern close is enabled).
+        /// </remarks>
         public void CheckMessageBox(params string[] text) {
             CheckMessageBox(MessageBoxButton.Close, text);
         }
