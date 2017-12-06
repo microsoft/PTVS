@@ -79,6 +79,8 @@ namespace Microsoft.PythonTools.Project.Web {
         public int LaunchProject(bool debug) {
             var config = debug ? _debugConfig : _runConfig;
 
+            DebugLaunchHelper.RequireStartupFile(config);
+
             Uri url;
             int port;
             GetFullUrl(_serviceProvider, config, out url, out port);

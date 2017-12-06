@@ -16,6 +16,7 @@
 
 using System;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
@@ -65,7 +66,11 @@ namespace Microsoft.PythonTools.Project {
                 }
             } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
+            } catch (NoStartupFileException ex) {
+                errorMessage = ex.Message;
             } catch (ArgumentException ex) {
+                // Previously used to handle "No startup file" which now has its own exception.
+                // Keeping it in case some launchers started relying on us catching this.
                 errorMessage = ex.Message;
             }
 

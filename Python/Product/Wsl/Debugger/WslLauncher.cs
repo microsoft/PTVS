@@ -22,6 +22,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -67,6 +68,8 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
         }
 
         private int Launch(LaunchConfiguration config, bool debug) {
+            DebugLaunchHelper.RequireStartupFile(config);
+
             if (debug) {
                 StartWithDebugger(config);
             } else {
@@ -139,10 +142,6 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
         }
 
         private void StartWithDebugger(LaunchConfiguration config) {
-            if (string.IsNullOrEmpty(config.ScriptName)) {
-                throw new ArgumentException("script name");
-            }
-
             int port = Enumerable.Range(new Random().Next(49152, 65536), 60000)
                 .Except(IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Select(c => c.LocalEndPoint.Port))
                 .First();
