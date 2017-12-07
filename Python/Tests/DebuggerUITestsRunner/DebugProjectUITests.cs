@@ -236,5 +236,11 @@ namespace DebuggerUITestsRunner {
         public void StartWithoutDebuggingNoScript() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StartWithoutDebuggingNoScript));
         }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void WebProjectLauncherNoStartupFile() {
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.WebProjectLauncherNoStartupFile));
+        }
     }
 }

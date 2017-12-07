@@ -47,12 +47,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private int Launch(LaunchConfiguration config, bool debug) {
-            // Most configuration is validated or inferred later, but while the
-            // helper class supports launching without a script, this launcher
-            // does not. So we validate script name now.
-            if (!File.Exists(config.ScriptName)) {
-                throw new ArgumentException(Strings.DebugLaunchScriptNameMissing);
-            }
+            DebugLaunchHelper.RequireStartupFile(config);
 
             if (debug) {
                 StartWithDebugger(config);

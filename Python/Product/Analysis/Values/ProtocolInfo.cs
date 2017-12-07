@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _memberType = null;
         }
 
-        public override string Name => string.Join(", ", _protocols.Select(p => p.Name));
+        public override string Name => _protocols.OfType<NameProtocol>().FirstOrDefault()?.Name ?? string.Join(", ", _protocols.Select(p => p.Name));
         public override IEnumerable<OverloadResult> Overloads => _protocols.SelectMany(p => p.Overloads);
         public override IPythonProjectEntry DeclaringModule { get; }
         public override int DeclaringVersion { get; }
@@ -194,7 +194,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetInstanceType() {
-            _instance = _instance ?? AnalysisSet.UnionAll(_protocols.Select(p => p.GetInstanceType()));
+            _instance = _instance ?? AnalysisSet.UnionAll(_protocols.Select(p => p.GetInstanceType()).Where(p => p != null).DefaultIfEmpty(this));
             return _instance;
         }
 
@@ -257,17 +257,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            var name = _protocols.OfType<NameProtocol>().FirstOrDefault();
+            if (name != null) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, name.Name);
+            }
             if (_protocols.Any()) {
-                bool skipComma = true;
-                foreach (var p in _protocols) {
-                    if (!skipComma) {
+                bool firstLoop = true;
+                foreach (var p in _protocols.Where(pr => !(pr is NameProtocol))) {
+                    if (firstLoop) {
+                        firstLoop = false;
+                        if (name != null) {
+                            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
+                        }
+                    } else {
                         yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
                     }
-                    skipComma = false;
                     foreach (var d in p.GetRichDescription()) {
                         yield return d;
                     }
                 }
+                if (!firstLoop && name != null) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
+                }
+
             } else {
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, "<unknown>");
             }

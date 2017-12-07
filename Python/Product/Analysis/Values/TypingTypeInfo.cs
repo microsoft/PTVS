@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -37,6 +38,52 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public TypingTypeInfo MakeGeneric(IReadOnlyList<IAnalysisSet> args) {
             if (_args == null) {
                 return new TypingTypeInfo(_baseName, args);
+            }
+            return this;
+        }
+
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (_args == null && node is CallExpression ce) {
+                return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.TypeAnnotation, n => {
+                    // Use annotation converter and reparse the arguments
+                    var newArgs = new List<IAnalysisSet>();
+                    var eval = new ExpressionEvaluatorAnnotationConverter(
+                        new ExpressionEvaluator(unit),
+                        node,
+                        unit,
+                        returnInternalTypes: true
+                    );
+                    foreach (var type in ce.Args.MaybeEnumerate().Where(e => e?.Expression != null).Select(e => new TypeAnnotation(unit.ProjectState.LanguageVersion, e.Expression))) {
+                        newArgs.Add(type.GetValue(eval) ?? AnalysisSet.Empty);
+                    }
+                    return new TypingTypeInfo(_baseName, newArgs);
+                });
+            }
+            return this;
+        }
+
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
+            if (node is IndexExpression ie) {
+                return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.TypeAnnotation, n => {
+                    // Use annotation converter and reparse the index
+                    var exprs = new List<Expression>();
+                    if (ie.Index is SequenceExpression te) {
+                        exprs.AddRange(te.Items.MaybeEnumerate());
+                    } else {
+                        exprs.Add(ie.Index);
+                    }
+                    var newArgs = new List<IAnalysisSet>();
+                    var eval = new ExpressionEvaluatorAnnotationConverter(
+                        new ExpressionEvaluator(unit),
+                        node,
+                        unit,
+                        returnInternalTypes: true
+                    );
+                    foreach (var type in exprs.Select(e => new TypeAnnotation(unit.ProjectState.LanguageVersion, e))) {
+                        newArgs.Add(type.GetValue(eval) ?? AnalysisSet.Empty);
+                    }
+                    return new TypingTypeInfo(_baseName, newArgs);
+                });
             }
             return this;
         }
@@ -65,6 +112,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IReadOnlyList<IAnalysisSet> ToTypeList() {
             if (_baseName == " List") {
                 return _args;
+            }
+            return null;
+        }
+
+        public static IReadOnlyList<IAnalysisSet> ToTypeList(IAnalysisSet set) {
+            if (set.Split(out IReadOnlyList<TypingTypeInfo> tti, out _)) {
+                return tti.Select(t => t.ToTypeList()).FirstOrDefault(t => t != null);
             }
             return null;
         }
@@ -246,10 +300,47 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
                         return gi;
                     });
-                case "NamedTuple": return null;
+                case "NamedTuple":
+                    return Scope.GetOrMakeNodeValue(_node, NodeValueKind.StrDict, n => CreateNamedTuple(
+                        n, _unit, args.ElementAtOrDefault(0), args.ElementAtOrDefault(1)
+                    ));
+                case " List":
+                    return AnalysisSet.UnionAll(args.Select(ToInstance));
             }
 
             return null;
+        }
+
+        private static IAnalysisSet CreateNamedTuple(Node node, AnalysisUnit unit, IAnalysisSet namedTupleName, IAnalysisSet namedTupleArgs) {
+            var args = namedTupleArgs == null ? null : TypingTypeInfo.ToTypeList(namedTupleArgs);
+
+            var res = new ProtocolInfo(unit.ProjectEntry);
+
+            if (namedTupleName != null) {
+                var np = new NameProtocol(res, namedTupleName.GetConstantValueAsString().FirstOrDefault() ?? "tuple");
+                res.AddProtocol(np);
+            }
+
+            if (args != null && args.Any()) {
+                foreach (var a in args) {
+                    // each arg is going to be either a union containing a string literal and type,
+                    // or a list with string literal and type.
+                    var u = a;
+                    if (a is TypingTypeInfo tti) {
+                        u = AnalysisSet.UnionAll(tti.ToTypeList());
+                    }
+
+                    if (u.Split(out IReadOnlyList<ConstantInfo> names, out var rest)) {
+                        var name = names.Select(n => n.GetConstantValueAsString()).FirstOrDefault() ?? "unnamed";
+
+                        var p = new NamespaceProtocol(res, name);
+                        p.SetMember(node, unit, name, rest.GetInstanceType());
+                        res.AddProtocol(p);
+                    }
+                }
+            }
+
+            return res;
         }
 
         public IAnalysisSet Finalize(string name) {

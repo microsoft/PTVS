@@ -1237,6 +1237,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The project cannot be launched because the startup file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string DebugLaunchScriptNameDoesntExist {
+            get {
+                return ResourceManager.GetString("DebugLaunchScriptNameDoesntExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The project cannot be launched because the startup file is not specified..
         /// </summary>
         public static string DebugLaunchScriptNameMissing {

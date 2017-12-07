@@ -19,8 +19,11 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class TypingModuleInfo : BuiltinModule {
+        private readonly BuiltinModule _inner;
+
         private TypingModuleInfo(BuiltinModule inner)
             : base(inner.InterpreterModule, inner.ProjectState) {
+            _inner = inner;
         }
 
         public static BuiltinModule Wrap(BuiltinModule inner) => new TypingModuleInfo(inner);
@@ -38,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return mod.AnalysisModule.GetMember(node, unit, typeName);
         }
 
-        public IAnalysisSet GetTypingMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             IAnalysisSet res = null;
 
             switch (name) {
@@ -110,7 +113,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 // AsyncContextManager
             }
 
-            return res;
+            return res ?? _inner.GetMember(node, unit, name);
         }
     }
 }

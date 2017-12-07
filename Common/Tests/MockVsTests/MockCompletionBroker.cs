@@ -25,8 +25,8 @@ using Microsoft.VisualStudio.Text.Editor;
 namespace Microsoft.VisualStudioTools.MockVsTests {
     [Export(typeof(ICompletionBroker))]
     class MockCompletionBroker : ICompletionBroker {
-        private readonly IEnumerable<Lazy<ICompletionSourceProvider, IContentTypeMetadata>> _completionProviders;
-        private readonly IIntellisenseSessionStackMapService _stackMap;
+        internal readonly IEnumerable<Lazy<ICompletionSourceProvider, IContentTypeMetadata>> _completionProviders;
+        internal readonly IIntellisenseSessionStackMapService _stackMap;
 
         [ImportingConstructor]
         public MockCompletionBroker(IIntellisenseSessionStackMapService stackMap, [ImportMany]IEnumerable<Lazy<ICompletionSourceProvider, IContentTypeMetadata>> completionProviders) {
@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public ICompletionSession CreateCompletionSession(ITextView textView, ITrackingPoint triggerPoint, bool trackCaret) {
-            throw new NotImplementedException();
+            return new MockCompletionSession(this, textView, triggerPoint);
         }
 
         public void DismissAllSessions(ITextView textView) {
@@ -66,36 +66,22 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public ICompletionSession TriggerCompletion(ITextView textView, ITrackingPoint triggerPoint, bool trackCaret) {
-            throw new NotImplementedException();
+            var session = CreateCompletionSession(textView, triggerPoint, trackCaret);
+
+            session.Start();
+
+            return session;
         }
 
         public ICompletionSession TriggerCompletion(ITextView textView) {
-            ObservableCollection<CompletionSet> sets = new ObservableCollection<CompletionSet>();
-            var session = new MockCompletionSession(
+            return TriggerCompletion(
                 textView,
-                sets,
                 textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(
                     textView.Caret.Position.BufferPosition.Position,
                     PointTrackingMode.Negative
-                )
+                ),
+                true
             );
-
-            foreach (var provider in _completionProviders) {
-                foreach (var targetContentType in provider.Metadata.ContentTypes) {
-                    if (textView.TextBuffer.ContentType.IsOfType(targetContentType)) {
-                        var source = provider.Value.TryCreateCompletionSource(textView.TextBuffer);
-                        if (source != null) {
-                            source.AugmentCompletionSession(session, sets);
-                        }
-                    }
-                }
-            }
-
-            if (session.CompletionSets.Count > 0 && !session.IsDismissed) {
-                _stackMap.GetStackForTextView(textView).PushSession(session);
-            }
-
-            return session;
         }
     }
 }
