@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     parentScope = parentScope.Parent;
                 }
 
-                if (parentScope == null && input.Name != selfParam.Name) {
+                if (parentScope == null && input.Name != selfParam?.Name) {
                     // we can either close over or pass these in as parameters, add them to the list
                     var paramName = new NameExpression(input.Name);
                     if (parameters.Count > 0) {
@@ -253,7 +253,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             comma = "";
             foreach (var param in parameters) {
-                if (param.Name != selfParam.Name) {
+                if (param.Name != selfParam?.Name) {
                     newCall.Append(comma);
                     newCall.Append(param.Name);
                     comma = ", ";

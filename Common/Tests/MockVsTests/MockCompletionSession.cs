@@ -24,26 +24,25 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
     class MockCompletionSession : ICompletionSession {
-        private bool _dismissed, _started;
-        private readonly ITextView _view;
-        private readonly ReadOnlyObservableCollection<CompletionSet> _sets;
+        private readonly MockCompletionBroker _broker;
+        private readonly ObservableCollection<CompletionSet> _sets;
         private readonly ITrackingPoint _triggerPoint;
-        private readonly PropertyCollection _properties = new PropertyCollection();
-        private CompletionSet _active;
 
-        public MockCompletionSession(ITextView view, ObservableCollection<CompletionSet> sets, ITrackingPoint triggerPoint) {
-            _view = view;
-            sets.CollectionChanged += sets_CollectionChanged;
+        public MockCompletionSession(MockCompletionBroker broker, ITextView view, ITrackingPoint triggerPoint) {
+            _broker = broker;
+            TextView = view;
+            _sets = new ObservableCollection<CompletionSet>();
+            _sets.CollectionChanged += sets_CollectionChanged;
             _triggerPoint = triggerPoint;
-            _sets = new ReadOnlyObservableCollection<CompletionSet>(sets);
+            CompletionSets = new ReadOnlyObservableCollection<CompletionSet>(_sets);
         }
 
-        void sets_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) {
+        void sets_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
             if (e.Action != NotifyCollectionChangedAction.Add) {
                 throw new NotImplementedException();
             }
-            if (_active == null) {
-                _active = _sets[0];
+            if (SelectedCompletionSet == null) {
+                SelectedCompletionSet = CompletionSets[0];
             }
         }
 
@@ -61,21 +60,16 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 }
             }
 
-            var committed = Committed;
-            if (committed != null) {
-                committed(this, EventArgs.Empty);
-            }
+            Committed?.Invoke(this, EventArgs.Empty);
             Dismiss();
         }
 
         public event EventHandler Committed;
 
-        public System.Collections.ObjectModel.ReadOnlyObservableCollection<CompletionSet> CompletionSets {
-            get { return _sets; }
-        }
+        public ReadOnlyObservableCollection<CompletionSet> CompletionSets { get; }
 
         public void Filter() {
-            foreach (CompletionSet completionSet in _sets) {
+            foreach (CompletionSet completionSet in CompletionSets) {
                 completionSet.Filter();
             }
 
@@ -83,18 +77,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             this.Match();
         }
 
-        public bool IsStarted {
-            get { return _started; }
-        }
+        public bool IsStarted { get; private set; }
 
-        public CompletionSet SelectedCompletionSet {
-            get {
-                return _active;
-            }
-            set {
-                _active = value;
-            }
-        }
+        public CompletionSet SelectedCompletionSet { get; set; }
 
         public event EventHandler<ValueChangedEventArgs<CompletionSet>> SelectedCompletionSetChanged {
             add { throw new NotImplementedException(); }
@@ -106,32 +91,27 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void Dismiss() {
-            _dismissed = true;
-            var dismissed = Dismissed;
-            if (dismissed != null) {
-                dismissed(this, EventArgs.Empty);
-            }
+            IsDismissed = true;
+            Dismissed?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler Dismissed;
 
-        public VisualStudio.Text.SnapshotPoint? GetTriggerPoint(VisualStudio.Text.ITextSnapshot textSnapshot) {
+        public SnapshotPoint? GetTriggerPoint(ITextSnapshot textSnapshot) {
             return GetTriggerPoint(textSnapshot.TextBuffer).GetPoint(textSnapshot);
         }
 
-        public VisualStudio.Text.ITrackingPoint GetTriggerPoint(VisualStudio.Text.ITextBuffer textBuffer) {
+        public ITrackingPoint GetTriggerPoint(ITextBuffer textBuffer) {
             if (textBuffer == _triggerPoint.TextBuffer) {
                 return _triggerPoint;
             }
             throw new NotImplementedException();
         }
 
-        public bool IsDismissed {
-            get { return _dismissed; }
-        }
+        public bool IsDismissed { get; private set; }
 
         public bool Match() {
-            foreach (CompletionSet completionSet in _sets) {
+            foreach (CompletionSet completionSet in CompletionSets) {
                 completionSet.SelectBestMatch();
             }
 
@@ -157,15 +137,29 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void Start() {
-            _started = true;
+            if (IsStarted) {
+                throw new InvalidOperationException("Session has already been started");
+            }
+            IsStarted = true;
+
+            foreach (var provider in _broker._completionProviders) {
+                foreach (var targetContentType in provider.Metadata.ContentTypes) {
+                    if (TextView.TextBuffer.ContentType.IsOfType(targetContentType)) {
+                        var source = provider.Value.TryCreateCompletionSource(TextView.TextBuffer);
+                        if (source != null) {
+                            source.AugmentCompletionSession(this, _sets);
+                        }
+                    }
+                }
+            }
+
+            if (_sets.Count > 0 && !IsDismissed) {
+                _broker._stackMap.GetStackForTextView(TextView).PushSession(this);
+            }
         }
 
-        public VisualStudio.Text.Editor.ITextView TextView {
-            get { return _view; }
-        }
+        public ITextView TextView { get; }
 
-        public VisualStudio.Utilities.PropertyCollection Properties {
-            get { return _properties; }
-        }
+        public PropertyCollection Properties { get; } = new PropertyCollection();
     }
 }

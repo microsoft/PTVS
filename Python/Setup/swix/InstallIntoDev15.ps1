@@ -18,7 +18,16 @@ $install_dirs = @(
 $to_delete = $install_dirs | ?{ Test-Path "$vs\$_" } | %{ gi "$vs\$_" }
 if ($to_delete) {
     "Cleaning old install..."
-    $to_delete | rmdir -Recurse -Force
+    $to_delete | %{ 
+        foreach ($i in 1..5) {
+            try {
+                rmdir $_ -Recurse -Force
+                break
+            } catch {
+                sleep -Seconds 1
+            }
+        }
+    }
 }
 
 if (-not $uninstall) {
@@ -83,11 +92,25 @@ if (-not $uninstall) {
             popd
         }
 
-        rmdir $d -Recurse -Force
+        foreach ($i in 1..5) {
+            try {
+                rmdir $d -Recurse -Force
+                break
+            } catch {
+                sleep -Seconds 1
+            }
+        }
     }
     
     popd
-    rmdir $tmp -Recurse -Force
+    foreach ($i in 1..5) {
+        try {
+            rmdir $tmp -Recurse -Force
+            break
+        } catch {
+            sleep -Seconds 1
+        }
+    }
 
     if ($tests) {
         gci -Directory $tests | %{

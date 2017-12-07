@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
@@ -108,7 +107,7 @@ namespace TestUtilities {
                     break;
                 } else {
                     var filename = frame.GetFileName();
-                    Console.WriteLine(string.Format(
+                    Console.Error.WriteLine(string.Format(
                         " at {0}.{1}({2}) in {3}:line {4}",
                         mi.DeclaringType.FullName,
                         mi.Name,
@@ -118,7 +117,7 @@ namespace TestUtilities {
                     ));
                     if (File.Exists(filename)) {
                         try {
-                            Console.WriteLine(
+                            Console.Error.WriteLine(
                                 "    " +
                                 File.ReadLines(filename).ElementAt(frame.GetFileLineNumber() - 1).Trim()
                             );
@@ -133,7 +132,7 @@ namespace TestUtilities {
                 Debugger.Break();
             }
 
-            Console.WriteLine(message);
+            Console.Error.WriteLine(message);
 
             if (_testContext == null) {
                 lock (_unhandled) {
