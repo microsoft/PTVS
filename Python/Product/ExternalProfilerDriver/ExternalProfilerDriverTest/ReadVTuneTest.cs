@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestExternalProfilerDriver
+namespace ExternalProfilerDriverTest
 {
-#if false
+
     [TestClass]
-    class TestReadVTune
+    class ReadVTuneTest
     {
+#if false
         static readonly string VTuneOutputSample = @"
 timeBin  Bin Start Time Bin End Time  CPU Time:Self
 -------  --------------  ------------  -------------
@@ -62,6 +63,6 @@ timeBin  Bin Start Time Bin End Time  CPU Time:Self
         public void TestReadVTuneFromString()
         {
         }
-    }
 #endif
+    }
 }

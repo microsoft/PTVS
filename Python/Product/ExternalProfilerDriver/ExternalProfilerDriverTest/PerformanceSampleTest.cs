@@ -1,13 +1,15 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestExternalProfilerDriver
+using ExternalProfilerDriver;
+
+namespace ExternalProfilerDriverTest
 {
     [TestClass]
-    public class TestPerformanceSample
+    public class PerformanceSampleTest
     {
         [TestMethod]
-        public void TestPerformanceSampleCtor()
+        public void PerformanceSampleCtorTest()
         {
             PerformanceSample p = new PerformanceSample("foo", "1.2", "module", "foo_complete", "??", "0x01");
             Assert.AreEqual("foo", p.Function);

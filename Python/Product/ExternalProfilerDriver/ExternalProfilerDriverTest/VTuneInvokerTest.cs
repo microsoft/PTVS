@@ -1,10 +1,10 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestExternalProfilerDriver
+namespace ExternalProfilerDriverTest
 {
     [TestClass]
-    public class TestVTuneInvoker
+    public class VTuneInvokerTest
     {
 #if false
         [TestMethod]
