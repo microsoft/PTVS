@@ -95,6 +95,10 @@ namespace Microsoft.PythonTools.Analysis.AnalysisSetDetails {
             }
         }
 
+        public override string ToString() {
+            return DebugViewProxy.ToString(this);
+        }
+
         public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
             if (!canMutate) {
                 if (Contains(item)) {

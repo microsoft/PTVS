@@ -417,6 +417,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         Wraps,
         SpecializedInstance,
         Dictionary,
+        TypeAnnotation,
     }
 
 }

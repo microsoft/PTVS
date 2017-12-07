@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     class TypeAnnotation {
@@ -101,32 +102,46 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             public override bool Walk(TupleExpression node) {
-                _ops.Add(new StartUnionOp());
+                _ops.Add(new StartListOp());
                 return base.Walk(node);
             }
 
             public override void PostWalk(TupleExpression node) {
-                _ops.Add(new EndUnionOp());
+                _ops.Add(new EndListOp());
                 base.PostWalk(node);
             }
 
             public override bool Walk(ListExpression node) {
-                _ops.Add(new StartUnionOp());
+                _ops.Add(new StartListOp());
                 return base.Walk(node);
             }
 
             public override void PostWalk(ListExpression node) {
-                _ops.Add(new EndUnionOp(ordered: true));
+                _ops.Add(new EndListOp());
                 base.PostWalk(node);
             }
 
             public override void PostWalk(IndexExpression node) {
-                if (_ops.LastOrDefault() is EndUnionOp) {
+                if (_ops.LastOrDefault() is EndListOp) {
                     _ops[_ops.Count - 1] = new MakeGenericOp(true);
                 } else {
                     _ops.Add(new MakeGenericOp(false));
                 }
                 base.PostWalk(node);
+            }
+
+            public override bool Walk(CallExpression node) {
+                if (!base.Walk(node)) {
+                    return false;
+                }
+
+                node.Target?.Walk(this);
+                _ops.Add(new StartListOp());
+                foreach (var a in node.Args.MaybeEnumerate()) {
+                    a.Walk(this);
+                }
+                _ops.Add(new MakeGenericOp(true));
+                return false;
             }
 
             internal abstract class Op {
@@ -138,7 +153,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 public string Name { get; set; }
 
                 public override bool Apply<T>(TypeAnnotationConverter<T> converter, Stack<KeyValuePair<string, T>> stack) {
-                    var t = converter.LookupName(Name);
+                    var t = converter.LookupName(Name) ?? converter.MakeNameType(Name);
                     if (t == null) {
                         return false;
                     }
@@ -189,27 +204,21 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
 
-            class StartUnionOp : Op {
+            class StartListOp : Op {
                 public override bool Apply<T>(TypeAnnotationConverter<T> converter, Stack<KeyValuePair<string, T>> stack) {
-                    stack.Push(new KeyValuePair<string, T>(nameof(StartUnionOp), null));
+                    stack.Push(new KeyValuePair<string, T>(nameof(StartListOp), null));
                     return true;
                 }
             }
 
-            class EndUnionOp : Op {
-                private readonly bool _ordered;
-
-                public EndUnionOp(bool ordered = false) {
-                    _ordered = ordered;
-                }
-
+            class EndListOp : Op {
                 public override bool Apply<T>(TypeAnnotationConverter<T> converter, Stack<KeyValuePair<string, T>> stack) {
                     var items = new List<T>();
                     if (!stack.Any()) {
                         return false;
                     }
                     var t = stack.Pop();
-                    while (t.Key != nameof(StartUnionOp)) {
+                    while (t.Key != nameof(StartListOp)) {
                         items.Add(t.Value);
                         if (!stack.Any()) {
                             return false;
@@ -217,7 +226,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         t = stack.Pop();
                     }
                     items.Reverse();
-                    t = new KeyValuePair<string, T>(null, _ordered ? converter.MakeList(items) : converter.MakeUnion(items));
+                    t = new KeyValuePair<string, T>(null, converter.MakeList(items));
                     if (t.Value == null) {
                         return false;
                     }
@@ -243,7 +252,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         return false;
                     }
                     if (_multipleArgs) {
-                        while (t.Key != nameof(StartUnionOp)) {
+                        while (t.Key != nameof(StartListOp)) {
                             items.Add(t.Value);
                             if (!stack.Any()) {
                                 return false;
@@ -251,7 +260,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                             t = stack.Pop();
                         }
                         items.Reverse();
-                    } else if (t.Key != nameof(StartUnionOp)) {
+                    } else if (t.Key != nameof(StartListOp)) {
                         items.Add(t.Value);
                     }
                     var baseType = stack.Pop();
@@ -301,6 +310,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// Returns the types as a single list type.
         /// </summary>
         public virtual T MakeList(IReadOnlyList<T> types) => default(T);
+
+        /// <summary>
+        /// Returns a value containing an unresolved name.
+        /// </summary>
+        public virtual T MakeNameType(string name) => default(T);
 
         /// <summary>
         /// Ensure the final result is a suitable type. Return null

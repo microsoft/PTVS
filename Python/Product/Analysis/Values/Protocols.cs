@@ -61,6 +61,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override PythonMemberType MemberType => PythonMemberType.Unknown;
 
+        public override IAnalysisSet GetInstanceType() => null;
+
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             EnsureMembers();
             return _members;
@@ -70,14 +72,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = base.GetMember(node, unit, name);
             EnsureMembers();
             if (_members.TryGetValue(name, out var m)) {
-                return m;
+                return (m as Protocol)?.GetMember(node, unit, name) ?? m;
             }
             return res;
+        }
+
+        public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
+            base.SetMember(node, unit, name, value);
+            EnsureMembers();
+            if (_members.TryGetValue(name, out var m)) {
+                (m as Protocol)?.SetMember(node, unit, name, value);
+            }
         }
 
         public virtual IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, Name);
         }
+    }
+
+    class NameProtocol : Protocol {
+        private readonly string _name;
+
+        public NameProtocol(ProtocolInfo self, string name) : base(self) {
+            _name = name;
+        }
+
+        public override string Name => _name;
     }
 
     class CallableProtocol : Protocol {
@@ -207,6 +227,40 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "]");
             }
+        }
+    }
+
+    class NamespaceProtocol : Protocol {
+        private readonly string _name;
+        private readonly VariableDef _values;
+
+        public NamespaceProtocol(ProtocolInfo self, string name) : base(self) {
+            _name = name;
+            _values = new VariableDef();
+        }
+
+        public override Protocol Clone(ProtocolInfo newSelf) {
+            var np = new NamespaceProtocol(newSelf, _name);
+            _values.CopyTo(np._values);
+            return np;
+        }
+
+        protected override void EnsureMembers(IDictionary<string, IAnalysisSet> members) {
+            members[_name] = this;
+        }
+
+        public override string Name => _name;
+
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            if (name == _name) {
+                _values.AddDependency(unit);
+                return _values.Types;
+            }
+            return AnalysisSet.Empty;
+        }
+
+        public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
+            _values.AddTypes(unit, value);
         }
     }
 }

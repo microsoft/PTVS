@@ -349,7 +349,7 @@ namespace TestUtilities.Python {
                 foreach (var r in rs) {
                     Trace.TraceInformation(r.ToString());
                 }
-                Assert.Fail("'{0}.{1}' had multiple values".FormatInvariant(module.ModuleName, variable));
+                Assert.Fail("'{0}.{1}' had multiple values: {2}".FormatInvariant(module.ModuleName, variable, AnalysisSet.Create(rs)));
             } else {
                 Assert.IsInstanceOfType(rs[0], typeof(T), "'{0}.{1}' was not expected type".FormatInvariant(module.ModuleName, variable));
                 return (T)rs[0];
