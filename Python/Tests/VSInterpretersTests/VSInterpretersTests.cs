@@ -55,6 +55,7 @@ namespace VSInterpretersTests {
             };
             parameters.ReferencedAssemblies.Add(typeof(ExportAttribute).Assembly.Location);
             parameters.ReferencedAssemblies.Add(typeof(IPythonInterpreterFactoryProvider).Assembly.Location);
+            parameters.ReferencedAssemblies.Add(typeof(InterpreterConfiguration).Assembly.Location);
             var result = provider.CompileAssemblyFromSource(parameters, csharpCode);
             if (result.Errors.HasErrors) {
                 foreach (var err in result.Errors) {
