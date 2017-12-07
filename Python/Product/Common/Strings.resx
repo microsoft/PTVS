@@ -1385,6 +1385,9 @@ modified from these scripts.</value>
   <data name="DebugLaunchScriptNameMissing" xml:space="preserve">
     <value>The project cannot be launched because the startup file is not specified.</value>
   </data>
+  <data name="DebugLaunchScriptNameDoesntExist" xml:space="preserve">
+    <value>The project cannot be launched because the startup file '{0}' was not found.</value>
+  </data>
   <data name="PublishToAzure30" xml:space="preserve">
     <value>Publishing Python projects has recently changed.</value>
   </data>

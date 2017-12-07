@@ -138,6 +138,16 @@ namespace Microsoft.PythonTools.Debugger {
             return jsonObj.ToString();
         }
 
+        public static void RequireStartupFile(LaunchConfiguration config) {
+            if (string.IsNullOrEmpty(config.ScriptName)) {
+                throw new NoStartupFileException(Strings.DebugLaunchScriptNameMissing);
+            }
+
+            if (!File.Exists(config.ScriptName)) {
+                throw new NoStartupFileException(Strings.DebugLaunchScriptNameDoesntExist.FormatUI(config.ScriptName));
+            }
+        }
+
         public static unsafe DebugTargetInfo CreateDebugTargetInfo(IServiceProvider provider, LaunchConfiguration config) {
             if (config.Interpreter.Version < new Version(2, 6)) {
                 // We don't support Python 2.5 now that our debugger needs the json module

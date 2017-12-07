@@ -75,6 +75,7 @@ namespace Microsoft.IronPythonTools.Debugger {
         }
 
         private int Launch(LaunchConfiguration config, bool debug) {
+            DebugLaunchHelper.RequireStartupFile(config);
 
             //if (factory.Id == _cpyInterpreterGuid || factory.Id == _cpy64InterpreterGuid) {
             //    MessageBox.Show(
