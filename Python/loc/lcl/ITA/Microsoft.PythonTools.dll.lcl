@@ -4252,8 +4252,8 @@
       <Item ItemId=";5018" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Classifier Project (cookiecutter)]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Progetto classificatore]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto classificatore (cookiecutter)]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Classifier Project]]></Val>
@@ -4264,8 +4264,8 @@
       <Item ItemId=";5019" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A project for testing scikit-learn classifiers.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]D;]A;]D;]A;Opens Cookiecutter window where you can create the project from a cookiecutter template available online.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Progetto per testare i classificatori scikit-learn.]D;]A;]D;]A;Questo progetto richiede i pacchetti pandas, numpy, scikit-learn e matplotlib.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto per testare i classificatori scikit-learn.]D;]A;]D;]A;Questo progetto richiede i pacchetti pandas, numpy, scikit-learn e matplotlib.]D;]A;]D;]A;Apre la finestra Cookiecutter in cui è possibile creare il progetto da un modello cookiecutter disponibile online.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A project for testing scikit-learn classifiers.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]]></Val>
@@ -4276,8 +4276,8 @@
       <Item ItemId=";5020" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Clustering Project (cookiecutter)]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Progetto clustering]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto clustering (cookiecutter)]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Clustering Project]]></Val>
@@ -4288,8 +4288,8 @@
       <Item ItemId=";5021" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A project for testing scikit-learn clustering learners.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]D;]A;]D;]A;Opens Cookiecutter window where you can create the project from a cookiecutter template available online.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Progetto per testare gli strumenti di apprendimento di clustering scikit-learn.]D;]A;]D;]A;Questo progetto richiede i pacchetti pandas, numpy, scikit-learn e matplotlib.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto per testare gli strumenti di apprendimento di clustering scikit-learn.]D;]A;]D;]A;Questo progetto richiede i pacchetti pandas, numpy, scikit-learn e matplotlib.]D;]A;]D;]A;Apre la finestra Cookiecutter in cui è possibile creare il progetto da un modello cookiecutter disponibile online.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A project for testing scikit-learn clustering learners.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]]></Val>
@@ -4300,8 +4300,8 @@
       <Item ItemId=";5022" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Regression Project (cookiecutter)]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Progetto regressione]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto regressione (cookiecutter)]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Regression Project]]></Val>
@@ -4312,8 +4312,8 @@
       <Item ItemId=";5023" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A project for testing scikit-learn regression learners.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]D;]A;]D;]A;Opens Cookiecutter window where you can create the project from a cookiecutter template available online.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Progetto per testare gli strumenti di apprendimento di regressione scikit-learn.]D;]A;]D;]A;Questo progetto richiede i pacchetti pandas, numpy, scikit-learn e matplotlib.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Progetto per testare gli strumenti di apprendimento di regressione scikit-learn.]D;]A;]D;]A;Questo progetto richiede i pacchetti pandas, numpy, scikit-learn e matplotlib.]D;]A;]D;]A;Apre la finestra Cookiecutter in cui è possibile creare il progetto da un modello cookiecutter disponibile online.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A project for testing scikit-learn regression learners.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]]></Val>
