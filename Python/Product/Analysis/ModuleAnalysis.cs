@@ -713,15 +713,23 @@ namespace Microsoft.PythonTools.Analysis {
             // collect variables from user defined scopes
             var scope = FindScope(location);
             foreach (var s in scope.EnumerateTowardsGlobal) {
+                var scopeResult = new Dictionary<string, List<AnalysisValue>>();
                 foreach (var kvp in s.GetAllMergedVariables()) {
-                    // deliberately overwrite variables from outer scopes
-                    var values = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
+                    if (scopeResult.TryGetValue(kvp.Key, out var values)) {
+                        values.AddRange(kvp.Value.TypesNoCopy);
+                    } else {
+                        scopeResult[kvp.Key] = values = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
+                    }
                     values.Add(new SyntheticDefinitionInfo(
                         kvp.Key,
                         null,
                         kvp.Value.Definitions.Select(e => e.GetLocationInfo())
                     ));
-                    result[kvp.Key] = values;
+                }
+
+                foreach (var kvp in scopeResult) {
+                    // deliberately overwrite variables from outer scopes
+                    result[kvp.Key] = kvp.Value;
                 }
             }
 

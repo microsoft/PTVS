@@ -37,6 +37,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet Finalize(IAnalysisSet type) {
+            // Final annotation should be not be a string literal
+            type.Split(out IReadOnlyList<ConstantInfo> constants, out type);
+            if (constants.Any(c => c.TypeId == BuiltinTypeId.NoneType)) {
+                type = type.Add(_unit.ProjectState.ClassInfos[BuiltinTypeId.NoneType]);
+            }
+            
             // Filter out any TypingTypeInfo items that have leaked through
             if (!_returnInternalTypes && type.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out IAnalysisSet rest)) {
                 return rest.UnionAll(typeInfo.Select(n => n.Finalize(_eval, _node, _unit)));
