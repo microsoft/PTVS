@@ -161,6 +161,11 @@ namespace Microsoft.PythonTools.Ipc.Json {
         public event EventHandler<EventReceivedEventArgs> EventReceived;
 
         /// <summary>
+        /// When a fire and forget error notification is received from the other side this event is raised.
+        /// </summary>
+        public event EventHandler<ErrorReceivedEventArgs> ErrorReceived;
+
+        /// <summary>
         /// Sends a request from the client to the listening server.
         /// 
         /// All request payloads inherit from Request&lt;TResponse&gt; where the TResponse generic parameter
@@ -273,6 +278,9 @@ namespace Microsoft.PythonTools.Ipc.Json {
                         case PacketType.Event:
                             ProcessEvent(packet);
                             break;
+                        case PacketType.Error:
+                            ProcessError(packet);
+                            break;
                         default:
                             throw new InvalidDataException("Bad packet type: " + type ?? "<null>");
                     }
@@ -287,6 +295,23 @@ namespace Microsoft.PythonTools.Ipc.Json {
             }
 
             _basicLog.WriteLine("ProcessMessages ended");
+        }
+
+        private void ProcessError(JObject packet) {
+            var name = packet["event"].ToObject<string>();
+            var eventBody = packet["body"];
+            string message;
+            try {
+                message = eventBody["message"].Value<string>();
+            } catch (Exception e) {
+                message = e.Message;
+            }
+            try {
+                ErrorReceived?.Invoke(this, new ErrorReceivedEventArgs(name, message));
+            } catch (Exception e) {
+                // TODO: Report unhandled exception?
+                Debug.Fail(e.Message);
+            }
         }
 
         private void ProcessEvent(JObject packet) {
