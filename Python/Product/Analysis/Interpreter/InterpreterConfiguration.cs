@@ -84,6 +84,14 @@ namespace Microsoft.PythonTools.Interpreter {
                     UIMode |= m;
                 }
             }
+            if (properties.TryGetValue(nameof(SearchPaths), out object o)) {
+                SearchPaths.Clear();
+                if (o is string s) {
+                    SearchPaths.AddRange(s.Split(';'));
+                } else if (o is IEnumerable<string> ss) {
+                    SearchPaths.AddRange(ss);
+                }
+            }
         }
 
         internal void WriteToDictionary(Dictionary<string, object> properties) {
@@ -103,6 +111,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (m.Any()) {
                 properties[nameof(UIMode)] = string.Join("|", m);
             }
+            properties[nameof(SearchPaths)] = SearchPaths.ToArray();
         }
 
         /// <summary>
@@ -194,6 +203,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// New in 2.2
         /// </remarks>
         public InterpreterUIMode UIMode { get; }
+
+        /// <summary>
+        /// The fixed search paths of the interpreter.
+        /// </summary>
+        public List<string> SearchPaths { get; } = new List<string>();
 
         public static bool operator ==(InterpreterConfiguration x, InterpreterConfiguration y)
             => x?.Equals(y) ?? object.ReferenceEquals(y, null);

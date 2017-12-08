@@ -313,13 +313,13 @@ R_A3 = R_A1.r_A()");
 
                     interp.ModuleNamesChanged += (s, e) => evt.Set();
 
-                    fact.SetCurrentSearchPaths(new[] { new PythonLibraryPath(TestData.GetPath("TestData\\AstAnalysis"), false, null) });
+                    fact.SetCurrentSearchPaths(new[] { TestData.GetPath("TestData\\AstAnalysis") });
                     Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
                     AssertUtil.ContainsAtLeast(interp.GetModuleNames(), "Values");
                     Assert.IsNotNull(interp.ImportModule("Values"), "Module was not available");
 
                     evt.Reset();
-                    fact.SetCurrentSearchPaths(new PythonLibraryPath[0]);
+                    fact.SetCurrentSearchPaths(new string[0]);
                     Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
                     AssertUtil.DoesntContain(interp.GetModuleNames(), "Values");
                     Assert.IsNull(interp.ImportModule("Values"), "Module was not removed");
