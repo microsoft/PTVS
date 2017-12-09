@@ -1028,13 +1028,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 var response = await SendRequestAsync(req).ConfigureAwait(false);
                 if (response != null) {
                     for (int i = 0; i < paths.Length; ++i) {
-                        AnalysisEntry entry = null;
+                        AnalysisEntry entry = res[i];
                         var path = paths[i];
                         var id = response.fileId[i];
                         if (!string.IsNullOrEmpty(path) && id != -1 && !_projectFilesById.TryGetValue(id, out entry)) {
                             entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id);
                             entry.AnalysisCookie = new FileCookie(path);
                         }
+                        Debug.Assert(entry != null);
                         res[i] = entry;
                     }
                 }
