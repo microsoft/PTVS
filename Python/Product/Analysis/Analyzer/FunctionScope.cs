@@ -161,6 +161,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     result = result.Concat(scope.GetAllMergedVariables());
                 }
             }
+
             return result;
         }
 

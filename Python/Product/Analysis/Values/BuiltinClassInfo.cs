@@ -74,10 +74,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 switch (TypeId) {
                     case BuiltinTypeId.NoneType:
                         return "None";
-                    case BuiltinTypeId.Unknown:
-                        return "<unknown>";
                 }
-                return _type.Name;
+                return _type?.Name ?? "<unknown>";
             }
         }
 

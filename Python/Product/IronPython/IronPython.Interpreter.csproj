@@ -67,6 +67,7 @@
     <Reference Include="Microsoft.Scripting" />
     <Reference Include="Microsoft.Scripting.Metadata" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />

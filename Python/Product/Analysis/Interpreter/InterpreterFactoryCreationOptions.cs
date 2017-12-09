@@ -46,7 +46,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public TraceLevel TraceLevel { get; set; } = TraceLevel.Info;
 
-
         #region Dictionary serialization
 
         public static InterpreterFactoryCreationOptions FromDictionary(Dictionary<string, object> properties) {
