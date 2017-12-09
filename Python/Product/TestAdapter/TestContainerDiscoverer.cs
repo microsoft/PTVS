@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(TestContainerDiscoverer))]
     class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
-        private readonly UIThreadBase _uiThread;
         private readonly SolutionEventsListener _solutionListener;
         private readonly Dictionary<PythonProject, ProjectInfo> _projectInfo;
         private bool _firstLoad, _isDisposed;
@@ -62,7 +61,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             _projectInfo = new Dictionary<PythonProject, ProjectInfo>();
 
             _serviceProvider = serviceProvider;
-            _uiThread = _serviceProvider.GetUIThread();
 
             _solutionListener = solutionListener;
             _solutionListener.ProjectLoaded += OnProjectLoaded;
@@ -90,7 +88,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (_firstLoad) {
                     // The first time through, we don't know about any loaded
                     // projects.
-                    _uiThread.Invoke(() => {
+                    ThreadHelper.JoinableTaskFactory.Run(async () => {
+                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         if (_firstLoad) {
                             _firstLoad = false;
                             // Get current solution
