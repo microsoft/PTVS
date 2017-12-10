@@ -64,9 +64,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public VariableDef GetParameter(string name) {
-            if (name == "*") {
+            if (string.IsNullOrEmpty(name)) {
+                return null;
+            }
+
+            if (name == _seqParameters?.Name) {
                 return _seqParameters;
-            } else if (name == "*") {
+            } else if (name == _dictParameters?.Name) {
                 return _dictParameters;
             } else if (_parameters.TryGetValue(name, out var vd)) {
                 return vd;
@@ -86,13 +90,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 if (astParams[i].Kind == ParameterKind.List) {
                     if (_seqParameters == null) {
-                        _seqParameters = new ListParameterVariableDef(unit, node);
-                        AddParameter(unit, "*", node);
+                        _seqParameters = new ListParameterVariableDef(unit, node, name);
+                        AddParameter(unit, name, node);
                     }
                 } else if (astParams[i].Kind == ParameterKind.Dictionary) {
                     if (_dictParameters == null) {
-                        _dictParameters = new DictParameterVariableDef(unit, node);
-                        AddParameter(unit, "**", node);
+                        _dictParameters = new DictParameterVariableDef(unit, node, name);
+                        AddParameter(unit, name, node);
                     }
                 } else if (!_parameters.ContainsKey(name)) {
                     _parameters[name] = new LocatedVariableDef(unit.ProjectEntry, node);
@@ -102,10 +106,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private VariableDef AddParameter(AnalysisUnit unit, string name, Node node) {
-            VariableDef param = new LocatedVariableDef(unit.ProjectEntry, node);
-            param.AddTypes(unit, GetOrMakeNodeValue(node, NodeValueKind.ParameterInfo, n => new ParameterInfo(Function, n, name)), false);
-            AddVariable(name, param);
-            return param;
+            var p = CreateVariable(node, unit, name);
+            p.AddTypes(unit, GetOrMakeNodeValue(node, NodeValueKind.ParameterInfo, n => new ParameterInfo(Function, n, name)), false);
+            return p;
         }
 
         internal void AddParameterReferences(AnalysisUnit caller, NameExpression[] names) {
@@ -127,13 +130,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var limits = state.Limits;
 
             for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
-                if (astParams[i].IsList || astParams[i].IsDictionary) {
-                    continue;
-                }
-
                 var name = astParams[i].Name;
                 VariableDef param;
-                if (!_parameters.TryGetValue(name, out param)) {
+                if (name == _seqParameters?.Name) {
+                    param = _seqParameters;
+                } else if (name == _dictParameters?.Name) {
+                    param = _dictParameters;
+                } else if (!_parameters.TryGetValue(name, out param)) {
                     Debug.Fail($"Parameter {name} has no variable in this function");
                     _parameters[name] = param = new LocatedVariableDef(Function.AnalysisUnit.ProjectEntry, (Node)astParams[i].NameExpression ?? astParams[i]);
                 }

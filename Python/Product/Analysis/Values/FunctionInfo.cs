@@ -120,12 +120,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             for (int i = 0; i < parameters.Count; ++i) {
-                if (i < arguments.Count && parameters[i].Name == name) {
-                    return arguments.Args[i];
-                } else if (parameters[i].IsList) {
-                    return arguments.SequenceArgs;
-                } else if (parameters[i].IsDictionary) {
-                    return arguments.DictArgs;
+                if (parameters[i].Name == name) {
+                    IAnalysisSet res = AnalysisSet.Empty;
+                    if (i < arguments.Count) {
+                        res = res.Union(arguments.Args[i]);
+                    }
+                    if (parameters[i].IsList) {
+                        res = res.Add(new LazyIndexableInfo(parameters[i], arguments.SequenceArgs, () => ResolveParameter(_analysisUnit, parameters[i].Name)));
+                    }
+                    if (parameters[i].IsDictionary) {
+                        res = res.Add(new LazyIndexableInfo(parameters[i], arguments.DictArgs, () => ResolveParameter(_analysisUnit, parameters[i].Name)));
+                    }
+                    return res;
                 }
             }
 

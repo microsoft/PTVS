@@ -87,7 +87,15 @@ namespace Microsoft.PythonTools.Analysis {
                 return set;
             }
             if (value is MultipleMemberInfo mmi) {
-                return mmi.Aggregate(AnalysisSet.Empty, (a, v) => ResolveAndAdd(unit, a, v));
+                if (mmi.Push()) {
+                    try {
+                        return mmi.Members.Aggregate(AnalysisSet.Empty, (a, v) => ResolveAndAdd(unit, a, v));
+                    } finally {
+                        mmi.Pop();
+                    }
+                } else {
+                    return AnalysisSet.Empty;
+                }
             }
             return set.Union(value.Resolve(unit));
         }
@@ -467,9 +475,9 @@ namespace Microsoft.PythonTools.Analysis {
                 var unit = GetNearestEnclosingAnalysisUnit(scope);
                 var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
-                    lookup = eval.EvaluateNoMemberRecursion(expr);
+                    lookup = eval.EvaluateNoMemberRecursion(expr).Resolve(unit);
                 } else {
-                    lookup = eval.Evaluate(expr);
+                    lookup = eval.Evaluate(expr).Resolve(unit);
                 }
             }
 

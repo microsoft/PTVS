@@ -465,8 +465,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 var ctxMgr = _eval.Evaluate(item.ContextManager);
                 var enter = ctxMgr.GetMember(node, _unit, node.IsAsync ? "__aenter__" : "__enter__");
                 var exit = ctxMgr.GetMember(node, _unit, node.IsAsync ? "__aexit__" : "__exit__");
-                var ctxt = enter.Call(node, _unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
-                var exitRes = exit.Call(node, _unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+                var ctxt = enter.Call(node, _unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames).Resolve(_unit);
+                var exitRes = exit.Call(node, _unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames).Resolve(_unit);
                 if (node.IsAsync) {
                     ctxt = ctxt.Await(node, _unit);
                     exitRes.Await(node, _unit);

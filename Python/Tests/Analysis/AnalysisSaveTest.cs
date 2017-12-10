@@ -173,7 +173,10 @@ Overloaded = test.Overloaded
 
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
-                Assert.AreEqual("class test.Aliased or function Aliased(fob)\r\n\r\nclass test.Aliased: class doc\r\n\r\nfunction Aliased(fob): function doc", allMembers.First(x => x.Name == "Aliased").Documentation);
+                Assert.AreEqual(
+                    allMembers.First(x => x.Name == "Aliased").Documentation,
+                    "class test.Aliased or function Aliased(fob)\r\n\r\nclass test.Aliased: class doc\r\n\r\nfunction Aliased(fob): function doc"
+                );
                 newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");
 
                 //var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First();

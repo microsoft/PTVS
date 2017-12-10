@@ -243,9 +243,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     sealed class ListParameterVariableDef : LocatedVariableDef {
         public readonly StarArgsSequenceInfo List;
+        public readonly string Name;
 
-        public ListParameterVariableDef(AnalysisUnit unit, Node location)
+        public ListParameterVariableDef(AnalysisUnit unit, Node location, string name)
             : base(unit.DeclaringModule.ProjectEntry, location) {
+            Name = name;
             List = new StarArgsSequenceInfo(
                 VariableDef.EmptyArray,
                 unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
