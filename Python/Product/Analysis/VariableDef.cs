@@ -178,7 +178,7 @@ namespace Microsoft.PythonTools.Analysis {
                 int total = 0;
                 var typeCounts = new Dictionary<string, int>();
                 foreach (var type in TypesNoCopy) {
-                    var str = type.ToString();
+                    var str = type.ToString() ?? "";
                     int count;
                     if (!typeCounts.TryGetValue(str, out count)) {
                         count = 0;

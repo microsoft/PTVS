@@ -77,18 +77,19 @@ namespace Microsoft.PythonTools.Analysis {
             var values = eval.Evaluate(expr);
             var res = AnalysisSet.EmptyUnion;
             foreach (var v in values) {
-                MultipleMemberInfo multipleMembers = v as MultipleMemberInfo;
-                if (multipleMembers != null) {
-                    foreach (var member in multipleMembers.Members) {
-                        if (member.IsAlive) {
-                            res = res.Add(member);
-                        }
-                    }
-                } else if (v.IsAlive) {
-                    res = res.Add(v);
-                }
+                res = ResolveAndAdd(unit, res, v);
             }
             return res;
+        }
+
+        private static IAnalysisSet ResolveAndAdd(AnalysisUnit unit, IAnalysisSet set, AnalysisValue value) {
+            if (!value.IsAlive) {
+                return set;
+            }
+            if (value is MultipleMemberInfo mmi) {
+                return mmi.Aggregate(AnalysisSet.Empty, (a, v) => ResolveAndAdd(unit, a, v));
+            }
+            return set.Union(value.Resolve(unit));
         }
 
         internal IEnumerable<AnalysisVariable> ReferencablesToVariables(IEnumerable<IReferenceable> defs) {

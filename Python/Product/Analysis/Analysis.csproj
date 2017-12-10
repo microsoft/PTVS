@@ -202,12 +202,14 @@
     <Compile Include="SingleDict.cs" />
     <Compile Include="Values\CoroutineInfo.cs" />
     <Compile Include="Values\DictBuiltinClassInfo.cs" />
+    <Compile Include="Values\ParameterInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
     <Compile Include="Values\ProtocolInfo.cs" />
     <Compile Include="Values\Protocols.cs" />
     <Compile Include="Values\SpecializedInstanceInfo.cs" />
     <Compile Include="Values\SyntheticDefinitionInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
+    <Compile Include="Values\LazyValueInfo.cs" />
     <Compile Include="Values\TypingModuleInfo.cs" />
     <Compile Include="Values\TypingTypeInfo.cs" />
     <Compile Include="VariableDef.cs" />
@@ -355,7 +357,6 @@
     <Compile Include="Values\BuiltinMethodInfo.cs" />
     <Compile Include="Values\BuiltinModule.cs" />
     <Compile Include="Values\BuiltinNamespace.cs" />
-    <Compile Include="Values\CallChain.cs" />
     <Compile Include="Values\MergeStrengths.cs" />
     <Compile Include="Values\ObjectBuiltinClassInfo.cs" />
     <Compile Include="Values\BuiltinPropertyInfo.cs" />

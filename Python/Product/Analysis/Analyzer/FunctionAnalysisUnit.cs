@@ -47,7 +47,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _decoratorCalls = new Dictionary<Node, Expression>();
 
             var scope = new FunctionScope(Function, Function.FunctionDefinition, declScope, declEntry);
-            scope.EnsureParameters(this);
             _scope = scope;
 
             AnalysisLog.NewUnit(this);
@@ -71,6 +70,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+            ((FunctionScope)Scope).EnsureParameters(this);
+
             // Resolve default parameters and decorators in the outer scope but
             // continue to associate changes with this unit.
             ddg.Scope = _declUnit.Scope;
@@ -207,52 +208,4 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             );
         }
     }
-
-    class CalledFunctionAnalysisUnit : FunctionAnalysisUnit {
-        private readonly FunctionAnalysisUnit _originalUnit;
-        public readonly CallChain CallChain;
-        private readonly IVersioned _agg;
-
-        public CalledFunctionAnalysisUnit(IVersioned agg, FunctionAnalysisUnit originalUnit, CallChain callChain, ArgumentSet callArgs)
-            : base(originalUnit.Function, originalUnit._declUnit) {
-            _originalUnit = originalUnit;
-            _agg = agg;
-            CallChain = callChain;
-
-            var scope = new FunctionScope(
-                Function,
-                Ast,
-                originalUnit.Scope.OuterScope,
-                originalUnit.DeclaringModule.ProjectEntry
-            );
-            scope.UpdateParameters(this, callArgs, false, originalUnit.Scope as FunctionScope);
-            _scope = scope;
-
-            var walker = new OverviewWalker(_originalUnit.ProjectEntry, this, Tree);
-            if (Ast.Body != null) {
-                Ast.Body.Walk(walker);
-            }
-
-            AnalysisLog.NewUnit(this);
-            Enqueue();
-        }
-
-        public override IVersioned DependencyProject => _agg;
-        internal override ILocationResolver AlternateResolver => _originalUnit;
-
-        internal override bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
-            var defScope = _originalUnit.Scope;
-            return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, (FunctionScope)defScope);
-        }
-
-        public override string ToString() {
-            return string.Format("{0}{1}({2})->{3}",
-                base.ToString(),
-                "",
-                string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
-                ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
-            );
-        }
-    }
-
 }

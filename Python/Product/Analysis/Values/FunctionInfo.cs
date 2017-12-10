@@ -36,11 +36,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool IsProperty;
         private ReferenceDict _references;
         private readonly int _declVersion;
-        private int _callDepthLimit;
-        private int _callsSinceLimitChange;
         private string _doc;
-
-        internal CallChainSet _allCalls;
 
         internal FunctionInfo(FunctionDefinition node, AnalysisUnit declUnit, InterpreterScope declScope) {
             _projectEntry = declUnit.ProjectEntry;
@@ -52,12 +48,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             _doc = node.Body?.Documentation?.TrimDocumentation();
-
-            object value;
-            if (!ProjectEntry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out value) ||
-                (_callDepthLimit = (value as int?) ?? -1) < 0) {
-                _callDepthLimit = declUnit.ProjectState.Limits.CallDepth;
-            }
 
             _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, _projectEntry);
         }
@@ -95,75 +85,51 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var callArgs = ArgumentSet.FromArgs(FunctionDefinition, unit, args, keywordArgNames);
 
-            FunctionAnalysisUnit calledUnit;
-            bool updateArguments = true;
+            _analysisUnit.UpdateParameters(callArgs);
 
-            if (callArgs.Count == 0 ||
-                (ProjectState.Limits.UnifyCallsToNew && Name == "__new__") ||
-                _callDepthLimit == 0) {
-                calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
-            } else if (FunctionDefinition.ReturnAnnotation != null) {
-                // TODO: Reevaluate return annotation in context of arguments
-                calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
-            } else {
-                if (_allCalls == null) {
-                    _allCalls = new CallChainSet();
-                }
-
-                var chain = new CallChain(node, unit, _callDepthLimit);
-                var aggregate = GetAggregate(unit);
-                if (!_allCalls.TryGetValue(aggregate, chain, _callDepthLimit, out calledUnit)) {
-                    if (unit.ForEval) {
-                        // Call expressions that weren't analyzed get the union result
-                        // of all calls to this function.
-                        var res = AnalysisSet.Empty;
-                        foreach (var call in _allCalls.Values) {
-                            res = res.Union(call.ReturnValue.GetTypesNoCopy(unit, DeclaringModule));
-                        }
-                        return res;
-                    } else {
-                        _callsSinceLimitChange += 1;
-                        if (_callsSinceLimitChange >= ProjectState.Limits.DecreaseCallDepth && _callDepthLimit > 1) {
-                            _callDepthLimit -= 1;
-                            _callsSinceLimitChange = 0;
-                            AnalysisLog.ReduceCallDepth(this, _allCalls.Count, _callDepthLimit);
-
-                            _allCalls.Clear();
-                            chain = chain.Trim(_callDepthLimit);
-                        }
-
-                        calledUnit = new CalledFunctionAnalysisUnit(aggregate, (FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
-                        _allCalls.Add(aggregate, chain, calledUnit);
-                        updateArguments = false;
-                    }
-                }
-            }
-
-            if (updateArguments && calledUnit.UpdateParameters(callArgs)) {
-                AnalysisLog.UpdateUnit(calledUnit);
-            }
             if (keywordArgNames != null && keywordArgNames.Any()) {
-                calledUnit.AddNamedParameterReferences(unit, keywordArgNames);
+                _analysisUnit.AddNamedParameterReferences(unit, keywordArgNames);
             }
 
-            calledUnit.ReturnValue.AddDependency(unit);
-            return calledUnit.ReturnValue.Types;
+            _analysisUnit.ReturnValue.AddDependency(unit);
+
+            if (_analysisUnit.ReturnValue.Types.Split(out IReadOnlyList<LazyValueInfo> pi, out var res)) {
+                res = res.Union(pi.SelectMany(p => {
+                    var r = p.Resolve(unit, this, callArgs);
+                    if (!r.Any() && unit.ForEval) {
+                        return p.Resolve(unit);
+                    }
+                    return r;
+                }));
+            }
+            return res;
         }
 
-        private IVersioned GetAggregate(AnalysisUnit unit) {
-            IVersioned agg;
-            var fau = unit as CalledFunctionAnalysisUnit;
-            if (fau == null || _callDepthLimit == 1) {
-                // The caller is top-level or a normal FAU, not one with a call chain.
-                // Just aggregate the caller w/ ourselves
-                agg = AggregateProjectEntry.GetAggregate(unit.ProjectEntry, ProjectEntry);
-            } else {
-                // The caller is part of a call chain, aggregate ourselves with everyone
-                // else who's in it.
-                agg = AggregateProjectEntry.GetAggregate(fau.DependencyProject, ProjectEntry);
+        public IAnalysisSet ResolveParameter(AnalysisUnit unit, string name) {
+            var vd = (_analysisUnit.Scope as FunctionScope)?.GetParameter(name);
+            if (unit != AnalysisUnit) {
+                vd?.AddDependency(unit);
+            }
+            return vd?.Types ?? AnalysisSet.Empty;
+        }
+
+        public IAnalysisSet ResolveParameter(AnalysisUnit unit, string name, ArgumentSet arguments) {
+            var parameters = FunctionDefinition.Parameters;
+            if (parameters == null || parameters.Count == 0) {
+                return ResolveParameter(unit, name);
             }
 
-            return agg;
+            for (int i = 0; i < parameters.Count; ++i) {
+                if (i < arguments.Count && parameters[i].Name == name) {
+                    return arguments.Args[i];
+                } else if (parameters[i].IsList) {
+                    return arguments.SequenceArgs;
+                } else if (parameters[i].IsDictionary) {
+                    return arguments.DictArgs;
+                }
+            }
+
+            return ResolveParameter(unit, name);
         }
 
         public override string Name {
@@ -436,49 +402,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
 
-                var references = new Dictionary<string[], IEnumerable<AnalysisVariable>[]>(new StringArrayComparer());
-
-                var units = new HashSet<AnalysisUnit>();
-                units.Add(AnalysisUnit);
-                if (_allCalls != null) {
-                    units.UnionWith(_allCalls.Values);
-                }
-
-                foreach (var unit in units) {
-                    var vars = FunctionDefinition.Parameters.Select(p => {
-                        VariableDef param;
-                        if (unit.Scope.TryGetVariable(p.Name, out param)) {
-                            return param;
-                        }
-                        return null;
-                    }).ToArray();
-
-                    var parameters = vars
-                        .Select(p => string.Join(", ", p.Types.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
-                        .ToArray();
-
-                    IEnumerable<AnalysisVariable>[] refs;
-                    if (references.TryGetValue(parameters, out refs)) {
-                        refs = refs.Zip(vars, (r, v) => r.Concat(ProjectEntry.Analysis.ToVariables(v))).ToArray();
-                    } else {
-                        refs = vars.Select(v => ProjectEntry.Analysis.ToVariables(v)).ToArray();
+                var unit = AnalysisUnit;
+                var vars = FunctionDefinition.Parameters.Select(p => {
+                    VariableDef param;
+                    if (unit.Scope.TryGetVariable(p.Name, out param)) {
+                        return param;
                     }
-                    references[parameters] = refs;
-                }
+                    return null;
+                }).ToArray();
 
-                foreach (var keyValue in references) {
-                    yield return new SimpleOverloadResult(
-                        FunctionDefinition.Parameters.Select((p, i) => {
-                            var name = MakeParameterName(p);
-                            var defaultValue = GetDefaultValue(ProjectState, p, DeclaringModule.Tree);
-                            var type = keyValue.Key[i];
-                            var refs = keyValue.Value[i];
-                            return new ParameterResult(name, string.Empty, type, false, refs, defaultValue);
-                        }).ToArray(),
-                        FunctionDefinition.Name,
-                        Documentation
-                    );
-                }
+                var parameters = vars
+                    .Select(p => string.Join(", ", p.Types.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
+                    .ToArray();
+
+                var refs = vars.Select(v => ProjectEntry.Analysis.ToVariables(v)).ToArray();
+
+                yield return new SimpleOverloadResult(
+                    FunctionDefinition.Parameters.Select((p, i) => {
+                        var name = MakeParameterName(p);
+                        var defaultValue = GetDefaultValue(ProjectState, p, DeclaringModule.Tree);
+                        return new ParameterResult(name, string.Empty, parameters[i], false, refs[i], defaultValue);
+                    }).ToArray(),
+                    FunctionDefinition.Name,
+                    Documentation
+                );
             }
         }
 
@@ -614,9 +561,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var finishedScopes = new HashSet<InterpreterScope>();
             var scopeSet = new HashSet<InterpreterScope>();
             scopeSet.Add(AnalysisUnit.Scope);
-            if (_allCalls != null) {
-                scopeSet.UnionWith(_allCalls.Values.Select(au => au.Scope));
-            }
 
             int index = 0;
             foreach (var p in parameters) {
@@ -637,9 +581,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var result = new IAnalysisSet[FunctionDefinition.Parameters.Count];
             var units = new HashSet<AnalysisUnit>();
             units.Add(AnalysisUnit);
-            if (_allCalls != null) {
-                units.UnionWith(_allCalls.Values);
-            }
 
             for (int i = 0; i < result.Length; ++i) {
                 result[i] = (unionStrength >= 0 && unionStrength <= UnionComparer.MAX_STRENGTH)
@@ -662,13 +603,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 ? AnalysisSet.CreateUnion(UnionComparer.Instances[unionStrength])
                 : AnalysisSet.Empty;
 
-            var units = new HashSet<AnalysisUnit>();
-            units.Add(AnalysisUnit);
-            if (_allCalls != null) {
-                units.UnionWith(_allCalls.Values);
+            var fau = AnalysisUnit as FunctionAnalysisUnit;
+            if (fau != null) {
+                result = result.Union(fau.ReturnValue.TypesNoCopy.Resolve(fau));
             }
-
-            result = result.UnionAll(units.OfType<FunctionAnalysisUnit>().Select(unit => unit.ReturnValue.TypesNoCopy));
 
             return result;
         }

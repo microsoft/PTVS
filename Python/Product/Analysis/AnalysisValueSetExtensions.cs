@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -253,6 +254,19 @@ namespace Microsoft.PythonTools.Analysis {
             var res = AnalysisSet.Empty;
             foreach (var ns in self) {
                 res = res.Union(ns.Await(node, unit));
+            }
+
+            return res;
+        }
+
+        public static IAnalysisSet Resolve(this IAnalysisSet self, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                if (ns is LazyValueInfo l) {
+                    res = res.Union(l.Resolve(unit, null, default(ArgumentSet)));
+                } else {
+                    res = res.Add(ns);
+                }
             }
 
             return res;

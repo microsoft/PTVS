@@ -48,6 +48,7 @@ namespace AnalysisTests {
         [TestCleanup]
         public void TestCleanup() {
             EndAnalysisLog();
+            AssertListener.ThrowUnhandled();
         }
 
         #region Test Cases
@@ -423,33 +424,33 @@ y = f('fob', 'oar')";
             entry.AssertIsInstance("y", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(0)]
-        public void CartesianMerge() {
-            var limits = GetLimits();
-            // Ensure we include enough calls
-            var callCount = limits.CallDepth * limits.DecreaseCallDepth + 1;
-            var code = new StringBuilder(@"def f(a):
-    return g(a)
+//        [TestMethod, Priority(0)]
+//        public void CartesianMerge() {
+//            var limits = GetLimits();
+//            // Ensure we include enough calls
+//            var callCount = limits.CallDepth * limits.DecreaseCallDepth + 1;
+//            var code = new StringBuilder(@"def f(a):
+//    return g(a)
 
-def g(b):
-    return h(b)
+//def g(b):
+//    return h(b)
 
-def h(c):
-    return c
+//def h(c):
+//    return c
 
-");
-            for (int i = 0; i < callCount; ++i) {
-                code.AppendLine("x = g(123)");
-            }
-            code.AppendLine("y = f(3.1415)");
+//");
+//            for (int i = 0; i < callCount; ++i) {
+//                code.AppendLine("x = g(123)");
+//            }
+//            code.AppendLine("y = f(3.1415)");
 
-            var text = code.ToString();
-            Console.WriteLine(text);
-            var entry = ProcessTextV2(text);
+//            var text = code.ToString();
+//            Console.WriteLine(text);
+//            var entry = ProcessTextV2(text);
 
-            entry.AssertIsInstance("x", BuiltinTypeId.Int, BuiltinTypeId.Float);
-            entry.AssertIsInstance("y", BuiltinTypeId.Int, BuiltinTypeId.Float);
-        }
+//            entry.AssertIsInstance("x", BuiltinTypeId.Int, BuiltinTypeId.Float);
+//            entry.AssertIsInstance("y", BuiltinTypeId.Int, BuiltinTypeId.Float);
+//        }
 
         [TestMethod, Priority(0)]
         public void ImportAs() {
