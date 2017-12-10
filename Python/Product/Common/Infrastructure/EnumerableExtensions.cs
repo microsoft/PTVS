@@ -90,5 +90,33 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
             return Enumerable.Empty<T>();
         }
+
+        public static int IndexOf<T>(this IEnumerable<T> source, T value) where T : IEquatable<T> {
+            return source.IndexOf(value, EqualityComparer<T>.Default);
+        }
+
+        public static int IndexOf<T>(this IEnumerable<T> source, T value, IEqualityComparer<T> comparer) {
+            int index = 0;
+            foreach (var v in source) {
+                if (comparer.Equals(value, v)) {
+                    return index;
+                }
+                index += 1;
+            }
+
+            return -1;
+        }
+
+        public static int IndexOf<T>(this IEnumerable<T> source, Func<T, bool> predicate) {
+            int index = 0;
+            foreach (var v in source) {
+                if (predicate(v)) {
+                    return index;
+                }
+                index += 1;
+            }
+
+            return -1;
+        }
     }
 }

@@ -411,22 +411,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return null;
                 }).ToArray();
 
-                var parameters = vars
-                    .Select(p => string.Join(", ", p.Types.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
-                    .ToArray();
-
+                var parameters = vars.Select(p => p == null ? null : string.Join(", ", p.Types.GetShortDescriptions())).ToArray();
                 var refs = vars.Select(v => ProjectEntry.Analysis.ToVariables(v)).ToArray();
 
                 yield return new SimpleOverloadResult(
-                    FunctionDefinition.Parameters.Select((p, i) => {
-                        var name = MakeParameterName(p);
-                        var defaultValue = GetDefaultValue(ProjectState, p, DeclaringModule.Tree);
-                        return new ParameterResult(name, string.Empty, parameters[i], false, refs[i], defaultValue);
-                    }).ToArray(),
+                    FunctionDefinition.Parameters.Select((p, i) => ToParameterResult(p, parameters[i], refs[i], ProjectState, DeclaringModule.Tree)).ToArray(),
                     FunctionDefinition.Name,
                     Documentation
                 );
             }
+        }
+
+        internal static ParameterResult ToParameterResult(Parameter p, string type, IEnumerable<AnalysisVariable> refs, PythonAnalyzer state, PythonAst tree) {
+            if (p.IsDictionary) {
+                return new ParameterResult("**" + p.Name ?? "", null, null, false, refs, null);
+            } else if (p.IsList) {
+                return new ParameterResult("*" + p.Name ?? "", null, null, false, refs, null);
+            }
+
+            var name = p.Name ?? "";
+            var defaultValue = GetDefaultValue(state, p, tree);
+            return new ParameterResult(name, null, type, false, refs, defaultValue);
         }
 
         internal static string MakeParameterName(Parameter curParam) {

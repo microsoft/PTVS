@@ -100,22 +100,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<OverloadResult> Overloads {
             get {
-                var p = _function.FunctionDefinition.Parameters;
-
-                var pp = p.Count == 0 ? new ParameterResult[0] : new ParameterResult[p.Count - 1];
-                for (int i = 1; i < p.Count; i++) {
-                    pp[i - 1] = new ParameterResult(
-                        FunctionInfo.MakeParameterName(p[i]),
-                        string.Empty,
-                        "object",
-                        false,
-                        null,
-                        FunctionInfo.GetDefaultValue(_function.ProjectState, p[i], DeclaringModule.Tree)
-                    );
+                foreach (var p in _function.Overloads) {
+                    yield return p.Parameters.Length > 0 ? p.WithNewParameters(p.Parameters.Skip(1).ToArray()) : p;
                 }
-                string doc = _function.Documentation;
-
-                yield return new SimpleOverloadResult(pp, _function.FunctionDefinition.Name, doc);
             }
         }
 
