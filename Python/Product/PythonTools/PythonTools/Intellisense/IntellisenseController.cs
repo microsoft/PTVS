@@ -821,33 +821,23 @@ namespace Microsoft.PythonTools.Intellisense {
             // pick the best signature when the signature includes types.
             var bestSig = sigHelpSession.SelectedSignature as PythonSignature;
             if (bestSig != null) {
-                for (int i = 0; i < bestSig.Parameters.Count; ++i) {
-                    if (bestSig.Parameters[i].Name == lastKeywordArg ||
-                        lastKeywordArg == null && (i == curParam || PythonSignature.IsParamArray(bestSig.Parameters[i].Name))
-                    ) {
-                        bestSig.SetCurrentParameter(bestSig.Parameters[i]);
-                        sigHelpSession.SelectedSignature = bestSig;
-                        return;
-                    }
+                if (bestSig.SelectBestParameter(curParam, lastKeywordArg) >= 0) {
+                    sigHelpSession.SelectedSignature = bestSig;
+                    return;
                 }
             }
 
             PythonSignature fallback = null;
             foreach (var sig in sigHelpSession.Signatures.OfType<PythonSignature>().OrderBy(s => s.Parameters.Count)) {
                 fallback = sig;
-                for (int i = 0; i < sig.Parameters.Count; ++i) {
-                    if (sig.Parameters[i].Name == lastKeywordArg ||
-                        lastKeywordArg == null && (i == curParam || PythonSignature.IsParamArray(sig.Parameters[i].Name))
-                    ) {
-                        sig.SetCurrentParameter(sig.Parameters[i]);
-                        sigHelpSession.SelectedSignature = sig;
-                        return;
-                    }
+                if (sig.SelectBestParameter(curParam, lastKeywordArg) >= 0) {
+                    sigHelpSession.SelectedSignature = sig;
+                    return;
                 }
             }
 
             if (fallback != null) {
-                fallback.SetCurrentParameter(null);
+                fallback.ClearParameter();
                 sigHelpSession.SelectedSignature = fallback;
             } else {
                 sigHelpSession.Dismiss();
@@ -911,11 +901,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 ISignature sig;
                 if (sigHelpSession.Properties.TryGetProperty(typeof(PythonSignature), out sig)) {
                     sigHelpSession.SelectedSignature = sig;
-
-                    IParameter param;
-                    if (sigHelpSession.Properties.TryGetProperty(typeof(PythonParameter), out param)) {
-                        ((PythonSignature)sig).SetCurrentParameter(param);
-                    }
                 }
 
                 _sigHelpSession = sigHelpSession;
