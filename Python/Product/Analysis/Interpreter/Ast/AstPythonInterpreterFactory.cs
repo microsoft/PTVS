@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Dispose(false);
         }
 
-        protected void Dispose(bool disposing) {
+        protected virtual void Dispose(bool disposing) {
             if (!_disposed) {
                 _disposed = true;
                 _log?.Flush(synchronous: true);
