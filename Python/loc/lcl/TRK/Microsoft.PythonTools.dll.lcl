@@ -4265,7 +4265,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for testing scikit-learn classifiers.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]D;]A;]D;]A;Opens Cookiecutter window where you can create the project from a cookiecutter template available online.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Scikit-learn sınıflandırıcılarını test etme projesi.]D;]A;]D;]A;Bu proje pandas, numpy, scikit-learn ve matplotlib paketlerini gerektirir.]D;]A;]D;\Çevrimiçi olarak hazırlanmış bir cookiecutter şablonundan projeyi oluşturabileceğiniz Cookiecutter penceresini açar.]]></Val>
+            <Val><![CDATA[Scikit-learn sınıflandırıcılarını test etme projesi.]D;]A;]D;]A;Bu proje pandas, numpy, scikit-learn ve matplotlib paketlerini gerektirir.]D;]A;]D;]A;Çevrimiçi olarak hazırlanmış bir cookiecutter şablonundan projeyi oluşturabileceğiniz Cookiecutter penceresini açar.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A project for testing scikit-learn classifiers.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]]></Val>
@@ -4289,7 +4289,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for testing scikit-learn clustering learners.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]D;]A;]D;]A;Opens Cookiecutter window where you can create the project from a cookiecutter template available online.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Scikit-learn sınıflandırıcılarını test etme projesi.]D;]A;]D;]A;Bu proje pandas, numpy, scikit-learn ve matplotlib paketlerini gerektirir.]D;]A;]D;\Çevrimiçi olarak hazırlanmış bir cookiecutter şablonundan projeyi oluşturabileceğiniz Cookiecutter penceresini açar.]]></Val>
+            <Val><![CDATA[Scikit-learn kümeleme öğrencilerini test etme projesi.]D;]A;]D;]A;Bu proje pandas, numpy, scikit-learn ve matplotlib paketlerini gerektirir.]D;]A;]D;]A;Çevrimiçi olarak hazırlanmış bir cookiecutter şablonundan projeyi oluşturabileceğiniz Cookiecutter penceresini açar.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A project for testing scikit-learn clustering learners.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]]></Val>
@@ -4313,7 +4313,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for testing scikit-learn regression learners.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]D;]A;]D;]A;Opens Cookiecutter window where you can create the project from a cookiecutter template available online.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Scikit-learn sınıflandırıcılarını test etme projesi.]D;]A;]D;]A;Bu proje pandas, numpy, scikit-learn ve matplotlib paketlerini gerektirir.]D;]A;]D;\Çevrimiçi olarak hazırlanmış bir cookiecutter şablonundan projeyi oluşturabileceğiniz Cookiecutter penceresini açar.]]></Val>
+            <Val><![CDATA[Scikit-learn regresyon öğrencilerini test etme projesi.]D;]A;]D;]A;Bu proje pandas, numpy, scikit-learn ve matplotlib paketlerini gerektirir.]D;]A;]D;]A;Çevrimiçi olarak hazırlanmış bir cookiecutter şablonundan projeyi oluşturabileceğiniz Cookiecutter penceresini açar.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A project for testing scikit-learn regression learners.]D;]A;]D;]A;This project requires the pandas, numpy, scikit-learn, and matplotlib packages.]]></Val>
