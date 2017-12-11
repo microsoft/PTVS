@@ -36,11 +36,13 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [Export(typeof(CondaEnvironmentFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class CondaEnvironmentFactoryProvider : IPythonInterpreterFactoryProvider {
+    class CondaEnvironmentFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private readonly IServiceProvider _site;
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         internal const string FactoryProviderName = "CondaEnv";
         internal const string EnvironmentCompanyName = "CondaEnv";
+
+        private bool _isDisposed;
         private int _ignoreNotifications;
         private bool _initialized;
         private readonly CPythonInterpreterFactoryProvider _globalProvider;
@@ -58,6 +60,27 @@ namespace Microsoft.PythonTools.Interpreter {
             _site = site;
             _watchFileSystem = isMockVs == null;
             _globalProvider = globalProvider;
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~CondaEnvironmentFactoryProvider() {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (!_isDisposed) {
+                _isDisposed = true;
+                if (_envsTxtWatcher != null) {
+                    _envsTxtWatcher.Dispose();
+                }
+                if (_envsTxtWatcherTimer != null) {
+                    _envsTxtWatcherTimer.Dispose();
+                }
+            }
         }
 
         private void EnsureInitialized() {
