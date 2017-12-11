@@ -54,7 +54,10 @@ namespace IronPythonTests {
             get { return IronPythonModuleContext.DontShowClrInstance;}
         }
 
-        protected override IPythonInterpreterFactory DefaultFactoryV2 => new IronPythonInterpreterFactory(InterpreterArchitecture.x86);
+        private readonly IronPythonInterpreterFactoryProvider _factoryProvider = new IronPythonInterpreterFactoryProvider();
+
+        protected override IPythonInterpreterFactory DefaultFactoryV2 => _factoryProvider.GetInterpreterFactory(IronPythonInterpreterFactoryProvider.GetInterpreterId(InterpreterArchitecture.x64));
+
         protected override IPythonInterpreterFactory DefaultFactoryV3 => null;
 
         protected override PythonAnalysis CreateAnalyzerInternal(IPythonInterpreterFactory factory) {
