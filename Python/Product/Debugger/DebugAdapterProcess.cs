@@ -47,8 +47,10 @@ namespace Microsoft.PythonTools.Debugger {
             if (_stream != null) {
                 _stream.Dispose();
             }
-            if (_process != null && !_process.HasExited) {
-                _process.Kill();
+            if (_process != null) {
+                if (!_process.HasExited) {
+                    _process.Kill();
+                }
                 _process.Dispose();
             }
         }
