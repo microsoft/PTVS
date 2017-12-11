@@ -315,32 +315,34 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        public void InvokeSync(Action action) {
-            Invoke<int>(() => {
+        public void InvokeSync(Action action, int timeout = Timeout.Infinite) {
+            Invoke(() => {
                 action();
                 return 0;
             });
         }
 
-        public T InvokeTask<T>(Func<Task<T>> taskCreator) {
+        public T InvokeTask<T>(Func<Task<T>> taskCreator, int timeout = Timeout.Infinite) {
             var t = Invoke(taskCreator);
-            t.Wait();
+            if (!t.Wait(timeout)) {
+                throw new OperationCanceledException();
+            }
             return t.Result;
         }
 
-        public T Invoke<T>(Func<T> func) {
+        public T Invoke<T>(Func<T> func, int timeout = Timeout.Infinite) {
             ThrowPendingException();
             if (Thread.CurrentThread == UIThread) {
                 return func();
             }
 
-            T res = default(T);
+            var tcs = new TaskCompletionSource<T>();
             using (var tmp = new AutoResetEvent(false)) {
                 Action action = () => {
                     try {
-                        res = func();
-                    } finally {
-                        tmp.Set();
+                        tcs.SetResult(func());
+                    } catch (Exception ex) {
+                        tcs.SetException(ex);
                     }
                 };
 
@@ -349,16 +351,29 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     _uiEvent.Set();
                 }
 
-                while (!tmp.WaitOne(100)) {
-                    if (!UIThread.IsAlive) {
-                        ThrowPendingException(checkThread: false);
-                        Debug.Fail("UIThread was terminated");
-                        return res;
+                try {
+                    if (timeout > 0) {
+                        if (!tcs.Task.Wait(timeout)) {
+                            throw new OperationCanceledException();
+                        }
+                    } else {
+                        while (!tcs.Task.Wait(100)) {
+                            if (!UIThread.IsAlive) {
+                                ThrowPendingException(checkThread: false);
+                                Debug.Fail("UIThread was terminated");
+                                return default(T);
+                            }
+                        }
                     }
+                } catch (AggregateException ex) {
+                    if (ex.InnerException != null) {
+                        throw ex.InnerException;
+                    }
+                    throw;
                 }
             }
             ThrowPendingException(checkThread: false);
-            return res;
+            return tcs.Task.Result;
         }
 
 
