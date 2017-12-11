@@ -74,19 +74,27 @@ namespace Microsoft.PythonTools.Interpreter {
         protected virtual void Dispose(bool disposing) {
             if (!_isDisposed) {
                 _isDisposed = true;
-                if (_envsTxtWatcher != null) {
-                    _envsTxtWatcher.Dispose();
-                }
-                if (_envsTxtWatcherTimer != null) {
-                    _envsTxtWatcherTimer.Dispose();
+                lock (_factories) {
+                    if (_envsTxtWatcher != null) {
+                        _envsTxtWatcher.Dispose();
+                    }
+                    if (_envsTxtWatcherTimer != null) {
+                        _envsTxtWatcherTimer.Dispose();
+                    }
                 }
             }
         }
 
         private void EnsureInitialized() {
-            lock (this) {
+            if (_initialized) {
+                return;
+            }
+
+            bool doDiscover = false;
+            lock (_factories) {
                 if (!_initialized) {
                     _initialized = true;
+                    doDiscover = true;
                     try {
                         _environmentsTxtPath = Path.Combine(
                             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
@@ -95,8 +103,6 @@ namespace Microsoft.PythonTools.Interpreter {
                         );
                     } catch (ArgumentException) {
                     }
-
-                    DiscoverInterpreterFactories();
 
                     if (_watchFileSystem && !string.IsNullOrEmpty(_environmentsTxtPath)) {
                         // Watch the file %HOMEPATH%/.conda/Environments.txt which
@@ -116,11 +122,17 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
             }
+
+            if (doDiscover) {
+                DiscoverInterpreterFactories();
+            }
         }
 
-        private async void _envsTxtWatcherTimer_Elapsed(object state) {
+            private async void _envsTxtWatcherTimer_Elapsed(object state) {
             try {
-                _envsTxtWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                lock (_factories) {
+                    _envsTxtWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                }
 
                 DiscoverInterpreterFactories();
             } catch (ObjectDisposedException) {
@@ -129,9 +141,11 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void _envsTxtWatcher_Changed(object sender, FileSystemEventArgs e) {
             if (PathUtils.IsSamePath(e.FullPath, _environmentsTxtPath)) {
-                try {
-                    _envsTxtWatcherTimer.Change(1000, Timeout.Infinite);
-                } catch (ObjectDisposedException) {
+                lock (_factories) {
+                    try {
+                        _envsTxtWatcherTimer.Change(1000, Timeout.Infinite);
+                    } catch (ObjectDisposedException) {
+                    }
                 }
             }
         }
@@ -159,7 +173,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var uniqueIds = new HashSet<string>(found.Select(i => i.Configuration.Id));
 
             // Then update our cached state with the lock held.
-            lock (this) {
+            lock (_factories) {
                 foreach (var info in found.MaybeEnumerate()) {
                     PythonInterpreterInformation existingInfo;
                     if (!_factories.TryGetValue(info.Configuration.Id, out existingInfo) ||
