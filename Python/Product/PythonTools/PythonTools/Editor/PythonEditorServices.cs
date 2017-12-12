@@ -113,8 +113,10 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         public ISignatureHelpBroker SignatureHelpBroker = null;
 
+#pragma warning disable 618 // TODO: switch to quick info async interfaces introduced in 15.6
         [Import]
         public IQuickInfoBroker QuickInfoBroker = null;
+#pragma warning restore 618
 
         [Import]
         public IPeekBroker PeekBroker = null;
