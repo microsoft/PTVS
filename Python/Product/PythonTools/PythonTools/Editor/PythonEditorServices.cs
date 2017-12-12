@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudio.Text.PatternMatching;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
@@ -129,6 +130,12 @@ namespace Microsoft.PythonTools.Editor {
 
         [Import]
         public ITextBufferUndoManagerProvider UndoManagerFactory = null;
+
+        [Import]
+        public IGlyphService GlyphService = null;
+
+        [Import]
+        public IPatternMatcherFactory PatternMatcherFactory = null;
 
         public IVsTextManager2 VsTextManager2 => (IVsTextManager2)Site.GetService(typeof(SVsTextManager));
 
