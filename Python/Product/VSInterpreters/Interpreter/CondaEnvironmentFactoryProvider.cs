@@ -62,16 +62,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _globalProvider = globalProvider;
         }
 
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~CondaEnvironmentFactoryProvider() {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing) {
+        public virtual void Dispose() {
             if (!_isDisposed) {
                 _isDisposed = true;
                 lock (_factories) {
