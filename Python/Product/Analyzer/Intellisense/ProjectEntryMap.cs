@@ -115,6 +115,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
+    [Serializable]
     sealed class ProjectEntryNotFoundException : KeyNotFoundException {
         public ProjectEntryNotFoundException(int itemId) : base($"Entry Id {itemId}") { }
     }

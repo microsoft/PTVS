@@ -15,12 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
+    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
+        Justification = "DebugTextWriter does not need to be disposed")]
     internal class PythonRemoteDebugPort : IDebugPort2 {
         private readonly PythonRemoteDebugPortSupplier _supplier;
         private readonly IDebugPortRequest2 _request;
