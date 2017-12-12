@@ -118,22 +118,34 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPythonInterpreterFactory Factory => _factory;
 
         public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~CondaPackageManager() {
+            Dispose(false);
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_refreshIsCurrentTrigger")]
+        protected void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
             }
             _isDisposed = true;
 
-            if (_historyWatcher != null) {
-                _historyWatcher.Changed -= _historyWatcher_Changed;
-                _historyWatcher.Created -= _historyWatcher_Changed;
-                _historyWatcher.Dispose();
-            }
+            if (disposing) {
+                if (_historyWatcher != null) {
+                    _historyWatcher.Changed -= _historyWatcher_Changed;
+                    _historyWatcher.Created -= _historyWatcher_Changed;
+                    _historyWatcher.Dispose();
+                }
 
-            if (_historyWatcherTimer != null) {
-                _historyWatcherTimer.Dispose();
-            }
+                if (_historyWatcherTimer != null) {
+                    _historyWatcherTimer.Dispose();
+                }
 
-            _working.Dispose();
+                _working.Dispose();
+            }
         }
 
         private void AbortOnInvalidConfiguration() {

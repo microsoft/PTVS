@@ -49,19 +49,30 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
-        public virtual void Dispose() {
+        ~LanguagePreferences() {
+            Dispose(false);
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
             }
 
-            _isDisposed = true;
-
-            if (_cookie != 0 && _textMgr != null) {
-                Guid guid = typeof(IVsTextManagerEvents2).GUID;
-                IConnectionPoint connectionPoint;
-                (_textMgr as IConnectionPointContainer).FindConnectionPoint(ref guid, out connectionPoint);
-                connectionPoint.Unadvise(_cookie);
+            if (disposing) {
+                if (_cookie != 0 && _textMgr != null) {
+                    Guid guid = typeof(IVsTextManagerEvents2).GUID;
+                    IConnectionPoint connectionPoint;
+                    (_textMgr as IConnectionPointContainer).FindConnectionPoint(ref guid, out connectionPoint);
+                    connectionPoint.Unadvise(_cookie);
+                }
             }
+
+            _isDisposed = true;
         }
 
         #region IVsTextManagerEvents2 Members

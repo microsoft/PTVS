@@ -57,11 +57,20 @@ namespace Microsoft.PythonTools.Interpreter {
             _registryTags = _watchRegistry ? new HashSet<object>() : null;
         }
 
-        public void Dispose() {
+        protected void Dispose(bool disposing) {
             foreach(var tag in _registryTags.MaybeEnumerate()) {
                 RegistryWatcher.Instance.Remove(tag);
             }
             _registryTags?.Clear();
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~CPythonInterpreterFactoryProvider() {
+            Dispose(false);
         }
 
         private void EnsureInitialized() {

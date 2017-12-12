@@ -35,17 +35,28 @@ namespace Microsoft.PythonTools {
             _notifyChangeTimer = new Timer(RaiseChanged, null, Timeout.Infinite, Timeout.Infinite);
         }
 
-        public virtual void Dispose() {
-            lock (_paths) {
-                foreach (var p in _paths) {
-                    Unwatch(p.Cookie);
-                }
-                _paths.Clear();
-            }
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            var timer = _notifyChangeTimer;
-            if (timer != null) {
-                timer.Dispose();
+        ~SearchPathManager() {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                lock (_paths) {
+                    foreach (var p in _paths) {
+                        Unwatch(p.Cookie);
+                    }
+                    _paths.Clear();
+                }
+
+                var timer = _notifyChangeTimer;
+                if (timer != null) {
+                    timer.Dispose();
+                }
             }
         }
 

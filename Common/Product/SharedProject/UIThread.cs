@@ -49,9 +49,20 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        public virtual void Dispose() {
-            if (_needDispose) {
-                _context.Dispose();
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~UIThread() {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                if (_needDispose) {
+                    _context.Dispose();
+                }
             }
         }
 

@@ -76,19 +76,20 @@ namespace Microsoft.PythonTools.Repl {
             _analysisFilename = Guid.NewGuid().ToString() + ".py";
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_analyzer")]
         protected virtual void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
             }
             _isDisposed = true;
 
-            if (disposing) {
-                if (_projectWithHookedEvents != null) {
-                    _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
-                    _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
-                    _projectWithHookedEvents = null;
-                }
+            if (_projectWithHookedEvents != null) {
+                _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
+                _projectWithHookedEvents = null;
+            }
 
+            if (disposing) {
                 _analyzer?.Dispose();
             }
         }

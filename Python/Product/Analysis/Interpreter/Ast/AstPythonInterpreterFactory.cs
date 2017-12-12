@@ -78,18 +78,27 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public void Dispose() {
-            if (_disposed) {
-                return;
-            }
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            _disposed = true;
-            _log?.Flush(synchronous: true);
+        ~AstPythonInterpreterFactory() {
+            Dispose(false);
+        }
 
-            if (_log != null) {
-                _log.Dispose();
-            }
-            if (PackageManager != null) {
-                PackageManager.InstalledPackagesChanged -= PackageManager_InstalledFilesChanged;
+        protected virtual void Dispose(bool disposing) {
+            if (!_disposed) {
+                _disposed = true;
+                _log?.Flush(synchronous: true);
+
+                if (disposing) {
+                    if (_log != null) {
+                        _log.Dispose();
+                    }
+                    if (PackageManager != null) {
+                        PackageManager.InstalledPackagesChanged -= PackageManager_InstalledFilesChanged;
+                    }
+                }
             }
         }
 

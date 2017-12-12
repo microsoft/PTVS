@@ -195,13 +195,23 @@ namespace TestUtilities.UI {
 
         #region IDisposable Members
 
-        public void Dispose() {
-            if (_disposed) {
-                return;
-            }
+        ~VisualStudioInstance() {
+            Dispose(false);
+        }
 
-            _disposed = true;
-            _solution.Dispose();
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing) {
+            if (!_disposed) {
+                if (disposing) {
+                    _solution.Dispose();
+                }
+
+                _disposed = true;
+            }
         }
 
         #endregion
