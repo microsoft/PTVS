@@ -935,11 +935,9 @@ class Thread(object):
         co_name = f_code.co_name
         co_filename = f_code.co_filename
 
-        # If we're importing stdlib, don't trace nested calls until we return from the import that started it,
-        # but notify the user if these nested calls end up in non-stdlib code.
+        # If we're importing stdlib, don't trace nested calls until we return from the import that started it
         if self.is_importing_stdlib:
-            if not is_stdlib(path.normcase(co_filename)):
-                debug_output.write('Standard library module invoked user code during import; breakpoints disabled for invoked code.\n')
+            # we used to notify the user, but don't anymore because this is too verbose and slow
             return self.prev_trace_func
 
         if co_name == '<module>' and co_filename not in ['<string>', '<stdin>']:
