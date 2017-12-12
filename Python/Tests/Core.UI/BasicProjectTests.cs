@@ -716,6 +716,40 @@ namespace PythonToolsUITests {
             }
         }
 
+        public void AddProjectReference(VisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\AddProjectReference.sln");
+            var project = app.OpenProject(sln);
+            var solutionExplorer = app.OpenSolutionExplorer();
+
+            var moduleProj = app.GetProject("PythonModule");
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                project.GetPythonProject().VSProject.References.AddProject(moduleProj);
+            });
+            solutionExplorer.WaitForChildOfProject(project, Strings.ReferencesNodeName, @"PythonModule");
+            solutionExplorer.WaitForChildOfProject(project, Strings.SearchPaths, @"..\PythonModule");
+
+            var moduleWithHomeProj = app.GetProject("PythonModuleWithCustomHome");
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                project.GetPythonProject().VSProject.References.AddProject(moduleWithHomeProj);
+            });
+            solutionExplorer.WaitForChildOfProject(project, Strings.ReferencesNodeName, @"PythonModuleWithCustomHome");
+            solutionExplorer.WaitForChildOfProject(project, Strings.SearchPaths, @"..\PythonModuleWithCustomHome\CustomHome");
+
+            var nativeProj = app.GetProject("NativeModule");
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                project.GetPythonProject().VSProject.References.AddProject(nativeProj);
+            });
+            solutionExplorer.WaitForChildOfProject(project, Strings.ReferencesNodeName, @"NativeModule");
+            solutionExplorer.WaitForChildOfProject(project, Strings.SearchPaths, @"..\..\Debug");
+
+            var csharpProj = app.GetProject("ClassLibrary");
+            app.ServiceProvider.GetUIThread().Invoke(() => {
+                project.GetPythonProject().VSProject.References.AddProject(csharpProj);
+            });
+            solutionExplorer.WaitForChildOfProject(project, Strings.ReferencesNodeName, @"ClassLibrary");
+            solutionExplorer.WaitForChildOfProject(project, Strings.SearchPaths, @"..\ClassLibrary\bin\Debug");
+        }
+
         public void DotNetReferences(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\XamlProject.sln");
 
