@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -48,8 +49,12 @@ namespace Microsoft.PythonTools.Debugger {
                 _stream.Dispose();
             }
             if (_process != null) {
-                if (!_process.HasExited) {
-                    _process.Kill();
+                try {
+                    if (!_process.HasExited) {
+                        _process.Kill();
+                    }
+                } catch (InvalidOperationException) {
+                } catch (Win32Exception) {
                 }
                 _process.Dispose();
             }
