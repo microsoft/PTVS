@@ -44,26 +44,17 @@ namespace TestUtilities.UI {
 
         #region IDisposable Members
 
-        ~AutomationDialog() {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing) {
-            if (!_isDisposed) {
-                if (disposing) {
-                    try {
-                        Element.GetWindowPattern().Close();
-                    } catch (InvalidOperationException) {
-                    } catch (ElementNotAvailableException) {
-                    }
-                }
-                _isDisposed = true;
-            }
-        }
-
         public void Dispose() {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
+            if (_isDisposed) {
+                return;
+            }
+
+            _isDisposed = true;
+            try {
+                Element.GetWindowPattern().Close();
+            } catch (InvalidOperationException) {
+            } catch (ElementNotAvailableException) {
+            }
         }
 
         #endregion

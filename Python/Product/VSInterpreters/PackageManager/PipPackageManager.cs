@@ -99,33 +99,23 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPythonInterpreterFactory Factory => _factory;
 
         public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~PipPackageManager() {
-            Dispose(false);
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_refreshIsCurrentTrigger")]
-        protected void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
             }
             _isDisposed = true;
 
-            if (disposing) {
-                if (_libWatchers != null) {
-                    lock (_libWatchers) {
-                        foreach (var w in _libWatchers) {
-                            w.EnableRaisingEvents = false;
-                            w.Dispose();
-                        }
+            if (_libWatchers != null) {
+                lock (_libWatchers) {
+                    foreach (var w in _libWatchers) {
+                        w.EnableRaisingEvents = false;
+                        w.Dispose();
                     }
                 }
-                _refreshIsCurrentTrigger?.Dispose();
-                _working.Dispose();
             }
+            if (_refreshIsCurrentTrigger != null) {
+                _refreshIsCurrentTrigger.Dispose();
+            }
+            _working.Dispose();
         }
 
         private void AbortOnInvalidConfiguration() {

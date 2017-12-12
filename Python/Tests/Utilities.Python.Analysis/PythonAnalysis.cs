@@ -88,25 +88,14 @@ namespace TestUtilities.Python {
         }
 
         public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~PythonAnalysis() {
-            Dispose(false);
-        }
-
-        protected void Dispose(bool disposing) {
             if (_disposed) {
                 return;
             }
             _disposed = true;
 
-            if (disposing) {
-                _analyzer.Dispose();
-                if (_disposeFactory) {
-                    (_factory as IDisposable)?.Dispose();
-                }
+            _analyzer.Dispose();
+            if (_disposeFactory) {
+                (_factory as IDisposable)?.Dispose();
             }
         }
 

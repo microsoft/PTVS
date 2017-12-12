@@ -167,18 +167,13 @@ namespace Microsoft.PythonTools.Debugger {
             DebugConnectionListener.RegisterProcess(_processGuid, this);
         }
 
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         internal void AddDirMapping(string[] mapping) {
             if (mapping != null) {
                 _dirMapping.Add(mapping);
             }
         }
 
-        protected virtual void Dispose(bool disposing) {
+        public virtual void Dispose() {
             if (_isDisposed) {
                 return;
             }
@@ -186,53 +181,47 @@ namespace Microsoft.PythonTools.Debugger {
 
             DebugConnectionListener.UnregisterProcess(_processGuid);
 
-            if (disposing) {
-                DebugConnection connection;
-                Process process;
+            DebugConnection connection;
+            Process process;
 
-                lock (_connectionLock) {
-                    connection = _connection;
-                    process = _process;
+            lock (_connectionLock) {
+                connection = _connection;
+                process = _process;
 
-                    if (_connection != null) {
-                        _connection.ProcessingMessagesEnded -= OnProcessingMessagesEnded;
-                        _connection.LegacyAsyncBreak -= OnLegacyAsyncBreak;
-                        _connection.LegacyBreakpointFailed -= OnLegacyBreakpointFailed;
-                        _connection.LegacyBreakpointHit -= OnLegacyBreakpointHit;
-                        _connection.LegacyBreakpointSet -= OnLegacyBreakpointSet;
-                        _connection.LegacyDebuggerOutput -= OnLegacyDebuggerOutput;
-                        _connection.LegacyDetach -= OnLegacyDetach;
-                        _connection.LegacyEnumChildren -= OnLegacyEnumChildren;
-                        _connection.LegacyException -= OnLegacyException;
-                        _connection.LegacyExecutionException -= OnLegacyExecutionException;
-                        _connection.LegacyExecutionResult -= OnLegacyExecutionResult;
-                        _connection.LegacyLast -= OnLegacyLast;
-                        _connection.LegacyModuleLoad -= OnLegacyModuleLoad;
-                        _connection.LegacyProcessLoad -= OnLegacyProcessLoad;
-                        _connection.LegacyRequestHandlers -= OnLegacyRequestHandlers;
-                        _connection.LegacyStepDone -= OnLegacyStepDone;
-                        _connection.LegacyThreadCreate -= OnLegacyThreadCreate;
-                        _connection.LegacyThreadExit -= OnLegacyThreadExit;
-                        _connection.LegacyThreadFrameList -= OnLegacyThreadFrameList;
-                        _connection.LegacyModulesChanged -= OnLegacyModulesChanged;
-                        _connection = null;
-                    }
+                if (_connection != null) {
+                    _connection.ProcessingMessagesEnded -= OnProcessingMessagesEnded;
+                    _connection.LegacyAsyncBreak -= OnLegacyAsyncBreak;
+                    _connection.LegacyBreakpointFailed -= OnLegacyBreakpointFailed;
+                    _connection.LegacyBreakpointHit -= OnLegacyBreakpointHit;
+                    _connection.LegacyBreakpointSet -= OnLegacyBreakpointSet;
+                    _connection.LegacyDebuggerOutput -= OnLegacyDebuggerOutput;
+                    _connection.LegacyDetach -= OnLegacyDetach;
+                    _connection.LegacyEnumChildren -= OnLegacyEnumChildren;
+                    _connection.LegacyException -= OnLegacyException;
+                    _connection.LegacyExecutionException -= OnLegacyExecutionException;
+                    _connection.LegacyExecutionResult -= OnLegacyExecutionResult;
+                    _connection.LegacyLast -= OnLegacyLast;
+                    _connection.LegacyModuleLoad -= OnLegacyModuleLoad;
+                    _connection.LegacyProcessLoad -= OnLegacyProcessLoad;
+                    _connection.LegacyRequestHandlers -= OnLegacyRequestHandlers;
+                    _connection.LegacyStepDone -= OnLegacyStepDone;
+                    _connection.LegacyThreadCreate -= OnLegacyThreadCreate;
+                    _connection.LegacyThreadExit -= OnLegacyThreadExit;
+                    _connection.LegacyThreadFrameList -= OnLegacyThreadFrameList;
+                    _connection.LegacyModulesChanged -= OnLegacyModulesChanged;
+                    _connection = null;
                 }
-
-                if (connection != null) {
-                    connection.Dispose();
-                }
-
-                if (process != null) {
-                    process.Dispose();
-                }
-
-                _connectedEvent.Dispose();
             }
-        }
 
-        ~PythonProcess() {
-            Dispose(false);
+            if (connection != null) {
+                connection.Dispose();
+            }
+
+            if (process != null) {
+                process.Dispose();
+            }
+
+            _connectedEvent.Dispose();
         }
 
         void _process_Exited(object sender, EventArgs e) {

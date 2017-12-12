@@ -50,24 +50,13 @@ namespace Microsoft.PythonTools.Analysis {
             _items.Add(new LogItem { Event = "Start", Time = TimeSpan.Zero, Args = new object[] { _startTime } });
         }
 
-        protected void Dispose(bool disposing) {
+        public virtual void Dispose() {
             if (_disposed) {
                 return;
             }
 
             _disposed = true;
-            if (disposing) {
-                _dumping.Dispose();
-            }
-        }
-
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~AnalysisLogWriter() {
-            Dispose(false);
+            _dumping.Dispose();
         }
 
         public bool CSV => _csv;

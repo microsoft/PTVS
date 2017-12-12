@@ -47,7 +47,6 @@ namespace Microsoft.PythonTools.Repl {
             base(serviceProvider) {
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_analyzer")]
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 

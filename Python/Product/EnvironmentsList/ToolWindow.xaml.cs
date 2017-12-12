@@ -196,25 +196,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+            if (_isDisposed) {
+                return;
+            }
+            _isDisposed = true;
 
-        ~ToolWindow() {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing) {
-            if (!_isDisposed) {
-                _isDisposed = true;
-
-                if (disposing) {
-                    lock (_listenerLock) {
-                        if (_listener != null) {
-                            _listener.Dispose();
-                            _listener = null;
-                        }
-                    }
+            lock (_listenerLock) {
+                if (_listener != null) {
+                    _listener.Dispose();
+                    _listener = null;
                 }
             }
         }

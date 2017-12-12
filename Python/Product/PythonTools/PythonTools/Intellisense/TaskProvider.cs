@@ -353,11 +353,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _errorProvider = errorProvider;
         }
 
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
 #if DEBUG
         private static bool Quiet = true;
 #endif
@@ -371,35 +366,29 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
         }
 
-        private void Dispose(bool disposing) {
-            if (disposing) {
-                var worker = _worker;
-                if (worker != null) {
-                    Log("Sending abort... {0}", DateTime.Now);
-                    lock (_workerQueue) {
-                        _workerQueue.Clear();
-                        _workerQueue.Enqueue(WorkerMessage.Abort());
-                        _workerQueueChanged.Set();
-                    }
-                    Log("Waiting for abort... {0}", DateTime.Now);
-                    bool stopped = worker.Join(10000);
-                    Log("Done Waiting for abort... {0} {1}", DateTime.Now, stopped);
-                    Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
+        public virtual void Dispose() {
+            var worker = _worker;
+            if (worker != null) {
+                Log("Sending abort... {0}", DateTime.Now);
+                lock (_workerQueue) {
+                    _workerQueue.Clear();
+                    _workerQueue.Enqueue(WorkerMessage.Abort());
+                    _workerQueueChanged.Set();
                 }
-
-                lock (_itemsLock) {
-                    _items.Clear();
-                }
-                if (_taskList != null) {
-                    _taskList.UnregisterTaskProvider(_cookie);
-                }
-
-                _workerQueueChanged.Dispose();
+                Log("Waiting for abort... {0}", DateTime.Now);
+                bool stopped = worker.Join(10000);
+                Log("Done Waiting for abort... {0} {1}", DateTime.Now, stopped);
+                Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
             }
-        }
 
-        ~TaskProvider() {
-            Dispose(false);
+            lock (_itemsLock) {
+                _items.Clear();
+            }
+            if (_taskList != null) {
+                _taskList.UnregisterTaskProvider(_cookie);
+            }
+
+            _workerQueueChanged.Dispose();
         }
 
         public uint Cookie {

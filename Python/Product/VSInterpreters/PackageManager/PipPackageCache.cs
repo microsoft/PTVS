@@ -103,28 +103,17 @@ namespace Microsoft.PythonTools.Interpreter {
             return cache;
         }
 
-        ~PipPackageCache() {
-            Dispose(false);
-        }
-
         public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
             }
             _isDisposed = true;
             
-            if (disposing) {
-                lock (_knownCachesLock) {
-                    if (--_userCount <= 0) {
-                        Debug.Assert(_userCount == 0);
-                        _cacheLock.Dispose();
-                        _knownCaches.Remove(_index?.AbsoluteUri ?? string.Empty);
-                    }
+            lock (_knownCachesLock) {
+                if (--_userCount <= 0) {
+                    Debug.Assert(_userCount == 0);
+                    _cacheLock.Dispose();
+                    _knownCaches.Remove(_index?.AbsoluteUri ?? string.Empty);
                 }
             }
         }
