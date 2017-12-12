@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-            private async void _envsTxtWatcherTimer_Elapsed(object state) {
+        private void _envsTxtWatcherTimer_Elapsed(object state) {
             try {
                 lock (_factories) {
                     _envsTxtWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
