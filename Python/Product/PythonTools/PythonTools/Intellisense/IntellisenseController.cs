@@ -51,7 +51,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IVsExpansionManager _expansionMgr;
         private ICompletionSession _activeSession;
         private ISignatureHelpSession _sigHelpSession;
+#pragma warning disable 618 // TODO: switch to quick info async interfaces introduced in 15.6
         private IQuickInfoSession _quickInfoSession;
+#pragma warning restore 618
         internal IOleCommandTarget _oldTarget;
         private IEditorOperations _editOps;
         private static readonly string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
