@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        public void Dispose() {
+        public virtual void Dispose() {
             if (_disposed) {
                 return;
             }
