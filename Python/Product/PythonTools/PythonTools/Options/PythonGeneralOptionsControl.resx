@@ -475,13 +475,13 @@
     <value>6, 3, 6, 3</value>
   </data>
   <data name="_invalidEncodingWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>279, 17</value>
+    <value>297, 17</value>
   </data>
   <data name="_invalidEncodingWarning.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="_invalidEncodingWarning.Text" xml:space="preserve">
-    <value>Warn when file &amp;encoding does match magic comment</value>
+    <value>Warn when file &amp;encoding does not match magic comment</value>
   </data>
   <data name="&gt;&gt;_invalidEncodingWarning.Name" xml:space="preserve">
     <value>_invalidEncodingWarning</value>
