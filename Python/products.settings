@@ -3,6 +3,9 @@
     <!-- Include Django by default -->
     <IncludeDjango Condition="'$(IncludeDjango)' == ''">true</IncludeDjango>
     
+    <!-- UNDONE: Exclude HTML editor extensions until we get an API stability guarantee from that team -->
+    <IncludeDjangoHtmlExtensions Condition="'$(IncludeDjangoHtmlExtensions)' == ''">false</IncludeDjangoHtmlExtensions>
+    
     <!-- Include IronPython by default -->
     <IncludeIronPython Condition="'$(IncludeIronPython)' == ''">true</IncludeIronPython>
     
