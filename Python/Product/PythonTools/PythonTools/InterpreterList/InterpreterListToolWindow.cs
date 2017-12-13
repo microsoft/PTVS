@@ -205,15 +205,11 @@ namespace Microsoft.PythonTools.InterpreterList {
             view.IPythonModeEnabledSetter = SetIPythonEnabled;
             view.IPythonModeEnabledGetter = QueryIPythonEnabled;
 
-            try {
-                var pep = new PipExtensionProvider(view.Factory);
-                pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
-                pep.OperationStarted += PipExtensionProvider_OperationStarted;
-                pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
-                pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
-                pep.OperationFinished += PipExtensionProvider_OperationFinished;
-                view.Extensions.Add(pep);
-            } catch (NotSupportedException) {
+            if (view.Factory.PackageManager != null) {
+                AddPepExtension(view, view.Factory, view.Factory.PackageManager);
+                foreach (var packageManager in PackageManagers.GetAlternatePackageManagers(view.Factory)) {
+                    AddPepExtension(view, view.Factory, packageManager);
+                }
             }
 
             var _withDb = view.Factory as PythonInterpreterFactoryWithDatabase;
@@ -242,6 +238,16 @@ namespace Microsoft.PythonTools.InterpreterList {
                     LogLoadException(null, ex2);
                 }
             }
+        }
+
+        private void AddPepExtension(EnvironmentView view, IPythonInterpreterFactory factory, IPackageManager packageManager) {
+            var pep = new PipExtensionProvider(factory, packageManager);
+            pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
+            pep.OperationStarted += PipExtensionProvider_OperationStarted;
+            pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
+            pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
+            pep.OperationFinished += PipExtensionProvider_OperationFinished;
+            view.Extensions.Add(pep);
         }
 
         private void LogLoadException(IEnvironmentViewExtensionProvider provider, Exception ex) {

@@ -39,21 +39,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         /// Creates a provider for managing packages through pip.
         /// </summary>
-        /// <param name="factory">The associated interpreter.</param>
-        /// <param name="index">
-        /// The index URL. Defaults to https://pypi.python.org/pypi/
-        /// </param>
-        /// <param name="indexName">
-        /// Display name of the index. Defaults to PyPI.
-        /// </param>
         public PipExtensionProvider(
-            IPythonInterpreterFactory factory
+            IPythonInterpreterFactory factory,
+            IPackageManager packageManager
         ) {
-            _factory = factory;
-            _packageManager = _factory?.PackageManager;
-            if (_packageManager == null) {
-                throw new NotSupportedException();
-            }
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            _packageManager = packageManager ?? throw new ArgumentNullException(nameof(packageManager));
         }
 
         public void Dispose() {
