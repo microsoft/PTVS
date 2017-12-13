@@ -776,6 +776,7 @@ class Thread(object):
         self.django_stepping = None
         self.is_sending = False
         self.is_importing_stdlib = False
+        self.is_importing_stdlib_warned = False
 
         # stackless changes
         if stackless is not None:
@@ -935,9 +936,12 @@ class Thread(object):
         co_name = f_code.co_name
         co_filename = f_code.co_filename
 
-        # If we're importing stdlib, don't trace nested calls until we return from the import that started it
+        # If we're importing stdlib, don't trace nested calls until we return from the import that started it,
+        # but notify the user if these nested calls end up in non-stdlib code.
         if self.is_importing_stdlib:
-            # we used to notify the user, but don't anymore because this is too verbose and slow
+            if not self.is_importing_stdlib_warned and not co_filename.startswith('<') and should_debug_code(f_code):
+                self.is_importing_stdlib_warned = True
+                debug_output.write('Standard library module invoked user code during import; breakpoints disabled for invoked code.\n')
             return self.prev_trace_func
 
         if co_name == '<module>' and co_filename not in ['<string>', '<stdin>']:
