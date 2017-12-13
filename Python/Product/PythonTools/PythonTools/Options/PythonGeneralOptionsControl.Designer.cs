@@ -44,15 +44,15 @@ namespace Microsoft.PythonTools.Options {
             resources.ApplyResources(this.tableLayoutPanel3, "tableLayoutPanel3");
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForVirtualEnvCreate, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForPackageInstallation, 0, 1);
+            this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this._autoAnalysis, 0, 3);
+            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 4);
             this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 5);
+            this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 6);
+            this.tableLayoutPanel3.Controls.Add(this._invalidEncodingWarning, 0, 7);
             this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 8);
             this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 8);
-            this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 2);
-            this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 6);
-            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 4);
             this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 10);
-            this.tableLayoutPanel3.Controls.Add(this._invalidEncodingWarning, 0, 7);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             // 
             // _showOutputWindowForVirtualEnvCreate
