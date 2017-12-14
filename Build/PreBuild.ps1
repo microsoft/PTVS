@@ -32,18 +32,8 @@ $outdir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPat
 
 pushd "$buildroot\Build"
 try {
-    if ($source) {
-        .\nuget.exe sources add -Name PreBuildSource -Source $source
-    }
-    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", $outdir
-
-    try {
-        Start-Process -Wait -NoNewWindow .\nuget.exe -ErrorAction Stop -ArgumentList $arglist
-    } finally {
-        if ($source) {
-            .\nuget.exe sources remove -Name PreBuildSource
-        }
-    }
+    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", $outdir, "-Config", "$vstarget\nuget.config", "-NonInteractive"
+    Start-Process -Wait -NoNewWindow .\nuget.exe -ErrorAction Stop -ArgumentList $arglist
 
     $versions = @{}
     ([xml](gc "$vstarget\packages.config")).packages.package | %{ $versions[$_.id] = $_.version }
