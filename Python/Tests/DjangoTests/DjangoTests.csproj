@@ -36,6 +36,7 @@
     <AssemblyName>DjangoTests</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <DefineConstants Condition="$(IncludeDjangoHtmlExtensions) == 'true'">DJANGO_HTML_EDITOR;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -57,12 +58,6 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Web" />
-    <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.VisualStudio.Html.Package.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <Choose>
     <When Condition="$(VSTarget) == '15.0'">
@@ -116,10 +111,25 @@
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
       <Name>Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\Django.Analysis\Django.Analysis.csproj">
-      <Project>{74d0775f-2d1e-4685-9bd4-0658f496f8dc}</Project>
-      <Name>Django.Analysis</Name>
-    </ProjectReference>
   </ItemGroup>
+  <Choose>
+    <When Condition="$(IncludeDjangoHtmlExtensions) == 'true'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.VisualStudio.Html.Package.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+      <ItemGroup>
+        <ProjectReference Include="..\..\Product\Django.Analysis\Django.Analysis.csproj">
+          <Project>{74d0775f-2d1e-4685-9bd4-0658f496f8dc}</Project>
+          <Name>Django.Analysis</Name>
+          <IncludeInVSIX>True</IncludeInVSIX>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>
