@@ -70,7 +70,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     if (pm != null) {
                         pm.SetInterpreterFactory(this);
                         pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                        // TODO: do we need to worry about the non-primary package managers?
                         PackageManager = pm;
                     }
                 } catch (NotSupportedException) {

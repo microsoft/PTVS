@@ -205,11 +205,8 @@ namespace Microsoft.PythonTools.InterpreterList {
             view.IPythonModeEnabledSetter = SetIPythonEnabled;
             view.IPythonModeEnabledGetter = QueryIPythonEnabled;
 
-            if (view.Factory.PackageManager != null) {
-                AddPepExtension(view, view.Factory, view.Factory.PackageManager);
-                foreach (var packageManager in PackageManagers.GetAlternatePackageManagers(view.Factory)) {
-                    AddPepExtension(view, view.Factory, packageManager);
-                }
+            foreach (var packageManager in view.Factory.GetAllPackageManagers()) {
+                AddPipExtension(view, view.Factory, packageManager);
             }
 
             var _withDb = view.Factory as PythonInterpreterFactoryWithDatabase;
@@ -240,7 +237,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
         }
 
-        private void AddPepExtension(EnvironmentView view, IPythonInterpreterFactory factory, IPackageManager packageManager) {
+        private void AddPipExtension(EnvironmentView view, IPythonInterpreterFactory factory, IPackageManager packageManager) {
             var pep = new PipExtensionProvider(factory, packageManager);
             pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
             pep.OperationStarted += PipExtensionProvider_OperationStarted;
