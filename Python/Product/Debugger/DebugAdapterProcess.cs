@@ -25,7 +25,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost;
+using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
