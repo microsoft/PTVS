@@ -16,7 +16,7 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost;
+using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 
 namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]

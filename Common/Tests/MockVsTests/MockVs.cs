@@ -503,7 +503,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     "Microsoft.VisualStudio.Text.Internal.dll",
                     "Microsoft.VisualStudio.Utilities.dll",
                     "Microsoft.VisualStudio.Workspace.dll",
-                    "Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost.dll"
+                    "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll"
                 }, StringComparer.OrdinalIgnoreCase);
 
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
