@@ -123,7 +123,7 @@
         </Reference>
       </ItemGroup>
       <ItemGroup>
-        <ProjectReference Include="..\Django.Analysis\Django.Analysis.csproj">
+        <ProjectReference Include="..\..\Product\Django.Analysis\Django.Analysis.csproj">
           <Project>{74d0775f-2d1e-4685-9bd4-0658f496f8dc}</Project>
           <Name>Django.Analysis</Name>
           <IncludeInVSIX>True</IncludeInVSIX>
