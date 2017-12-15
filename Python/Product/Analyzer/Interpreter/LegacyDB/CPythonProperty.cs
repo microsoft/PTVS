@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class CPythonProperty : IBuiltinProperty, ILocatedMember {
         private readonly string _doc;
         private IPythonType _type;

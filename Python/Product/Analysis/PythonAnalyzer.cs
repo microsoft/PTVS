@@ -59,7 +59,6 @@ namespace Microsoft.PythonTools.Analysis {
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
         private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
-        private ExceptionDispatchInfo _loadKnownTypesException;
         private Dictionary<IProjectEntry[], AggregateProjectEntry> _aggregates = new Dictionary<IProjectEntry[], AggregateProjectEntry>(AggregateComparer.Instance);
 
         /// <summary>
@@ -113,7 +112,7 @@ namespace Microsoft.PythonTools.Analysis {
             _langVersion = factory.GetLanguageVersion();
             _disposeInterpreter = pythonInterpreter == null;
             _interpreter = pythonInterpreter ?? factory.CreateInterpreter();
-            _builtinName = _langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
+            _builtinName = BuiltinTypeId.Unknown.GetModuleName(_langVersion);
             _modules = new ModuleTable(this, _interpreter);
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _modulesWithUnresolvedImports = new HashSet<ModuleInfo>();
@@ -127,64 +126,25 @@ namespace Microsoft.PythonTools.Analysis {
 
             _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope, true);
             AnalysisLog.NewUnit(_evalUnit);
-
-            try {
-                LoadInitialKnownTypes();
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                // This will be rethrown in LoadKnownTypesAsync
-                _loadKnownTypesException = ExceptionDispatchInfo.Capture(ex);
-            }
-        }
-
-        private void LoadInitialKnownTypes() {
-            if (_builtinModule != null) {
-                Debug.Fail("LoadInitialKnownTypes should only be called once");
-                return;
-            }
-
-            var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
-            _builtinModule = _modules.GetBuiltinModule(fallbackDb.GetModule(SharedDatabaseState.BuiltinName2x));
-
-            FinishLoadKnownTypes(fallbackDb);
         }
 
         private async Task LoadKnownTypesAsync() {
-            if (_loadKnownTypesException != null) {
-                _loadKnownTypesException.Throw();
-            }
-
             _itemCache.Clear();
 
-            Debug.Assert(_builtinModule != null, "LoadInitialKnownTypes was not called");
-            if (_builtinModule == null) {
-                LoadInitialKnownTypes();
-            }
+            var fallback = new FallbackBuiltinModule(_langVersion);
 
             var moduleRef = await Modules.TryImportAsync(_builtinName).ConfigureAwait(false);
             if (moduleRef != null) {
                 _builtinModule = (BuiltinModule)moduleRef.Module;
             } else {
+                _builtinModule = new BuiltinModule(fallback, this);
                 Modules[_builtinName] = new ModuleReference(_builtinModule, _builtinName);
             }
 
             Modules.AddBuiltinModuleWrapper("sys", SysModuleInfo.Wrap);
             Modules.AddBuiltinModuleWrapper("typing", TypingModuleInfo.Wrap);
 
-            FinishLoadKnownTypes(null);
-        }
-
-        private void FinishLoadKnownTypes(PythonTypeDatabase db) {
-            _itemCache.Clear();
-
-            if (db == null) {
-                db = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
-                Types = KnownTypes.Create(this, db);
-            } else {
-                Types = KnownTypes.CreateDefault(this, db);
-            }
+            Types = KnownTypes.Create(this, fallback);
 
             ClassInfos = (IKnownClasses)Types;
             _noneInst = (ConstantInfo)GetCached(

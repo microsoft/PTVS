@@ -16,7 +16,7 @@
 
 using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools {
     public class CompletionOptions {
         /// <summary>
         /// The set of options used by the analyzer.
@@ -103,24 +103,16 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public bool FilterCompletions { get; set; }
 
-        /// <summary>
-        /// The search mode to use for completions.
-        /// </summary>
-        /*
-        public FuzzyMatchMode SearchMode { get; set; }
-        */
         public CompletionOptions() {
             MemberOptions = GetMemberOptions.IncludeStatementKeywords |
                 GetMemberOptions.IncludeExpressionKeywords |
                 GetMemberOptions.HideAdvancedMembers;
             FilterCompletions = true;
-            //SearchMode = FuzzyMatchMode.Default;
         }
 
         public CompletionOptions(GetMemberOptions options) {
             MemberOptions = options;
             FilterCompletions = true;
-            //SearchMode = FuzzyMatchMode.Default;
         }
 
         /// <summary>
@@ -133,7 +125,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 TabSize = TabSize,
                 IndentSize = IndentSize,
                 FilterCompletions = FilterCompletions,
-                //SearchMode = SearchMode
             };
         }
 

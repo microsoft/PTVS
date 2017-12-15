@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,27 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
-    /// The data passed in the <see cref="PythonTypeDatabase.DatabaseReplaced"/>
-    /// event.
+    /// Exportable interface for objects that provide package managers.
     /// </summary>
-    public class DatabaseReplacedEventArgs : EventArgs {
-        readonly PythonTypeDatabase _newDatabase;
-
-        public DatabaseReplacedEventArgs(PythonTypeDatabase newDatabase) {
-            _newDatabase = newDatabase;
-        }
-
-        /// <summary>
-        /// The updated database.
-        /// </summary>
-        public PythonTypeDatabase NewDatabase {
-            get {
-                return _newDatabase;
-            }
-        }
+    public interface IPackageManagerProvider {
+        IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory);
     }
 }

@@ -6755,7 +6755,7 @@ x = ClsB.x");
             analyzer.WaitForAnalysis();
             analyzer.AssertIsInstance(entryB, "x");
 
-            entryA.Parse(entryA.Tree.LanguageVersion, @"class ClsA(object): x = 123");
+            analyzer.UpdateModule(entryA, @"class ClsA(object): x = 123");
             entryA.Analyze(CancellationToken.None, true);
             analyzer.WaitForAnalysis();
             analyzer.AssertIsInstance(entryB, "x", BuiltinTypeId.Int);

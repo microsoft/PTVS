@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public string Description { get; private set; }
         public InterpreterConfiguration Configuration { get; private set; }
         public Guid Id { get; private set; }
-        public IPackageManager PackageManager => null;
+        public void NotifyImportNamesChanged() { }
 
         public IPythonInterpreter CreateInterpreter() {
             return new NotFoundInterpreter();

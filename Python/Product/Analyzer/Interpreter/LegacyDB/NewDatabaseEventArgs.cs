@@ -14,29 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonConstant : IPythonConstant {
-        private readonly IPythonType _type;
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
+    /// <summary>
+    /// The data passed in the <see cref="PythonTypeDatabase.DatabaseReplaced"/>
+    /// event.
+    /// </summary>
+    public class DatabaseReplacedEventArgs : EventArgs {
+        readonly PythonTypeDatabase _newDatabase;
 
-        public CPythonConstant(IPythonType type) {
-            _type = type;
+        public DatabaseReplacedEventArgs(PythonTypeDatabase newDatabase) {
+            _newDatabase = newDatabase;
         }
 
-        #region IPythonConstant Members
-
-        public IPythonType Type {
-            get { return _type; }
+        /// <summary>
+        /// The updated database.
+        /// </summary>
+        public PythonTypeDatabase NewDatabase {
+            get {
+                return _newDatabase;
+            }
         }
-
-        #endregion
-
-        #region IMember Members
-
-        public PythonMemberType MemberType {
-            get { return PythonMemberType.Constant; }
-        }
-
-        #endregion
     }
 }

@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Ast;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class CPythonInterpreter : IPythonInterpreter {
         readonly Version _langVersion;
         private PythonInterpreterFactoryWithDatabase _factory;
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 throw new KeyNotFoundException(string.Format("{0} ({1})", id, (int)id));
             }
 
-            var name = SharedDatabaseState.GetBuiltinTypeName(id, _typeDb.LanguageVersion);
+            var name = id.GetTypeName(_typeDb.LanguageVersion);
             var res = _typeDb.BuiltinModule.GetAnyMember(name) as IPythonType;
             if (res == null) {
                 throw new KeyNotFoundException(string.Format("{0} ({1})", id, (int)id));

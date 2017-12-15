@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.Project {
     internal class InterpretersNode : HierarchyNode {
         private readonly IInterpreterRegistryService _interpreterService;
         internal readonly IPythonInterpreterFactory _factory;
+        internal readonly IPackageManager _packageManager;
         private readonly bool _isReference;
         private readonly bool _canDelete, _canRemove;
         private readonly string _captionSuffix;
@@ -73,8 +74,11 @@ namespace Microsoft.PythonTools.Project {
             _canRemove = canRemove.HasValue ? canRemove.Value : !isGlobalDefault;
             _captionSuffix = isGlobalDefault ? Strings.GlobalDefaultSuffix : "";
 
-            if (_factory.PackageManager != null) {
-                _factory.PackageManager.InstalledPackagesChanged += InstalledPackagesChanged;
+            var interpreterOpts = project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            _packageManager = interpreterOpts?.GetPackageManagers(factory).FirstOrDefault();
+            if (_packageManager != null) {
+                _packageManager.InstalledPackagesChanged += InstalledPackagesChanged;
+                _packageManager.EnableNotifications();
             }
         }
 
@@ -102,8 +106,8 @@ namespace Microsoft.PythonTools.Project {
 
         public override void Close() {
             if (!_disposed) {
-                if (_factory?.PackageManager != null) {
-                    _factory.PackageManager.InstalledPackagesChanged -= InstalledPackagesChanged;
+                if (_packageManager != null) {
+                    _packageManager.InstalledPackagesChanged -= InstalledPackagesChanged;
                 }
             }
             _disposed = true;
@@ -116,7 +120,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void RefreshPackages() {
-            RefreshPackagesAsync(_factory?.PackageManager)
+            RefreshPackagesAsync(_packageManager)
                 .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
@@ -181,7 +185,7 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (prevChecked && anyChanges) {
-                    var withDb = _factory as IPythonInterpreterFactoryWithDatabase;
+                    var withDb = _factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
                     if (withDb != null) {
                         withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
                     }
@@ -206,7 +210,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public void ResumeWatching() {
             _suppressPackageRefresh = false;
-            RefreshPackagesAsync(_factory?.PackageManager)
+            RefreshPackagesAsync(_packageManager)
                 .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
@@ -517,7 +521,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override object GetProperty(int propId) {
             if (propId == (int)__VSHPROPID.VSHPROPID_Expandable) {
-                if (_factory?.PackageManager == null) {
+                if (_packageManager == null) {
                     // No package manager, so we are not expandable
                     return false;
                 }

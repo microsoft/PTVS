@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _interpreterFactory = factory ?? throw new ArgumentNullException(nameof(factory));
-            var withDb = _interpreterFactory as IPythonInterpreterFactoryWithDatabase;
+            var withDb = _interpreterFactory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 withDb.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
             }
@@ -389,7 +389,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Dispose() {
             _disposing = true;
 
-            var withDb = _interpreterFactory as IPythonInterpreterFactoryWithDatabase;
+            var withDb = _interpreterFactory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 withDb.NewDatabaseAvailable -= Factory_NewDatabaseAvailable;
             }

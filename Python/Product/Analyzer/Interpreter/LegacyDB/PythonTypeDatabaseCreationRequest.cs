@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Interpreter {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// <summary>
     /// Provides information to PythonTypeDatabase on how to generate a
     /// database.

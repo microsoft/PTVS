@@ -34,6 +34,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public string SearchHelpText => throw new NotImplementedException();
 
+        public string UniqueKey => "none";
+
+        public int Priority => int.MaxValue;
+
         public event EventHandler InstalledFilesChanged { add { } remove { } }
         public event EventHandler InstalledPackagesChanged { add { } remove { } }
 
@@ -94,5 +98,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public string GetInstallCommandDisplayName(string searchQuery) {
             return string.Empty;
         }
+
+        public void EnableNotifications() { }
+
+        public void DisableNotifications() { }
     }
 }

@@ -22,9 +22,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Interpreter {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// <summary>
     /// Cached state that's shared between multiple PythonTypeDatabase instances.
     /// </summary>
@@ -48,13 +48,11 @@ namespace Microsoft.PythonTools.Interpreter {
         private IPythonType _objectType;
         internal readonly SharedDatabaseState _inner;
 
-        internal const string BuiltinName2x = "__builtin__";
-        internal const string BuiltinName3x = "builtins";
         private readonly string _builtinName;
 
         public SharedDatabaseState(Version languageVersion) {
             _langVersion = languageVersion;
-            _builtinName = (_langVersion.Major == 3) ? BuiltinName3x : BuiltinName2x;
+            _builtinName = BuiltinTypeId.Unknown.GetModuleName(_langVersion);
         }
 
         public SharedDatabaseState(Version languageVersion, string databaseDirectory)
@@ -76,7 +74,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (_inner.BuiltinModule != null) {
                 _builtinName = _inner.BuiltinModule.Name;
             } else {
-                _builtinName = (_langVersion.Major == 3) ? BuiltinName3x : BuiltinName2x;
+                _builtinName = BuiltinTypeId.Unknown.GetModuleName(_langVersion);
             }
         }
 
@@ -99,7 +97,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             _modules[_builtinName] = _builtinModule;
             if (_isDefaultDb && _langVersion.Major == 3) {
-                _modules[BuiltinName2x] = _builtinModule;
+                _modules[BuiltinTypeId.Unknown.GetModuleName(PythonLanguageVersion.V27)] = _builtinModule;
             }
 
             foreach (var file in Directory.GetFiles(databaseDirectory)) {
@@ -107,7 +105,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 } else if (String.Equals(Path.GetFileNameWithoutExtension(file), _builtinName, StringComparison.OrdinalIgnoreCase)) {
                     continue;
-                } else if (_isDefaultDb && String.Equals(Path.GetFileNameWithoutExtension(file), BuiltinName2x, StringComparison.OrdinalIgnoreCase)) {
+                } else if (_isDefaultDb && String.Equals(Path.GetFileNameWithoutExtension(file), BuiltinTypeId.Unknown.GetModuleName(PythonLanguageVersion.V27), StringComparison.OrdinalIgnoreCase)) {
                     continue;
                 }
 
@@ -158,7 +156,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            if (name == BuiltinName2x || name == BuiltinName3x) {
+            if (name == BuiltinTypeId.Unknown.GetModuleName(PythonLanguageVersion.V27) ||
+                name == BuiltinTypeId.Unknown.GetModuleName(PythonLanguageVersion.V35)) {
                 // Handle both names for builtins if the correct one was not
                 // found above.
                 var mod = BuiltinModule;
@@ -381,57 +380,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public string GetBuiltinTypeName(BuiltinTypeId id) {
-            return GetBuiltinTypeName(id, _langVersion);
-        }
-
-        public static string GetBuiltinTypeName(BuiltinTypeId id, Version languageVersion) {
-            string name;
-            switch (id) {
-                case BuiltinTypeId.Bool: name = "bool"; break;
-                case BuiltinTypeId.Complex: name = "complex"; break;
-                case BuiltinTypeId.Dict: name = "dict"; break;
-                case BuiltinTypeId.Float: name = "float"; break;
-                case BuiltinTypeId.Int: name = "int"; break;
-                case BuiltinTypeId.List: name = "list"; break;
-                case BuiltinTypeId.Long: name = languageVersion.Major == 3 ? "int" : "long"; break;
-                case BuiltinTypeId.Object: name = "object"; break;
-                case BuiltinTypeId.Set: name = "set"; break;
-                case BuiltinTypeId.Str: name = "str"; break;
-                case BuiltinTypeId.Unicode: name = languageVersion.Major == 3 ? "str" : "unicode"; break;
-                case BuiltinTypeId.Bytes: name = languageVersion.Major == 3 ? "bytes" : "str"; break;
-                case BuiltinTypeId.Tuple: name = "tuple"; break;
-                case BuiltinTypeId.Type: name = "type"; break;
-
-                case BuiltinTypeId.BuiltinFunction: name = "builtin_function"; break;
-                case BuiltinTypeId.BuiltinMethodDescriptor: name = "builtin_method_descriptor"; break;
-                case BuiltinTypeId.DictKeys: name = "dict_keys"; break;
-                case BuiltinTypeId.DictValues: name = "dict_values"; break;
-                case BuiltinTypeId.DictItems: name = "dict_items"; break;
-                case BuiltinTypeId.Function: name = "function"; break;
-                case BuiltinTypeId.Generator: name = "generator"; break;
-                case BuiltinTypeId.NoneType: name = "NoneType"; break;
-                case BuiltinTypeId.Ellipsis: name = "ellipsis"; break;
-                case BuiltinTypeId.Module: name = "module_type"; break;
-                case BuiltinTypeId.ListIterator: name = "list_iterator"; break;
-                case BuiltinTypeId.TupleIterator: name = "tuple_iterator"; break;
-                case BuiltinTypeId.SetIterator: name = "set_iterator"; break;
-                case BuiltinTypeId.StrIterator: name = "str_iterator"; break;
-                case BuiltinTypeId.UnicodeIterator: name = languageVersion.Major == 3 ? "str_iterator" : "unicode_iterator"; break;
-                case BuiltinTypeId.BytesIterator: name = languageVersion.Major == 3 ? "bytes_iterator" : "str_iterator"; break;
-                case BuiltinTypeId.CallableIterator: name = "callable_iterator"; break;
-
-                case BuiltinTypeId.Property: name = "property"; break;
-                case BuiltinTypeId.ClassMethod: name = "classmethod"; break;
-                case BuiltinTypeId.StaticMethod: name = "staticmethod"; break;
-                case BuiltinTypeId.FrozenSet: name = "frozenset"; break;
-
-                case BuiltinTypeId.Unknown:
-                default:
-                    return null;
-            }
-            return name;
-        }
+        public string GetBuiltinTypeName(BuiltinTypeId id) => id.GetTypeName(_langVersion);
 
         public bool BeginModuleLoad(IPythonModule module, int millisecondsTimeout) {
 #if DEBUG

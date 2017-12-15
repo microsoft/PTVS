@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
 
@@ -44,5 +45,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         void RemoveConfigurableInterpreter(string id);
         bool IsConfigurable(string id);
+
+        IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory);
     }
 }

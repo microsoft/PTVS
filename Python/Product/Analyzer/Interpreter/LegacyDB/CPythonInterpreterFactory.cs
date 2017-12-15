@@ -16,8 +16,8 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
+    public sealed class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
         public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
             base(configuration, options) { }
 

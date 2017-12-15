@@ -23,6 +23,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -40,8 +41,11 @@ namespace PythonToolsUITests {
 
         static DefaultInterpreterSetter InitPython2(PythonVisualStudioApp app) {
             var dis = app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
+            var pm = app.OptionsService.GetPackageManagers(dis.CurrentDefault).FirstOrDefault();
             try {
-                dis.CurrentDefault.PipInstall("-U virtualenv");
+                if (!pm.GetInstalledPackageAsync(new PackageSpec("virtualenv"), CancellationTokens.After60s).WaitAndUnwrapExceptions().IsValid) {
+                    pm.InstallAsync(new PackageSpec("virtualenv"), new TestPackageManagerUI(), CancellationTokens.After60s).WaitAndUnwrapExceptions();
+                }
                 var r = dis;
                 dis = null;
                 return r;
@@ -326,8 +330,9 @@ namespace PythonToolsUITests {
 
         public void CreateVEnv(PythonVisualStudioApp app) {
             using (var dis = InitPython3(app)) {
-                if (dis.CurrentDefault.FindModules("virtualenv").Contains("virtualenv")) {
-                    dis.CurrentDefault.PipUninstall("virtualenv");
+                var pm = app.OptionsService.GetPackageManagers(dis.CurrentDefault).FirstOrDefault();
+                if (pm.GetInstalledPackageAsync(new PackageSpec("virtualenv"), CancellationTokens.After60s).WaitAndUnwrapExceptions().IsValid) {
+                    pm.UninstallAsync(new PackageSpec("virtualenv"), new TestPackageManagerUI(), CancellationTokens.After60s).WaitAndUnwrapExceptions();
                 }
 
                 Assert.AreEqual(0, Microsoft.PythonTools.Analysis.ModulePath.GetModulesInLib(dis.CurrentDefault.Configuration)

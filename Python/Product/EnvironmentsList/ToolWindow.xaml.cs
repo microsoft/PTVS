@@ -313,7 +313,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void StartRefreshDB_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
-            var factory = view == null ? null : view.Factory as IPythonInterpreterFactoryWithDatabase;
+            var factory = view?.Factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
             e.CanExecute = factory != null &&
                 !view.IsRefreshingDB &&
                 File.Exists(factory.Configuration.InterpreterPath);
@@ -331,7 +331,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             view.IsRefreshDBProgressIndeterminate = true;
 
             var tcs = new TaskCompletionSource<int>();
-            ((IPythonInterpreterFactoryWithDatabase)view.Factory).GenerateDatabase(
+            ((Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase)view.Factory).GenerateDatabase(
                 Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ?
                     GenerateDatabaseOptions.None :
                     GenerateDatabaseOptions.SkipUnchanged,

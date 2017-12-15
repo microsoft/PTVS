@@ -38,10 +38,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public string DatabasePath { get; set; }
 
-        public IPackageManager PackageManager { get; set; }
-
-        public bool NoDatabase { get; set; }
-
         public bool UseExistingCache { get; set; } = true;
 
         public TraceLevel TraceLevel { get; set; } = TraceLevel.Info;
@@ -53,10 +49,8 @@ namespace Microsoft.PythonTools.Interpreter {
             TraceLevel level;
             var opts = new InterpreterFactoryCreationOptions {
                 DatabasePath = properties.TryGetValue("DatabasePath", out o) ? (o as string) : null,
-                PackageManager = null,
                 UseExistingCache = ReadBool(properties, nameof(UseExistingCache)) ?? true,
-                WatchFileSystem = ReadBool(properties, nameof(WatchFileSystem)) ?? false,
-                NoDatabase = ReadBool(properties, nameof(NoDatabase)) ?? false
+                WatchFileSystem = ReadBool(properties, nameof(WatchFileSystem)) ?? false
             };
 
             if (properties.TryGetValue(nameof(TraceLevel), out o) && Enum.TryParse(o as string, true, out level)) {
@@ -73,7 +67,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
             d[nameof(DatabasePath)] = DatabasePath;
             d[nameof(UseExistingCache)] = UseExistingCache;
-            d[nameof(NoDatabase)] = NoDatabase;
             if (!suppressFileWatching) {
                 d[nameof(WatchFileSystem)] = WatchFileSystem;
             }

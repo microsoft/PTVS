@@ -15,24 +15,28 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonBuiltinModule : CPythonModule, IBuiltinPythonModule {
-        public CPythonBuiltinModule(SharedDatabaseState typeDb, string moduleName, string filename, bool isBuiltin)
-            : base(typeDb, moduleName, filename, isBuiltin) {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
+    class CPythonConstant : IPythonConstant {
+        private readonly IPythonType _type;
+
+        public CPythonConstant(IPythonType type) {
+            _type = type;
         }
 
-        public IMember GetAnyMember(string name) {
-            if (string.IsNullOrEmpty(name)) {
-                return null;
-            }
+        #region IPythonConstant Members
 
-            EnsureLoaded();
-
-            IMember res;
-            if (_members.TryGetValue(name, out res) || (_hiddenMembers != null && _hiddenMembers.TryGetValue(name, out res))) {
-                return res;
-            }
-            return null;
+        public IPythonType Type {
+            get { return _type; }
         }
+
+        #endregion
+
+        #region IMember Members
+
+        public PythonMemberType MemberType {
+            get { return PythonMemberType.Constant; }
+        }
+
+        #endregion
     }
 }

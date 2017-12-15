@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             DefaultLookupOptions = LookupOptions.Normal;
 
             _unknownType = Interpreter.GetBuiltinType(BuiltinTypeId.Unknown) ??
-                new FallbackBuiltinPythonType(Ast.LanguageVersion, BuiltinTypeId.Unknown);
+                new FallbackBuiltinPythonType(new FallbackBuiltinModule(Ast.LanguageVersion), BuiltinTypeId.Unknown);
 
             _scopes = new Stack<Dictionary<string, IMember>>();
             _builtinModule = builtinModule == null ? new Lazy<IPythonModule>(ImportBuiltinModule) : new Lazy<IPythonModule>(() => builtinModule);
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         private IPythonModule ImportBuiltinModule() {
-            var modname = Ast.LanguageVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
+            var modname = BuiltinTypeId.Unknown.GetModuleName(Ast.LanguageVersion);
             var mod = Interpreter.ImportModule(modname);
             Debug.Assert(mod != null, "Failed to import " + modname);
             mod?.Imported(Context);

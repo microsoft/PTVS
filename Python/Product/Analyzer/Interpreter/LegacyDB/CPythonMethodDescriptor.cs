@@ -16,7 +16,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class CPythonMethodDescriptor : IPythonMethodDescriptor {
         private readonly string _name;
         private readonly CPythonFunction _func;

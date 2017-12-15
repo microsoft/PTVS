@@ -16,7 +16,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class CPythonParameterInfo : IParameterInfo {
         private readonly string _name, _doc, _defaultValue;
         private readonly bool _isSplat, _isKeywordSplat;

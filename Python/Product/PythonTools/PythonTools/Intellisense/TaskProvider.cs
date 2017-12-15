@@ -158,12 +158,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal TaskProviderItem FromUnresolvedImport(
             IServiceProvider serviceProvider, 
-            IPythonInterpreterFactoryWithDatabase factory,
+            IPythonInterpreterFactory factory,
             string importName,
             SourceSpan span
         ) {
             string message;
-            if (factory != null && !factory.IsCurrent) {
+            if ((factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase)?.IsCurrent == false) {
                 message = Strings.UnresolvedModuleTooltipRefreshing.FormatUI(importName);
             } else {
                 message = Strings.UnresolvedModuleTooltip.FormatUI(importName);

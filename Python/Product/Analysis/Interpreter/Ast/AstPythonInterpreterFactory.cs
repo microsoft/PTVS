@@ -28,7 +28,7 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     public class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
-        private readonly string _databasePath;
+        private readonly string _databasePath, _searchPathCachePath;
         private readonly object _searchPathsLock = new object();
         private string[] _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
@@ -58,23 +58,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             _databasePath = CreationOptions.DatabasePath;
             if (!string.IsNullOrEmpty(_databasePath)) {
+                _searchPathCachePath = PathUtils.GetAbsoluteFilePath(_databasePath, "database.path");
+
                 _log = new AnalysisLogWriter(PathUtils.GetAbsoluteFilePath(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
                 _log.Rotate(LogRotationSize);
                 _log.MinimumLevel = CreationOptions.TraceLevel;
             }
             _skipCache = !CreationOptions.UseExistingCache;
-
-            if (!GlobalInterpreterOptions.SuppressPackageManagers) {
-                try {
-                    var pm = CreationOptions.PackageManager;
-                    if (pm != null) {
-                        pm.SetInterpreterFactory(this);
-                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                        PackageManager = pm;
-                    }
-                } catch (NotSupportedException) {
-                }
-            }
         }
 
         public void Dispose() {
@@ -94,9 +84,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (disposing) {
                     if (_log != null) {
                         _log.Dispose();
-                    }
-                    if (PackageManager != null) {
-                        PackageManager.InstalledPackagesChanged -= PackageManager_InstalledFilesChanged;
                     }
                 }
             }
@@ -119,15 +106,26 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public PythonLanguageVersion LanguageVersion { get; }
 
-        public IPackageManager PackageManager { get; }
-
         public event EventHandler ImportableModulesChanged;
 
-        private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
+        public void NotifyImportNamesChanged() {
             lock (_searchPathsLock) {
                 _searchPaths = null;
                 _searchPathPackages = null;
             }
+
+            if (File.Exists(_searchPathCachePath)) {
+                for (int retries = 5; retries > 0; --retries) {
+                    try {
+                        File.Delete(_searchPathCachePath);
+                        break;
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    }
+                    Thread.Sleep(10);
+                }
+            }
+
             ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -372,7 +370,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             try {
-                return PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(Configuration.InterpreterPath)
+                return PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath)
                     .WaitAndUnwrapExceptions()
                     .MaybeEnumerate()
                     .Select(p => p.Path);
@@ -381,7 +379,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        internal IEnumerable<string> GetSearchPaths() {
+        public IEnumerable<string> GetSearchPaths() {
             var sp = _searchPaths;
             if (sp == null) {
                 lock (_searchPathsLock) {

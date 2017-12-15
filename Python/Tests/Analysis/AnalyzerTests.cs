@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
@@ -454,7 +455,7 @@ namespace AnalysisTests {
         [TestMethod, Priority(0)]
         public async Task GetDatabasePaths() {
             foreach (var version in PythonPaths.Versions) {
-                var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(version.InterpreterPath);
+                var paths = await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(version.InterpreterPath);
                 AssertUtil.ContainsAtLeast(
                     paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
                     new[] {
@@ -491,7 +492,7 @@ namespace AnalysisTests {
             }
 
             var interpreter = Path.Combine(env, "Scripts", "python.exe");
-            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(interpreter);
+            var paths = await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(interpreter);
             AssertUtil.ContainsAtLeast(
                 paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
                 new[] {
@@ -533,7 +534,7 @@ namespace AnalysisTests {
             }
 
             var interpreter = Path.Combine(env, "Scripts", "python.exe");
-            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(interpreter);
+            var paths = await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(interpreter);
             AssertUtil.ContainsAtLeast(
                 paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
                 new[] {
@@ -571,7 +572,7 @@ namespace AnalysisTests {
             }
 
             var interpreter = Path.Combine(env, "Scripts", "python.exe");
-            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(interpreter);
+            var paths = await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(interpreter);
             AssertUtil.ContainsAtLeast(
                 paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
                 new[] {
@@ -612,7 +613,7 @@ namespace AnalysisTests {
             }
 
             var interpreter = Path.Combine(env, "Scripts", "python.exe");
-            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(interpreter);
+            var paths = await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(interpreter);
             AssertUtil.ContainsAtLeast(
                 paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
                 new[] {

@@ -18,7 +18,6 @@ using System;
 using System.IO;
 using System.Text;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -33,25 +32,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public static IPythonInterpreterFactory CreateInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options = null) {
             options = options?.Clone() ?? new InterpreterFactoryCreationOptions();
 
-            if (string.IsNullOrEmpty(options.DatabasePath)) {
-                options.DatabasePath = Path.Combine(
-                    PythonTypeDatabase.CompletionDatabasePath,
-                    GetRelativePathForConfigurationId(configuration.Id)
-                );
-            }
-
-            if (options.NoDatabase) {
-                // Use the (currenty experimental) non-database backed factory
-                var fact = new Ast.AstPythonInterpreterFactory(configuration, options);
-                return fact;
-            } else {
-                // Use the database-backed factory
-                var fact = new CPythonInterpreterFactory(configuration, options);
-                if (options.WatchFileSystem) {
-                    fact.BeginRefreshIsCurrent();
-                }
-                return fact;
-            }
+            return new Ast.AstPythonInterpreterFactory(configuration, options);
         }
 
         /// <summary>
@@ -68,24 +49,13 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// Creates a new interpreter factory with the specified database path.
-        /// This factory is suitable for analysis, but not execution.
-        /// </summary>
-        public static PythonInterpreterFactoryWithDatabase CreateAnalysisInterpreterFactory(
-            Version languageVersion,
-            string description,
-            params string[] databasePaths) {
-            return new AnalysisOnlyInterpreterFactory(languageVersion, databasePaths);
-        }
-
-        /// <summary>
         /// Creates a new interpreter factory with the default database. This
         /// factory is suitable for analysis, but not execution.
         /// </summary>
-        public static PythonInterpreterFactoryWithDatabase CreateAnalysisInterpreterFactory(
+        public static IPythonInterpreterFactory CreateAnalysisInterpreterFactory(
             Version languageVersion,
             string description = null) {
-            return new AnalysisOnlyInterpreterFactory(languageVersion, description);
+            return new Ast.AstPythonInterpreterFactory(null, null);
         }
     }
 }

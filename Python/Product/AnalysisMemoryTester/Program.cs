@@ -35,8 +35,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             Console.WriteLine("Each line of the script file contains one of the following commands:");
             Console.WriteLine();
             Console.WriteLine("== Configuration Commands ==");
-            Console.WriteLine(" python <version in x.y format>");
-            Console.WriteLine(" db <relative path to completion DB from CWD>");
+            Console.WriteLine(" python <version in x.y format> <interpreter path>");
             Console.WriteLine();
             Console.WriteLine("== Analysis Sequence Commands ==");
             Console.WriteLine(" module <module name> <relative path to source file>");
@@ -89,32 +88,23 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
 
             Environment.CurrentDirectory = Path.GetDirectoryName(responseFile);
 
-            var version = GetFirstCommand(commands, "python\\s+(\\d\\.\\d)", m => {
-                Version ver;
-                return Version.TryParse(m.Groups[1].Value, out ver) ? ver : null;
-            }, v => v != null) ?? new Version(3, 3);
-            Console.WriteLine("Using Python Version {0}.{1}", version.Major, version.Minor);
+            var interpreter = GetFirstCommand(commands, "python\\s+(\\d\\.\\d)\\s+(.+)", m => m.Value, v => v.Length > 4 && File.Exists(v.Substring(4).Trim()));
+            var version = Version.Parse(interpreter.Substring(0, 3));
+            interpreter = interpreter.Substring(4).Trim();
+            Console.WriteLine($"Using Python from {interpreter}");
 
-            var dbPath = GetFirstCommand(commands, "db\\s+(.+)", m => {
-                var path = m.Groups[1].Value;
-                if (!Path.IsPathRooted(path)) {
-                    path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), path);
-                }
-                return Path.GetFullPath(path);
-            }, Directory.Exists);
+            var config = new InterpreterConfiguration(
+                "Python|" + interpreter,
+                interpreter,
+                Path.GetDirectoryName(interpreter),
+                interpreter,
+                interpreter,
+                "PYTHONPATH",
+                InterpreterArchitecture.FromExe(interpreter),
+                version
+            );
 
-            if (dbPath == null) {
-                if (!string.IsNullOrEmpty(dbPath)) {
-                    Console.WriteLine("Could not find DB path {0}", dbPath);
-                } else {
-                    Console.WriteLine("No DB path specified");
-                }
-                PrintUsage();
-                return;
-            }
-            Console.WriteLine("Using database in {0}", dbPath);
-
-            using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version, "Test Factory", dbPath))
+            using (var factory = new Interpreter.Ast.AstPythonInterpreterFactory(config, new InterpreterFactoryCreationOptions()))
             using (var analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                 var modules = new Dictionary<string, IPythonProjectEntry>();
                 var state = new State();
@@ -133,7 +123,6 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
 
         private static HashSet<string> IgnoredCommands = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase) {
             "python",
-            "db",
             "",
             null
         };

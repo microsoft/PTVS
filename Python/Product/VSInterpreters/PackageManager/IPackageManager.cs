@@ -22,21 +22,6 @@ using System.Threading.Tasks;
 namespace Microsoft.PythonTools.Interpreter {
     public interface IPackageManager {
         /// <summary>
-        /// Called once to initialize the interpreter factory associated with
-        /// a package manager instance.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// factory is null.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// SetInterpreterFactory has already been called.
-        /// </exception>
-        /// <exception cref="NotSupportedException">
-        /// factory is not supported by the package manager.
-        /// </exception>
-        void SetInterpreterFactory(IPythonInterpreterFactory factory);
-
-        /// <summary>
         /// Returns the interpreter factory associated with this manager, or
         /// <c>null</c> if <see cref="SetInterpreterFactory"/> has not been
         /// called.
@@ -144,6 +129,22 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         event EventHandler InstalledFilesChanged;
 
+        /// <summary>
+        /// Starts producing notifications from the package manager.
+        /// </summary>
+        void EnableNotifications();
+
+        /// <summary>
+        /// Stops producing notifications from the package manager.
+        /// </summary>
+        void DisableNotifications();
+
+        /// <summary>
+        /// Temporarily suppresses notifications from the package manager.
+        /// This will generally be more efficient than completely disabling
+        /// notifications, and should produce any notifications that occur
+        /// while suppressed after the returned object is disposed.
+        /// </summary>
         IDisposable SuppressNotifications();
 
         /// <summary>
@@ -152,5 +153,17 @@ namespace Microsoft.PythonTools.Interpreter {
         /// in any way.
         /// </summary>
         void NotifyPackagesChanged();
+
+        /// <summary>
+        /// Gets a uniquifying key. Only one package manager with a given key is
+        /// made available, and it will be the one with the lowest Priority.
+        /// </summary>
+        string UniqueKey { get; }
+
+        /// <summary>
+        /// The priority for the package manager against all others. Lower values
+        /// appear first.
+        /// </summary>
+        int Priority { get; }
     }
 }

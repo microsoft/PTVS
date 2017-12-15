@@ -22,11 +22,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Interpreter {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// <summary>
     /// Base class for interpreter factories that have an executable file
     /// following CPython command-line conventions, a standard library that is
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Interpreter {
         IDisposable
     {
         private PythonTypeDatabase _typeDb, _typeDbWithoutPackages;
-        private IDisposable _generating;
+        private object _generating;
         private bool _isValid, _isCheckingDatabase, _disposed;
         private readonly string _databasePath;
 #if DEBUG
@@ -105,36 +105,38 @@ namespace Microsoft.PythonTools.Interpreter {
                 // Assume the database is valid
                 _isValid = true;
             }
+        }
 
-            if (!GlobalInterpreterOptions.SuppressPackageManagers) {
-                try {
-                    var pm = CreationOptions.PackageManager;
-                    if (pm != null) {
-                        pm.SetInterpreterFactory(this);
-                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                        PackageManager = pm;
-                    }
-                } catch (NotSupportedException) {
-                }
+        public static PythonInterpreterFactoryWithDatabase CreateFromDatabase(Version version, params string[] dbPath) {
+            var defPath = dbPath.ElementAtOrDefault(0) ?? PythonTypeDatabase.BaselineDatabasePath;
+            var fact = new PythonInterpreterFactoryWithDatabase(
+                new InterpreterConfiguration($"AnalysisOnly|{version}", $"Analysis Only {version}", version: version, uiMode: InterpreterUIMode.SupportsDatabase),
+                new InterpreterFactoryCreationOptions { DatabasePath = defPath, WatchFileSystem = false }
+            );
+            foreach (var p in dbPath.Skip(1)) {
+                fact.GetCurrentDatabase().LoadDatabase(p);
             }
+            return fact;
         }
 
         public virtual void BeginRefreshIsCurrent() {
+            if (IsGenerating) {
+                // No need to refresh right now
+                return;
+            }
 #if DEBUG
             _hasEverCheckedDatabase = true;
 #endif
             Task.Run(() => RefreshIsCurrent()).DoNotWait();
         }
 
-        private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
+        public virtual void NotifyImportNamesChanged() {
             BeginRefreshIsCurrent();
         }
 
         public InterpreterConfiguration Configuration { get; }
 
         public InterpreterFactoryCreationOptions CreationOptions { get; }
-
-        public IPackageManager PackageManager { get; }
 
         /// <summary>
         /// Returns a new interpreter created with the specified factory.
@@ -234,10 +236,9 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         protected virtual void GenerateDatabase(PythonTypeDatabaseCreationRequest request, Action<int> onExit = null) {
-            // Use the NoPackageManager instance if we don't have a package
-            // manager, so that we still get a valid disposable object while we
-            // are generating.
-            var generating = _generating = (request.Factory.PackageManager ?? NoPackageManager.Instance).SuppressNotifications();
+            // Use the NoPackageManager instance so that we get a
+            // valid disposable object while we are generating.
+            var generating = _generating = new object();
 
             PythonTypeDatabase.GenerateAsync(request).ContinueWith(t => {
                 int exitCode;
@@ -249,7 +250,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 if (exitCode != PythonTypeDatabase.AlreadyGeneratingExitCode) {
-                    generating.Dispose();
                     Interlocked.CompareExchange(ref _generating, null, generating);
                 }
                 onExit?.Invoke(exitCode);
@@ -281,8 +281,7 @@ namespace Microsoft.PythonTools.Interpreter {
             RefreshIsCurrent();
 
             if (IsCurrent) {
-                var generating = Interlocked.Exchange(ref _generating, null);
-                generating?.Dispose();
+                Interlocked.Exchange(ref _generating, null);
                 OnIsCurrentChanged();
 
                 // This also clears the previous database so that we load the new
@@ -359,8 +358,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     _isCurrentException = null;
                     return;
                 }
-                var generating = Interlocked.Exchange(ref _generating, null);
-                generating?.Dispose();
+                Interlocked.Exchange(ref _generating, null);
             }
 
             try {
@@ -490,7 +488,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private string[] GetMissingModules(HashSet<string> existingDatabase) {
             Debug.Assert(!string.IsNullOrEmpty(DatabasePath));
 
-            var searchPaths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(DatabasePath);
+            var searchPaths = PythonLibraryPath.GetCachedDatabaseSearchPaths(Path.Combine(DatabasePath, "database.path"));
 
             if (searchPaths == null) {
                 // No cached search paths means our database is out of date.
@@ -543,8 +541,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 return "An error occurred. Click Copy to get full details.";
             } else if (_generating != null) {
                 return "Currently regenerating";
-            } else if (PackageManager == null) {
-                return "Interpreter has no library";
             } else if (!Directory.Exists(DatabasePath)) {
                 return "Database has never been generated";
             } else if (!_isValid) {
@@ -595,8 +591,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 return reason + " raised an exception while refreshing:" + Environment.NewLine + _isCurrentException;
             } else if (_generating != null) {
                 return reason + " is regenerating";
-            } else if (PackageManager == null) {
-                return "Interpreter has no library";
             } else if (!Directory.Exists(DatabasePath)) {
                 return reason + " does not exist";
             } else if (!_isValid) {
@@ -640,11 +634,6 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
                 }
-
-                if (PackageManager != null) {
-                    PackageManager.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
-                }
-                (PackageManager as IDisposable)?.Dispose();
 
                 _isCurrentSemaphore.Dispose();
             }

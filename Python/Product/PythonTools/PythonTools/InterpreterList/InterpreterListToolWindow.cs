@@ -205,18 +205,20 @@ namespace Microsoft.PythonTools.InterpreterList {
             view.IPythonModeEnabledSetter = SetIPythonEnabled;
             view.IPythonModeEnabledGetter = QueryIPythonEnabled;
 
-            try {
-                var pep = new PipExtensionProvider(view.Factory);
-                pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
-                pep.OperationStarted += PipExtensionProvider_OperationStarted;
-                pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
-                pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
-                pep.OperationFinished += PipExtensionProvider_OperationFinished;
-                view.Extensions.Add(pep);
-            } catch (NotSupportedException) {
+            foreach (var pm in (_site.GetComponentModel().GetService<IInterpreterOptionsService>()?.GetPackageManagers(view.Factory)).MaybeEnumerate()) {
+                try {
+                    var pep = new PipExtensionProvider(view.Factory, pm);
+                    pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
+                    pep.OperationStarted += PipExtensionProvider_OperationStarted;
+                    pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
+                    pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
+                    pep.OperationFinished += PipExtensionProvider_OperationFinished;
+                    view.Extensions.Add(pep);
+                } catch (NotSupportedException) {
+                }
             }
 
-            var _withDb = view.Factory as PythonInterpreterFactoryWithDatabase;
+            var _withDb = view.Factory as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
             if (_withDb != null && !string.IsNullOrEmpty(_withDb.DatabasePath)) {
                 view.Extensions.Add(new DBExtensionProvider(_withDb));
             }

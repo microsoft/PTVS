@@ -22,7 +22,7 @@ using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -491,9 +491,8 @@ x = unittest.skipIf(False)
                 true
             );
 
-            var loadFactory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+            var loadFactory = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(
                 version.ToVersion(),
-                null,
                 dbFolder
             );
             return new SaveLoadResult(CreateAnalyzer(loadFactory), state.CodeFolder);

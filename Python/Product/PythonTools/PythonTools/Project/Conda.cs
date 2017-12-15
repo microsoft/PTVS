@@ -31,7 +31,8 @@ namespace Microsoft.PythonTools.Project {
 
         private static async Task<IPythonInterpreterFactory> TryGetCondaFactoryAsync(
             IPythonInterpreterFactory target,
-            IInterpreterRegistryService service
+            IInterpreterRegistryService service,
+            IInterpreterOptionsService optionsService
         ) {
             var condaMetaPath = PathUtils.GetAbsoluteDirectoryPath(
                 target.Configuration.PrefixPath,
@@ -79,7 +80,7 @@ namespace Microsoft.PythonTools.Project {
                         factory = service.FindInterpreter(config.Id);
                     }
 
-                    if (factory != null && !(await factory.FindModulesAsync("conda")).Any()) {
+                    if (factory != null && !await factory.HasModuleAsync("conda", optionsService)) {
                         factory = null;
                     }
 
@@ -87,7 +88,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            if ((await target.FindModulesAsync("conda")).Any()) {
+            if (await target.HasModuleAsync("conda", optionsService)) {
                 return target;
             }
             return null;
@@ -95,25 +96,27 @@ namespace Microsoft.PythonTools.Project {
 
         public static bool CanInstall(
             IPythonInterpreterFactory factory,
-            IInterpreterRegistryService service
+            IInterpreterRegistryService service, 
+            IInterpreterOptionsService optionsService
         ) {
             if (!factory.IsRunnable()) {
                 return false;
             }
 
-            return TryGetCondaFactoryAsync(factory, service).WaitAndUnwrapExceptions() != null;
+            return TryGetCondaFactoryAsync(factory, service, optionsService).WaitAndUnwrapExceptions() != null;
         }
 
         public static async Task<bool> Install(
             IServiceProvider provider,
             IPythonInterpreterFactory factory,
             IInterpreterRegistryService service,
+            IInterpreterOptionsService optionsService,
             string package,
             Redirector output = null
         ) {
             factory.ThrowIfNotRunnable("factory");
 
-            var condaFactory = await TryGetCondaFactoryAsync(factory, service); ;
+            var condaFactory = await TryGetCondaFactoryAsync(factory, service, optionsService);
             if (condaFactory == null) {
                 throw new InvalidOperationException(Strings.CannotFindConda);
             }

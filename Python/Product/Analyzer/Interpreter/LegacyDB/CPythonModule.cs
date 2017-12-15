@@ -23,7 +23,7 @@ using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class CPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
         private readonly string _modName;
         private readonly string _dbFile;

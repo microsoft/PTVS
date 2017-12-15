@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class CPythonFunction : IPythonFunction, ILocatedMember {
         private readonly string _name;
         private readonly string _doc;

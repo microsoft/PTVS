@@ -26,10 +26,5 @@ namespace Microsoft.PythonTools.Interpreter {
         /// When True, factories should not watch the file system.
         /// </summary>
         public static bool SuppressFileSystemWatchers { get; set; }
-
-        /// <summary>
-        /// When True, factories should never provide a package manager.
-        /// </summary>
-        public static bool SuppressPackageManagers { get; set; }
     }
 }

@@ -17,7 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class CPythonFunctionOverload : IPythonFunctionOverload {
         private readonly CPythonParameterInfo[] _parameters;
         private readonly string _doc, _returnDoc;

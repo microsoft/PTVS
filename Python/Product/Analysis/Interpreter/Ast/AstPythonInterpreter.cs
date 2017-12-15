@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _factory.ImportableModulesChanged += Factory_ImportableModulesChanged;
             _modules = new ConcurrentDictionary<string, IPythonModule>();
             _builtinTypes = new Dictionary<BuiltinTypeId, IPythonType>();
-            BuiltinModuleName = _factory.LanguageVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
+            BuiltinModuleName = BuiltinTypeId.Unknown.GetModuleName(_factory.LanguageVersion);
             _noneType = new AstPythonBuiltinType("NoneType", BuiltinTypeId.NoneType);
             _builtinTypes[BuiltinTypeId.NoneType] = _noneType;
             _builtinTypes[BuiltinTypeId.Unknown] = new AstPythonBuiltinType("Unknown", BuiltinTypeId.Unknown);
@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     var bm = ImportModule(BuiltinModuleName) as AstBuiltinsPythonModule;
                     res = bm?.GetAnyMember($"__{id}") as IPythonType;
                     if (res == null) {
-                        var name = SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version);
+                        var name = id.GetTypeName(_factory.Configuration.Version);
                         if (string.IsNullOrEmpty(name)) {
                             Debug.Assert(id == BuiltinTypeId.Unknown, $"no name for {id}");
                             if (!_builtinTypes.TryGetValue(BuiltinTypeId.Unknown, out res)) {

@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly HashSet<string> _hiddenNames;
 
         public AstBuiltinsPythonModule(PythonLanguageVersion version)
-            : base(version.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x, null) {
+            : base(BuiltinTypeId.Unknown.GetModuleName(version), null) {
             _hiddenNames = new HashSet<string>();
         }
 

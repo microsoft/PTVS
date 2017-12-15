@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class CPythonMultipleMembers : IPythonMultipleMembers, ILocatedMember {
         private readonly List<IMember> _members;
         
