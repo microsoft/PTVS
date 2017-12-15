@@ -6,17 +6,12 @@ class ArithmeticError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class AssertionError(StandardError):
@@ -25,17 +20,12 @@ class AssertionError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class AttributeError(StandardError):
@@ -44,17 +34,12 @@ class AttributeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class BaseException(__builtin__.object):
@@ -62,52 +47,47 @@ class BaseException(__builtin__.object):
     __class__ = BaseException
     def __delattr__(self):
         "x.__delattr__('name') <==> del x.name"
-        pass
+        return None
     
     __dict__ = __builtin__.dict()
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
-    def __getslice__(self):
+    def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        pass
+        return self
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     def __setattr__(self):
         "x.__setattr__('name', value) <==> x.name = value"
-        pass
+        return None
     
     def __setstate__(self, state):
-        pass
+        return None
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def __unicode__(self):
         pass
@@ -127,17 +107,12 @@ class BufferError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class BytesWarning(Warning):
@@ -146,17 +121,12 @@ class BytesWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class DeprecationWarning(Warning):
@@ -165,17 +135,12 @@ class DeprecationWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class EOFError(StandardError):
@@ -184,17 +149,12 @@ class EOFError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class EnvironmentError(StandardError):
@@ -203,24 +163,19 @@ class EnvironmentError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def errno(self):
@@ -244,17 +199,12 @@ class Exception(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class FloatingPointError(ArithmeticError):
@@ -263,17 +213,12 @@ class FloatingPointError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class FutureWarning(Warning):
@@ -282,17 +227,12 @@ class FutureWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class GeneratorExit(BaseException):
@@ -301,17 +241,12 @@ class GeneratorExit(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class IOError(EnvironmentError):
@@ -320,17 +255,12 @@ class IOError(EnvironmentError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class ImportError(StandardError):
@@ -339,17 +269,12 @@ class ImportError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class ImportWarning(Warning):
@@ -358,17 +283,12 @@ class ImportWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class IndentationError(SyntaxError):
@@ -377,17 +297,12 @@ class IndentationError(SyntaxError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class IndexError(LookupError):
@@ -396,17 +311,12 @@ class IndexError(LookupError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class KeyError(LookupError):
@@ -415,21 +325,16 @@ class KeyError(LookupError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class KeyboardInterrupt(BaseException):
@@ -438,17 +343,12 @@ class KeyboardInterrupt(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class LookupError(StandardError):
@@ -457,17 +357,12 @@ class LookupError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class MemoryError(StandardError):
@@ -476,17 +371,12 @@ class MemoryError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class NameError(StandardError):
@@ -495,17 +385,12 @@ class NameError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class NotImplementedError(RuntimeError):
@@ -514,17 +399,12 @@ class NotImplementedError(RuntimeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class OSError(EnvironmentError):
@@ -533,17 +413,12 @@ class OSError(EnvironmentError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class OverflowError(ArithmeticError):
@@ -552,17 +427,12 @@ class OverflowError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class PendingDeprecationWarning(Warning):
@@ -571,17 +441,12 @@ class PendingDeprecationWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class ReferenceError(StandardError):
@@ -590,17 +455,12 @@ class ReferenceError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class RuntimeError(StandardError):
@@ -609,17 +469,12 @@ class RuntimeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class RuntimeWarning(Warning):
@@ -628,17 +483,12 @@ class RuntimeWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class StandardError(Exception):
@@ -647,17 +497,12 @@ class StandardError(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class StopIteration(Exception):
@@ -666,17 +511,12 @@ class StopIteration(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class SyntaxError(StandardError):
@@ -685,21 +525,16 @@ class SyntaxError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def filename(self):
@@ -738,17 +573,12 @@ class SyntaxWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class SystemError(StandardError):
@@ -757,17 +587,12 @@ class SystemError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class SystemExit(BaseException):
@@ -776,17 +601,12 @@ class SystemExit(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def code(self):
@@ -800,17 +620,12 @@ class TabError(IndentationError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class TypeError(StandardError):
@@ -819,17 +634,12 @@ class TypeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class UnboundLocalError(NameError):
@@ -838,17 +648,12 @@ class UnboundLocalError(NameError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class UnicodeDecodeError(UnicodeError):
@@ -857,21 +662,16 @@ class UnicodeDecodeError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def encoding(self):
@@ -905,21 +705,16 @@ class UnicodeEncodeError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def encoding(self):
@@ -953,17 +748,12 @@ class UnicodeError(ValueError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class UnicodeTranslateError(UnicodeError):
@@ -972,21 +762,16 @@ class UnicodeTranslateError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def encoding(self):
@@ -1020,17 +805,12 @@ class UnicodeWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class UserWarning(Warning):
@@ -1039,17 +819,12 @@ class UserWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class ValueError(StandardError):
@@ -1058,17 +833,12 @@ class ValueError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class Warning(Exception):
@@ -1077,17 +847,12 @@ class Warning(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class WindowsError(OSError):
@@ -1096,21 +861,16 @@ class WindowsError(OSError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def errno(self):
@@ -1139,17 +899,12 @@ class ZeroDivisionError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 __doc__ = "Python's standard exception class hierarchy.\n\nExceptions found here are defined both in the exceptions module and the\nbuilt-in namespace.  It is recommended that user-defined exceptions\ninherit from Exception.  See the documentation for the exception\ninheritance hierarchy.\n"

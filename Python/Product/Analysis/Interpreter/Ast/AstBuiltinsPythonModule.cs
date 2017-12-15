@@ -91,6 +91,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected override void PostWalk(PythonWalker walker) {
+            IPythonType boolType = null;
+
             foreach (BuiltinTypeId typeId in Enum.GetValues(typeof(BuiltinTypeId))) {
                 IMember m;
                 AstPythonBuiltinType biType;
@@ -104,9 +106,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         _hiddenNames.Add(biType.Name);
                     }
                     _hiddenNames.Add($"__{typeId}");
+
+                    if (typeId == BuiltinTypeId.Bool) {
+                        boolType = m as IPythonType;
+                    }
                 }
             }
             _hiddenNames.Add("__builtin_module_names");
+
+            if (boolType != null) {
+                _members["True"] = _members["False"] = new AstPythonConstant(boolType);
+            }
         }
 
     }

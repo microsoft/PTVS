@@ -71,134 +71,129 @@ def exit(status):
 class flags:
     'sys.flags\n\nFlags provided through command line arguments or environment vars.'
     @staticmethod
-    def __add__():
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = flags
     @staticmethod
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x'
-        pass
+        return False
     
     @staticmethod
     def __delattr__():
         "x.__delattr__('name') <==> del x.name"
-        pass
+        return None
     
     @staticmethod
-    def __eq__():
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
-    def __ge__():
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     @staticmethod
     def __getattribute__():
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     @staticmethod
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
     @staticmethod
-    def __getslice__():
+    def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        pass
+        return self
     
     @staticmethod
-    def __gt__():
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     @staticmethod
-    def __hash__():
+    def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
     @staticmethod
     def __init__():
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
+        return self
     
     @staticmethod
-    def __le__():
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
     @staticmethod
-    def __len__():
+    def __len__(self):
         'x.__len__() <==> len(x)'
-        pass
+        return 0
     
     @staticmethod
-    def __lt__():
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
     @staticmethod
-    def __mul__():
+    def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        pass
+        return self
     
     @staticmethod
-    def __ne__():
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
-    
-    @staticmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return False
     
     @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
-    def __repr__():
+    def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     @staticmethod
-    def __rmul__():
+    def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        pass
+        return self
     
     @staticmethod
     def __setattr__():
         "x.__setattr__('name', value) <==> x.name = value"
-        pass
+        return None
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
-    def __str__():
+    def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     bytes_warning = 0
     debug = 0
@@ -223,134 +218,129 @@ class flags:
 class float_info:
     "sys.float_info\n\nA structseq holding information about the float type. It contains low level\ninformation about the precision and internal representation. Please study\nyour system's :file:`float.h` for more information."
     @staticmethod
-    def __add__():
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = float_info
     @staticmethod
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x'
-        pass
+        return False
     
     @staticmethod
     def __delattr__():
         "x.__delattr__('name') <==> del x.name"
-        pass
+        return None
     
     @staticmethod
-    def __eq__():
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
-    def __ge__():
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     @staticmethod
     def __getattribute__():
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     @staticmethod
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
     @staticmethod
-    def __getslice__():
+    def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        pass
+        return self
     
     @staticmethod
-    def __gt__():
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     @staticmethod
-    def __hash__():
+    def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
     @staticmethod
     def __init__():
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
+        return self
     
     @staticmethod
-    def __le__():
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
     @staticmethod
-    def __len__():
+    def __len__(self):
         'x.__len__() <==> len(x)'
-        pass
+        return 0
     
     @staticmethod
-    def __lt__():
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
     @staticmethod
-    def __mul__():
+    def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        pass
+        return self
     
     @staticmethod
-    def __ne__():
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
-    
-    @staticmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return False
     
     @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
-    def __repr__():
+    def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     @staticmethod
-    def __rmul__():
+    def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        pass
+        return self
     
     @staticmethod
     def __setattr__():
         "x.__setattr__('name', value) <==> x.name = value"
-        pass
+        return None
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
-    def __str__():
+    def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     dig = 15
     epsilon = 2.220446049250313e-16
@@ -408,134 +398,129 @@ hexversion = 34016752
 class long_info:
     "sys.long_info\n\nA struct sequence that holds information about Python's\ninternal representation of integers.  The attributes are read only."
     @staticmethod
-    def __add__():
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = long_info
     @staticmethod
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x'
-        pass
+        return False
     
     @staticmethod
     def __delattr__():
         "x.__delattr__('name') <==> del x.name"
-        pass
+        return None
     
     @staticmethod
-    def __eq__():
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
-    def __ge__():
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     @staticmethod
     def __getattribute__():
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     @staticmethod
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
     @staticmethod
-    def __getslice__():
+    def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        pass
+        return self
     
     @staticmethod
-    def __gt__():
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     @staticmethod
-    def __hash__():
+    def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
     @staticmethod
     def __init__():
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
+        return self
     
     @staticmethod
-    def __le__():
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
     @staticmethod
-    def __len__():
+    def __len__(self):
         'x.__len__() <==> len(x)'
-        pass
+        return 0
     
     @staticmethod
-    def __lt__():
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
     @staticmethod
-    def __mul__():
+    def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        pass
+        return self
     
     @staticmethod
-    def __ne__():
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
-    
-    @staticmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return False
     
     @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
-    def __repr__():
+    def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     @staticmethod
-    def __rmul__():
+    def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        pass
+        return self
     
     @staticmethod
     def __setattr__():
         "x.__setattr__('name', value) <==> x.name = value"
-        pass
+        return None
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
-    def __str__():
+    def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     bits_per_digit = 30
     n_fields = 2
@@ -578,134 +563,129 @@ version = '2.7.13 (v2.7.13:a06454b1afa1, Dec 17 2016, 20:53:40) [MSC v.1500 64 b
 class version_info:
     'sys.version_info\n\nVersion information as a named tuple.'
     @staticmethod
-    def __add__():
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = version_info
     @staticmethod
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x'
-        pass
+        return False
     
     @staticmethod
     def __delattr__():
         "x.__delattr__('name') <==> del x.name"
-        pass
+        return None
     
     @staticmethod
-    def __eq__():
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
-    def __ge__():
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     @staticmethod
     def __getattribute__():
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     @staticmethod
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
     @staticmethod
-    def __getslice__():
+    def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        pass
+        return self
     
     @staticmethod
-    def __gt__():
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     @staticmethod
-    def __hash__():
+    def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
     @staticmethod
     def __init__():
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
+        return self
     
     @staticmethod
-    def __le__():
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
     @staticmethod
-    def __len__():
+    def __len__(self):
         'x.__len__() <==> len(x)'
-        pass
+        return 0
     
     @staticmethod
-    def __lt__():
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
     @staticmethod
-    def __mul__():
+    def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        pass
+        return self
     
     @staticmethod
-    def __ne__():
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
-    
-    @staticmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return False
     
     @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
-    def __repr__():
+    def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     @staticmethod
-    def __rmul__():
+    def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        pass
+        return self
     
     @staticmethod
     def __setattr__():
         "x.__setattr__('name', value) <==> x.name = value"
-        pass
+        return None
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
-    def __str__():
+    def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     major = 2
     micro = 13

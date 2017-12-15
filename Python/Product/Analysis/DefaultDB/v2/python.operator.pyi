@@ -2,15 +2,15 @@ import __builtin__
 
 def __abs__():
     'abs(a) -- Same as abs(a).'
-    pass
+    return self
 
 def __add__():
     'add(a, b) -- Same as a + b.'
-    pass
+    return self
 
 def __and__():
     'and_(a, b) -- Same as a & b.'
-    pass
+    return self
 
 def __concat__():
     'concat(a, b) -- Same as a + b, for a and b sequences.'
@@ -18,11 +18,11 @@ def __concat__():
 
 def __contains__(self, value):
     'contains(a, b) -- Same as b in a (note reversed operands).'
-    pass
+    return False
 
 def __delitem__():
     'delitem(a, b) -- Same as del a[b].'
-    pass
+    return None
 
 def __delslice__():
     'delslice(a, b, c) -- Same as del a[b:c].'
@@ -35,35 +35,35 @@ def __div__():
 __doc__ = "Operator interface.\n\nThis module exports a set of functions implemented in C corresponding\nto the intrinsic operators of Python.  For example, operator.add(x, y)\nis equivalent to the expression x+y.  The function names are those\nused for special methods; variants without leading and trailing\n'__' are also provided for convenience."
 def __eq__():
     'eq(a, b) -- Same as a==b.'
-    pass
+    return False
 
 def __floordiv__():
     'floordiv(a, b) -- Same as a // b.'
-    pass
+    return 0
 
 def __ge__():
     'ge(a, b) -- Same as a>=b.'
-    pass
+    return False
 
 def __getitem__(self, index):
     'getitem(a, b) -- Same as a[b].'
-    pass
+    return Any
 
 def __getslice__():
     'getslice(a, b, c) -- Same as a[b:c].'
-    pass
+    return self
 
 def __gt__():
     'gt(a, b) -- Same as a>b.'
-    pass
+    return False
 
 def __iadd__():
     'a = iadd(a, b) -- Same as a += b.'
-    pass
+    return None
 
 def __iand__():
     'a = iand(a, b) -- Same as a &= b.'
-    pass
+    return None
 
 def __iconcat__():
     'a = iconcat(a, b) -- Same as a += b, for a and b sequences.'
@@ -87,11 +87,11 @@ def __imod__():
 
 def __imul__():
     'a = imul(a, b) -- Same as a *= b.'
-    pass
+    return None
 
 def __index__():
     'index(a) -- Same as a.__index__()'
-    pass
+    return 0
 
 def __inv__():
     'inv(a) -- Same as ~a.'
@@ -99,11 +99,11 @@ def __inv__():
 
 def __invert__():
     'invert(a) -- Same as ~a.'
-    pass
+    return self
 
 def __ior__():
     'a = ior(a, b) -- Same as a |= b.'
-    pass
+    return None
 
 def __ipow__():
     'a = ipow(a, b) -- Same as a **= b.'
@@ -119,7 +119,7 @@ def __irshift__():
 
 def __isub__():
     'a = isub(a, b) -- Same as a -= b.'
-    pass
+    return None
 
 def __itruediv__():
     'a = itruediv(a, b) -- Same as a /= b when __future__.division is in effect.'
@@ -127,36 +127,36 @@ def __itruediv__():
 
 def __ixor__():
     'a = ixor(a, b) -- Same as a ^= b.'
-    pass
+    return None
 
 def __le__():
     'le(a, b) -- Same as a<=b.'
-    pass
+    return False
 
 def __lshift__():
     'lshift(a, b) -- Same as a << b.'
-    pass
+    return self
 
 def __lt__():
     'lt(a, b) -- Same as a<b.'
-    pass
+    return False
 
 def __mod__():
     'mod(a, b) -- Same as a % b.'
-    pass
+    return self
 
 def __mul__():
     'mul(a, b) -- Same as a * b.'
-    pass
+    return self
 
 __name__ = 'operator'
 def __ne__():
     'ne(a, b) -- Same as a!=b.'
-    pass
+    return False
 
 def __neg__():
     'neg(a) -- Same as -a.'
-    pass
+    return self
 
 def __not__():
     'not_(a) -- Same as not a.'
@@ -164,16 +164,16 @@ def __not__():
 
 def __or__():
     'or_(a, b) -- Same as a | b.'
-    pass
+    return self
 
 __package__ = None
 def __pos__():
     'pos(a) -- Same as +a.'
-    pass
+    return self
 
 def __pow__():
     'pow(a, b) -- Same as a ** b.'
-    pass
+    return self
 
 def __repeat__():
     'repeat(a, b) -- Return a * b, where a is a sequence, and b is an integer.'
@@ -181,11 +181,11 @@ def __repeat__():
 
 def __rshift__():
     'rshift(a, b) -- Same as a >> b.'
-    pass
+    return self
 
 def __setitem__(self, index, value):
     'setitem(a, b, c) -- Same as a[b] = c.'
-    pass
+    return None
 
 def __setslice__():
     'setslice(a, b, c, d) -- Same as a[b:c] = d.'
@@ -193,15 +193,15 @@ def __setslice__():
 
 def __sub__():
     'sub(a, b) -- Same as a - b.'
-    pass
+    return self
 
 def __truediv__():
     'truediv(a, b) -- Same as a / b when __future__.division is in effect.'
-    pass
+    return 0.0
 
 def __xor__():
     'xor(a, b) -- Same as a ^ b.'
-    pass
+    return self
 
 def _compare_digest():
     "compare_digest(a, b) -> bool\n\nReturn 'a == b'.  This function uses an approach designed to prevent\ntiming analysis, making it appropriate for cryptography.\na and b must both be of the same type: either str (ASCII only),\nor any type that supports the buffer protocol (e.g. bytes).\n\nNote: If a and b are of different lengths, or if an error occurs,\na timing attack could theoretically reveal information about the\ntypes and lengths of a and b--but not their values.\n"
@@ -223,22 +223,17 @@ class attrgetter(__builtin__.object):
     "attrgetter(attr, ...) --> attrgetter object\n\nReturn a callable object that fetches the given attribute(s) from its operand.\nAfter f = attrgetter('name'), the call f(r) returns r.name.\nAfter g = attrgetter('name', 'date'), the call g(r) returns (r.name, r.date).\nAfter h = attrgetter('name.first', 'name.last'), the call h(r) returns\n(r.name.first, r.name.last)."
     def __call__(self):
         'x.__call__(...) <==> x(...)'
-        pass
+        return Any
     
     __class__ = attrgetter
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return Any
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 def concat(a, b):
@@ -385,22 +380,17 @@ class itemgetter(__builtin__.object):
     'itemgetter(item, ...) --> itemgetter object\n\nReturn a callable object that fetches the given item(s) from its operand.\nAfter f = itemgetter(2), the call f(r) returns r[2].\nAfter g = itemgetter(2, 5, 3), the call g(r) returns (r[2], r[5], r[3])'
     def __call__(self):
         'x.__call__(...) <==> x(...)'
-        pass
+        return Any
     
     __class__ = itemgetter
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return Any
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 def itruediv():
@@ -427,22 +417,17 @@ class methodcaller(__builtin__.object):
     "methodcaller(name, ...) --> methodcaller object\n\nReturn a callable object that calls the given method on its operand.\nAfter f = methodcaller('name'), the call f(r) returns r.name().\nAfter g = methodcaller('name', 'date', foo=1), the call g(r) returns\nr.name('date', foo=1)."
     def __call__(self):
         'x.__call__(...) <==> x(...)'
-        pass
+        return Any
     
     __class__ = methodcaller
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return Any
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 def mod(a, b):

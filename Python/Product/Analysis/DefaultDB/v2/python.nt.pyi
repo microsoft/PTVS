@@ -192,79 +192,74 @@ def stat_float_times(newval):
 
 class stat_result(__builtin__.object):
     'stat_result: Result from stat or lstat.\n\nThis object may be accessed either as a tuple of\n  (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime)\nor via the attributes st_mode, st_ino, st_dev, st_nlink, st_uid, and so on.\n\nPosix/windows: If your platform supports st_blksize, st_blocks, st_rdev,\nor st_flags, they are available as attributes only.\n\nSee os.stat for more information.'
-    def __add__(self):
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = stat_result
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x'
-        pass
+        return False
     
-    def __eq__(self):
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
-    def __ge__(self):
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
-    def __getslice__(self):
+    def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        pass
+        return self
     
-    def __gt__(self):
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
-    def __le__(self):
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
     def __len__(self):
         'x.__len__() <==> len(x)'
-        pass
+        return 0
     
-    def __lt__(self):
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
-    def __mul__(self):
+    def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        pass
+        return self
     
-    def __ne__(self):
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return False
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
-    def __rmul__(self):
+    def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     n_fields = 13
     n_sequence_fields = 10
@@ -322,79 +317,74 @@ class stat_result(__builtin__.object):
 
 class statvfs_result(__builtin__.object):
     'statvfs_result: Result from statvfs or fstatvfs.\n\nThis object may be accessed either as a tuple of\n  (bsize, frsize, blocks, bfree, bavail, files, ffree, favail, flag, namemax),\nor via the attributes f_bsize, f_frsize, f_blocks, f_bfree, and so on.\n\nSee os.statvfs for more information.'
-    def __add__(self):
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = statvfs_result
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x'
-        pass
+        return False
     
-    def __eq__(self):
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
-    def __ge__(self):
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
-    def __getslice__(self):
+    def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        pass
+        return self
     
-    def __gt__(self):
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
-    def __le__(self):
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
     def __len__(self):
         'x.__len__() <==> len(x)'
-        pass
+        return 0
     
-    def __lt__(self):
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
-    def __mul__(self):
+    def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        pass
+        return self
     
-    def __ne__(self):
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return False
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
-    def __rmul__(self):
+    def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def f_bavail(self):

@@ -96,9 +96,9 @@ class flags:
         pass
     
     @staticmethod
-    def __dir__():
+    def __dir__(self):
         '__dir__() -> list\ndefault dir() implementation'
-        pass
+        return ['']
     
     @staticmethod
     def __eq__(self, value):
@@ -108,7 +108,7 @@ class flags:
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
     def __ge__(self, value):
@@ -127,7 +127,7 @@ class flags:
     
     @staticmethod
     def __getnewargs__(self):
-        pass
+        return ()
     
     @staticmethod
     def __gt__(self, value):
@@ -147,7 +147,7 @@ class flags:
     @staticmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @staticmethod
     def __iter__(self):
@@ -180,18 +180,13 @@ class flags:
         pass
     
     @staticmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
     def __repr__(self):
@@ -209,9 +204,9 @@ class flags:
         pass
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
     def __str__(self):
@@ -221,11 +216,11 @@ class flags:
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     bytes_warning = 0
     @staticmethod
-    def count():
+    def count(self, value):
         'T.count(value) -> integer -- return number of occurrences of value'
         pass
     
@@ -234,7 +229,7 @@ class flags:
     hash_randomization = 1
     ignore_environment = 0
     @staticmethod
-    def index():
+    def index(self, value, start, stop):
         'T.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
         pass
     
@@ -269,9 +264,9 @@ class float_info:
         pass
     
     @staticmethod
-    def __dir__():
+    def __dir__(self):
         '__dir__() -> list\ndefault dir() implementation'
-        pass
+        return ['']
     
     @staticmethod
     def __eq__(self, value):
@@ -281,7 +276,7 @@ class float_info:
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
     def __ge__(self, value):
@@ -300,7 +295,7 @@ class float_info:
     
     @staticmethod
     def __getnewargs__(self):
-        pass
+        return ()
     
     @staticmethod
     def __gt__(self, value):
@@ -320,7 +315,7 @@ class float_info:
     @staticmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @staticmethod
     def __iter__(self):
@@ -353,18 +348,13 @@ class float_info:
         pass
     
     @staticmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
     def __repr__(self):
@@ -382,9 +372,9 @@ class float_info:
         pass
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
     def __str__(self):
@@ -394,17 +384,17 @@ class float_info:
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @staticmethod
-    def count():
+    def count(self, value):
         'T.count(value) -> integer -- return number of occurrences of value'
         pass
     
     dig = 15
     epsilon = 2.220446049250313e-16
     @staticmethod
-    def index():
+    def index(self, value, start, stop):
         'T.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
         pass
     
@@ -497,9 +487,9 @@ class hash_info:
         pass
     
     @staticmethod
-    def __dir__():
+    def __dir__(self):
         '__dir__() -> list\ndefault dir() implementation'
-        pass
+        return ['']
     
     @staticmethod
     def __eq__(self, value):
@@ -509,7 +499,7 @@ class hash_info:
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
     def __ge__(self, value):
@@ -528,7 +518,7 @@ class hash_info:
     
     @staticmethod
     def __getnewargs__(self):
-        pass
+        return ()
     
     @staticmethod
     def __gt__(self, value):
@@ -548,7 +538,7 @@ class hash_info:
     @staticmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @staticmethod
     def __iter__(self):
@@ -581,18 +571,13 @@ class hash_info:
         pass
     
     @staticmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
     def __repr__(self):
@@ -610,9 +595,9 @@ class hash_info:
         pass
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
     def __str__(self):
@@ -622,11 +607,11 @@ class hash_info:
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     algorithm = 'siphash24'
     @staticmethod
-    def count():
+    def count(self, value):
         'T.count(value) -> integer -- return number of occurrences of value'
         pass
     
@@ -634,7 +619,7 @@ class hash_info:
     hash_bits = 64
     imag = 1000003
     @staticmethod
-    def index():
+    def index(self, value, start, stop):
         'T.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
         pass
     
@@ -668,9 +653,9 @@ class int_info:
         pass
     
     @staticmethod
-    def __dir__():
+    def __dir__(self):
         '__dir__() -> list\ndefault dir() implementation'
-        pass
+        return ['']
     
     @staticmethod
     def __eq__(self, value):
@@ -680,7 +665,7 @@ class int_info:
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
     def __ge__(self, value):
@@ -699,7 +684,7 @@ class int_info:
     
     @staticmethod
     def __getnewargs__(self):
-        pass
+        return ()
     
     @staticmethod
     def __gt__(self, value):
@@ -719,7 +704,7 @@ class int_info:
     @staticmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @staticmethod
     def __iter__(self):
@@ -752,18 +737,13 @@ class int_info:
         pass
     
     @staticmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
     def __repr__(self):
@@ -781,9 +761,9 @@ class int_info:
         pass
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
     def __str__(self):
@@ -793,16 +773,16 @@ class int_info:
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     bits_per_digit = 30
     @staticmethod
-    def count():
+    def count(self, value):
         'T.count(value) -> integer -- return number of occurrences of value'
         pass
     
     @staticmethod
-    def index():
+    def index(self, value, start, stop):
         'T.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
         pass
     
@@ -878,9 +858,9 @@ class thread_info:
         pass
     
     @staticmethod
-    def __dir__():
+    def __dir__(self):
         '__dir__() -> list\ndefault dir() implementation'
-        pass
+        return ['']
     
     @staticmethod
     def __eq__(self, value):
@@ -890,7 +870,7 @@ class thread_info:
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
     def __ge__(self, value):
@@ -909,7 +889,7 @@ class thread_info:
     
     @staticmethod
     def __getnewargs__(self):
-        pass
+        return ()
     
     @staticmethod
     def __gt__(self, value):
@@ -929,7 +909,7 @@ class thread_info:
     @staticmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @staticmethod
     def __iter__(self):
@@ -962,18 +942,13 @@ class thread_info:
         pass
     
     @staticmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
     def __repr__(self):
@@ -991,9 +966,9 @@ class thread_info:
         pass
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
     def __str__(self):
@@ -1003,15 +978,15 @@ class thread_info:
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @staticmethod
-    def count():
+    def count(self, value):
         'T.count(value) -> integer -- return number of occurrences of value'
         pass
     
     @staticmethod
-    def index():
+    def index(self, value, start, stop):
         'T.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
         pass
     
@@ -1042,9 +1017,9 @@ class version_info:
         pass
     
     @staticmethod
-    def __dir__():
+    def __dir__(self):
         '__dir__() -> list\ndefault dir() implementation'
-        pass
+        return ['']
     
     @staticmethod
     def __eq__(self, value):
@@ -1054,7 +1029,7 @@ class version_info:
     @staticmethod
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     @staticmethod
     def __ge__(self, value):
@@ -1073,7 +1048,7 @@ class version_info:
     
     @staticmethod
     def __getnewargs__(self):
-        pass
+        return ()
     
     @staticmethod
     def __gt__(self, value):
@@ -1093,7 +1068,7 @@ class version_info:
     @staticmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @staticmethod
     def __iter__(self):
@@ -1126,18 +1101,13 @@ class version_info:
         pass
     
     @staticmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @staticmethod
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     @staticmethod
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     @staticmethod
     def __repr__(self):
@@ -1155,9 +1125,9 @@ class version_info:
         pass
     
     @staticmethod
-    def __sizeof__():
+    def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     @staticmethod
     def __str__(self):
@@ -1167,15 +1137,15 @@ class version_info:
     @staticmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @staticmethod
-    def count():
+    def count(self, value):
         'T.count(value) -> integer -- return number of occurrences of value'
         pass
     
     @staticmethod
-    def index():
+    def index(self, value, start, stop):
         'T.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
         pass
     

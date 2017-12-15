@@ -229,6 +229,22 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
+            var dec = (node.Decorators?.Decorators).MaybeEnumerate().ToArray();
+            if (dec.OfType<NameExpression>().Any(n => n.Name == "property")) {
+                AddProperty(node);
+                return false;
+            }
+            foreach (var setter in dec.OfType<MemberExpression>().Where(n => n.Name == "setter")) {
+                if (setter.Target is NameExpression src) {
+                    var existingProp = _scope.LookupNameInScopes(src.Name, NameLookupContext.LookupOptions.Local) as AstPythonProperty;
+                    if (existingProp != null) {
+                        // Setter for an existing property, so don't create a function
+                        existingProp.MakeSettable();
+                        return false;
+                    }
+                }
+            }
+
             var existing = _scope.LookupNameInScopes(node.Name, NameLookupContext.LookupOptions.Local) as AstPythonFunction;
 
             if (existing == null) {
@@ -246,6 +262,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             // Do not recurse into functions
             return false;
+        }
+
+        private void AddProperty(FunctionDefinition node) {
+            var existing = _scope.LookupNameInScopes(node.Name, NameLookupContext.LookupOptions.Local) as AstPythonProperty;
+
+            if (existing == null) {
+                existing = new AstPythonProperty(_ast, node, GetLoc(node));
+                _scope.SetInScope(node.Name, existing);
+            }
+
+            // Treat the rest of the property as a function. "AddOverload" takes the return type
+            // and sets it as the property type.
+            var funcScope = _scope.Clone();
+            if (CreateBuiltinTypes) {
+                funcScope.SuppressBuiltinLookup = true;
+            }
+            var funcWalk = new AstAnalysisFunctionWalker(funcScope, node);
+            _postWalkers.Add(funcWalk);
+            existing.AddOverload(funcWalk.Overload);
         }
 
         private static string GetDoc(SuiteStatement node) {

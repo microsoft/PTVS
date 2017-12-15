@@ -7,17 +7,12 @@ class BufferedRWPair(_BufferedIOBase):
     __class__ = BufferedRWPair
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         pass
@@ -59,24 +54,19 @@ class BufferedRandom(_BufferedIOBase):
     __class__ = BufferedRandom
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     def __sizeof__(self):
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         pass
@@ -155,24 +145,19 @@ class BufferedReader(_BufferedIOBase):
     __class__ = BufferedReader
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     def __sizeof__(self):
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         pass
@@ -245,24 +230,19 @@ class BufferedWriter(_BufferedIOBase):
     __class__ = BufferedWriter
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     def __sizeof__(self):
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         pass
@@ -325,27 +305,22 @@ class BytesIO(_BufferedIOBase):
     
     def __init__(self, buffer):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
+        return self
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, buffer):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __setstate__(self, state):
-        pass
+        return None
     
     def __sizeof__(self):
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         'close() -> None.  Disable all I/O operations.'
@@ -431,25 +406,20 @@ class FileIO(_RawIOBase):
     __class__ = FileIO
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         'close() -> None.  Close the file.\n\nA closed file cannot be used for further I/O operations.  close() may be\ncalled more than once without error.'
@@ -524,17 +494,12 @@ class IncrementalNewlineDecoder(__builtin__.object):
     __class__ = IncrementalNewlineDecoder
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def decode(self):
         pass
@@ -561,20 +526,15 @@ class StringIO(_TextIOBase):
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __setstate__(self, state):
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         'Close the IO object. Attempting any further operation after the\nobject is closed will raise a ValueError.\n\nThis method has no effect if the file is already closed.\n'
@@ -646,21 +606,16 @@ class TextIOWrapper(_TextIOBase):
     __class__ = TextIOWrapper
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def buffer(self):
@@ -744,7 +699,7 @@ class _BufferedIOBase(_IOBase):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def detach(self):
         'Disconnect this buffer from its underlying raw stream and return it.\n\nAfter the raw stream has been detached, the buffer is in an unusable\nstate.\n'
@@ -777,17 +732,12 @@ class _IOBase(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def _checkClosed(self):
         pass
@@ -867,7 +817,7 @@ class _RawIOBase(_IOBase):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def read(self):
         pass
@@ -883,7 +833,7 @@ class _TextIOBase(_IOBase):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def detach(self):
         'Separate the underlying buffer from the TextIOBase and return it.\n\nAfter the underlying buffer has been detached, the TextIO is in an\nunusable state.\n'

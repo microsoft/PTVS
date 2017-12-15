@@ -8,17 +8,12 @@ class NullImporter(__builtin__.object):
     __class__ = NullImporter
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def find_module(self):
         'Always return None'

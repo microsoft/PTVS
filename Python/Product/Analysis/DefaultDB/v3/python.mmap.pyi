@@ -37,7 +37,7 @@ class mmap(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __len__(self):
         'Return len(self).'
@@ -45,11 +45,6 @@ class mmap(builtins.object):
     
     def __mul__(self, value):
         'Return self*value.n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __rmul__(self, value):
@@ -61,12 +56,12 @@ class mmap(builtins.object):
         pass
     
     def __sizeof__(self):
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         pass

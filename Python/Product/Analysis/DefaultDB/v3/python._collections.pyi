@@ -18,7 +18,7 @@ class _deque_iterator(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -26,12 +26,7 @@ class _deque_iterator(builtins.object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -39,12 +34,12 @@ class _deque_iterator(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class _deque_reverse_iterator(builtins.object):
@@ -56,7 +51,7 @@ class _deque_reverse_iterator(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -64,12 +59,7 @@ class _deque_reverse_iterator(builtins.object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -77,12 +67,12 @@ class _deque_reverse_iterator(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 defaultdict = collections.defaultdict

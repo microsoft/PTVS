@@ -30,7 +30,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         ) {
             _parameters = parameters?.ToArray() ?? throw new ArgumentNullException(nameof(parameters));
             Locations = loc != null ? new[] { loc } : Array.Empty<LocationInfo>();
-            ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));
+            ReturnType = (returnType ?? throw new ArgumentNullException(nameof(returnType)))
+                .Where(v => v.TypeId != BuiltinTypeId.Unknown)
+                .ToArray();
         }
 
         internal void SetDocumentation(string doc) {

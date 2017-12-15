@@ -62,6 +62,7 @@
     <Compile Include="CompletionOptions.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />

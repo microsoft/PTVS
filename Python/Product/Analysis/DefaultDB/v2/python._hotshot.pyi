@@ -6,20 +6,20 @@ class LogReaderType(__builtin__.object):
     __class__ = LogReaderType
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def close(self):
         'close()\nClose the log file, preventing additional records from being read.'
@@ -50,12 +50,12 @@ class ProfilerType(__builtin__.object):
     __class__ = ProfilerType
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def addinfo(self, key, value):
         'addinfo(key, value)\nInsert an ADD_INFO record into the log.'

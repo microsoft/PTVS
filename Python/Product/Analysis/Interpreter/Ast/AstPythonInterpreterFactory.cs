@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
-            if (file != null) {
+            if (file != null && !_skipWriteToCache) {
                 bool fileIsOkay = false;
                 try {
                     var cacheTime = File.GetLastWriteTimeUtc(path);

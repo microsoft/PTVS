@@ -18,7 +18,7 @@ class FunctionTestCase(TestCase):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __repr__(self):
         pass
@@ -29,7 +29,7 @@ class FunctionTestCase(TestCase):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def id(self):
         pass
@@ -62,13 +62,13 @@ class SkipTest(builtins.Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __module__ = 'unittest.case'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -96,7 +96,7 @@ class TestCase(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __module__ = 'unittest.case'
     def __repr__(self):
@@ -108,7 +108,7 @@ class TestCase(builtins.object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -404,12 +404,12 @@ class _AssertLogsContext(_BaseTestCaseContext):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class _AssertRaisesBaseContext(_BaseTestCaseContext):
@@ -421,12 +421,12 @@ class _AssertRaisesBaseContext(_BaseTestCaseContext):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def handle(self, name, args, kwargs):
         "\n        If args is empty, assertRaises/Warns is being used as a\n        context manager, so check for a 'msg' kwarg and return self.\n        If args is not empty, call a callable passing positional and keyword\n        arguments.\n        "
@@ -446,12 +446,12 @@ class _AssertRaisesContext(_AssertRaisesBaseContext):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     _base_type = builtins.BaseException
     _base_type_str = 'an exception type or tuple of exception types'
@@ -469,12 +469,12 @@ class _AssertWarnsContext(_AssertRaisesBaseContext):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     _base_type = builtins.Warning
     _base_type_str = 'a warning type or tuple of warning types'
@@ -488,13 +488,13 @@ class _BaseTestCaseContext(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __module__ = 'unittest.case'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -515,13 +515,13 @@ class _CapturingHandler(logging.Handler):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __module__ = 'unittest.case'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def emit(self, record):
         pass
@@ -540,13 +540,9 @@ class _LoggingWatcher(builtins.tuple):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __module__ = 'unittest.case'
-    def __new__(self, records, output):
-        'Create new instance of _LoggingWatcher(records, output)'
-        pass
-    
     def __repr__(self):
         'Return a nicely formatted representation string'
         pass
@@ -555,7 +551,7 @@ class _LoggingWatcher(builtins.tuple):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def _asdict(self):
         'Return a new OrderedDict which maps field names to their values.'
@@ -583,13 +579,13 @@ class _Outcome(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __module__ = 'unittest.case'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -607,13 +603,13 @@ class _ShouldStop(builtins.Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __module__ = 'unittest.case'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -630,7 +626,7 @@ class _SubTest(TestCase):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __str__(self):
         pass
@@ -638,7 +634,7 @@ class _SubTest(TestCase):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def _subDescription(self):
         pass
@@ -669,13 +665,13 @@ class _UnexpectedSuccess(builtins.Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __module__ = 'unittest.case'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):

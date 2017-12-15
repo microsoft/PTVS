@@ -5,17 +5,12 @@ class Random(__builtin__.object):
     __class__ = Random
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return Any
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def getrandbits(self, k):
         'getrandbits(k) -> x.  Generates a long int with k random bits.'

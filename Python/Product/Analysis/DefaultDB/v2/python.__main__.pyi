@@ -11,7 +11,7 @@ class InspectWarning(exceptions.UserWarning):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -25,14 +25,14 @@ class MemberInfo(__builtin__.object):
     NO_VALUE = __builtin__.object()
     __class__ = MemberInfo
     __dict__ = __builtin__.dict()
-    def __init__(self, name, value, literal, scope, module, alias, module_doc):
-        pass
+    def __init__(self, name, value, literal, scope, module, alias, module_doc, scope_alias):
+        return self
     
     __module__ = '__main__'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -68,20 +68,20 @@ class ScrapeState(__builtin__.object):
     __class__ = ScrapeState
     __dict__ = __builtin__.dict()
     def __init__(self, module_name, module):
-        pass
+        return self
     
     __module__ = '__main__'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
         'list of weak references to the object (if defined)'
         pass
     
-    def _collect_members(self, mod, members, substitutes, scope):
+    def _collect_members(self, mod, members, substitutes, outer_member):
         'Fills the members attribute with a dictionary containing\n        all members from the module.'
         pass
     
@@ -118,16 +118,16 @@ class Signature(__builtin__.object):
     __class__ = Signature
     __dict__ = __builtin__.dict()
     def __init__(self, name, callable, scope, defaults, scope_alias, decorators, module_doc):
-        pass
+        return self
     
     __module__ = '__main__'
     def __str__(self):
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):

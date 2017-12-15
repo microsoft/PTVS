@@ -128,6 +128,7 @@ class Signature(object):
         "__getitem__": "Any",
         "__getnewargs__": "()",
         "__getnewargs_ex__": "((), {})",
+        "__getslice__": "self.__class__()",
         "__globals__": "{}",
         "__gt__": "False",
         "__hash__": "0",
@@ -135,7 +136,7 @@ class Signature(object):
         "__iand__": "None",
         "__imul__": "None",
         "__index__": "0",
-        "__init__": "self",
+        "__init__": "",
         "__init_subclass__": "None",
         "__int__": "0",
         "__invert__": "self",
@@ -152,7 +153,6 @@ class Signature(object):
         "__mul__": "self",
         "__ne__": "False",
         "__neg__": "self",
-        "__new__": "cls()",
         "__next__": "Any",
         "__pos__": "self",
         "__pow__": "self",
@@ -201,7 +201,6 @@ class Signature(object):
         "__init_subclass__": "(cls)",
         "__instancecheck__": "(self, instance)",
         "__length_hint__": "(self)",
-        "__new__": "(cls, *args, **kwargs)",
         "__prepare__": "(cls, name, bases, **kwds)",
         "__round__": "(self, ndigits=0)",
         "__reduce__": "(self)",
@@ -251,8 +250,8 @@ class Signature(object):
             # Disable fromsignature() because it doesn't work as well as argspec
             #self._init_argspec_fromsignature(self._defaults) or
             self._init_argspec_fromargspec(self._defaults) or
-            self._init_argspec_fromdocstring(self._defaults) or
             self._init_argspec_fromknown(self._defaults, scope_alias) or
+            self._init_argspec_fromdocstring(self._defaults) or
             (self.name + "(" + ", ".join(self._defaults) + ")")
         )
         self.restype = (
@@ -352,8 +351,17 @@ class Signature(object):
 
         call = self._parse_funcdef(doc, allow_name_mismatch)
         if not call:
+            # Remove optional parameter marks
             doc = re.sub(r'[\[\]]', '', doc)
             call = self._parse_funcdef(doc, allow_name_mismatch)
+        if not call:
+            # Replace "X.y(" with y(self : X,"
+            doc2 = re.sub(r'^(\w+)\.(\w+)\(', r'\2(self : \1, ', doc)
+            call = self._parse_funcdef(doc2, allow_name_mismatch)
+        if not call:
+            # Replace "X.y(" with y(self,"
+            doc2 = re.sub(r'^(\w+)\.(\w+)\(', r'\2(self, ', doc)
+            call = self._parse_funcdef(doc2, allow_name_mismatch)
         if not call:
             doc = re.sub(r'\=.+?([,\)])', r'\1', doc)
             call = self._parse_funcdef(doc, allow_name_mismatch)
@@ -452,6 +460,9 @@ class Signature(object):
                 return '()'
             return '(' + ', '.join(elts) + ')'
 
+        def walk_Dict(self, node):
+            return '{}'
+
         def walk_BinOp(self, node):
             v1 = self.walk(node.left)
             op = self.walk(node.op)
@@ -523,7 +534,7 @@ class Signature(object):
 class MemberInfo(object):
     NO_VALUE = object()
 
-    def __init__(self, name, value, literal=None, scope=None, module=None, alias=None, module_doc=None):
+    def __init__(self, name, value, literal=None, scope=None, module=None, alias=None, module_doc=None, scope_alias=None):
         self.name = name
         self.value = value
         self.literal = literal
@@ -535,6 +546,7 @@ class MemberInfo(object):
         self.bases = ()
         self.signature = None
         self.documentation = getattr(value, '__doc__', None)
+        self.alias = alias
         if not isinstance(self.documentation, str):
             self.documentation = None
 
@@ -570,10 +582,10 @@ class MemberInfo(object):
                     dec += '@staticmethod',
                 elif value_type in CLASSMETHOD_TYPES:
                     dec += '@classmethod',
-            self.signature = Signature(name, value, scope, scope_alias=alias, decorators=dec, module_doc=module_doc)
+            self.signature = Signature(name, value, scope, scope_alias=scope_alias, decorators=dec, module_doc=module_doc)
         elif value is not None:
             if value_type in PROPERTY_TYPES:
-                self.signature = Signature(name, value, scope, scope_alias=alias)
+                self.signature = Signature(name, value, scope, scope_alias=scope_alias)
             if value_type not in SKIP_TYPENAME_FOR_TYPES:
                 self.need_imports, self.type_name = self._get_typename(value_type, module)
             if isinstance(value, float) and repr(value) == 'nan':
@@ -644,7 +656,10 @@ class MemberInfo(object):
         yield 'def ' + str(self.signature) + ':'
         if self.documentation:
             yield '    ' + repr(self.documentation)
-        yield '    pass'
+        if self.signature.restype:
+            yield '    ' + self.signature.restype
+        else:
+            yield '    pass'
         yield ''
 
     def as_str(self, indent=''):
@@ -677,6 +692,7 @@ CLASS_MEMBER_SUBSTITUTE = {
     '__mro__': MemberInfo('__mro__', ()),
     '__dict__': MemberInfo('__dict__', {}),
     '__doc__': None,
+    '__new__': None,
 }
 
 class ScrapeState(object):
@@ -763,7 +779,7 @@ class ScrapeState(object):
             if self._should_collect_members(mi):
                 substitutes = dict(CLASS_MEMBER_SUBSTITUTE)
                 substitutes['__class__'] = MemberInfo('__class__', None, literal=mi.type_name)
-                self._collect_members(mi.value, mi.members, substitutes, mi.scope_name)
+                self._collect_members(mi.value, mi.members, substitutes, mi)
 
                 if mi.scope_name != mi.type_name:
                     # When the scope and type names are different, we have a static
@@ -773,14 +789,22 @@ class ScrapeState(object):
                         if mi2.signature:
                             mi2.signature.decorators += '@staticmethod',
 
-    def _collect_members(self, mod, members, substitutes, scope):
+    def _collect_members(self, mod, members, substitutes, outer_member):
         '''Fills the members attribute with a dictionary containing
         all members from the module.'''
         if not mod:
             raise RuntimeError("failed to import module")
         if mod is MemberInfo.NO_VALUE:
             return
-        
+
+        existing_names = set(m.name for m in members)
+
+        if outer_member:
+            scope = outer_member.scope_name
+            scope_alias = outer_member.alias
+        else:
+            scope, scope_alias = None, None
+
         mod_scope = (self.module_name + '.' + scope) if scope else self.module_name
         mod_doc = getattr(mod, '__doc__', None)
         mro = (getattr(mod, '__mro__', None) or ())[1:]
@@ -802,6 +826,9 @@ class ScrapeState(object):
             except LookupError:
                 pass
 
+            if name in existing_names:
+                continue
+
             try:
                 value = getattr(mod, name)
             except AttributeError:
@@ -813,7 +840,7 @@ class ScrapeState(object):
                     continue
                 if self._mro_contains(mro, name, value):
                     continue
-                members.append(MemberInfo(name, value, scope=scope, module=self.module_name, module_doc=mod_doc))
+                members.append(MemberInfo(name, value, scope=scope, module=self.module_name, module_doc=mod_doc, scope_alias=scope_alias))
 
     def _should_add_value(self, value):
         try:
@@ -869,11 +896,13 @@ class ScrapeState(object):
                 raise
 
 def add_builtin_objects(state):
-    T = "__Type(self)()"
+    T = "self.__class__()"
     Signature.KNOWN_RESTYPES.update({
         "__Type.__call__": "cls()",
         "__Property.__delete__": "None",
         "__Float.__getformat__": "''",
+        "__Bytes.__getitem__": T,
+        "__Unicode.__getitem__": T,
         "__Type.__instancecheck__": "__Bool()",
         "__Tuple.__iter__": "__TupleIterator()",
         "__List.__iter__": "__ListIterator()",
@@ -1010,6 +1039,8 @@ def add_builtin_objects(state):
         "__Type.__instancecheck__": "(self, instance)",
         "__Bool.__init__": "(self, x)",
         "__Int.__init__": "(self, x=0)",
+        "__List.__init__": "(self, iterable)",
+        "__Tuple.__init__": "(self, iterable)",
         "__Type.__prepare__": "(cls, name, bases, **kwds)",
         "__Int.__round__": "(self, ndigits=0)",
         "__Float.__round__": "(self, ndigits=0)",
@@ -1139,11 +1170,14 @@ def add_builtin_objects(state):
             "__UnicodeIterator.__next__": None,
             "__UnicodeIterator.next": "u''",
             "__Generator.send": "self.next()",
+            "__Function.func_closure": "()",
+            "__Function.func_doc": "b''",
+            "__Function.func_name": "b''",
         })
 
         Signature.KNOWN_ARGSPECS.update({
-            "__BytesIterator.next": "self",
-            "__UnicodeIterator.next": "self",
+            "__BytesIterator.next": "(self)",
+            "__UnicodeIterator.next": "(self)",
         })
 
 

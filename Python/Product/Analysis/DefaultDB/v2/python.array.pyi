@@ -6,14 +6,14 @@ __name__ = 'array'
 __package__ = None
 class array(__builtin__.object):
     'array(typecode [, initializer]) -> array\n\nReturn a new array whose items are restricted by typecode, and\ninitialized from the optional initializer value, which must be a list,\nstring or iterable over elements of the appropriate type.\n\nArrays represent basic values and behave very much like lists, except\nthe type of objects stored in them is constrained.\n\nMethods:\n\nappend() -- append a new item to the end of the array\nbuffer_info() -- return information giving the current memory info\nbyteswap() -- byteswap all the items of the array\ncount() -- return number of occurrences of an object\nextend() -- extend array by appending multiple elements from an iterable\nfromfile() -- read items from a file object\nfromlist() -- append items from the list\nfromstring() -- append items from the string\nindex() -- return index of first occurrence of an object\ninsert() -- insert a new item into the array at a provided position\npop() -- remove and return item (default last)\nread() -- DEPRECATED, use fromfile()\nremove() -- remove first occurrence of an object\nreverse() -- reverse the order of the items in the array\ntofile() -- write all items to a file object\ntolist() -- return the array converted to an ordinary list\ntostring() -- return the array converted to a string\nwrite() -- DEPRECATED, use tofile()\n\nAttributes:\n\ntypecode -- the typecode character used to create the array\nitemsize -- the length in bytes of one array item\n'
-    def __add__(self):
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = array
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x'
-        pass
+        return False
     
     def __copy__(self):
         'copy(array)\n\n Return a copy of the array.'
@@ -23,103 +23,98 @@ class array(__builtin__.object):
         'copy(array)\n\n Return a copy of the array.'
         pass
     
-    def __delitem__(self):
+    def __delitem__(self, y):
         'x.__delitem__(y) <==> del x[y]'
-        pass
+        return None
     
-    def __delslice__(self):
+    def __delslice__(self, i, j):
         'x.__delslice__(i, j) <==> del x[i:j]\n           \n           Use of negative indices is not supported.'
         pass
     
-    def __eq__(self):
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
-    def __ge__(self):
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
-    def __getslice__(self):
+    def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        pass
+        return self
     
-    def __gt__(self):
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
-    def __iadd__(self):
+    def __iadd__(self, y):
         'x.__iadd__(y) <==> x+=y'
-        pass
+        return None
     
-    def __imul__(self):
+    def __imul__(self, y):
         'x.__imul__(y) <==> x*=y'
-        pass
+        return None
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
+        return self
     
-    def __le__(self):
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
     def __len__(self):
         'x.__len__() <==> len(x)'
-        pass
+        return 0
     
-    def __lt__(self):
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
-    def __mul__(self):
+    def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        pass
+        return self
     
-    def __ne__(self):
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
-    
-    @classmethod
-    def __new__(cls, typecode, initializer):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return False
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
-    def __rmul__(self):
+    def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        pass
+        return self
     
     def __setitem__(self, index, value):
         'x.__setitem__(i, y) <==> x[i]=y'
-        pass
+        return None
     
-    def __setslice__(self):
+    def __setslice__(self, i, j, y):
         'x.__setslice__(i, j, y) <==> x[i:j]=y\n           \n           Use  of negative indices is not supported.'
         pass
     
     def __sizeof__(self):
         '__sizeof__() -> int\n\nSize of the array in memory, in bytes.'
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def append(self, x):
         'append(x)\n\nAppend new value x to the end of the array.'

@@ -7,80 +7,75 @@ __name__ = 'datetime'
 __package__ = None
 class date(__builtin__.object):
     'date(year, month, day) --> date object'
-    def __add__(self):
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = date
-    def __eq__(self):
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
     def __format__(self, format_spec):
         'Formats self with strftime.'
-        pass
+        return ''
     
-    def __ge__(self):
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
-    def __gt__(self):
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
-    def __le__(self):
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
-    def __lt__(self):
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
-    def __ne__(self):
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
+        return False
     
-    @classmethod
-    def __new__(cls, year, month, day):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
-    
-    def __radd__(self):
+    def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        pass
+        return self
     
     def __reduce__(self):
         '__reduce__() -> (cls, state)'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
-    def __rsub__(self):
+    def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
-    def __sub__(self):
+    def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def ctime(self):
         'Return ctime() style string.'
@@ -151,76 +146,71 @@ class date(__builtin__.object):
 
 class datetime(date):
     'datetime(year, month, day[, hour[, minute[, second[, microsecond[,tzinfo]]]]])\n\nThe year, month and day arguments are required. tzinfo may be None, or an\ninstance of a tzinfo subclass. The remaining arguments may be ints or longs.\n'
-    def __add__(self):
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = datetime
-    def __eq__(self):
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
-    def __ge__(self):
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
-    def __gt__(self):
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
-    def __le__(self):
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
-    def __lt__(self):
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
-    def __ne__(self):
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
+        return False
     
-    @classmethod
-    def __new__(cls, year, month, day, hour, minute, second, microsecond, tzinfo):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
-    
-    def __radd__(self):
+    def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        pass
+        return self
     
     def __reduce__(self):
         '__reduce__() -> (cls, state)'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
-    def __rsub__(self):
+    def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
-    def __sub__(self):
+    def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def astimezone(self):
         'tz -> convert to local time in new timezone tz\n'
@@ -338,46 +328,41 @@ datetime_CAPI = __builtin__.PyCapsule()
 class time(__builtin__.object):
     'time([hour[, minute[, second[, microsecond[, tzinfo]]]]]) --> a time object\n\nAll arguments are optional. tzinfo may be None, or an instance of\na tzinfo subclass. The remaining arguments may be ints or longs.\n'
     __class__ = time
-    def __eq__(self):
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
     def __format__(self, format_spec):
         'Formats self with strftime.'
-        pass
+        return ''
     
-    def __ge__(self):
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
-    def __gt__(self):
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
-    def __le__(self):
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
-    def __lt__(self):
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
-    def __ne__(self):
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
-    
-    @classmethod
-    def __new__(cls, hour, minute, second, microsecond, tzinfo):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return False
     
     def __nonzero__(self):
         'x.__nonzero__() <==> x != 0'
@@ -385,20 +370,20 @@ class time(__builtin__.object):
     
     def __reduce__(self):
         '__reduce__() -> (cls, state)'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def dst(self):
         'Return self.tzinfo.dst(self).'
@@ -452,65 +437,60 @@ class timedelta(__builtin__.object):
     'Difference between two datetime values.'
     def __abs__(self):
         'x.__abs__() <==> abs(x)'
-        pass
+        return self
     
-    def __add__(self):
+    def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        pass
+        return self
     
     __class__ = timedelta
-    def __div__(self):
+    def __div__(self, y):
         'x.__div__(y) <==> x/y'
         pass
     
-    def __eq__(self):
+    def __eq__(self, y):
         'x.__eq__(y) <==> x==y'
-        pass
+        return False
     
-    def __floordiv__(self):
+    def __floordiv__(self, y):
         'x.__floordiv__(y) <==> x//y'
-        pass
+        return 0
     
-    def __ge__(self):
+    def __ge__(self, y):
         'x.__ge__(y) <==> x>=y'
-        pass
+        return False
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
-    def __gt__(self):
+    def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
-        pass
+        return False
     
     def __hash__(self):
         'x.__hash__() <==> hash(x)'
-        pass
+        return 0
     
-    def __le__(self):
+    def __le__(self, y):
         'x.__le__(y) <==> x<=y'
-        pass
+        return False
     
-    def __lt__(self):
+    def __lt__(self, y):
         'x.__lt__(y) <==> x<y'
-        pass
+        return False
     
-    def __mul__(self):
+    def __mul__(self, y):
         'x.__mul__(y) <==> x*y'
-        pass
+        return self
     
-    def __ne__(self):
+    def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
-        pass
+        return False
     
     def __neg__(self):
         'x.__neg__() <==> -x'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __nonzero__(self):
         'x.__nonzero__() <==> x != 0'
@@ -518,48 +498,48 @@ class timedelta(__builtin__.object):
     
     def __pos__(self):
         'x.__pos__() <==> +x'
-        pass
+        return self
     
-    def __radd__(self):
+    def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        pass
+        return self
     
-    def __rdiv__(self):
+    def __rdiv__(self, y):
         'x.__rdiv__(y) <==> y/x'
         pass
     
     def __reduce__(self):
         '__reduce__() -> (cls, state)'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
-    def __rfloordiv__(self):
+    def __rfloordiv__(self, y):
         'x.__rfloordiv__(y) <==> y//x'
-        pass
+        return self
     
-    def __rmul__(self):
+    def __rmul__(self, y):
         'x.__rmul__(y) <==> y*x'
-        pass
+        return self
     
-    def __rsub__(self):
+    def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        pass
+        return self
     
     def __str__(self):
         'x.__str__() <==> str(x)'
-        pass
+        return ''
     
-    def __sub__(self):
+    def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def days(self):
@@ -589,21 +569,16 @@ class tzinfo(__builtin__.object):
     __class__ = tzinfo
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return Any
     
     def __reduce__(self):
         '-> (cls, state)'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def dst(self):
         'datetime -> DST offset in minutes east of UTC.'

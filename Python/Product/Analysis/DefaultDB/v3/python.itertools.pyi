@@ -12,15 +12,10 @@ class _grouper(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -29,12 +24,12 @@ class _grouper(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class _tee(builtins.object):
@@ -47,15 +42,10 @@ class _tee(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -64,16 +54,16 @@ class _tee(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class _tee_dataobject(builtins.object):
@@ -86,21 +76,16 @@ class _tee_dataobject(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class accumulate(builtins.object):
@@ -113,15 +98,10 @@ class accumulate(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, func):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -130,16 +110,16 @@ class accumulate(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class chain(builtins.object):
@@ -152,15 +132,10 @@ class chain(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -169,19 +144,19 @@ class chain(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @classmethod
-    def from_iterable(cls):
+    def from_iterable(cls, self, iterable):
         'chain.from_iterable(iterable) --> chain object\n\nAlternate chain() constructor taking a single iterable argument\nthat evaluates lazily.'
         pass
     
@@ -196,15 +171,10 @@ class combinations(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, r):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -213,20 +183,20 @@ class combinations(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     def __sizeof__(self):
         'Returns size in memory, in bytes.'
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class combinations_with_replacement(builtins.object):
@@ -239,15 +209,10 @@ class combinations_with_replacement(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, r):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -256,20 +221,20 @@ class combinations_with_replacement(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     def __sizeof__(self):
         'Returns size in memory, in bytes.'
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class compress(builtins.object):
@@ -282,15 +247,10 @@ class compress(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, data, selectors):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -299,12 +259,12 @@ class compress(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class count(builtins.object):
@@ -317,15 +277,10 @@ class count(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, start=0, step=1):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -334,7 +289,7 @@ class count(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -343,7 +298,7 @@ class count(builtins.object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class cycle(builtins.object):
@@ -356,15 +311,10 @@ class cycle(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -373,16 +323,16 @@ class cycle(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class dropwhile(builtins.object):
@@ -395,15 +345,10 @@ class dropwhile(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, predicate, iterable):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -412,16 +357,16 @@ class dropwhile(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class filterfalse(builtins.object):
@@ -434,15 +379,10 @@ class filterfalse(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -451,12 +391,12 @@ class filterfalse(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class groupby(builtins.object):
@@ -469,15 +409,10 @@ class groupby(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, keyfunc):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -486,16 +421,16 @@ class groupby(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class islice(builtins.object):
@@ -508,15 +443,10 @@ class islice(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, stop):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -525,16 +455,16 @@ class islice(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class permutations(builtins.object):
@@ -547,15 +477,10 @@ class permutations(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, r):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -564,20 +489,20 @@ class permutations(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     def __sizeof__(self):
         'Returns size in memory, in bytes.'
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class product(builtins.object):
@@ -590,15 +515,10 @@ class product(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -607,20 +527,20 @@ class product(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     def __sizeof__(self):
         'Returns size in memory, in bytes.'
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class repeat(builtins.object):
@@ -633,7 +553,7 @@ class repeat(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -641,12 +561,7 @@ class repeat(builtins.object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
-    
-    @classmethod
-    def __new__(cls, object, times):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -654,7 +569,7 @@ class repeat(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -663,7 +578,7 @@ class repeat(builtins.object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class starmap(builtins.object):
@@ -676,15 +591,10 @@ class starmap(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, function, sequence):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -693,12 +603,12 @@ class starmap(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class takewhile(builtins.object):
@@ -711,15 +621,10 @@ class takewhile(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, predicate, iterable):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -728,16 +633,16 @@ class takewhile(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 def tee(iterable, n=2):
@@ -754,15 +659,10 @@ class zip_longest(builtins.object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -771,15 +671,15 @@ class zip_longest(builtins.object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 

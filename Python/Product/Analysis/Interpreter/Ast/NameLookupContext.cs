@@ -198,14 +198,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            if (expr.Name == Module.Name) {
-                return Module;
-            }
             IMember existing = LookupNameInScopes(expr.Name, options);
             if (existing != null) {
                 return existing;
             }
 
+            if (expr.Name == Module.Name) {
+                return Module;
+            }
             _log?.Log(TraceLevel.Verbose, "UnknownName", expr.Name);
             return new AstPythonConstant(_unknownType, GetLoc(expr));
         }

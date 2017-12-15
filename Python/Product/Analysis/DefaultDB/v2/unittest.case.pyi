@@ -5,32 +5,32 @@ DIFF_OMITTED = '\nDiff is %s characters long. Set self.maxDiff to None to see it
 class FunctionTestCase(TestCase):
     "A test case that wraps a test function.\n\n    This is useful for slipping pre-existing test functions into the\n    unittest framework. Optionally, set-up and tidy-up functions can be\n    supplied. As with TestCase, the tidy-up ('tearDown') function will\n    always be called if the set-up ('setUp') function ran successfully.\n    "
     def __call__(self, *args):
-        pass
+        return Any
     
     __class__ = FunctionTestCase
     __dict__ = __builtin__.dict()
     def __eq__(self, other):
-        pass
+        return False
     
     def __hash__(self):
-        pass
+        return 0
     
     def __init__(self, testFunc, setUp, tearDown, description):
-        pass
+        return self
     
     def __ne__(self, other):
-        pass
+        return False
     
     def __repr__(self):
-        pass
+        return ''
     
     def __str__(self):
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def _addSkip(self, result, reason):
         pass
@@ -278,7 +278,7 @@ class SkipTest(exceptions.Exception):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -289,34 +289,34 @@ class SkipTest(exceptions.Exception):
 class TestCase(__builtin__.object):
     "A class whose instances are single test cases.\n\n    By default, the test code itself should be placed in a method named\n    'runTest'.\n\n    If the fixture may be used for many test cases, create as\n    many test methods as are needed. When instantiating such a TestCase\n    subclass, specify in the constructor arguments the name of the test method\n    that the instance is to execute.\n\n    Test authors should subclass TestCase for their own tests. Construction\n    and deconstruction of the test's environment ('fixture') can be\n    implemented by overriding the 'setUp' and 'tearDown' methods respectively.\n\n    If it is necessary to override the __init__ method, the base class\n    __init__ method must always be called. It is important that subclasses\n    should not change the signature of their __init__ method, since instances\n    of the classes are instantiated automatically by parts of the framework\n    in order to be run.\n\n    When subclassing TestCase, you can set these attributes:\n    * failureException: determines which exception will be raised when\n        the instance's assertion methods fail; test methods raising this\n        exception will be deemed to have 'failed' rather than 'errored'.\n    * longMessage: determines whether long messages (including repr of\n        objects used in assert methods) will be printed on failure in *addition*\n        to any explicit message passed.\n    * maxDiff: sets the maximum length of a diff in failure messages\n        by assert methods using difflib. It is looked up as an instance\n        attribute so can be configured by individual tests if required.\n    "
     def __call__(self, *args):
-        pass
+        return Any
     
     __class__ = TestCase
     __dict__ = __builtin__.dict()
     def __eq__(self, other):
-        pass
+        return False
     
     def __hash__(self):
-        pass
+        return 0
     
     def __init__(self, methodName):
         'Create an instance of the class that will use the named test\n           method when executed. Raises a ValueError if the instance does\n           not have a method with the specified name.\n        '
-        pass
+        return self
     
     __module__ = 'unittest.case'
     def __ne__(self, other):
-        pass
+        return False
     
     def __repr__(self):
-        pass
+        return ''
     
     def __str__(self):
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -577,13 +577,13 @@ class _AssertRaisesContext(__builtin__.object):
         pass
     
     def __init__(self, expected, test_case, expected_regexp):
-        pass
+        return self
     
     __module__ = 'unittest.case'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -596,13 +596,13 @@ class _ExpectedFailure(exceptions.Exception):
     __class__ = _ExpectedFailure
     __dict__ = __builtin__.dict()
     def __init__(self, exc_info):
-        pass
+        return self
     
     __module__ = 'unittest.case'
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -618,7 +618,7 @@ class _UnexpectedSuccess(exceptions.Exception):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):

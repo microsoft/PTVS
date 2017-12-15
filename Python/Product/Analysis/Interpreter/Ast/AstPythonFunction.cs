@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonFunction : IPythonFunction, ILocatedMember {
         private readonly List<IPythonFunctionOverload> _overloads;
+        private readonly string _doc;
 
         public AstPythonFunction(
             PythonAst ast,
@@ -36,6 +37,9 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             DeclaringType = declType;
 
             Name = def.Name;
+            if (Name == "__init__") {
+                _doc = declType?.Documentation;
+            }
 
             foreach (var dec in (def.Decorators?.Decorators).MaybeEnumerate().OfType<NameExpression>()) {
                 if (dec.Name == "classmethod") {
@@ -63,7 +67,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IPythonModule DeclaringModule {get;}
         public IPythonType DeclaringType {get;}
         public string Name { get; }
-        public string Documentation => _overloads.FirstOrDefault()?.Documentation;
+        public string Documentation => _doc ?? _overloads.FirstOrDefault()?.Documentation;
         public bool IsBuiltin => true;
 
         public bool IsClassMethod { get; }

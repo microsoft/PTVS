@@ -88,6 +88,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public string BuiltinModuleName { get; }
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
+            if (id < 0 || id > BuiltinTypeIdExtensions.LastTypeId) {
+                throw new KeyNotFoundException($"(BuiltinTypeId)({(int)id})");
+            }
+
             IPythonType res;
             lock (_builtinTypes) {
                 if (!_builtinTypes.TryGetValue(id, out res)) {

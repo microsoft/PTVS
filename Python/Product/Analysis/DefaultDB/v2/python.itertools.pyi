@@ -8,24 +8,19 @@ class chain(__builtin__.object):
     __class__ = chain
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @classmethod
-    def from_iterable(cls):
+    def from_iterable(cls, self, iterable):
         'chain.from_iterable(iterable) --> chain object\n\nAlternate chain() constructor taking a single iterable argument\nthat evaluates lazily.'
         pass
     
@@ -39,21 +34,16 @@ class combinations(__builtin__.object):
     __class__ = combinations
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, r):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -65,21 +55,16 @@ class combinations_with_replacement(__builtin__.object):
     __class__ = combinations_with_replacement
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, r):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -91,21 +76,16 @@ class compress(__builtin__.object):
     __class__ = compress
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, data, selectors):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -117,29 +97,24 @@ class count(__builtin__.object):
     __class__ = count
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, start=0, step=1):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -151,21 +126,16 @@ class cycle(__builtin__.object):
     __class__ = cycle
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -177,21 +147,16 @@ class dropwhile(__builtin__.object):
     __class__ = dropwhile
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, predicate, iterable):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -203,21 +168,16 @@ class groupby(__builtin__.object):
     __class__ = groupby
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, keyfunc):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -229,21 +189,16 @@ class ifilter(__builtin__.object):
     __class__ = ifilter
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -255,21 +210,16 @@ class ifilterfalse(__builtin__.object):
     __class__ = ifilterfalse
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -281,21 +231,16 @@ class imap(__builtin__.object):
     __class__ = imap
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, func):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -307,21 +252,16 @@ class islice(__builtin__.object):
     __class__ = islice
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, start, stop, step):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -333,21 +273,16 @@ class izip(__builtin__.object):
     __class__ = izip
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -359,21 +294,16 @@ class izip_longest(__builtin__.object):
     __class__ = izip_longest
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, *args, **kwargs):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -385,21 +315,16 @@ class permutations(__builtin__.object):
     __class__ = permutations
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, r):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -411,21 +336,16 @@ class product(__builtin__.object):
     __class__ = product
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -437,29 +357,24 @@ class repeat(__builtin__.object):
     __class__ = repeat
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
+        return self
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
-    
-    @classmethod
-    def __new__(cls, object, times):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return 0
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -471,21 +386,16 @@ class starmap(__builtin__.object):
     __class__ = starmap
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, function, sequence):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'
@@ -497,21 +407,16 @@ class takewhile(__builtin__.object):
     __class__ = takewhile
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
-        pass
+        return Any
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        pass
-    
-    @classmethod
-    def __new__(cls, predicate, iterable):
-        'T.__new__(S, ...) -> a new object with type S, a subtype of T'
-        pass
+        return self
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     def next(self):
         'x.next() -> the next value, or raise StopIteration'

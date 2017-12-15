@@ -3,15 +3,10 @@ class NotImplementedType(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -20,7 +15,7 @@ class NotImplementedType(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class __Unknown:
@@ -39,7 +34,7 @@ class object:
     
     def __dir__(self):
         '__dir__() -> list\ndefault dir() implementation'
-        pass
+        return ['']
     
     def __eq__(self, value):
         'Return self==value.'
@@ -47,7 +42,7 @@ class object:
     
     def __format__(self, format_spec):
         'default object formatter'
-        pass
+        return ''
     
     def __ge__(self, value):
         'Return self>=value.'
@@ -72,7 +67,7 @@ class object:
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __le__(self, value):
         'Return self<=value.'
@@ -86,18 +81,13 @@ class object:
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __reduce__(self):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     def __reduce_ex__(self, protocol):
         'helper for pickle'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -109,7 +99,7 @@ class object:
     
     def __sizeof__(self):
         '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
+        return 0
     
     def __str__(self):
         'Return str(self).'
@@ -118,7 +108,7 @@ class object:
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __Object = object
@@ -140,7 +130,7 @@ class type(object):
     __dictoffset__ = 264
     def __dir__(self):
         '__dir__() -> list\nspecialized __dir__ implementation for types'
-        pass
+        return ['']
     
     __flags__ = -2146675712
     def __getattribute__(self, name):
@@ -154,24 +144,19 @@ class type(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
-    def __instancecheck__(self):
+    def __instancecheck__(self, instance):
         '__instancecheck__() -> bool\ncheck if an object is an instance'
-        pass
+        return __Bool()
     
     __itemsize__ = 40
     __mro__ = builtins.tuple()
     __name__ = 'type'
     @classmethod
-    def __new__(cls, object_or_name, bases, dict):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __prepare__(cls):
+    def __prepare__(cls, name, bases, **kwds):
         '__prepare__() -> dict\nused to create the namespace for the class statement'
-        pass
+        return None
     
     __qualname__ = 'type'
     def __repr__(self):
@@ -184,26 +169,26 @@ class type(object):
     
     def __sizeof__(self):
         '__sizeof__() -> int\nreturn memory consumption of the type object'
-        pass
+        return 0
     
-    def __subclasscheck__(self):
+    def __subclasscheck__(cls, subclass):
         '__subclasscheck__() -> bool\ncheck if a class is a subclass'
-        pass
+        return __Bool()
     
-    def __subclasses__(self):
+    def __subclasses__(cls):
         '__subclasses__() -> list of immediate subclasses'
-        pass
+        return (cls,)
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     __text_signature__ = None
     __weakrefoffset__ = 368
-    def mro(self):
+    def mro(cls):
         "mro() -> list\nreturn a type's method resolution order"
-        pass
+        return [__Type()]
     
 
 __Type = type
@@ -227,7 +212,7 @@ class int(object):
     
     def __ceil__(self):
         'Ceiling of an Integral returns itself.'
-        pass
+        return self
     
     __class__ = int
     def __divmod__(self, value):
@@ -244,14 +229,14 @@ class int(object):
     
     def __floor__(self):
         'Flooring an Integral returns itself.'
-        pass
+        return self
     
     def __floordiv__(self, value):
         'Return self//value.'
         pass
     
     def __format__(self, format_spec):
-        pass
+        return ''
     
     def __ge__(self, value):
         'Return self>=value.'
@@ -262,7 +247,7 @@ class int(object):
         pass
     
     def __getnewargs__(self):
-        pass
+        return ()
     
     def __gt__(self, value):
         'Return self>value.'
@@ -279,7 +264,7 @@ class int(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __int__(self):
         'int(self)'
@@ -315,11 +300,6 @@ class int(object):
     
     def __neg__(self):
         '-self'
-        pass
-    
-    @classmethod
-    def __new__(cls, x=0):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __or__(self, value):
@@ -372,7 +352,7 @@ class int(object):
     
     def __round__(self, ndigits=0):
         'Rounding an Integral returns itself.\nRounding with an ndigits argument also returns an integer.'
-        pass
+        return self
     
     def __rpow__(self, value, mod):
         'Return pow(value, self, mod).'
@@ -400,7 +380,7 @@ class int(object):
     
     def __sizeof__(self):
         'Returns size in memory, in bytes'
-        pass
+        return 0
     
     def __str__(self):
         'Return str(self).'
@@ -413,7 +393,7 @@ class int(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def __truediv__(self, value):
         'Return self/value.'
@@ -421,7 +401,7 @@ class int(object):
     
     def __trunc__(self):
         'Truncating an Integral returns itself.'
-        pass
+        return self
     
     def __xor__(self, value):
         'Return self^value.'
@@ -429,11 +409,11 @@ class int(object):
     
     def bit_length(self):
         "int.bit_length() -> int\n\nNumber of bits necessary to represent self in binary.\n>>> bin(37)\n'0b100101'\n>>> (37).bit_length()\n6"
-        pass
+        return 0
     
     def conjugate(self):
         'Returns self, the complex conjugate of any int.'
-        pass
+        return __Complex()
     
     @property
     def denominator(self):
@@ -441,9 +421,9 @@ class int(object):
         pass
     
     @classmethod
-    def from_bytes(cls):
+    def from_bytes(bytes, byteorder, *, signed=False):
         "int.from_bytes(bytes, byteorder, *, signed=False) -> int\n\nReturn the integer represented by the given array of bytes.\n\nThe bytes argument must be a bytes-like object (e.g. bytes or bytearray).\n\nThe byteorder argument determines the byte order used to represent the\ninteger.  If byteorder is 'big', the most significant byte is at the\nbeginning of the byte array.  If byteorder is 'little', the most\nsignificant byte is at the end of the byte array.  To request the native\nbyte order of the host system, use `sys.byteorder' as the byte order value.\n\nThe signed keyword-only argument indicates whether two's complement is\nused to represent the integer."
-        pass
+        return 0
     
     @property
     def imag(self):
@@ -460,9 +440,9 @@ class int(object):
         'the real part of a complex number'
         pass
     
-    def to_bytes(self):
+    def to_bytes(bytes, byteorder, *, signed=False):
         "int.to_bytes(length, byteorder, *, signed=False) -> bytes\n\nReturn an array of bytes representing an integer.\n\nThe integer is represented using length bytes.  An OverflowError is\nraised if the integer is not representable with the given number of\nbytes.\n\nThe byteorder argument determines the byte order used to represent the\ninteger.  If byteorder is 'big', the most significant byte is at the\nbeginning of the byte array.  If byteorder is 'little', the most\nsignificant byte is at the end of the byte array.  To request the native\nbyte order of the host system, use `sys.byteorder' as the byte order value.\n\nThe signed keyword-only argument determines whether two's complement is\nused to represent the integer.  If signed is False and a negative integer\nis given, an OverflowError is raised."
-        pass
+        return b''
     
 
 __Int = int
@@ -476,12 +456,7 @@ class bool(int):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(cls, x):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __or__(self, value):
         'Return self|value.'
@@ -510,16 +485,16 @@ class bool(int):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def __xor__(self, value):
         'Return self^value.'
         pass
     
     @classmethod
-    def from_bytes(cls):
+    def from_bytes(bytes, byteorder, *, signed=False):
         "int.from_bytes(bytes, byteorder, *, signed=False) -> int\n\nReturn the integer represented by the given array of bytes.\n\nThe bytes argument must be a bytes-like object (e.g. bytes or bytearray).\n\nThe byteorder argument determines the byte order used to represent the\ninteger.  If byteorder is 'big', the most significant byte is at the\nbeginning of the byte array.  If byteorder is 'little', the most\nsignificant byte is at the end of the byte array.  To request the native\nbyte order of the host system, use `sys.byteorder' as the byte order value.\n\nThe signed keyword-only argument indicates whether two's complement is\nused to represent the integer."
-        pass
+        return __Bool()
     
 
 __Bool = bool
@@ -557,7 +532,7 @@ class float(object):
     
     def __format__(self, format_spec):
         'float.__format__(format_spec) -> string\n\nFormats the float according to format_spec.'
-        pass
+        return ''
     
     def __ge__(self, value):
         'Return self>=value.'
@@ -568,12 +543,12 @@ class float(object):
         pass
     
     @classmethod
-    def __getformat__(cls):
+    def __getformat__(typestr):
         "float.__getformat__(typestr) -> string\n\nYou probably don't want to use this function.  It exists mainly to be\nused in Python's test suite.\n\ntypestr must be 'double' or 'float'.  This function returns whichever of\n'unknown', 'IEEE, big-endian' or 'IEEE, little-endian' best describes the\nformat of floating point numbers used by the C type named by typestr."
-        pass
+        return ''
     
     def __getnewargs__(self):
-        pass
+        return ()
     
     def __gt__(self, value):
         'Return self>value.'
@@ -586,7 +561,7 @@ class float(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __int__(self):
         'int(self)'
@@ -614,11 +589,6 @@ class float(object):
     
     def __neg__(self):
         '-self'
-        pass
-    
-    @classmethod
-    def __new__(cls, x):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __pos__(self):
@@ -655,7 +625,7 @@ class float(object):
     
     def __round__(self, ndigits=0):
         'Return the Integral closest to x, rounding half toward even.\nWhen an argument is passed, work like built-in round(x, ndigits).'
-        pass
+        return self
     
     def __rpow__(self, value, mod):
         'Return pow(value, self, mod).'
@@ -670,9 +640,9 @@ class float(object):
         pass
     
     @classmethod
-    def __setformat__(cls):
+    def __setformat__(typestr, fmt):
         "float.__setformat__(typestr, fmt) -> None\n\nYou probably don't want to use this function.  It exists mainly to be\nused in Python's test suite.\n\ntypestr must be 'double' or 'float'.  fmt must be one of 'unknown',\n'IEEE, big-endian' or 'IEEE, little-endian', and in addition can only be\none of the latter two if it appears to match the underlying C reality.\n\nOverride the automatic determination of C-level floating point type.\nThis affects how floats are converted to and from binary strings."
-        pass
+        return None
     
     def __str__(self):
         'Return str(self).'
@@ -685,7 +655,7 @@ class float(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def __truediv__(self, value):
         'Return self/value.'
@@ -693,24 +663,24 @@ class float(object):
     
     def __trunc__(self):
         'Return the Integral closest to x between 0 and x.'
-        pass
+        return self
     
     def as_integer_ratio(self):
         'float.as_integer_ratio() -> (int, int)\n\nReturn a pair of integers, whose ratio is exactly equal to the original\nfloat and with a positive denominator.\nRaise OverflowError on infinities and a ValueError on NaNs.\n\n>>> (10.0).as_integer_ratio()\n(10, 1)\n>>> (0.0).as_integer_ratio()\n(0, 1)\n>>> (-.25).as_integer_ratio()\n(-1, 4)'
-        pass
+        return (0, 0)
     
     def conjugate(self):
         'Return self, the complex conjugate of any float.'
-        pass
+        return __Complex()
     
     @classmethod
-    def fromhex(cls):
+    def fromhex(string):
         "float.fromhex(string) -> float\n\nCreate a floating-point number from a hexadecimal string.\n>>> float.fromhex('0x1.ffffp10')\n2047.984375\n>>> float.fromhex('-0x1p-1074')\n-5e-324"
-        pass
+        return 0.0
     
     def hex(self):
         "float.hex() -> string\n\nReturn a hexadecimal representation of a floating-point number.\n>>> (-0.1).hex()\n'-0x1.999999999999ap-4'\n>>> 3.14159.hex()\n'0x1.921f9f01b866ep+1'"
-        pass
+        return ''
     
     @property
     def imag(self):
@@ -719,7 +689,7 @@ class float(object):
     
     def is_integer(self):
         'Return True if the float is an integer.'
-        pass
+        return __Bool()
     
     @property
     def real(self):
@@ -761,7 +731,7 @@ class complex(object):
     
     def __format__(self, format_spec):
         'complex.__format__() -> str\n\nConvert to a string according to format_spec.'
-        pass
+        return ''
     
     def __ge__(self, value):
         'Return self>=value.'
@@ -772,7 +742,7 @@ class complex(object):
         pass
     
     def __getnewargs__(self):
-        pass
+        return ()
     
     def __gt__(self, value):
         'Return self>value.'
@@ -785,7 +755,7 @@ class complex(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __int__(self):
         'int(self)'
@@ -813,11 +783,6 @@ class complex(object):
     
     def __neg__(self):
         '-self'
-        pass
-    
-    @classmethod
-    def __new__(cls, real, imag):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __pos__(self):
@@ -875,7 +840,7 @@ class complex(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def __truediv__(self, value):
         'Return self/value.'
@@ -883,7 +848,7 @@ class complex(object):
     
     def conjugate(self):
         'complex.conjugate() -> complex\n\nReturn the complex conjugate of its argument. (3-4j).conjugate() == 3+4j.'
-        pass
+        return __Complex()
     
     @property
     def imag(self):
@@ -925,7 +890,7 @@ class tuple(object):
         pass
     
     def __getnewargs__(self):
-        pass
+        return ()
     
     def __gt__(self, value):
         'Return self>value.'
@@ -938,7 +903,7 @@ class tuple(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -964,11 +929,6 @@ class tuple(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __repr__(self):
         'Return repr(self).'
         pass
@@ -980,15 +940,15 @@ class tuple(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def count(self, x):
         'T.count(value) -> integer -- return number of occurrences of value'
-        pass
+        return 0
     
     def index(self, v):
         'T.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
-        pass
+        return 0
     
 
 __Tuple = tuple
@@ -1021,7 +981,7 @@ class list(object):
     
     def __getitem__(self, index):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
     def __gt__(self, value):
         'Return self>value.'
@@ -1043,7 +1003,7 @@ class list(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -1069,18 +1029,13 @@ class list(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __repr__(self):
         'Return repr(self).'
         pass
     
     def __reversed__(self):
         'L.__reversed__() -- return a reverse iterator over the list'
-        pass
+        return __ListIterator()
     
     def __rmul__(self, value):
         'Return self*value.'
@@ -1092,56 +1047,56 @@ class list(object):
     
     def __sizeof__(self):
         'L.__sizeof__() -- size of L in memory, in bytes'
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
-    def append(self):
+    def append(self, value):
         'L.append(object) -> None -- append object to end'
-        pass
+        return None
     
     def clear(self):
         'L.clear() -> None -- remove all items from L'
-        pass
+        return None
     
     def copy(self):
         'L.copy() -> list -- a shallow copy of L'
-        pass
+        return self.__class__()
     
     def count(self, x):
         'L.count(value) -> integer -- return number of occurrences of value'
-        pass
+        return 0
     
-    def extend(self):
+    def extend(self, iterable):
         'L.extend(iterable) -> None -- extend list by appending elements from the iterable'
-        pass
+        return None
     
     def index(self, v):
         'L.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
-        pass
+        return 0
     
-    def insert(self):
+    def insert(self, index, value):
         'L.insert(index, object) -- insert object before index'
-        pass
+        return None
     
-    def pop(self):
+    def pop(self, index=-1):
         'L.pop([index]) -> item -- remove and return item at index (default last).\nRaises IndexError if list is empty or index is out of range.'
-        pass
+        return self[0]
     
-    def remove(self):
+    def remove(self, value):
         'L.remove(value) -> None -- remove first occurrence of value.\nRaises ValueError if the value is not present.'
-        pass
+        return None
     
     def reverse(self):
         'L.reverse() -- reverse *IN PLACE*'
-        pass
+        return None
     
     def sort(self):
         'L.sort(key=None, reverse=False) -> None -- stable sort *IN PLACE*'
-        pass
+        return None
     
 
 __List = list
@@ -1168,9 +1123,9 @@ class dict(object):
         'Return getattr(self, name).'
         pass
     
-    def __getitem__(self, index):
+    def __getitem__(self, key):
         'x.__getitem__(y) <==> x[y]'
-        pass
+        return Any
     
     def __gt__(self, value):
         'Return self>value.'
@@ -1184,7 +1139,7 @@ class dict(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -1206,11 +1161,6 @@ class dict(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __repr__(self):
         'Return repr(self).'
         pass
@@ -1221,57 +1171,57 @@ class dict(object):
     
     def __sizeof__(self):
         'D.__sizeof__() -> size of D in memory, in bytes'
-        pass
+        return 0
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def clear(self):
         'D.clear() -> None.  Remove all items from D.'
-        pass
+        return None
     
     def copy(self):
         'D.copy() -> a shallow copy of D'
-        pass
+        return self.__class__()
     
     @classmethod
     def fromkeys(type, iterable, value):
         'Returns a new dict with keys from iterable and values equal to value.'
         pass
     
-    def get(self):
+    def get(self, key, d=Unknown()):
         'D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'
-        pass
+        return self[0]
     
     def items(self):
         "D.items() -> a set-like object providing a view on D's items"
-        pass
+        return __DictItems()
     
     def keys(self):
         "D.keys() -> a set-like object providing a view on D's keys"
-        pass
+        return __DictKeys()
     
-    def pop(self):
+    def pop(self, k, d=Unknown()):
         'D.pop(k[,d]) -> v, remove specified key and return the corresponding value.\nIf key is not found, d is returned if given, otherwise KeyError is raised'
-        pass
+        return self.keys()[0]
     
-    def popitem(self):
+    def popitem(self, k, d=Unknown()):
         'D.popitem() -> (k, v), remove and return some (key, value) pair as a\n2-tuple; but raise KeyError if D is empty.'
-        pass
+        return self.items()[0]
     
-    def setdefault(self):
+    def setdefault(self, k, d):
         'D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D'
-        pass
+        return self[0]
     
-    def update(self):
+    def update(self, d):
         'D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.\nIf E is present and has a .keys() method, then does:  for k in E: D[k] = E[k]\nIf E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v\nIn either case, this is followed by: for k in F:  D[k] = F[k]'
-        pass
+        return None
     
     def values(self):
         "D.values() -> an object providing a view on D's values"
-        pass
+        return __DictValues()
     
 
 __Dict = dict
@@ -1284,7 +1234,7 @@ class set(object):
     __class__ = set
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x.'
-        pass
+        return False
     
     def __eq__(self, value):
         'Return self==value.'
@@ -1314,7 +1264,7 @@ class set(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __ior__(self, value):
         'Return self|=value.'
@@ -1348,11 +1298,6 @@ class set(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __or__(self, value):
         'Return self|value.'
         pass
@@ -1363,7 +1308,7 @@ class set(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -1383,7 +1328,7 @@ class set(object):
     
     def __sizeof__(self):
         'S.__sizeof__() -> size of S in memory, in bytes'
-        pass
+        return 0
     
     def __sub__(self, value):
         'Return self-value.'
@@ -1392,79 +1337,79 @@ class set(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def __xor__(self, value):
         'Return self^value.'
         pass
     
-    def add(self):
+    def add(self, value):
         'Add an element to a set.\n\nThis has no effect if the element is already present.'
-        pass
+        return None
     
     def clear(self):
         'Remove all elements from this set.'
-        pass
+        return None
     
     def copy(self):
         'Return a shallow copy of a set.'
-        pass
+        return self.__class__()
     
-    def difference(self):
+    def difference(self, other):
         'Return the difference of two or more sets as a new set.\n\n(i.e. all elements that are in this set but not the others.)'
-        pass
+        return self.__class__()
     
-    def difference_update(self):
+    def difference_update(self, *others):
         'Remove all elements of another set from this set.'
-        pass
+        return None
     
-    def discard(self):
+    def discard(self, elem):
         'Remove an element from a set if it is a member.\n\nIf the element is not a member, do nothing.'
-        pass
+        return None
     
-    def intersection(self):
+    def intersection(self, other):
         'Return the intersection of two sets as a new set.\n\n(i.e. all elements that are in both sets.)'
-        pass
+        return self.__class__()
     
-    def intersection_update(self):
+    def intersection_update(self, *others):
         'Update a set with the intersection of itself and another.'
-        pass
+        return None
     
-    def isdisjoint(self):
+    def isdisjoint(self, other):
         'Return True if two sets have a null intersection.'
-        pass
+        return __Bool()
     
-    def issubset(self):
+    def issubset(self, other):
         'Report whether another set contains this set.'
-        pass
+        return __Bool()
     
-    def issuperset(self):
+    def issuperset(self, other):
         'Report whether this set contains another set.'
-        pass
+        return __Bool()
     
     def pop(self):
         'Remove and return an arbitrary set element.\nRaises KeyError if the set is empty.'
-        pass
+        return Any
     
-    def remove(self):
+    def remove(self, elem):
         'Remove an element from a set; it must be a member.\n\nIf the element is not a member, raise a KeyError.'
-        pass
+        return None
     
-    def symmetric_difference(self):
+    def symmetric_difference(self, other):
         'Return the symmetric difference of two sets as a new set.\n\n(i.e. all elements that are in exactly one of the sets.)'
-        pass
+        return self.__class__()
     
-    def symmetric_difference_update(self):
+    def symmetric_difference_update(self, *others):
         'Update a set with the symmetric difference of itself and another.'
-        pass
+        return None
     
-    def union(self):
+    def union(self, *others):
         'Return the union of sets as a new set.\n\n(i.e. all elements that are in either set.)'
-        pass
+        return self.__class__()
     
-    def update(self):
+    def update(self, *others):
         'Update a set with the union of itself and others.'
-        pass
+        return None
     
 
 __Set = set
@@ -1477,7 +1422,7 @@ class frozenset(object):
     __class__ = frozenset
     def __contains__(self, value):
         'x.__contains__(y) <==> y in x.'
-        pass
+        return False
     
     def __eq__(self, value):
         'Return self==value.'
@@ -1502,7 +1447,7 @@ class frozenset(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -1524,11 +1469,6 @@ class frozenset(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __or__(self, value):
         'Return self|value.'
         pass
@@ -1539,7 +1479,7 @@ class frozenset(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -1559,7 +1499,7 @@ class frozenset(object):
     
     def __sizeof__(self):
         'S.__sizeof__() -> size of S in memory, in bytes'
-        pass
+        return 0
     
     def __sub__(self, value):
         'Return self-value.'
@@ -1568,7 +1508,7 @@ class frozenset(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def __xor__(self, value):
         'Return self^value.'
@@ -1576,35 +1516,35 @@ class frozenset(object):
     
     def copy(self):
         'Return a shallow copy of a set.'
-        pass
+        return self.__class__()
     
-    def difference(self):
+    def difference(self, other):
         'Return the difference of two or more sets as a new set.\n\n(i.e. all elements that are in this set but not the others.)'
-        pass
+        return self.__class__()
     
-    def intersection(self):
+    def intersection(self, other):
         'Return the intersection of two sets as a new set.\n\n(i.e. all elements that are in both sets.)'
-        pass
+        return self.__class__()
     
-    def isdisjoint(self):
+    def isdisjoint(self, other):
         'Return True if two sets have a null intersection.'
-        pass
+        return __Bool()
     
-    def issubset(self):
+    def issubset(self, other):
         'Report whether another set contains this set.'
-        pass
+        return __Bool()
     
-    def issuperset(self):
+    def issuperset(self, other):
         'Report whether this set contains another set.'
-        pass
+        return __Bool()
     
-    def symmetric_difference(self):
+    def symmetric_difference(self, other):
         'Return the symmetric difference of two sets as a new set.\n\n(i.e. all elements that are in exactly one of the sets.)'
-        pass
+        return self.__class__()
     
-    def union(self):
+    def union(self, *others):
         'Return the union of sets as a new set.\n\n(i.e. all elements that are in either set.)'
-        pass
+        return self.__class__()
     
 
 __FrozenSet = frozenset
@@ -1636,7 +1576,7 @@ class bytes(object):
         pass
     
     def __getnewargs__(self):
-        pass
+        return ()
     
     def __gt__(self, value):
         'Return self>value.'
@@ -1649,7 +1589,7 @@ class bytes(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -1679,11 +1619,6 @@ class bytes(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls, iterable_of_ints):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __repr__(self):
         'Return repr(self).'
         pass
@@ -1703,19 +1638,19 @@ class bytes(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def capitalize(self):
         'B.capitalize() -> copy of B\n\nReturn a copy of B with only its first character capitalized (ASCII)\nand the rest lower-cased.'
-        pass
+        return self.__class__()
     
-    def center(self):
+    def center(self, width, fillbyte=b' '):
         'B.center(width[, fillchar]) -> copy of B\n\nReturn B centered in a string of length width.  Padding is\ndone using the specified fill character (default is a space).'
-        pass
+        return self.__class__()
     
-    def count(self, x):
+    def count(self, sub, start=0, end=-1):
         'B.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of subsection sub in\nbytes B[start:end].  Optional arguments start and end are interpreted\nas in slice notation.'
-        pass
+        return 0
     
     def decode(self, encoding, errors):
         "Decode the bytes using the codec registered for encoding.\n\n  encoding\n    The encoding with which to decode the bytes.\n  errors\n    The error handling scheme to use for the handling of decoding errors.\n    The default is 'strict' meaning that decoding errors raise a\n    UnicodeDecodeError. Other possible values are 'ignore' and 'replace'\n    as well as any other name registered with codecs.register_error that\n    can handle UnicodeDecodeErrors."
@@ -1723,15 +1658,15 @@ class bytes(object):
     
     def endswith(self, suffix, start=0, end=-1):
         'B.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if B ends with the specified suffix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nsuffix can also be a tuple of bytes to try.'
-        pass
+        return __Bool()
     
     def expandtabs(self, tabsize=8):
         'B.expandtabs(tabsize=8) -> copy of B\n\nReturn a copy of B where all tab characters are expanded using spaces.\nIf tabsize is not given, a tab size of 8 characters is assumed.'
-        pass
+        return self.__class__()
     
     def find(self, sub, start=0, end=-1):
         'B.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
+        return 0
     
     @classmethod
     def fromhex(type, string):
@@ -1740,51 +1675,51 @@ class bytes(object):
     
     def hex(self):
         "B.hex() -> string\n\nCreate a string of hexadecimal numbers from a bytes object.\nExample: b'\\xb9\\x01\\xef'.hex() -> 'b901ef'."
-        pass
+        return ''
     
-    def index(self, v):
+    def index(self, sub, start=0, end=-1):
         'B.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the subsection is not found.'
-        pass
+        return 0
     
     def isalnum(self):
         'B.isalnum() -> bool\n\nReturn True if all characters in B are alphanumeric\nand there is at least one character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def isalpha(self):
         'B.isalpha() -> bool\n\nReturn True if all characters in B are alphabetic\nand there is at least one character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def isdigit(self):
         'B.isdigit() -> bool\n\nReturn True if all characters in B are digits\nand there is at least one character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def islower(self):
         'B.islower() -> bool\n\nReturn True if all cased characters in B are lowercase and there is\nat least one cased character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def isspace(self):
         'B.isspace() -> bool\n\nReturn True if all characters in B are whitespace\nand there is at least one character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def istitle(self):
         'B.istitle() -> bool\n\nReturn True if B is a titlecased string and there is at least one\ncharacter in B, i.e. uppercase characters may only follow uncased\ncharacters and lowercase characters only cased ones. Return False\notherwise.'
-        pass
+        return __Bool()
     
     def isupper(self):
         'B.isupper() -> bool\n\nReturn True if all cased characters in B are uppercase and there is\nat least one cased character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def join(self, iterable_of_bytes):
         "Concatenate any number of bytes objects.\n\nThe bytes whose method is called is inserted in between each pair.\n\nThe result is returned as a new bytes object.\n\nExample: b'.'.join([b'ab', b'pq', b'rs']) -> b'ab.pq.rs'."
         pass
     
-    def ljust(self):
+    def ljust(self, width, fillbyte=b' '):
         'B.ljust(width[, fillchar]) -> copy of B\n\nReturn B left justified in a string of length width. Padding is\ndone using the specified fill character (default is a space).'
-        pass
+        return self.__class__()
     
     def lower(self):
         'B.lower() -> copy of B\n\nReturn a copy of B with all ASCII characters converted to lowercase.'
-        pass
+        return self.__class__()
     
     def lstrip(self, bytes):
         'Strip leading bytes contained in the argument.\n\nIf the argument is omitted or None, strip leading  ASCII whitespace.'
@@ -1805,15 +1740,15 @@ class bytes(object):
     
     def rfind(self, sub, start=0, end=-1):
         'B.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
+        return 0
     
     def rindex(self, sub, start=0, end=-1):
         'B.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaise ValueError when the subsection is not found.'
-        pass
+        return 0
     
-    def rjust(self):
+    def rjust(self, width, fillbyte=b' '):
         'B.rjust(width[, fillchar]) -> copy of B\n\nReturn B right justified in a string of length width. Padding is\ndone using the specified fill character (default is a space)'
-        pass
+        return self.__class__()
     
     def rpartition(self, sep):
         'Partition the bytes into three parts using the given separator.\n\nThis will search for the separator sep in the bytes, starting and the end. If\nthe separator is found, returns a 3-tuple containing the part before the\nseparator, the separator itself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing two empty bytes\nobjects and the original bytes object.'
@@ -1837,7 +1772,7 @@ class bytes(object):
     
     def startswith(self, prefix, start=0, end=-1):
         'B.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if B starts with the specified prefix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nprefix can also be a tuple of bytes to try.'
-        pass
+        return __Bool()
     
     def strip(self, bytes):
         'Strip leading and trailing bytes contained in the argument.\n\nIf the argument is omitted or None, strip leading and trailing ASCII whitespace.'
@@ -1845,11 +1780,11 @@ class bytes(object):
     
     def swapcase(self):
         'B.swapcase() -> copy of B\n\nReturn a copy of B with uppercase ASCII characters converted\nto lowercase ASCII and vice versa.'
-        pass
+        return self.__class__()
     
     def title(self):
         'B.title() -> copy of B\n\nReturn a titlecased version of B, i.e. ASCII words start with uppercase\ncharacters, all remaining cased characters have lowercase.'
-        pass
+        return self.__class__()
     
     def translate(self, table, delete):
         'Return a copy with each character mapped by the given translation table.\n\n  table\n    Translation table, which must be a bytes object of length 256.\n\nAll characters occurring in the optional argument delete are removed.\nThe remaining characters are mapped through the given translation table.'
@@ -1857,11 +1792,11 @@ class bytes(object):
     
     def upper(self):
         'B.upper() -> copy of B\n\nReturn a copy of B with all ASCII characters converted to uppercase.'
-        pass
+        return self.__class__()
     
     def zfill(self, width):
         'B.zfill(width) -> copy of B\n\nPad a numeric string B with zeros on the left, to fill a field\nof the specified width.  B is never truncated.'
-        pass
+        return self.__class__()
     
 
 __Bytes = bytes
@@ -1874,7 +1809,7 @@ class bytes_iterator(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -1882,7 +1817,7 @@ class bytes_iterator(object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -1890,16 +1825,16 @@ class bytes_iterator(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __BytesIterator = bytes_iterator
@@ -1920,7 +1855,7 @@ class str(object):
     
     def __format__(self, format_spec):
         'S.__format__(format_spec) -> str\n\nReturn a formatted version of S as described by format_spec.'
-        pass
+        return ''
     
     def __ge__(self, value):
         'Return self>=value.'
@@ -1935,7 +1870,7 @@ class str(object):
         pass
     
     def __getnewargs__(self):
-        pass
+        return ()
     
     def __gt__(self, value):
         'Return self>value.'
@@ -1948,7 +1883,7 @@ class str(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -1978,11 +1913,6 @@ class str(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls, object=''):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __repr__(self):
         'Return repr(self).'
         pass
@@ -1997,7 +1927,7 @@ class str(object):
     
     def __sizeof__(self):
         'S.__sizeof__() -> size of S in memory, in bytes'
-        pass
+        return 0
     
     def __str__(self):
         'Return str(self).'
@@ -2006,184 +1936,184 @@ class str(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def capitalize(self):
         'S.capitalize() -> str\n\nReturn a capitalized version of S, i.e. make the first character\nhave upper case and the rest lower case.'
-        pass
+        return self.__class__()
     
     def casefold(self):
         'S.casefold() -> str\n\nReturn a version of S suitable for caseless comparisons.'
-        pass
+        return self.__class__()
     
-    def center(self):
+    def center(self, width, fillchar=' '):
         'S.center(width[, fillchar]) -> str\n\nReturn S centered in a string of length width. Padding is\ndone using the specified fill character (default is a space)'
-        pass
+        return self.__class__()
     
-    def count(self, x):
+    def count(self, sub, start=0, end=-1):
         'S.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of substring sub in\nstring S[start:end].  Optional arguments start and end are\ninterpreted as in slice notation.'
-        pass
+        return 0
     
-    def encode(self):
+    def encode(self, encoding='utf-8', errors='strict'):
         "S.encode(encoding='utf-8', errors='strict') -> bytes\n\nEncode S using the codec registered for encoding. Default encoding\nis 'utf-8'. errors may be given to set a different error\nhandling scheme. Default is 'strict' meaning that encoding errors raise\na UnicodeEncodeError. Other possible values are 'ignore', 'replace' and\n'xmlcharrefreplace' as well as any other name registered with\ncodecs.register_error that can handle UnicodeEncodeErrors."
-        pass
+        return b''
     
     def endswith(self, suffix, start=0, end=-1):
         'S.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if S ends with the specified suffix, False otherwise.\nWith optional start, test S beginning at that position.\nWith optional end, stop comparing S at that position.\nsuffix can also be a tuple of strings to try.'
-        pass
+        return __Bool()
     
     def expandtabs(self, tabsize=8):
         'S.expandtabs(tabsize=8) -> str\n\nReturn a copy of S where all tab characters are expanded using spaces.\nIf tabsize is not given, a tab size of 8 characters is assumed.'
-        pass
+        return self.__class__()
     
     def find(self, sub, start=0, end=-1):
         'S.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
+        return 0
     
-    def format(self):
+    def format(self, *args, **kwargs):
         "S.format(*args, **kwargs) -> str\n\nReturn a formatted version of S, using substitutions from args and kwargs.\nThe substitutions are identified by braces ('{' and '}')."
-        pass
+        return self.__class__()
     
-    def format_map(self):
+    def format_map(self, mapping):
         "S.format_map(mapping) -> str\n\nReturn a formatted version of S, using substitutions from mapping.\nThe substitutions are identified by braces ('{' and '}')."
-        pass
+        return self.__class__()
     
-    def index(self, v):
+    def index(self, sub, start=0, end=-1):
         'S.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in S where substring sub is found, \nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the substring is not found.'
-        pass
+        return 0
     
     def isalnum(self):
         'S.isalnum() -> bool\n\nReturn True if all characters in S are alphanumeric\nand there is at least one character in S, False otherwise.'
-        pass
+        return __Bool()
     
     def isalpha(self):
         'S.isalpha() -> bool\n\nReturn True if all characters in S are alphabetic\nand there is at least one character in S, False otherwise.'
-        pass
+        return __Bool()
     
     def isdecimal(self):
         'S.isdecimal() -> bool\n\nReturn True if there are only decimal characters in S,\nFalse otherwise.'
-        pass
+        return __Bool()
     
     def isdigit(self):
         'S.isdigit() -> bool\n\nReturn True if all characters in S are digits\nand there is at least one character in S, False otherwise.'
-        pass
+        return __Bool()
     
     def isidentifier(self):
         'S.isidentifier() -> bool\n\nReturn True if S is a valid identifier according\nto the language definition.\n\nUse keyword.iskeyword() to test for reserved identifiers\nsuch as "def" and "class".\n'
-        pass
+        return __Bool()
     
     def islower(self):
         'S.islower() -> bool\n\nReturn True if all cased characters in S are lowercase and there is\nat least one cased character in S, False otherwise.'
-        pass
+        return __Bool()
     
     def isnumeric(self):
         'S.isnumeric() -> bool\n\nReturn True if there are only numeric characters in S,\nFalse otherwise.'
-        pass
+        return __Bool()
     
     def isprintable(self):
         'S.isprintable() -> bool\n\nReturn True if all characters in S are considered\nprintable in repr() or S is empty, False otherwise.'
-        pass
+        return __Bool()
     
     def isspace(self):
         'S.isspace() -> bool\n\nReturn True if all characters in S are whitespace\nand there is at least one character in S, False otherwise.'
-        pass
+        return __Bool()
     
     def istitle(self):
         'S.istitle() -> bool\n\nReturn True if S is a titlecased string and there is at least one\ncharacter in S, i.e. upper- and titlecase characters may only\nfollow uncased characters and lowercase characters only cased ones.\nReturn False otherwise.'
-        pass
+        return __Bool()
     
     def isupper(self):
         'S.isupper() -> bool\n\nReturn True if all cased characters in S are uppercase and there is\nat least one cased character in S, False otherwise.'
-        pass
+        return __Bool()
     
-    def join(self):
+    def join(self, iterable):
         'S.join(iterable) -> str\n\nReturn a string which is the concatenation of the strings in the\niterable.  The separator between elements is S.'
-        pass
+        return ''
     
-    def ljust(self):
+    def ljust(self, width, fillchar=' '):
         'S.ljust(width[, fillchar]) -> str\n\nReturn S left-justified in a Unicode string of length width. Padding is\ndone using the specified fill character (default is a space).'
-        pass
+        return self.__class__()
     
     def lower(self):
         'S.lower() -> str\n\nReturn a copy of the string S converted to lowercase.'
-        pass
+        return self.__class__()
     
     def lstrip(self, chars):
         'S.lstrip([chars]) -> str\n\nReturn a copy of the string S with leading whitespace removed.\nIf chars is given and not None, remove characters in chars instead.'
-        pass
+        return self.__class__()
     
     @classmethod
     def maketrans(cls, x, y, z):
         'Return a translation table usable for str.translate().\n\nIf there is only one argument, it must be a dictionary mapping Unicode\nordinals (integers) or characters to Unicode ordinals, strings or None.\nCharacter keys will be then converted to ordinals.\nIf there are two arguments, they must be strings of equal length, and\nin the resulting dictionary, each character in x will be mapped to the\ncharacter at the same position in y. If there is a third argument, it\nmust be a string, whose characters will be mapped to None in the result.'
         pass
     
-    def partition(self):
+    def partition(self, sep):
         'S.partition(sep) -> (head, sep, tail)\n\nSearch for the separator sep in S, and return the part before it,\nthe separator itself, and the part after it.  If the separator is not\nfound, return S and two empty strings.'
-        pass
+        return (__Type(self)(), __Type(self)(), __Type(self)())
     
     def replace(self, old, new, count=-1):
         'S.replace(old, new[, count]) -> str\n\nReturn a copy of S with all occurrences of substring\nold replaced by new.  If the optional argument count is\ngiven, only the first count occurrences are replaced.'
-        pass
+        return self.__class__()
     
     def rfind(self, sub, start=0, end=-1):
         'S.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
+        return 0
     
     def rindex(self, sub, start=0, end=-1):
         'S.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the substring is not found.'
-        pass
+        return 0
     
-    def rjust(self):
+    def rjust(self, width, fillchar=' '):
         'S.rjust(width[, fillchar]) -> str\n\nReturn S right-justified in a string of length width. Padding is\ndone using the specified fill character (default is a space).'
-        pass
+        return self.__class__()
     
-    def rpartition(self):
+    def rpartition(self, sep):
         'S.rpartition(sep) -> (head, sep, tail)\n\nSearch for the separator sep in S, starting at the end of S, and return\nthe part before it, the separator itself, and the part after it.  If the\nseparator is not found, return two empty strings and S.'
-        pass
+        return (__Type(self)(), __Type(self)(), __Type(self)())
     
     def rsplit(self, sep=None, maxsplit=-1):
         'S.rsplit(sep=None, maxsplit=-1) -> list of strings\n\nReturn a list of the words in S, using sep as the\ndelimiter string, starting at the end of the string and\nworking to the front.  If maxsplit is given, at most maxsplit\nsplits are done. If sep is not specified, any whitespace string\nis a separator.'
-        pass
+        return [__Type(self)()]
     
     def rstrip(self, chars=None):
         'S.rstrip([chars]) -> str\n\nReturn a copy of the string S with trailing whitespace removed.\nIf chars is given and not None, remove characters in chars instead.'
-        pass
+        return self.__class__()
     
     def split(self, sep=None, maxsplit=-1):
         'S.split(sep=None, maxsplit=-1) -> list of strings\n\nReturn a list of the words in S, using sep as the\ndelimiter string.  If maxsplit is given, at most maxsplit\nsplits are done. If sep is not specified or is None, any\nwhitespace string is a separator and empty strings are\nremoved from the result.'
-        pass
+        return [__Type(self)()]
     
     def splitlines(self, keepends=False):
         'S.splitlines([keepends]) -> list of strings\n\nReturn a list of the lines in S, breaking at line boundaries.\nLine breaks are not included in the resulting list unless keepends\nis given and true.'
-        pass
+        return [self()]
     
     def startswith(self, prefix, start=0, end=-1):
         'S.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if S starts with the specified prefix, False otherwise.\nWith optional start, test S beginning at that position.\nWith optional end, stop comparing S at that position.\nprefix can also be a tuple of strings to try.'
-        pass
+        return __Bool()
     
     def strip(self, chars=None):
         'S.strip([chars]) -> str\n\nReturn a copy of the string S with leading and trailing\nwhitespace removed.\nIf chars is given and not None, remove characters in chars instead.'
-        pass
+        return self.__class__()
     
     def swapcase(self):
         'S.swapcase() -> str\n\nReturn a copy of S with uppercase characters converted to lowercase\nand vice versa.'
-        pass
+        return self.__class__()
     
     def title(self):
         'S.title() -> str\n\nReturn a titlecased version of S, i.e. words start with title case\ncharacters, all remaining cased characters have lower case.'
-        pass
+        return self.__class__()
     
-    def translate(self):
+    def translate(self, table):
         'S.translate(table) -> str\n\nReturn a copy of the string S in which each character has been mapped\nthrough the given translation table. The table must implement\nlookup/indexing via __getitem__, for instance a dictionary or list,\nmapping Unicode ordinals to Unicode ordinals, strings, or None. If\nthis operation raises LookupError, the character is left untouched.\nCharacters mapped to None are deleted.'
-        pass
+        return self.__class__()
     
     def upper(self):
         'S.upper() -> str\n\nReturn a copy of S converted to uppercase.'
-        pass
+        return self.__class__()
     
     def zfill(self, width):
         'S.zfill(width) -> str\n\nPad a numeric string S with zeros on the left, to fill a field\nof the specified width. The string S is never truncated.'
-        pass
+        return self.__class__()
     
 
 __Unicode = str
@@ -2196,7 +2126,7 @@ class str_iterator(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -2204,7 +2134,7 @@ class str_iterator(object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -2212,16 +2142,16 @@ class str_iterator(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __UnicodeIterator = str_iterator
@@ -2237,7 +2167,7 @@ class module(object):
     __dict__ = builtins.dict()
     def __dir__(self):
         '__dir__() -> list\nspecialized dir() implementation'
-        pass
+        return ['']
     
     def __getattribute__(self, name):
         'Return getattr(self, name).'
@@ -2250,12 +2180,7 @@ class module(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(cls, name, doc):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __repr__(self):
         'Return repr(self).'
@@ -2268,7 +2193,7 @@ class module(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __Module = module
@@ -2276,7 +2201,7 @@ class function(object):
     'function(code, globals[, name[, argdefs[, closure]]])\n\nCreate a function object from a code object and a dictionary.\nThe optional name string overrides the name from the code object.\nThe optional argdefs tuple specifies the default argument values.\nThe optional closure tuple supplies the bindings for free variables.'
     @property
     def __annotations__(self):
-        pass
+        return {}
     
     def __call__(self, *args, **kwargs):
         'Call self as a function.'
@@ -2289,7 +2214,7 @@ class function(object):
     
     @property
     def __code__(self):
-        pass
+        return object()
     
     @property
     def __defaults__(self):
@@ -2302,23 +2227,18 @@ class function(object):
     
     @property
     def __globals__(self):
-        pass
+        return {}
     
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @property
     def __kwdefaults__(self):
         pass
     
     __name__ = 'function'
-    @classmethod
-    def __new__(cls, code, globals, name, argdefs, closure):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     __qualname__ = 'function'
     def __repr__(self):
         'Return repr(self).'
@@ -2327,7 +2247,7 @@ class function(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __Function = function
@@ -2348,7 +2268,7 @@ class wrapper_descriptor(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     __name__ = 'wrapper_descriptor'
     @property
@@ -2357,7 +2277,7 @@ class wrapper_descriptor(object):
     
     __qualname__ = 'wrapper_descriptor'
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -2366,7 +2286,7 @@ class wrapper_descriptor(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     __text_signature__ = None
 
@@ -2400,7 +2320,7 @@ class builtin_function_or_method(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __le__(self, value):
         'Return self<=value.'
@@ -2417,7 +2337,7 @@ class builtin_function_or_method(object):
     
     __qualname__ = 'builtin_function_or_method'
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -2430,7 +2350,7 @@ class builtin_function_or_method(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     __text_signature__ = None
 
@@ -2438,7 +2358,7 @@ __BuiltinFunction = builtin_function_or_method
 class generator(object):
     __class__ = generator
     def __del__(self):
-        pass
+        return None
     
     def __getattribute__(self, name):
         'Return getattr(self, name).'
@@ -2447,7 +2367,7 @@ class generator(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -2466,11 +2386,11 @@ class generator(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def close(self):
         'close() -> raise GeneratorExit inside generator.'
-        pass
+        return None
     
     @property
     def gi_code(self):
@@ -2489,13 +2409,13 @@ class generator(object):
         'object being iterated by yield from, or None'
         pass
     
-    def send(self, arg):
+    def send(self, value):
         "send(arg) -> send 'arg' into generator,\nreturn next yielded value or raise StopIteration."
-        pass
+        return self.__next__()
     
-    def throw(self, typ, val, tb):
+    def throw(self, type, value=None, traceback=None):
         'throw(typ[,val[,tb]]) -> raise exception in generator,\nreturn next yielded value or raise StopIteration.'
-        pass
+        return None
     
 
 __Generator = generator
@@ -2521,15 +2441,10 @@ class property(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @property
     def __isabstractmethod__(self):
-        pass
-    
-    @classmethod
-    def __new__(cls, fget=None, fset=None, fdel=None, doc=None):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __set__(self, instance, value):
@@ -2539,11 +2454,11 @@ class property(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
-    def deleter(self):
+    def deleter(self, func):
         'Descriptor to change the deleter on a property.'
-        pass
+        return func
     
     @property
     def fdel(self):
@@ -2557,13 +2472,13 @@ class property(object):
     def fset(self):
         pass
     
-    def getter(self):
+    def getter(self, func):
         'Descriptor to change the getter on a property.'
-        pass
+        return func
     
-    def setter(self):
+    def setter(self, func):
         'Descriptor to change the setter on a property.'
-        pass
+        return func
     
 
 __Property = property
@@ -2586,21 +2501,16 @@ class classmethod(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @property
     def __isabstractmethod__(self):
         pass
     
     @classmethod
-    def __new__(cls, function):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __ClassMethod = classmethod
@@ -2623,21 +2533,16 @@ class staticmethod(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @property
     def __isabstractmethod__(self):
         pass
     
     @classmethod
-    def __new__(cls, function):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __StaticMethod = staticmethod
@@ -2650,15 +2555,10 @@ class ellipsis(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -2667,7 +2567,7 @@ class ellipsis(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __Ellipsis = ellipsis
@@ -2680,7 +2580,7 @@ class tuple_iterator(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -2688,7 +2588,7 @@ class tuple_iterator(object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -2696,16 +2596,16 @@ class tuple_iterator(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __TupleIterator = tuple_iterator
@@ -2718,7 +2618,7 @@ class list_iterator(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -2726,7 +2626,7 @@ class list_iterator(object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -2734,16 +2634,16 @@ class list_iterator(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __ListIterator = list_iterator
@@ -2777,7 +2677,7 @@ class dict_keys(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -2830,15 +2730,15 @@ class dict_keys(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def __xor__(self, value):
         'Return self^value.'
         pass
     
-    def isdisjoint(self):
+    def isdisjoint(self, other):
         'Return True if the view and the given iterable have a null intersection.'
-        pass
+        return __Bool()
     
 
 __DictKeys = dict_keys
@@ -2851,7 +2751,7 @@ class dict_values(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -2868,7 +2768,7 @@ class dict_values(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __DictValues = dict_values
@@ -2902,7 +2802,7 @@ class dict_items(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -2955,15 +2855,15 @@ class dict_items(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def __xor__(self, value):
         'Return self^value.'
         pass
     
-    def isdisjoint(self):
+    def isdisjoint(self, other):
         'Return True if the view and the given iterable have a null intersection.'
-        pass
+        return __Bool()
     
 
 __DictItems = dict_items
@@ -2976,7 +2876,7 @@ class set_iterator(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -2984,7 +2884,7 @@ class set_iterator(object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -2992,12 +2892,12 @@ class set_iterator(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __SetIterator = set_iterator
@@ -3010,7 +2910,7 @@ class callable_iterator(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -3022,12 +2922,12 @@ class callable_iterator(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 __CallableIterator = callable_iterator
@@ -3043,17 +2943,12 @@ class ArithmeticError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class AssertionError(Exception):
@@ -3067,17 +2962,12 @@ class AssertionError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class AttributeError(Exception):
@@ -3091,17 +2981,12 @@ class AttributeError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class BaseException(object):
@@ -3133,15 +3018,10 @@ class BaseException(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -3152,7 +3032,7 @@ class BaseException(object):
         pass
     
     def __setstate__(self, state):
-        pass
+        return None
     
     def __str__(self):
         'Return str(self).'
@@ -3161,7 +3041,7 @@ class BaseException(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def __suppress_context__(self):
@@ -3175,7 +3055,7 @@ class BaseException(object):
     def args(self):
         pass
     
-    def with_traceback(self):
+    def with_traceback(self, tb):
         'Exception.with_traceback(tb) --\n    set self.__traceback__ to tb and return self.'
         pass
     
@@ -3191,12 +3071,12 @@ class BlockingIOError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class BrokenPipeError(ConnectionError):
@@ -3210,12 +3090,12 @@ class BrokenPipeError(ConnectionError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class BufferError(Exception):
@@ -3229,17 +3109,12 @@ class BufferError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class BytesWarning(Warning):
@@ -3253,17 +3128,12 @@ class BytesWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ChildProcessError(OSError):
@@ -3277,12 +3147,12 @@ class ChildProcessError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ConnectionAbortedError(ConnectionError):
@@ -3296,12 +3166,12 @@ class ConnectionAbortedError(ConnectionError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ConnectionError(OSError):
@@ -3315,12 +3185,12 @@ class ConnectionError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ConnectionRefusedError(ConnectionError):
@@ -3334,12 +3204,12 @@ class ConnectionRefusedError(ConnectionError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ConnectionResetError(ConnectionError):
@@ -3353,12 +3223,12 @@ class ConnectionResetError(ConnectionError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class DeprecationWarning(Warning):
@@ -3372,17 +3242,12 @@ class DeprecationWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class EOFError(Exception):
@@ -3396,17 +3261,12 @@ class EOFError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 Ellipsis = ellipsis()
@@ -3422,17 +3282,12 @@ class Exception(BaseException):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class FileExistsError(OSError):
@@ -3446,12 +3301,12 @@ class FileExistsError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class FileNotFoundError(OSError):
@@ -3465,12 +3320,12 @@ class FileNotFoundError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class FloatingPointError(ArithmeticError):
@@ -3484,17 +3339,12 @@ class FloatingPointError(ArithmeticError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class FutureWarning(Warning):
@@ -3508,17 +3358,12 @@ class FutureWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class GeneratorExit(BaseException):
@@ -3532,17 +3377,12 @@ class GeneratorExit(BaseException):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 IOError = OSError()
@@ -3557,10 +3397,10 @@ class ImportError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __str__(self):
         'Return str(self).'
@@ -3569,7 +3409,7 @@ class ImportError(Exception):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def msg(self):
@@ -3598,17 +3438,12 @@ class ImportWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class IndentationError(SyntaxError):
@@ -3622,12 +3457,12 @@ class IndentationError(SyntaxError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class IndexError(LookupError):
@@ -3641,17 +3476,12 @@ class IndexError(LookupError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class InterruptedError(OSError):
@@ -3665,12 +3495,12 @@ class InterruptedError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class IsADirectoryError(OSError):
@@ -3684,12 +3514,12 @@ class IsADirectoryError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class KeyError(LookupError):
@@ -3703,7 +3533,7 @@ class KeyError(LookupError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __str__(self):
         'Return str(self).'
@@ -3712,7 +3542,7 @@ class KeyError(LookupError):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class KeyboardInterrupt(BaseException):
@@ -3726,17 +3556,12 @@ class KeyboardInterrupt(BaseException):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class LookupError(Exception):
@@ -3750,17 +3575,12 @@ class LookupError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class MemoryError(Exception):
@@ -3774,17 +3594,12 @@ class MemoryError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ModuleNotFoundError(ImportError):
@@ -3798,12 +3613,12 @@ class ModuleNotFoundError(ImportError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class NameError(Exception):
@@ -3817,17 +3632,12 @@ class NameError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class NotADirectoryError(OSError):
@@ -3841,12 +3651,12 @@ class NotADirectoryError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 NotImplemented = NotImplementedType()
@@ -3861,17 +3671,12 @@ class NotImplementedError(RuntimeError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class OSError(Exception):
@@ -3885,15 +3690,10 @@ class OSError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __str__(self):
         'Return str(self).'
@@ -3902,7 +3702,7 @@ class OSError(Exception):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def characters_written(self):
@@ -3945,17 +3745,12 @@ class OverflowError(ArithmeticError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class PendingDeprecationWarning(Warning):
@@ -3969,17 +3764,12 @@ class PendingDeprecationWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class PermissionError(OSError):
@@ -3993,12 +3783,12 @@ class PermissionError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ProcessLookupError(OSError):
@@ -4012,12 +3802,12 @@ class ProcessLookupError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class RecursionError(RuntimeError):
@@ -4031,17 +3821,12 @@ class RecursionError(RuntimeError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ReferenceError(Exception):
@@ -4055,17 +3840,12 @@ class ReferenceError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ResourceWarning(Warning):
@@ -4079,17 +3859,12 @@ class ResourceWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class RuntimeError(Exception):
@@ -4103,17 +3878,12 @@ class RuntimeError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class RuntimeWarning(Warning):
@@ -4127,17 +3897,12 @@ class RuntimeWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class StopAsyncIteration(Exception):
@@ -4151,17 +3916,12 @@ class StopAsyncIteration(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class StopIteration(Exception):
@@ -4175,12 +3935,12 @@ class StopIteration(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def value(self):
@@ -4199,7 +3959,7 @@ class SyntaxError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __str__(self):
         'Return str(self).'
@@ -4208,7 +3968,7 @@ class SyntaxError(Exception):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def filename(self):
@@ -4252,17 +4012,12 @@ class SyntaxWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class SystemError(Exception):
@@ -4276,17 +4031,12 @@ class SystemError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class SystemExit(BaseException):
@@ -4300,12 +4050,12 @@ class SystemExit(BaseException):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def code(self):
@@ -4324,12 +4074,12 @@ class TabError(IndentationError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class TimeoutError(OSError):
@@ -4343,12 +4093,12 @@ class TimeoutError(OSError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class TypeError(Exception):
@@ -4362,17 +4112,12 @@ class TypeError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class UnboundLocalError(NameError):
@@ -4386,17 +4131,12 @@ class UnboundLocalError(NameError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class UnicodeDecodeError(UnicodeError):
@@ -4410,12 +4150,7 @@ class UnicodeDecodeError(UnicodeError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __str__(self):
         'Return str(self).'
@@ -4424,7 +4159,7 @@ class UnicodeDecodeError(UnicodeError):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def encoding(self):
@@ -4463,12 +4198,7 @@ class UnicodeEncodeError(UnicodeError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __str__(self):
         'Return str(self).'
@@ -4477,7 +4207,7 @@ class UnicodeEncodeError(UnicodeError):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def encoding(self):
@@ -4516,17 +4246,12 @@ class UnicodeError(ValueError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class UnicodeTranslateError(UnicodeError):
@@ -4540,12 +4265,7 @@ class UnicodeTranslateError(UnicodeError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __str__(self):
         'Return str(self).'
@@ -4554,7 +4274,7 @@ class UnicodeTranslateError(UnicodeError):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def encoding(self):
@@ -4593,17 +4313,12 @@ class UnicodeWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class UserWarning(Warning):
@@ -4617,17 +4332,12 @@ class UserWarning(Warning):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class ValueError(Exception):
@@ -4641,17 +4351,12 @@ class ValueError(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 class Warning(Exception):
@@ -4665,17 +4370,12 @@ class Warning(Exception):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 WindowsError = OSError()
@@ -4690,17 +4390,12 @@ class ZeroDivisionError(ArithmeticError):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 def __build_class__(func, name):
@@ -4733,62 +4428,6 @@ def ascii(obj):
 def bin(number):
     "Return the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'"
     pass
-
-class bool(int):
-    'bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.'
-    def __and__(self, value):
-        'Return self&value.'
-        pass
-    
-    __class__ = bool
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(cls, x):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __or__(self, value):
-        'Return self|value.'
-        pass
-    
-    def __rand__(self, value):
-        'Return value&self.'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __ror__(self, value):
-        'Return value|self.'
-        pass
-    
-    def __rxor__(self, value):
-        'Return value^self.'
-        pass
-    
-    def __str__(self):
-        'Return str(self).'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def __xor__(self, value):
-        'Return self^value.'
-        pass
-    
-    @classmethod
-    def from_bytes(cls):
-        "int.from_bytes(bytes, byteorder, *, signed=False) -> int\n\nReturn the integer represented by the given array of bytes.\n\nThe bytes argument must be a bytes-like object (e.g. bytes or bytearray).\n\nThe byteorder argument determines the byte order used to represent the\ninteger.  If byteorder is 'big', the most significant byte is at the\nbeginning of the byte array.  If byteorder is 'little', the most\nsignificant byte is at the end of the byte array.  To request the native\nbyte order of the host system, use `sys.byteorder' as the byte order value.\n\nThe signed keyword-only argument indicates whether two's complement is\nused to represent the integer."
-        pass
-    
 
 class bytearray(object):
     'bytearray(iterable_of_ints) -> bytearray\nbytearray(string, encoding[, errors]) -> bytearray\nbytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer\nbytearray(int) -> bytes array of size given by the parameter initialized with null bytes\nbytearray() -> empty bytes array\n\nConstruct a mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a buffer object\n  - any object implementing the buffer API.\n  - an integer'
@@ -4845,7 +4484,7 @@ class bytearray(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -4873,11 +4512,6 @@ class bytearray(object):
     
     def __ne__(self, value):
         'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable_of_ints):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __reduce__(self):
@@ -4915,7 +4549,7 @@ class bytearray(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def append(self, item):
         'Append a single item to the end of the bytearray.\n\n  item\n    The item to be appended.'
@@ -4923,11 +4557,11 @@ class bytearray(object):
     
     def capitalize(self):
         'B.capitalize() -> copy of B\n\nReturn a copy of B with only its first character capitalized (ASCII)\nand the rest lower-cased.'
-        pass
+        return self.__class__()
     
-    def center(self):
+    def center(self, width, fillchar):
         'B.center(width[, fillchar]) -> copy of B\n\nReturn B centered in a string of length width.  Padding is\ndone using the specified fill character (default is a space).'
-        pass
+        return self.__class__()
     
     def clear(self):
         'Remove all items from the bytearray.'
@@ -4939,7 +4573,7 @@ class bytearray(object):
     
     def count(self, x):
         'B.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of subsection sub in\nbytes B[start:end].  Optional arguments start and end are interpreted\nas in slice notation.'
-        pass
+        return 0
     
     def decode(self, encoding, errors):
         "Decode the bytearray using the codec registered for encoding.\n\n  encoding\n    The encoding with which to decode the bytearray.\n  errors\n    The error handling scheme to use for the handling of decoding errors.\n    The default is 'strict' meaning that decoding errors raise a\n    UnicodeDecodeError. Other possible values are 'ignore' and 'replace'\n    as well as any other name registered with codecs.register_error that\n    can handle UnicodeDecodeErrors."
@@ -4947,11 +4581,11 @@ class bytearray(object):
     
     def endswith(self, suffix, start=0, end=-1):
         'B.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if B ends with the specified suffix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nsuffix can also be a tuple of bytes to try.'
-        pass
+        return __Bool()
     
     def expandtabs(self, tabsize=8):
         'B.expandtabs(tabsize=8) -> copy of B\n\nReturn a copy of B where all tab characters are expanded using spaces.\nIf tabsize is not given, a tab size of 8 characters is assumed.'
-        pass
+        return self.__class__()
     
     def extend(self, iterable_of_ints):
         'Append all the items from the iterator or sequence to the end of the bytearray.\n\n  iterable_of_ints\n    The iterable of items to append.'
@@ -4959,7 +4593,7 @@ class bytearray(object):
     
     def find(self, sub, start=0, end=-1):
         'B.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
+        return 0
     
     @classmethod
     def fromhex(type, string):
@@ -4968,11 +4602,11 @@ class bytearray(object):
     
     def hex(self):
         "B.hex() -> string\n\nCreate a string of hexadecimal numbers from a bytearray object.\nExample: bytearray([0xb9, 0x01, 0xef]).hex() -> 'b901ef'."
-        pass
+        return ''
     
     def index(self, v):
         'B.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the subsection is not found.'
-        pass
+        return 0
     
     def insert(self, index, item):
         'Insert a single item into the bytearray before the given index.\n\n  index\n    The index where the value is to be inserted.\n  item\n    The item to be inserted.'
@@ -4980,43 +4614,43 @@ class bytearray(object):
     
     def isalnum(self):
         'B.isalnum() -> bool\n\nReturn True if all characters in B are alphanumeric\nand there is at least one character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def isalpha(self):
         'B.isalpha() -> bool\n\nReturn True if all characters in B are alphabetic\nand there is at least one character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def isdigit(self):
         'B.isdigit() -> bool\n\nReturn True if all characters in B are digits\nand there is at least one character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def islower(self):
         'B.islower() -> bool\n\nReturn True if all cased characters in B are lowercase and there is\nat least one cased character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def isspace(self):
         'B.isspace() -> bool\n\nReturn True if all characters in B are whitespace\nand there is at least one character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def istitle(self):
         'B.istitle() -> bool\n\nReturn True if B is a titlecased string and there is at least one\ncharacter in B, i.e. uppercase characters may only follow uncased\ncharacters and lowercase characters only cased ones. Return False\notherwise.'
-        pass
+        return __Bool()
     
     def isupper(self):
         'B.isupper() -> bool\n\nReturn True if all cased characters in B are uppercase and there is\nat least one cased character in B, False otherwise.'
-        pass
+        return __Bool()
     
     def join(self, iterable_of_bytes):
         'Concatenate any number of bytes/bytearray objects.\n\nThe bytearray whose method is called is inserted in between each pair.\n\nThe result is returned as a new bytearray object.'
         pass
     
-    def ljust(self):
+    def ljust(self, width, fillchar):
         'B.ljust(width[, fillchar]) -> copy of B\n\nReturn B left justified in a string of length width. Padding is\ndone using the specified fill character (default is a space).'
-        pass
+        return self.__class__()
     
     def lower(self):
         'B.lower() -> copy of B\n\nReturn a copy of B with all ASCII characters converted to lowercase.'
-        pass
+        return self.__class__()
     
     def lstrip(self, bytes):
         'Strip leading bytes contained in the argument.\n\nIf the argument is omitted or None, strip leading ASCII whitespace.'
@@ -5049,15 +4683,15 @@ class bytearray(object):
     
     def rfind(self, sub, start=0, end=-1):
         'B.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
+        return 0
     
     def rindex(self, sub, start=0, end=-1):
         'B.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaise ValueError when the subsection is not found.'
-        pass
+        return 0
     
-    def rjust(self):
+    def rjust(self, width, fillchar):
         'B.rjust(width[, fillchar]) -> copy of B\n\nReturn B right justified in a string of length width. Padding is\ndone using the specified fill character (default is a space)'
-        pass
+        return self.__class__()
     
     def rpartition(self, sep):
         'Partition the bytes into three parts using the given separator.\n\nThis will search for the separator sep in the bytearray, starting and the end.\nIf the separator is found, returns a 3-tuple containing the part before the\nseparator, the separator itself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing two empty bytearray\nobjects and the original bytearray object.'
@@ -5081,7 +4715,7 @@ class bytearray(object):
     
     def startswith(self, prefix, start=0, end=-1):
         'B.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if B starts with the specified prefix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nprefix can also be a tuple of bytes to try.'
-        pass
+        return __Bool()
     
     def strip(self, bytes):
         'Strip leading and trailing bytes contained in the argument.\n\nIf the argument is omitted or None, strip leading and trailing ASCII whitespace.'
@@ -5089,11 +4723,11 @@ class bytearray(object):
     
     def swapcase(self):
         'B.swapcase() -> copy of B\n\nReturn a copy of B with uppercase ASCII characters converted\nto lowercase ASCII and vice versa.'
-        pass
+        return self.__class__()
     
     def title(self):
         'B.title() -> copy of B\n\nReturn a titlecased version of B, i.e. ASCII words start with uppercase\ncharacters, all remaining cased characters have lowercase.'
-        pass
+        return self.__class__()
     
     def translate(self, table, delete):
         'Return a copy with each character mapped by the given translation table.\n\n  table\n    Translation table, which must be a bytes object of length 256.\n\nAll characters occurring in the optional argument delete are removed.\nThe remaining characters are mapped through the given translation table.'
@@ -5101,267 +4735,11 @@ class bytearray(object):
     
     def upper(self):
         'B.upper() -> copy of B\n\nReturn a copy of B with all ASCII characters converted to uppercase.'
-        pass
+        return self.__class__()
     
     def zfill(self, width):
         'B.zfill(width) -> copy of B\n\nPad a numeric string B with zeros on the left, to fill a field\nof the specified width.  B is never truncated.'
-        pass
-    
-
-class bytes(object):
-    'bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer'
-    def __add__(self, value):
-        'Return self+value.'
-        pass
-    
-    __class__ = bytes
-    def __contains__(self, key):
-        'Return key in self.'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __getitem__(self, key):
-        'Return self[key].'
-        pass
-    
-    def __getnewargs__(self):
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    def __hash__(self):
-        'Return hash(self).'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __iter__(self):
-        'Implement iter(self).'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __len__(self):
-        'Return len(self).'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __mod__(self, value):
-        'Return self%value.'
-        pass
-    
-    def __mul__(self, value):
-        'Return self*value.n'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable_of_ints):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __rmod__(self, value):
-        'Return value%self.'
-        pass
-    
-    def __rmul__(self, value):
-        'Return self*value.'
-        pass
-    
-    def __str__(self):
-        'Return str(self).'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def capitalize(self):
-        'B.capitalize() -> copy of B\n\nReturn a copy of B with only its first character capitalized (ASCII)\nand the rest lower-cased.'
-        pass
-    
-    def center(self):
-        'B.center(width[, fillchar]) -> copy of B\n\nReturn B centered in a string of length width.  Padding is\ndone using the specified fill character (default is a space).'
-        pass
-    
-    def count(self, x):
-        'B.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of subsection sub in\nbytes B[start:end].  Optional arguments start and end are interpreted\nas in slice notation.'
-        pass
-    
-    def decode(self, encoding, errors):
-        "Decode the bytes using the codec registered for encoding.\n\n  encoding\n    The encoding with which to decode the bytes.\n  errors\n    The error handling scheme to use for the handling of decoding errors.\n    The default is 'strict' meaning that decoding errors raise a\n    UnicodeDecodeError. Other possible values are 'ignore' and 'replace'\n    as well as any other name registered with codecs.register_error that\n    can handle UnicodeDecodeErrors."
-        pass
-    
-    def endswith(self, suffix, start=0, end=-1):
-        'B.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if B ends with the specified suffix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nsuffix can also be a tuple of bytes to try.'
-        pass
-    
-    def expandtabs(self, tabsize=8):
-        'B.expandtabs(tabsize=8) -> copy of B\n\nReturn a copy of B where all tab characters are expanded using spaces.\nIf tabsize is not given, a tab size of 8 characters is assumed.'
-        pass
-    
-    def find(self, sub, start=0, end=-1):
-        'B.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
-    
-    @classmethod
-    def fromhex(type, string):
-        "Create a bytes object from a string of hexadecimal numbers.\n\nSpaces between two numbers are accepted.\nExample: bytes.fromhex('B9 01EF') -> b'\\\\xb9\\\\x01\\\\xef'."
-        pass
-    
-    def hex(self):
-        "B.hex() -> string\n\nCreate a string of hexadecimal numbers from a bytes object.\nExample: b'\\xb9\\x01\\xef'.hex() -> 'b901ef'."
-        pass
-    
-    def index(self, v):
-        'B.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the subsection is not found.'
-        pass
-    
-    def isalnum(self):
-        'B.isalnum() -> bool\n\nReturn True if all characters in B are alphanumeric\nand there is at least one character in B, False otherwise.'
-        pass
-    
-    def isalpha(self):
-        'B.isalpha() -> bool\n\nReturn True if all characters in B are alphabetic\nand there is at least one character in B, False otherwise.'
-        pass
-    
-    def isdigit(self):
-        'B.isdigit() -> bool\n\nReturn True if all characters in B are digits\nand there is at least one character in B, False otherwise.'
-        pass
-    
-    def islower(self):
-        'B.islower() -> bool\n\nReturn True if all cased characters in B are lowercase and there is\nat least one cased character in B, False otherwise.'
-        pass
-    
-    def isspace(self):
-        'B.isspace() -> bool\n\nReturn True if all characters in B are whitespace\nand there is at least one character in B, False otherwise.'
-        pass
-    
-    def istitle(self):
-        'B.istitle() -> bool\n\nReturn True if B is a titlecased string and there is at least one\ncharacter in B, i.e. uppercase characters may only follow uncased\ncharacters and lowercase characters only cased ones. Return False\notherwise.'
-        pass
-    
-    def isupper(self):
-        'B.isupper() -> bool\n\nReturn True if all cased characters in B are uppercase and there is\nat least one cased character in B, False otherwise.'
-        pass
-    
-    def join(self, iterable_of_bytes):
-        "Concatenate any number of bytes objects.\n\nThe bytes whose method is called is inserted in between each pair.\n\nThe result is returned as a new bytes object.\n\nExample: b'.'.join([b'ab', b'pq', b'rs']) -> b'ab.pq.rs'."
-        pass
-    
-    def ljust(self):
-        'B.ljust(width[, fillchar]) -> copy of B\n\nReturn B left justified in a string of length width. Padding is\ndone using the specified fill character (default is a space).'
-        pass
-    
-    def lower(self):
-        'B.lower() -> copy of B\n\nReturn a copy of B with all ASCII characters converted to lowercase.'
-        pass
-    
-    def lstrip(self, bytes):
-        'Strip leading bytes contained in the argument.\n\nIf the argument is omitted or None, strip leading  ASCII whitespace.'
-        pass
-    
-    @classmethod
-    def maketrans(cls, frm, to):
-        'Return a translation table useable for the bytes or bytearray translate method.\n\nThe returned table will be one where each byte in frm is mapped to the byte at\nthe same position in to.\n\nThe bytes objects frm and to must be of the same length.'
-        pass
-    
-    def partition(self, sep):
-        'Partition the bytes into three parts using the given separator.\n\nThis will search for the separator sep in the bytes. If the separator is found,\nreturns a 3-tuple containing the part before the separator, the separator\nitself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing the original bytes\nobject and two empty bytes objects.'
-        pass
-    
-    def replace(self, old, new, count):
-        'Return a copy with all occurrences of substring old replaced by new.\n\n  count\n    Maximum number of occurrences to replace.\n    -1 (the default value) means replace all occurrences.\n\nIf the optional argument count is given, only the first count occurrences are\nreplaced.'
-        pass
-    
-    def rfind(self, sub, start=0, end=-1):
-        'B.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
-    
-    def rindex(self, sub, start=0, end=-1):
-        'B.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaise ValueError when the subsection is not found.'
-        pass
-    
-    def rjust(self):
-        'B.rjust(width[, fillchar]) -> copy of B\n\nReturn B right justified in a string of length width. Padding is\ndone using the specified fill character (default is a space)'
-        pass
-    
-    def rpartition(self, sep):
-        'Partition the bytes into three parts using the given separator.\n\nThis will search for the separator sep in the bytes, starting and the end. If\nthe separator is found, returns a 3-tuple containing the part before the\nseparator, the separator itself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing two empty bytes\nobjects and the original bytes object.'
-        pass
-    
-    def rsplit(self, sep, maxsplit):
-        'Return a list of the sections in the bytes, using sep as the delimiter.\n\n  sep\n    The delimiter according which to split the bytes.\n    None (the default value) means split on ASCII whitespace characters\n    (space, tab, return, newline, formfeed, vertical tab).\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.\n\nSplitting is done starting at the end of the bytes and working to the front.'
-        pass
-    
-    def rstrip(self, bytes):
-        'Strip trailing bytes contained in the argument.\n\nIf the argument is omitted or None, strip trailing ASCII whitespace.'
-        pass
-    
-    def split(self, sep, maxsplit):
-        'Return a list of the sections in the bytes, using sep as the delimiter.\n\n  sep\n    The delimiter according which to split the bytes.\n    None (the default value) means split on ASCII whitespace characters\n    (space, tab, return, newline, formfeed, vertical tab).\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.'
-        pass
-    
-    def splitlines(self, keepends):
-        'Return a list of the lines in the bytes, breaking at line boundaries.\n\nLine breaks are not included in the resulting list unless keepends is given and\ntrue.'
-        pass
-    
-    def startswith(self, prefix, start=0, end=-1):
-        'B.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if B starts with the specified prefix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nprefix can also be a tuple of bytes to try.'
-        pass
-    
-    def strip(self, bytes):
-        'Strip leading and trailing bytes contained in the argument.\n\nIf the argument is omitted or None, strip leading and trailing ASCII whitespace.'
-        pass
-    
-    def swapcase(self):
-        'B.swapcase() -> copy of B\n\nReturn a copy of B with uppercase ASCII characters converted\nto lowercase ASCII and vice versa.'
-        pass
-    
-    def title(self):
-        'B.title() -> copy of B\n\nReturn a titlecased version of B, i.e. ASCII words start with uppercase\ncharacters, all remaining cased characters have lowercase.'
-        pass
-    
-    def translate(self, table, delete):
-        'Return a copy with each character mapped by the given translation table.\n\n  table\n    Translation table, which must be a bytes object of length 256.\n\nAll characters occurring in the optional argument delete are removed.\nThe remaining characters are mapped through the given translation table.'
-        pass
-    
-    def upper(self):
-        'B.upper() -> copy of B\n\nReturn a copy of B with all ASCII characters converted to uppercase.'
-        pass
-    
-    def zfill(self, width):
-        'B.zfill(width) -> copy of B\n\nPad a numeric string B with zeros on the left, to fill a field\nof the specified width.  B is never truncated.'
-        pass
+        return self.__class__()
     
 
 def callable(obj):
@@ -5372,213 +4750,9 @@ def chr(i):
     'Return a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.'
     pass
 
-class classmethod(object):
-    'classmethod(function) -> method\n\nConvert a function to be a class method.\n\nA class method receives the class as implicit first argument,\njust like an instance method receives the instance.\nTo declare a class method, use this idiom:\n\n  class C:\n      @classmethod\n      def f(cls, arg1, arg2, ...):\n          ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\nIf a class method is called for a derived class, the derived class\nobject is passed as the implied first argument.\n\nClass methods are different than C++ or Java static methods.\nIf you want those, see the staticmethod builtin.'
-    __class__ = classmethod
-    __dict__ = builtins.dict()
-    @property
-    def __func__(self):
-        pass
-    
-    def __get__(self, instance, owner):
-        'Return an attribute of instance, which is of type owner.'
-        pass
-    
-    def __init__(self, function):
-        'Initialize self.  See help(type(self)) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @property
-    def __isabstractmethod__(self):
-        pass
-    
-    @classmethod
-    def __new__(cls, function):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-
 def compile(source, filename, mode, flags, dont_inherit, optimize):
     "Compile source into a code object that can be executed by exec() or eval().\n\nThe source code may represent a Python module, statement or expression.\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if true, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or false these statements do influence the compilation,\nin addition to any features explicitly specified."
     pass
-
-class complex(object):
-    'complex(real[, imag]) -> complex number\n\nCreate a complex number from a real part and an optional imaginary part.\nThis is equivalent to (real + imag*1j) where imag defaults to 0.'
-    def __abs__(self):
-        'abs(self)'
-        pass
-    
-    def __add__(self, value):
-        'Return self+value.'
-        pass
-    
-    def __bool__(self):
-        'self != 0'
-        pass
-    
-    __class__ = complex
-    def __divmod__(self, value):
-        'Return divmod(self, value).'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __float__(self):
-        'float(self)'
-        pass
-    
-    def __floordiv__(self, value):
-        'Return self//value.'
-        pass
-    
-    def __format__(self, format_spec):
-        'complex.__format__() -> str\n\nConvert to a string according to format_spec.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __getnewargs__(self):
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    def __hash__(self):
-        'Return hash(self).'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __int__(self):
-        'int(self)'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __mod__(self, value):
-        'Return self%value.'
-        pass
-    
-    def __mul__(self, value):
-        'Return self*value.'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    def __neg__(self):
-        '-self'
-        pass
-    
-    @classmethod
-    def __new__(cls, real, imag):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __pos__(self):
-        '+self'
-        pass
-    
-    def __pow__(self, value, mod):
-        'Return pow(self, value, mod).'
-        pass
-    
-    def __radd__(self, value):
-        'Return value+self.'
-        pass
-    
-    def __rdivmod__(self, value):
-        'Return divmod(value, self).'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __rfloordiv__(self, value):
-        'Return value//self.'
-        pass
-    
-    def __rmod__(self, value):
-        'Return value%self.'
-        pass
-    
-    def __rmul__(self, value):
-        'Return value*self.'
-        pass
-    
-    def __rpow__(self, value, mod):
-        'Return pow(value, self, mod).'
-        pass
-    
-    def __rsub__(self, value):
-        'Return value-self.'
-        pass
-    
-    def __rtruediv__(self, value):
-        'Return value/self.'
-        pass
-    
-    def __str__(self):
-        'Return str(self).'
-        pass
-    
-    def __sub__(self, value):
-        'Return self-value.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def __truediv__(self, value):
-        'Return self/value.'
-        pass
-    
-    def conjugate(self):
-        'complex.conjugate() -> complex\n\nReturn the complex conjugate of its argument. (3-4j).conjugate() == 3+4j.'
-        pass
-    
-    @property
-    def imag(self):
-        'the imaginary part of a complex number'
-        pass
-    
-    @property
-    def real(self):
-        'the real part of a complex number'
-        pass
-    
 
 def copyright(self):
     'interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.'
@@ -5591,135 +4765,6 @@ def credits(self):
 def delattr(obj, name):
     "Deletes the named attribute from the given object.\n\ndelattr(x, 'y') is equivalent to ``del x.y''"
     pass
-
-class dict(object):
-    "dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)"
-    __class__ = dict
-    def __contains__(self, key):
-        'True if D has a key k, else False.'
-        pass
-    
-    def __delitem__(self, key):
-        'Delete self[key].'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __getitem__(self, index):
-        'x.__getitem__(y) <==> x[y]'
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    __hash__ = None
-    def __init__(self):
-        'Initialize self.  See help(type(self)) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __iter__(self):
-        'Implement iter(self).'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __len__(self):
-        'Return len(self).'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __setitem__(self, key, value):
-        'Set self[key] to value.'
-        pass
-    
-    def __sizeof__(self):
-        'D.__sizeof__() -> size of D in memory, in bytes'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def clear(self):
-        'D.clear() -> None.  Remove all items from D.'
-        pass
-    
-    def copy(self):
-        'D.copy() -> a shallow copy of D'
-        pass
-    
-    @classmethod
-    def fromkeys(type, iterable, value):
-        'Returns a new dict with keys from iterable and values equal to value.'
-        pass
-    
-    def get(self):
-        'D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'
-        pass
-    
-    def items(self):
-        "D.items() -> a set-like object providing a view on D's items"
-        pass
-    
-    def keys(self):
-        "D.keys() -> a set-like object providing a view on D's keys"
-        pass
-    
-    def pop(self):
-        'D.pop(k[,d]) -> v, remove specified key and return the corresponding value.\nIf key is not found, d is returned if given, otherwise KeyError is raised'
-        pass
-    
-    def popitem(self):
-        'D.popitem() -> (k, v), remove and return some (key, value) pair as a\n2-tuple; but raise KeyError if D is empty.'
-        pass
-    
-    def setdefault(self):
-        'D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D'
-        pass
-    
-    def update(self):
-        'D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.\nIf E is present and has a .keys() method, then does:  for k in E: D[k] = E[k]\nIf E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v\nIn either case, this is followed by: for k in F:  D[k] = F[k]'
-        pass
-    
-    def values(self):
-        "D.values() -> an object providing a view on D's values"
-        pass
-    
 
 def dir(object):
     "dir([object]) -> list of strings\n\nIf called without an argument, return the names in the current scope.\nElse, return an alphabetized list of names comprising (some of) the attributes\nof the given object, and of attributes reachable from it.\nIf the object supplies a method named __dir__, it will be used; otherwise\nthe default dir() logic is used and returns:\n  for a module object: the module's attributes.\n  for a class object:  its attributes, and recursively the attributes\n    of its bases.\n  for any other object: its attributes, its class's attributes, and\n    recursively the attributes of its class's base classes."
@@ -5739,15 +4784,10 @@ class enumerate(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, iterable, start):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -5756,12 +4796,12 @@ class enumerate(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 def eval(source, globals, locals):
@@ -5785,15 +4825,10 @@ class filter(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -5802,359 +4837,17 @@ class filter(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-
-class float(object):
-    'float(x) -> floating point number\n\nConvert a string or number to a floating point number, if possible.'
-    def __abs__(self):
-        'abs(self)'
-        pass
-    
-    def __add__(self, value):
-        'Return self+value.'
-        pass
-    
-    def __bool__(self):
-        'self != 0'
-        pass
-    
-    __class__ = float
-    def __divmod__(self, value):
-        'Return divmod(self, value).'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __float__(self):
-        'float(self)'
-        pass
-    
-    def __floordiv__(self, value):
-        'Return self//value.'
-        pass
-    
-    def __format__(self, format_spec):
-        'float.__format__(format_spec) -> string\n\nFormats the float according to format_spec.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    @classmethod
-    def __getformat__(cls):
-        "float.__getformat__(typestr) -> string\n\nYou probably don't want to use this function.  It exists mainly to be\nused in Python's test suite.\n\ntypestr must be 'double' or 'float'.  This function returns whichever of\n'unknown', 'IEEE, big-endian' or 'IEEE, little-endian' best describes the\nformat of floating point numbers used by the C type named by typestr."
-        pass
-    
-    def __getnewargs__(self):
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    def __hash__(self):
-        'Return hash(self).'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __int__(self):
-        'int(self)'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __mod__(self, value):
-        'Return self%value.'
-        pass
-    
-    def __mul__(self, value):
-        'Return self*value.'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    def __neg__(self):
-        '-self'
-        pass
-    
-    @classmethod
-    def __new__(cls, x):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __pos__(self):
-        '+self'
-        pass
-    
-    def __pow__(self, value, mod):
-        'Return pow(self, value, mod).'
-        pass
-    
-    def __radd__(self, value):
-        'Return value+self.'
-        pass
-    
-    def __rdivmod__(self, value):
-        'Return divmod(value, self).'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __rfloordiv__(self, value):
-        'Return value//self.'
-        pass
-    
-    def __rmod__(self, value):
-        'Return value%self.'
-        pass
-    
-    def __rmul__(self, value):
-        'Return value*self.'
-        pass
-    
-    def __round__(self, ndigits=0):
-        'Return the Integral closest to x, rounding half toward even.\nWhen an argument is passed, work like built-in round(x, ndigits).'
-        pass
-    
-    def __rpow__(self, value, mod):
-        'Return pow(value, self, mod).'
-        pass
-    
-    def __rsub__(self, value):
-        'Return value-self.'
-        pass
-    
-    def __rtruediv__(self, value):
-        'Return value/self.'
-        pass
-    
-    @classmethod
-    def __setformat__(cls):
-        "float.__setformat__(typestr, fmt) -> None\n\nYou probably don't want to use this function.  It exists mainly to be\nused in Python's test suite.\n\ntypestr must be 'double' or 'float'.  fmt must be one of 'unknown',\n'IEEE, big-endian' or 'IEEE, little-endian', and in addition can only be\none of the latter two if it appears to match the underlying C reality.\n\nOverride the automatic determination of C-level floating point type.\nThis affects how floats are converted to and from binary strings."
-        pass
-    
-    def __str__(self):
-        'Return str(self).'
-        pass
-    
-    def __sub__(self, value):
-        'Return self-value.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def __truediv__(self, value):
-        'Return self/value.'
-        pass
-    
-    def __trunc__(self):
-        'Return the Integral closest to x between 0 and x.'
-        pass
-    
-    def as_integer_ratio(self):
-        'float.as_integer_ratio() -> (int, int)\n\nReturn a pair of integers, whose ratio is exactly equal to the original\nfloat and with a positive denominator.\nRaise OverflowError on infinities and a ValueError on NaNs.\n\n>>> (10.0).as_integer_ratio()\n(10, 1)\n>>> (0.0).as_integer_ratio()\n(0, 1)\n>>> (-.25).as_integer_ratio()\n(-1, 4)'
-        pass
-    
-    def conjugate(self):
-        'Return self, the complex conjugate of any float.'
-        pass
-    
-    @classmethod
-    def fromhex(cls):
-        "float.fromhex(string) -> float\n\nCreate a floating-point number from a hexadecimal string.\n>>> float.fromhex('0x1.ffffp10')\n2047.984375\n>>> float.fromhex('-0x1p-1074')\n-5e-324"
-        pass
-    
-    def hex(self):
-        "float.hex() -> string\n\nReturn a hexadecimal representation of a floating-point number.\n>>> (-0.1).hex()\n'-0x1.999999999999ap-4'\n>>> 3.14159.hex()\n'0x1.921f9f01b866ep+1'"
-        pass
-    
-    @property
-    def imag(self):
-        'the imaginary part of a complex number'
-        pass
-    
-    def is_integer(self):
-        'Return True if the float is an integer.'
-        pass
-    
-    @property
-    def real(self):
-        'the real part of a complex number'
-        pass
+        return __Bool()
     
 
 def format(value, format_spec):
     "Return value.__format__(format_spec)\n\nformat_spec defaults to the empty string.\nSee the Format Specification Mini-Language section of help('FORMATTING') for\ndetails."
     pass
-
-class frozenset(object):
-    'frozenset() -> empty frozenset object\nfrozenset(iterable) -> frozenset object\n\nBuild an immutable unordered collection of unique elements.'
-    def __and__(self, value):
-        'Return self&value.'
-        pass
-    
-    __class__ = frozenset
-    def __contains__(self, value):
-        'x.__contains__(y) <==> y in x.'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    def __hash__(self):
-        'Return hash(self).'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __iter__(self):
-        'Implement iter(self).'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __len__(self):
-        'Return len(self).'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __or__(self, value):
-        'Return self|value.'
-        pass
-    
-    def __rand__(self, value):
-        'Return value&self.'
-        pass
-    
-    def __reduce__(self):
-        'Return state information for pickling.'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __ror__(self, value):
-        'Return value|self.'
-        pass
-    
-    def __rsub__(self, value):
-        'Return value-self.'
-        pass
-    
-    def __rxor__(self, value):
-        'Return value^self.'
-        pass
-    
-    def __sizeof__(self):
-        'S.__sizeof__() -> size of S in memory, in bytes'
-        pass
-    
-    def __sub__(self, value):
-        'Return self-value.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def __xor__(self, value):
-        'Return self^value.'
-        pass
-    
-    def copy(self):
-        'Return a shallow copy of a set.'
-        pass
-    
-    def difference(self):
-        'Return the difference of two or more sets as a new set.\n\n(i.e. all elements that are in this set but not the others.)'
-        pass
-    
-    def intersection(self):
-        'Return the intersection of two sets as a new set.\n\n(i.e. all elements that are in both sets.)'
-        pass
-    
-    def isdisjoint(self):
-        'Return True if two sets have a null intersection.'
-        pass
-    
-    def issubset(self):
-        'Report whether another set contains this set.'
-        pass
-    
-    def issuperset(self):
-        'Report whether this set contains another set.'
-        pass
-    
-    def symmetric_difference(self):
-        'Return the symmetric difference of two sets as a new set.\n\n(i.e. all elements that are in exactly one of the sets.)'
-        pass
-    
-    def union(self):
-        'Return the union of sets as a new set.\n\n(i.e. all elements that are in either set.)'
-        pass
-    
 
 def getattr(object, name, default):
     "getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case."
@@ -6188,264 +4881,6 @@ def input(prompt):
     'Read a string from standard input.  The trailing newline is stripped.\n\nThe prompt string, if given, is printed to standard output without a\ntrailing newline before reading input.\n\nIf the user hits EOF (*nix: Ctrl-D, Windows: Ctrl-Z+Return), raise EOFError.\nOn *nix systems, readline is used if available.'
     pass
 
-class int(object):
-    "int(x=0) -> integer\nint(x, base=10) -> integer\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is a number, return x.__int__().  For floating point\nnumbers, this truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string,\nbytes, or bytearray instance representing an integer literal in the\ngiven base.  The literal can be preceded by '+' or '-' and be surrounded\nby whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.\nBase 0 means to interpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4"
-    def __abs__(self):
-        'abs(self)'
-        pass
-    
-    def __add__(self, value):
-        'Return self+value.'
-        pass
-    
-    def __and__(self, value):
-        'Return self&value.'
-        pass
-    
-    def __bool__(self):
-        'self != 0'
-        pass
-    
-    def __ceil__(self):
-        'Ceiling of an Integral returns itself.'
-        pass
-    
-    __class__ = int
-    def __divmod__(self, value):
-        'Return divmod(self, value).'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __float__(self):
-        'float(self)'
-        pass
-    
-    def __floor__(self):
-        'Flooring an Integral returns itself.'
-        pass
-    
-    def __floordiv__(self, value):
-        'Return self//value.'
-        pass
-    
-    def __format__(self, format_spec):
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __getnewargs__(self):
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    def __hash__(self):
-        'Return hash(self).'
-        pass
-    
-    def __index__(self):
-        'Return self converted to an integer, if self is suitable for use as an index into a list.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __int__(self):
-        'int(self)'
-        pass
-    
-    def __invert__(self):
-        '~self'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __lshift__(self, value):
-        'Return self<<value.'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __mod__(self, value):
-        'Return self%value.'
-        pass
-    
-    def __mul__(self, value):
-        'Return self*value.'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    def __neg__(self):
-        '-self'
-        pass
-    
-    @classmethod
-    def __new__(cls, x=0):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __or__(self, value):
-        'Return self|value.'
-        pass
-    
-    def __pos__(self):
-        '+self'
-        pass
-    
-    def __pow__(self, value, mod):
-        'Return pow(self, value, mod).'
-        pass
-    
-    def __radd__(self, value):
-        'Return value+self.'
-        pass
-    
-    def __rand__(self, value):
-        'Return value&self.'
-        pass
-    
-    def __rdivmod__(self, value):
-        'Return divmod(value, self).'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __rfloordiv__(self, value):
-        'Return value//self.'
-        pass
-    
-    def __rlshift__(self, value):
-        'Return value<<self.'
-        pass
-    
-    def __rmod__(self, value):
-        'Return value%self.'
-        pass
-    
-    def __rmul__(self, value):
-        'Return value*self.'
-        pass
-    
-    def __ror__(self, value):
-        'Return value|self.'
-        pass
-    
-    def __round__(self, ndigits=0):
-        'Rounding an Integral returns itself.\nRounding with an ndigits argument also returns an integer.'
-        pass
-    
-    def __rpow__(self, value, mod):
-        'Return pow(value, self, mod).'
-        pass
-    
-    def __rrshift__(self, value):
-        'Return value>>self.'
-        pass
-    
-    def __rshift__(self, value):
-        'Return self>>value.'
-        pass
-    
-    def __rsub__(self, value):
-        'Return value-self.'
-        pass
-    
-    def __rtruediv__(self, value):
-        'Return value/self.'
-        pass
-    
-    def __rxor__(self, value):
-        'Return value^self.'
-        pass
-    
-    def __sizeof__(self):
-        'Returns size in memory, in bytes'
-        pass
-    
-    def __str__(self):
-        'Return str(self).'
-        pass
-    
-    def __sub__(self, value):
-        'Return self-value.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def __truediv__(self, value):
-        'Return self/value.'
-        pass
-    
-    def __trunc__(self):
-        'Truncating an Integral returns itself.'
-        pass
-    
-    def __xor__(self, value):
-        'Return self^value.'
-        pass
-    
-    def bit_length(self):
-        "int.bit_length() -> int\n\nNumber of bits necessary to represent self in binary.\n>>> bin(37)\n'0b100101'\n>>> (37).bit_length()\n6"
-        pass
-    
-    def conjugate(self):
-        'Returns self, the complex conjugate of any int.'
-        pass
-    
-    @property
-    def denominator(self):
-        'the denominator of a rational number in lowest terms'
-        pass
-    
-    @classmethod
-    def from_bytes(cls):
-        "int.from_bytes(bytes, byteorder, *, signed=False) -> int\n\nReturn the integer represented by the given array of bytes.\n\nThe bytes argument must be a bytes-like object (e.g. bytes or bytearray).\n\nThe byteorder argument determines the byte order used to represent the\ninteger.  If byteorder is 'big', the most significant byte is at the\nbeginning of the byte array.  If byteorder is 'little', the most\nsignificant byte is at the end of the byte array.  To request the native\nbyte order of the host system, use `sys.byteorder' as the byte order value.\n\nThe signed keyword-only argument indicates whether two's complement is\nused to represent the integer."
-        pass
-    
-    @property
-    def imag(self):
-        'the imaginary part of a complex number'
-        pass
-    
-    @property
-    def numerator(self):
-        'the numerator of a rational number in lowest terms'
-        pass
-    
-    @property
-    def real(self):
-        'the real part of a complex number'
-        pass
-    
-    def to_bytes(self):
-        "int.to_bytes(length, byteorder, *, signed=False) -> bytes\n\nReturn an array of bytes representing an integer.\n\nThe integer is represented using length bytes.  An OverflowError is\nraised if the integer is not representable with the given number of\nbytes.\n\nThe byteorder argument determines the byte order used to represent the\ninteger.  If byteorder is 'big', the most significant byte is at the\nbeginning of the byte array.  If byteorder is 'little', the most\nsignificant byte is at the end of the byte array.  To request the native\nbyte order of the host system, use `sys.byteorder' as the byte order value.\n\nThe signed keyword-only argument determines whether two's complement is\nused to represent the integer.  If signed is False and a negative integer\nis given, an OverflowError is raised."
-        pass
-    
-
 def isinstance(obj, class_or_tuple):
     'Return whether an object is an instance of a class or of a subclass thereof.\n\nA tuple, as in ``isinstance(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``isinstance(x, A) or isinstance(x, B)\nor ...`` etc.'
     pass
@@ -6466,158 +4901,6 @@ def license(self):
     'interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.'
     pass
 
-class list(object):
-    "list() -> new empty list\nlist(iterable) -> new list initialized from iterable's items"
-    def __add__(self, value):
-        'Return self+value.'
-        pass
-    
-    __class__ = list
-    def __contains__(self, key):
-        'Return key in self.'
-        pass
-    
-    def __delitem__(self, key):
-        'Delete self[key].'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __getitem__(self, index):
-        'x.__getitem__(y) <==> x[y]'
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    __hash__ = None
-    def __iadd__(self, value):
-        'Implement self+=value.'
-        pass
-    
-    def __imul__(self, value):
-        'Implement self*=value.'
-        pass
-    
-    def __init__(self):
-        'Initialize self.  See help(type(self)) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __iter__(self):
-        'Implement iter(self).'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __len__(self):
-        'Return len(self).'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __mul__(self, value):
-        'Return self*value.n'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __reversed__(self):
-        'L.__reversed__() -- return a reverse iterator over the list'
-        pass
-    
-    def __rmul__(self, value):
-        'Return self*value.'
-        pass
-    
-    def __setitem__(self, key, value):
-        'Set self[key] to value.'
-        pass
-    
-    def __sizeof__(self):
-        'L.__sizeof__() -- size of L in memory, in bytes'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def append(self):
-        'L.append(object) -> None -- append object to end'
-        pass
-    
-    def clear(self):
-        'L.clear() -> None -- remove all items from L'
-        pass
-    
-    def copy(self):
-        'L.copy() -> list -- a shallow copy of L'
-        pass
-    
-    def count(self, x):
-        'L.count(value) -> integer -- return number of occurrences of value'
-        pass
-    
-    def extend(self):
-        'L.extend(iterable) -> None -- extend list by appending elements from the iterable'
-        pass
-    
-    def index(self, v):
-        'L.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
-        pass
-    
-    def insert(self):
-        'L.insert(index, object) -- insert object before index'
-        pass
-    
-    def pop(self):
-        'L.pop([index]) -> item -- remove and return item at index (default last).\nRaises IndexError if list is empty or index is out of range.'
-        pass
-    
-    def remove(self):
-        'L.remove(value) -> None -- remove first occurrence of value.\nRaises ValueError if the value is not present.'
-        pass
-    
-    def reverse(self):
-        'L.reverse() -- reverse *IN PLACE*'
-        pass
-    
-    def sort(self):
-        'L.sort(key=None, reverse=False) -> None -- stable sort *IN PLACE*'
-        pass
-    
-
 def locals():
     "Return a dictionary containing the current scope's local variables.\n\nNOTE: Whether or not updates to this dictionary will affect name lookups in\nthe local scope and vice-versa is *implementation dependent* and not\ncovered by any backwards compatibility guarantees."
     pass
@@ -6632,15 +4915,10 @@ class map(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(cls, func):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -6649,12 +4927,12 @@ class map(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 def max(iterable):
@@ -6701,7 +4979,7 @@ class memoryview(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __le__(self, value):
         'Return self<=value.'
@@ -6719,11 +4997,6 @@ class memoryview(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __repr__(self):
         'Return repr(self).'
         pass
@@ -6735,7 +5008,7 @@ class memoryview(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def c_contiguous(self):
@@ -6826,97 +5099,6 @@ def next(iterator, default):
     'next(iterator[, default])\n\nReturn the next item from the iterator. If default is given and the iterator\nis exhausted, it is returned instead of raising StopIteration.'
     pass
 
-class object:
-    'The most base type'
-    __class__ = object
-    def __delattr__(self, name):
-        'Implement delattr(self, name).'
-        pass
-    
-    def __dir__(self):
-        '__dir__() -> list\ndefault dir() implementation'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __format__(self, format_spec):
-        'default object formatter'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    def __hash__(self):
-        'Return hash(self).'
-        pass
-    
-    def __init__(self, *args, **kwargs):
-        'Initialize self.  See help(type(self)) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __reduce__(self):
-        'helper for pickle'
-        pass
-    
-    def __reduce_ex__(self, protocol):
-        'helper for pickle'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __setattr__(self, name, value):
-        'Implement setattr(self, name, value).'
-        pass
-    
-    def __sizeof__(self):
-        '__sizeof__() -> int\nsize of object in memory, in bytes'
-        pass
-    
-    def __str__(self):
-        'Return str(self).'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-
 def oct(number):
     "Return the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'"
     pass
@@ -6936,73 +5118,6 @@ def pow(x, y, z):
 def print():
     "print(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\nOptional keyword arguments:\nfile:  a file-like object (stream); defaults to the current sys.stdout.\nsep:   string inserted between values, default a space.\nend:   string appended after the last value, default a newline.\nflush: whether to forcibly flush the stream."
     pass
-
-class property(object):
-    'property(fget=None, fset=None, fdel=None, doc=None) -> property attribute\n\nfget is a function to be used for getting an attribute value, and likewise\nfset is a function for setting, and fdel a function for del\'ing, an\nattribute.  Typical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, "I\'m the \'x\' property.")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        "I am the \'x\' property."\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x\n'
-    __class__ = property
-    def __delete__(self, instance):
-        'Delete an attribute of instance.'
-        pass
-    
-    def __get__(self, instance, owner):
-        'Return an attribute of instance, which is of type owner.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __init__(self, fget=None, fset=None, fdel=None, doc=None):
-        'Initialize self.  See help(type(self)) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @property
-    def __isabstractmethod__(self):
-        pass
-    
-    @classmethod
-    def __new__(cls, fget=None, fset=None, fdel=None, doc=None):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __set__(self, instance, value):
-        'Set an attribute of instance to value.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def deleter(self):
-        'Descriptor to change the deleter on a property.'
-        pass
-    
-    @property
-    def fdel(self):
-        pass
-    
-    @property
-    def fget(self):
-        pass
-    
-    @property
-    def fset(self):
-        pass
-    
-    def getter(self):
-        'Descriptor to change the getter on a property.'
-        pass
-    
-    def setter(self):
-        'Descriptor to change the setter on a property.'
-        pass
-    
 
 def quit(self, code):
     pass
@@ -7045,7 +5160,7 @@ class range(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -7067,13 +5182,8 @@ class range(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls, stop):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __reduce__(self):
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -7086,15 +5196,15 @@ class range(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     def count(self, x):
         'rangeobject.count(value) -> integer -- return number of occurrences of value'
-        pass
+        return 0
     
     def index(self, v):
         'rangeobject.index(value, [start, [stop]]) -> integer -- return index of value.\nRaise ValueError if the value is not present.'
-        pass
+        return 0
     
     @property
     def start(self):
@@ -7123,7 +5233,7 @@ class reversed(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
@@ -7131,12 +5241,7 @@ class reversed(object):
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
-        pass
-    
-    @classmethod
-    def __new__(cls, sequence):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return 0
     
     def __next__(self):
         'Implement next(self).'
@@ -7144,213 +5249,21 @@ class reversed(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __setstate__(self, state):
         'Set state information for unpickling.'
-        pass
+        return None
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 
 def round(number, ndigits):
     'round(number[, ndigits]) -> number\n\nRound a number to a given precision in decimal digits (default 0 digits).\nThis returns an int when called with one argument, otherwise the\nsame type as the number. ndigits may be negative.'
     pass
-
-class set(object):
-    'set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.'
-    def __and__(self, value):
-        'Return self&value.'
-        pass
-    
-    __class__ = set
-    def __contains__(self, value):
-        'x.__contains__(y) <==> y in x.'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    __hash__ = None
-    def __iand__(self, value):
-        'Return self&=value.'
-        pass
-    
-    def __init__(self):
-        'Initialize self.  See help(type(self)) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __ior__(self, value):
-        'Return self|=value.'
-        pass
-    
-    def __isub__(self, value):
-        'Return self-=value.'
-        pass
-    
-    def __iter__(self):
-        'Implement iter(self).'
-        pass
-    
-    def __ixor__(self, value):
-        'Return self^=value.'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __len__(self):
-        'Return len(self).'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __or__(self, value):
-        'Return self|value.'
-        pass
-    
-    def __rand__(self, value):
-        'Return value&self.'
-        pass
-    
-    def __reduce__(self):
-        'Return state information for pickling.'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __ror__(self, value):
-        'Return value|self.'
-        pass
-    
-    def __rsub__(self, value):
-        'Return value-self.'
-        pass
-    
-    def __rxor__(self, value):
-        'Return value^self.'
-        pass
-    
-    def __sizeof__(self):
-        'S.__sizeof__() -> size of S in memory, in bytes'
-        pass
-    
-    def __sub__(self, value):
-        'Return self-value.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def __xor__(self, value):
-        'Return self^value.'
-        pass
-    
-    def add(self):
-        'Add an element to a set.\n\nThis has no effect if the element is already present.'
-        pass
-    
-    def clear(self):
-        'Remove all elements from this set.'
-        pass
-    
-    def copy(self):
-        'Return a shallow copy of a set.'
-        pass
-    
-    def difference(self):
-        'Return the difference of two or more sets as a new set.\n\n(i.e. all elements that are in this set but not the others.)'
-        pass
-    
-    def difference_update(self):
-        'Remove all elements of another set from this set.'
-        pass
-    
-    def discard(self):
-        'Remove an element from a set if it is a member.\n\nIf the element is not a member, do nothing.'
-        pass
-    
-    def intersection(self):
-        'Return the intersection of two sets as a new set.\n\n(i.e. all elements that are in both sets.)'
-        pass
-    
-    def intersection_update(self):
-        'Update a set with the intersection of itself and another.'
-        pass
-    
-    def isdisjoint(self):
-        'Return True if two sets have a null intersection.'
-        pass
-    
-    def issubset(self):
-        'Report whether another set contains this set.'
-        pass
-    
-    def issuperset(self):
-        'Report whether this set contains another set.'
-        pass
-    
-    def pop(self):
-        'Remove and return an arbitrary set element.\nRaises KeyError if the set is empty.'
-        pass
-    
-    def remove(self):
-        'Remove an element from a set; it must be a member.\n\nIf the element is not a member, raise a KeyError.'
-        pass
-    
-    def symmetric_difference(self):
-        'Return the symmetric difference of two sets as a new set.\n\n(i.e. all elements that are in exactly one of the sets.)'
-        pass
-    
-    def symmetric_difference_update(self):
-        'Update a set with the symmetric difference of itself and another.'
-        pass
-    
-    def union(self):
-        'Return the union of sets as a new set.\n\n(i.e. all elements that are in either set.)'
-        pass
-    
-    def update(self):
-        'Update a set with the union of itself and others.'
-        pass
-    
 
 def setattr(obj, name, value):
     "Sets the named attribute on the given object to the specified value.\n\nsetattr(x, 'y', v) is equivalent to ``x.y = v''"
@@ -7379,7 +5292,7 @@ class slice(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __le__(self, value):
         'Return self<=value.'
@@ -7393,14 +5306,9 @@ class slice(object):
         'Return self!=value.'
         pass
     
-    @classmethod
-    def __new__(cls, stop):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     def __repr__(self):
         'Return repr(self).'
@@ -7409,9 +5317,9 @@ class slice(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
-    def indices(self):
+    def indices(self, len):
         'S.indices(len) -> (start, stop, stride)\n\nAssuming a sequence of length len, calculate the start and stop\nindices, and the stride length of the extended slice described by\nS. Out of bounds indices are clipped in a manner consistent with the\nhandling of normal slices.'
         pass
     
@@ -7431,325 +5339,6 @@ class slice(object):
 def sorted(iterable):
     'Return a new list containing all items from the iterable in ascending order.\n\nA custom key function can be supplied to customize the sort order, and the\nreverse flag can be set to request the result in descending order.'
     pass
-
-class staticmethod(object):
-    'staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n         @staticmethod\n         def f(arg1, arg2, ...):\n             ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.'
-    __class__ = staticmethod
-    __dict__ = builtins.dict()
-    @property
-    def __func__(self):
-        pass
-    
-    def __get__(self, instance, owner):
-        'Return an attribute of instance, which is of type owner.'
-        pass
-    
-    def __init__(self, function):
-        'Initialize self.  See help(type(self)) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @property
-    def __isabstractmethod__(self):
-        pass
-    
-    @classmethod
-    def __new__(cls, function):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-
-class str(object):
-    "str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'."
-    def __add__(self, value):
-        'Return self+value.'
-        pass
-    
-    __class__ = str
-    def __contains__(self, key):
-        'Return key in self.'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __format__(self, format_spec):
-        'S.__format__(format_spec) -> str\n\nReturn a formatted version of S as described by format_spec.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __getitem__(self, key):
-        'Return self[key].'
-        pass
-    
-    def __getnewargs__(self):
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    def __hash__(self):
-        'Return hash(self).'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __iter__(self):
-        'Implement iter(self).'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __len__(self):
-        'Return len(self).'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __mod__(self, value):
-        'Return self%value.'
-        pass
-    
-    def __mul__(self, value):
-        'Return self*value.n'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(cls, object=''):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __rmod__(self, value):
-        'Return value%self.'
-        pass
-    
-    def __rmul__(self, value):
-        'Return self*value.'
-        pass
-    
-    def __sizeof__(self):
-        'S.__sizeof__() -> size of S in memory, in bytes'
-        pass
-    
-    def __str__(self):
-        'Return str(self).'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def capitalize(self):
-        'S.capitalize() -> str\n\nReturn a capitalized version of S, i.e. make the first character\nhave upper case and the rest lower case.'
-        pass
-    
-    def casefold(self):
-        'S.casefold() -> str\n\nReturn a version of S suitable for caseless comparisons.'
-        pass
-    
-    def center(self):
-        'S.center(width[, fillchar]) -> str\n\nReturn S centered in a string of length width. Padding is\ndone using the specified fill character (default is a space)'
-        pass
-    
-    def count(self, x):
-        'S.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of substring sub in\nstring S[start:end].  Optional arguments start and end are\ninterpreted as in slice notation.'
-        pass
-    
-    def encode(self):
-        "S.encode(encoding='utf-8', errors='strict') -> bytes\n\nEncode S using the codec registered for encoding. Default encoding\nis 'utf-8'. errors may be given to set a different error\nhandling scheme. Default is 'strict' meaning that encoding errors raise\na UnicodeEncodeError. Other possible values are 'ignore', 'replace' and\n'xmlcharrefreplace' as well as any other name registered with\ncodecs.register_error that can handle UnicodeEncodeErrors."
-        pass
-    
-    def endswith(self, suffix, start=0, end=-1):
-        'S.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if S ends with the specified suffix, False otherwise.\nWith optional start, test S beginning at that position.\nWith optional end, stop comparing S at that position.\nsuffix can also be a tuple of strings to try.'
-        pass
-    
-    def expandtabs(self, tabsize=8):
-        'S.expandtabs(tabsize=8) -> str\n\nReturn a copy of S where all tab characters are expanded using spaces.\nIf tabsize is not given, a tab size of 8 characters is assumed.'
-        pass
-    
-    def find(self, sub, start=0, end=-1):
-        'S.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
-    
-    def format(self):
-        "S.format(*args, **kwargs) -> str\n\nReturn a formatted version of S, using substitutions from args and kwargs.\nThe substitutions are identified by braces ('{' and '}')."
-        pass
-    
-    def format_map(self):
-        "S.format_map(mapping) -> str\n\nReturn a formatted version of S, using substitutions from mapping.\nThe substitutions are identified by braces ('{' and '}')."
-        pass
-    
-    def index(self, v):
-        'S.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in S where substring sub is found, \nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the substring is not found.'
-        pass
-    
-    def isalnum(self):
-        'S.isalnum() -> bool\n\nReturn True if all characters in S are alphanumeric\nand there is at least one character in S, False otherwise.'
-        pass
-    
-    def isalpha(self):
-        'S.isalpha() -> bool\n\nReturn True if all characters in S are alphabetic\nand there is at least one character in S, False otherwise.'
-        pass
-    
-    def isdecimal(self):
-        'S.isdecimal() -> bool\n\nReturn True if there are only decimal characters in S,\nFalse otherwise.'
-        pass
-    
-    def isdigit(self):
-        'S.isdigit() -> bool\n\nReturn True if all characters in S are digits\nand there is at least one character in S, False otherwise.'
-        pass
-    
-    def isidentifier(self):
-        'S.isidentifier() -> bool\n\nReturn True if S is a valid identifier according\nto the language definition.\n\nUse keyword.iskeyword() to test for reserved identifiers\nsuch as "def" and "class".\n'
-        pass
-    
-    def islower(self):
-        'S.islower() -> bool\n\nReturn True if all cased characters in S are lowercase and there is\nat least one cased character in S, False otherwise.'
-        pass
-    
-    def isnumeric(self):
-        'S.isnumeric() -> bool\n\nReturn True if there are only numeric characters in S,\nFalse otherwise.'
-        pass
-    
-    def isprintable(self):
-        'S.isprintable() -> bool\n\nReturn True if all characters in S are considered\nprintable in repr() or S is empty, False otherwise.'
-        pass
-    
-    def isspace(self):
-        'S.isspace() -> bool\n\nReturn True if all characters in S are whitespace\nand there is at least one character in S, False otherwise.'
-        pass
-    
-    def istitle(self):
-        'S.istitle() -> bool\n\nReturn True if S is a titlecased string and there is at least one\ncharacter in S, i.e. upper- and titlecase characters may only\nfollow uncased characters and lowercase characters only cased ones.\nReturn False otherwise.'
-        pass
-    
-    def isupper(self):
-        'S.isupper() -> bool\n\nReturn True if all cased characters in S are uppercase and there is\nat least one cased character in S, False otherwise.'
-        pass
-    
-    def join(self):
-        'S.join(iterable) -> str\n\nReturn a string which is the concatenation of the strings in the\niterable.  The separator between elements is S.'
-        pass
-    
-    def ljust(self):
-        'S.ljust(width[, fillchar]) -> str\n\nReturn S left-justified in a Unicode string of length width. Padding is\ndone using the specified fill character (default is a space).'
-        pass
-    
-    def lower(self):
-        'S.lower() -> str\n\nReturn a copy of the string S converted to lowercase.'
-        pass
-    
-    def lstrip(self, chars):
-        'S.lstrip([chars]) -> str\n\nReturn a copy of the string S with leading whitespace removed.\nIf chars is given and not None, remove characters in chars instead.'
-        pass
-    
-    @classmethod
-    def maketrans(cls, x, y, z):
-        'Return a translation table usable for str.translate().\n\nIf there is only one argument, it must be a dictionary mapping Unicode\nordinals (integers) or characters to Unicode ordinals, strings or None.\nCharacter keys will be then converted to ordinals.\nIf there are two arguments, they must be strings of equal length, and\nin the resulting dictionary, each character in x will be mapped to the\ncharacter at the same position in y. If there is a third argument, it\nmust be a string, whose characters will be mapped to None in the result.'
-        pass
-    
-    def partition(self):
-        'S.partition(sep) -> (head, sep, tail)\n\nSearch for the separator sep in S, and return the part before it,\nthe separator itself, and the part after it.  If the separator is not\nfound, return S and two empty strings.'
-        pass
-    
-    def replace(self, old, new, count=-1):
-        'S.replace(old, new[, count]) -> str\n\nReturn a copy of S with all occurrences of substring\nold replaced by new.  If the optional argument count is\ngiven, only the first count occurrences are replaced.'
-        pass
-    
-    def rfind(self, sub, start=0, end=-1):
-        'S.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.'
-        pass
-    
-    def rindex(self, sub, start=0, end=-1):
-        'S.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the substring is not found.'
-        pass
-    
-    def rjust(self):
-        'S.rjust(width[, fillchar]) -> str\n\nReturn S right-justified in a string of length width. Padding is\ndone using the specified fill character (default is a space).'
-        pass
-    
-    def rpartition(self):
-        'S.rpartition(sep) -> (head, sep, tail)\n\nSearch for the separator sep in S, starting at the end of S, and return\nthe part before it, the separator itself, and the part after it.  If the\nseparator is not found, return two empty strings and S.'
-        pass
-    
-    def rsplit(self, sep=None, maxsplit=-1):
-        'S.rsplit(sep=None, maxsplit=-1) -> list of strings\n\nReturn a list of the words in S, using sep as the\ndelimiter string, starting at the end of the string and\nworking to the front.  If maxsplit is given, at most maxsplit\nsplits are done. If sep is not specified, any whitespace string\nis a separator.'
-        pass
-    
-    def rstrip(self, chars=None):
-        'S.rstrip([chars]) -> str\n\nReturn a copy of the string S with trailing whitespace removed.\nIf chars is given and not None, remove characters in chars instead.'
-        pass
-    
-    def split(self, sep=None, maxsplit=-1):
-        'S.split(sep=None, maxsplit=-1) -> list of strings\n\nReturn a list of the words in S, using sep as the\ndelimiter string.  If maxsplit is given, at most maxsplit\nsplits are done. If sep is not specified or is None, any\nwhitespace string is a separator and empty strings are\nremoved from the result.'
-        pass
-    
-    def splitlines(self, keepends=False):
-        'S.splitlines([keepends]) -> list of strings\n\nReturn a list of the lines in S, breaking at line boundaries.\nLine breaks are not included in the resulting list unless keepends\nis given and true.'
-        pass
-    
-    def startswith(self, prefix, start=0, end=-1):
-        'S.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if S starts with the specified prefix, False otherwise.\nWith optional start, test S beginning at that position.\nWith optional end, stop comparing S at that position.\nprefix can also be a tuple of strings to try.'
-        pass
-    
-    def strip(self, chars=None):
-        'S.strip([chars]) -> str\n\nReturn a copy of the string S with leading and trailing\nwhitespace removed.\nIf chars is given and not None, remove characters in chars instead.'
-        pass
-    
-    def swapcase(self):
-        'S.swapcase() -> str\n\nReturn a copy of S with uppercase characters converted to lowercase\nand vice versa.'
-        pass
-    
-    def title(self):
-        'S.title() -> str\n\nReturn a titlecased version of S, i.e. words start with title case\ncharacters, all remaining cased characters have lower case.'
-        pass
-    
-    def translate(self):
-        'S.translate(table) -> str\n\nReturn a copy of the string S in which each character has been mapped\nthrough the given translation table. The table must implement\nlookup/indexing via __getitem__, for instance a dictionary or list,\nmapping Unicode ordinals to Unicode ordinals, strings, or None. If\nthis operation raises LookupError, the character is left untouched.\nCharacters mapped to None are deleted.'
-        pass
-    
-    def upper(self):
-        'S.upper() -> str\n\nReturn a copy of S converted to uppercase.'
-        pass
-    
-    def zfill(self, width):
-        'S.zfill(width) -> str\n\nPad a numeric string S with zeros on the left, to fill a field\nof the specified width. The string S is never truncated.'
-        pass
-    
 
 def sum(iterable, start):
     "Return the sum of a 'start' value (default: 0) plus an iterable of numbers\n\nWhen the iterable is empty, return the start value.\nThis function is intended specifically for use with numeric values and may\nreject non-numeric types."
@@ -7773,12 +5362,7 @@ class super(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
+        return None
     
     def __repr__(self):
         'Return repr(self).'
@@ -7797,189 +5381,11 @@ class super(object):
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
     @property
     def __thisclass__(self):
         'the class invoking super()'
-        pass
-    
-
-class tuple(object):
-    "tuple() -> empty tuple\ntuple(iterable) -> tuple initialized from iterable's items\n\nIf the argument is a tuple, the return value is the same object."
-    def __add__(self, value):
-        'Return self+value.'
-        pass
-    
-    __class__ = tuple
-    def __contains__(self, key):
-        'Return key in self.'
-        pass
-    
-    def __eq__(self, value):
-        'Return self==value.'
-        pass
-    
-    def __ge__(self, value):
-        'Return self>=value.'
-        pass
-    
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __getitem__(self, key):
-        'Return self[key].'
-        pass
-    
-    def __getnewargs__(self):
-        pass
-    
-    def __gt__(self, value):
-        'Return self>value.'
-        pass
-    
-    def __hash__(self):
-        'Return hash(self).'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __iter__(self):
-        'Implement iter(self).'
-        pass
-    
-    def __le__(self, value):
-        'Return self<=value.'
-        pass
-    
-    def __len__(self):
-        'Return len(self).'
-        pass
-    
-    def __lt__(self, value):
-        'Return self<value.'
-        pass
-    
-    def __mul__(self, value):
-        'Return self*value.n'
-        pass
-    
-    def __ne__(self, value):
-        'Return self!=value.'
-        pass
-    
-    @classmethod
-    def __new__(cls):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __rmul__(self, value):
-        'Return self*value.'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    def count(self, x):
-        'T.count(value) -> integer -- return number of occurrences of value'
-        pass
-    
-    def index(self, v):
-        'T.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.'
-        pass
-    
-
-class type(object):
-    "type(object_or_name, bases, dict)\ntype(object) -> the object's type\ntype(name, bases, dict) -> a new type"
-    __base__ = object()
-    __bases__ = builtins.tuple()
-    __basicsize__ = 864
-    def __call__(self, *args, **kwargs):
-        'Call self as a function.'
-        pass
-    
-    __class__ = type
-    def __delattr__(self, name):
-        'Implement delattr(self, name).'
-        pass
-    
-    __dict__ = builtins.dict()
-    __dictoffset__ = 264
-    def __dir__(self):
-        '__dir__() -> list\nspecialized __dir__ implementation for types'
-        pass
-    
-    __flags__ = -2146675712
-    def __getattribute__(self, name):
-        'Return getattr(self, name).'
-        pass
-    
-    def __init__(self, object_or_name, bases, dict):
-        'Initialize self.  See help(type(self)) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __init_subclass__(cls):
-        'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
-    
-    def __instancecheck__(self):
-        '__instancecheck__() -> bool\ncheck if an object is an instance'
-        pass
-    
-    __itemsize__ = 40
-    __mro__ = builtins.tuple()
-    __name__ = 'type'
-    @classmethod
-    def __new__(cls, object_or_name, bases, dict):
-        'Create and return a new object.  See help(type) for accurate signature.'
-        pass
-    
-    @classmethod
-    def __prepare__(cls):
-        '__prepare__() -> dict\nused to create the namespace for the class statement'
-        pass
-    
-    __qualname__ = 'type'
-    def __repr__(self):
-        'Return repr(self).'
-        pass
-    
-    def __setattr__(self, name, value):
-        'Implement setattr(self, name, value).'
-        pass
-    
-    def __sizeof__(self):
-        '__sizeof__() -> int\nreturn memory consumption of the type object'
-        pass
-    
-    def __subclasscheck__(self):
-        '__subclasscheck__() -> bool\ncheck if a class is a subclass'
-        pass
-    
-    def __subclasses__(self):
-        '__subclasses__() -> list of immediate subclasses'
-        pass
-    
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
-    
-    __text_signature__ = None
-    __weakrefoffset__ = 368
-    def mro(self):
-        "mro() -> list\nreturn a type's method resolution order"
         pass
     
 
@@ -7997,15 +5403,10 @@ class zip(object):
     @classmethod
     def __init_subclass__(cls):
         'This method is called when a class is subclassed.\n\nThe default implementation does nothing. It may be\noverridden to extend subclasses.\n'
-        pass
+        return None
     
     def __iter__(self):
         'Implement iter(self).'
-        pass
-    
-    @classmethod
-    def __new__(type, *args, **kwargs):
-        'Create and return a new object.  See help(type) for accurate signature.'
         pass
     
     def __next__(self):
@@ -8014,11 +5415,11 @@ class zip(object):
     
     def __reduce__(self):
         'Return state information for pickling.'
-        pass
+        return ''; return ()
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return __Bool()
     
 

@@ -6,12 +6,12 @@ class BadPickleGet(UnpicklingError):
     __dict__ = __builtin__.dict()
     __module__ = 'cPickle'
     def __str__(self):
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 HIGHEST_PROTOCOL = 2
@@ -20,12 +20,12 @@ class PickleError(exceptions.Exception):
     __dict__ = __builtin__.dict()
     __module__ = 'cPickle'
     def __str__(self):
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
     @property
     def __weakref__(self):
@@ -42,12 +42,12 @@ class PicklingError(PickleError):
     __dict__ = __builtin__.dict()
     __module__ = 'cPickle'
     def __str__(self):
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 class UnpickleableError(PicklingError):
@@ -55,12 +55,12 @@ class UnpickleableError(PicklingError):
     __dict__ = __builtin__.dict()
     __module__ = 'cPickle'
     def __str__(self):
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 def Unpickler(file):
@@ -72,12 +72,12 @@ class UnpicklingError(PickleError):
     __dict__ = __builtin__.dict()
     __module__ = 'cPickle'
     def __str__(self):
-        pass
+        return ''
     
     @classmethod
     def __subclasshook__(cls, subclass):
         'Abstract classes can override this to customize issubclass().\n\nThis is invoked early on by abc.ABCMeta.__subclasscheck__().\nIt should return True, False or NotImplemented.  If it returns\nNotImplemented, the normal algorithm is used.  Otherwise, it\noverrides the normal algorithm (and the outcome is cached).\n'
-        pass
+        return False
     
 
 __builtins__ = __builtin__.dict()
