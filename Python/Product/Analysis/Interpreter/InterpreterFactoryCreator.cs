@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.PythonTools.Infrastructure;
@@ -29,23 +30,13 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Creates a new interpreter factory with the specified options. This
         /// interpreter always includes a cached completion database.
         /// </summary>
-        public static IPythonInterpreterFactory CreateInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options = null) {
+        public static IPythonInterpreterFactory CreateInterpreterFactory(
+            InterpreterConfiguration configuration,
+            InterpreterFactoryCreationOptions options = null
+        ) {
             options = options?.Clone() ?? new InterpreterFactoryCreationOptions();
 
             return new Ast.AstPythonInterpreterFactory(configuration, options);
-        }
-
-        /// <summary>
-        /// Returns a relative path string based on the provided ID. There is no
-        /// guarantee that the path is human readable or that it is used by all
-        /// components.
-        /// </summary>
-        public static string GetRelativePathForConfigurationId(string id) {
-            var subpath = id.Replace('|', '\\');
-            if (!PathUtils.IsValidPath(subpath)) {
-                subpath = Convert.ToBase64String(new UTF8Encoding(false).GetBytes(id));
-            }
-            return subpath;
         }
 
         /// <summary>
@@ -54,8 +45,21 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public static IPythonInterpreterFactory CreateAnalysisInterpreterFactory(
             Version languageVersion,
-            string description = null) {
-            return new Ast.AstPythonInterpreterFactory(null, null);
+            string description = null,
+            IEnumerable<string> searchPaths = null
+        ) {
+            var config = new InterpreterConfiguration(
+                $"AnalysisOnly|{languageVersion}",
+                description ?? $"Analysis Only {languageVersion}",
+                version: languageVersion
+            );
+            config.SearchPaths.AddRange(searchPaths.MaybeEnumerate());
+
+            var opts = new InterpreterFactoryCreationOptions {
+                WatchFileSystem = false
+            };
+
+            return CreateInterpreterFactory(config, opts);
         }
     }
 }

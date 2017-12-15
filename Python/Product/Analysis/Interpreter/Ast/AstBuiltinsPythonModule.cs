@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         protected override Stream LoadCachedCode(AstPythonInterpreter interpreter) {
             var fact = interpreter.Factory as AstPythonInterpreterFactory;
             if (fact?.Configuration.InterpreterPath == null) {
-                return null;
+                return fact.ReadCachedModule("python.exe");
             }
             return fact.ReadCachedModule(fact.Configuration.InterpreterPath);
         }

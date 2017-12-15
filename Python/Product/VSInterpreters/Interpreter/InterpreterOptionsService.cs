@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Interpreter {
     sealed class InterpreterOptionsService : IInterpreterOptionsService {
         private readonly Lazy<IInterpreterRegistryService> _registryService;
         private readonly Lazy<CPythonInterpreterFactoryProvider> _cpythonProvider;
-        private readonly Lazy<IPackageManagerProvider[]> _packageManagerProviders;
+        private readonly Lazy<IPackageManagerProvider>[] _packageManagerProviders;
         private bool _defaultInterpreterWatched;
         private string _defaultInterpreterId;
         IPythonInterpreterFactory _defaultInterpreter;
@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public InterpreterOptionsService(
             [Import] Lazy<IInterpreterRegistryService> registryService,
             [Import] Lazy<CPythonInterpreterFactoryProvider> cpythonProvider,
-            [ImportMany] Lazy<IPackageManagerProvider[]> packageManagerProviders
+            [ImportMany] Lazy<IPackageManagerProvider>[] packageManagerProviders
         ) {
             _registryService = registryService;
             _cpythonProvider = cpythonProvider;
@@ -337,11 +337,11 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
-            if (_packageManagerProviders == null || !_packageManagerProviders.Value.Any()) {
+            if (_packageManagerProviders == null || !_packageManagerProviders.Any()) {
                 return Enumerable.Empty<IPackageManager>();
             }
 
-            return _packageManagerProviders.Value.SelectMany(p => p.GetPackageManagers(factory))
+            return _packageManagerProviders.SelectMany(p => p.Value.GetPackageManagers(factory))
                 .GroupBy(p => p.UniqueKey)
                 .Select(g => g.OrderBy(p => p.Priority).FirstOrDefault())
                 .Where(p => p != null)

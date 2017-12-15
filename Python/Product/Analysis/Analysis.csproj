@@ -390,6 +390,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="DefaultDB\regenerate.py" />
     <Content Include="get_search_paths.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -398,6 +399,668 @@
     <Content Include="scrape_module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DefaultDB\v2\python.array.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.audioop.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.binascii.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.cmath.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.cPickle.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.cStringIO.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.datetime.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.errno.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.exceptions.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.future_builtins.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.gc.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.imageop.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.imp.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.itertools.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.marshal.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.math.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.mmap.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.msvcrt.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.nt.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.operator.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.parser.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.signal.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.strop.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.sys.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.thread.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.time.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.xxsubtype.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.zipimport.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.zlib.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._ast.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._bisect.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._codecs.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._codecs_cn.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._codecs_hk.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._codecs_iso2022.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._codecs_jp.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._codecs_kr.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._codecs_tw.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._collections.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._csv.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._functools.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._heapq.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._hotshot.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._io.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._json.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._locale.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._lsprof.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._md5.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._multibytecodec.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._random.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._sha.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._sha256.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._sha512.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._sre.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._struct.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._subprocess.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._symtable.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._warnings.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._weakref.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python._winreg.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.__builtin__.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\python.__main__.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\unittest.case.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v2\unittest.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.array.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.atexit.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.audioop.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.binascii.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.builtins.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.cmath.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.errno.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.faulthandler.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.gc.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.itertools.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.marshal.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.math.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.mmap.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.msvcrt.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.nt.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.parser.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.sys.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.time.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.winreg.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.xxsubtype.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.zipimport.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python.zlib.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._ast.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._bisect.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._blake2.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._codecs.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._codecs_cn.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._codecs_hk.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._codecs_iso2022.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._codecs_jp.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._codecs_kr.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._codecs_tw.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._collections.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._csv.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._datetime.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._findvs.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._functools.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._heapq.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._imp.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._io.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._json.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._locale.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._lsprof.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._md5.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._multibytecodec.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._opcode.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._operator.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._pickle.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._random.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._sha1.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._sha256.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._sha3.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._sha512.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._signal.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._sre.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._stat.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._string.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._struct.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._symtable.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._thread.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._tracemalloc.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._warnings.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._weakref.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\python._winapi.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\unittest.case.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DefaultDB\v3\unittest.pyi">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

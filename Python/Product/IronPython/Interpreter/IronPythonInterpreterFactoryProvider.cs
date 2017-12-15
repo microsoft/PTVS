@@ -256,10 +256,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             } else {
                 noDatabase = false;
                 return new InterpreterFactoryCreationOptions {
-                    DatabasePath = Path.Combine(
-                        PythonTools.Interpreter.LegacyDB.PythonTypeDatabase.CompletionDatabasePath,
-                        InterpreterFactoryCreator.GetRelativePathForConfigurationId(config.Id)
-                    )
+                    DatabasePath = DatabasePathSelector.CalculateGlobalDatabasePath(config, PythonTools.Interpreter.LegacyDB.PythonTypeDatabase.CurrentVersion)
                 };
             }
         }

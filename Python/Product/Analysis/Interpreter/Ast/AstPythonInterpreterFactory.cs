@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private IReadOnlyDictionary<string, string> _searchPathPackages;
 
         private bool _disposed;
-        private readonly bool _skipCache;
+        private readonly bool _skipCache, _skipWriteToCache;
 
         private AnalysisLogWriter _log;
         // Available for tests to override
@@ -63,6 +63,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 _log = new AnalysisLogWriter(PathUtils.GetAbsoluteFilePath(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
                 _log.Rotate(LogRotationSize);
                 _log.MinimumLevel = CreationOptions.TraceLevel;
+            } else {
+                var biPath = PythonToolsInstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", typeof(InterpreterFactoryCreator).Assembly);
+                if (File.Exists(biPath)) {
+                    _databasePath = PathUtils.GetParent(biPath);
+                    _skipWriteToCache = true;
+                }
             }
             _skipCache = !CreationOptions.UseExistingCache;
         }
@@ -152,6 +158,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
+            var name = PathUtils.GetFileOrDirectoryName(filePath);
+            var candidate = Path.ChangeExtension(Path.Combine(_databasePath, name), ".pyi");
+            if (File.Exists(candidate)) {
+                return candidate;
+            }
+
             var hash = SHA256.Create();
             var dir = PathUtils.GetParent(filePath);
             var dirHash = Convert.ToBase64String(hash.ComputeHash(new UTF8Encoding(false).GetBytes(dir)))
@@ -159,7 +171,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             return Path.ChangeExtension(PathUtils.GetAbsoluteFilePath(
                 _databasePath,
-                Path.Combine(dirHash, PathUtils.GetFileOrDirectoryName(filePath))
+                Path.Combine(dirHash, name)
             ), ".pyi");
         }
 
@@ -264,6 +276,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal void WriteCachedModule(string filePath, Stream code) {
+            if (_skipWriteToCache) {
+                return;
+            }
+
             var cache = GetCacheFilePath(filePath);
             if (string.IsNullOrEmpty(cache)) {
                 return;
@@ -365,7 +381,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Configuration.SearchPaths;
             }
 
-            if (!File.Exists(Configuration?.InterpreterPath)) {
+            if (!File.Exists(Configuration.InterpreterPath)) {
                 return Enumerable.Empty<string>();
             }
 
