@@ -10,7 +10,7 @@ class spamdict(__builtin__.dict):
     __class__ = spamdict
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -40,7 +40,7 @@ class spamlist(__builtin__.list):
     __class__ = spamlist
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):

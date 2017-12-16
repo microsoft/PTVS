@@ -6,7 +6,7 @@ class ArithmeticError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -20,7 +20,7 @@ class AssertionError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -34,7 +34,7 @@ class AttributeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -60,11 +60,11 @@ class BaseException(__builtin__.object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return BaseException()
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __reduce__(self):
         return ''; return ()
@@ -107,7 +107,7 @@ class BufferError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -121,7 +121,7 @@ class BytesWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -135,7 +135,7 @@ class DeprecationWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -149,7 +149,7 @@ class EOFError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -163,7 +163,7 @@ class EnvironmentError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __reduce__(self):
         return ''; return ()
@@ -199,7 +199,7 @@ class Exception(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -213,7 +213,7 @@ class FloatingPointError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -227,7 +227,7 @@ class FutureWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -241,7 +241,7 @@ class GeneratorExit(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -255,7 +255,7 @@ class IOError(EnvironmentError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -269,7 +269,7 @@ class ImportError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -283,7 +283,7 @@ class ImportWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -297,7 +297,7 @@ class IndentationError(SyntaxError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -311,7 +311,7 @@ class IndexError(LookupError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -325,7 +325,7 @@ class KeyError(LookupError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -343,7 +343,7 @@ class KeyboardInterrupt(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -357,7 +357,7 @@ class LookupError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -371,7 +371,7 @@ class MemoryError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -385,7 +385,7 @@ class NameError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -399,7 +399,7 @@ class NotImplementedError(RuntimeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -413,7 +413,7 @@ class OSError(EnvironmentError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -427,7 +427,7 @@ class OverflowError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -441,7 +441,7 @@ class PendingDeprecationWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -455,7 +455,7 @@ class ReferenceError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -469,7 +469,7 @@ class RuntimeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -483,7 +483,7 @@ class RuntimeWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -497,7 +497,7 @@ class StandardError(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -511,7 +511,7 @@ class StopIteration(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -525,7 +525,7 @@ class SyntaxError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -573,7 +573,7 @@ class SyntaxWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -587,7 +587,7 @@ class SystemError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -601,7 +601,7 @@ class SystemExit(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -620,7 +620,7 @@ class TabError(IndentationError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -634,7 +634,7 @@ class TypeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -648,7 +648,7 @@ class UnboundLocalError(NameError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -662,7 +662,7 @@ class UnicodeDecodeError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -705,7 +705,7 @@ class UnicodeEncodeError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -748,7 +748,7 @@ class UnicodeError(ValueError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -762,7 +762,7 @@ class UnicodeTranslateError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -805,7 +805,7 @@ class UnicodeWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -819,7 +819,7 @@ class UserWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -833,7 +833,7 @@ class ValueError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -847,7 +847,7 @@ class Warning(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -861,7 +861,7 @@ class WindowsError(OSError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -899,7 +899,7 @@ class ZeroDivisionError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):

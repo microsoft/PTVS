@@ -7,7 +7,7 @@ class BufferedRWPair(_BufferedIOBase):
     __class__ = BufferedRWPair
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -54,7 +54,7 @@ class BufferedRandom(_BufferedIOBase):
     __class__ = BufferedRandom
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -145,7 +145,7 @@ class BufferedReader(_BufferedIOBase):
     __class__ = BufferedReader
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -230,7 +230,7 @@ class BufferedWriter(_BufferedIOBase):
     __class__ = BufferedWriter
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -305,11 +305,11 @@ class BytesIO(_BufferedIOBase):
     
     def __init__(self, buffer):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return BytesIO()
     
     def __setstate__(self, state):
         return None
@@ -410,7 +410,7 @@ class FileIO(_RawIOBase):
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -494,7 +494,7 @@ class IncrementalNewlineDecoder(__builtin__.object):
     __class__ = IncrementalNewlineDecoder
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -526,7 +526,7 @@ class StringIO(_TextIOBase):
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __setstate__(self, state):
         return None
@@ -606,7 +606,7 @@ class TextIOWrapper(_TextIOBase):
     __class__ = TextIOWrapper
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -732,7 +732,7 @@ class _IOBase(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return _IOBase()
     
     @classmethod
     def __subclasshook__(cls, subclass):

@@ -117,6 +117,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (boolType != null) {
                 _members["True"] = _members["False"] = new AstPythonConstant(boolType);
             }
+
+            base.PostWalk(walker);
         }
 
     }

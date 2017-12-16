@@ -26,14 +26,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private IPythonFunction _function;
         private string _doc;
         private ReadOnlyCollection<OverloadResult> _overloads;
-        private readonly IAnalysisSet _returnTypes;
+        private readonly Lazy<IAnalysisSet> _returnTypes;
         private BuiltinMethodInfo _method;
 
         public BuiltinFunctionInfo(IPythonFunction function, PythonAnalyzer projectState)
             : base(projectState.Types[BuiltinTypeId.BuiltinFunction], projectState) {
 
             _function = function;
-            _returnTypes = Utils.GetReturnTypes(function, projectState);
+            _returnTypes = new Lazy<IAnalysisSet>(() => Utils.GetReturnTypes(function, projectState).GetInstanceType());
         }
 
         public override IPythonType PythonType {
@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return _returnTypes.GetInstanceType();
+            return _returnTypes.Value;
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {

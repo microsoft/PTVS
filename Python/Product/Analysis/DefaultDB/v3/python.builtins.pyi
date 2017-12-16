@@ -2702,7 +2702,7 @@ class float(object):
     
     def __round__(self, ndigits=0):
         'Return the Integral closest to x, rounding half toward even.\nWhen an argument is passed, work like built-in round(x, ndigits).'
-        return self
+        return float()
     
     def __rpow__(self, value, mod):
         'Return pow(value, self, mod).'
@@ -2740,7 +2740,7 @@ class float(object):
     
     def __trunc__(self):
         'Return the Integral closest to x between 0 and x.'
-        return self
+        return float()
     
     def as_integer_ratio(self):
         'float.as_integer_ratio() -> (int, int)\n\nReturn a pair of integers, whose ratio is exactly equal to the original\nfloat and with a positive denominator.\nRaise OverflowError on infinities and a ValueError on NaNs.\n\n>>> (10.0).as_integer_ratio()\n(10, 1)\n>>> (0.0).as_integer_ratio()\n(0, 1)\n>>> (-.25).as_integer_ratio()\n(-1, 4)'
@@ -2964,7 +2964,7 @@ class int(object):
     
     def __ceil__(self):
         'Ceiling of an Integral returns itself.'
-        return self
+        return int()
     
     __class__ = int
     def __divmod__(self, value):
@@ -2981,7 +2981,7 @@ class int(object):
     
     def __floor__(self):
         'Flooring an Integral returns itself.'
-        return self
+        return int()
     
     def __floordiv__(self, value):
         'Return self//value.'
@@ -3104,7 +3104,7 @@ class int(object):
     
     def __round__(self, ndigits=0):
         'Rounding an Integral returns itself.\nRounding with an ndigits argument also returns an integer.'
-        return self
+        return int()
     
     def __rpow__(self, value, mod):
         'Return pow(value, self, mod).'
@@ -3153,7 +3153,7 @@ class int(object):
     
     def __trunc__(self):
         'Truncating an Integral returns itself.'
-        return self
+        return int()
     
     def __xor__(self, value):
         'Return self^value.'

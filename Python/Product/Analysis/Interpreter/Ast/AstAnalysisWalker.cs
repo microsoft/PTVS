@@ -72,9 +72,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (_ast != node) {
                 throw new InvalidOperationException("walking wrong AST");
             }
-            _scope.PushScope(_members);
 
-            CollectAllClasses((node.Body as SuiteStatement)?.Statements);
+            FirstPassCollectClasses();
+
+            _scope.PushScope(_members);
 
             return base.Walk(node);
         }
@@ -82,11 +83,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public override void PostWalk(PythonAst node) {
             _scope.PopScope();
 
+            base.PostWalk(node);
+        }
+
+        public void Complete() {
             foreach (var walker in _postWalkers) {
                 walker.Walk();
             }
-
-            base.PostWalk(node);
         }
 
         internal LocationInfo GetLoc(ClassDefinition node) {
@@ -300,20 +303,19 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return new AstPythonType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node));
         }
 
-        private void CollectAllClasses(IEnumerable<Statement> stmts) {
-            foreach (var node in stmts.MaybeEnumerate().OfType<ClassDefinition>()) {
-                _scope.SetInScope(node.Name, CreateType(node), false);
+        public void FirstPassCollectClasses() {
+            foreach (var node in (_ast.Body as SuiteStatement).Statements.OfType<ClassDefinition>()) {
+                _members[node.Name] = CreateType(node);
             }
-            foreach (var node in stmts.MaybeEnumerate().OfType<AssignmentStatement>()) {
+            foreach (var node in (_ast.Body as SuiteStatement).Statements.OfType<AssignmentStatement>()) {
                 var rhs = node.Right as NameExpression;
                 if (rhs == null) {
                     continue;
                 }
 
-                var cls = _scope.LookupNameInScopes(rhs.Name, NameLookupContext.LookupOptions.Local) as IPythonType;
-                if (cls != null) {
+                if (_members.TryGetValue(rhs.Name, out var member)) {
                     foreach (var lhs in node.Left.OfType<NameExpression>()) {
-                        _scope.SetInScope(lhs.Name, cls);
+                        _members[lhs.Name] = member;
                     }
                 }
             }

@@ -28,7 +28,7 @@ class mmap(__builtin__.object):
     "Windows: mmap(fileno, length[, tagname[, access[, offset]]])\n\nMaps length bytes from the file specified by the file handle fileno,\nand returns a mmap object.  If length is larger than the current size\nof the file, the file is extended to contain length bytes.  If length\nis 0, the maximum length of the map is the current size of the file,\nexcept that if the file is empty Windows raises an exception (you cannot\ncreate an empty mapping on Windows).\n\nUnix: mmap(fileno, length[, flags[, prot[, access[, offset]]]])\n\nMaps length bytes from the file specified by the file descriptor fileno,\nand returns a mmap object.  If length is 0, the maximum length of the map\nwill be the current size of the file when mmap is called.\nflags specifies the nature of the mapping. MAP_PRIVATE creates a\nprivate copy-on-write mapping, so changes to the contents of the mmap\nobject will be private to this process, and MAP_SHARED creates a mapping\nthat's shared with all other processes mapping the same areas of the file.\nThe default value is MAP_SHARED.\n\nTo map anonymous memory, pass -1 as the fileno (both versions)."
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return mmap()
     
     __class__ = mmap
     def __delitem__(self, y):
@@ -49,7 +49,7 @@ class mmap(__builtin__.object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return mmap()
     
     def __len__(self):
         'x.__len__() <==> len(x)'
@@ -57,11 +57,11 @@ class mmap(__builtin__.object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return mmap()
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return mmap()
     
     def __setitem__(self, index, value):
         'x.__setitem__(i, y) <==> x[i]=y'

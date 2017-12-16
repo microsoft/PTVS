@@ -14,7 +14,7 @@ class LogReaderType(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return LogReaderType()
     
     @classmethod
     def __subclasshook__(cls, subclass):

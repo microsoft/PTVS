@@ -12,7 +12,7 @@ class AST(__builtin__.object):
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __reduce__(self):
         return ''; return ()

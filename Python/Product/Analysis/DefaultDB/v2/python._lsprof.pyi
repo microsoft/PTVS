@@ -5,7 +5,7 @@ class Profiler(__builtin__.object):
     __class__ = Profiler
     def __init__(self, custom_timer=None, time_unit=None, subcalls=True, builtins=True):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -35,7 +35,7 @@ __package__ = None
 class profiler_entry(__builtin__.object):
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return profiler_entry()
     
     __class__ = profiler_entry
     def __contains__(self, value):
@@ -56,7 +56,7 @@ class profiler_entry(__builtin__.object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return profiler_entry()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -80,7 +80,7 @@ class profiler_entry(__builtin__.object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return profiler_entry()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -95,7 +95,7 @@ class profiler_entry(__builtin__.object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return profiler_entry()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -139,7 +139,7 @@ class profiler_entry(__builtin__.object):
 class profiler_subentry(__builtin__.object):
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return profiler_subentry()
     
     __class__ = profiler_subentry
     def __contains__(self, value):
@@ -160,7 +160,7 @@ class profiler_subentry(__builtin__.object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return profiler_subentry()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -184,7 +184,7 @@ class profiler_subentry(__builtin__.object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return profiler_subentry()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -199,7 +199,7 @@ class profiler_subentry(__builtin__.object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return profiler_subentry()
     
     @classmethod
     def __subclasshook__(cls, subclass):

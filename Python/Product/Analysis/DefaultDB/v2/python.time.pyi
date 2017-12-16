@@ -46,7 +46,7 @@ class struct_time(__builtin__.object):
     "The time value as returned by gmtime(), localtime(), and strptime(), and\n accepted by asctime(), mktime() and strftime().  May be considered as a\n sequence of 9 integers.\n\n Note that several fields' values are not the same as those defined by\n the C language standard for struct tm.  For example, the value of the\n field tm_year is the actual year, not year - 1900.  See individual\n fields' descriptions for details."
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return struct_time()
     
     __class__ = struct_time
     def __contains__(self, value):
@@ -67,7 +67,7 @@ class struct_time(__builtin__.object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return struct_time()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -91,7 +91,7 @@ class struct_time(__builtin__.object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return struct_time()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -106,7 +106,7 @@ class struct_time(__builtin__.object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return struct_time()
     
     @classmethod
     def __subclasshook__(cls, subclass):

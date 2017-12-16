@@ -9,7 +9,7 @@ class date(__builtin__.object):
     'date(year, month, day) --> date object'
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return date()
     
     __class__ = date
     def __eq__(self, y):
@@ -50,7 +50,7 @@ class date(__builtin__.object):
     
     def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        return self
+        return date()
     
     def __reduce__(self):
         '__reduce__() -> (cls, state)'
@@ -62,7 +62,7 @@ class date(__builtin__.object):
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return date()
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -70,7 +70,7 @@ class date(__builtin__.object):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return date()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -148,7 +148,7 @@ class datetime(date):
     'datetime(year, month, day[, hour[, minute[, second[, microsecond[,tzinfo]]]]])\n\nThe year, month and day arguments are required. tzinfo may be None, or an\ninstance of a tzinfo subclass. The remaining arguments may be ints or longs.\n'
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return datetime()
     
     __class__ = datetime
     def __eq__(self, y):
@@ -185,7 +185,7 @@ class datetime(date):
     
     def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        return self
+        return datetime()
     
     def __reduce__(self):
         '__reduce__() -> (cls, state)'
@@ -197,7 +197,7 @@ class datetime(date):
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return datetime()
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -205,7 +205,7 @@ class datetime(date):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return datetime()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -437,11 +437,11 @@ class timedelta(__builtin__.object):
     'Difference between two datetime values.'
     def __abs__(self):
         'x.__abs__() <==> abs(x)'
-        return self
+        return timedelta()
     
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return timedelta()
     
     __class__ = timedelta
     def __div__(self, y):
@@ -482,7 +482,7 @@ class timedelta(__builtin__.object):
     
     def __mul__(self, y):
         'x.__mul__(y) <==> x*y'
-        return self
+        return timedelta()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -490,7 +490,7 @@ class timedelta(__builtin__.object):
     
     def __neg__(self):
         'x.__neg__() <==> -x'
-        return self
+        return timedelta()
     
     def __nonzero__(self):
         'x.__nonzero__() <==> x != 0'
@@ -498,11 +498,11 @@ class timedelta(__builtin__.object):
     
     def __pos__(self):
         'x.__pos__() <==> +x'
-        return self
+        return timedelta()
     
     def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        return self
+        return timedelta()
     
     def __rdiv__(self, y):
         'x.__rdiv__(y) <==> y/x'
@@ -518,15 +518,15 @@ class timedelta(__builtin__.object):
     
     def __rfloordiv__(self, y):
         'x.__rfloordiv__(y) <==> y//x'
-        return self
+        return timedelta()
     
     def __rmul__(self, y):
         'x.__rmul__(y) <==> y*x'
-        return self
+        return timedelta()
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return timedelta()
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -534,7 +534,7 @@ class timedelta(__builtin__.object):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return timedelta()
     
     @classmethod
     def __subclasshook__(cls, subclass):

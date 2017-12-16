@@ -104,6 +104,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected virtual void PostWalk(PythonWalker walker) {
+            (walker as AstAnalysisWalker)?.Complete();
         }
 
         protected virtual Stream LoadCachedCode(AstPythonInterpreter interpreter) {

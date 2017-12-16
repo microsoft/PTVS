@@ -326,7 +326,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var m = GetValueFromExpression(expr.Target);
             if (m is IPythonType type) {
-                if (type == Interpreter.GetBuiltinType(BuiltinTypeId.Type) && expr.Args.Count >= 1) {
+                if (type.TypeId == BuiltinTypeId.Type && type == Interpreter.GetBuiltinType(BuiltinTypeId.Type) && expr.Args.Count >= 1) {
                     var aType = GetTypeFromValue(GetValueFromExpression(expr.Args[0].Expression));
                     if (aType != null) {
                         return aType;

@@ -20,6 +20,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -55,6 +56,39 @@ namespace Microsoft.PythonTools.Analysis {
             return x.Length > y.Length ? x : y;
         }
 
+        private static IEnumerable<string> CommaSplit(string x) {
+            if (string.IsNullOrEmpty(x)) {
+                yield break;
+            }
+
+            var sb = new StringBuilder();
+            int nestCount = 0;
+            foreach (var c in x) {
+                if (c == ',' && nestCount == 0) {
+                    yield return sb.ToString().Trim();
+                    sb.Clear();
+                    continue;
+                }
+
+                if (c == '(' || c == '[' || c == '{') {
+                    nestCount += 1;
+                } else if (c == ')' || c == ']' || c == '}') {
+                    nestCount -= 1;
+                }
+                sb.Append(c);
+            }
+
+            if (sb.Length > 0) {
+                yield return sb.ToString().Trim();
+            }
+        }
+
+        private static string Merge(string x, string y) {
+            return string.Join(", ",
+                CommaSplit(x).Concat(CommaSplit(y)).OrderBy(n => n).Distinct()
+            );
+        }
+
         public static OverloadResult Merge(IEnumerable<OverloadResult> overloads) {
             overloads = overloads.ToArray();
 
@@ -72,9 +106,9 @@ namespace Microsoft.PythonTools.Analysis {
                         res[i] = new ParameterResult(
                             Longest(l.Name, r.Name),
                             Longest(l.Documentation, r.Documentation),
-                            Longest(l.Type, r.Type),
+                            Merge(l.Type, r.Type),
                             l.IsOptional || r.IsOptional,
-                            l.Variables.Concat(r.Variables).ToArray(),
+                            l.Variables?.Concat(r.Variables.MaybeEnumerate()).ToArray() ?? r.Variables,
                             Longest(l.DefaultValue, r.DefaultValue)
                         );
                     }

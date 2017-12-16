@@ -8,7 +8,7 @@ class array(__builtin__.object):
     'array(typecode [, initializer]) -> array\n\nReturn a new array whose items are restricted by typecode, and\ninitialized from the optional initializer value, which must be a list,\nstring or iterable over elements of the appropriate type.\n\nArrays represent basic values and behave very much like lists, except\nthe type of objects stored in them is constrained.\n\nMethods:\n\nappend() -- append a new item to the end of the array\nbuffer_info() -- return information giving the current memory info\nbyteswap() -- byteswap all the items of the array\ncount() -- return number of occurrences of an object\nextend() -- extend array by appending multiple elements from an iterable\nfromfile() -- read items from a file object\nfromlist() -- append items from the list\nfromstring() -- append items from the string\nindex() -- return index of first occurrence of an object\ninsert() -- insert a new item into the array at a provided position\npop() -- remove and return item (default last)\nread() -- DEPRECATED, use fromfile()\nremove() -- remove first occurrence of an object\nreverse() -- reverse the order of the items in the array\ntofile() -- write all items to a file object\ntolist() -- return the array converted to an ordinary list\ntostring() -- return the array converted to a string\nwrite() -- DEPRECATED, use tofile()\n\nAttributes:\n\ntypecode -- the typecode character used to create the array\nitemsize -- the length in bytes of one array item\n'
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return array()
     
     __class__ = array
     def __contains__(self, value):
@@ -49,7 +49,7 @@ class array(__builtin__.object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return array()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -65,7 +65,7 @@ class array(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return array()
     
     def __le__(self, y):
         'x.__le__(y) <==> x<=y'
@@ -81,7 +81,7 @@ class array(__builtin__.object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return array()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -97,7 +97,7 @@ class array(__builtin__.object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return array()
     
     def __setitem__(self, index, value):
         'x.__setitem__(i, y) <==> x[i]=y'

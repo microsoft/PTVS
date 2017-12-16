@@ -12,7 +12,7 @@ class chain(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return chain()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -38,7 +38,7 @@ class combinations(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return combinations()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -59,7 +59,7 @@ class combinations_with_replacement(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return combinations_with_replacement()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -80,7 +80,7 @@ class compress(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return compress()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -101,7 +101,7 @@ class count(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return count()
     
     def __reduce__(self):
         'Return state information for pickling.'
@@ -130,7 +130,7 @@ class cycle(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return cycle()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -151,7 +151,7 @@ class dropwhile(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return dropwhile()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -172,7 +172,7 @@ class groupby(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return groupby()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -193,7 +193,7 @@ class ifilter(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return ifilter()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -214,7 +214,7 @@ class ifilterfalse(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return ifilterfalse()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -235,7 +235,7 @@ class imap(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return imap()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -256,7 +256,7 @@ class islice(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return islice()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -277,7 +277,7 @@ class izip(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return izip()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -298,7 +298,7 @@ class izip_longest(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return izip_longest()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -319,7 +319,7 @@ class permutations(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return permutations()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -340,7 +340,7 @@ class product(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return product()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -361,7 +361,7 @@ class repeat(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return repeat()
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
@@ -390,7 +390,7 @@ class starmap(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return starmap()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -411,7 +411,7 @@ class takewhile(__builtin__.object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return takewhile()
     
     @classmethod
     def __subclasshook__(cls, subclass):

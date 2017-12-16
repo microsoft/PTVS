@@ -73,7 +73,7 @@ class flags:
     @staticmethod
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return __T()
     
     __class__ = flags
     @staticmethod
@@ -114,7 +114,7 @@ class flags:
     @staticmethod
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return __T()
     
     @staticmethod
     def __gt__(self, y):
@@ -129,7 +129,7 @@ class flags:
     @staticmethod
     def __init__():
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @staticmethod
     def __le__(self, y):
@@ -149,7 +149,7 @@ class flags:
     @staticmethod
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return __T()
     
     @staticmethod
     def __ne__(self, y):
@@ -173,7 +173,7 @@ class flags:
     @staticmethod
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return __T()
     
     @staticmethod
     def __setattr__():
@@ -220,7 +220,7 @@ class float_info:
     @staticmethod
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return __T()
     
     __class__ = float_info
     @staticmethod
@@ -261,7 +261,7 @@ class float_info:
     @staticmethod
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return __T()
     
     @staticmethod
     def __gt__(self, y):
@@ -276,7 +276,7 @@ class float_info:
     @staticmethod
     def __init__():
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @staticmethod
     def __le__(self, y):
@@ -296,7 +296,7 @@ class float_info:
     @staticmethod
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return __T()
     
     @staticmethod
     def __ne__(self, y):
@@ -320,7 +320,7 @@ class float_info:
     @staticmethod
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return __T()
     
     @staticmethod
     def __setattr__():
@@ -400,7 +400,7 @@ class long_info:
     @staticmethod
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return __T()
     
     __class__ = long_info
     @staticmethod
@@ -441,7 +441,7 @@ class long_info:
     @staticmethod
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return __T()
     
     @staticmethod
     def __gt__(self, y):
@@ -456,7 +456,7 @@ class long_info:
     @staticmethod
     def __init__():
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @staticmethod
     def __le__(self, y):
@@ -476,7 +476,7 @@ class long_info:
     @staticmethod
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return __T()
     
     @staticmethod
     def __ne__(self, y):
@@ -500,7 +500,7 @@ class long_info:
     @staticmethod
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return __T()
     
     @staticmethod
     def __setattr__():
@@ -565,7 +565,7 @@ class version_info:
     @staticmethod
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return __T()
     
     __class__ = version_info
     @staticmethod
@@ -606,7 +606,7 @@ class version_info:
     @staticmethod
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return __T()
     
     @staticmethod
     def __gt__(self, y):
@@ -621,7 +621,7 @@ class version_info:
     @staticmethod
     def __init__():
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @staticmethod
     def __le__(self, y):
@@ -641,7 +641,7 @@ class version_info:
     @staticmethod
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return __T()
     
     @staticmethod
     def __ne__(self, y):
@@ -665,7 +665,7 @@ class version_info:
     @staticmethod
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return __T()
     
     @staticmethod
     def __setattr__():

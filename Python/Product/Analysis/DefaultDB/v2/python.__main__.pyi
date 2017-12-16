@@ -26,7 +26,7 @@ class MemberInfo(__builtin__.object):
     __class__ = MemberInfo
     __dict__ = __builtin__.dict()
     def __init__(self, name, value, literal, scope, module, alias, module_doc, scope_alias):
-        return self
+        pass
     
     __module__ = '__main__'
     @classmethod
@@ -68,7 +68,7 @@ class ScrapeState(__builtin__.object):
     __class__ = ScrapeState
     __dict__ = __builtin__.dict()
     def __init__(self, module_name, module):
-        return self
+        pass
     
     __module__ = '__main__'
     @classmethod
@@ -118,7 +118,7 @@ class Signature(__builtin__.object):
     __class__ = Signature
     __dict__ = __builtin__.dict()
     def __init__(self, name, callable, scope, defaults, scope_alias, decorators, module_doc):
-        return self
+        pass
     
     __module__ = '__main__'
     def __str__(self):

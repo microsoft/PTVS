@@ -16,7 +16,7 @@ class FunctionTestCase(TestCase):
         return 0
     
     def __init__(self, testFunc, setUp, tearDown, description):
-        return self
+        pass
     
     def __ne__(self, other):
         return False
@@ -301,7 +301,7 @@ class TestCase(__builtin__.object):
     
     def __init__(self, methodName):
         'Create an instance of the class that will use the named test\n           method when executed. Raises a ValueError if the instance does\n           not have a method with the specified name.\n        '
-        return self
+        pass
     
     __module__ = 'unittest.case'
     def __ne__(self, other):
@@ -577,7 +577,7 @@ class _AssertRaisesContext(__builtin__.object):
         pass
     
     def __init__(self, expected, test_case, expected_regexp):
-        return self
+        pass
     
     __module__ = 'unittest.case'
     @classmethod
@@ -596,7 +596,7 @@ class _ExpectedFailure(exceptions.Exception):
     __class__ = _ExpectedFailure
     __dict__ = __builtin__.dict()
     def __init__(self, exc_info):
-        return self
+        pass
     
     __module__ = 'unittest.case'
     @classmethod

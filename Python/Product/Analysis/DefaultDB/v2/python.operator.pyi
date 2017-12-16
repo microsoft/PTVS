@@ -2,15 +2,15 @@ import __builtin__
 
 def __abs__():
     'abs(a) -- Same as abs(a).'
-    return self
+    return __T()
 
 def __add__():
     'add(a, b) -- Same as a + b.'
-    return self
+    return __T()
 
 def __and__():
     'and_(a, b) -- Same as a & b.'
-    return self
+    return __T()
 
 def __concat__():
     'concat(a, b) -- Same as a + b, for a and b sequences.'
@@ -51,7 +51,7 @@ def __getitem__(self, index):
 
 def __getslice__():
     'getslice(a, b, c) -- Same as a[b:c].'
-    return self
+    return __T()
 
 def __gt__():
     'gt(a, b) -- Same as a>b.'
@@ -99,7 +99,7 @@ def __inv__():
 
 def __invert__():
     'invert(a) -- Same as ~a.'
-    return self
+    return __T()
 
 def __ior__():
     'a = ior(a, b) -- Same as a |= b.'
@@ -135,7 +135,7 @@ def __le__():
 
 def __lshift__():
     'lshift(a, b) -- Same as a << b.'
-    return self
+    return __T()
 
 def __lt__():
     'lt(a, b) -- Same as a<b.'
@@ -143,11 +143,11 @@ def __lt__():
 
 def __mod__():
     'mod(a, b) -- Same as a % b.'
-    return self
+    return __T()
 
 def __mul__():
     'mul(a, b) -- Same as a * b.'
-    return self
+    return __T()
 
 __name__ = 'operator'
 def __ne__():
@@ -156,7 +156,7 @@ def __ne__():
 
 def __neg__():
     'neg(a) -- Same as -a.'
-    return self
+    return __T()
 
 def __not__():
     'not_(a) -- Same as not a.'
@@ -164,16 +164,16 @@ def __not__():
 
 def __or__():
     'or_(a, b) -- Same as a | b.'
-    return self
+    return __T()
 
 __package__ = None
 def __pos__():
     'pos(a) -- Same as +a.'
-    return self
+    return __T()
 
 def __pow__():
     'pow(a, b) -- Same as a ** b.'
-    return self
+    return __T()
 
 def __repeat__():
     'repeat(a, b) -- Return a * b, where a is a sequence, and b is an integer.'
@@ -181,7 +181,7 @@ def __repeat__():
 
 def __rshift__():
     'rshift(a, b) -- Same as a >> b.'
-    return self
+    return __T()
 
 def __setitem__(self, index, value):
     'setitem(a, b, c) -- Same as a[b] = c.'
@@ -193,7 +193,7 @@ def __setslice__():
 
 def __sub__():
     'sub(a, b) -- Same as a - b.'
-    return self
+    return __T()
 
 def __truediv__():
     'truediv(a, b) -- Same as a / b when __future__.division is in effect.'
@@ -201,7 +201,7 @@ def __truediv__():
 
 def __xor__():
     'xor(a, b) -- Same as a ^ b.'
-    return self
+    return __T()
 
 def _compare_digest():
     "compare_digest(a, b) -> bool\n\nReturn 'a == b'.  This function uses an approach designed to prevent\ntiming analysis, making it appropriate for cryptography.\na and b must both be of the same type: either str (ASCII only),\nor any type that supports the buffer protocol (e.g. bytes).\n\nNote: If a and b are of different lengths, or if an error occurs,\na timing attack could theoretically reveal information about the\ntypes and lengths of a and b--but not their values.\n"

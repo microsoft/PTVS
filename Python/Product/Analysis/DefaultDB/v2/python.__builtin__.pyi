@@ -32,7 +32,7 @@ class ArithmeticError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -46,7 +46,7 @@ class AssertionError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -60,7 +60,7 @@ class AttributeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -86,11 +86,11 @@ class BaseException(object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return BaseException()
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __reduce__(self):
         return ''; return ()
@@ -133,7 +133,7 @@ class BufferError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -147,7 +147,7 @@ class BytesWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -161,7 +161,7 @@ class DeprecationWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -175,7 +175,7 @@ class EOFError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -190,7 +190,7 @@ class EnvironmentError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __reduce__(self):
         return ''; return ()
@@ -226,7 +226,7 @@ class Exception(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -241,7 +241,7 @@ class FloatingPointError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -255,7 +255,7 @@ class FutureWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -269,7 +269,7 @@ class GeneratorExit(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -283,7 +283,7 @@ class IOError(EnvironmentError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -297,7 +297,7 @@ class ImportError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -311,7 +311,7 @@ class ImportWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -325,7 +325,7 @@ class IndentationError(SyntaxError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -339,7 +339,7 @@ class IndexError(LookupError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -353,7 +353,7 @@ class KeyError(LookupError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -371,7 +371,7 @@ class KeyboardInterrupt(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -385,7 +385,7 @@ class LookupError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -399,7 +399,7 @@ class MemoryError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -413,7 +413,7 @@ class NameError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -429,7 +429,7 @@ class NotImplementedError(RuntimeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -443,7 +443,7 @@ class OSError(EnvironmentError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -457,7 +457,7 @@ class OverflowError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -471,7 +471,7 @@ class PendingDeprecationWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -485,7 +485,7 @@ class ReferenceError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -499,7 +499,7 @@ class RuntimeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -513,7 +513,7 @@ class RuntimeWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -527,7 +527,7 @@ class StandardError(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -541,7 +541,7 @@ class StopIteration(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -555,7 +555,7 @@ class SyntaxError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -603,7 +603,7 @@ class SyntaxWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -617,7 +617,7 @@ class SystemError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -631,7 +631,7 @@ class SystemExit(BaseException):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -650,7 +650,7 @@ class TabError(IndentationError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -665,7 +665,7 @@ class TypeError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -679,7 +679,7 @@ class UnboundLocalError(NameError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -693,7 +693,7 @@ class UnicodeDecodeError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -736,7 +736,7 @@ class UnicodeEncodeError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -779,7 +779,7 @@ class UnicodeError(ValueError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -793,7 +793,7 @@ class UnicodeTranslateError(UnicodeError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -836,7 +836,7 @@ class UnicodeWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -850,7 +850,7 @@ class UserWarning(Warning):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -864,7 +864,7 @@ class ValueError(StandardError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -878,7 +878,7 @@ class Warning(Exception):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -892,7 +892,7 @@ class WindowsError(OSError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -930,7 +930,7 @@ class ZeroDivisionError(ArithmeticError):
     __dict__ = __builtin__.dict()
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -979,16 +979,16 @@ class bool(int):
     'bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.'
     def __and__(self, y):
         'x.__and__(y) <==> x&y'
-        return self
+        return bool()
     
     __class__ = bool
     def __or__(self, y):
         'x.__or__(y) <==> x|y'
-        return self
+        return bool()
     
     def __rand__(self, y):
         'x.__rand__(y) <==> y&x'
-        return self
+        return bool()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -996,11 +996,11 @@ class bool(int):
     
     def __ror__(self, y):
         'x.__ror__(y) <==> y|x'
-        return self
+        return bool()
     
     def __rxor__(self, y):
         'x.__rxor__(y) <==> y^x'
-        return self
+        return bool()
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -1013,14 +1013,14 @@ class bool(int):
     
     def __xor__(self, y):
         'x.__xor__(y) <==> x^y'
-        return self
+        return bool()
     
 
 class buffer(object):
     'buffer(object [, offset[, size]])\n\nCreate a new buffer object which references the given object.\nThe buffer will reference a slice of the target object from the\nstart of the object (or at the specified offset). The slice will\nextend to the end of the target object (or with the specified size).'
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return buffer()
     
     __class__ = buffer
     def __cmp__(self, y):
@@ -1045,7 +1045,7 @@ class buffer(object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return buffer()
     
     def __hash__(self):
         'x.__hash__() <==> hash(x)'
@@ -1057,7 +1057,7 @@ class buffer(object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return buffer()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -1065,7 +1065,7 @@ class buffer(object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return buffer()
     
     def __setitem__(self, index, value):
         'x.__setitem__(i, y) <==> x[i]=y'
@@ -1089,7 +1089,7 @@ class bytearray(object):
     'bytearray(iterable_of_ints) -> bytearray.\nbytearray(string, encoding[, errors]) -> bytearray.\nbytearray(bytes_or_bytearray) -> mutable copy of bytes_or_bytearray.\nbytearray(memory_view) -> bytearray.\n\nConstruct a mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a bytearray object\n  - any object implementing the buffer API.\n\nbytearray(int) -> bytearray.\n\nConstruct a zero-initialized bytearray of the given length.'
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return bytearray()
     
     def __alloc__(self):
         'B.__alloc__() -> int\n\nReturns the number of bytes actually allocated.'
@@ -1134,11 +1134,11 @@ class bytearray(object):
     
     def __init__(self, iterable_of_ints):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return bytearray()
     
     def __le__(self, y):
         'x.__le__(y) <==> x<=y'
@@ -1154,7 +1154,7 @@ class bytearray(object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return bytearray()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -1170,7 +1170,7 @@ class bytearray(object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return bytearray()
     
     def __setitem__(self, index, value):
         'x.__setitem__(i, y) <==> x[i]=y'
@@ -1381,7 +1381,7 @@ class classmethod(object):
     
     def __get__(self, obj, type):
         'descr.__get__(obj[, type]) -> value'
-        return self
+        return classmethod()
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
@@ -1389,7 +1389,7 @@ class classmethod(object):
     
     def __init__(self, function):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -1413,11 +1413,11 @@ class complex(object):
     'complex(real[, imag]) -> complex number\n\nCreate a complex number from a real part and an optional imaginary part.\nThis is equivalent to (real + imag*1j) where imag defaults to 0.'
     def __abs__(self):
         'x.__abs__() <==> abs(x)'
-        return self
+        return complex()
     
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return complex()
     
     __class__ = complex
     def __coerce__(self, y):
@@ -1485,11 +1485,11 @@ class complex(object):
     
     def __mod__(self, y):
         'x.__mod__(y) <==> x%y'
-        return self
+        return complex()
     
     def __mul__(self, y):
         'x.__mul__(y) <==> x*y'
-        return self
+        return complex()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -1497,7 +1497,7 @@ class complex(object):
     
     def __neg__(self):
         'x.__neg__() <==> -x'
-        return self
+        return complex()
     
     def __nonzero__(self):
         'x.__nonzero__() <==> x != 0'
@@ -1505,15 +1505,15 @@ class complex(object):
     
     def __pos__(self):
         'x.__pos__() <==> +x'
-        return self
+        return complex()
     
     def __pow__(self, y, z):
         'x.__pow__(y[, z]) <==> pow(x, y[, z])'
-        return self
+        return complex()
     
     def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        return self
+        return complex()
     
     def __rdiv__(self, y):
         'x.__rdiv__(y) <==> y/x'
@@ -1529,27 +1529,27 @@ class complex(object):
     
     def __rfloordiv__(self, y):
         'x.__rfloordiv__(y) <==> y//x'
-        return self
+        return complex()
     
     def __rmod__(self, y):
         'x.__rmod__(y) <==> y%x'
-        return self
+        return complex()
     
     def __rmul__(self, y):
         'x.__rmul__(y) <==> y*x'
-        return self
+        return complex()
     
     def __rpow__(self, x, z):
         'y.__rpow__(x[, z]) <==> pow(x, y[, z])'
-        return self
+        return complex()
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return complex()
     
     def __rtruediv__(self, y):
         'x.__rtruediv__(y) <==> y/x'
-        return self
+        return complex()
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -1557,7 +1557,7 @@ class complex(object):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return complex()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -1633,11 +1633,11 @@ class dict(object):
     __hash__ = None
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return dict()
     
     def __le__(self, y):
         'x.__le__(y) <==> x<=y'
@@ -1763,7 +1763,7 @@ class enumerate(object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return enumerate()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -1807,11 +1807,11 @@ class file(object):
     
     def __init__(self, name, mode, buffering):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return file()
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -1930,11 +1930,11 @@ class float(object):
     'float(x) -> floating point number\n\nConvert a string or number to a floating point number, if possible.'
     def __abs__(self):
         'x.__abs__() <==> abs(x)'
-        return self
+        return float()
     
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return float()
     
     __class__ = float
     def __coerce__(self, y):
@@ -2007,11 +2007,11 @@ class float(object):
     
     def __mod__(self, y):
         'x.__mod__(y) <==> x%y'
-        return self
+        return float()
     
     def __mul__(self, y):
         'x.__mul__(y) <==> x*y'
-        return self
+        return float()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -2019,7 +2019,7 @@ class float(object):
     
     def __neg__(self):
         'x.__neg__() <==> -x'
-        return self
+        return float()
     
     def __nonzero__(self):
         'x.__nonzero__() <==> x != 0'
@@ -2027,15 +2027,15 @@ class float(object):
     
     def __pos__(self):
         'x.__pos__() <==> +x'
-        return self
+        return float()
     
     def __pow__(self, y, z):
         'x.__pow__(y[, z]) <==> pow(x, y[, z])'
-        return self
+        return float()
     
     def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        return self
+        return float()
     
     def __rdiv__(self, y):
         'x.__rdiv__(y) <==> y/x'
@@ -2051,27 +2051,27 @@ class float(object):
     
     def __rfloordiv__(self, y):
         'x.__rfloordiv__(y) <==> y//x'
-        return self
+        return float()
     
     def __rmod__(self, y):
         'x.__rmod__(y) <==> y%x'
-        return self
+        return float()
     
     def __rmul__(self, y):
         'x.__rmul__(y) <==> y*x'
-        return self
+        return float()
     
     def __rpow__(self, x, z):
         'y.__rpow__(x[, z]) <==> pow(x, y[, z])'
-        return self
+        return float()
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return float()
     
     def __rtruediv__(self, y):
         'x.__rtruediv__(y) <==> y/x'
-        return self
+        return float()
     
     @classmethod
     def __setformat__(cls, self, typestr, fmt):
@@ -2084,7 +2084,7 @@ class float(object):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return float()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -2097,7 +2097,7 @@ class float(object):
     
     def __trunc__(self):
         'Return the Integral closest to x between 0 and x.'
-        return self
+        return float()
     
     def as_integer_ratio(self):
         'float.as_integer_ratio() -> (int, int)\n\nReturn a pair of integers, whose ratio is exactly equal to the original\nfloat and with a positive denominator.\nRaise OverflowError on infinities and a ValueError on NaNs.\n\n>>> (10.0).as_integer_ratio()\n(10, 1)\n>>> (0.0).as_integer_ratio()\n(0, 1)\n>>> (-.25).as_integer_ratio()\n(-1, 4)'
@@ -2139,7 +2139,7 @@ class frozenset(object):
     'frozenset() -> empty frozenset object\nfrozenset(iterable) -> frozenset object\n\nBuild an immutable unordered collection of unique elements.'
     def __and__(self, y):
         'x.__and__(y) <==> x&y'
-        return self
+        return frozenset()
     
     __class__ = frozenset
     def __cmp__(self, y):
@@ -2172,7 +2172,7 @@ class frozenset(object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return frozenset()
     
     def __le__(self, y):
         'x.__le__(y) <==> x<=y'
@@ -2192,11 +2192,11 @@ class frozenset(object):
     
     def __or__(self, y):
         'x.__or__(y) <==> x|y'
-        return self
+        return frozenset()
     
     def __rand__(self, y):
         'x.__rand__(y) <==> y&x'
-        return self
+        return frozenset()
     
     def __reduce__(self):
         'Return state information for pickling.'
@@ -2208,15 +2208,15 @@ class frozenset(object):
     
     def __ror__(self, y):
         'x.__ror__(y) <==> y|x'
-        return self
+        return frozenset()
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return frozenset()
     
     def __rxor__(self, y):
         'x.__rxor__(y) <==> y^x'
-        return self
+        return frozenset()
     
     def __sizeof__(self):
         'S.__sizeof__() -> size of S in memory, in bytes'
@@ -2224,7 +2224,7 @@ class frozenset(object):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return frozenset()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -2233,7 +2233,7 @@ class frozenset(object):
     
     def __xor__(self, y):
         'x.__xor__(y) <==> x^y'
-        return self
+        return frozenset()
     
     def copy(self):
         'Return a shallow copy of a set.'
@@ -2304,15 +2304,15 @@ class int(object):
     "int(x=0) -> int or long\nint(x, base=10) -> int or long\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is floating point, the conversion truncates towards zero.\nIf x is outside the integer range, the function returns a long instead.\n\nIf x is not a number or if base is given, then x must be a string or\nUnicode object representing an integer literal in the given base.  The\nliteral can be preceded by '+' or '-' and be surrounded by whitespace.\nThe base defaults to 10.  Valid bases are 0 and 2-36.  Base 0 means to\ninterpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4"
     def __abs__(self):
         'x.__abs__() <==> abs(x)'
-        return self
+        return int()
     
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return int()
     
     def __and__(self, y):
         'x.__and__(y) <==> x&y'
-        return self
+        return int()
     
     __class__ = int
     def __cmp__(self, y):
@@ -2367,7 +2367,7 @@ class int(object):
     
     def __invert__(self):
         'x.__invert__() <==> ~x'
-        return self
+        return int()
     
     def __long__(self):
         'x.__long__() <==> long(x)'
@@ -2375,19 +2375,19 @@ class int(object):
     
     def __lshift__(self, y):
         'x.__lshift__(y) <==> x<<y'
-        return self
+        return int()
     
     def __mod__(self, y):
         'x.__mod__(y) <==> x%y'
-        return self
+        return int()
     
     def __mul__(self, y):
         'x.__mul__(y) <==> x*y'
-        return self
+        return int()
     
     def __neg__(self):
         'x.__neg__() <==> -x'
-        return self
+        return int()
     
     def __nonzero__(self):
         'x.__nonzero__() <==> x != 0'
@@ -2399,23 +2399,23 @@ class int(object):
     
     def __or__(self, y):
         'x.__or__(y) <==> x|y'
-        return self
+        return int()
     
     def __pos__(self):
         'x.__pos__() <==> +x'
-        return self
+        return int()
     
     def __pow__(self, y, z):
         'x.__pow__(y[, z]) <==> pow(x, y[, z])'
-        return self
+        return int()
     
     def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        return self
+        return int()
     
     def __rand__(self, y):
         'x.__rand__(y) <==> y&x'
-        return self
+        return int()
     
     def __rdiv__(self, y):
         'x.__rdiv__(y) <==> y/x'
@@ -2431,47 +2431,47 @@ class int(object):
     
     def __rfloordiv__(self, y):
         'x.__rfloordiv__(y) <==> y//x'
-        return self
+        return int()
     
     def __rlshift__(self, y):
         'x.__rlshift__(y) <==> y<<x'
-        return self
+        return int()
     
     def __rmod__(self, y):
         'x.__rmod__(y) <==> y%x'
-        return self
+        return int()
     
     def __rmul__(self, y):
         'x.__rmul__(y) <==> y*x'
-        return self
+        return int()
     
     def __ror__(self, y):
         'x.__ror__(y) <==> y|x'
-        return self
+        return int()
     
     def __rpow__(self, x, z):
         'y.__rpow__(x[, z]) <==> pow(x, y[, z])'
-        return self
+        return int()
     
     def __rrshift__(self, y):
         'x.__rrshift__(y) <==> y>>x'
-        return self
+        return int()
     
     def __rshift__(self, y):
         'x.__rshift__(y) <==> x>>y'
-        return self
+        return int()
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return int()
     
     def __rtruediv__(self, y):
         'x.__rtruediv__(y) <==> y/x'
-        return self
+        return int()
     
     def __rxor__(self, y):
         'x.__rxor__(y) <==> y^x'
-        return self
+        return int()
     
     def __str__(self):
         'x.__str__() <==> str(x)'
@@ -2479,7 +2479,7 @@ class int(object):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return int()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -2492,11 +2492,11 @@ class int(object):
     
     def __trunc__(self):
         'Truncating an Integral returns itself.'
-        return self
+        return int()
     
     def __xor__(self, y):
         'x.__xor__(y) <==> x^y'
-        return self
+        return int()
     
     def bit_length(self):
         "int.bit_length() -> int\n\nNumber of bits necessary to represent self in binary.\n>>> bin(37)\n'0b100101'\n>>> (37).bit_length()\n6"
@@ -2555,7 +2555,7 @@ class list(object):
     "list() -> new empty list\nlist(iterable) -> new list initialized from iterable's items"
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return list()
     
     __class__ = list
     def __contains__(self, value):
@@ -2588,7 +2588,7 @@ class list(object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return list()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -2605,11 +2605,11 @@ class list(object):
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return list()
     
     def __le__(self, y):
         'x.__le__(y) <==> x<=y'
@@ -2625,7 +2625,7 @@ class list(object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return list()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -2641,7 +2641,7 @@ class list(object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return list()
     
     def __setitem__(self, index, value):
         'x.__setitem__(i, y) <==> x[i]=y'
@@ -2705,15 +2705,15 @@ class long(object):
     "long(x=0) -> long\nlong(x, base=10) -> long\n\nConvert a number or string to a long integer, or return 0L if no arguments\nare given.  If x is floating point, the conversion truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string or\nUnicode object representing an integer literal in the given base.  The\nliteral can be preceded by '+' or '-' and be surrounded by whitespace.\nThe base defaults to 10.  Valid bases are 0 and 2-36.  Base 0 means to\ninterpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4L"
     def __abs__(self):
         'x.__abs__() <==> abs(x)'
-        return self
+        return long()
     
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return long()
     
     def __and__(self, y):
         'x.__and__(y) <==> x&y'
-        return self
+        return long()
     
     __class__ = long
     def __cmp__(self, y):
@@ -2768,7 +2768,7 @@ class long(object):
     
     def __invert__(self):
         'x.__invert__() <==> ~x'
-        return self
+        return long()
     
     def __long__(self):
         'x.__long__() <==> long(x)'
@@ -2776,19 +2776,19 @@ class long(object):
     
     def __lshift__(self, y):
         'x.__lshift__(y) <==> x<<y'
-        return self
+        return long()
     
     def __mod__(self, y):
         'x.__mod__(y) <==> x%y'
-        return self
+        return long()
     
     def __mul__(self, y):
         'x.__mul__(y) <==> x*y'
-        return self
+        return long()
     
     def __neg__(self):
         'x.__neg__() <==> -x'
-        return self
+        return long()
     
     def __nonzero__(self):
         'x.__nonzero__() <==> x != 0'
@@ -2800,23 +2800,23 @@ class long(object):
     
     def __or__(self, y):
         'x.__or__(y) <==> x|y'
-        return self
+        return long()
     
     def __pos__(self):
         'x.__pos__() <==> +x'
-        return self
+        return long()
     
     def __pow__(self, y, z):
         'x.__pow__(y[, z]) <==> pow(x, y[, z])'
-        return self
+        return long()
     
     def __radd__(self, y):
         'x.__radd__(y) <==> y+x'
-        return self
+        return long()
     
     def __rand__(self, y):
         'x.__rand__(y) <==> y&x'
-        return self
+        return long()
     
     def __rdiv__(self, y):
         'x.__rdiv__(y) <==> y/x'
@@ -2832,47 +2832,47 @@ class long(object):
     
     def __rfloordiv__(self, y):
         'x.__rfloordiv__(y) <==> y//x'
-        return self
+        return long()
     
     def __rlshift__(self, y):
         'x.__rlshift__(y) <==> y<<x'
-        return self
+        return long()
     
     def __rmod__(self, y):
         'x.__rmod__(y) <==> y%x'
-        return self
+        return long()
     
     def __rmul__(self, y):
         'x.__rmul__(y) <==> y*x'
-        return self
+        return long()
     
     def __ror__(self, y):
         'x.__ror__(y) <==> y|x'
-        return self
+        return long()
     
     def __rpow__(self, x, z):
         'y.__rpow__(x[, z]) <==> pow(x, y[, z])'
-        return self
+        return long()
     
     def __rrshift__(self, y):
         'x.__rrshift__(y) <==> y>>x'
-        return self
+        return long()
     
     def __rshift__(self, y):
         'x.__rshift__(y) <==> x>>y'
-        return self
+        return long()
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return long()
     
     def __rtruediv__(self, y):
         'x.__rtruediv__(y) <==> y/x'
-        return self
+        return long()
     
     def __rxor__(self, y):
         'x.__rxor__(y) <==> y^x'
-        return self
+        return long()
     
     def __sizeof__(self):
         'Returns size in memory, in bytes'
@@ -2884,7 +2884,7 @@ class long(object):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return long()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -2897,11 +2897,11 @@ class long(object):
     
     def __trunc__(self):
         'Truncating an Integral returns itself.'
-        return self
+        return long()
     
     def __xor__(self, y):
         'x.__xor__(y) <==> x^y'
-        return self
+        return long()
     
     def bit_length(self):
         "long.bit_length() -> int or long\n\nNumber of bits necessary to represent self in binary.\n>>> bin(37L)\n'0b100101'\n>>> (37L).bit_length()\n6"
@@ -3060,7 +3060,7 @@ class object:
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __reduce__(self):
         'helper for pickle'
@@ -3117,7 +3117,7 @@ class property(object):
     
     def __get__(self, obj, type):
         'descr.__get__(obj[, type]) -> value'
-        return self
+        return property()
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
@@ -3125,7 +3125,7 @@ class property(object):
     
     def __init__(self, fget=None, fset=None, fdel=None, doc=None):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __set__(self, obj, value):
         'descr.__set__(obj, value)'
@@ -3193,7 +3193,7 @@ class reversed(object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return reversed()
     
     def __length_hint__(self):
         'Private method returning an estimate of len(list(it)).'
@@ -3217,7 +3217,7 @@ class set(object):
     'set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.'
     def __and__(self, y):
         'x.__and__(y) <==> x&y'
-        return self
+        return set()
     
     __class__ = set
     def __cmp__(self, y):
@@ -3251,7 +3251,7 @@ class set(object):
     
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __ior__(self, y):
         'x.__ior__(y) <==> x|=y'
@@ -3263,7 +3263,7 @@ class set(object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return set()
     
     def __ixor__(self, y):
         'x.__ixor__(y) <==> x^=y'
@@ -3287,11 +3287,11 @@ class set(object):
     
     def __or__(self, y):
         'x.__or__(y) <==> x|y'
-        return self
+        return set()
     
     def __rand__(self, y):
         'x.__rand__(y) <==> y&x'
-        return self
+        return set()
     
     def __reduce__(self):
         'Return state information for pickling.'
@@ -3303,15 +3303,15 @@ class set(object):
     
     def __ror__(self, y):
         'x.__ror__(y) <==> y|x'
-        return self
+        return set()
     
     def __rsub__(self, y):
         'x.__rsub__(y) <==> y-x'
-        return self
+        return set()
     
     def __rxor__(self, y):
         'x.__rxor__(y) <==> y^x'
-        return self
+        return set()
     
     def __sizeof__(self):
         'S.__sizeof__() -> size of S in memory, in bytes'
@@ -3319,7 +3319,7 @@ class set(object):
     
     def __sub__(self, y):
         'x.__sub__(y) <==> x-y'
-        return self
+        return set()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -3328,7 +3328,7 @@ class set(object):
     
     def __xor__(self, y):
         'x.__xor__(y) <==> x^y'
-        return self
+        return set()
     
     def add(self):
         'Add an element to a set.\n\nThis has no effect if the element is already present.'
@@ -3461,7 +3461,7 @@ class staticmethod(object):
     
     def __get__(self, obj, type):
         'descr.__get__(obj[, type]) -> value'
-        return self
+        return staticmethod()
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
@@ -3469,7 +3469,7 @@ class staticmethod(object):
     
     def __init__(self, function):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -3481,7 +3481,7 @@ class str(basestring):
     "str(object='') -> string\n\nReturn a nice string representation of the object.\nIf the argument is a string, the return value is the same object."
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return str()
     
     __class__ = str
     def __contains__(self, value):
@@ -3513,7 +3513,7 @@ class str(basestring):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return str()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -3537,11 +3537,11 @@ class str(basestring):
     
     def __mod__(self, y):
         'x.__mod__(y) <==> x%y'
-        return self
+        return str()
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return str()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -3553,11 +3553,11 @@ class str(basestring):
     
     def __rmod__(self, y):
         'x.__rmod__(y) <==> y%x'
-        return self
+        return str()
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return str()
     
     def __sizeof__(self):
         'S.__sizeof__() -> size of S in memory, in bytes'
@@ -3740,7 +3740,7 @@ class super(object):
     __class__ = super
     def __get__(self, obj, type):
         'descr.__get__(obj[, type]) -> value'
-        return self
+        return super()
     
     def __getattribute__(self):
         "x.__getattribute__('name') <==> x.name"
@@ -3748,7 +3748,7 @@ class super(object):
     
     def __init__(self, type, obj):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'
@@ -3779,7 +3779,7 @@ class tuple(object):
     "tuple() -> empty tuple\ntuple(iterable) -> tuple initialized from iterable's items\n\nIf the argument is a tuple, the return value is the same object."
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return tuple()
     
     __class__ = tuple
     def __contains__(self, value):
@@ -3807,7 +3807,7 @@ class tuple(object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return tuple()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -3819,7 +3819,7 @@ class tuple(object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return tuple()
     
     def __le__(self, y):
         'x.__le__(y) <==> x<=y'
@@ -3835,7 +3835,7 @@ class tuple(object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return tuple()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -3847,7 +3847,7 @@ class tuple(object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return tuple()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -3902,7 +3902,7 @@ class type(object):
     
     def __init__(self, object):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __instancecheck__(self, instance):
         '__instancecheck__() -> bool\ncheck if an object is an instance'
@@ -3959,7 +3959,7 @@ class unicode(basestring):
     "unicode(object='') -> unicode object\nunicode(string[, encoding[, errors]]) -> unicode object\n\nCreate a new Unicode object from the given encoded string.\nencoding defaults to the current default string encoding.\nerrors can be 'strict', 'replace' or 'ignore' and defaults to 'strict'."
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return unicode()
     
     __class__ = unicode
     def __contains__(self, value):
@@ -3991,7 +3991,7 @@ class unicode(basestring):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return unicode()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -4015,11 +4015,11 @@ class unicode(basestring):
     
     def __mod__(self, y):
         'x.__mod__(y) <==> x%y'
-        return self
+        return unicode()
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return unicode()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -4031,11 +4031,11 @@ class unicode(basestring):
     
     def __rmod__(self, y):
         'x.__rmod__(y) <==> y%x'
-        return self
+        return unicode()
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return unicode()
     
     def __sizeof__(self):
         'S.__sizeof__() -> size of S in memory, in bytes\n\n'
@@ -4234,7 +4234,7 @@ class xrange(object):
     
     def __iter__(self):
         'x.__iter__() <==> iter(x)'
-        return self
+        return xrange()
     
     def __len__(self):
         'x.__len__() <==> len(x)'

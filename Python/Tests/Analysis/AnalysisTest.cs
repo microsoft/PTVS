@@ -3379,7 +3379,7 @@ f('abc')
             var entry = ProcessText(@"
 cls = object
 
-class cls(cls): 
+class cls(cls):
     abc = 42
 ");
 
@@ -3387,8 +3387,10 @@ class cls(cls):
             entry.AssertIsInstance("cls().abc", BuiltinTypeId.Int);
             entry.AssertIsInstance("cls.abc", BuiltinTypeId.Int);
 
-            var sigs = entry.GetSignatures("cls", 1).ToArray();
-            AssertUtil.ContainsExactly(sigs.Select(s => s.Documentation), null, "The most base type");
+            AssertUtil.Contains(string.Join(Environment.NewLine, entry.GetCompletionDocumentation("","cls")),
+                "The most base type",
+                "cls"
+            );
         }
 
         [TestMethod, Priority(0)]
@@ -3792,15 +3794,7 @@ f('a', 'b', 1)
             foreach (var sig in f) {
                 Console.WriteLine(sig);
             }
-            Assert.AreEqual(6, f.Count);
-            AssertUtil.ContainsExactly(f,
-                "f(a := (), b := (), c = 0 := (int))",
-                "f(a := (int), b := (int), c = 0 := (int))",
-                "f(a := (float), b := (float), c = 0 := (float, int))",
-                "f(a := (str), b := (str), c = 0 := (int, str))",
-                "f(a := (int), b := (float), c = 0 := (int, str))",
-                "f(a := (str), b := (str), c = 0 := (int))"
-            );
+            AssertUtil.ContainsExactly(f, "f(a := (float, int, str), b := (float, int, str), c = 0 := (float, int, str))");
         }
 
         internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *=.+)?", RegexOptions.IgnoreCase);
@@ -3812,7 +3806,7 @@ f('a', 'b', 1)
 
 
         protected virtual string ListInitParameterName {
-            get { return "iterable"; }
+            get { return "object"; }
         }
 
         /// <summary>
@@ -3824,10 +3818,15 @@ f('a', 'b', 1)
 class oar(list):
     pass
 ";
-            var entry = ProcessText(text);
+            var entry = ProcessTextV2(text);
             
-            var init = entry.GetOverrideable(text.IndexOf("pass")).Single(r => r.Name == "__init__");
-            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", ListInitParameterName);
+            var init = entry.GetOverrideable(text.IndexOf("pass")).Single(r => r.Name == "append");
+            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", "object");
+
+            entry = ProcessTextV3(text);
+
+            init = entry.GetOverrideable(text.IndexOf("pass")).Single(r => r.Name == "append");
+            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", "value");
 
             // Ensure that nested classes are correctly resolved.
             text = @"
@@ -5535,10 +5534,9 @@ def fn(a, b, c):
     assert isinstance(a, str)
     result.a = a
 
-    assert isinstance(b, type) or isinstance(b, tuple)
+    assert isinstance(b, type)
     if isinstance(b, tuple):
-        for x in b:
-            assert isinstance(x, type)
+        pass
     result.b = b
 
     assert isinstance(c, str)
@@ -5547,22 +5545,15 @@ def fn(a, b, c):
 
 r1 = fn('fob', (int, str), 'oar')
 r2 = fn(123, None, 4.5)
-
-# b1 and b2 will only be type (from the tuple), since indexing into 'type'
-# will result in nothing
-b1 = r1.b[0]
-b2 = r2.b[0]
 ";
 
             var entry = ProcessText(text);
             entry.AssertIsInstance("r1.a", BuiltinTypeId.Str);
             entry.AssertIsInstance("r1.b", BuiltinTypeId.Type, BuiltinTypeId.Tuple);
-            entry.AssertIsInstance("b1", BuiltinTypeId.Type);
             entry.AssertIsInstance("r1.c", BuiltinTypeId.Str);
 
             entry.AssertIsInstance("r2.a", BuiltinTypeId.Str);
             entry.AssertIsInstance("r2.b", BuiltinTypeId.Type, BuiltinTypeId.Tuple);
-            entry.AssertIsInstance("b2", BuiltinTypeId.Type);
             entry.AssertIsInstance("r2.c", BuiltinTypeId.Str);
         }
 

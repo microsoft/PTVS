@@ -29,7 +29,7 @@ class zipimporter(__builtin__.object):
     
     def __init__(self, archivepath):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     def __repr__(self):
         'x.__repr__() <==> repr(x)'

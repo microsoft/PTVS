@@ -194,7 +194,7 @@ class stat_result(__builtin__.object):
     'stat_result: Result from stat or lstat.\n\nThis object may be accessed either as a tuple of\n  (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime)\nor via the attributes st_mode, st_ino, st_dev, st_nlink, st_uid, and so on.\n\nPosix/windows: If your platform supports st_blksize, st_blocks, st_rdev,\nor st_flags, they are available as attributes only.\n\nSee os.stat for more information.'
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return stat_result()
     
     __class__ = stat_result
     def __contains__(self, value):
@@ -215,7 +215,7 @@ class stat_result(__builtin__.object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return stat_result()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -239,7 +239,7 @@ class stat_result(__builtin__.object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return stat_result()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -254,7 +254,7 @@ class stat_result(__builtin__.object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return stat_result()
     
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -319,7 +319,7 @@ class statvfs_result(__builtin__.object):
     'statvfs_result: Result from statvfs or fstatvfs.\n\nThis object may be accessed either as a tuple of\n  (bsize, frsize, blocks, bfree, bavail, files, ffree, favail, flag, namemax),\nor via the attributes f_bsize, f_frsize, f_blocks, f_bfree, and so on.\n\nSee os.statvfs for more information.'
     def __add__(self, y):
         'x.__add__(y) <==> x+y'
-        return self
+        return statvfs_result()
     
     __class__ = statvfs_result
     def __contains__(self, value):
@@ -340,7 +340,7 @@ class statvfs_result(__builtin__.object):
     
     def __getslice__(self, i, j):
         'x.__getslice__(i, j) <==> x[i:j]\n           \n           Use of negative indices is not supported.'
-        return self
+        return statvfs_result()
     
     def __gt__(self, y):
         'x.__gt__(y) <==> x>y'
@@ -364,7 +364,7 @@ class statvfs_result(__builtin__.object):
     
     def __mul__(self, n):
         'x.__mul__(n) <==> x*n'
-        return self
+        return statvfs_result()
     
     def __ne__(self, y):
         'x.__ne__(y) <==> x!=y'
@@ -379,7 +379,7 @@ class statvfs_result(__builtin__.object):
     
     def __rmul__(self, n):
         'x.__rmul__(n) <==> n*x'
-        return self
+        return statvfs_result()
     
     @classmethod
     def __subclasshook__(cls, subclass):

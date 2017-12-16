@@ -8,7 +8,7 @@ class NullImporter(__builtin__.object):
     __class__ = NullImporter
     def __init__(self):
         'x.__init__(...) initializes x; see help(type(x)) for signature'
-        return self
+        pass
     
     @classmethod
     def __subclasshook__(cls, subclass):
