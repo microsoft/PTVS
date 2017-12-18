@@ -108,6 +108,8 @@ namespace Microsoft.PythonTools.Project {
             if (!_disposed) {
                 if (_packageManager != null) {
                     _packageManager.InstalledPackagesChanged -= InstalledPackagesChanged;
+                    _packageManager.DisableNotifications();
+                    (_packageManager as IDisposable)?.Dispose();
                 }
             }
             _disposed = true;

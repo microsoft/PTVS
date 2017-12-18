@@ -391,12 +391,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DefaultDB\regenerate.py" />
     <Content Include="get_search_paths.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
+    <Content Include="regenerate.py" />
     <Content Include="scrape_module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -412,7 +412,7 @@
   -->
   <Target Name="_RegeneratePython3DB" Inputs="$(PackagePath)python\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v3\python.pyi" BeforeTargets="AssignTargetPaths">
     <PropertyGroup>
-      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)DefaultDB\regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v3" "$(PackagesPath)python\tools\python.exe"</_RefreshCmd>
+      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v3" "$(PackagesPath)python\tools\python.exe"</_RefreshCmd>
     </PropertyGroup>
     <Exec Command="$(_RefreshCmd)" />
     <ItemGroup>
@@ -428,7 +428,7 @@
   </Target>
   <Target Name="_RegeneratePython2DB" Inputs="$(PackagePath)python2.2.7.14\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v2\python.pyi" BeforeTargets="AssignTargetPaths">
     <PropertyGroup>
-      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)DefaultDB\regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v2" "$(PackagesPath)python2.2.7.14\tools\python.exe"</_RefreshCmd>
+      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v2" "$(PackagesPath)python2.2.7.14\tools\python.exe"</_RefreshCmd>
     </PropertyGroup>
     <Exec Command="$(_RefreshCmd)" />
     <ItemGroup>
