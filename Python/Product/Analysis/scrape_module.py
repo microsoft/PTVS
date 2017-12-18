@@ -903,68 +903,68 @@ class ScrapeState(object):
 
 def add_builtin_objects(state):
     Signature.KNOWN_RESTYPES.update({
-        "__Type.__call__": "cls()",
-        "__Property.__delete__": "None",
-        "__Float.__getformat__": "''",
-        "__Bytes.__getitem__": "__T()",
-        "__Unicode.__getitem__": "__T()",
-        "__Type.__instancecheck__": "False",
-        "__Tuple.__iter__": "__TupleIterator()",
-        "__List.__iter__": "__ListIterator()",
-        "__Dict.__iter__": "__DictKeys()",
-        "__Set.__iter__": "__SetIterator()",
-        "__FrozenSet.__iter__": "__SetIterator()",
-        "__Bytes.__iter__": "__BytesIterator()",
-        "__Unicode.__iter__": "__UnicodeIterator()",
-        "__BytesIterator.__next__": "0",
-        "__UnicodeIterator.__next__": "__Unicode()",
-        "__Type.__prepare__": "None",
-        "__List.__reversed__": "__ListIterator()",
-        "__Float.__setformat__": "None",
-        "__Type.__subclasses__": "(cls,)",
+        "__Type__.__call__": "cls()",
+        "__Property__.__delete__": "None",
+        "__Float__.__getformat__": "''",
+        "__Bytes__.__getitem__": "__T()",
+        "__Unicode__.__getitem__": "__T()",
+        "__Type__.__instancecheck__": "False",
+        "__Tuple__.__iter__": "__TupleIterator__()",
+        "__List__.__iter__": "__ListIterator__()",
+        "__Dict__.__iter__": "__DictKeys__()",
+        "__Set__.__iter__": "__SetIterator__()",
+        "__FrozenSet__.__iter__": "__SetIterator__()",
+        "__Bytes__.__iter__": "__BytesIterator__()",
+        "__Unicode__.__iter__": "__UnicodeIterator__()",
+        "__BytesIterator__.__next__": "0",
+        "__UnicodeIterator__.__next__": "__Unicode__()",
+        "__Type__.__prepare__": "None",
+        "__List__.__reversed__": "__ListIterator__()",
+        "__Float__.__setformat__": "None",
+        "__Type__.__subclasses__": "(cls,)",
         "__truediv__": "Float()",
-        "__Type.__subclasscheck__": "False",
+        "__Type__.__subclasscheck__": "False",
         "__subclasshook__": "False",
-        "__Set.add": "None",
-        "__List.append": "None",
-        "__Float.as_integer_ratio": "(0, 0)",
-        "__Int.bit_length": "0",
+        "__Set__.add": "None",
+        "__List__.append": "None",
+        "__Float__.as_integer_ratio": "(0, 0)",
+        "__Int__.bit_length": "0",
         "capitalize": "__T()",
         "casefold": "__T()",
         "center": "__T()",
         "clear": "None",
-        "__Generator.close": "None",
-        "conjugate": "__Complex()",
+        "__Generator__.close": "None",
+        "conjugate": "__Complex__()",
         "copy": "__T()",
         "count": "0",
-        "__Bytes.decode": "''",
-        "__Property.deleter": "func",
-        "__Set.difference": "__T()",
-        "__FrozenSet.difference": "__T()",
-        "__Set.difference_update": "None",
-        "__Set.discard": "None",
-        "__Bytes.encode": "b''",
-        "__Unicode.encode": "b''",
+        "__Bytes__.decode": "''",
+        "__Property__.deleter": "func",
+        "__Set__.difference": "__T()",
+        "__FrozenSet__.difference": "__T()",
+        "__Set__.difference_update": "None",
+        "__Set__.discard": "None",
+        "__Bytes__.encode": "b''",
+        "__Unicode__.encode": "b''",
         "endswith": "False",
         "expandtabs": "__T()",
-        "__List.extend": "None",
+        "__List__.extend": "None",
         "find": "0",
-        "__Unicode.format": "__T()",
-        "__Unicode.format_map": "__T()",
-        "__Bool.from_bytes": "False",
-        "__Int.from_bytes": "0",
-        "__Long.from_bytes": "__Long()",
-        "__Float.fromhex": "0.0",
-        "__Bytes.fromhex": "b''",
-        "__Dict.fromkeys": "{}",
-        "__Dict.get": "self[0]",
-        "__Property.getter": "func",
+        "__Unicode__.format": "__T()",
+        "__Unicode__.format_map": "__T()",
+        "__Bool__.from_bytes": "False",
+        "__Int__.from_bytes": "0",
+        "__Long__.from_bytes": "__Long__()",
+        "__Float__.fromhex": "0.0",
+        "__Bytes__.fromhex": "b''",
+        "__Dict__.fromkeys": "{}",
+        "__Dict__.get": "self[0]",
+        "__Property__.getter": "func",
         "hex": "''",
         "index": "0",
-        "__List.insert": "None",
-        "__Set.intersection": "__T()",
-        "__FrozenSet.intersection": "__T()",
-        "__Set.intersection_update": "None",
+        "__List__.insert": "None",
+        "__Set__.intersection": "__T()",
+        "__FrozenSet__.intersection": "__T()",
+        "__Set__.intersection_update": "None",
         "isalnum": "False",
         "isalpha": "False",
         "isdecimal": "False",
@@ -976,123 +976,123 @@ def add_builtin_objects(state):
         "isspace": "False",
         "istitle": "False",
         "isupper": "False",
-        "__Float.is_integer": "False",
-        "__Set.isdisjoint": "False",
-        "__FrozenSet.isdisjoint": "False",
-        "__DictKeys.isdisjoint": "False",
-        "__DictItems.isdisjoint": "False",
-        "__Set.issubset": "False",
-        "__FrozenSet.issubset": "False",
-        "__Set.issuperset": "False",
-        "__FrozenSet.issuperset": "False",
-        "__Dict.items": "__DictItems()",
-        "__Bytes.join": "b''",
-        "__Unicode.join": "''",
-        "__Dict.keys": "__DictKeys()",
+        "__Float__.is_integer": "False",
+        "__Set__.isdisjoint": "False",
+        "__FrozenSet__.isdisjoint": "False",
+        "__DictKeys__.isdisjoint": "False",
+        "__DictItems__.isdisjoint": "False",
+        "__Set__.issubset": "False",
+        "__FrozenSet__.issubset": "False",
+        "__Set__.issuperset": "False",
+        "__FrozenSet__.issuperset": "False",
+        "__Dict__.items": "__DictItems__()",
+        "__Bytes__.join": "b''",
+        "__Unicode__.join": "''",
+        "__Dict__.keys": "__DictKeys__()",
         "lower": "__T()",
         "ljust": "__T()",
         "lstrip": "__T()",
-        "__Bytes.maketrans": "b''",
-        "__Unicode.maketrans": "{}",
-        "__Type.mro": "[__Type()]",
+        "__Bytes__.maketrans": "b''",
+        "__Unicode__.maketrans": "{}",
+        "__Type__.mro": "[__Type__()]",
         "partition": "(__T(), __T(), __T())",
-        "__List.pop": "self[0]",
-        "__Dict.pop": "self.keys()[0]",
-        "__Set.pop": "Any",
-        "__Dict.popitem": "self.items()[0]",
+        "__List__.pop": "self[0]",
+        "__Dict__.pop": "self.keys()[0]",
+        "__Set__.pop": "Any",
+        "__Dict__.popitem": "self.items()[0]",
         "remove": "None",
         "replace": "__T()",
         "rfind": "0",
-        "__List.reverse": "None",
+        "__List__.reverse": "None",
         "rindex": "0",
         "rjust": "__T()",
         "rpartition": "(__T(), __T(), __T())",
         "rsplit": "[__T()]",
         "rstrip": "__T()",
-        "__Generator.send": "self.__next__()",
-        "__Dict.setdefault": "self[0]",
-        "__Property.setter": "func",
-        "__List.sort": "None",
+        "__Generator__.send": "self.__next__()",
+        "__Dict__.setdefault": "self[0]",
+        "__Property__.setter": "func",
+        "__List__.sort": "None",
         "split": "[__T()]",
         "splitlines": "[self()]",
         "startswith": "False",
         "strip": "__T()",
         "swapcase": "__T()",
-        "__Set.symmetric_difference": "__T()",
-        "__FrozenSet.symmetric_difference": "__T()",
-        "__Set.symmetric_difference_update": "None",
-        "__Bytes.translate": "__T()",
-        "__Unicode.translate": "__T()",
-        "__Generator.throw": "None",
+        "__Set__.symmetric_difference": "__T()",
+        "__FrozenSet__.symmetric_difference": "__T()",
+        "__Set__.symmetric_difference_update": "None",
+        "__Bytes__.translate": "__T()",
+        "__Unicode__.translate": "__T()",
+        "__Generator__.throw": "None",
         "title": "__T()",
         "to_bytes": "b''",
-        "__Set.union": "__T()",
-        "__FrozenSet.union": "__T()",
-        "__Dict.update": "None",
-        "__Set.update": "None",
+        "__Set__.union": "__T()",
+        "__FrozenSet__.union": "__T()",
+        "__Dict__.update": "None",
+        "__Set__.update": "None",
         "upper": "__T()",
-        "__Dict.values": "__DictValues()",
+        "__Dict__.values": "__DictValues__()",
         "zfill": "__T()",
     })
 
     Signature.KNOWN_ARGSPECS.update({
-        "__Type.__call__": "(cls, *args, **kwargs)",
-        "__Int.__ceil__": "(self)",
-        "__Int.__floor__": "(self)",
-        "__Float.__getformat__": "(typestr)",
-        "__Dict.__getitem__": "(self, key)",
-        "__Type.__instancecheck__": "(self, instance)",
-        "__Bool.__init__": "(self, x)",
-        "__Int.__init__": "(self, x=0)",
-        "__List.__init__": "(self, iterable)",
-        "__Tuple.__init__": "(self, iterable)",
-        "__Type.__prepare__": "(cls, name, bases, **kwds)",
-        "__Int.__round__": "(self, ndigits=0)",
-        "__Float.__round__": "(self, ndigits=0)",
-        "__List.__reversed__": "(self)",
-        "__Float.__setformat__": "(typestr, fmt)",
-        "__Dict.__setitem__": "(self, key, value)",
-        "__Set.add": "(self, value)",
-        "__List.append": "(self, value)",
-        "__Float.as_integer_ratio": "(self)",
-        "__Int.bit_length": "(self)",
+        "__Type__.__call__": "(cls, *args, **kwargs)",
+        "__Int__.__ceil__": "(self)",
+        "__Int__.__floor__": "(self)",
+        "__Float__.__getformat__": "(typestr)",
+        "__Dict__.__getitem__": "(self, key)",
+        "__Type__.__instancecheck__": "(self, instance)",
+        "__Bool__.__init__": "(self, x)",
+        "__Int__.__init__": "(self, x=0)",
+        "__List__.__init__": "(self, iterable)",
+        "__Tuple__.__init__": "(self, iterable)",
+        "__Type__.__prepare__": "(cls, name, bases, **kwds)",
+        "__Int__.__round__": "(self, ndigits=0)",
+        "__Float__.__round__": "(self, ndigits=0)",
+        "__List__.__reversed__": "(self)",
+        "__Float__.__setformat__": "(typestr, fmt)",
+        "__Dict__.__setitem__": "(self, key, value)",
+        "__Set__.add": "(self, value)",
+        "__List__.append": "(self, value)",
+        "__Float__.as_integer_ratio": "(self)",
+        "__Int__.bit_length": "(self)",
         "capitalize": "(self)",
         "casefold": "(self)",
-        "__Bytes.center": "(self, width, fillbyte=b' ')",
-        "__Unicode.center": "(self, width, fillchar=' ')",
+        "__Bytes__.center": "(self, width, fillbyte=b' ')",
+        "__Unicode__.center": "(self, width, fillchar=' ')",
         "clear": "(self)",
-        "__Generator.close": "(self)",
+        "__Generator__.close": "(self)",
         "conjugate": "(self)",
         "copy": "(self)",
         "count": "(self, x)",
-        "__Bytes.count": "(self, sub, start=0, end=-1)",
-        "__Unicode.count": "(self, sub, start=0, end=-1)",
-        "__Bytes.decode": "(self, encoding='utf-8', errors='strict')",
-        "__Property.deleter": "(self, func)",
-        "__Set.difference": "(self, other)",
-        "__FrozenSet.difference": "(self, other)",
-        "__Set.difference_update": "(self, *others)",
-        "__Set.discard": "(self, elem)",
-        "__Unicode.encode": "(self, encoding='utf-8', errors='strict')",
+        "__Bytes__.count": "(self, sub, start=0, end=-1)",
+        "__Unicode__.count": "(self, sub, start=0, end=-1)",
+        "__Bytes__.decode": "(self, encoding='utf-8', errors='strict')",
+        "__Property__.deleter": "(self, func)",
+        "__Set__.difference": "(self, other)",
+        "__FrozenSet__.difference": "(self, other)",
+        "__Set__.difference_update": "(self, *others)",
+        "__Set__.discard": "(self, elem)",
+        "__Unicode__.encode": "(self, encoding='utf-8', errors='strict')",
         "endswith": "(self, suffix, start=0, end=-1)",
         "expandtabs": "(self, tabsize=8)",
-        "__List.extend": "(self, iterable)",
+        "__List__.extend": "(self, iterable)",
         "find": "(self, sub, start=0, end=-1)",
-        "__Unicode.format": "(self, *args, **kwargs)",
-        "__Unicode.format_map": "(self, mapping)",
-        "__Bool.from_bytes": "(bytes, byteorder, *, signed=False)",
-        "__Int.from_bytes": "(bytes, byteorder, *, signed=False)",
-        "__Float.fromhex": "(string)",
-        "__Dict.get": "(self, key, d=Unknown())",
-        "__Property.getter": "(self, func)",
+        "__Unicode__.format": "(self, *args, **kwargs)",
+        "__Unicode__.format_map": "(self, mapping)",
+        "__Bool__.from_bytes": "(bytes, byteorder, *, signed=False)",
+        "__Int__.from_bytes": "(bytes, byteorder, *, signed=False)",
+        "__Float__.fromhex": "(string)",
+        "__Dict__.get": "(self, key, d=Unknown())",
+        "__Property__.getter": "(self, func)",
         "hex": "(self)",
-        "__List.insert": "(self, index, value)",
+        "__List__.insert": "(self, index, value)",
         "index": "(self, v)",
-        "__Bytes.index": "(self, sub, start=0, end=-1)",
-        "__Unicode.index": "(self, sub, start=0, end=-1)",
-        "__Set.intersection": "(self, other)",
-        "__FrozenSet.intersection": "(self, other)",
-        "__Set.intersection_update": "(self, *others)",
+        "__Bytes__.index": "(self, sub, start=0, end=-1)",
+        "__Unicode__.index": "(self, sub, start=0, end=-1)",
+        "__Set__.intersection": "(self, other)",
+        "__FrozenSet__.intersection": "(self, other)",
+        "__Set__.intersection_update": "(self, *others)",
         "isalnum": "(self)",
         "isalpha": "(self)",
         "isdecimal": "(self)",
@@ -1104,85 +1104,85 @@ def add_builtin_objects(state):
         "isspace": "(self)",
         "istitle": "(self)",
         "isupper": "(self)",
-        "__Float.is_integer": "(self)",
-        "__Set.isdisjoint": "(self, other)",
-        "__FrozenSet.isdisjoint": "(self, other)",
-        "__DictKeys.isdisjoint": "(self, other)",
-        "__DictItems.isdisjoint": "(self, other)",
-        "__Set.issubset": "(self, other)",
-        "__FrozenSet.issubset": "(self, other)",
-        "__Set.issuperset": "(self, other)",
-        "__FrozenSet.issuperset": "(self, other)",
-        "__Dict.items": "(self)",
-        "__Bytes.join": "(self, iterable)",
-        "__Unicode.join": "(self, iterable)",
-        "__Dict.keys": "(self)",
+        "__Float__.is_integer": "(self)",
+        "__Set__.isdisjoint": "(self, other)",
+        "__FrozenSet__.isdisjoint": "(self, other)",
+        "__DictKeys__.isdisjoint": "(self, other)",
+        "__DictItems__.isdisjoint": "(self, other)",
+        "__Set__.issubset": "(self, other)",
+        "__FrozenSet__.issubset": "(self, other)",
+        "__Set__.issuperset": "(self, other)",
+        "__FrozenSet__.issuperset": "(self, other)",
+        "__Dict__.items": "(self)",
+        "__Bytes__.join": "(self, iterable)",
+        "__Unicode__.join": "(self, iterable)",
+        "__Dict__.keys": "(self)",
         "lower": "(self)",
-        "__Bytes.ljust": "(self, width, fillbyte=b' ')",
-        "__Unicode.ljust": "(self, width, fillchar=' ')",
+        "__Bytes__.ljust": "(self, width, fillbyte=b' ')",
+        "__Unicode__.ljust": "(self, width, fillchar=' ')",
         "lstrip": "(self, chars)",
-        "__Bytes.maketrans": "(from_, to)",
-        "__Unicode.maketrans": "(x, y, z)",
-        "__Type.mro": "(cls)",
-        "__Bytes.partition": "(self, sep)",
-        "__Unicode.partition": "(self, sep)",
-        "__List.pop": "(self, index=-1)",
-        "__Dict.pop": "(self, k, d=Unknown())",
-        "__Set.pop": "(self)",
-        "__Dict.popitem": "(self, k, d=Unknown())",
-        "__List.remove": "(self, value)",
-        "__Set.remove": "(self, elem)",
+        "__Bytes__.maketrans": "(from_, to)",
+        "__Unicode__.maketrans": "(x, y, z)",
+        "__Type__.mro": "(cls)",
+        "__Bytes__.partition": "(self, sep)",
+        "__Unicode__.partition": "(self, sep)",
+        "__List__.pop": "(self, index=-1)",
+        "__Dict__.pop": "(self, k, d=Unknown())",
+        "__Set__.pop": "(self)",
+        "__Dict__.popitem": "(self, k, d=Unknown())",
+        "__List__.remove": "(self, value)",
+        "__Set__.remove": "(self, elem)",
         "replace": "(self, old, new, count=-1)",
-        "__List.reverse": "(self)",
+        "__List__.reverse": "(self)",
         "rfind": "(self, sub, start=0, end=-1)",
         "rindex": "(self, sub, start=0, end=-1)",
-        "__Bytes.rjust": "(self, width, fillbyte=b' ')",
-        "__Unicode.rjust": "(self, width, fillchar=' ')",
-        "__Bytes.rpartition": "(self, sep)",
-        "__Unicode.rpartition": "(self, sep)",
+        "__Bytes__.rjust": "(self, width, fillbyte=b' ')",
+        "__Unicode__.rjust": "(self, width, fillchar=' ')",
+        "__Bytes__.rpartition": "(self, sep)",
+        "__Unicode__.rpartition": "(self, sep)",
         "rsplit": "(self, sep=None, maxsplit=-1)",
         "rstrip": "(self, chars=None)",
-        "__Generator.send": "(self, value)",
-        "__Dict.setdefault": "(self, k, d)",
-        "__Property.setter": "(self, func)",
-        "__List.sort": "(self)",
+        "__Generator__.send": "(self, value)",
+        "__Dict__.setdefault": "(self, k, d)",
+        "__Property__.setter": "(self, func)",
+        "__List__.sort": "(self)",
         "split": "(self, sep=None, maxsplit=-1)",
         "splitlines": "(self, keepends=False)",
         "strip": "(self, chars=None)",
         "startswith": "(self, prefix, start=0, end=-1)",
         "swapcase": "(self)",
-        "__Set.symmetric_difference": "(self, other)",
-        "__FrozenSet.symmetric_difference": "(self, other)",
-        "__Set.symmetric_difference_update": "(self, *others)",
-        "__Generator.throw": "(self, type, value=None, traceback=None)",
+        "__Set__.symmetric_difference": "(self, other)",
+        "__FrozenSet__.symmetric_difference": "(self, other)",
+        "__Set__.symmetric_difference_update": "(self, *others)",
+        "__Generator__.throw": "(self, type, value=None, traceback=None)",
         "title": "(self)",
-        "__Int.to_bytes": "(bytes, byteorder, *, signed=False)",
-        "__Bytes.translate": "(self, table, delete=b'')",
-        "__Unicode.translate": "(self, table)",
-        "__Set.union": "(self, *others)",
-        "__FrozenSet.union": "(self, *others)",
-        "__Dict.update": "(self, d)",
-        "__Set.update": "(self, *others)",
+        "__Int__.to_bytes": "(bytes, byteorder, *, signed=False)",
+        "__Bytes__.translate": "(self, table, delete=b'')",
+        "__Unicode__.translate": "(self, table)",
+        "__Set__.union": "(self, *others)",
+        "__FrozenSet__.union": "(self, *others)",
+        "__Dict__.update": "(self, d)",
+        "__Set__.update": "(self, *others)",
         "upper": "(self)",
-        "__Dict.values": "(self)",
+        "__Dict__.values": "(self)",
         "zfill": "(self, width)",
     })
 
     if sys.version[0] == '2':
         Signature.KNOWN_RESTYPES.update({
-            "__BytesIterator.__next__": None,
-            "__BytesIterator.next": "b''",
-            "__UnicodeIterator.__next__": None,
-            "__UnicodeIterator.next": "u''",
-            "__Generator.send": "self.next()",
-            "__Function.func_closure": "()",
-            "__Function.func_doc": "b''",
-            "__Function.func_name": "b''",
+            "__BytesIterator__.__next__": None,
+            "__BytesIterator__.next": "b''",
+            "__UnicodeIterator__.__next__": None,
+            "__UnicodeIterator__.next": "u''",
+            "__Generator__.send": "self.next()",
+            "__Function__.func_closure": "()",
+            "__Function__.func_doc": "b''",
+            "__Function__.func_name": "b''",
         })
 
         Signature.KNOWN_ARGSPECS.update({
-            "__BytesIterator.next": "(self)",
-            "__UnicodeIterator.next": "(self)",
+            "__BytesIterator__.next": "(self)",
+            "__UnicodeIterator__.next": "(self)",
         })
 
 
@@ -1202,72 +1202,72 @@ def add_builtin_objects(state):
         state.members.append(mi)
         state.members.append(MemberInfo(alias, None, literal=mi.name))
 
-    add_simple('__Unknown', '<unknown>', MemberInfo("__name__", None, literal='"<unknown>"'))
-    add_simple('__NoneType', 'the type of the None object', MemberInfo.NO_VALUE)
+    add_simple('__Unknown__', '<unknown>', MemberInfo("__name__", None, literal='"<unknown>"'))
+    add_simple('__NoneType__', 'the type of the None object', MemberInfo.NO_VALUE)
 
     # NoneType and None are explicitly defined to avoid parser errors
     # because of None being a keyword.
-    #add_literal('NoneType', '__NoneType')
-    #add_literal('None', '__NoneType()')
+    #add_literal('NoneType', '__NoneType__')
+    #add_literal('None', '__NoneType__()')
 
-    add_type('__Object', object)
-    add_type('__Type', type)
+    add_type('__Object__', object)
+    add_type('__Type__', type)
     
-    add_type('__Int', int)
+    add_type('__Int__', int)
     if type(bool()) is int:
-        add_literal('__Bool', '__Int')
+        add_literal('__Bool__', '__Int__')
     else:
-        add_type('__Bool', bool)
+        add_type('__Bool__', bool)
 
     try:
         long
     except NameError:
-        add_literal('__Long', '__Int')
+        add_literal('__Long__', '__Int__')
     else:
-        add_type('__Long', long)
+        add_type('__Long__', long)
 
-    add_type("__Float", float)
-    add_type("__Complex", complex)
+    add_type("__Float__", float)
+    add_type("__Complex__", complex)
 
-    add_type("__Tuple", tuple)
-    add_type("__List", list)
-    add_type("__Dict", dict)
-    add_type("__Set", set)
-    add_type("__FrozenSet", frozenset)
+    add_type("__Tuple__", tuple)
+    add_type("__List__", list)
+    add_type("__Dict__", dict)
+    add_type("__Set__", set)
+    add_type("__FrozenSet__", frozenset)
 
     if bytes is not str:
-        add_type("__Bytes", bytes)
-        add_type("__BytesIterator", type(iter(bytes())))
-        add_type("__Unicode", str)
-        add_type("__UnicodeIterator", type(iter(str())))
-        add_literal("__Str", "__Unicode")
-        add_literal("__StrIterator", "__UnicodeIterator")
+        add_type("__Bytes__", bytes)
+        add_type("__BytesIterator__", type(iter(bytes())))
+        add_type("__Unicode__", str)
+        add_type("__UnicodeIterator__", type(iter(str())))
+        add_literal("__Str__", "__Unicode__")
+        add_literal("__StrIterator__", "__UnicodeIterator__")
 
     else:
-        add_type("__Bytes", str)
-        add_type("__BytesIterator", type(iter(str())))
-        add_type("__Unicode", unicode)
-        add_type("__UnicodeIterator", type(iter(unicode())))
-        add_literal("__Str", "__Bytes")
-        add_literal("__StrIterator", "__BytesIterator")
+        add_type("__Bytes__", str)
+        add_type("__BytesIterator__", type(iter(str())))
+        add_type("__Unicode__", unicode)
+        add_type("__UnicodeIterator__", type(iter(unicode())))
+        add_literal("__Str__", "__Bytes__")
+        add_literal("__StrIterator__", "__BytesIterator__")
 
-    add_type("__Module", type(inspect))
-    add_type("__Function", type(add_simple))
+    add_type("__Module__", type(inspect))
+    add_type("__Function__", type(add_simple))
 
-    add_type("__BuiltinMethodDescriptor", type(object.__hash__))
-    add_type("__BuiltinFunction", type(abs))
-    add_type("__Generator", type((_ for _ in [])))
-    add_type("__Property", property)
-    add_type("__ClassMethod", classmethod)
-    add_type("__StaticMethod", staticmethod)
-    add_type("__Ellipsis", type(Ellipsis))
-    add_type("__TupleIterator", type(iter(())))
-    add_type("__ListIterator", type(iter([])))
-    add_type("__DictKeys", type({}.keys()))
-    add_type("__DictValues", type({}.values()))
-    add_type("__DictItems", type({}.items()))
-    add_type("__SetIterator", type(iter(set())))
-    add_type("__CallableIterator", type(iter((lambda: None), None)))
+    add_type("__BuiltinMethodDescriptor__", type(object.__hash__))
+    add_type("__BuiltinFunction__", type(abs))
+    add_type("__Generator__", type((_ for _ in [])))
+    add_type("__Property__", property)
+    add_type("__ClassMethod__", classmethod)
+    add_type("__StaticMethod__", staticmethod)
+    add_type("__Ellipsis__", type(Ellipsis))
+    add_type("__TupleIterator__", type(iter(())))
+    add_type("__ListIterator__", type(iter([])))
+    add_type("__DictKeys__", type({}.keys()))
+    add_type("__DictValues__", type({}.values()))
+    add_type("__DictItems__", type({}.items()))
+    add_type("__SetIterator__", type(iter(set())))
+    add_type("__CallableIterator__", type(iter((lambda: None), None)))
 
     # Also write out the builtin module names here so that we cache them
     try:

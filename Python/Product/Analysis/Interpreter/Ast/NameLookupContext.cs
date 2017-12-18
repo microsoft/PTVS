@@ -391,12 +391,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Type);
             }
 
-            if (value is IPythonFunction) {
+            IPythonFunction f;
+            if ((f = value as IPythonFunction ?? (value as IPythonBoundFunction)?.Function) != null) {
+                if (f.IsStatic) {
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.StaticMethod);
+                } else if (f.IsClassMethod) {
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.ClassMethod);
+                }
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
             }
 
-            if (value is IPythonBoundFunction) {
-                return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
+            if (value is IBuiltinProperty) {
+                return Interpreter.GetBuiltinType(BuiltinTypeId.Property);
             }
 
             if (value is IPythonModule) {

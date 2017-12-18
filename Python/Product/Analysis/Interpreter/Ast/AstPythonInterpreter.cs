@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             lock (_builtinTypes) {
                 if (!_builtinTypes.TryGetValue(id, out res)) {
                     var bm = ImportModule(BuiltinModuleName) as AstBuiltinsPythonModule;
-                    res = bm?.GetAnyMember($"__{id}") as IPythonType;
+                    res = bm?.GetAnyMember($"__{id}__") as IPythonType;
                     if (res == null) {
                         var name = id.GetTypeName(_factory.Configuration.Version);
                         if (string.IsNullOrEmpty(name)) {

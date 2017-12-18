@@ -86,7 +86,7 @@ namespace TestUtilities.Python {
             var editorServices = CreatePythonEditorServices(serviceProvider, serviceProvider.ComponentModel);
             serviceProvider.ComponentModel.AddExtension(() => editorServices);
 
-            var analysisEntryServiceCreator = new Lazy<AnalysisEntryService>(() => new AnalysisEntryService(editorServices));
+            var analysisEntryServiceCreator = new Lazy<AnalysisEntryService>(() => new AnalysisEntryService(new Lazy<PythonEditorServices>(() => editorServices)));
             serviceProvider.ComponentModel.AddExtension<IAnalysisEntryService>(() => analysisEntryServiceCreator.Value);
             serviceProvider.ComponentModel.AddExtension(() => analysisEntryServiceCreator.Value);
 
@@ -111,7 +111,7 @@ namespace TestUtilities.Python {
         }
 
         private static PythonEditorServices CreatePythonEditorServices(IServiceContainer site, MockComponentModel model) {
-            var services = new PythonEditorServices(site);
+            var services = new PythonEditorServices(site, model);
 
             // We don't have a full composition service availabe, to this code emulates
             // ComponentModel.DefaultCompositionService.SatisfyImportsOnce(services)

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
@@ -105,6 +106,12 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                         vsPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
                     }
                     vsPath = Path.Combine(vsPath, "Microsoft Visual Studio", AssemblyVersionInfo.VSVersionSuffix);
+                    foreach (var sku in new[] { "Enterprise", "Professional", "Community" }) {
+                        if (Directory.Exists(Path.Combine(vsPath, sku))) {
+                            vsPath = Path.Combine(vsPath, sku);
+                            break;
+                        }
+                    }
                 }
                 if (Directory.Exists(vsPath)) {
                     var msbuildPath = Path.Combine(vsPath, "MSBuild");
@@ -482,9 +489,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         private CompositionContainer CreateCompositionContainer() {
             var container = new CompositionContainer(CachedInfo.Catalog);
-            container.ComposeExportedValue<MockVs>(this);
-            var batch = new CompositionBatch();
 
+            var batch = new CompositionBatch();
+            batch.AddExportedValue(this);
+            batch.AddExportedValue(typeof(SComponentModel).FullName, this);
             container.Compose(batch);
 
             return container;
@@ -502,6 +510,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 var _excludedAssemblies = new HashSet<string>(new string[] {
                     "Microsoft.VisualStudio.Text.Internal.dll",
                     "Microsoft.VisualStudio.Utilities.dll",
+                    "Microsoft.VisualStudio.Validation.dll",
                     "Microsoft.VisualStudio.Workspace.dll",
                     "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll"
                 }, StringComparer.OrdinalIgnoreCase);
@@ -1031,5 +1040,18 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public void OnDispose(Action action) {
 
         }
+    }
+
+    [Export(typeof(SComponentModel))]
+    class MockComponentModelWrapper : SComponentModel, IComponentModel {
+        [Import(typeof(MockVs))]
+        private IComponentModel _mockVs = null;
+
+        public ComposablePartCatalog DefaultCatalog => _mockVs.DefaultCatalog;
+        public ExportProvider DefaultExportProvider => _mockVs.DefaultExportProvider;
+        public ICompositionService DefaultCompositionService => _mockVs.DefaultCompositionService;
+        public ComposablePartCatalog GetCatalog(string catalogName) => _mockVs.GetCatalog(catalogName);
+        public IEnumerable<T> GetExtensions<T>() where T : class => _mockVs.GetExtensions<T>();
+        public T GetService<T>() where T : class => _mockVs.GetService<T>();
     }
 }
