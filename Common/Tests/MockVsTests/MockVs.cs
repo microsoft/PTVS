@@ -492,7 +492,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             var batch = new CompositionBatch();
             batch.AddExportedValue(this);
-            batch.AddExportedValue(typeof(SComponentModel).FullName, this);
             container.Compose(batch);
 
             return container;
@@ -1040,18 +1039,5 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public void OnDispose(Action action) {
 
         }
-    }
-
-    [Export(typeof(SComponentModel))]
-    class MockComponentModelWrapper : SComponentModel, IComponentModel {
-        [Import(typeof(MockVs))]
-        private IComponentModel _mockVs = null;
-
-        public ComposablePartCatalog DefaultCatalog => _mockVs.DefaultCatalog;
-        public ExportProvider DefaultExportProvider => _mockVs.DefaultExportProvider;
-        public ICompositionService DefaultCompositionService => _mockVs.DefaultCompositionService;
-        public ComposablePartCatalog GetCatalog(string catalogName) => _mockVs.GetCatalog(catalogName);
-        public IEnumerable<T> GetExtensions<T>() where T : class => _mockVs.GetExtensions<T>();
-        public T GetService<T>() where T : class => _mockVs.GetService<T>();
     }
 }

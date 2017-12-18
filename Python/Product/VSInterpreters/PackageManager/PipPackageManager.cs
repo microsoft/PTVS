@@ -594,11 +594,11 @@ namespace Microsoft.PythonTools.Interpreter {
         private async Task CreateLibraryWatchers() {
             Debug.Assert(_libWatchers != null, "Should not create watchers when suppressed");
 
-            IList<string> paths = null;
+            IReadOnlyList<string> paths = null;
             string cachePath = null;
 
             if (_factory is Ast.AstPythonInterpreterFactory astFactory) {
-                paths = astFactory.GetSearchPaths().ToArray();
+                paths = await astFactory.GetSearchPathsAsync();
             } else if (_factory is LegacyDB.PythonInterpreterFactoryWithDatabase dbFactory) {
                 cachePath = PathUtils.GetAbsoluteFilePath(dbFactory.DatabasePath, "database.path");
             }

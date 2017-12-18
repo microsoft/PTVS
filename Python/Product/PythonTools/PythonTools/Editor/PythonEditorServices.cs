@@ -50,12 +50,9 @@ namespace Microsoft.PythonTools.Editor {
     [Export]
     sealed class PythonEditorServices {
         [ImportingConstructor]
-        public PythonEditorServices(
-            [Import(typeof(SVsServiceProvider))] IServiceProvider site,
-            [Import(typeof(SComponentModel))] IComponentModel model
-        ) {
+        public PythonEditorServices([Import(typeof(SVsServiceProvider))] IServiceProvider site) {
             Site = site;
-            ComponentModel = model;
+            _componentModel = new Lazy<IComponentModel>(() => site.GetComponentModel());
             _errorTaskProvider = new Lazy<ErrorTaskProvider>(CreateTaskProvider<ErrorTaskProvider>);
             _commentTaskProvider = new Lazy<CommentTaskProvider>(CreateTaskProvider<CommentTaskProvider>);
             _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateSquiggleProvider<UnresolvedImportSquiggleProvider>);
@@ -87,7 +84,8 @@ namespace Microsoft.PythonTools.Editor {
             return PythonTextBufferInfo.ForBuffer(this, textBuffer);
         }
 
-        public IComponentModel ComponentModel { get; }
+        private readonly Lazy<IComponentModel> _componentModel;
+        public IComponentModel ComponentModel => _componentModel.Value;
 
         [Import]
         public IClassificationTypeRegistryService ClassificationTypeRegistryService;

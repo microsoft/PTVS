@@ -236,8 +236,6 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         }
 
         protected virtual void GenerateDatabase(PythonTypeDatabaseCreationRequest request, Action<int> onExit = null) {
-            // Use the NoPackageManager instance so that we get a
-            // valid disposable object while we are generating.
             var generating = _generating = new object();
 
             PythonTypeDatabase.GenerateAsync(request).ContinueWith(t => {

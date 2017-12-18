@@ -22,6 +22,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -30,7 +31,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
     public class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
         private readonly string _databasePath, _searchPathCachePath;
         private readonly object _searchPathsLock = new object();
-        private string[] _searchPaths;
+        private IReadOnlyList<string> _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
 
         private bool _disposed;
@@ -305,26 +306,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         #endregion
 
-        internal IReadOnlyDictionary<string, string> GetImportableModules() {
+        internal async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync() {
             var spp = _searchPathPackages;
             if (spp != null) {
                 return spp;
             }
-            var sp = GetSearchPaths();
+
+            var sp = await GetSearchPathsAsync();
             if (sp == null) {
                 return null;
             }
 
+            var packageDict = await GetImportableModulesAsync(sp).ConfigureAwait(false);
+            if (!packageDict.Any()) {
+                return null;
+            }
+
             lock (_searchPathsLock) {
-                spp = _searchPathPackages;
-                if (spp != null) {
-                    return spp;
-                }
-
-                var packageDict = GetImportableModules(sp);
-
-                if (!packageDict.Any()) {
-                    return null;
+                if (_searchPathPackages != null) {
+                    return _searchPathPackages;
                 }
 
                 _searchPathPackages = packageDict;
@@ -332,7 +332,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        internal static IReadOnlyDictionary<string, string> GetImportableModules(IEnumerable<string> searchPaths) {
+        internal static async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync(IEnumerable<string> searchPaths) {
             var packageDict = new Dictionary<string, string>();
 
             foreach (var searchPath in searchPaths.MaybeEnumerate()) {
@@ -340,7 +340,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (File.Exists(searchPath)) {
                     packages = GetPackagesFromZipFile(searchPath);
                 } else if (Directory.Exists(searchPath)) {
-                    packages = GetPackagesFromDirectory(searchPath);
+                    packages = await Task.Run(() => GetPackagesFromDirectory(searchPath)).ConfigureAwait(false);
                 }
                 foreach (var package in packages.MaybeEnumerate()) {
                     packageDict[package] = searchPath;
@@ -376,32 +376,32 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        protected virtual IEnumerable<string> GetCurrentSearchPaths() {
+        protected virtual async Task<IReadOnlyList<string>> GetCurrentSearchPathsAsync() {
             if (Configuration.SearchPaths.Any()) {
                 return Configuration.SearchPaths;
             }
 
             if (!File.Exists(Configuration.InterpreterPath)) {
-                return Enumerable.Empty<string>();
+                return Array.Empty<string>();
             }
 
             try {
-                return PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath)
-                    .WaitAndUnwrapExceptions()
-                    .MaybeEnumerate()
-                    .Select(p => p.Path);
+                var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath).ConfigureAwait(false);
+                return paths.MaybeEnumerate().Select(p => p.Path).ToArray();
             } catch (InvalidOperationException) {
-                return Enumerable.Empty<string>();
+                return Array.Empty<string>();
             }
         }
 
-        public IEnumerable<string> GetSearchPaths() {
+        public async Task<IReadOnlyList<string>> GetSearchPathsAsync() {
             var sp = _searchPaths;
             if (sp == null) {
+                sp = await GetCurrentSearchPathsAsync().ConfigureAwait(false);
                 lock (_searchPathsLock) {
-                    sp = _searchPaths;
-                    if (sp == null) {
-                        _searchPaths = sp = GetCurrentSearchPaths().MaybeEnumerate().ToArray();
+                    if (_searchPaths == null) {
+                        _searchPaths = sp;
+                    } else {
+                        sp = _searchPaths;
                     }
                 }
                 Debug.Assert(sp != null, "Should have search paths");
@@ -410,8 +410,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return sp;
         }
 
-        private ModulePath FindModule(string filePath) {
-            var sp = GetSearchPaths();
+        private async Task<ModulePath> FindModuleAsync(string filePath) {
+            var sp = await GetSearchPathsAsync();
 
             string bestLibraryPath = "";
 
@@ -427,11 +427,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return mp;
         }
 
-        public static ModulePath FindModule(IPythonInterpreterFactory factory, string filePath) {
+        public static async Task<ModulePath> FindModuleAsync(IPythonInterpreterFactory factory, string filePath) {
             try {
                 var apif = factory as AstPythonInterpreterFactory;
                 if (apif != null) {
-                    return apif.FindModule(filePath);
+                    return await apif.FindModuleAsync(filePath);
                 }
 
                 return ModulePath.FromFullPath(filePath);

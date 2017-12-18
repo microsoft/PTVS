@@ -20,11 +20,15 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
+    /// <summary>
+    /// Implemented by objects that can manage packages. Initially, these
+    /// object should not trigger any events or require disposal until the
+    /// <see cref="EnableNotifications"/> function is called. Package
+    /// managers are assumed to be very cheap to create.
+    /// </summary>
     public interface IPackageManager {
         /// <summary>
-        /// Returns the interpreter factory associated with this manager, or
-        /// <c>null</c> if <see cref="SetInterpreterFactory"/> has not been
-        /// called.
+        /// Returns the interpreter factory associated with this manager.
         /// </summary>
         IPythonInterpreterFactory Factory { get; }
 
@@ -130,13 +134,24 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler InstalledFilesChanged;
 
         /// <summary>
-        /// Starts producing notifications from the package manager.
+        /// Starts producing notifications from the package manager. After
+        /// calling this function, the package manager instance should be
+        /// retained until after <see cref="DisableNotifications"/> or
+        /// <c>Dispose</c> (if implemented) is called.
         /// </summary>
+        /// <remarks>
+        /// Implementers should avoid doing anything that may requires
+        /// disposal until this function is called.
+        /// </remarks>
         void EnableNotifications();
 
         /// <summary>
         /// Stops producing notifications from the package manager.
         /// </summary>
+        /// <remarks>
+        /// If a package manager is disposable, it should be equivalent to
+        /// calling this function.
+        /// </remarks>
         void DisableNotifications();
 
         /// <summary>

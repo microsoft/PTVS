@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             if (innerDatabase != null) {
                 _sharedState = new SharedDatabaseState(innerDatabase._sharedState);
             } else {
-                _sharedState = new SharedDatabaseState(_factory.Configuration.Version);
+                _sharedState = new SharedDatabaseState(_factory?.Configuration.Version ?? new Version());
             }
 
             if (databaseDirectories != null) {
@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         ) {
             _factory = factory;
             _sharedState = new SharedDatabaseState(
-                factory.Configuration.Version,
+                factory?.Configuration.Version ?? new Version(),
                 databaseDirectory,
                 defaultDatabase: isDefaultDatabase
             );
@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         /// </summary>
         public Version LanguageVersion {
             get {
-                return _factory.Configuration.Version;
+                return _factory?.Configuration.Version ?? new Version();
             }
         }
 
@@ -161,6 +161,9 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
             ModulePath moduleName,
             CancellationToken cancellationToken = default(CancellationToken)
         ) {
+            if (_factory == null) {
+                return;
+            }
             var loader = new ExtensionModuleLoader(
                 this,
                 _factory,
@@ -195,7 +198,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
 
             public ExtensionModuleLoader(PythonTypeDatabase typeDb, IPythonInterpreterFactory factory, ModulePath moduleName, CancellationToken cancel) {
                 _typeDb = typeDb;
-                _factory = factory;
+                _factory = factory ?? throw new ArgumentNullException(nameof(factory));
                 _moduleName = moduleName;
                 _cancel = cancel;
             }

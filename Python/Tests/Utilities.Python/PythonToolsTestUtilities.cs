@@ -111,7 +111,7 @@ namespace TestUtilities.Python {
         }
 
         private static PythonEditorServices CreatePythonEditorServices(IServiceContainer site, MockComponentModel model) {
-            var services = new PythonEditorServices(site, model);
+            var services = new PythonEditorServices(site);
 
             // We don't have a full composition service availabe, to this code emulates
             // ComponentModel.DefaultCompositionService.SatisfyImportsOnce(services)

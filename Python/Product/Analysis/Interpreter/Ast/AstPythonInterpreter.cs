@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -114,12 +115,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return res;
         }
 
-        private IReadOnlyDictionary<string, string> GetUserSearchPathPackages() {
+        private async Task<IReadOnlyDictionary<string, string>> GetUserSearchPathPackagesAsync() {
             var ussp = _userSearchPathPackages;
             if (ussp == null) {
+                IReadOnlyList<string> usp;
                 lock (_userSearchPathsLock) {
-                    if (ussp == null && _userSearchPaths != null && _userSearchPaths.Any()) {
-                        ussp = AstPythonInterpreterFactory.GetImportableModules(_userSearchPaths);
+                    usp = _userSearchPaths;
+                    ussp = _userSearchPathPackages;
+                }
+                if (ussp != null || usp == null || !usp.Any()) {
+                    return ussp;
+                }
+
+                ussp = await AstPythonInterpreterFactory.GetImportableModulesAsync(usp);
+                lock (_userSearchPathsLock) {
+                    if (_userSearchPathPackages == null) {
+                        _userSearchPathPackages = ussp;
+                    } else {
+                        ussp = _userSearchPathPackages;
                     }
                 }
             }
@@ -127,8 +140,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IList<string> GetModuleNames() {
-            var ussp = GetUserSearchPathPackages();
-            var ssp = _factory.GetImportableModules();
+            var ussp = GetUserSearchPathPackagesAsync().WaitAndUnwrapExceptions();
+            var ssp = _factory.GetImportableModulesAsync().WaitAndUnwrapExceptions();
             var bmn = _builtinModuleNames;
 
             IEnumerable<string> names = null;
@@ -257,7 +270,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             // Do normal searches
-            mod = ImportFromSearchPaths(name) ?? ImportFromBuiltins(name);
+            mod = ImportFromSearchPathsAsync(name).WaitAndUnwrapExceptions() ?? ImportFromBuiltins(name);
 
             // Replace our sentinel, or if we raced, get the current
             // value and abandon the one we just created.
@@ -293,8 +306,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        private IPythonModule ImportFromSearchPaths(string name) {
-            var mmp = FindModuleInSearchPath(_userSearchPaths, GetUserSearchPathPackages(), name);
+        private async Task<IPythonModule> ImportFromSearchPathsAsync(string name) {
+            var mmp = FindModuleInSearchPath(
+                _userSearchPaths,
+                await GetUserSearchPathPackagesAsync(),
+                name
+            );
 
             if (mmp.HasValue) {
                 lock (_userSearchPathsLock) {
@@ -304,7 +321,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     _userSearchPathImported.Add(name);
                 }
             } else {
-                mmp = FindModuleInSearchPath(_factory.GetSearchPaths(), _factory.GetImportableModules(), name);
+                mmp = FindModuleInSearchPath(
+                    await _factory.GetSearchPathsAsync(),
+                    await _factory.GetImportableModulesAsync(),
+                    name
+                );
             }
 
             if (!mmp.HasValue) {
@@ -376,8 +397,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IEnumerable<string> GetModulesNamed(string name) {
-            var usp = GetUserSearchPathPackages();
-            var ssp = _factory.GetImportableModules();
+            var usp = GetUserSearchPathPackagesAsync().WaitAndUnwrapExceptions();
+            var ssp = _factory.GetImportableModulesAsync().WaitAndUnwrapExceptions();
 
             var dotName = "." + name;
 
