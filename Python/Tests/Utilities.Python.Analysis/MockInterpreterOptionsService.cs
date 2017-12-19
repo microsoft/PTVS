@@ -28,9 +28,12 @@ namespace TestUtilities.Python {
         readonly IPythonInterpreterFactory _noInterpretersValue;
         IPythonInterpreterFactory _defaultInterpreter;
 
+        readonly Dictionary<IPythonInterpreterFactory, IReadOnlyList<IPackageManager>> _packageManagers;
+
         public MockInterpreterOptionsService() {
             _providers = new List<IPythonInterpreterFactoryProvider>();
             _noInterpretersValue = new MockPythonInterpreterFactory(new InterpreterConfiguration("2.7", "No Interpreters", version: new Version(2, 7)));
+            _packageManagers = new Dictionary<IPythonInterpreterFactory, IReadOnlyList<IPackageManager>>();
         }
 
         public void AddProvider(IPythonInterpreterFactoryProvider provider) {
@@ -188,6 +191,18 @@ namespace TestUtilities.Python {
             var f = (ICustomInterpreterSerialization)((factory as MockPythonInterpreterFactory) ?? new MockPythonInterpreterFactory(factory.Configuration));
             if (!f.GetSerializationInfo(out assembly, out typeName, out properties)) {
                 throw new InvalidOperationException($"Failed to serialize {factory.Configuration.Id}");
+            }
+        }
+
+        public void AddPackageManagers(IPythonInterpreterFactory factory, IReadOnlyList<IPackageManager> packageManagers) {
+            _packageManagers[factory] = packageManagers;
+        }
+
+        public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
+            try {
+                return _packageManagers[factory];
+            } catch (KeyNotFoundException) {
+                return Enumerable.Empty<IPackageManager>();
             }
         }
     }

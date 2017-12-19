@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;

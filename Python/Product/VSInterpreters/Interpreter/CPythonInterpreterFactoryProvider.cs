@@ -246,15 +246,24 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
+            if (!ExperimentalOptions.NoDatabaseFactory) {
+                // Use the database-backed factory
+                var fact = new LegacyDB.CPythonInterpreterFactory(
+                    info.Configuration,
+                    new InterpreterFactoryCreationOptions {
+                        WatchFileSystem = true,
+                        DatabasePath = DatabasePathSelector.CalculateGlobalDatabasePath(info.Configuration, LegacyDB.PythonTypeDatabase.FormatVersion)
+                    }
+                );
+                fact.BeginRefreshIsCurrent();
+                return fact;
+            }
+
             return InterpreterFactoryCreator.CreateInterpreterFactory(
                 info.Configuration,
                 new InterpreterFactoryCreationOptions {
-                    PackageManager = CondaUtils.HasConda(info.Configuration.PrefixPath) ? BuiltInPackageManagers.Conda : BuiltInPackageManagers.Pip,
                     WatchFileSystem = true,
-                    NoDatabase = ExperimentalOptions.NoDatabaseFactory,
-                    DatabasePath = ExperimentalOptions.NoDatabaseFactory ?
-                        DatabasePathSelector.CalculateVSLocalDatabasePath(_site, info.Configuration, 1) :
-                        DatabasePathSelector.CalculateGlobalDatabasePath(info.Configuration, PythonTypeDatabase.FormatVersion)
+                    DatabasePath = DatabasePathSelector.CalculateVSLocalDatabasePath(_site, info.Configuration, 1)
                 }
             );
         }

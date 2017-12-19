@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -146,9 +147,8 @@ namespace DjangoTests {
                 "TestData\\DjangoDB needs updating."
             );
 
-            var testFact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+            var testFact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(
                 new Version(2, 7),
-                "Django Test Interpreter",
                 TestData.GetPath("CompletionDB"),
                 djangoDbPath
             );

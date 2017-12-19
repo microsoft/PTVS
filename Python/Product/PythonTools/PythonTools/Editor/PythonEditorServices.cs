@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Editor {
         [ImportingConstructor]
         public PythonEditorServices([Import(typeof(SVsServiceProvider))] IServiceProvider site) {
             Site = site;
-            ComponentModel = Site.GetComponentModel();
+            _componentModel = new Lazy<IComponentModel>(() => site.GetComponentModel());
             _errorTaskProvider = new Lazy<ErrorTaskProvider>(CreateTaskProvider<ErrorTaskProvider>);
             _commentTaskProvider = new Lazy<CommentTaskProvider>(CreateTaskProvider<CommentTaskProvider>);
             _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateSquiggleProvider<UnresolvedImportSquiggleProvider>);
@@ -84,7 +84,8 @@ namespace Microsoft.PythonTools.Editor {
             return PythonTextBufferInfo.ForBuffer(this, textBuffer);
         }
 
-        public IComponentModel ComponentModel { get; }
+        private readonly Lazy<IComponentModel> _componentModel;
+        public IComponentModel ComponentModel => _componentModel.Value;
 
         [Import]
         public IClassificationTypeRegistryService ClassificationTypeRegistryService;
@@ -134,8 +135,9 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         public IGlyphService GlyphService = null;
 
-        [Import]
-        public IPatternMatcherFactory PatternMatcherFactory = null;
+        [Import(AllowDefault = true)]
+        private Lazy<IPatternMatcherFactory> _patternMatcherFactory = null;
+        public IPatternMatcherFactory PatternMatcherFactory => _patternMatcherFactory.Value;
 
         public IVsTextManager2 VsTextManager2 => (IVsTextManager2)Site.GetService(typeof(SVsTextManager));
 

@@ -181,27 +181,43 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public IMember GetMember(IModuleContext context, string name) {
             IMember member;
             lock (_members) {
-                if (!_members.TryGetValue(name, out member)) {
-                    switch (name) {
-                        case "__mro__":
-                            member = _members[name] = new AstPythonSequence(
-                                (context as IPythonInterpreter)?.GetBuiltinType(BuiltinTypeId.Tuple),
-                                DeclaringModule,
-                                Mro
-                            );
-                            break;
-                    }
+                if (_members.TryGetValue(name, out member)) {
+                    return member;
+                }
+
+                // Special case names that we want to add to our own _members dict
+                switch (name) {
+                    case "__mro__":
+                        member = _members[name] = new AstPythonSequence(
+                            (context as IPythonInterpreter)?.GetBuiltinType(BuiltinTypeId.Tuple),
+                            DeclaringModule,
+                            Mro
+                        );
+                        return member;
                 }
             }
-            return member;
+            foreach (var m in Mro.Skip(1)) {
+                member = m.GetMember(context, name);
+                if (member != null) {
+                    return member;
+                }
+            }
+            return null;
         }
 
         public IPythonFunction GetConstructors() => GetMember(null, "__init__") as IPythonFunction;
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
+            var names = new HashSet<string>();
             lock (_members) {
-                return _members.Keys.ToArray();
+                names.UnionWith(_members.Keys);
             }
+
+            foreach (var m in Mro.Skip(1)) {
+                names.UnionWith(m.GetMemberNames(moduleContext));
+            }
+
+            return names;
         }
     }
 }

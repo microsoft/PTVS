@@ -37,16 +37,11 @@ namespace Microsoft.PythonTools.Options {
         public InterpreterConfiguration Configuration { get; private set; }
 
         public Guid Id => Guid.Empty;
-        public IPackageManager PackageManager => null;
 
         public IPythonInterpreter CreateInterpreter() {
             throw new NotSupportedException();
         }
 
-        public IPythonInterpreterFactoryProvider Provider {
-            get {
-                throw new NotSupportedException();
-            }
-        }
+        public void NotifyImportNamesChanged() { }
     }
 }

@@ -298,7 +298,6 @@ namespace Microsoft.PythonTools.Ipc.Json {
         }
 
         private void ProcessError(JObject packet) {
-            var name = packet["event"].ToObject<string>();
             var eventBody = packet["body"];
             string message;
             try {
@@ -307,7 +306,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 message = e.Message;
             }
             try {
-                ErrorReceived?.Invoke(this, new ErrorReceivedEventArgs(name, message));
+                ErrorReceived?.Invoke(this, new ErrorReceivedEventArgs(message));
             } catch (Exception e) {
                 // TODO: Report unhandled exception?
                 Debug.Fail(e.Message);

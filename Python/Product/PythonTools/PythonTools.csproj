@@ -78,7 +78,8 @@
     </ProjectReference>
     <ProjectReference Include="..\Analyzer\Analyzer.csproj">
       <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
-      <Name>Analyzer</Name>
+      <Name>Microsoft.PythonTools.Analyzer</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
@@ -389,7 +390,6 @@
     <Compile Include="PythonTools\Project\AddVirtualEnvironmentOperation.cs" />
     <Compile Include="PythonTools\Project\AnalyzerChangingEventArgs.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />
-    <Compile Include="PythonTools\Project\Conda.cs" />
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
@@ -475,7 +475,6 @@
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
     <Compile Include="PythonTools\Intellisense\ExceptionCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />

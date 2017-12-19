@@ -122,6 +122,10 @@
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Analyzer\Analyzer.csproj">
+      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
+      <Name>Microsoft.PythonTools.Analyzer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
       <Name>Microsoft.PythonTools.EnvironmentsList</Name>

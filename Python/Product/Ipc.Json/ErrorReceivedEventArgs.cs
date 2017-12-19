@@ -18,16 +18,13 @@ using System;
 
 namespace Microsoft.PythonTools.Ipc.Json {
     public sealed class ErrorReceivedEventArgs : EventArgs {
-        private readonly string _name;
         private readonly string _message;
 
-        public ErrorReceivedEventArgs(string name, string message) {
-            _name = name;
+        public ErrorReceivedEventArgs(string message) {
             _message = message;
         }
 
         public string Message => _message;
-        public string Name => _name;
     }
 }
 

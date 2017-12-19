@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    class TestPackageManagerUI : IPackageManagerUI {
+    public class TestPackageManagerUI : IPackageManagerUI {
         private static string RemoveNewline(string text) {
             if (string.IsNullOrEmpty(text)) {
                 return string.Empty;

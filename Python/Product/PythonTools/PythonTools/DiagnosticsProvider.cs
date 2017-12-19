@@ -235,7 +235,7 @@ namespace Microsoft.PythonTools {
             }
             writer.WriteLine();
 
-            string globalAnalysisLog = PythonTypeDatabase.GlobalLogFilename;
+            string globalAnalysisLog = Interpreter.LegacyDB.PythonTypeDatabase.GlobalLogFilename;
             if (File.Exists(globalAnalysisLog)) {
                 writer.WriteLine("Global Analysis:");
                 try {

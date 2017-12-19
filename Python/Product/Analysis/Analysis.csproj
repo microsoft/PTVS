@@ -59,7 +59,11 @@
     <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisLogWriter.cs" />
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
+    <Compile Include="CompletionOptions.cs" />
     <Compile Include="ExpressionFinder.cs" />
+    <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
+    <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />
@@ -93,10 +97,7 @@
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
-    <Compile Include="Interpreter\IPackageManager.cs" />
-    <Compile Include="Interpreter\IPackageManagerUI.cs" />
     <Compile Include="Interpreter\NoInterpretersFactory.cs" />
-    <Compile Include="Interpreter\NoPackageManager.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PackageVersion.cs" />
     <Compile Include="Parsing\Ast\TypeAnnotation.cs" />
@@ -117,9 +118,6 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="IAggregateableProjectEntry.cs" />
     <Compile Include="Projects\IAnalysisExtension.cs" />
-    <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
-    <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
-    <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
     <Compile Include="Interpreter\IInterpreterLog.cs" />
     <Compile Include="Interpreter\IInterpreterRegistryService.cs" />
     <Compile Include="Interpreter\InMemoryProject.cs" />
@@ -130,7 +128,6 @@
     <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />
     <Compile Include="Interpreter\IPythonSequenceType.cs" />
     <Compile Include="Interpreter\LaunchConfiguration.cs" />
-    <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
     <Compile Include="Interpreter\IProjectContextProvider.cs" />
@@ -145,10 +142,8 @@
     <Compile Include="IdDispenser.cs" />
     <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />
-    <Compile Include="Interpreter\ITypeDatabaseReader.cs" />
     <Compile Include="Interpreter\ProjectReference.cs" />
     <Compile Include="Interpreter\ProjectReferenceKind.cs" />
-    <Compile Include="Interpreter\SharedDatabaseState.cs" />
     <Compile Include="ModuleTable.cs" />
     <Compile Include="AnalysisSet.cs" />
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
@@ -171,9 +166,7 @@
     <Compile Include="GetMemberOptions.cs" />
     <Compile Include="ILocationResolver.cs" />
     <Compile Include="Interpreter\ILocatedMember.cs" />
-    <Compile Include="Interpreter\Default\CPythonBuiltinModule.cs" />
     <Compile Include="Interpreter\IBuiltinPythonModule.cs" />
-    <Compile Include="Interpreter\PythonTypeDatabaseCreationRequest.cs" />
     <Compile Include="Parsing\AsciiString.cs" />
     <Compile Include="Parsing\Ast\DecoratorStatement.cs" />
     <Compile Include="Parsing\Ast\ErrorStatement.cs" />
@@ -185,7 +178,6 @@
     <Compile Include="Parsing\TokenizerOptions.cs" />
     <Compile Include="SetOfOne.cs" />
     <Compile Include="Deque.cs" />
-    <Compile Include="Interpreter\Default\CPythonMultipleMembers.cs" />
     <Compile Include="Interpreter\IDotNetPythonInterpreter.cs" />
     <Compile Include="Interpreter\IPythonMultipleMembers.cs" />
     <Compile Include="NoneType.cs" />
@@ -211,23 +203,11 @@
     <Compile Include="Values\TypingModuleInfo.cs" />
     <Compile Include="Values\TypingTypeInfo.cs" />
     <Compile Include="VariableDef.cs" />
-    <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
-    <Compile Include="Interpreter\Default\CPythonMethodDescriptor.cs" />
-    <Compile Include="Interpreter\Default\CPythonConstant.cs" />
-    <Compile Include="Interpreter\Default\CPythonInterpreter.cs" />
-    <Compile Include="Interpreter\PythonInterpreterFactoryWithDatabase.cs" />
-    <Compile Include="Interpreter\Default\CPythonModule.cs" />
-    <Compile Include="Interpreter\Default\CPythonParameterInfo.cs" />
-    <Compile Include="Interpreter\Default\CPythonProperty.cs" />
-    <Compile Include="Interpreter\Default\CPythonType.cs" />
-    <Compile Include="Interpreter\PythonTypeDatabase.cs" />
-    <Compile Include="Interpreter\GenerateDatabaseOptions.cs" />
     <Compile Include="Interpreter\IAdvancedPythonType.cs" />
     <Compile Include="Interpreter\IPythonFunction.cs" />
     <Compile Include="Interpreter\IPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\IPythonMethodDescriptor.cs" />
     <Compile Include="Interpreter\IBuiltinProperty.cs" />
-    <Compile Include="Interpreter\IPythonInterpreterFactoryWithDatabase.cs" />
     <Compile Include="Interpreter\IMember.cs" />
     <Compile Include="Interpreter\IMemberContainer.cs" />
     <Compile Include="Interpreter\IModuleContext.cs" />
@@ -394,7 +374,6 @@
     <Compile Include="Parsing\Ellipsis.cs" />
     <Compile Include="Parsing\Ast\AndExpression.cs" />
     <Compile Include="Interpreter\BuiltinTypeId.cs" />
-    <Compile Include="Interpreter\Default\CPythonFunction.cs" />
     <Compile Include="VariablesResult.cs" />
     <Compile Include="VariableType.cs" />
     <Compile Include="XamlAnalysis.cs" />
@@ -418,6 +397,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
+    <Content Include="regenerate.py" />
     <Content Include="scrape_module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -431,4 +411,40 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Target Name="_IncludePython3DB" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <Python3DB Include="$(IntermediateOutputPath)DefaultDB\v3\*.pyi" />
+      <Python3DB>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>DefaultDB\v3\%(Filename)%(Extension)</Link>
+        <VSIXSubPath>DefaultDB\v3</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Python3DB>
+      <Content Include="@(Python3DB)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_RegeneratePython3DB" Inputs="$(PackagePath)python\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v3\python.pyi" BeforeTargets="_IncludePython3DB">
+    <PropertyGroup>
+      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v3" "$(PackagesPath)python\tools\python.exe"</_RefreshCmd>
+    </PropertyGroup>
+    <Exec Command="$(_RefreshCmd)" />
+  </Target>
+  <Target Name="_IncludePython2DB" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <Python2DB Include="$(IntermediateOutputPath)DefaultDB\v2\*.pyi" />
+      <Python2DB>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>DefaultDB\v2\%(Filename)%(Extension)</Link>
+        <VSIXSubPath>DefaultDB\v2</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Python2DB>
+      <Content Include="@(Python2DB)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_RegeneratePython2DB" Inputs="$(PackagePath)python2.2.7.14\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v2\python.pyi" BeforeTargets="_IncludePython2DB">
+    <PropertyGroup>
+      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v2" "$(PackagesPath)python2.2.7.14\tools\python.exe"</_RefreshCmd>
+    </PropertyGroup>
+    <Exec Command="$(_RefreshCmd)" />
+  </Target>
 </Project>

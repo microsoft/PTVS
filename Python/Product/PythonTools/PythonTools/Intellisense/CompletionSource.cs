@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 IntersectMembers = pyService.AdvancedOptions.IntersectMembers,
                 HideAdvancedMembers = pyService.LangPrefs.HideAdvancedMembers,
                 FilterCompletions = pyService.AdvancedOptions.FilterCompletions,
-                SearchMode = pyService.AdvancedOptions.SearchMode
             };
 
             return options;

@@ -347,6 +347,21 @@ namespace PythonToolsUITests {
             AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "LaunchWorker.ps1", "ps.cmd", "readme.html");
         }
 
+        private static void InstallModule(PythonVisualStudioApp app, IPythonInterpreterFactory factory, string module) {
+            var pm = app.OptionsService.GetPackageManagers(factory).First();
+            pm.InstallAsync(new PackageSpec(module), new TestPackageManagerUI(), CancellationTokens.After60s).WaitAndUnwrapExceptions();
+        }
+
+        private static void UninstallModule(PythonVisualStudioApp app, IPythonInterpreterFactory factory, string module) {
+            var pm = app.OptionsService.GetPackageManagers(factory).First();
+            pm.UninstallAsync(new PackageSpec(module), new TestPackageManagerUI(), CancellationTokens.After60s).WaitAndUnwrapExceptions();
+        }
+
+        private static bool HasModule(PythonVisualStudioApp app, IPythonInterpreterFactory factory, string module) {
+            var pm = app.OptionsService.GetPackageManagers(factory).First();
+            return pm.GetInstalledPackageAsync(new PackageSpec(module), CancellationTokens.After60s).WaitAndUnwrapExceptions().IsValid;
+        }
+
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectCreateVirtualEnvOnNew(PythonVisualStudioApp app) {
@@ -380,18 +395,18 @@ namespace PythonToolsUITests {
             Assert.IsTrue(contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration), "Did not have virtualenv");
 
             for (int retries = 60; retries > 0; --retries) {
-                if (project.GetPythonProject().ActiveInterpreter.FindModules("flask").Any()) {
+                if (HasModule(app, project.GetPythonProject().ActiveInterpreter, "flask")) {
                     break;
                 }
                 Thread.Sleep(1000);
             }
-            AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("flask"), "flask");
+            Assert.IsTrue(HasModule(app, project.GetPythonProject().ActiveInterpreter, "flask"));
         }
 
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectInstallOnNew(PythonVisualStudioApp app) {
-            app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
+            UninstallModule(app, app.OptionsService.DefaultInterpreter, "bottle");
 
             var t = Task.Run(() => app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
@@ -411,14 +426,14 @@ namespace PythonToolsUITests {
             Assert.AreSame(app.OptionsService.DefaultInterpreter, project.GetPythonProject().ActiveInterpreter);
 
             for (int retries = 60; retries > 0; --retries) {
-                if (project.GetPythonProject().ActiveInterpreter.FindModules("bottle").Any()) {
+                if (HasModule(app, project.GetPythonProject().ActiveInterpreter, "bottle")) {
                     break;
                 }
                 Thread.Sleep(1000);
             }
-            AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("bottle"), "bottle");
+            Assert.IsTrue(HasModule(app, project.GetPythonProject().ActiveInterpreter, "bottle"));
 
-            app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
+            UninstallModule(app, app.OptionsService.DefaultInterpreter, "bottle");
         }
 
         private static void CloudProjectTest(PythonVisualStudioApp app, string roleType, bool openServiceDefinition) {
@@ -751,14 +766,9 @@ namespace PythonToolsUITests {
             }
         }
 
-        internal static void InstallWebFramework(VisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
-            var task = app.ServiceProvider.GetUIThread().InvokeTask(() => factory.PipInstallAsync(packageName));
-            try {
-                Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(3.0)), "Timed out waiting for install " + packageName);
-            } catch (AggregateException ex) {
-                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-            }
-            Assert.AreEqual(1, factory.FindModules(moduleName).Count);
+        internal static void InstallWebFramework(PythonVisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
+            InstallModule(app, factory, packageName);
+            Assert.IsTrue(HasModule(app, factory, moduleName));
         }
 
         #endregion

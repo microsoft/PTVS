@@ -115,6 +115,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true, true);
             ast.Walk(walker);
+            walker.Complete();
         }
 
         internal void AddChildModule(string name, IPythonModule module) {

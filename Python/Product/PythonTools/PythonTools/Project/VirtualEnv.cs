@@ -36,16 +36,18 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public static Task<bool> Install(IServiceProvider provider, IPythonInterpreterFactory factory) {
             var ui = new VsPackageManagerUI(provider);
+            var interpreterOpts = provider.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var pm = interpreterOpts?.GetPackageManagers(factory).FirstOrDefault(p => p.UniqueKey == "pip");
             if (factory.Configuration.Version < new Version(2, 5)) {
                 ui.OnErrorTextReceived(null, "Python versions earlier than 2.5 are not supported by PTVS.\n");
                 throw new OperationCanceledException();
-            } else if (factory.PackageManager == null) {
+            } else if (pm == null) {
                 ui.OnErrorTextReceived(null, Strings.PackageManagementNotSupported_Package.FormatUI("virtualenv"));
                 throw new OperationCanceledException();
             } else if (factory.Configuration.Version == new Version(2, 5)) {
-                return factory.PackageManager.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317970"), ui, CancellationToken.None);
+                return pm.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317970"), ui, CancellationToken.None);
             } else {
-                return factory.PackageManager.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317969"), ui, CancellationToken.None);
+                return pm.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317969"), ui, CancellationToken.None);
             }
         }
 
@@ -127,7 +129,8 @@ namespace Microsoft.PythonTools.Project {
 
             var cancel = CancellationToken.None;
             var ui = new VsPackageManagerUI(provider);
-            var pm = factory.PackageManager;
+            var interpreterOpts = provider.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var pm = interpreterOpts?.GetPackageManagers(factory).FirstOrDefault(p => p.UniqueKey == "pip");
             if (pm == null) {
                 throw new InvalidOperationException(Strings.PackageManagementNotSupported);
             }
@@ -138,8 +141,8 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var modules = await factory.FindModulesAsync("virtualenv", "venv");
-            bool hasVirtualEnv = modules.Contains("virtualenv") || modules.Contains("venv");
+            bool hasVirtualEnv = (await factory.HasModuleAsync("venv", interpreterOpts)) ||
+                (await factory.HasModuleAsync("virtualenv", interpreterOpts));
 
             if (!hasVirtualEnv) {
                 if (!await Install(provider, factory)) {

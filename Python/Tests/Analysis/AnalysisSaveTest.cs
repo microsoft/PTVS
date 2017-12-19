@@ -22,7 +22,7 @@ using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -470,7 +470,7 @@ x = unittest.skipIf(False)
         private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];
 
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+            var fact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(version.ToVersion());
             var interp = fact.CreateInterpreter();
 
             var dbFolder = TestData.GetTempPath();
@@ -484,6 +484,7 @@ x = unittest.skipIf(False)
             state.WaitForAnalysis();
 
             new SaveAnalysis().Save(state.Analyzer, dbFolder);
+            File.WriteAllText(Path.Combine(dbFolder, "database.ver"), PythonTypeDatabase.CurrentVersion.ToString());
 
             File.Copy(
                 Path.Combine(PythonTypeDatabase.BaselineDatabasePath, state.Analyzer._builtinName + ".idb"),
@@ -491,11 +492,7 @@ x = unittest.skipIf(False)
                 true
             );
 
-            var loadFactory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
-                version.ToVersion(),
-                null,
-                dbFolder
-            );
+            var loadFactory = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(version.ToVersion(), dbFolder);
             return new SaveLoadResult(CreateAnalyzer(loadFactory), state.CodeFolder);
         }
 

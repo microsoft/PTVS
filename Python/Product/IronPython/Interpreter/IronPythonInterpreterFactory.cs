@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {

@@ -91,8 +91,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 // Type promotion rules are applied 
-                if (lhsType == BuiltinTypeId.Unknown || lhsType > BuiltinTypeId.Complex || 
-                    rhsType == BuiltinTypeId.Unknown || rhsType > BuiltinTypeId.Complex) {
+                if (lhsType <= BuiltinTypeId.NoneType || lhsType > BuiltinTypeId.Complex || 
+                    rhsType <= BuiltinTypeId.NoneType || rhsType > BuiltinTypeId.Complex) {
                     // Non-numeric types require the reverse operation
                     res = res.Union(ns.ReverseBinaryOperation(node, unit, operation, lhs));
                 } else if (lhsType == BuiltinTypeId.Complex || rhsType == BuiltinTypeId.Complex) {

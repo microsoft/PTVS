@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             DefaultLookupOptions = LookupOptions.Normal;
 
             _unknownType = Interpreter.GetBuiltinType(BuiltinTypeId.Unknown) ??
-                new FallbackBuiltinPythonType(Ast.LanguageVersion, BuiltinTypeId.Unknown);
+                new FallbackBuiltinPythonType(new FallbackBuiltinModule(Ast.LanguageVersion), BuiltinTypeId.Unknown);
 
             _scopes = new Stack<Dictionary<string, IMember>>();
             _builtinModule = builtinModule == null ? new Lazy<IPythonModule>(ImportBuiltinModule) : new Lazy<IPythonModule>(() => builtinModule);
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         private IPythonModule ImportBuiltinModule() {
-            var modname = Ast.LanguageVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
+            var modname = BuiltinTypeId.Unknown.GetModuleName(Ast.LanguageVersion);
             var mod = Interpreter.ImportModule(modname);
             Debug.Assert(mod != null, "Failed to import " + modname);
             mod?.Imported(Context);
@@ -198,14 +198,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return null;
             }
 
-            if (expr.Name == Module.Name) {
-                return Module;
-            }
             IMember existing = LookupNameInScopes(expr.Name, options);
             if (existing != null) {
                 return existing;
             }
 
+            if (expr.Name == Module.Name) {
+                return Module;
+            }
             _log?.Log(TraceLevel.Verbose, "UnknownName", expr.Name);
             return new AstPythonConstant(_unknownType, GetLoc(expr));
         }
@@ -326,7 +326,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var m = GetValueFromExpression(expr.Target);
             if (m is IPythonType type) {
-                if (type == Interpreter.GetBuiltinType(BuiltinTypeId.Type) && expr.Args.Count >= 1) {
+                if (type.TypeId == BuiltinTypeId.Type && type == Interpreter.GetBuiltinType(BuiltinTypeId.Type) && expr.Args.Count >= 1) {
                     var aType = GetTypeFromValue(GetValueFromExpression(expr.Args[0].Expression));
                     if (aType != null) {
                         return aType;
@@ -391,12 +391,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Type);
             }
 
-            if (value is IPythonFunction) {
+            IPythonFunction f;
+            if ((f = value as IPythonFunction ?? (value as IPythonBoundFunction)?.Function) != null) {
+                if (f.IsStatic) {
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.StaticMethod);
+                } else if (f.IsClassMethod) {
+                    return Interpreter.GetBuiltinType(BuiltinTypeId.ClassMethod);
+                }
                 return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
             }
 
-            if (value is IPythonBoundFunction) {
-                return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
+            if (value is IBuiltinProperty) {
+                return Interpreter.GetBuiltinType(BuiltinTypeId.Property);
             }
 
             if (value is IPythonModule) {

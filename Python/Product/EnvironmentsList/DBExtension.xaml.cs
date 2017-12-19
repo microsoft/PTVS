@@ -28,8 +28,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     internal partial class DBExtension : UserControl {
@@ -349,19 +351,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 stdLibPaths.Add(Path.GetDirectoryName(_factory.Configuration.InterpreterPath));
 
                 var results = await Task.Run(() => {
-                    var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(_factory.DatabasePath);
-                    if (paths == null) {
-                        paths = PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(
-                            _factory.Configuration.InterpreterPath
-                        ).WaitAndUnwrapExceptions();
-                        try {
-                            PythonTypeDatabase.WriteDatabaseSearchPaths(_factory.DatabasePath, paths);
-                        } catch (Exception ex) {
-                            if (ex.IsCriticalException()) {
-                                throw;
-                            }
-                        }
-                    }
+                    var paths = PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, Path.Combine(_factory.DatabasePath, "database.path"))
+                        .WaitAndUnwrapExceptions();
 
                     var groups = PythonTypeDatabase.GetDatabaseExpectedModules(
                         _factory.Configuration.Version,

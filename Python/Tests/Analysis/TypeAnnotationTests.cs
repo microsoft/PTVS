@@ -117,7 +117,7 @@ namespace AnalysisTests {
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
-                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
             );
             analyzer.AddModule("test-module", @"from typing import *
 
@@ -175,7 +175,7 @@ dctv_s_i_item_1, dctv_s_i_item_2 = next(dctv_s_i_items)
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
-                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
             );
             analyzer.AddModule("test-module", @"from typing import *
 
@@ -209,7 +209,7 @@ call_iis_i_ret = call_iis_i()
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
-                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
             );
             analyzer.AddModule("test-module", @"from typing import *
 
@@ -230,7 +230,7 @@ n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
-                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
             );
             analyzer.AddModule("test-module", @"from typing import *
 

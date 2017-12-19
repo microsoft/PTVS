@@ -67,10 +67,9 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 }
             }
 
-            _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+            _factory = Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase.CreateFromDatabase(
                 version,
-                dbDir,
-                paths.ToArray()
+                new[] { dbDir }.Concat(paths).ToArray()
             );
             Path = dbDir;
             _interpreter = _factory.CreateInterpreter();

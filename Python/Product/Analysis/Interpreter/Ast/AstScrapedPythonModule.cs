@@ -81,7 +81,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         protected virtual List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
             var args = new List<string> { "-B", "-E" };
 
-            ModulePath mp = AstPythonInterpreterFactory.FindModule(factory, _filePath);
+            ModulePath mp = AstPythonInterpreterFactory.FindModuleAsync(factory, _filePath)
+                .WaitAndUnwrapExceptions();
             if (string.IsNullOrEmpty(mp.FullName)) {
                 return null;
             }
@@ -104,6 +105,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected virtual void PostWalk(PythonWalker walker) {
+            (walker as AstAnalysisWalker)?.Complete();
         }
 
         protected virtual Stream LoadCachedCode(AstPythonInterpreter interpreter) {

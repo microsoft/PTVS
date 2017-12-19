@@ -17,6 +17,7 @@
 extern alias analysis;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -24,6 +25,7 @@ using System.Threading.Tasks;
 using analysis::Microsoft.PythonTools.Interpreter;
 using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -117,7 +119,8 @@ mc.fn([])
             var entries = Enumerable.Range(0, 100)
                 .Select(i => {
                     var entry = state.AddModule(string.Format("mod{0:000}", i), string.Format("mod{0:000}.py", i));
-                    entry.ParseFormat(PythonLanguageVersion.V34, testCode, i + 1, PythonTypes[i % PythonTypes.Count]);
+                    using (var parser = Parser.CreateParser(new StringReader(testCode.FormatInvariant(i + 1, PythonTypes[i % PythonTypes.Count])), PythonLanguageVersion.V34))
+                        entry.UpdateTree(parser.ParseFile(), null);
                     return entry;
                 })
                 .ToList();
@@ -159,7 +162,8 @@ mc.fn([])
                         .ToList();
                     foreach (var t in shufEntries) {
                         var i = t.Item3;
-                        t.Item2.ParseFormat(PythonLanguageVersion.V34, testCode, i + 1, PythonTypes[i % PythonTypes.Count]);
+                        using (var parser = Parser.CreateParser(new StringReader(testCode.FormatInvariant(i + 1, PythonTypes[i % PythonTypes.Count])), PythonLanguageVersion.V34))
+                            t.Item2.UpdateTree(parser.ParseFile(), null);
                     }
                     Thread.Sleep(1000);
                 }

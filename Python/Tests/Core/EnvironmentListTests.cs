@@ -29,6 +29,7 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -937,8 +938,7 @@ namespace PythonToolsUITests {
                 )
             );
             if (usePipPackageManager) {
-                factory.PackageManager = new PipPackageManager(false);
-                factory.PackageManager.SetInterpreterFactory(factory);
+                service.AddPackageManagers(factory, new[] { new PipPackageManager(factory, null, 0) });
             }
             provider.AddFactory(factory);
             service.AddProvider(provider);
@@ -988,8 +988,7 @@ namespace PythonToolsUITests {
                     python.Version.ToVersion()
                 )
             );
-            factory.PackageManager = new CondaPackageManager(false);
-            factory.PackageManager.SetInterpreterFactory(factory);
+            service.AddPackageManagers(factory, new[] { new CondaPackageManager(factory, null) });
             provider.AddFactory(factory);
             service.AddProvider(provider);
             return service;
@@ -1022,11 +1021,17 @@ namespace PythonToolsUITests {
                         e.View.Extensions.Add(new DBExtensionProvider(withDb));
                     }
                 }
-                if (CreatePipExtension && e.View.Factory.PackageManager != null) {
-                    var pip = new PipExtensionProvider(e.View.Factory);
-                    pip.OutputTextReceived += (s, e2) => Console.Write("OUT: "+ e2.Data);
-                    pip.ErrorTextReceived += (s, e2) => Console.Write("ERR: " + e2.Data);
-                    e.View.Extensions.Add(pip);
+                if (CreatePipExtension) {
+                    var pm = Service.GetPackageManagers(e.View.Factory).FirstOrDefault();
+                    if (pm != null) {
+                        try {
+                            var pip = new PipExtensionProvider(e.View.Factory, pm);
+                            pip.OutputTextReceived += (s, e2) => Console.Write("OUT: " + e2.Data);
+                            pip.ErrorTextReceived += (s, e2) => Console.Write("ERR: " + e2.Data);
+                            e.View.Extensions.Add(pip);
+                        } catch (NotSupportedException) {
+                        }
+                    }
                 }
             }
 

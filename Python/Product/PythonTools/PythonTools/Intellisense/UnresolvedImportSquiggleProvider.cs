@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         VsProjectAnalyzer.UnresolvedImportMoniker,
                         missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
                             Services.Site,
-                            entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
+                            entry.Analyzer.InterpreterFactory,
                             t.name,
                             new SourceSpan(
                                 new SourceLocation(t.startLine, t.startColumn),

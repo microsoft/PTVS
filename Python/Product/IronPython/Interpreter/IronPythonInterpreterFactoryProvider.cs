@@ -22,6 +22,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
@@ -160,8 +161,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 lock (this) {
                     if (_interpreterX64 == null) {
                         var config = GetConfiguration(InterpreterArchitecture.x64);
-                        var opts = GetCreationOptions(_site, config);
-                        _interpreterX64 = opts.NoDatabase ?
+                        var opts = GetCreationOptions(_site, config, out var noDb);
+                        _interpreterX64 = noDb ?
                             (IPythonInterpreterFactory)new IronPythonAstInterpreterFactory(config, opts) :
                             new IronPythonInterpreterFactory(config, opts);
                     }
@@ -174,8 +175,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 lock (this) {
                     if (_interpreter == null) {
                         var config = GetConfiguration(InterpreterArchitecture.x86);
-                        var opts = GetCreationOptions(_site, config);
-                        _interpreter = opts.NoDatabase ?
+                        var opts = GetCreationOptions(_site, config, out var noDb);
+                        _interpreter = noDb ?
                             (IPythonInterpreterFactory)new IronPythonAstInterpreterFactory(config, opts) :
                             new IronPythonInterpreterFactory(config, opts);
                     }
@@ -246,20 +247,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
             );
         }
 
-        internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, InterpreterConfiguration config) {
+        internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, InterpreterConfiguration config, out bool noDatabase) {
             if (ExperimentalOptions.NoDatabaseFactory) {
+                noDatabase = true;
                 return new InterpreterFactoryCreationOptions {
-                    PackageManager = BuiltInPackageManagers.PipXFrames,
-                    NoDatabase = true,
                     DatabasePath = DatabasePathSelector.CalculateVSLocalDatabasePath(site, config, 1),
                 };
             } else {
+                noDatabase = false;
                 return new InterpreterFactoryCreationOptions {
-                    PackageManager = BuiltInPackageManagers.PipXFrames,
-                    DatabasePath = Path.Combine(
-                        PythonTypeDatabase.CompletionDatabasePath,
-                        InterpreterFactoryCreator.GetRelativePathForConfigurationId(config.Id)
-                    )
+                    DatabasePath = DatabasePathSelector.CalculateGlobalDatabasePath(config, PythonTools.Interpreter.LegacyDB.PythonTypeDatabase.CurrentVersion)
                 };
             }
         }

@@ -557,7 +557,9 @@ namespace Microsoft.PythonTools.Analysis {
                             .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>()));
                     }
 
-                    return result;
+                    // Take nearly-equivalent overloads and merge them, retaining the maximum
+                    // possible information.
+                    return result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge);
                 }
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {

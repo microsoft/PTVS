@@ -71,9 +71,11 @@
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Interfaces.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -134,6 +136,10 @@
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
       <Aliases>global,analysis</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Analyzer\Analyzer.csproj">
+      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
+      <Name>Analyzer</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\BuildTasks\BuildTasks.csproj">
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>

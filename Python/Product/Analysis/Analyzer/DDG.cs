@@ -280,13 +280,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 } else if (impName == "*") {
                     // Handle "import *"
                     if (userMod != null) {
+                        userMod.Imported(_unit);
+
                         foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
                             if (!varName.StartsWith("_")) {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }
-
-                        userMod.Imported(_unit);
                     }
                 } else {
                     WalkFromImportWorker(nameNode, userMod, impName, newName);

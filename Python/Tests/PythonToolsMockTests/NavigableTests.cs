@@ -229,7 +229,7 @@ res = my_var * 10
             private readonly PythonEditor _view;
 
             public NavigableHelper(string code, PythonVersion version) {
-                var factory = InterpreterFactoryCreator.CreateInterpreterFactory(version.Configuration, new InterpreterFactoryCreationOptions() { WatchFileSystem = false, NoDatabase = true });
+                var factory = InterpreterFactoryCreator.CreateInterpreterFactory(version.Configuration, new InterpreterFactoryCreationOptions() { WatchFileSystem = false });
                 _view = new PythonEditor("", version.Version, factory: factory);
                 _view.Text = code;
             }

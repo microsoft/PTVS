@@ -29,10 +29,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Microsoft.PythonTools.Interpreter {
     static class DatabasePathSelector {
         public static string CalculateGlobalDatabasePath(InterpreterConfiguration config, int version) {
-            Debug.Assert(version == PythonTypeDatabase.FormatVersion, "Global paths are only supported for legacy databases");
+            Debug.Assert(version == LegacyDB.PythonTypeDatabase.FormatVersion, "Global paths are only supported for legacy databases");
 
             return PathUtils.GetAbsoluteDirectoryPath(
-                PythonTypeDatabase.CompletionDatabasePath,
+                LegacyDB.PythonTypeDatabase.CompletionDatabasePath,
                 GetRelativePathForConfigurationId(config.Id)
             );
         }

@@ -71,7 +71,6 @@
     <Compile Include="Intellisense\AnalysisSynchronizationContext.cs" />
     <Compile Include="Intellisense\AssignmentWalker.cs" />
     <Compile Include="Intellisense\ClassifierWalker.cs" />
-    <Compile Include="Intellisense\CompletionOptions.cs" />
     <Compile Include="Intellisense\DetectSideEffectsWalker.cs" />
     <Compile Include="Intellisense\EnclosingNodeWalker.cs" />
     <Compile Include="Intellisense\ExtractedMethodCreator.cs" />
@@ -88,6 +87,27 @@
     <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
     <Compile Include="Intellisense\SelectionTarget.cs" />
     <Compile Include="Intellisense\VersionCookie.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonBuiltinModule.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonConstant.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonFunction.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonFunctionOverload.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonInterpreter.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonInterpreterFactory.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonMethodDescriptor.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonModule.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonMultipleMembers.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonParameterInfo.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonProperty.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonSequenceType.cs" />
+    <Compile Include="Interpreter\LegacyDB\CPythonType.cs" />
+    <Compile Include="Interpreter\LegacyDB\GenerateDatabaseOptions.cs" />
+    <Compile Include="Interpreter\LegacyDB\IPythonInterpreterFactoryWithDatabase.cs" />
+    <Compile Include="Interpreter\LegacyDB\ITypeDatabaseReader.cs" />
+    <Compile Include="Interpreter\LegacyDB\NewDatabaseEventArgs.cs" />
+    <Compile Include="Interpreter\LegacyDB\PythonInterpreterFactoryWithDatabase.cs" />
+    <Compile Include="Interpreter\LegacyDB\PythonTypeDatabase.cs" />
+    <Compile Include="Interpreter\LegacyDB\PythonTypeDatabaseCreationRequest.cs" />
+    <Compile Include="Interpreter\LegacyDB\SharedDatabaseState.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>

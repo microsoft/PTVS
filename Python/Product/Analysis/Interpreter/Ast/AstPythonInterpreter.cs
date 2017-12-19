@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
@@ -57,7 +58,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             _factory.ImportableModulesChanged += Factory_ImportableModulesChanged;
             _modules = new ConcurrentDictionary<string, IPythonModule>();
             _builtinTypes = new Dictionary<BuiltinTypeId, IPythonType>();
-            BuiltinModuleName = _factory.LanguageVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x;
+            BuiltinModuleName = BuiltinTypeId.Unknown.GetModuleName(_factory.LanguageVersion);
             _noneType = new AstPythonBuiltinType("NoneType", BuiltinTypeId.NoneType);
             _builtinTypes[BuiltinTypeId.NoneType] = _noneType;
             _builtinTypes[BuiltinTypeId.Unknown] = new AstPythonBuiltinType("Unknown", BuiltinTypeId.Unknown);
@@ -88,13 +89,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public string BuiltinModuleName { get; }
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
+            if (id < 0 || id > BuiltinTypeIdExtensions.LastTypeId) {
+                throw new KeyNotFoundException($"(BuiltinTypeId)({(int)id})");
+            }
+
             IPythonType res;
             lock (_builtinTypes) {
                 if (!_builtinTypes.TryGetValue(id, out res)) {
                     var bm = ImportModule(BuiltinModuleName) as AstBuiltinsPythonModule;
-                    res = bm?.GetAnyMember($"__{id}") as IPythonType;
+                    res = bm?.GetAnyMember($"__{id}__") as IPythonType;
                     if (res == null) {
-                        var name = SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version);
+                        var name = id.GetTypeName(_factory.Configuration.Version);
                         if (string.IsNullOrEmpty(name)) {
                             Debug.Assert(id == BuiltinTypeId.Unknown, $"no name for {id}");
                             if (!_builtinTypes.TryGetValue(BuiltinTypeId.Unknown, out res)) {
@@ -110,12 +115,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return res;
         }
 
-        private IReadOnlyDictionary<string, string> GetUserSearchPathPackages() {
+        private async Task<IReadOnlyDictionary<string, string>> GetUserSearchPathPackagesAsync() {
             var ussp = _userSearchPathPackages;
             if (ussp == null) {
+                IReadOnlyList<string> usp;
                 lock (_userSearchPathsLock) {
-                    if (ussp == null && _userSearchPaths != null && _userSearchPaths.Any()) {
-                        ussp = AstPythonInterpreterFactory.GetImportableModules(_userSearchPaths);
+                    usp = _userSearchPaths;
+                    ussp = _userSearchPathPackages;
+                }
+                if (ussp != null || usp == null || !usp.Any()) {
+                    return ussp;
+                }
+
+                ussp = await AstPythonInterpreterFactory.GetImportableModulesAsync(usp);
+                lock (_userSearchPathsLock) {
+                    if (_userSearchPathPackages == null) {
+                        _userSearchPathPackages = ussp;
+                    } else {
+                        ussp = _userSearchPathPackages;
                     }
                 }
             }
@@ -123,8 +140,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IList<string> GetModuleNames() {
-            var ussp = GetUserSearchPathPackages();
-            var ssp = _factory.GetImportableModules();
+            var ussp = GetUserSearchPathPackagesAsync().WaitAndUnwrapExceptions();
+            var ssp = _factory.GetImportableModulesAsync().WaitAndUnwrapExceptions();
             var bmn = _builtinModuleNames;
 
             IEnumerable<string> names = null;
@@ -253,7 +270,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             // Do normal searches
-            mod = ImportFromSearchPaths(name) ?? ImportFromBuiltins(name);
+            if (!string.IsNullOrEmpty(Factory.Configuration?.InterpreterPath)) {
+                mod = ImportFromSearchPathsAsync(name).WaitAndUnwrapExceptions() ?? ImportFromBuiltins(name);
+            }
+            if (mod == null) {
+                mod = ImportFromCache(name);
+            }
 
             // Replace our sentinel, or if we raced, get the current
             // value and abandon the one we just created.
@@ -274,6 +296,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return mod;
         }
 
+        private IPythonModule ImportFromCache(string name) {
+            if (string.IsNullOrEmpty(_factory.CreationOptions.DatabasePath)) {
+                return null;
+            }
+
+            if (File.Exists(_factory.GetCacheFilePath($"python.{name}.pyi"))) {
+                return new AstCachedPythonModule(name, $"python.{name}");
+            } else if (File.Exists(_factory.GetCacheFilePath($"{name}.pyi"))) {
+                return new AstCachedPythonModule(name, name);
+            }
+
+            return null;
+        }
+
         private IPythonModule ImportFromBuiltins(string name) {
             if (_builtinModuleNames == null || !_builtinModuleNames.Contains(name)) {
                 return null;
@@ -289,8 +325,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        private IPythonModule ImportFromSearchPaths(string name) {
-            var mmp = FindModuleInSearchPath(_userSearchPaths, GetUserSearchPathPackages(), name);
+        private async Task<IPythonModule> ImportFromSearchPathsAsync(string name) {
+            var mmp = FindModuleInSearchPath(
+                _userSearchPaths,
+                await GetUserSearchPathPackagesAsync(),
+                name
+            );
 
             if (mmp.HasValue) {
                 lock (_userSearchPathsLock) {
@@ -300,7 +340,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     _userSearchPathImported.Add(name);
                 }
             } else {
-                mmp = FindModuleInSearchPath(_factory.GetSearchPaths(), _factory.GetImportableModules(), name);
+                mmp = FindModuleInSearchPath(
+                    await _factory.GetSearchPathsAsync(),
+                    await _factory.GetImportableModulesAsync(),
+                    name
+                );
             }
 
             if (!mmp.HasValue) {
@@ -372,8 +416,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         public IEnumerable<string> GetModulesNamed(string name) {
-            var usp = GetUserSearchPathPackages();
-            var ssp = _factory.GetImportableModules();
+            var usp = GetUserSearchPathPackagesAsync().WaitAndUnwrapExceptions();
+            var ssp = _factory.GetImportableModulesAsync().WaitAndUnwrapExceptions();
 
             var dotName = "." + name;
 

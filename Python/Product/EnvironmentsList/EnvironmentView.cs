@@ -53,7 +53,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private readonly IInterpreterOptionsService _service;
         private readonly IInterpreterRegistryService _registry;
-        private readonly IPythonInterpreterFactoryWithDatabase _withDb;
 
         public IPythonInterpreterFactory Factory { get; }
         public InterpreterConfiguration Configuration { get; }
@@ -95,11 +94,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             IsBroken = !Configuration.IsRunnable();
             BrokenEnvironmentHelpUrl = "https://go.microsoft.com/fwlink/?linkid=863373";
 
-            _withDb = factory as IPythonInterpreterFactoryWithDatabase;
-            if (_withDb != null) {
-                _withDb.IsCurrentChanged += Factory_IsCurrentChanged;
-                IsCheckingDatabase = _withDb.IsCheckingDatabase;
-                IsCurrent = _withDb.IsCurrent;
+            var withDb = factory as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
+            if (withDb != null) {
+                withDb.IsCurrentChanged += Factory_IsCurrentChanged;
+                IsCheckingDatabase = withDb.IsCheckingDatabase;
+                IsCurrent = withDb.IsCurrent;
             }
             
 
@@ -152,14 +151,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public ObservableCollection<object> Extensions { get; private set; }
 
         private void Factory_IsCurrentChanged(object sender, EventArgs e) {
-            Debug.Assert(_withDb != null);
-            if (_withDb == null) {
+            var withDb = sender as Interpreter.LegacyDB.IPythonInterpreterFactoryWithDatabase;
+            Debug.Assert(withDb != null);
+            if (withDb == null) {
                 return;
             }
 
             Dispatcher.BeginInvoke((Action)(() => {
-                IsCheckingDatabase = _withDb.IsCheckingDatabase;
-                IsCurrent = _withDb.IsCurrent;
+                IsCheckingDatabase = withDb.IsCheckingDatabase;
+                IsCurrent = withDb.IsCurrent;
             }));
         }
 

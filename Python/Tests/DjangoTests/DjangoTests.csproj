@@ -83,6 +83,10 @@
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\Analyzer\Analyzer.csproj">
+      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
+      <Name>Analyzer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>

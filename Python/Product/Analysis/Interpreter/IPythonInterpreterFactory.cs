@@ -42,9 +42,9 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreter CreateInterpreter();
 
         /// <summary>
-        /// Gets the associated package manager. This may be null,
-        /// and will not change after first access.
+        /// Notifies the interpreter factory that the set of names that
+        /// can be imported may have changed.
         /// </summary>
-        IPackageManager PackageManager { get; }
+        void NotifyImportNamesChanged();
     }
 }
