@@ -162,8 +162,8 @@ namespace Microsoft.PythonTools.Repl {
                 eval = string.IsNullOrEmpty(id) ?
                     null :
                     _providers.Select(p => p.GetEvaluator(id)).FirstOrDefault(e => e != null);
-            } catch (NoInterpretersException ex) {
-                _window.WriteErrorLine(ex.Message);
+            } catch (NoInterpretersException) {
+                _window.WriteErrorLine(Strings.NoInterpretersAvailable);
             } catch (MissingInterpreterException ex) {
                 _window.WriteErrorLine(ex.Message);
             } catch (DirectoryNotFoundException ex) {

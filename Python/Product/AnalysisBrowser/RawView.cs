@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
     class RawView : IAnalysisItemView {

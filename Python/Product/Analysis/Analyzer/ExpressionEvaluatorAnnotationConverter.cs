@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -37,6 +36,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet Finalize(IAnalysisSet type) {
+            if (_returnInternalTypes) {
+                return type;
+            }
+
             // Final annotation should be not be a string literal
             type.Split(out IReadOnlyList<ConstantInfo> constants, out type);
             if (constants.Any(c => c.TypeId == BuiltinTypeId.NoneType)) {
@@ -44,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
             
             // Filter out any TypingTypeInfo items that have leaked through
-            if (!_returnInternalTypes && type.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out IAnalysisSet rest)) {
+            if (type.Split(out IReadOnlyList<TypingTypeInfo> typeInfo, out IAnalysisSet rest)) {
                 return rest.UnionAll(typeInfo.Select(n => n.Finalize(_eval, _node, _unit)));
             }
 
@@ -62,7 +65,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IAnalysisSet MakeNameType(string name) {
-            return new ConstantInfo(_unit.ProjectState.ClassInfos[BuiltinTypeId.Unicode], name, PythonMemberType.Constant);
+            return _unit.ProjectState.GetConstant(name);
         }
 
         public override IAnalysisSet GetTypeMember(IAnalysisSet baseType, string member) {

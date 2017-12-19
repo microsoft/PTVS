@@ -312,7 +312,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                arch = InterpreterArchitecture.FromExe(interpreterPath);
+                arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(interpreterPath);
             } else {
                 return null;
             }

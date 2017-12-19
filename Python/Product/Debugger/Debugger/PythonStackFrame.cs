@@ -17,10 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -209,7 +211,7 @@ namespace Microsoft.PythonTools.Debugger {
                 return functionName;
             }
 
-            string qualName = walker.Name;
+            string qualName = walker.Name.Aggregate((a, n) => string.IsNullOrEmpty(a) ? n : Strings.DebugStackFrameNameInName.FormatUI(a, n));
             if (string.IsNullOrEmpty(qualName)) {
                 return functionName;
             }

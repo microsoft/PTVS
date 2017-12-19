@@ -16,20 +16,9 @@
 
 using System;
 using System.IO;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PythonInterpreterFactoryExtensions {
-        /// <summary>
-        /// Executes the interpreter with the specified arguments. Any output is
-        /// captured and returned via the <see cref="ProcessOutput"/> object.
-        /// </summary>
-        internal static ProcessOutput Run(
-            this IPythonInterpreterFactory factory,
-            params string[] arguments) {
-            return ProcessOutput.RunHiddenAndCapture(factory.Configuration.InterpreterPath, arguments);
-        }
-
         /// <summary>
         /// Determines whether two interpreter factories are equivalent.
         /// </summary>

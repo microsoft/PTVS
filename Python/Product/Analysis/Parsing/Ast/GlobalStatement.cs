@@ -16,7 +16,7 @@
 
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class GlobalStatement : Statement {

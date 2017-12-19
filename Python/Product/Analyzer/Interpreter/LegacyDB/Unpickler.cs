@@ -22,7 +22,7 @@ using System.Numerics;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     public static class Unpickle {
         /// <summary>
         /// Unpickles a Python pickle stream but returns Dictionary[object, object] for PythonDictionaries,

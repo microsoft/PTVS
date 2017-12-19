@@ -88,11 +88,12 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         private PythonTypeDatabase(
             PythonInterpreterFactoryWithDatabase factory,
             string databaseDirectory,
-            bool isDefaultDatabase
+            bool isDefaultDatabase,
+            Version version = null
         ) {
             _factory = factory;
             _sharedState = new SharedDatabaseState(
-                factory?.Configuration.Version ?? new Version(),
+                version ?? factory?.Configuration.Version ?? new Version(),
                 databaseDirectory,
                 defaultDatabase: isDefaultDatabase
             );
@@ -366,7 +367,7 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         }
 
         internal static PythonTypeDatabase CreateDefaultTypeDatabase(Version languageVersion) {
-            return new PythonTypeDatabase(null, BaselineDatabasePath, isDefaultDatabase: true);
+            return new PythonTypeDatabase(null, BaselineDatabasePath, isDefaultDatabase: true, version: languageVersion);
         }
 
         public IEnumerable<string> GetModuleNames() {

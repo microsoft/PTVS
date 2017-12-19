@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                 interpreter,
                 interpreter,
                 "PYTHONPATH",
-                InterpreterArchitecture.FromExe(interpreter),
+                NativeMethods.GetBinaryType(interpreter) == System.Reflection.ProcessorArchitecture.Amd64 ? InterpreterArchitecture.x64 : InterpreterArchitecture.x86,
                 version
             );
 
@@ -206,12 +206,12 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                             Console.WriteLine("Reusing module {0}", mod.ModuleName);
                         }
 
-                        using (var file = File.OpenText(mod.SourceFile))
-                        using (var parser = Parser.CreateParser(
-                            file,
-                            analyzer.LanguageVersion,
-                            new ParserOptions() { BindReferences = true })
-                        ) {
+                        using (var file = File.OpenText(mod.SourceFile)) {
+                            var parser = Parser.CreateParser(
+                                file,
+                                analyzer.LanguageVersion,
+                                new ParserOptions() { BindReferences = true }
+                            );
                             entry.UpdateTree(parser.ParseFile(), null);
                         }
                     }

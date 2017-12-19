@@ -23,7 +23,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -529,42 +529,38 @@ namespace Microsoft.PythonTools.Analysis {
                 var scope = FindScope(location);
                 var unit = GetNearestEnclosingAnalysisUnit(scope);
                 var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
-                using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
-                    var expr = GetExpression(parser.ParseTopExpression().Body);
-                    if (expr is ListExpression ||
-                        expr is TupleExpression ||
-                        expr is DictionaryExpression) {
-                        return Enumerable.Empty<IOverloadResult>();
-                    }
-                    var lookup = eval.Evaluate(expr);
+                var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion);
+                var expr = GetExpression(parser.ParseTopExpression().Body);
+                if (expr is ListExpression ||
+                    expr is TupleExpression ||
+                    expr is DictionaryExpression) {
+                    return Enumerable.Empty<IOverloadResult>();
+                }
+                var lookup = eval.Evaluate(expr);
 
-                    lookup = AnalysisSet.Create(lookup.Where(av => !(av is MultipleMemberInfo)).Concat(
-                        lookup.OfType<MultipleMemberInfo>().SelectMany(mmi => mmi.Members)
-                    ));
+                lookup = AnalysisSet.Create(lookup.Where(av => !(av is MultipleMemberInfo)).Concat(
+                    lookup.OfType<MultipleMemberInfo>().SelectMany(mmi => mmi.Members)
+                ));
 
-                    var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
+                var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
 
-                    // TODO: Include relevant type info on the parameter...
+                // TODO: Include relevant type info on the parameter...
+                result.UnionWith(lookup
+                    // Exclude constant values first time through
+                    .Where(av => av.MemberType != PythonMemberType.Constant)
+                    .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>())
+                );
+
+                if (!result.Any()) {
                     result.UnionWith(lookup
-                        // Exclude constant values first time through
-                        .Where(av => av.MemberType != PythonMemberType.Constant)
-                        .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>())
-                    );
-
-                    if (!result.Any()) {
-                        result.UnionWith(lookup
-                            .Where(av => av.MemberType == PythonMemberType.Constant)
-                            .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>()));
-                    }
-
-                    // Take nearly-equivalent overloads and merge them, retaining the maximum
-                    // possible information.
-                    return result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge);
+                        .Where(av => av.MemberType == PythonMemberType.Constant)
+                        .SelectMany(av => av.Overloads ?? Enumerable.Empty<OverloadResult>()));
                 }
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+
+                // Take nearly-equivalent overloads and merge them, retaining the maximum
+                // possible information.
+                return result.GroupBy(o => o, OverloadResultComparer.WeakInstance).Select(OverloadResult.Merge);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Debug.Fail(ex.ToString());
                 return GetSignaturesError;
             }
@@ -985,9 +981,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal PythonAst GetAstFromText(string exprText, string privatePrefix) {
-            using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true })) {
-                return parser.ParseTopExpression();
-            }
+            var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true });
+            return parser.ParseTopExpression();
         }
 
         internal static Expression GetExpression(Statement statement) {

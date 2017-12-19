@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -72,15 +72,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
-            var args = new List<string> { "-B", "-E" };
-
-            var sb = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
-            if (!File.Exists(sb)) {
+            if (!InstallPath.TryGetFile("scrape_module.py", out string sb)) {
                 return null;
             }
-            args.Add(sb);
 
-            return args;
+            return new List<string> { "-B", "-E", sb };
         }
 
         protected override PythonWalker PrepareWalker(IPythonInterpreter interpreter, PythonAst ast) {

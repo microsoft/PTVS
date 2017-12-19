@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>

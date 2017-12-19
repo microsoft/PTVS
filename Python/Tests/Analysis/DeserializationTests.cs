@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;

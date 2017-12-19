@@ -541,9 +541,8 @@ namespace Microsoft.PythonTools.Editor {
             );
 
             PythonAst ast;
-            using (var parser = Parser.CreateParser(sourceSpan, LanguageVersion)) {
-                ast = parser.ParseFile();
-            }
+            var parser = Parser.CreateParser(sourceSpan, LanguageVersion);
+            ast = parser.ParseFile();
 
             var finder = new ExpressionFinder(ast, options);
             var actualExpr = finder.GetExpressionSpan(span.ToSourceSpan());

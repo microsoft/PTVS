@@ -225,10 +225,6 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public void Uninitialize() {
-            if (_reader != null) {
-                _reader.Dispose();
-                _reader = null;
-            }
             _start = _end = 0;
             _position = 0;
         }

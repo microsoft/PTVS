@@ -27,8 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonInterpreter : IPythonInterpreter, IModuleContext, ICanFindModuleMembers {
@@ -228,7 +227,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     _modules[BuiltinModuleName] = _builtinModule = new AstBuiltinsPythonModule(_factory.LanguageVersion);
                     _builtinModuleNames = null;
                     _builtinModule.Imported(this);
-                    var bmn = ((AstBuiltinsPythonModule)_builtinModule).GetAnyMember("__builtin_module_names") as AstPythonStringLiteral;
+                    var bmn = ((AstBuiltinsPythonModule)_builtinModule).GetAnyMember("__builtin_module_names__") as AstPythonStringLiteral;
                     _builtinModuleNames = bmn?.Value?.Split(',') ?? Array.Empty<string>();
                 }
                 return _builtinModule;
@@ -445,18 +444,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         private IEnumerable<string> GetTypeShedPaths(string path) {
             var version = _factory.Configuration.Version;
-            var stdlib = PathUtils.GetAbsoluteDirectoryPath(path, "stdlib");
-            var thirdParty = PathUtils.GetAbsoluteDirectoryPath(path, "third_party");
+            var stdlib = Path.Combine(path, "stdlib");
+            var thirdParty = Path.Combine(path, "third_party");
 
             foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = PathUtils.GetAbsoluteDirectoryPath(stdlib, subdir);
+                var candidate = Path.Combine(stdlib, subdir);
                 if (Directory.Exists(candidate)) {
                     yield return candidate;
                 }
             }
 
             foreach (var subdir in new[] { version.ToString(), version.Major.ToString(), "2and3" }) {
-                var candidate = PathUtils.GetAbsoluteDirectoryPath(thirdParty, subdir);
+                var candidate = Path.Combine(thirdParty, subdir);
                 if (Directory.Exists(candidate)) {
                     yield return candidate;
                 }

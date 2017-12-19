@@ -490,7 +490,8 @@ from System.Windows.Media import Colors
 
                 xamlEntry.ParseContent(new FileStreamReader(xamlPath), null);
 
-                using (var parser = Parser.CreateParser(new FileStreamReader(pyPath), PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true })) {
+                using (var stream = new FileStreamReader(pyPath)) {
+                    var parser = Parser.CreateParser(stream, PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true });
                     pyEntry.UpdateTree(parser.ParseFile(), null);
                 }
 

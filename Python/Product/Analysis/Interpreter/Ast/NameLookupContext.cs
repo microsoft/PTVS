@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             if (expr is MemberExpression me) {
-                return "{0}.{1}".FormatInvariant(GetNameFromExpressionWorker(me.Target), me.Name);
+                return $"{GetNameFromExpressionWorker(me.Target)}.{me.Name}";
             }
 
             throw new FormatException();
