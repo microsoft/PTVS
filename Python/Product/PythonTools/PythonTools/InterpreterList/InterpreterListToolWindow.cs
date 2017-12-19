@@ -205,15 +205,8 @@ namespace Microsoft.PythonTools.InterpreterList {
             view.IPythonModeEnabledSetter = SetIPythonEnabled;
             view.IPythonModeEnabledGetter = QueryIPythonEnabled;
 
-            try {
-                var pep = new PipExtensionProvider(view.Factory);
-                pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
-                pep.OperationStarted += PipExtensionProvider_OperationStarted;
-                pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
-                pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
-                pep.OperationFinished += PipExtensionProvider_OperationFinished;
-                view.Extensions.Add(pep);
-            } catch (NotSupportedException) {
+            foreach (var packageManager in view.Factory.GetAllPackageManagers()) {
+                AddPipExtension(view, view.Factory, packageManager);
             }
 
             var _withDb = view.Factory as PythonInterpreterFactoryWithDatabase;
@@ -242,6 +235,16 @@ namespace Microsoft.PythonTools.InterpreterList {
                     LogLoadException(null, ex2);
                 }
             }
+        }
+
+        private void AddPipExtension(EnvironmentView view, IPythonInterpreterFactory factory, IPackageManager packageManager) {
+            var pep = new PipExtensionProvider(factory, packageManager);
+            pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
+            pep.OperationStarted += PipExtensionProvider_OperationStarted;
+            pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
+            pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
+            pep.OperationFinished += PipExtensionProvider_OperationFinished;
+            view.Extensions.Add(pep);
         }
 
         private void LogLoadException(IEnvironmentViewExtensionProvider provider, Exception ex) {

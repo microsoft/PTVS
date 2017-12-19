@@ -69,5 +69,17 @@ namespace Microsoft.PythonTools.Interpreter {
         public static IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories(this IPythonInterpreterFactoryProvider self) {
             return self.GetInterpreterConfigurations().Select(x => self.GetInterpreterFactory(x.Id));
         }
+
+        public static IEnumerable<IPackageManager> GetAllPackageManagers(this IPythonInterpreterFactory factory) {
+            if (factory.PackageManager != null) {
+                yield return factory.PackageManager;
+
+                if (factory.PackageManager is CondaPackageManager) {
+                    var pip = BuiltInPackageManagers.Pip;
+                    pip.SetInterpreterFactory(factory);
+                    yield return pip;
+                }
+            }
+        }
     }
 }

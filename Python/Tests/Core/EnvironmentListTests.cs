@@ -1023,7 +1023,7 @@ namespace PythonToolsUITests {
                     }
                 }
                 if (CreatePipExtension && e.View.Factory.PackageManager != null) {
-                    var pip = new PipExtensionProvider(e.View.Factory);
+                    var pip = new PipExtensionProvider(e.View.Factory, e.View.Factory.PackageManager);
                     pip.OutputTextReceived += (s, e2) => Console.Write("OUT: "+ e2.Data);
                     pip.ErrorTextReceived += (s, e2) => Console.Write("ERR: " + e2.Data);
                     e.View.Extensions.Add(pip);
