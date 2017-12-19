@@ -1275,7 +1275,7 @@ def add_builtin_objects(state):
     except AttributeError:
         pass
     else:
-        add_literal('__builtin_module_names', '"' + ','.join(builtin_module_names) + '"')
+        add_literal('__builtin_module_names__', '"' + ','.join(builtin_module_names) + '"')
 
 
 if __name__ == '__main__':

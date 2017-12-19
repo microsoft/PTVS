@@ -32,7 +32,7 @@ def _read_builtin_module_names(pyi_file):
     with pyi_file.open('rb') as f:
         tree = ast.parse(f.read())
     assigns = [n for n in tree.body if isinstance(n, ast.Assign)]
-    bmn = next(n for n in assigns if n.targets[0].id == '__builtin_module_names')
+    bmn = next(n for n in assigns if n.targets[0].id == '__builtin_module_names__')
     return bmn.value.s.split(',')
 
 # scrape builtins first
@@ -46,7 +46,7 @@ for mod in _read_builtin_module_names(wrote_to):
 
 # scrape other modules
 INCLUDE_MODULES = [
-    'unittest', 'unittest.case',
+    'functools', 'unittest', 'unittest.case',
 ]
 
 for mod in INCLUDE_MODULES:

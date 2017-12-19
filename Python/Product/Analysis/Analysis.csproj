@@ -62,6 +62,7 @@
     <Compile Include="CompletionOptions.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
+    <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
@@ -410,11 +411,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Target Name="_RegeneratePython3DB" Inputs="$(PackagePath)python\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v3\python.pyi" BeforeTargets="AssignTargetPaths">
-    <PropertyGroup>
-      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v3" "$(PackagesPath)python\tools\python.exe"</_RefreshCmd>
-    </PropertyGroup>
-    <Exec Command="$(_RefreshCmd)" />
+  <Target Name="_IncludePython3DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
       <Python3DB Include="$(IntermediateOutputPath)DefaultDB\v3\*.pyi" />
       <Python3DB>
@@ -426,11 +423,13 @@
       <Content Include="@(Python3DB)" />
     </ItemGroup>
   </Target>
-  <Target Name="_RegeneratePython2DB" Inputs="$(PackagePath)python2.2.7.14\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v2\python.pyi" BeforeTargets="AssignTargetPaths">
+  <Target Name="_RegeneratePython3DB" Inputs="$(PackagePath)python\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v3\python.pyi" BeforeTargets="_IncludePython3DB">
     <PropertyGroup>
-      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v2" "$(PackagesPath)python2.2.7.14\tools\python.exe"</_RefreshCmd>
+      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v3" "$(PackagesPath)python\tools\python.exe"</_RefreshCmd>
     </PropertyGroup>
     <Exec Command="$(_RefreshCmd)" />
+  </Target>
+  <Target Name="_IncludePython2DB" BeforeTargets="AssignTargetPaths">
     <ItemGroup>
       <Python2DB Include="$(IntermediateOutputPath)DefaultDB\v2\*.pyi" />
       <Python2DB>
@@ -441,5 +440,11 @@
       </Python2DB>
       <Content Include="@(Python2DB)" />
     </ItemGroup>
+  </Target>
+  <Target Name="_RegeneratePython2DB" Inputs="$(PackagePath)python2.2.7.14\tools\python.exe" Outputs="$(IntermediateOutputPath)DefaultDB\v2\python.pyi" BeforeTargets="_IncludePython2DB">
+    <PropertyGroup>
+      <_RefreshCmd>"$(PackagesPath)python\tools\python.exe" "$(ProjectDir)regenerate.py" "$(ProjectDir)scrape_module.py" "$(IntermediateOutputPath)DefaultDB\v2" "$(PackagesPath)python2.2.7.14\tools\python.exe"</_RefreshCmd>
+    </PropertyGroup>
+    <Exec Command="$(_RefreshCmd)" />
   </Target>
 </Project>

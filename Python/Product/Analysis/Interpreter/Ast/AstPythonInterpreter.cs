@@ -270,7 +270,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             // Do normal searches
-            mod = ImportFromSearchPathsAsync(name).WaitAndUnwrapExceptions() ?? ImportFromBuiltins(name);
+            if (!string.IsNullOrEmpty(Factory.Configuration?.InterpreterPath)) {
+                mod = ImportFromSearchPathsAsync(name).WaitAndUnwrapExceptions() ?? ImportFromBuiltins(name);
+            }
+            if (mod == null) {
+                mod = ImportFromCache(name);
+            }
 
             // Replace our sentinel, or if we raced, get the current
             // value and abandon the one we just created.
@@ -289,6 +294,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             sentinalValue.Complete(mod);
             sentinalValue.Dispose();
             return mod;
+        }
+
+        private IPythonModule ImportFromCache(string name) {
+            if (string.IsNullOrEmpty(_factory.CreationOptions.DatabasePath)) {
+                return null;
+            }
+
+            if (File.Exists(_factory.GetCacheFilePath($"python.{name}.pyi"))) {
+                return new AstCachedPythonModule(name, $"python.{name}");
+            } else if (File.Exists(_factory.GetCacheFilePath($"{name}.pyi"))) {
+                return new AstCachedPythonModule(name, name);
+            }
+
+            return null;
         }
 
         private IPythonModule ImportFromBuiltins(string name) {

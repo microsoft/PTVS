@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             } else {
                 var biPath = PythonToolsInstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", typeof(InterpreterFactoryCreator).Assembly);
                 if (File.Exists(biPath)) {
-                    _databasePath = PathUtils.GetParent(biPath);
+                    CreationOptions.DatabasePath = _databasePath = PathUtils.GetParent(biPath);
                     _skipWriteToCache = true;
                 }
             }

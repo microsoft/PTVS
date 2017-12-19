@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             foreach (BuiltinTypeId typeId in Enum.GetValues(typeof(BuiltinTypeId))) {
                 IMember m;
                 AstPythonBuiltinType biType;
-                if (_members.TryGetValue($"__{typeId}", out m) && (biType = m as AstPythonBuiltinType) != null) {
+                if (_members.TryGetValue($"__{typeId}__", out m) && (biType = m as AstPythonBuiltinType) != null) {
                     if (typeId != BuiltinTypeId.Str &&
                         typeId != BuiltinTypeId.StrIterator) {
                         biType.TrySetTypeId(typeId);
@@ -105,14 +105,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     if (biType.IsHidden) {
                         _hiddenNames.Add(biType.Name);
                     }
-                    _hiddenNames.Add($"__{typeId}");
+                    _hiddenNames.Add($"__{typeId}__");
 
                     if (typeId == BuiltinTypeId.Bool) {
                         boolType = m as IPythonType;
                     }
                 }
             }
-            _hiddenNames.Add("__builtin_module_names");
+            _hiddenNames.Add("__builtin_module_names__");
 
             if (boolType != null) {
                 _members["True"] = _members["False"] = new AstPythonConstant(boolType);
