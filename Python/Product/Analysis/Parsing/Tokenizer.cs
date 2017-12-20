@@ -227,6 +227,7 @@ namespace Microsoft.PythonTools.Parsing {
         public void Uninitialize() {
             _start = _end = 0;
             _position = 0;
+            _reader = null;
         }
 
         public TokenInfo ReadToken() {

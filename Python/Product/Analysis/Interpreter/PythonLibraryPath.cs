@@ -171,12 +171,17 @@ namespace Microsoft.PythonTools.Analysis {
                     proc.OnErrorLine = errorLines.Add;
 
                     proc.Start();
-                    var exitCode = proc.Wait(60000);
-                    if (exitCode == null) {
-                        proc.Kill();
-                    }
-                    if (exitCode != 0) {
-                        throw new InvalidOperationException(string.Join(Environment.NewLine, errorLines));
+                    using (var cts = new CancellationTokenSource(30000)) {
+                        int exitCode;
+                        try {
+                            exitCode = await proc.WaitAsync(cts.Token).ConfigureAwait(false);
+                        } catch (OperationCanceledException) {
+                            proc.Kill();
+                            exitCode = -1;
+                        }
+                        if (exitCode != 0) {
+                            throw new InvalidOperationException(string.Join(Environment.NewLine, errorLines));
+                        }
                     }
                 }
             } finally {

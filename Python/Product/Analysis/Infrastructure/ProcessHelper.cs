@@ -44,8 +44,8 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             _psi.RedirectStandardOutput = true;
             _psi.RedirectStandardError = true;
 
-            _seenNullOutput = new SemaphoreSlim(0, 1);
-            _seenNullError = new SemaphoreSlim(0, 1);
+            _seenNullOutput = new SemaphoreSlim(1);
+            _seenNullError = new SemaphoreSlim(1);
         }
 
         public ProcessStartInfo StartInfo => _psi;
@@ -109,7 +109,13 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
         public int? Wait(int milliseconds) {
             var cts = new CancellationTokenSource(milliseconds);
             try {
-                return WaitAsync(cts.Token).WaitAndUnwrapExceptions();
+                var t = WaitAsync(cts.Token);
+                try {
+                    t.Wait(cts.Token);
+                    return t.Result;
+                } catch (AggregateException ae) when (ae.InnerException != null) {
+                    throw ae.InnerException;
+                }
             } catch (OperationCanceledException) {
                 return null;
             }
