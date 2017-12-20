@@ -16,7 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstBuiltinPythonModule : AstScrapedPythonModule {
@@ -33,8 +33,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected override List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
-            var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
-            if (!File.Exists(sm)) {
+            if (!InstallPath.TryGetFile("scrape_module.py", out string sm)) {
                 return null;
             }
 

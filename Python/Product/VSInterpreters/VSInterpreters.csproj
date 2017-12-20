@@ -82,6 +82,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interpreter\NoInterpretersFactory.cs" />
     <Compile Include="PackageManager\CPythonCondaPackageManagerProvider.cs" />
     <Compile Include="PackageManager\IPackageManager.cs" />
     <Compile Include="PackageManager\IPackageManagerProvider.cs" />

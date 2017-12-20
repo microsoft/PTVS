@@ -403,10 +403,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var languageVersion = entry.Analyzer.LanguageVersion;
-            PythonAst ast;
-            using (var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions { Verbatim = true })) {
-                ast = parser.ParseSingleStatement();
-            }
+            var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions { Verbatim = true });
+            var ast = parser.ParseSingleStatement();
 
             var walker = new ExpressionCompletionWalker(caretPoint.Value.Position - statement.Value.Start.Position);
             ast.Walk(walker);

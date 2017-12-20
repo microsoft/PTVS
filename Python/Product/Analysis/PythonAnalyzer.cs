@@ -27,7 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
@@ -963,7 +963,7 @@ namespace Microsoft.PythonTools.Analysis {
                     break;
             }
 
-            Debug.Fail("unsupported constant type <{0}> value '{1}'".FormatInvariant(value.GetType().FullName, value));
+            Debug.Fail($"unsupported constant type <{value.GetType().FullName}> value '{value}'");
             return Types[BuiltinTypeId.Object];
         }
 

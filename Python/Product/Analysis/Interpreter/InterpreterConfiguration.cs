@@ -16,8 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterConfiguration : IEquatable<InterpreterConfiguration> {
@@ -153,11 +153,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 // Regular description is sufficient
                 _fullDescription = null;
             } else if (hasVersion) {
-                _fullDescription = "{0} ({1})".FormatUI(_description, Architecture);
+                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1})", _description, Architecture);
             } else if (hasArch) {
-                _fullDescription = "{0} ({1})".FormatUI(_description, Version);
+                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1})", _description, Version);
             } else {
-                _fullDescription = "{0} ({1}, {2})".FormatUI(_description, Version, Architecture);
+                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1}, {2})", _description, Version, Architecture);
             }
         }
 
@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var c in configs) {
                 c._fullDescription = null;
             }
-            foreach (var c in configs.GroupBy(i => i._description ?? "").Where(g => g.Count() > 1).SelectMany()) {
+            foreach (var c in configs.GroupBy(i => i._description ?? "").Where(g => g.Count() > 1).SelectMany(g => g)) {
                 c.SwitchToFullDescription();
             }
         }

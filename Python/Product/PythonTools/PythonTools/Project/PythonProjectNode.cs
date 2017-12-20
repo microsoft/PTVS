@@ -1445,7 +1445,7 @@ namespace Microsoft.PythonTools.Project {
             try {
                 config = GetLaunchConfigurationOrThrow();
             } catch (NoInterpretersException ex) {
-                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                PythonToolsPackage.OpenNoInterpretersHelpPage(Site, ex.HelpPage);
                 return VSConstants.S_OK;
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);

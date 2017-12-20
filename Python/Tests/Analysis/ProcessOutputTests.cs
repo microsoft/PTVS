@@ -93,7 +93,7 @@ namespace AnalysisTests {
         [TestMethod, Priority(0)]
         public void RunInterpreterOutput() {
             foreach (var fact in Factories) {
-                using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
+                using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "import sys; print(sys.version)")) {
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
                     foreach (var line in output.StandardOutputLines) {
@@ -116,7 +116,7 @@ namespace AnalysisTests {
         [TestCategory("10s")]
         public void RunInterpreterError() {
             foreach(var fact in Factories) {
-                using (var output = fact.Run("-c", "assert False")) {
+                using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "assert False")) {
                     Console.WriteLine(output.Arguments);
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 

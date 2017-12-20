@@ -2107,15 +2107,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     var tasks = new List<AP.TaskItem>();
                     ParserOptions options = MakeParserOptions(errorSink, tasks);
 
-                    using (var parser = buffer.Value.CreateParser(Project.LanguageVersion, options)) {
-                        var ast = ParseOneFile(parser);
-                        parseResults[buffer.Key] = new ParseResult(
-                            ast,
-                            errorSink,
-                            tasks,
-                            buffer.Value.Version
-                        );
-                    }
+                    var parser = buffer.Value.CreateParser(Project.LanguageVersion, options);
+                    var ast = ParseOneFile(parser);
+                    parseResults[buffer.Key] = new ParseResult(
+                        ast,
+                        errorSink,
+                        tasks,
+                        buffer.Value.Version
+                    );
                 }
 
                 // Save the single or combined tree into the project entry

@@ -14,9 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -39,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis {
     public class QualifiedFunctionNameWalker : PythonWalker {
         private readonly PythonAst _ast;
         private readonly int _lineNumber;
-        private readonly StringBuilder _name = new StringBuilder();
+        private readonly List<string> _names = new List<string>();
         private readonly string _expectedFuncName;
 
         public QualifiedFunctionNameWalker(PythonAst ast, int lineNumber, string expectedFuncName) {
@@ -48,9 +50,7 @@ namespace Microsoft.PythonTools.Analysis {
             _expectedFuncName = expectedFuncName;
         }
 
-        public string Name {
-            get { return _name.ToString(); }
-        }
+        public IEnumerable<string> Name => _names.AsEnumerable().Reverse();
 
         public override void PostWalk(FunctionDefinition node) {
             int start = node.GetStart(_ast).Line;
@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             string funcName = node.Name;
-            if (_name.Length == 0 && funcName != _expectedFuncName) {
+            if (_names.Count == 0 && funcName != _expectedFuncName) {
                 // The innermost function name must match the one that we've got from the code object.
                 // If it doesn't, the source code that we're parsing is out of sync with the running program,
                 // and cannot be used to compute the fully qualified name.
@@ -71,13 +71,7 @@ namespace Microsoft.PythonTools.Analysis {
                 funcName = classDef.Name + "." + funcName;
             }
 
-            if (_name.Length != 0) {
-                var inner = _name.ToString();
-                _name.Clear();
-                _name.Append(Strings.DebugStackFrameNameInName.FormatUI(inner, funcName));
-            } else {
-                _name.Append(funcName);
-            }
+            _names.Add(funcName);
         }
     }
 }

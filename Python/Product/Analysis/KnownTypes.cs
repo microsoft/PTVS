@@ -102,10 +102,35 @@ namespace Microsoft.PythonTools.Analysis {
 
     class FallbackBuiltinModule : IBuiltinPythonModule, IPythonModule {
         public readonly PythonLanguageVersion LanguageVersion;
+        private readonly Dictionary<BuiltinTypeId, IMember> _cachedInstances;
 
         public FallbackBuiltinModule(PythonLanguageVersion version) {
             LanguageVersion = version;
+            _cachedInstances = new Dictionary<BuiltinTypeId, IMember>();
             Name = BuiltinTypeId.Unknown.GetModuleName(version);
+        }
+
+        private IMember GetOrCreate(BuiltinTypeId typeId) {
+            if (typeId.IsVirtualId()) {
+                switch (typeId) {
+                    case BuiltinTypeId.Str:
+                        typeId = LanguageVersion.Is3x() ? BuiltinTypeId.Unicode : BuiltinTypeId.Bytes;
+                        break;
+                    case BuiltinTypeId.StrIterator:
+                        typeId = LanguageVersion.Is3x() ? BuiltinTypeId.UnicodeIterator : BuiltinTypeId.BytesIterator;
+                        break;
+                    default:
+                        typeId = BuiltinTypeId.Unknown;
+                        break;
+                }
+            }
+
+            lock (_cachedInstances) {
+                if (!_cachedInstances.TryGetValue(typeId, out var value)) {
+                    _cachedInstances[typeId] = value = new FallbackBuiltinPythonType(this, typeId);
+                }
+                return value;
+            }
         }
 
         public string Documentation => string.Empty;
@@ -115,10 +140,10 @@ namespace Microsoft.PythonTools.Analysis {
         public IMember GetAnyMember(string name) {
             foreach (BuiltinTypeId typeId in Enum.GetValues(typeof(BuiltinTypeId))) {
                 if (typeId.GetTypeName(LanguageVersion) == name) {
-                    return new FallbackBuiltinPythonType(this, typeId, name);
+                    return GetOrCreate(typeId);
                 }
             }
-            return new FallbackBuiltinPythonType(this, BuiltinTypeId.Unknown, BuiltinTypeId.Unknown.GetTypeName(LanguageVersion));
+            return GetOrCreate(BuiltinTypeId.Unknown);
         }
 
         public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();

@@ -202,9 +202,8 @@ b = C().f(1)
 
         private static PythonAstAndSource Parse(string code, GetExpressionOptions options) {
             code += "\n";
-            using (var parser = Parser.CreateParser(new StringReader(code), PythonLanguageVersion.V35, new ParserOptions { Verbatim = true })) {
-                return new PythonAstAndSource { Ast = parser.ParseFile(), Source = code, Options = options };
-            }
+            var parser = Parser.CreateParser(new StringReader(code), PythonLanguageVersion.V35, new ParserOptions { Verbatim = true });
+            return new PythonAstAndSource { Ast = parser.ParseFile(), Source = code, Options = options };
         }
 
         private static void AssertNoExpr(PythonAstAndSource astAndSource, int line, int column) {

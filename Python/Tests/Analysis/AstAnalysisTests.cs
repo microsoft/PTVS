@@ -404,10 +404,13 @@ R_A3 = R_A1.r_A()");
 
         [TestMethod, Priority(0)]
         public void ScrapedSpecialFloats() {
-            using (var analysis = CreateAnalysis()) {
+            using (var analysis = CreateAnalysis(PythonPaths.Versions.LastOrDefault(v => v.Version.Is3x()))) {
                 try {
                     var entry = analysis.AddModule("test-module", "import math; inf = math.inf; nan = math.nan");
                     analysis.WaitForAnalysis(CancellationTokens.After15s);
+
+                    var math = analysis.GetValue<AnalysisValue>("math");
+                    Assert.IsNotNull(math);
 
                     var inf = analysis.GetValue<ConstantInfo>("inf");
                     Assert.AreEqual(BuiltinTypeId.Float, inf.TypeId);

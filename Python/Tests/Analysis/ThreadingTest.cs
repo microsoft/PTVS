@@ -119,8 +119,8 @@ mc.fn([])
             var entries = Enumerable.Range(0, 100)
                 .Select(i => {
                     var entry = state.AddModule(string.Format("mod{0:000}", i), string.Format("mod{0:000}.py", i));
-                    using (var parser = Parser.CreateParser(new StringReader(testCode.FormatInvariant(i + 1, PythonTypes[i % PythonTypes.Count])), PythonLanguageVersion.V34))
-                        entry.UpdateTree(parser.ParseFile(), null);
+                    var parser = Parser.CreateParser(new StringReader(testCode.FormatInvariant(i + 1, PythonTypes[i % PythonTypes.Count])), PythonLanguageVersion.V34);
+                    entry.UpdateTree(parser.ParseFile(), null);
                     return entry;
                 })
                 .ToList();
@@ -162,8 +162,8 @@ mc.fn([])
                         .ToList();
                     foreach (var t in shufEntries) {
                         var i = t.Item3;
-                        using (var parser = Parser.CreateParser(new StringReader(testCode.FormatInvariant(i + 1, PythonTypes[i % PythonTypes.Count])), PythonLanguageVersion.V34))
-                            t.Item2.UpdateTree(parser.ParseFile(), null);
+                        var parser = Parser.CreateParser(new StringReader(testCode.FormatInvariant(i + 1, PythonTypes[i % PythonTypes.Count])), PythonLanguageVersion.V34);
+                        t.Item2.UpdateTree(parser.ParseFile(), null);
                     }
                     Thread.Sleep(1000);
                 }

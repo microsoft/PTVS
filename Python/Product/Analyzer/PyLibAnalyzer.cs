@@ -1250,10 +1250,7 @@ namespace Microsoft.PythonTools.Analysis {
                     currentLibrary = PathUtils.GetFileOrDirectoryName(files[0].LibraryPath);
                 }
 
-                using (var factory = new PythonInterpreterFactoryWithDatabase(
-                    new InterpreterConfiguration($"AnalysisOnly|{_version}", $"Analysis Only {_version}", version: _version),
-                    new InterpreterFactoryCreationOptions { WatchFileSystem = false }
-                ))
+                using (var factory = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(_version, outDir))
                 using (var projectState = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                     int? mostItemsInQueue = null;
                     if (_updater != null) {

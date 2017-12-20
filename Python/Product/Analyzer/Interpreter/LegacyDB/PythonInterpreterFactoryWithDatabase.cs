@@ -199,7 +199,8 @@ namespace Microsoft.PythonTools.Interpreter.LegacyDB {
         /// <see cref="CreateInterpreter"/>.
         /// </remarks>
         public virtual PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
-            if (!string.IsNullOrEmpty(databasePath) && !IsGenerating && PythonTypeDatabase.IsDatabaseVersionCurrent(databasePath)) {
+            if (!string.IsNullOrEmpty(databasePath) && !IsGenerating && 
+                (string.IsNullOrEmpty(Configuration.InterpreterPath) || PythonTypeDatabase.IsDatabaseVersionCurrent(databasePath))) {
                 var paths = new List<string>();
                 paths.Add(databasePath);
                 if (includeSitePackages) {

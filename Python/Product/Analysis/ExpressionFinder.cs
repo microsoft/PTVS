@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -28,10 +28,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         public ExpressionFinder(string expression, PythonLanguageVersion version, GetExpressionOptions options) {
             var parserOpts = new ParserOptions { Verbatim = true };
-            using (var parser = Parser.CreateParser(new StringReader(expression), version, parserOpts)) {
-                Ast = parser.ParseTopExpression();
-                Ast.Body.SetLoc(0, expression.Length);
-            }
+            var parser = Parser.CreateParser(new StringReader(expression), version, parserOpts);
+            Ast = parser.ParseTopExpression();
+            Ast.Body.SetLoc(0, expression.Length);
             Options = options.Clone();
         }
 

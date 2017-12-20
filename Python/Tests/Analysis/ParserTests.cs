@@ -2882,9 +2882,8 @@ namespace AnalysisTests {
                         break;
                 }
 
-                using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
-                    var ast = parser.ParseFile();
-                }
+                var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink });
+                var ast = parser.ParseFile();
 
                 if (errorSink.Errors.Count != 0) {
                     var fileErrors = errorSink.Errors.ToList();

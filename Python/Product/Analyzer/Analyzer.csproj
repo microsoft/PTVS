@@ -104,10 +104,13 @@
     <Compile Include="Interpreter\LegacyDB\IPythonInterpreterFactoryWithDatabase.cs" />
     <Compile Include="Interpreter\LegacyDB\ITypeDatabaseReader.cs" />
     <Compile Include="Interpreter\LegacyDB\NewDatabaseEventArgs.cs" />
+    <Compile Include="Interpreter\LegacyDB\Pickler.cs" />
     <Compile Include="Interpreter\LegacyDB\PythonInterpreterFactoryWithDatabase.cs" />
     <Compile Include="Interpreter\LegacyDB\PythonTypeDatabase.cs" />
     <Compile Include="Interpreter\LegacyDB\PythonTypeDatabaseCreationRequest.cs" />
+    <Compile Include="Interpreter\LegacyDB\SaveAnalysis.cs" />
     <Compile Include="Interpreter\LegacyDB\SharedDatabaseState.cs" />
+    <Compile Include="Interpreter\LegacyDB\Unpickler.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>

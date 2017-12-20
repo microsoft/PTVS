@@ -16,37 +16,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public sealed class NoInterpretersFactory : IPythonInterpreterFactory {
-        private readonly IBuiltinPythonModule _builtinModule = new FallbackBuiltinModule(PythonLanguageVersion.V37);
+    public sealed class NoInterpretersInterpreter : IPythonInterpreter {
+        private static readonly IBuiltinPythonModule _builtinModule = new FallbackBuiltinModule(PythonLanguageVersion.V37);
 
-        public NoInterpretersFactory() {
-            Configuration = new InterpreterConfiguration(
-                InterpreterRegistryConstants.NoInterpretersFactoryId,
-                Strings.NoInterpretersDescription,
-                uiMode: InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
-            );
-        }
-
-        public InterpreterConfiguration Configuration { get; }
-
-        public void NotifyImportNamesChanged() { }
-
-        public IPythonInterpreter CreateInterpreter() {
-            return new NoInterpretersInterpreter(_builtinModule);
-        }
-    }
-
-    class NoInterpretersInterpreter : IPythonInterpreter {
-        private readonly IBuiltinPythonModule _builtinModule;
-
-        public NoInterpretersInterpreter(IBuiltinPythonModule builtinModule) {
-            _builtinModule = builtinModule;
-        }
+        public NoInterpretersInterpreter() { }
 
         public void Dispose() { }
 
