@@ -32,37 +32,79 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
 
         // This is just a small cache to deal with the same keys being used
         // frequently in a loop.
-        private class CacheItem {
+        internal class CacheItem {
             public string CompareKey;
             public long Accessed;
         }
-        private readonly Dictionary<string, CacheItem> _compareKeyCache = new Dictionary<string, CacheItem>();
+        internal readonly Dictionary<string, CacheItem> _compareKeyCache = new Dictionary<string, CacheItem>();
         private long _accessCount;
         private const int CACHE_UPPER_LIMIT = 32;
 
         private readonly StringComparer Ordinal = StringComparer.Ordinal;
 
-        private PathEqualityComparer() { }
+        internal PathEqualityComparer() { }
 
-        private static string GetCompareKeyUncached(string path) {
-            path = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
-
-            var doubleSep = new string(Path.DirectorySeparatorChar, 2);
-            string oldPath = null;
-            while (oldPath != path) {
-                oldPath = path;
-                path = path.Replace(doubleSep, Path.DirectorySeparatorChar.ToString());
+        internal static string GetCompareKeyUncached(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return path;
             }
 
-            if (path.Length > 0 && path[path.Length - 1] == Path.DirectorySeparatorChar) {
-                path = path.Remove(path.Length - 1);
-            }
+            string root = "";
 
-            // TODO: Don't uppercase on non-Windows platforms
-            return path.ToUpperInvariant();
+            int rootParts = 0;
+            var parts = new List<string>();
+            int next_i = int.MaxValue;
+            for (int i = 0; next_i > 0 && i < path.Length; i = next_i) {
+                next_i = path.IndexOfAny(PathUtils.DirectorySeparators, i) + 1;
+                string segment;
+                if (next_i <= 0) {
+                    segment = path.Substring(i);
+                } else {
+                    segment = path.Substring(i, next_i - i - 1);
+                }
+                if (segment.Length == 0) {
+                    if (i == 0 && next_i == 1) {
+                        // Slash at the start should be preserved, but we may have
+                        // an SMB reference, so we need to check that too
+                        if (path.IndexOfAny(PathUtils.DirectorySeparators, next_i) != next_i) {
+                            parts.Add(string.Empty);
+                            continue;
+                        }
+
+                        // There are two slashes, so our first four segments will
+                        // be protected:
+                        //
+                        //   \\computer\share
+                        //
+                        // Segment 1: '' before first \
+                        // Segment 2: '' between first and second \
+                        // Segment 3: 'computer'
+                        // Segment 4: 'share'
+                        parts.Add(string.Empty);
+                        parts.Add(string.Empty);    // the second one will be skipped
+                        rootParts = 4;
+                    }
+                } else if (segment == ".") {
+                    // Do nothing
+                } else if (segment == "..") {
+                    if (parts.Count > rootParts) {
+                        parts.RemoveAt(parts.Count - 1);
+                    } else {
+                        parts.Add(segment);
+                        rootParts += 1;
+                    }
+                } else {
+                    if (parts.Count == 0 && segment.Last() == ':') {
+                        rootParts = 1;
+                    }
+                    parts.Add(segment.TrimEnd('.', ' ', '\t').ToUpperInvariant());
+                }
+            }
+            
+            return root + string.Join(Path.DirectorySeparatorChar.ToString(), parts);
         }
 
-        private CacheItem GetOrCreateCacheItem(string key, out bool created) {
+        internal CacheItem GetOrCreateCacheItem(string key, out bool created) {
             CacheItem item;
             created = true;
             var access = Interlocked.Increment(ref _accessCount);

@@ -22,7 +22,7 @@ using System.Threading;
 
 namespace Microsoft.PythonTools.Analysis.Infrastructure {
     static class PathUtils {
-        private static readonly char[] DirectorySeparators = new[] {
+        internal static readonly char[] DirectorySeparators = new[] {
             Path.DirectorySeparatorChar,
             Path.AltDirectorySeparatorChar
         };
