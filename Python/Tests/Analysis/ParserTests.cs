@@ -2917,33 +2917,38 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void SourceLocationTests() {
-            foreach (var sl in new[] {
-                new SourceLocation(),
-                new SourceLocation(1, 1)
-            }) {
-                try {
-                    int i = sl.Index;
-                    Assert.Fail("Expected InvalidOperationException");
-                } catch (InvalidOperationException) {
-                }
+            Assert.AreEqual(0, new SourceLocation().Index);
+            Assert.AreEqual(100, new SourceLocation(100, 1, 1).Index);
+            try {
+                int i = new SourceLocation(1, 1).Index;
+                Assert.Fail("Expected InvalidOperationException");
+            } catch (InvalidOperationException) {
             }
 
             var x = new SourceLocation(100, 5, 10);
             var y = x.AddColumns(int.MaxValue);
-            Assert.AreEqual(int.MaxValue, x.Column);
-            Assert.AreEqual(int.MaxValue, x.Index);
+            Assert.AreEqual(int.MaxValue, y.Column);
+            Assert.AreEqual(int.MaxValue, y.Index);
 
             y = x.AddColumns(int.MaxValue - 9);
-            Assert.AreEqual(int.MaxValue, x.Column);
-            Assert.AreEqual(int.MaxValue, x.Index);
+            Assert.AreEqual(int.MaxValue, y.Column);
+            Assert.AreEqual(int.MaxValue, y.Index);
+
+            y = x.AddColumns(-5);
+            Assert.AreEqual(5, y.Column);
+            Assert.AreEqual(95, y.Index);
 
             y = x.AddColumns(-10);
-            Assert.AreEqual(1, x.Column);
-            Assert.AreEqual(91, x.Index);
+            Assert.AreEqual(1, y.Column);
+            Assert.AreEqual(91, y.Index);
 
             y = x.AddColumns(-100);
-            Assert.AreEqual(1, x.Column);
-            Assert.AreEqual(91, x.Index);
+            Assert.AreEqual(1, y.Column);
+            Assert.AreEqual(91, y.Index);
+
+            y = x.AddColumns(int.MinValue);
+            Assert.AreEqual(1, y.Column);
+            Assert.AreEqual(91, y.Index);
         }
 
         #endregion

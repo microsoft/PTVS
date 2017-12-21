@@ -199,26 +199,43 @@ namespace Microsoft.PythonTools.Parsing {
         /// <returns>True if the location is valid, False otherwise.</returns>
         public bool IsValid {
             get {
-                return this._line != 0 && this._column != 0;
+                return this._line > 0 && this._column > 0;
             }
         }
 
         /// <summary>
         /// Returns a new SourceLocation with modified column. This will never
-        /// result in a column less than 1, and will not modify the line number.
+        /// result in a column less than 1 (unless the original location is invalid),
+        /// and will not modify the line number.
         /// </summary>
         public SourceLocation AddColumns(int columns) {
+            if (!IsValid) {
+                return Invalid;
+            }
+
             int newIndex = this._index, newCol = this._column;
-            if (int.MaxValue - this._column < columns) {
+
+            // These comparisons have been arranged to allow columns to
+            // be int.MaxValue without the arithmetic overflowing.
+            // The naive version is shown as a comment.
+
+            // if (this._column + columns > int.MaxValue)
+            if (columns > int.MaxValue - this._column) {
                 newCol = int.MaxValue;
                 if (newIndex >= 0) {
                     newIndex = int.MaxValue;
                 }
-            } else if (this._column + columns < 1) {
-                if (newIndex >= 0) {
-                    newIndex += (this._column + columns) + 1;
-                }
+            // if (this._column + columns <= 0)
+            } else if (columns == int.MinValue || (columns < 0 && this._column <= -columns)) {
                 newCol = 1;
+                if (newIndex >= 0) {
+                    newIndex += 1 - this._column;
+                }
+            } else {
+                newCol += columns;
+                if (newIndex >= 0) {
+                    newIndex += columns;
+                }
             }
             return new SourceLocation(newIndex, this._line, newCol);
         }
