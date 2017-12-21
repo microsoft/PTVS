@@ -24,6 +24,7 @@ using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -127,6 +128,13 @@ namespace Microsoft.PythonTools.Project {
                 }
             } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
+                    case PythonConstants.CreateCondaEnv:
+                        if (ExperimentalOptions.AutoDetectCondaEnvironments) {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        } else {
+                            result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
+                        }
+                        return VSConstants.S_OK;
                     case PythonConstants.AddEnvironment:
                     case PythonConstants.AddVirtualEnv:
                     case PythonConstants.AddExistingVirtualEnv:

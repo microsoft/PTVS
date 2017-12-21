@@ -1652,6 +1652,9 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.AddEnvironment:
                         ShowAddInterpreter();
                         return VSConstants.S_OK;
+                    case PythonConstants.CreateCondaEnv:
+                        ExecCreateCondaEnv();
+                        return VSConstants.S_OK;
                     case PythonConstants.AddExistingVirtualEnv:
                     case PythonConstants.AddVirtualEnv:
                         ShowAddVirtualEnvironmentWithErrorHandling((int)cmdId == PythonConstants.AddExistingVirtualEnv, Path.Combine(ProjectHome, "requirements.txt"));
@@ -1879,6 +1882,7 @@ namespace Microsoft.PythonTools.Project {
                         case CommonConstants.StartWithoutDebuggingCmdId:
                             return true;
                         case PythonConstants.ActivateEnvironment:
+                        case PythonConstants.CreateCondaEnv:
                         case PythonConstants.AddEnvironment:
                         case PythonConstants.AddExistingVirtualEnv:
                         case PythonConstants.AddVirtualEnv:
@@ -1898,6 +1902,7 @@ namespace Microsoft.PythonTools.Project {
                 } else if (this.IsAppxPackageableProject()) {
                     // Disable adding environment for UWP projects
                     switch ((int)cmd) {
+                        case PythonConstants.CreateCondaEnv:
                         case PythonConstants.AddEnvironment:
                         case PythonConstants.AddExistingVirtualEnv:
                         case PythonConstants.AddVirtualEnv:
@@ -2515,6 +2520,15 @@ namespace Microsoft.PythonTools.Project {
         }
 
         #endregion
+
+        private int ExecCreateCondaEnv() {
+            InterpreterList.InterpreterListToolWindow.OpenAt(
+                Site,
+                EnvironmentsList.EnvironmentView.CondaEnvironmentViewId,
+                typeof(EnvironmentsList.CondaExtensionProvider)
+            );
+            return VSConstants.S_OK;
+        }
 
         public override Guid SharedCommandGuid {
             get {

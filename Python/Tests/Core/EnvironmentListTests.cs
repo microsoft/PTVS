@@ -98,8 +98,7 @@ namespace PythonToolsUITests {
 
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                list.Service = mockService;
-                list.Interpreters = mockService;
+                list.InitializeEnvironments(mockService, mockService);
                 var environments = list.Environments;
 
                 Assert.AreEqual(6, environments.Count);
@@ -131,8 +130,7 @@ namespace PythonToolsUITests {
 
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                list.Service = mockService;
-                list.Interpreters = mockService;
+                list.InitializeEnvironments(mockService, mockService);
                 var environments = list.Environments;
 
                 Assert.AreEqual(2, environments.Count);
@@ -252,8 +250,7 @@ namespace PythonToolsUITests {
                     )
                 });
                 try {
-                    list.Service = service;
-                    list.Interpreters = interpreters;
+                    list.InitializeEnvironments(interpreters, service);
                     var environments = list.Environments;
 
                     AssertUtil.AreEqual(
@@ -285,8 +282,7 @@ namespace PythonToolsUITests {
                     new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 3", new Version(3, 3)))
                 );
 
-                list.Service = mockService;
-                list.Interpreters = mockService;
+                list.InitializeEnvironments(mockService, mockService);
 
                 Assert.AreEqual(0, list.Environments.Count);
 
@@ -308,8 +304,7 @@ namespace PythonToolsUITests {
                 var service = new MockInterpreterOptionsService();
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
                 service.AddProvider(provider);
-                list.Service = service;
-                list.Interpreters = service;
+                list.InitializeEnvironments(service, service);
 
                 foreach (string invalidPath in new string[] {
                     null,
@@ -347,8 +342,7 @@ namespace PythonToolsUITests {
                 var service = new MockInterpreterOptionsService();
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
                 service.AddProvider(provider);
-                list.Service = service;
-                list.Interpreters = service;
+                list.InitializeEnvironments(service, service);
 
                 foreach (var version in PythonPaths.Versions) {
                     Console.WriteLine("Path: <{0}>", version.InterpreterPath);
@@ -379,8 +373,7 @@ namespace PythonToolsUITests {
 
                 var mockService = new MockInterpreterOptionsService();
                 mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact));
-                list.Service = mockService;
-                list.Interpreters = mockService;
+                list.InitializeEnvironments(mockService, mockService);
                 var view = list.Environments.Single();
 
                 Assert.IsFalse(wpf.Invoke(() => view.IsRefreshingDB));
@@ -436,8 +429,7 @@ namespace PythonToolsUITests {
                 var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
-                list.Service = service;
-                list.Interpreters = interpreters;
+                list.InitializeEnvironments(interpreters, service);
 
                 var expected = new HashSet<string>(
                     PythonPaths.Versions
@@ -469,8 +461,7 @@ namespace PythonToolsUITests {
                 var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
-                list.Service = service;
-                list.Interpreters = interpreters;
+                list.InitializeEnvironments(interpreters, service);
 
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Select(ev => (string)ev.InterpreterPath),
@@ -582,8 +573,7 @@ namespace PythonToolsUITests {
                 var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
-                list.Service = service;
-                list.Interpreters = interpreters;
+                list.InitializeEnvironments(interpreters, service);
 
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
@@ -639,8 +629,7 @@ namespace PythonToolsUITests {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 service.DefaultInterpreterChanged += (s, e) => { defaultChanged.SetIfNotDisposed(); };
-                list.Service = service;
-                list.Interpreters = interpreters;
+                list.InitializeEnvironments(interpreters, service);
                 var originalDefault = service.DefaultInterpreter;
                 try {
                     foreach (var interpreter in interpreters.Interpreters) {
@@ -693,8 +682,7 @@ namespace PythonToolsUITests {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 list.CreatePipExtension = true;
-                list.Service = service;
-                list.Interpreters = service;
+                list.InitializeEnvironments(service, service);
 
                 var environment = list.Environments.Single();
                 var pip = list.GetExtensionOrAssert<PipExtensionProvider>(environment);
@@ -736,8 +724,7 @@ namespace PythonToolsUITests {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 list.CreatePipExtension = true;
-                list.Service = service;
-                list.Interpreters = service;
+                list.InitializeEnvironments(service, service);
 
                 var environment = list.Environments.Single();
                 var pip = list.GetExtensionOrAssert<PipExtensionProvider>(environment);
@@ -841,8 +828,7 @@ namespace PythonToolsUITests {
 
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                list.Service = mockService;
-                list.Interpreters = mockService;
+                list.InitializeEnvironments(mockService, mockService);
                 var environments = list.Environments;
 
                 Assert.AreEqual(4, environments.Count);
@@ -1038,23 +1024,21 @@ namespace PythonToolsUITests {
             public bool CreateDBExtension { get; set; }
             public bool CreatePipExtension { get; set; }
 
+            public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options) {
+                _proxy.Invoke(() => Window.InitializeEnvironments(interpreters, options));
+            }
+
             public IInterpreterOptionsService Service {
                 get {
-                    return _proxy.Invoke(() => Window.Service);
-                }
-                set {
-                    _proxy.Invoke(() => { Window.Service = value; });
+                    return _proxy.Invoke(() => Window.OptionsService);
                 }
             }
 
-            public IInterpreterRegistryService Interpreters {
-                get {
-                    return _proxy.Invoke(() => Window.Interpreters);
-                }
-                set {
-                    _proxy.Invoke(() => { Window.Interpreters = value; });
-                }
-            }
+            //public IInterpreterRegistryService Interpreters {
+            //    get {
+            //        return _proxy.Invoke(() => Window.Interpreters);
+            //    }
+            //}
 
             public List<EnvironmentView> Environments {
                 get {

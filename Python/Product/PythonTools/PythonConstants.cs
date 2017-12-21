@@ -71,6 +71,7 @@ namespace Microsoft.PythonTools {
         internal const int InstallRequirementsTxt = 0x4033;
         internal const int GenerateRequirementsTxt = 0x4034;
         internal const int ProcessRequirementsTxt = 0x4036;
+        internal const int CreateCondaEnv = 0x4037;
         internal const int OpenInteractiveForEnvironment = 0x4031;
         internal const int ViewAllEnvironments = 0x400B;
 
