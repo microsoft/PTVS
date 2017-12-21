@@ -45,6 +45,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly VSTASKCATEGORY _category;
         private readonly bool _squiggle;
         private readonly LocationTracker _spanTranslator;
+        private readonly int _fromVersion;
         private readonly IServiceProvider _serviceProvider;
 
         internal TaskProviderItem(
@@ -54,12 +55,14 @@ namespace Microsoft.PythonTools.Intellisense {
             VSTASKPRIORITY priority,
             VSTASKCATEGORY category,
             bool squiggle,
-            LocationTracker spanTranslator
+            LocationTracker spanTranslator,
+            int fromVersion
         ) {
             _serviceProvider = serviceProvider;
             _message = message;
             _rawSpan = rawSpan;
             _spanTranslator = spanTranslator;
+            _fromVersion = fromVersion;
             _rawSpan = rawSpan;
             _priority = priority;
             _category = category;
@@ -90,12 +93,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            // TODO: Map between versions rather than using the current snapshot
             var snapshot = _spanTranslator.TextBuffer.CurrentSnapshot;
-            var target = _rawSpan.ToSnapshotSpan(snapshot);
-            //SnapshotSpan target = _spanTranslator.TranslateForward(
-            //    new Span(_rawSpan.Start.Index, _rawSpan.Length)
-            //);
+            var target = _spanTranslator.Translate(_rawSpan, _fromVersion, snapshot);
 
             if (target.Length <= 0) {
                 return;
@@ -129,9 +128,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
     sealed class TaskProviderItemFactory {
         private readonly LocationTracker _spanTranslator;
+        private readonly int _fromVersion;
 
-        public TaskProviderItemFactory(LocationTracker spanTranslator) {
+        public TaskProviderItemFactory(LocationTracker spanTranslator, int fromVersion) {
             _spanTranslator = spanTranslator;
+            _fromVersion = fromVersion;
         }
 
         #region Factory Functions
@@ -145,7 +146,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 priority,
                 category,
                 true,
-                _spanTranslator
+                _spanTranslator,
+                _fromVersion
             );
         }
 
@@ -176,7 +178,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 VSTASKPRIORITY.TP_NORMAL,
                 VSTASKCATEGORY.CAT_BUILDCOMPILE,
                 true,
-                _spanTranslator
+                _spanTranslator,
+                _fromVersion
             );
         }
 

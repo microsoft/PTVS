@@ -179,11 +179,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
-            var lastSent = _services.GetBufferInfo(buffer).LastSentSnapshot;
+        public Task EnsureCodeSyncedAsync(ITextBuffer buffer) => EnsureCodeSyncedAsync(buffer, false);
+
+        public async Task EnsureCodeSyncedAsync(ITextBuffer buffer, bool force) {
+            var lastSent = force ? null : _services.GetBufferInfo(buffer).LastSentSnapshot;
             var snapshot = buffer.CurrentSnapshot;
-            if (lastSent != buffer.CurrentSnapshot) {
-                await ParseBuffers(Enumerable.Repeat(snapshot, 1));
+            if (force || lastSent != buffer.CurrentSnapshot) {
+                await ParseBuffers(Enumerable.Repeat(snapshot, 1)).ConfigureAwait(false);
             }
         }
 

@@ -1433,7 +1433,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // Update the parser warnings/errors.
                 if (!entry.SuppressErrorList && _services.ErrorTaskProvider != null) {
                     if ((buffer.errors?.Any() ?? false) || (buffer.warnings?.Any() ?? false)) {
-                        var factory = new TaskProviderItemFactory(translator);
+                        var factory = new TaskProviderItemFactory(translator, buffer.version);
                         var warningItems = buffer.warnings?.Select(er => factory.FromErrorResult(
                             _services.Site,
                             er,
@@ -1467,7 +1467,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             GetPriority(x.priority),
                             GetCategory(x.category),
                             x.squiggle,
-                            translator
+                            translator,
+                            buffer.version
                         ));
 
                         _services.CommentTaskProvider.ReplaceItems(

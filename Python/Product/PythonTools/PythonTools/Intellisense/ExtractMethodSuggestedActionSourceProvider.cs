@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -37,15 +38,11 @@ namespace Microsoft.PythonTools.Intellisense {
     [TextViewRole(PredefinedTextViewRoles.Analyzable)]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
     class ExtractMethodSuggestedActionSourceProvider : ISuggestedActionsSourceProvider {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly Lazy<PreviewChangesService> _changePreviewFactory;
-        private readonly Lazy<AnalysisEntryService> _entryService;
+        private readonly PythonEditorServices _services;
 
         [ImportingConstructor]
-        public ExtractMethodSuggestedActionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider provider, Lazy<PreviewChangesService> changePreviewFactory, Lazy<AnalysisEntryService> entryService) {
-            _serviceProvider = provider;
-            _changePreviewFactory = changePreviewFactory;
-            _entryService = entryService;
+        public ExtractMethodSuggestedActionSourceProvider([Import] PythonEditorServices services) {
+            _services = services;
         }
 
         public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer) {
@@ -158,44 +155,37 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 public async Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
-                    AnalysisEntry entry;
-                    if (_parent._entryService.Value == null || !_parent._entryService.Value.TryGetAnalysisEntry(_view, out entry)) {
+                    var bi = _parent._services.GetBufferInfo(_view.TextBuffer);
+                    var entry = bi?.AnalysisEntry;
+                    if (entry == null) {
                         return null;
                     }
 
                     var extractInfo = await entry.Analyzer.ExtractMethodAsync(
-                        entry,
-                        _view.TextBuffer,
+                        bi,
                         _view,
                         "new_method",
                         null,
                         null
                     );
-                    if (extractInfo == null || extractInfo.Data == null) {
+                    if (extractInfo == null) {
                         return null;
                     }
 
-                    var changes = extractInfo.Data.changes;
-                    var tracker = extractInfo.GetTracker(extractInfo.Data.version);
-                    var originalBuffer = _view.TextBuffer;
-                    if (changes == null || tracker == null || originalBuffer == null) {
-                        return null;
-                    }
-
-                    return _parent._changePreviewFactory.Value.CreateDiffView(
-                        changes,
-                        tracker,
-                        originalBuffer
+                    return _parent._services.PreviewChangesService.CreateDiffView(
+                        extractInfo.changes,
+                        bi,
+                        extractInfo.version
                     );
                 }
 
 
                 public void Invoke(CancellationToken cancellationToken) {
                     new Refactoring.MethodExtractor(
-                        _parent._serviceProvider,
+                        _parent._services,
                         _view
                     ).ExtractMethod(
-                        new ExtractMethodUserInput(_parent._serviceProvider)
+                        new ExtractMethodUserInput(_parent._services.Site)
                     ).DoNotWait();
                 }
 

@@ -120,8 +120,7 @@ namespace PythonToolsMockTests {
                                     Assert.IsNotNull(bp, "No buffer parser was ever created");
                                     var bi = PythonTextBufferInfo.TryGetForBuffer(view.TextView.TextBuffer);
                                     Assert.IsNotNull(bi, "No BufferInfo was ever created");
-                                    bi.LastSentSnapshot = null;
-                                    bp.EnsureCodeSyncedAsync(view.TextView.TextBuffer).WaitAndUnwrapExceptions();
+                                    bp.EnsureCodeSyncedAsync(view.TextView.TextBuffer, force: true).WaitAndUnwrapExceptions();
                                 }
                             }
                         } catch (OperationCanceledException) {
@@ -251,13 +250,13 @@ namespace PythonToolsMockTests {
 
             public async Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
                 if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
-                    for (int retries = 100; retries > 0 && _info.LastAnalysisReceivedVersion == null; --retries) {
+                    for (int retries = 100; retries > 0 && _info.LastAnalysisSnapshot == null; --retries) {
                         await Task.Delay(100);
                     }
-                    if (_info.LastAnalysisReceivedVersion == null) {
+                    if (_info.LastAnalysisSnapshot == null) {
                         throw new NullReferenceException("LastAnalysisReceivedVersion was not set");
                     }
-                    if (_info.LastAnalysisReceivedVersion.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
+                    if (_info.LastAnalysisSnapshot.Version.VersionNumber >= _info.Buffer.CurrentSnapshot.Version.VersionNumber) {
                         try {
                             _event.Set();
                         } catch (ObjectDisposedException) {

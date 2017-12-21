@@ -784,7 +784,7 @@ namespace Microsoft.PythonTools.Language {
 
 
         private void ExtractMethod() {
-            new Refactoring.MethodExtractor(_editorServices.Site, _textView).ExtractMethod(new ExtractMethodUserInput(_editorServices.Site)).DoNotWait();
+            new Refactoring.MethodExtractor(_editorServices, _textView).ExtractMethod(new ExtractMethodUserInput(_editorServices.Site)).DoNotWait();
         }
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {

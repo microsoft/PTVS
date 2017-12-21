@@ -127,6 +127,9 @@ namespace Microsoft.PythonTools.Editor {
         public IIncrementalSearchFactoryService IncrementalSearch = null;
 
         [Import]
+        public PreviewChangesService PreviewChangesService = null;
+
+        [Import]
         public ITextMarkerProviderFactory TextMarkerProviderFactory = null;
 
         [Import]
