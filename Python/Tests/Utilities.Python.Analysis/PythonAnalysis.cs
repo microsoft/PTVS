@@ -145,14 +145,13 @@ namespace TestUtilities.Python {
             if (code != null) {
                 PythonAst ast;
                 errors = new CollectingErrorSink();
-                using (var p = Parser.CreateParser(
+                var p = Parser.CreateParser(
                     new StringReader(code),
                     _analyzer.LanguageVersion,
                     new ParserOptions { BindReferences = true, ErrorSink = errors }
-                )) {
-                    ast = p.ParseFile();
-                    entry.UpdateTree(ast, null);
-                }
+                );
+                ast = p.ParseFile();
+                entry.UpdateTree(ast, null);
                 if (errors.Errors.Any() || errors.Warnings.Any()) {
                     if (AssertOnParseErrors) {
                         var errorMsg = MakeMessage(errors);

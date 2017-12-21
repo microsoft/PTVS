@@ -23,7 +23,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     /// <summary>
     /// Implements a subset of the Python pickling protocol for saving out intellisense databases.  Supports dictionary of str, object,
     /// object arrays, and list of object as well as primitive types.

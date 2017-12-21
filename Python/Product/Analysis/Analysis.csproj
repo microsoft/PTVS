@@ -61,6 +61,14 @@
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
     <Compile Include="CompletionOptions.cs" />
     <Compile Include="ExpressionFinder.cs" />
+    <Compile Include="Infrastructure\EnumerableExtensions.cs" />
+    <Compile Include="Infrastructure\ExceptionExtensions.cs" />
+    <Compile Include="Infrastructure\InstallPath.cs" />
+    <Compile Include="Infrastructure\PathEqualityComparer.cs" />
+    <Compile Include="Infrastructure\PathUtils.cs" />
+    <Compile Include="Infrastructure\ProcessHelper.cs" />
+    <Compile Include="Infrastructure\StringExtensions.cs" />
+    <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Interpreter\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
@@ -97,7 +105,7 @@
     <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\ICanFindModuleMembers.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
-    <Compile Include="Interpreter\NoInterpretersFactory.cs" />
+    <Compile Include="Interpreter\NoInterpretersInterpreter.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PackageVersion.cs" />
     <Compile Include="Parsing\Ast\TypeAnnotation.cs" />
@@ -317,14 +325,11 @@
     <Compile Include="Parsing\Tokenizer.cs" />
     <Compile Include="Parsing\TokenKind.Generated.cs" />
     <Compile Include="Parsing\TokenTriggers.cs" />
-    <Compile Include="Pickler.cs" />
     <Compile Include="ProjectEntry.cs" />
     <Compile Include="PythonAnalyzer.cs" />
-    <Compile Include="SaveAnalysis.cs" />
     <Compile Include="EncodedLocation.cs" />
     <Compile Include="AnalysisUnit.cs" />
     <Compile Include="Parsing\SourceLocation.cs" />
-    <Compile Include="Unpickler.cs" />
     <Compile Include="Validation.cs" />
     <Compile Include="Values\ArgumentSet.cs" />
     <Compile Include="Values\BoundBuiltinMethodInfo.cs" />
@@ -384,12 +389,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="get_search_paths.py">

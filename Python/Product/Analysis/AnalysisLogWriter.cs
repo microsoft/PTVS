@@ -22,7 +22,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Analysis {
     class AnalysisLogWriter : IDisposable {
@@ -234,7 +233,7 @@ namespace Microsoft.PythonTools.Analysis {
                 } catch (DirectoryNotFoundException) when (!create) {
                     return null;
                 } catch (IOException) {
-                    var dir = PathUtils.GetParent(_outputFile);
+                    var dir = Path.GetDirectoryName(_outputFile);
                     try {
                         Directory.CreateDirectory(dir);
                     } catch (IOException) {

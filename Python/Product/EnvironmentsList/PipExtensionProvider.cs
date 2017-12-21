@@ -34,8 +34,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
-        private static readonly Version SupportsDashMPip = new Version(2, 7);
-
         /// <summary>
         /// Creates a provider for managing packages through pip.
         /// </summary>

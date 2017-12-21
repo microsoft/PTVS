@@ -82,6 +82,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interpreter\NoInterpretersFactory.cs" />
     <Compile Include="Interpreter\ICondaEnvironmentManagerUI.cs" />
     <Compile Include="Interpreter\ICondaEnvironmentManager.cs" />
     <Compile Include="Interpreter\CondaEnvironmentManager.cs" />

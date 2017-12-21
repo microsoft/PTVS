@@ -292,14 +292,13 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var config = Configuration;
-            using (var parser = Parser.CreateParser(new StringReader(text), LanguageVersion)) {
-                parser.ParseInteractiveCode(out pr);
-                if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
-                    return text.EndsWith("\n");
-                }
-                if (pr == ParseResult.IncompleteToken) {
-                    return false;
-                }
+            var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
+            parser.ParseInteractiveCode(out pr);
+            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
+                return text.EndsWith("\n");
+            }
+            if (pr == ParseResult.IncompleteToken) {
+                return false;
             }
             return true;
         }

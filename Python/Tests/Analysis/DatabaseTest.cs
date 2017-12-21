@@ -212,7 +212,7 @@ namespace AnalysisTests {
                 "Should not have found cached paths in an empty directory");
 
             PythonLibraryPath.WriteDatabaseSearchPaths(dbPath, paths);
-            Assert.IsTrue(File.Exists(Path.Combine(dbPath, "database.path")));
+            Assert.IsTrue(File.Exists(dbPath));
             var paths2 = PythonLibraryPath.GetCachedDatabaseSearchPaths(dbPath);
             AssertUtil.ArrayEquals(paths, paths2, (o1, o2) => {
                 PythonLibraryPath p1 = (PythonLibraryPath)o1, p2 = (PythonLibraryPath)o2;

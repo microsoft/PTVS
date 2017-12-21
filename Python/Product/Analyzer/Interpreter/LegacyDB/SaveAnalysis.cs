@@ -20,13 +20,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis {
+namespace Microsoft.PythonTools.Interpreter.LegacyDB {
     class SaveAnalysis {
         // This stack contains all module, class and member names while saving
         // analysis. It should only be popped on successful generation (that is,

@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using IOPath = System.IO.Path;
 
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             result.Add(new PythonLibraryPath(library, true, null));
 
-            var sitePackages = PathUtils.GetAbsoluteDirectoryPath(library, "site-packages");
+            var sitePackages = IOPath.Combine(library, "site-packages");
             if (!Directory.Exists(sitePackages)) {
                 return result;
             }
@@ -110,15 +110,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static async Task<IList<PythonLibraryPath>> GetDatabaseSearchPathsAsync(InterpreterConfiguration config, string cachePath) {
             for (int retries = 5; retries > 0; --retries) {
+                List<PythonLibraryPath> paths;
                 if (!string.IsNullOrEmpty(cachePath)) {
-                    var paths = GetCachedDatabaseSearchPaths(cachePath);
+                    paths = GetCachedDatabaseSearchPaths(cachePath);
                     if (paths != null) {
                         return paths;
                     }
                 }
 
                 try {
-                    var paths = await GetUncachedDatabaseSearchPathsAsync(config.InterpreterPath);
+                    paths = await GetUncachedDatabaseSearchPathsAsync(config.InterpreterPath);
                     if (!string.IsNullOrEmpty(cachePath)) {
                         WriteDatabaseSearchPaths(cachePath, paths);
                     }
@@ -126,6 +127,9 @@ namespace Microsoft.PythonTools.Analysis {
                 } catch (InvalidOperationException) {
                     // Failed to get paths
                     break;
+                } catch (UnauthorizedAccessException) {
+                    // Failed to write paths - sleep and then loop
+                    Thread.Sleep(50);
                 } catch (IOException) {
                     // Failed to write paths - sleep and then loop
                     Thread.Sleep(50);
@@ -134,7 +138,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             var ospy = PathUtils.FindFile(config.PrefixPath, "os.py", firstCheck: new[] { "Lib" });
             if (!string.IsNullOrEmpty(ospy)) {
-                return GetDefaultDatabaseSearchPaths(PathUtils.GetParent(ospy));
+                return GetDefaultDatabaseSearchPaths(IOPath.GetDirectoryName(ospy));
             }
 
             return Array.Empty<PythonLibraryPath>();
@@ -147,52 +151,41 @@ namespace Microsoft.PythonTools.Analysis {
         /// <returns>A list of search paths for the interpreter.</returns>
         /// <remarks>Added in 2.2, moved in 3.3</remarks>
         public static async Task<List<PythonLibraryPath>> GetUncachedDatabaseSearchPathsAsync(string interpreter) {
-            List<string> lines;
-
             // sys.path will include the working directory, so we make an empty
             // path that we can filter out later
             var tempWorkingDir = IOPath.Combine(IOPath.GetTempPath(), IOPath.GetRandomFileName());
             Directory.CreateDirectory(tempWorkingDir);
-            var srcGetSearchPaths = PythonToolsInstallPath.GetFile("get_search_paths.py", typeof(PythonLibraryPath).Assembly);
-            var getSearchPaths = PathUtils.GetAbsoluteFilePath(tempWorkingDir, PathUtils.GetFileOrDirectoryName(srcGetSearchPaths));
+            if (!InstallPath.TryGetFile("get_search_paths.py", out string srcGetSearchPaths)) {
+                return new List<PythonLibraryPath>();
+            }
+            var getSearchPaths = IOPath.Combine(tempWorkingDir, PathUtils.GetFileName(srcGetSearchPaths));
             File.Copy(srcGetSearchPaths, getSearchPaths);
 
-            try {
-                using (var proc = ProcessOutput.Run(
-                    interpreter,
-                    new[] {
-                        "-S",   // don't import site - we do that in code
-                        "-E",   // ignore environment
-                        getSearchPaths
-                    },
-                    tempWorkingDir,
-                    null,
-                    false,
-                    null
-                )) {
-                    int exitCode = -1;
-                    try {
-                        exitCode = await proc;
-                    } catch (OperationCanceledException) {
-                    }
-                    if (exitCode != 0) {
-                        throw new InvalidOperationException(string.Format(
-                            "Cannot obtain list of paths{0}{1}",
-                            Environment.NewLine,
-                            string.Join(Environment.NewLine, proc.StandardErrorLines))
-                        );
-                    }
+            var lines = new List<string>();
+            var errorLines = new List<string> { "Cannot obtain list of paths" };
 
-                    lines = proc.StandardOutputLines.ToList();
+            try {
+                using (var seenNullData = new ManualResetEventSlim())
+                using (var proc = new ProcessHelper(interpreter, new[] { "-S", "-E", getSearchPaths }, tempWorkingDir)) {
+                    proc.OnOutputLine = lines.Add;
+                    proc.OnErrorLine = errorLines.Add;
+
+                    proc.Start();
+                    using (var cts = new CancellationTokenSource(30000)) {
+                        int exitCode;
+                        try {
+                            exitCode = await proc.WaitAsync(cts.Token).ConfigureAwait(false);
+                        } catch (OperationCanceledException) {
+                            proc.Kill();
+                            exitCode = -1;
+                        }
+                        if (exitCode != 0) {
+                            throw new InvalidOperationException(string.Join(Environment.NewLine, errorLines));
+                        }
+                    }
                 }
             } finally {
-                try {
-                    Directory.Delete(tempWorkingDir, true);
-                } catch (Exception ex) {
-                    if (ex.IsCriticalException()) {
-                        throw;
-                    }
-                }
+                PathUtils.DeleteDirectory(tempWorkingDir);
             }
 
             return lines.Select(s => {
@@ -245,19 +238,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="paths">The list of search paths.</param>
         /// <remarks>Added in 2.2, moved in 3.3</remarks>
         public static void WriteDatabaseSearchPaths(string cachePath, IEnumerable<PythonLibraryPath> paths) {
-            try {
-                Directory.CreateDirectory(PathUtils.GetParent(cachePath));
-                using (var file = new StreamWriter(cachePath)) {
-                    foreach (var path in paths) {
-                        file.WriteLine(path.ToString());
-                    }
+            Directory.CreateDirectory(IOPath.GetDirectoryName(cachePath));
+            using (var file = new StreamWriter(cachePath)) {
+                foreach (var path in paths) {
+                    file.WriteLine(path.ToString());
                 }
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                // There's no recoverable reason for this to fail,
-                // so report it when debugging otherwise silently
-                // skip caching.
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(PythonLibraryPath)));
-                return;
             }
         }
 

@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     class TypeAnnotation {
@@ -36,9 +36,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public Expression Expression { get; }
 
         private Expression ParseSubExpression(string expr) {
-            using (var parser = Parser.CreateParser(new StringReader(expr), LanguageVersion)) {
-                return Statement.GetExpression(parser.ParseTopExpression()?.Body);
-            }
+            var parser = Parser.CreateParser(new StringReader(expr), LanguageVersion);
+            return Statement.GetExpression(parser.ParseTopExpression()?.Body);
         }
 
         /// <summary>

@@ -24,7 +24,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -59,15 +59,14 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             _databasePath = CreationOptions.DatabasePath;
             if (!string.IsNullOrEmpty(_databasePath)) {
-                _searchPathCachePath = PathUtils.GetAbsoluteFilePath(_databasePath, "database.path");
+                _searchPathCachePath = Path.Combine(_databasePath, "database.path");
 
-                _log = new AnalysisLogWriter(PathUtils.GetAbsoluteFilePath(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
+                _log = new AnalysisLogWriter(Path.Combine(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
                 _log.Rotate(LogRotationSize);
                 _log.MinimumLevel = CreationOptions.TraceLevel;
             } else {
-                var biPath = PythonToolsInstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", typeof(InterpreterFactoryCreator).Assembly);
-                if (File.Exists(biPath)) {
-                    CreationOptions.DatabasePath = _databasePath = PathUtils.GetParent(biPath);
+                if (InstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", out string biPath)) {
+                    CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
                     _skipWriteToCache = true;
                 }
             }
@@ -155,22 +154,23 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
 
         internal string GetCacheFilePath(string filePath) {
-            if (string.IsNullOrEmpty(_databasePath)) {
+            var dbPath = _databasePath;
+            if (!PathEqualityComparer.IsValidPath(dbPath)) {
                 return null;
             }
 
-            var name = PathUtils.GetFileOrDirectoryName(filePath);
-            var candidate = Path.ChangeExtension(Path.Combine(_databasePath, name), ".pyi");
+            var name = PathUtils.GetFileName(filePath);
+            var candidate = Path.ChangeExtension(Path.Combine(dbPath, name), ".pyi");
             if (File.Exists(candidate)) {
                 return candidate;
             }
 
             var hash = SHA256.Create();
-            var dir = PathUtils.GetParent(filePath);
+            var dir = Path.GetDirectoryName(filePath);
             var dirHash = Convert.ToBase64String(hash.ComputeHash(new UTF8Encoding(false).GetBytes(dir)))
                 .Replace('/', '_').Replace('+', '-');
 
-            return Path.ChangeExtension(PathUtils.GetAbsoluteFilePath(
+            return Path.ChangeExtension(Path.Combine(
                 _databasePath,
                 Path.Combine(dirHash, name)
             ), ".pyi");
@@ -233,7 +233,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 try {
                     return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
                 } catch (DirectoryNotFoundException) {
-                    var dir = PathUtils.GetParent(path);
+                    var dir = Path.GetDirectoryName(path);
                     if (Directory.Exists(dir)) {
                         break;
                     }
@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     try {
                         Directory.CreateDirectory(dir);
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
-                        Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                        Debug.Fail(ex.ToString());
                         break;
                     }
                 } catch (UnauthorizedAccessException) {
@@ -255,7 +255,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 } catch (IOException) {
                     break;
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                    Debug.Fail(ex.ToString());
                     break;
                 }
 
@@ -270,7 +270,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     File.SetAttributes(path, FileAttributes.Normal);
                     File.Delete(path);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                    Debug.Fail(ex.ToString());
                     break;
                 }
             }
@@ -405,7 +405,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     }
                 }
                 Debug.Assert(sp != null, "Should have search paths");
-                Log(TraceLevel.Info, "SearchPaths", sp);
+                Log(TraceLevel.Info, "SearchPaths", sp.Cast<object>().ToArray());
             }
             return sp;
         }
@@ -416,7 +416,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             string bestLibraryPath = "";
 
             foreach (var p in sp) {
-                if (PathUtils.IsSubpathOf(p, filePath)) {
+                if (PathEqualityComparer.Instance.StartsWith(filePath, p)) {
                     if (p.Length > bestLibraryPath.Length) {
                         bestLibraryPath = p;
                     }
@@ -450,7 +450,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             try {
                 return File.ReadAllText(logfile);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                return ex.ToUnhandledExceptionMessage(GetType());
+                return ex.ToString();
             }
         }
     }
