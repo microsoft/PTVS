@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private void Selection_SelectionChanged(object sender, EventArgs e) {
-                var newValue = MethodExtractor.CanExtract(_view);
+                var newValue = Refactoring.MethodExtractor.CanExtract(_view);
                 if (newValue != _canExtract) {
                     _canExtract = newValue;
                     SuggestedActionsChanged?.Invoke(this, EventArgs.Empty);
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-                if (MethodExtractor.CanExtract(_view) == true) {
+                if (Refactoring.MethodExtractor.CanExtract(_view) == true) {
                     return new SuggestedActionSet[] {
                     new SuggestedActionSet(
                         PredefinedSuggestedActionCategoryNames.Refactoring,
@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-                if (MethodExtractor.CanExtract(_view) == true) {
+                if (Refactoring.MethodExtractor.CanExtract(_view) == true) {
                     return Task.FromResult(true);
                 }
 
@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
                 public void Invoke(CancellationToken cancellationToken) {
-                    new MethodExtractor(
+                    new Refactoring.MethodExtractor(
                         _parent._serviceProvider,
                         _view
                     ).ExtractMethod(

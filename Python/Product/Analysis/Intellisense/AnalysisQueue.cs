@@ -21,7 +21,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -30,22 +30,20 @@ namespace Microsoft.PythonTools.Intellisense {
     /// </summary>
     sealed class AnalysisQueue : IDisposable {
         private readonly Thread _workThread;
-        private readonly AutoResetEvent _workEvent;
-        private readonly OutOfProcProjectAnalyzer _analyzer;
+        private readonly AutoResetEvent _workEvent, _activityEvent;
         private readonly object _queueLock = new object();
         private readonly List<IAnalyzable>[] _queue;
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
-        private TaskScheduler _scheduler;
         private CancellationTokenSource _cancel;
         private bool _isAnalyzing;
         private int _analysisPending;
 
         private const int PriorityCount = (int)AnalysisPriority.High + 1;
 
-        internal AnalysisQueue(OutOfProcProjectAnalyzer analyzer) {
+        internal AnalysisQueue() {
             _workEvent = new AutoResetEvent(false);
+            _activityEvent = new AutoResetEvent(false);
             _cancel = new CancellationTokenSource();
-            _analyzer = analyzer;
 
             _queue = new List<IAnalyzable>[PriorityCount];
             for (int i = 0; i < PriorityCount; i++) {
@@ -64,11 +62,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public TaskScheduler Scheduler {
-            get {
-                return _scheduler;
-            }
-        }
+        public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
+
+        public TaskScheduler Scheduler { get; private set; }
 
         public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
             int iPri = (int)priority;
@@ -145,10 +141,15 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public void WaitForActivity(int millisecondsTimeout) {
+            _activityEvent.WaitOne(millisecondsTimeout);
+        }
+
         #region IDisposable Members
 
         public void Dispose() {
             Stop();
+            _activityEvent.Dispose();
             _workEvent.Dispose();
             _cancel.Dispose();
         }
@@ -172,7 +173,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void Worker(object threadStarted) {
             try {
                 SynchronizationContext.SetSynchronizationContext(new AnalysisSynchronizationContext(this));
-                _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+                Scheduler = TaskScheduler.FromCurrentSynchronizationContext();
             } finally {
                 ((AutoResetEvent)threadStarted).Set();
             }
@@ -209,11 +210,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         } else {
                             workItem.Analyze(cancel);
                         }
-                    } catch (Exception ex) {
-                        if (ex.IsCriticalException() || System.Diagnostics.Debugger.IsAttached) {
-                            throw;
-                        }
-                        _analyzer.ReportUnhandledException(ex);
+                    } catch (Exception ex) when (!ex.IsCriticalException() && !Debugger.IsAttached) {
+                        UnhandledException?.Invoke(this, new UnhandledExceptionEventArgs(ex, false));
                         _cancel.Cancel();
                     }
                 } else if (!_workEvent.WaitOne(50)) {
@@ -224,7 +222,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         ThreadPool.QueueUserWorkItem(_ => evt1(this, EventArgs.Empty));
                     }
                     try {
-                        WaitHandle.SignalAndWait(_analyzer.QueueActivityEvent, _workEvent);
+                        WaitHandle.SignalAndWait(_activityEvent, _workEvent);
                     } catch (ApplicationException) {
                         // No idea where this is coming from...
                         try {

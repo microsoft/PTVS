@@ -21,7 +21,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -67,10 +69,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 _bufferIdMapping.TryGetValue(bufferId, out res);
                 return res;
             }
-        }
-
-        internal ITextSnapshot GetLastSentSnapshot(ITextBuffer buffer) {
-            return GetBuffer(buffer)?.LastSentSnapshot;
         }
 
         public ITextBuffer[] AllBuffers => _buffers.Select(x => x.Buffer.Buffer).ToArray();
@@ -182,7 +180,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
-            var lastSent = GetLastSentSnapshot(buffer);
+            var lastSent = _services.GetBufferInfo(buffer).LastSentSnapshot;
             var snapshot = buffer.CurrentSnapshot;
             if (lastSent != buffer.CurrentSnapshot) {
                 await ParseBuffers(Enumerable.Repeat(snapshot, 1));
@@ -204,16 +202,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var lastSent = buffer.LastSentSnapshot;
-
-            if (lastSent?.Version == snapshot.Version) {
+            var lastSent = buffer.AddSentSnapshot(snapshot);
+            if (lastSent == snapshot) {
                 // this snapshot is up to date...
                 return null;
             }
 
             // Update last sent snapshot and the analysis cookie to our
             // current snapshot.
-            buffer.LastSentSnapshot = snapshot;
             var entry = buffer.AnalysisEntry;
             if (entry != null) {
                 entry.AnalysisCookie = new SnapshotCookie(snapshot);
@@ -233,10 +229,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var versions = GetVersions(lastSent.Version, snapshot.Version).Select(v => new AP.VersionChanges {
-                changes = GetChanges(v)
+                changes = GetChanges(buffer, v)
             }).ToArray();
 
-            return new AP.FileUpdate() {
+            return new AP.FileUpdate {
                 versions = versions,
                 version = snapshot.Version.VersionNumber,
                 bufferId = buffer.AnalysisBufferId,
@@ -313,7 +309,27 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static AP.ChangeInfo[] GetChanges(ITextVersion curVersion) {
+        private static bool CanMerge(AP.ChangeInfo prevChange, ITextChange change, LocationTracker tracker, int version) {
+            if (prevChange == null || tracker == null || change == null) {
+                return false;
+            }
+            if (string.IsNullOrEmpty(prevChange.newText)) {
+                return false;
+            }
+
+            if (change.OldLength != 0 || prevChange.startLine != prevChange.endLine || prevChange.startColumn != prevChange.endColumn) {
+                return false;
+            }
+
+            var prevEnd = new SourceLocation(prevChange.startLine, prevChange.startColumn).AddColumns(prevChange.newText?.Length ?? 0);
+            if (tracker.GetIndex(prevEnd, version) != change.OldPosition) {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static AP.ChangeInfo[] GetChanges(PythonTextBufferInfo buffer, ITextVersion curVersion) {
             Debug.WriteLine("Changes for version {0}", curVersion.VersionNumber);
             var changes = new List<AP.ChangeInfo>();
             if (curVersion.Changes != null) {
@@ -321,16 +337,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 foreach (var change in curVersion.Changes) {
                     Debug.WriteLine("Changes for version {0} {1} {2}", change.OldPosition, change.OldLength, change.NewText);
 
-                    if (prev != null && !string.IsNullOrEmpty(prev.newText) &&
-                        change.OldLength == 0 && prev.length == 0 && prev.start + prev.newText.Length == change.OldPosition) {
+                    if (CanMerge(prev, change, buffer.LocationTracker, curVersion.VersionNumber)) {
                         // we can merge the two changes together
                         prev.newText += change.NewText;
                         continue;
                     }
 
-                    prev = new AP.ChangeInfo() {
-                        start = change.OldPosition,
-                        length = change.OldLength,
+                    var oldPos = buffer.LocationTracker.GetSourceLocation(change.OldPosition, curVersion.VersionNumber);
+                    var oldEnd = buffer.LocationTracker.GetSourceLocation(change.OldEnd, curVersion.VersionNumber);
+                    prev = new AP.ChangeInfo {
+                        startLine = oldPos.Line,
+                        startColumn = oldPos.Column,
+                        endLine = oldEnd.Line,
+                        endColumn = oldEnd.Column,
                         newText = change.NewText
                     };
                     changes.Add(prev);

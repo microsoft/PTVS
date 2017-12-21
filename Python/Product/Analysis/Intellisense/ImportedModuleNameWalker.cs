@@ -15,9 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {

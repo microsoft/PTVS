@@ -753,27 +753,21 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.Properties[_pathInZipFile] = value;
         }
 
-        internal Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(AnalysisEntry analysisEntry, ITextBuffer textBuffer) {
-            var lastVersion = analysisEntry.GetAnalysisVersion(textBuffer);
+        internal Task<AP.UnresolvedImportsResponse> GetMissingImportsAsync(PythonTextBufferInfo buffer) {
+            var lastVersion = buffer.LastAnalysisSnapshot.Version;
 
             return EnsureSingleRequest(
                 typeof(AP.UnresolvedImportsRequest),
                 lastVersion,
                 n => n == lastVersion,
                 async () => {
-                    var resp = await SendRequestAsync(
+                    return await SendRequestAsync(
                         new AP.UnresolvedImportsRequest() {
-                            fileId = analysisEntry.FileId,
-                            bufferId = analysisEntry.GetBufferId(textBuffer)
+                            fileId = buffer.AnalysisEntry.FileId,
+                            bufferId = buffer.AnalysisBufferId
                         },
                         null
                     ).ConfigureAwait(false);
-
-                    if (resp != null) {
-                        return VersionedResponse(resp, textBuffer, lastVersion);
-                    }
-
-                    return null;
                 }
             );
         }
@@ -1310,8 +1304,8 @@ namespace Microsoft.PythonTools.Intellisense {
             if (changes != null) {
                 ApplyChanges(
                     changes.changes,
-                    bi.LastAnalysisReceivedVersion ?? bi.CurrentSnapshot.Version,
                     bi.Buffer,
+                    bi.LocationTracker,
                     changes.version
                 );
             }
@@ -1427,18 +1421,13 @@ namespace Microsoft.PythonTools.Intellisense {
                         continue;
                     }
 
-                    var newVersion = textBuffer.UpdateLastReceivedParse(buffer.version);
-                    if (newVersion == null) {
+                    if (!textBuffer.UpdateLastReceivedParse(buffer.version)) {
                         // ignore receiving responses out of order...
                         Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
                         continue;
                     }
 
-                    translator = new LocationTracker(
-                        newVersion,
-                        textBuffer.Buffer,
-                        buffer.version
-                    );
+                    translator = textBuffer.LocationTracker;
                 }
 
                 // Update the parser warnings/errors.
@@ -1903,26 +1892,28 @@ namespace Microsoft.PythonTools.Intellisense {
             return res?.names ?? Array.Empty<string>();
         }
 
-        internal async Task<InsertionPoint> GetInsertionPointAsync(AnalysisEntry entry, ITextBuffer textBuffer, string className) {
-            var lastVersion = entry.GetAnalysisVersion(textBuffer);
+        internal async Task<InsertionPoint> GetInsertionPointAsync(ITextSnapshot textSnapshot, string className) {
+            var bi = _services.GetBufferInfo(textSnapshot.TextBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
+                return null;
+            }
 
             var res = await SendRequestAsync(
-                    new AP.MethodInsertionLocationRequest() {
-                        fileId = entry.FileId,
-                        bufferId = entry.GetBufferId(textBuffer),
-                        className = className
-                    }
-                ).ConfigureAwait(false);
-
-            if (res != null) {
-                var translator = new LocationTracker(lastVersion, textBuffer, res.version);
-
-                return new InsertionPoint(
-                    translator.TranslateForward(res.location),
-                    res.indentation
-                );
+                new AP.MethodInsertionLocationRequest() {
+                    fileId = entry.FileId,
+                    bufferId = bi.AnalysisBufferId,
+                    className = className
+                }
+            ).ConfigureAwait(false);
+            if (res == null) {
+                return null;
             }
-            return null;
+
+            return new InsertionPoint(
+                bi.LocationTracker.Translate(new SourceLocation(res.line, res.column), res.version, textSnapshot),
+                res.column - 1
+            );
         }
 
         internal async Task<AP.MethodInfoResponse> GetMethodInfoAsync(AnalysisEntry entry, ITextBuffer textBuffer, string className, string methodName) {
@@ -1936,10 +1927,6 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ConfigureAwait(false);
         }
 
-
-        private VersionedResponse<T> VersionedResponse<T>(T data, ITextBuffer textBuffer, ITextVersion versionBeforeRequest) {
-            return new VersionedResponse<T>(data, textBuffer, versionBeforeRequest);
-        }
 
         private struct RequestInfo<T, U> {
             public T Value;
@@ -2006,27 +1993,20 @@ namespace Microsoft.PythonTools.Intellisense {
             return _activeRequests.TryRemove(key, out o);
         }
 
-        internal Task<VersionedResponse<AP.AnalysisClassificationsResponse>> GetAnalysisClassificationsAsync(AnalysisEntry projFile, ITextBuffer textBuffer, bool colorNames) {
-            var lastVersion = projFile.GetAnalysisVersion(textBuffer);
+        internal Task<AP.AnalysisClassificationsResponse> GetAnalysisClassificationsAsync(PythonTextBufferInfo buffer, bool colorNames) {
+            var lastVersion = buffer.LastAnalysisSnapshot;
 
             return EnsureSingleRequest(
                 typeof(AP.AnalysisClassificationsRequest),
                 lastVersion,
                 n => n == lastVersion,
-                async () => {
-                    var res = await SendRequestAsync(
-                        new AP.AnalysisClassificationsRequest() {
-                            fileId = projFile.FileId,
-                            bufferId = projFile.GetBufferId(textBuffer),
-                            colorNames = colorNames
-                        }
-                    ).ConfigureAwait(false);
-
-                    if (res != null) {
-                        return VersionedResponse(res, textBuffer, lastVersion);
+                async () => await SendRequestAsync(
+                    new AP.AnalysisClassificationsRequest() {
+                        fileId = buffer.AnalysisEntry.FileId,
+                        bufferId = buffer.AnalysisBufferId,
+                        colorNames = colorNames
                     }
-                    return null;
-                }
+                ).ConfigureAwait(false)
             );
         }
 
@@ -2054,21 +2034,18 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
-            AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(span.Snapshot.TextBuffer, out entry)) {
+            var bi = _services.GetBufferInfo(span.Snapshot.TextBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
                 return;
             }
-            var buffer = span.Snapshot.TextBuffer;
 
-            await entry.EnsureCodeSyncedAsync(buffer);
-
-            var bufferId = entry.GetBufferId(buffer);
-            var lastAnalyzed = entry.GetAnalysisVersion(buffer);
+            await entry.EnsureCodeSyncedAsync(bi.Buffer);
 
             var res = await SendRequestAsync(
                 new AP.FormatCodeRequest() {
                     fileId = entry.FileId,
-                    bufferId = bufferId,
+                    bufferId = bi.AnalysisBufferId,
                     startIndex = span.Start,
                     endIndex = span.End,
                     options = options,
@@ -2077,69 +2054,52 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             if (res != null && res.version != -1) {
-                ITrackingSpan selectionSpan = null;
+                SnapshotSpan selectionSpan = default(SnapshotSpan);
                 if (selectResult) {
-                    var translator = new LocationTracker(lastAnalyzed, buffer, res.version);
-                    int start = translator.TranslateForward(res.startIndex);
-                    int end = translator.TranslateForward(res.endIndex);
-                    Debug.Assert(
-                        start < view.TextBuffer.CurrentSnapshot.Length,
-                        String.Format("Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})",
-                            start,
-                            view.TextBuffer.CurrentSnapshot.Length,
-                            res.startIndex,
-                            res.version,
-                            view.TextBuffer.CurrentSnapshot.Version.VersionNumber
-                        )
-                    );
-                    Debug.Assert(
-                        end <= view.TextBuffer.CurrentSnapshot.Length,
-                        String.Format(
-                            "Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})",
-                            end,
-                            view.TextBuffer.CurrentSnapshot.Length,
-                            res.endIndex,
-                            res.version,
-                            view.TextBuffer.CurrentSnapshot.Version.VersionNumber
-                        )
-                    );
-
-                    selectionSpan = view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
-                        Span.FromBounds(start, end),
-                        SpanTrackingMode.EdgeInclusive
+                    selectionSpan = bi.LocationTracker.Translate(
+                        new SourceSpan(
+                            new SourceLocation(res.startLine, res.startColumn),
+                            new SourceLocation(res.endLine, res.endColumn)
+                        ),
+                        res.version,
+                        span.Snapshot
                     );
                 }
 
-                ApplyChanges(res.changes, lastAnalyzed, buffer, res.version);
+                ApplyChanges(res.changes, bi.Buffer, bi.LocationTracker, res.version);
 
                 if (selectResult && !view.IsClosed) {
-                    view.Selection.Select(selectionSpan.GetSpan(view.TextBuffer.CurrentSnapshot), false);
+                    view.Selection.Select(selectionSpan, false);
                 }
             }
         }
 
-        internal async Task RemoveImportsAsync(ITextView view, ITextBuffer textBuffer, int index, bool allScopes) {
-            AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(textBuffer, out entry)) {
+        internal async Task RemoveImportsAsync(SnapshotPoint loc, bool allScopes) {
+            var bi = _services.GetBufferInfo(loc.Snapshot.TextBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
                 return;
             }
-            await entry.EnsureCodeSyncedAsync(textBuffer);
-            var lastAnalyzed = entry.GetAnalysisVersion(textBuffer);
+
+            await entry.EnsureCodeSyncedAsync(bi.Buffer);
+            var sloc = loc.ToSourceLocation();
 
             var res = await SendRequestAsync(
                 new AP.RemoveImportsRequest() {
                     fileId = entry.FileId,
-                    bufferId = entry.GetBufferId(textBuffer),
+                    bufferId = bi.AnalysisBufferId,
+                    version = loc.Snapshot.Version.VersionNumber,
                     allScopes = allScopes,
-                    index = index
+                    line = sloc.Line,
+                    column = sloc.Column
                 }
             );
 
             if (res != null) {
                 ApplyChanges(
                     res.changes,
-                    lastAnalyzed,
-                    textBuffer,
+                    bi.Buffer,
+                    bi.LocationTracker,
                     res.version
                 );
             }
@@ -2178,15 +2138,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return Enumerable.Empty<ExportedMemberInfo>();
         }
 
-        internal async Task<VersionedResponse<AP.ExtractMethodResponse>> ExtractMethodAsync(AnalysisEntry entry, ITextBuffer textBuffer, ITextView view, string name, string[] parameters, int? targetScope = null) {
-            var bufferId = entry.GetBufferId(textBuffer);
+        internal async Task<AP.ExtractMethodResponse> ExtractMethodAsync(PythonTextBufferInfo buffer, ITextView view, string name, string[] parameters, int? targetScope = null) {
+            var bufferId = buffer.AnalysisBufferId;
 
-            await entry.EnsureCodeSyncedAsync(textBuffer);
-            var lastAnalyzed = entry.GetAnalysisVersion(textBuffer);
+            await buffer.AnalysisEntry.EnsureCodeSyncedAsync(buffer.Buffer);
             var selection = view.GetPythonSelection().First();
 
-            var res = await SendRequestAsync(new AP.ExtractMethodRequest() {
-                fileId = entry.FileId,
+            return await SendRequestAsync(new AP.ExtractMethodRequest {
+                fileId = buffer.AnalysisEntry.FileId,
                 bufferId = bufferId,
                 indentSize = view.Options.GetIndentSize(),
                 convertTabsToSpaces = view.Options.IsConvertTabsToSpacesEnabled(),
@@ -2198,15 +2157,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 scope = targetScope,
                 shouldExpandSelection = true
             });
-
-            if (res != null) {
-                return VersionedResponse(
-                    res,
-                    textBuffer,
-                    lastAnalyzed
-                );
-            }
-            return null;
         }
 
         internal async Task<AP.AddImportResponse> AddImportAsync(AnalysisEntry entry, ITextBuffer textBuffer, string fromModule, string name, string newLine) {
@@ -2236,57 +2186,56 @@ namespace Microsoft.PythonTools.Intellisense {
                 .DoNotWait();
         }
 
-        internal async Task<NavigationInfo> GetNavigationsAsync(ITextView view) {
-            AnalysisEntry entry;
-            var textBuffer = view.TextBuffer;
-            if (_services.AnalysisEntryService.TryGetAnalysisEntry(textBuffer, out entry)) {
-                var lastVersion = entry.GetAnalysisVersion(textBuffer);
-
-                var navigations = await SendRequestAsync(
-                    new AP.NavigationRequest() {
-                        fileId = entry.FileId,
-                        bufferId = entry.GetBufferId(textBuffer)
-                    }
-                );
-
-                if (navigations != null && navigations.version != -1 && navigations.version >= lastVersion.VersionNumber) {
-                    List<NavigationInfo> bufferNavs = new List<NavigationInfo>();
-
-                    LocationTracker translator = new LocationTracker(
-                        lastVersion,
-                        textBuffer,
-                        navigations.version
-                    );
-                    bufferNavs.AddRange(ConvertNavigations(textBuffer.CurrentSnapshot, translator, navigations.navigations));
-
-                    return new NavigationInfo(
-                        null,
-                        NavigationKind.None,
-                        new SnapshotSpan(),
-                        bufferNavs.ToArray()
-                    );
-                }
+        internal async Task<NavigationInfo> GetNavigationsAsync(ITextSnapshot snapshot) {
+            var bi = _services.GetBufferInfo(snapshot.TextBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
+                return NavigationInfo.Empty;
             }
 
-            return new NavigationInfo(null, NavigationKind.None, new SnapshotSpan(), Array.Empty<NavigationInfo>());
+            var navigations = await SendRequestAsync(
+                new AP.NavigationRequest() {
+                    fileId = entry.FileId,
+                    bufferId = bi.AnalysisBufferId
+                }
+            );
+
+            if (navigations?.navigations == null || !bi.LocationTracker.CanTranslateFrom(navigations.version)) {
+                return NavigationInfo.Empty;
+            }
+
+            return new NavigationInfo(
+                null,
+                NavigationKind.None,
+                new SnapshotSpan(),
+                ConvertNavigations(navigations.navigations, bi.LocationTracker, navigations.version, snapshot)
+            );
         }
 
-        private NavigationInfo[] ConvertNavigations(ITextSnapshot snapshot, LocationTracker translator, AP.Navigation[] navigations) {
-            if (navigations == null) {
+        private NavigationInfo[] ConvertNavigations(AP.Navigation[] navigations, LocationTracker translator, int fromVersion, ITextSnapshot snapshot) {
+            if (navigations == null || translator == null) {
                 return null;
             }
 
             List<NavigationInfo> res = new List<NavigationInfo>();
             foreach (var nav in navigations) {
                 // translate the span from the version we last parsed to the current version
-                var span = translator.TranslateForward(Span.FromBounds(nav.startIndex, nav.endIndex));
+
+                var span = translator.Translate(
+                    new SourceSpan(
+                        new SourceLocation(nav.startLine, nav.startColumn),
+                        new SourceLocation(nav.endLine, nav.endColumn)
+                    ),
+                    fromVersion,
+                    snapshot
+                );
 
                 res.Add(
                     new NavigationInfo(
                         nav.name,
                         GetNavigationKind(nav.type),
                         span,
-                        ConvertNavigations(snapshot, translator, nav.children)
+                        ConvertNavigations(nav.children, translator, fromVersion, snapshot)
                     )
                 );
             }
@@ -2331,63 +2280,48 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<IEnumerable<OutliningTaggerProvider.TagSpan>> GetOutliningTagsAsync(ITextSnapshot snapshot) {
-            AnalysisEntry entry;
-            if (!_services.AnalysisEntryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
+            var bi = _services.GetBufferInfo(snapshot.TextBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
                 return null;
             }
-
-            var lastVersion = entry.GetAnalysisVersion(snapshot.TextBuffer);
 
             var outliningTags = await SendRequestAsync(
                 new AP.OutliningRegionsRequest() {
                     fileId = entry.FileId,
-                    bufferId = entry.GetBufferId(snapshot.TextBuffer)
+                    bufferId = bi.AnalysisBufferId
                 }
             );
 
-            if (outliningTags != null && outliningTags.version >= lastVersion.VersionNumber) {
-                Debug.WriteLine("Translating from {0} to {1}", outliningTags.version, snapshot.TextBuffer.CurrentSnapshot);
-                var translator = new LocationTracker(
-                    lastVersion,
-                    snapshot.TextBuffer,
-                    outliningTags.version
-                );
-
-                return ConvertOutliningTags(translator, outliningTags.tags);
+            if (outliningTags != null && outliningTags.version >= bi.LastAnalysisSnapshot.Version.VersionNumber) {
+                return ConvertOutliningTags(bi.LocationTracker, outliningTags.version, outliningTags.tags);
             }
 
             return null;
         }
 
-        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(LocationTracker translator, AP.OutliningTag[] tags) {
+        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(LocationTracker translator, int atVersion, AP.OutliningTag[] tags) {
             var snapshot = translator.TextBuffer.CurrentSnapshot;
             foreach (var tag in tags) {
                 // translate the span from the version we last parsed to the current version
                 SnapshotSpan span;
-                int headerIndex = tag.headerIndex;
+
+                var start = new SourceLocation(tag.startLine, tag.startCol);
+                var header = start.AddColumns(tag.headerOffset < 0 ? int.MaxValue : tag.headerOffset);
+                var end = new SourceLocation(tag.endLine, tag.endCol);
 
                 try {
-                    span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
+                    span = translator.Translate(new SourceSpan(start, end), atVersion, snapshot);
                 } catch (ArgumentOutOfRangeException) {
                     // Failed to get the "correct" span, so skip this tag
                     continue;
                 }
 
-                if (headerIndex >= 0) {
-                    try {
-                        headerIndex = translator.TranslateForward(headerIndex);
-                    } catch (ArgumentOutOfRangeException) {
-                        // Failed to get the correct header index, so use the start point
-                        headerIndex = -1;
-                    }
-                }
-
                 if (span.Length > 0) {
                     yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                        snapshot,
                         span.Start,
                         span.End,
-                        headerIndex
+                        header.ToSnapshotPoint(snapshot)
                     );
                 }
             }
@@ -2407,23 +2341,19 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        internal static void ApplyChanges(AP.ChangeInfo[] changes, ITextVersion lastVersion, ITextBuffer textBuffer, int fromVersion) {
-            var translator = new LocationTracker(lastVersion, textBuffer, fromVersion);
-
-            ApplyChanges(changes, textBuffer, translator);
-        }
-
-        internal static void ApplyChanges(AP.ChangeInfo[] changes, ITextBuffer textBuffer, LocationTracker translator) {
+        internal static void ApplyChanges(AP.ChangeInfo[] changes, ITextBuffer textBuffer, LocationTracker translator, int atVersion) {
             if (translator == null) {
                 throw new ArgumentNullException(nameof(translator));
             }
 
             using (var edit = textBuffer.CreateEdit()) {
                 foreach (var change in changes.MaybeEnumerate()) {
-                    edit.Replace(
-                        translator.TranslateForward(new Span(change.start, change.length)),
-                        change.newText
+                    var span = new SourceSpan(
+                        new SourceLocation(change.startLine, change.startColumn),
+                        new SourceLocation(change.endLine, change.endColumn)
                     );
+
+                    edit.Replace(translator.Translate(span, atVersion, edit.Snapshot), change.newText);
                 }
                 edit.Apply();
             }

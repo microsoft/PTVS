@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.PythonTools.Editor.Core;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -387,10 +388,9 @@ string'''";
 
             var tags = protoTags.Select(x =>
                 OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                    snapshot,
-                    x.startIndex,
-                    x.endIndex,
-                    x.headerIndex
+                    x.Span.Start.ToSnapshotPoint(snapshot),
+                    x.Span.End.ToSnapshotPoint(snapshot),
+                    x.Span.Start.AddColumns(x.HeaderOffset).ToSnapshotPoint(snapshot)
                 )
             );
             VerifyTags(snapshot, tags, expected);

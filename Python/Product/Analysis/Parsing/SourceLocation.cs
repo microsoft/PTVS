@@ -203,6 +203,26 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
+        /// <summary>
+        /// Returns a new SourceLocation with modified column. This will never
+        /// result in a column less than 1, and will not modify the line number.
+        /// </summary>
+        public SourceLocation AddColumns(int columns) {
+            int newIndex = this._index, newCol = this._column;
+            if (int.MaxValue - this._column < columns) {
+                newCol = int.MaxValue;
+                if (newIndex >= 0) {
+                    newIndex = int.MaxValue;
+                }
+            } else if (this._column + columns < 1) {
+                if (newIndex >= 0) {
+                    newIndex += (this._column + columns) + 1;
+                }
+                newCol = 1;
+            }
+            return new SourceLocation(newIndex, this._line, newCol);
+        }
+
         public override bool Equals(object obj) {
             if (!(obj is SourceLocation)) return false;
 

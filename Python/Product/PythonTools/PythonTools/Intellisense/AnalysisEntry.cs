@@ -117,10 +117,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisBufferId ?? 0;
         }
 
-        public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
-            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.LastAnalysisReceivedVersion ?? buffer.CurrentSnapshot.Version;
-        }
-
         public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
             try {
                 var bufferParser = TryGetBufferParser();

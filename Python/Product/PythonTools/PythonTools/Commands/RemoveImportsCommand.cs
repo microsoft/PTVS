@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -55,12 +56,7 @@ namespace Microsoft.PythonTools.Commands {
                 return;
             }
 
-            await analyzer.RemoveImportsAsync(
-                view,
-                pythonCaret.Value.Snapshot.TextBuffer,
-                pythonCaret.Value.Position,
-                _allScopes
-            );
+            await analyzer.RemoveImportsAsync(pythonCaret.Value, _allScopes);
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {

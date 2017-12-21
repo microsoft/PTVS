@@ -1718,7 +1718,7 @@ async def f():
                     false
                 );
 
-                await new MethodExtractor(services.Site, view).ExtractMethod(extractInput);
+                await new Microsoft.PythonTools.Refactoring.MethodExtractor(services.Site, view).ExtractMethod(extractInput);
 
                 if (expected.IsError) {
                     Assert.AreEqual(expected.Text, extractInput.FailureReason);

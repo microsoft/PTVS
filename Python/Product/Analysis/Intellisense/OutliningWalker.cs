@@ -14,19 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using AP = AnalysisProtocol;
-
     class OutliningWalker : PythonWalker {
-        public readonly List<AP.OutliningTag> TagSpans = new List<AP.OutliningTag>();
-        readonly PythonAst _ast;
+        private readonly PythonAst _ast;
+        private readonly List<TaggedSpan> _tagSpans;
 
         public OutliningWalker(PythonAst ast) {
             _ast = ast;
+            _tagSpans = new List<TaggedSpan>();
         }
 
         // Compound Statements: if, while, for, try, with, func, class, decorated
@@ -170,31 +171,29 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void AddTagIfNecessary(int startIndex, int endIndex, int headerIndex = -1, DecoratorStatement decorator = null, int minLinesToCollapse = 3) {
-            var startLine = _ast.IndexToLocation(startIndex).Line;
-            var endLine = _ast.IndexToLocation(endIndex).Line;
-            var lines = endLine - startLine + 1;
+            var start = _ast.IndexToLocation(startIndex);
+            var end = _ast.IndexToLocation(endIndex);
+            var lines = end.Line - start.Line + 1;
 
             // Collapse if more than 3 lines.
-            if (lines >= minLinesToCollapse) {
-                if (decorator != null) {
-                    // we don't want to collapse the decorators, we like them visible, so
-                    // we base our starting position on where the decorators end.
-                    startIndex = decorator.EndIndex + 1;
-                }
-
-                var tagSpan = new AP.OutliningTag() {
-                    startIndex = startIndex,
-                    endIndex = endIndex,
-                    headerIndex = headerIndex
-                };
-                TagSpans.Add(tagSpan);
+            if (lines < minLinesToCollapse) {
+                return;
             }
+
+            if (decorator != null) {
+                // we don't want to collapse the decorators, we like them visible, so
+                // we base our starting position on where the decorators end.
+                startIndex = decorator.EndIndex + 1;
+            }
+
+            var tagSpan = new TaggedSpan(new SourceSpan(start, end), null, headerIndex);
+            _tagSpans.Add(tagSpan);
         }
 
-        internal AP.OutliningTag[] GetTags() {
-            return TagSpans
-                .GroupBy(s => _ast.IndexToLocation(s.startIndex).Line)
-                .Select(ss => ss.OrderBy(s => _ast.IndexToLocation(s.endIndex).Line - ss.Key).Last())
+        internal IEnumerable<TaggedSpan> GetTags() {
+            return _tagSpans
+                .GroupBy(s => s.Span.Start.Line)
+                .Select(ss => ss.OrderByDescending(s => s.Span.End.Line).First())
                 .ToArray();
         }
     }

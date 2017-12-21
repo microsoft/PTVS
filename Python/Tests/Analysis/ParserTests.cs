@@ -2915,6 +2915,37 @@ namespace AnalysisTests {
             return null;
         }
 
+        [TestMethod, Priority(0)]
+        public void SourceLocationTests() {
+            foreach (var sl in new[] {
+                new SourceLocation(),
+                new SourceLocation(1, 1)
+            }) {
+                try {
+                    int i = sl.Index;
+                    Assert.Fail("Expected InvalidOperationException");
+                } catch (InvalidOperationException) {
+                }
+            }
+
+            var x = new SourceLocation(100, 5, 10);
+            var y = x.AddColumns(int.MaxValue);
+            Assert.AreEqual(int.MaxValue, x.Column);
+            Assert.AreEqual(int.MaxValue, x.Index);
+
+            y = x.AddColumns(int.MaxValue - 9);
+            Assert.AreEqual(int.MaxValue, x.Column);
+            Assert.AreEqual(int.MaxValue, x.Index);
+
+            y = x.AddColumns(-10);
+            Assert.AreEqual(1, x.Column);
+            Assert.AreEqual(91, x.Index);
+
+            y = x.AddColumns(-100);
+            Assert.AreEqual(1, x.Column);
+            Assert.AreEqual(91, x.Index);
+        }
+
         #endregion
 
         #region Checker Factories / Helpers

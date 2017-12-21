@@ -185,7 +185,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class MethodInsertionLocationResponse : Response {
-            public int location, indentation;
+            public int line, column;
             public int version;
         }
 
@@ -230,7 +230,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class AnalysisClassification {
-            public int start, length;
+            public int startLine, startColumn;
+            public int endLine, endColumn;
             public string type;
         }
 
@@ -285,7 +286,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FormatCodeResponse : Response {
             public ChangeInfo[] changes;
 
-            public int startIndex, endIndex;
+            public int startLine, startColumn;
+            public int endLine, endColumn;
             public int version = -1;
         }
 
@@ -480,14 +482,23 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class ChangeInfo {
             public string newText;
-            public int start;
-            public int length;
+            public int startLine, startColumn;
+            public int endLine, endColumn;
 
-            public static ChangeInfo FromBounds(string text, int start, int end) {
-                return new ChangeInfo() {
-                    newText = text,
-                    start = start,
-                    length = end - start
+            public static ChangeInfo FromChangeInfo(Intellisense.ChangeInfo c) {
+                return new ChangeInfo {
+                    startLine = c.ReplacedSpan.Start.Line,
+                    startColumn = c.ReplacedSpan.Start.Column,
+                    endLine = c.ReplacedSpan.End.Line,
+                    endColumn = c.ReplacedSpan.End.Column,
+                    newText = c.InsertedText
+                };
+            }
+
+            public Intellisense.ChangeInfo ToChangeInfo() {
+                return new Intellisense.ChangeInfo {
+                    InsertedText = newText,
+                    ReplacedSpan = new SourceSpan(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn))
                 };
             }
         }
@@ -539,7 +550,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class RemoveImportsRequest : Request<RemoveImportsResponse> {
             public const string Command = "removeImports";
 
-            public int fileId, bufferId, index;
+            public int fileId, bufferId, version;
+            public int line, column;
             public bool allScopes;
 
             public override string command => Command;
@@ -573,7 +585,8 @@ namespace Microsoft.PythonTools.Intellisense {
             /// </summary>
             public ScopeInfo[] scopes;
             public bool wasExpanded;
-            public int? startIndex, endIndex;
+            public int startLine, startCol;
+            public int endLine, endCol;
             public int version;
             public string methodBody;
             public string[] variables;
@@ -882,7 +895,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public sealed class OutliningTag {
-            public int headerIndex, startIndex, endIndex;
+            public int startLine, startCol;
+            public int endLine, endCol;
+            public int headerOffset;
         }
 
         public sealed class NavigationRequest : Request<NavigationResponse> {
@@ -900,7 +915,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class Navigation {
             public string name, type;
-            public int startIndex, endIndex, bufferId;
+            public int bufferId;
+            public int startLine, startColumn;
+            public int endLine, endColumn;
             public Navigation[] children;
         }
 

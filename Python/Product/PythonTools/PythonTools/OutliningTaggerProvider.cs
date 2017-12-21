@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools {
                         regions.Push(line);
                     } else if (_closingRegionRegex.IsMatch(lineText) && regions.Count > 0) {
                         var openLine = regions.Pop();
-                        var outline = GetTagSpan(snapshot, openLine.Start, line.End);
+                        var outline = GetTagSpan(openLine.Start, line.End, openLine.End);
 
                         yield return outline;
                     }
@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools {
                         previousCellStart = cellStart.LineNumber;
                         var cellEnd = CodeCellAnalysis.FindEndOfCell(cellStart, line);
                         if (cellEnd.LineNumber > cellStart.LineNumber) {
-                            yield return GetTagSpan(snapshot, cellStart.Start, cellEnd.End);
+                            yield return GetTagSpan(cellStart.Start, cellEnd.End, cellStart.End);
                         }
                         if (cellEnd.LineNumber + 1 < snapshot.LineCount) {
                             line = snapshot.GetLineFromLineNumber(cellEnd.LineNumber + 1);
@@ -171,21 +171,17 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            internal static TagSpan GetTagSpan(ITextSnapshot snapshot, int start, int end, int headerIndex = -1) {
+            internal static TagSpan GetTagSpan(SnapshotPoint start, SnapshotPoint end, SnapshotPoint header) {
                 TagSpan tagSpan = null;
+                var snapshot = start.Snapshot;
                 try {
-                    // if the user provided a -1, we should figure out the end of the first line
-                    if (headerIndex < 0) {
-                        headerIndex = snapshot.GetLineFromPosition(start).End.Position;
-                    }
-
                     if (start != -1 && end != -1) {
-                        int length = end - headerIndex;
+                        int length = end - header;
                         if (length > 0) {
                             Debug.Assert(start + length <= snapshot.Length, String.Format("{0} + {1} <= {2} end was {3}", start, length, snapshot.Length, end));
                             var span = GetFinalSpan(
                                 snapshot,
-                                headerIndex,
+                                header,
                                 length
                             );
 

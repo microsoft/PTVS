@@ -14,16 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using AP = AnalysisProtocol;
-
     static class ProjectEntryExtensions {
         private static readonly object _currentCodeKey = new object();
 
@@ -73,19 +73,27 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Updates the code applying the changes to the existing text buffer and updates the version.
         /// </summary>
-        public static string UpdateCode(this IProjectEntry entry, AP.VersionChanges[] versions, int buffer, int version) {
+        public static string UpdateCode(this IProjectEntry entry, IReadOnlyList<IReadOnlyList<ChangeInfo>> versions, int buffer, int version) {
             lock (_currentCodeKey) {
                 CurrentCode curCode = GetCurrentCode(entry, buffer);
                 var strBuffer = curCode.Text;
 
                 foreach (var versionChange in versions) {
                     int delta = 0;
+                    var lineLoc = LineInfo.SplitLines(strBuffer.ToString())
+                        .Select(l => new NewLineLocation(l.EndIncludingLineBreak, l.LineBreak))
+                        .ToArray();
 
-                    foreach (var change in versionChange.changes) {
-                        strBuffer.Remove(change.start + delta, change.length);
-                        strBuffer.Insert(change.start + delta, change.newText);
+                    foreach (var change in versionChange) {
+                        int start = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.Start, strBuffer.Length);
+                        int end = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.End, strBuffer.Length);
+                        strBuffer.Remove(start + delta, end - start);
+                        if (!string.IsNullOrEmpty(change.InsertedText)) {
+                            strBuffer.Insert(start + delta, change.InsertedText);
+                            delta += change.InsertedText.Length;
+                        }
 
-                        delta += change.newText.Length - change.length;
+                        delta -= (end - start);
                     }
                 }
 

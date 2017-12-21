@@ -2726,7 +2726,27 @@ namespace Microsoft.PythonTools.Parsing {
                 return lineLocations[line].EndIndex;
             }
 
+            if (endIndex < 0) {
+                endIndex = lineLocations[lineLocations.Length - 1].EndIndex;
+            }
+
             return (int)Math.Min((long)index + location.Column - 1, endIndex);
+        }
+
+        private static char[] _lineSeparators = new[] { '\r', '\n' };
+
+        public static NewLineLocation FindNewLine(string text, int start) {
+            int i = text.IndexOfAny(_lineSeparators, start);
+            if (i < start) {
+                return new NewLineLocation(text.Length, NewLineKind.None);
+            }
+            if (text[i] == '\n') {
+                return new NewLineLocation(i + 1, NewLineKind.LineFeed);
+            }
+            if (text.Length > i + 1 && text[i + 1] == '\n') {
+                return new NewLineLocation(i + 2, NewLineKind.CarriageReturnLineFeed);
+            }
+            return new NewLineLocation(i + 1, NewLineKind.CarriageReturn);
         }
     }
 

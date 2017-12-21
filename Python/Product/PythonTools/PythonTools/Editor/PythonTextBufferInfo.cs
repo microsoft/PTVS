@@ -87,6 +87,7 @@ namespace Microsoft.PythonTools.Editor {
 
         private readonly Lazy<string> _filename;
         private readonly TokenCache _tokenCache;
+        private readonly LocationTracker _locationTracker;
 
         private readonly bool _hasChangedOnBackground;
         private bool _replace;
@@ -115,6 +116,8 @@ namespace Microsoft.PythonTools.Editor {
                 _hasChangedOnBackground = true;
                 buffer2.ChangedOnBackground += Buffer_TextContentChangedOnBackground;
             }
+
+            _locationTracker = new LocationTracker(Buffer.CurrentSnapshot);
         }
 
         private T GetOrCreate<T>(ref T destination, Func<PythonTextBufferInfo, T> creator) where T : class {
@@ -336,33 +339,53 @@ namespace Microsoft.PythonTools.Editor {
             return Interlocked.CompareExchange(ref _bufferId, id, -1) == -1;
         }
 
-        public ITextSnapshot LastSentSnapshot { get; set; }
-        public ITextVersion LastParseReceivedVersion { get; private set; }
-        public ITextVersion LastAnalysisReceivedVersion { get; private set; }
+        private readonly Dictionary<int, ITextSnapshot> _expectParse = new Dictionary<int, ITextSnapshot>();
+        private readonly Dictionary<int, ITextSnapshot> _expectAnalysis = new Dictionary<int, ITextSnapshot>();
+        private ITextSnapshot _lastSentSnapshot;
 
-        public ITextVersion UpdateLastReceivedParse(int version) {
-            lock (_lock) {
-                var ver = LastParseReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-                while (ver?.Next != null && ver.VersionNumber < version) {
-                    ver = ver.Next;
+        public ITextSnapshot LastAnalysisSnapshot { get; private set; }
+
+        public ITextSnapshot LastSentSnapshot {
+            get {
+                lock (_lock) {
+                    return _lastSentSnapshot;
                 }
-                var r = ver != null && ver.VersionNumber >= version;
-                LastParseReceivedVersion = ver;
-                return r ? ver : null;
             }
         }
 
-        public ITextVersion UpdateLastReceivedAnalysis(int version) {
+        public ITextSnapshot AddSentSnapshot(ITextSnapshot sent) {
             lock (_lock) {
-                var ver = LastAnalysisReceivedVersion ?? Buffer.CurrentSnapshot.Version;
-                while (ver?.Next != null && ver.VersionNumber < version) {
-                    ver = ver.Next;
+                if (_lastSentSnapshot != null && _lastSentSnapshot.Version.VersionNumber < sent.Version.VersionNumber) {
+                    return _lastSentSnapshot;
                 }
-                var r = ver != null && ver.VersionNumber >= version;
-                LastAnalysisReceivedVersion = ver;
-                return r ? ver : null;
+                _lastSentSnapshot = sent;
+                _expectAnalysis[sent.Version.VersionNumber] = sent;
+                _expectParse[sent.Version.VersionNumber] = sent;
+                return sent;
             }
         }
+
+        public bool UpdateLastReceivedParse(int version) {
+            lock (_lock) {
+                return _expectParse.Remove(version);
+            }
+        }
+
+        public bool UpdateLastReceivedAnalysis(int version) {
+            lock (_lock) {
+                if (_expectAnalysis.TryGetValue(version, out var snapshot)) {
+                    _expectAnalysis.Remove(version);
+                    if (snapshot.Version.VersionNumber > (LastAnalysisSnapshot?.Version.VersionNumber ?? -1)) {
+                        LastAnalysisSnapshot = snapshot;
+                        _locationTracker.UpdateBaseSnapshot(snapshot);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        public LocationTracker LocationTracker => _locationTracker;
 
         /// <summary>
         /// Gets the smallest expression that fully contains the span.

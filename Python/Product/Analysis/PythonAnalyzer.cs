@@ -834,7 +834,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return _noneInst;
             }
 
-            var attrType = (attr != null) ? attr.GetType() : typeof(NoneType);
+            var attrType = attr.GetType();
             if (attr is IPythonType) {
                 return GetBuiltinType((IPythonType)attr);
             } else if (attr is IPythonFunction) {

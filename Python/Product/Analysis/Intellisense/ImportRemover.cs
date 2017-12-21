@@ -20,8 +20,6 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using AP = AnalysisProtocol;
-
     class ImportRemover {
         private readonly PythonAst _ast;
         private readonly bool _allScopes;
@@ -35,18 +33,18 @@ namespace Microsoft.PythonTools.Intellisense {
             _index = index;
         }
 
-        internal AP.ChangeInfo[] RemoveImports() {
+        internal IReadOnlyList<ChangeInfo> RemoveImports() {
             ScopeStatement targetStmt = null;
             if (!_allScopes) {
                 var enclosingNodeWalker = new EnclosingNodeWalker(_ast, _index, _index);
                 _ast.Walk(enclosingNodeWalker);
-                targetStmt = enclosingNodeWalker.Target.Parents[enclosingNodeWalker.Target.Parents.Length - 1];
+                targetStmt = enclosingNodeWalker.Target.Parents[enclosingNodeWalker.Target.Parents.Count - 1];
             }
 
             var walker = new ImportWalker(targetStmt);
             _ast.Walk(walker);
 
-            List<AP.ChangeInfo> changes = new List<AnalysisProtocol.ChangeInfo>();
+            var changes = new List<ChangeInfo>();
             foreach (var removeInfo in walker.GetToRemove()) {
                 // see if we're removing some or all of the 
                 //var node = removeInfo.Node;
@@ -76,29 +74,16 @@ namespace Microsoft.PythonTools.Intellisense {
                     int start = _ast.LocationToIndex(span.Start) - proceedingLength;
                     int length = _ast.GetSpanLength(span) + proceedingLength;
 
-                    changes.Add(
-                        new AP.ChangeInfo() {
-                            start = start,
-                            length = length,
-                            newText = ""
-                        }
-                    );
-                    changes.Add(
-                        new AP.ChangeInfo() {
-                            start = _ast.LocationToIndex(span.Start),
-                            length = 0,
-                            newText = newCode
-                        }
-                    );
+                    changes.Add(ChangeInfo.Delete(new SourceSpan(span.Start.AddColumns(-proceedingLength), span.End)));
+                    changes.Add(ChangeInfo.Insert(newCode, span.Start));
                 }
             }
             return changes.ToArray();
         }
 
-        private void DeleteStatement(List<AP.ChangeInfo> changes, SourceSpan span, bool insertPass) {
+        private void DeleteStatement(List<ChangeInfo> changes, SourceSpan span, bool insertPass) {
             // remove the entire node, leave any trailing whitespace/comments, but include the
             // newline and any indentation.
-
 
             int start = _ast.LocationToIndex(span.Start);
             int length = _ast.GetSpanLength(span);
@@ -147,14 +132,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            changes.Add(
-                new AP.ChangeInfo() {
-                    start = start,
-                    length = length,
-                    newText = insertPass ? "pass" : ""
-                }
-            );
-            
+            changes.Add(ChangeInfo.Replace(
+                _ast,
+                start,
+                length,
+                insertPass ? "pass": null
+            ));
         }
 
         /// <summary>
