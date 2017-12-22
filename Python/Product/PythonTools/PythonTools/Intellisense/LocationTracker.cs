@@ -60,6 +60,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        internal bool IsCached(int version) {
+            lock (_lineCache) {
+                return _lineCache.ContainsKey(version);
+            }
+        }
+
         public void UpdateBaseSnapshot(ITextSnapshot snapshot) {
             lock (_lineCache) {
                 if (_snapshot.TextBuffer != TextBuffer && TextBuffer != null) {
@@ -101,22 +107,45 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static IEnumerable<NewLineLocation> LineEndsToLineLengths(IEnumerable<NewLineLocation> lineEnds) {
+            bool lastWasEmpty = false;
             int lastEnd = 0;
             foreach (var line in lineEnds) {
-                yield return new NewLineLocation(line.EndIndex - lastEnd, line.Kind);
+                int length = line.EndIndex - lastEnd;
                 lastEnd = line.EndIndex;
+                lastWasEmpty = length == 0;
+                // Length is only 0 when Kind == None
+                if (length > 0) {
+                    yield return new NewLineLocation(length, line.Kind);
+                }
+            }
+
+            if (lastWasEmpty) {
+                // If we finish with an empty line, need to include it
+                yield return new NewLineLocation(0, NewLineKind.None);
             }
         }
 
         private static IEnumerable<NewLineLocation> LineLengthsToLineEnds(IEnumerable<NewLineLocation> lineLengths) {
+            bool lastHadNoEnding = false;
             int lastEnd = 0;
             foreach (var line in lineLengths) {
                 lastEnd += line.EndIndex;
-                yield return new NewLineLocation(lastEnd, line.Kind);
+                if (line.Kind == NewLineKind.None) {
+                    // Only yield NewLineKind.None at the end
+                    // Otherwise, we want to merge the lines
+                    lastHadNoEnding = true;
+                } else {
+                    lastHadNoEnding = false;
+                    yield return new NewLineLocation(lastEnd, line.Kind);
+                }
+            }
+
+            if (lastHadNoEnding) {
+                yield return new NewLineLocation(lastEnd, NewLineKind.None);
             }
         }
 
-        private NewLineLocation[] GetLineLocations(int version) {
+        internal NewLineLocation[] GetLineLocations(int version) {
             var ver = _snapshot.Version;
             NewLineLocation[] initial;
 
@@ -140,6 +169,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     _lineCache[fromVersion] = initial = LinesToLineEnds(_snapshot.Lines).ToArray();
                 }
 
+                while (ver.Next != null && ver.VersionNumber < fromVersion) {
+                    ver = ver.Next;
+                }
+
                 List<NewLineLocation> asLengths = null;
                 while (ver.Changes != null && ver.VersionNumber < version) {
                     if (asLengths == null) {
@@ -154,30 +187,50 @@ namespace Microsoft.PythonTools.Intellisense {
                         
                         if (c.OldLength > 0) {
                             // Deletion may span lines, so combine them until we can delete
-                            while (oldLoc.Column - 1 + c.OldLength > line.EndIndex && asLengths.Count > lineNo + 1) {
-                                var nextLine = asLengths[oldLoc.Line + 1];
-                                asLengths.RemoveAt(oldLoc.Line + 1);
-                                line = new NewLineLocation(line.EndIndex + nextLine.EndIndex, nextLine.Kind);
+                            int cutAtCol = oldLoc.Column - 1;
+                            for (int toRemove = c.OldLength; toRemove > 0 && lineNo < asLengths.Count; lineNo += 1) {
+                                line = asLengths[lineNo];
+                                int lineLen = line.EndIndex - cutAtCol;
+                                cutAtCol = 0;
+                                if (line.Kind == NewLineKind.CarriageReturnLineFeed && toRemove == lineLen - 1) {
+                                    // Special case of deleting just the '\r' from a '\r\n' ending
+                                    asLengths[lineNo] = new NewLineLocation(line.EndIndex - toRemove, NewLineKind.LineFeed);
+                                    break;
+                                } else if (toRemove < lineLen) {
+                                    asLengths[lineNo] = new NewLineLocation(line.EndIndex - toRemove, line.Kind);
+                                    break;
+                                } else {
+                                    asLengths[lineNo] = new NewLineLocation(line.EndIndex - lineLen, NewLineKind.None);
+                                    toRemove -= lineLen;
+                                }
                             }
-                            asLengths[lineNo] = line = new NewLineLocation(line.EndIndex - c.OldLength, line.Kind);
                         }
                         if (!string.IsNullOrEmpty(c.NewText)) {
                             NewLineLocation addedLine = new NewLineLocation(0, NewLineKind.None);
                             int lastLineEnd = 0, cutAtCol = oldLoc.Column - 1;
-                            while ((addedLine = NewLineLocation.FindNewLine(c.NewText, addedLine.EndIndex)).Kind != NewLineKind.None) {
-                                var nextLine = new NewLineLocation(line.EndIndex - cutAtCol, line.Kind);
-                                asLengths[lineNo] = line = new NewLineLocation(line.EndIndex - cutAtCol + addedLine.EndIndex - lastLineEnd, addedLine.Kind);
-                                asLengths.Insert(lineNo + 1, nextLine);
-
-                                cutAtCol = 0;
+                            while ((addedLine = NewLineLocation.FindNewLine(c.NewText, lastLineEnd)).Kind != NewLineKind.None) {
+                                if (cutAtCol > 0) {
+                                    asLengths[lineNo] = new NewLineLocation(line.EndIndex - cutAtCol, line.Kind);
+                                    lastLineEnd -= cutAtCol;
+                                    cutAtCol = 0;
+                                }
+                                line = new NewLineLocation(addedLine.EndIndex - lastLineEnd, addedLine.Kind);
+                                asLengths.Insert(lineNo++, line);
                                 lastLineEnd = addedLine.EndIndex;
                             }
-                            asLengths[lineNo] = line = new NewLineLocation(line.EndIndex + addedLine.EndIndex - lastLineEnd, line.Kind);
+                            if (addedLine.EndIndex > lastLineEnd) {
+                                if (lineNo < asLengths.Count) {
+                                    line = asLengths[lineNo];
+                                    asLengths[lineNo] = line = new NewLineLocation(line.EndIndex + addedLine.EndIndex - lastLineEnd, line.Kind);
+                                } else {
+                                    asLengths.Add(new NewLineLocation(addedLine.EndIndex - lastLineEnd, NewLineKind.None));
+                                }
+                            }
                         }
                     }
 
                     initial = LineLengthsToLineEnds(asLengths).ToArray();
-                    _lineCache[ver.VersionNumber] = initial;
+                    _lineCache[ver.VersionNumber + 1] = initial;
 
                     ver = ver.Next;
                 }
@@ -197,10 +250,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public SourceLocation Translate(SourceLocation loc, int fromVersion, int toVersion) {
-            if (fromVersion == toVersion) {
-                return loc;
-            }
-
             var fromVer = _snapshot.Version;
             while (fromVer.Next != null && fromVer.VersionNumber < fromVersion) {
                 fromVer = fromVer.Next;

@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Intellisense {
             while ((nextLine = NewLineLocation.FindNewLine(text, lastLineEnd)).EndIndex != lastLineEnd) {
                 yield return new LineInfo(
                     lastLineEnd,
-                    nextLine.EndIndex - lastLineEnd,
+                    nextLine.EndIndex - lastLineEnd - nextLine.Kind.GetSize(),
                     lines.Count,
                     nextLine.Kind
                 );

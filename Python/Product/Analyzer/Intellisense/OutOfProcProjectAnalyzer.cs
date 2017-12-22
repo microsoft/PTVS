@@ -1792,20 +1792,24 @@ namespace Microsoft.PythonTools.Intellisense {
                 switch (update.kind) {
                     case AP.FileUpdateKind.changes:
                         if (entry != null) {
-                            var newCodeStr = entry.UpdateCode(
-                                update.versions.Select(v => v.changes.Select(c => c.ToChangeInfo()).ToArray()).ToArray(),
-                                update.bufferId,
-                                update.version
-                            );
+                            try {
+                                var code = entry.GetCurrentCode(update.bufferId, out _);
+                                code.UpdateCode(
+                                    update.versions.Select(v => v.changes.Select(c => c.ToChangeInfo()).ToArray()).ToArray(),
+                                    update.version
+                                );
 
-                            codeByBuffer[update.bufferId] = new TextCodeInfo(
-                                update.version,
-                                new StringReader(newCodeStr),
-                                entry.FilePath.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase)
-                            );
+                                codeByBuffer[update.bufferId] = new TextCodeInfo(
+                                    update.version,
+                                    new StringReader(code.Text.ToString()),
+                                    entry.FilePath.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase)
+                                );
 #if DEBUG
-                            newCode[update.bufferId] = newCodeStr;
+                                newCode[update.bufferId] = code.Text.ToString();
 #endif
+                            } catch (InvalidOperationException) {
+                                return new AP.FileUpdateResponse { failed = true };
+                            }
                         }
                         break;
                     case AP.FileUpdateKind.reset:

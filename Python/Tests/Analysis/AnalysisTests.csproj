@@ -66,6 +66,7 @@
     <Compile Include="AnalyzerTests.cs" />
     <Compile Include="AstAnalysisTests.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
+    <Compile Include="CodeBufferTests.cs" />
     <Compile Include="CompletionDBTest.cs" />
     <Compile Include="DatabaseTest.cs" />
     <Compile Include="DeserializationTests.cs" />
@@ -93,7 +94,7 @@
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
-      <Aliases>global,analysis</Aliases>
+      <Aliases>global</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\Analyzer\Analyzer.csproj">
       <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>

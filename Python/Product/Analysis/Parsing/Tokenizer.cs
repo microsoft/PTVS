@@ -2663,6 +2663,7 @@ namespace Microsoft.PythonTools.Parsing {
         CarriageReturnLineFeed
     }
 
+    [DebuggerDisplay("NewLineLocation({_endIndex}, {_kind})")]
     public struct NewLineLocation : IComparable<NewLineLocation> {
         private int _endIndex;
         private NewLineKind _kind;
@@ -2687,9 +2688,10 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public static SourceLocation IndexToLocation(NewLineLocation[] lineLocations, int index) {
-            if (lineLocations == null) {
+            if (lineLocations == null || index == 0) {
                 return new SourceLocation(index, 1, 1);
             }
+
             int match = Array.BinarySearch(lineLocations, new NewLineLocation(index, NewLineKind.None));
             if (match < 0) {
                 // If our index = -1, it means we're on the first line.
@@ -2701,7 +2703,19 @@ namespace Microsoft.PythonTools.Parsing {
                 match = ~match - 1;
             }
 
-            return new SourceLocation(index, match + 2, index - lineLocations[match].EndIndex + 1);
+            int line = match + 2;
+            int col = index - lineLocations[match].EndIndex + 1;
+            if (col == 1 && lineLocations[match].Kind == NewLineKind.None) {
+                if (match >= 0) {
+                    line = match + 1;
+                    col = index - (match > 1 ? lineLocations[match - 1].EndIndex : 0) + 1;
+                } else {
+                    line = 1;
+                    col = 1;
+                    index = 0;
+                }
+            }
+            return new SourceLocation(index, line, col);
         }
 
         public static int LocationToIndex(NewLineLocation[] lineLocations, SourceLocation location, int endIndex) {
@@ -2748,9 +2762,11 @@ namespace Microsoft.PythonTools.Parsing {
             }
             return new NewLineLocation(i + 1, NewLineKind.CarriageReturn);
         }
+
+        public override string ToString() => $"<NewLineLocation({_endIndex}, NewLineKind.{_kind})>";
     }
 
-    static class NewLineKindExtensions {
+    public static class NewLineKindExtensions {
         public static int GetSize(this NewLineKind kind) {
             switch (kind) {
                 case NewLineKind.LineFeed: return 1;

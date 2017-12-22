@@ -190,7 +190,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Task ParseBuffers(IEnumerable<ITextSnapshot> snapshots) {
-            return ParseBuffersAsync(_services, _analyzer, snapshots);
+            return ParseBuffersAsync(_services, _analyzer, snapshots, true);
         }
 
         private static IEnumerable<ITextVersion> GetVersions(ITextVersion from, ITextVersion to) {
@@ -272,7 +272,8 @@ namespace Microsoft.PythonTools.Intellisense {
         internal static async Task ParseBuffersAsync(
             PythonEditorServices services,
             VsProjectAnalyzer analyzer,
-            IEnumerable<ITextSnapshot> snapshots
+            IEnumerable<ITextSnapshot> snapshots,
+            bool retryOnFailure
         ) {
             var tasks = new List<Tuple<ITextSnapshot[], Task<AP.FileUpdateResponse>>>();
 
@@ -298,16 +299,27 @@ namespace Microsoft.PythonTools.Intellisense {
                 )));
             }
 
+            var needRetry = new List<ITextSnapshot>();
             foreach (var task in tasks) {
                 var res = await task.Item2;
 
-                if (res != null) {
-                    Debug.Assert(res.failed != true);
+                if (res?.failed ?? false) {
+                    Interlocked.Decrement(ref analyzer._parsePending);
+                    if (res != null) {
+                        needRetry.AddRange(task.Item1);
+                    }
+                } else {
                     analyzer.OnAnalysisStarted();
                     ValidateBufferContents(task.Item1, res);
-                } else {
-                    Interlocked.Decrement(ref analyzer._parsePending);
                 }
+            }
+
+            if (retryOnFailure && needRetry.Any()) {
+                foreach (var bi in needRetry.Select(s => PythonTextBufferInfo.TryGetForBuffer(s.TextBuffer))) {
+                    bi.ClearSentSnapshot();
+                }
+
+                await ParseBuffersAsync(services, analyzer, needRetry, false);
             }
         }
 
@@ -332,13 +344,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static AP.ChangeInfo[] GetChanges(PythonTextBufferInfo buffer, ITextVersion curVersion) {
-            Debug.WriteLine("Changes for version {0}", curVersion.VersionNumber);
             var changes = new List<AP.ChangeInfo>();
             if (curVersion.Changes != null) {
                 AP.ChangeInfo prev = null;
                 foreach (var change in curVersion.Changes) {
-                    Debug.WriteLine("Changes for version {0} {1} {2}", change.OldPosition, change.OldLength, change.NewText);
-
                     if (CanMerge(prev, change, buffer.LocationTracker, curVersion.VersionNumber)) {
                         // we can merge the two changes together
                         prev.newText += change.NewText;
@@ -357,6 +366,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     changes.Add(prev);
                 }
             }
+
+#if DEBUG
+            Debug.WriteLine("Getting changes for version {0}", curVersion.VersionNumber);
+            foreach (var c in changes) {
+                Debug.WriteLine($" - ({c.startLine}, {c.startColumn})-({c.endLine}, {c.endColumn}): \"{c.newText}\"");
+            }
+#endif
             return changes.ToArray();
         }
 

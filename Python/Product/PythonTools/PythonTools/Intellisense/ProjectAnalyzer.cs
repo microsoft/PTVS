@@ -754,7 +754,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal Task<AP.UnresolvedImportsResponse> GetMissingImportsAsync(PythonTextBufferInfo buffer) {
-            var lastVersion = buffer.LastAnalysisSnapshot.Version;
+            var lastVersion = buffer.LastAnalysisSnapshot?.Version;
 
             return EnsureSingleRequest(
                 typeof(AP.UnresolvedImportsRequest),
@@ -873,7 +873,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                     bufferParser.AddBuffer(snapshot.TextBuffer);
                 }
-                await BufferParser.ParseBuffersAsync(_services, this, oldSnapshots);
+                await BufferParser.ParseBuffersAsync(_services, this, oldSnapshots, true);
             }
         }
 
@@ -1995,7 +1995,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal Task<AP.AnalysisClassificationsResponse> GetAnalysisClassificationsAsync(PythonTextBufferInfo buffer, bool colorNames) {
-            var lastVersion = buffer.LastAnalysisSnapshot;
+            var lastVersion = buffer.LastAnalysisSnapshot?.Version;
 
             return EnsureSingleRequest(
                 typeof(AP.AnalysisClassificationsRequest),
@@ -2294,7 +2294,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
 
-            if (outliningTags != null && outliningTags.version >= bi.LastAnalysisSnapshot.Version.VersionNumber) {
+            if (outliningTags != null) {
                 return ConvertOutliningTags(bi.LocationTracker, outliningTags.version, outliningTags.tags);
             }
 

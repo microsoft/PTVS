@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -32,28 +33,27 @@ namespace Microsoft.PythonTools.Intellisense {
         /// 
         /// Returns the string for this code and the version of the code represented by the string.
         /// </summary>
-        public static string GetCurrentCode(this IProjectEntry entry, int buffer, out int version) {
+        public static CurrentCode GetCurrentCode(this IProjectEntry entry, int buffer, out int version) {
             lock (_currentCodeKey) {
-                object dict;
-                CurrentCode curCode;
-                if (entry.Properties.TryGetValue(_currentCodeKey, out dict) &&
-                    ((SortedDictionary<int, CurrentCode>)dict).TryGetValue(buffer, out curCode)) {
+                var curCode = GetCurrentCode(entry, buffer);
+                if (curCode.Version >= 0) {
                     version = curCode.Version;
-                    return curCode.Text.ToString();
+                    return curCode;
                 }
 
                 if (entry.FilePath != null) {
                     try {
                         string allText = File.ReadAllText(entry.FilePath);
-                        entry.SetCurrentCode(allText, buffer, 0);
-                        version = 0;
-                        return allText;
+                        curCode.Text.Append(allText);
+                        curCode.Version = version = 0;
+                        return curCode;
                     } catch (IOException) {
                     }
                 }
 
-                version = -1;
-                return null;
+                curCode.Text.Clear();
+                curCode.Version = version = 0;
+                return curCode;
             }
         }
 
@@ -70,39 +70,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        /// <summary>
-        /// Updates the code applying the changes to the existing text buffer and updates the version.
-        /// </summary>
-        public static string UpdateCode(this IProjectEntry entry, IReadOnlyList<IReadOnlyList<ChangeInfo>> versions, int buffer, int version) {
-            lock (_currentCodeKey) {
-                CurrentCode curCode = GetCurrentCode(entry, buffer);
-                var strBuffer = curCode.Text;
-
-                foreach (var versionChange in versions) {
-                    int delta = 0;
-                    var lineLoc = LineInfo.SplitLines(strBuffer.ToString())
-                        .Select(l => new NewLineLocation(l.EndIncludingLineBreak, l.LineBreak))
-                        .ToArray();
-
-                    foreach (var change in versionChange) {
-                        int start = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.Start, strBuffer.Length);
-                        int end = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.End, strBuffer.Length);
-                        strBuffer.Remove(start + delta, end - start);
-                        if (!string.IsNullOrEmpty(change.InsertedText)) {
-                            strBuffer.Insert(start + delta, change.InsertedText);
-                            delta += change.InsertedText.Length;
-                        }
-
-                        delta -= (end - start);
-                    }
-                }
-
-                curCode.Version = version;
-                return strBuffer.ToString();
-            }
-        }
-
-
         private static CurrentCode GetCurrentCode(IProjectEntry entry, int buffer) {
             object dictTmp;
             SortedDictionary<int, CurrentCode> dict;
@@ -114,7 +81,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             CurrentCode curCode;
             if (!dict.TryGetValue(buffer, out curCode)) {
-                curCode = dict[buffer] = new CurrentCode();
+                curCode = dict[buffer] = new CurrentCode { Version = -1 };
             }
 
             return curCode;
@@ -126,7 +93,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public static PythonAst GetVerbatimAst(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, int bufferId, out int version) {
             ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
 
-            var code = projectFile.GetCurrentCode(bufferId, out version);
+            var code = projectFile.GetCurrentCode(bufferId, out version)?.Text.ToString();
             if (code != null) {
                 var parser = Parser.CreateParser(
                     new StringReader(code),
@@ -145,7 +112,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public static PythonAst GetVerbatimAstAndCode(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, int bufferId, out int version, out string code) {
             ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
 
-            code = projectFile.GetCurrentCode(bufferId, out version);
+            code = projectFile.GetCurrentCode(bufferId, out version)?.Text.ToString();
             if (code != null) {
                 var parser = Parser.CreateParser(
                     new StringReader(code),
@@ -158,9 +125,50 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        class CurrentCode {
+        public class CurrentCode {
             public readonly StringBuilder Text = new StringBuilder();
             public int Version;
+
+            /// <summary>
+            /// Updates the code applying the changes to the existing text buffer and updates the version.
+            /// </summary>
+            public void UpdateCode(IReadOnlyList<IReadOnlyList<ChangeInfo>> versions, int finalVersion) {
+                lock (_currentCodeKey) {
+                    if (finalVersion < Version) {
+                        throw new InvalidOperationException("code is out of sync");
+                    }
+
+                    foreach (var versionChange in versions) {
+                        int lastStart = -1;
+                        int delta = 0;
+                        var lineLoc = LineInfo.SplitLines(Text.ToString())
+                            .Select(l => new NewLineLocation(l.EndIncludingLineBreak, l.LineBreak))
+                            .ToArray();
+
+                        foreach (var change in versionChange) {
+                            int start = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.Start, Text.Length);
+                            if (start < lastStart) {
+                                throw new InvalidOperationException("changes must be in order of start location");
+                            }
+                            lastStart = start;
+
+                            int end = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.End, Text.Length);
+                            if (end > start) {
+                                Text.Remove(start + delta, end - start);
+                            }
+                            if (!string.IsNullOrEmpty(change.InsertedText)) {
+                                Text.Insert(start + delta, change.InsertedText);
+                                delta += change.InsertedText.Length;
+                            }
+
+                            delta -= (end - start);
+                        }
+
+                    }
+                    Version = finalVersion;
+                }
+            }
+
         }
     }
 }

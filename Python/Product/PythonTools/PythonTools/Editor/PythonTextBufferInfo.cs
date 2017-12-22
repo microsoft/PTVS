@@ -353,6 +353,14 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
+        public void ClearSentSnapshot() {
+            lock (_lock) {
+                _lastSentSnapshot = null;
+                _expectAnalysis.Clear();
+                _expectParse.Clear();
+            }
+        }
+
         public ITextSnapshot AddSentSnapshot(ITextSnapshot sent) {
             lock (_lock) {
                 if (_lastSentSnapshot != null && _lastSentSnapshot.Version.VersionNumber < sent.Version.VersionNumber) {

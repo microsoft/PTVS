@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace Microsoft.PythonTools.Parsing {
@@ -22,6 +23,7 @@ namespace Microsoft.PythonTools.Parsing {
     /// Represents a location in source code.
     /// </summary>
     [Serializable]
+    [DebuggerDisplay("({_line}, {_column})")]
     public struct SourceLocation {
         // TODO: remove index
         private readonly int _index;
@@ -237,7 +239,7 @@ namespace Microsoft.PythonTools.Parsing {
                     newIndex += columns;
                 }
             }
-            return new SourceLocation(newIndex, this._line, newCol);
+            return newIndex >= 0 ? new SourceLocation(newIndex, this._line, newCol) : new SourceLocation(this._line, newCol);
         }
 
         public override bool Equals(object obj) {
