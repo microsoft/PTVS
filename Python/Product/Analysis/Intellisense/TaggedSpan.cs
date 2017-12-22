@@ -20,12 +20,10 @@ namespace Microsoft.PythonTools.Intellisense {
     public sealed class TaggedSpan {
         public SourceSpan Span { get; }
         public string Tag { get; }
-        public int HeaderOffset { get; }
 
-        public TaggedSpan(SourceSpan span, string tag, int headerOffset = 0) {
+        public TaggedSpan(SourceSpan span, string tag) {
             Span = span;
             Tag = tag;
-            HeaderOffset = headerOffset;
         }
     }
 }

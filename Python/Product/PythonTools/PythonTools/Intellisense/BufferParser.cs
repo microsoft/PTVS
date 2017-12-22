@@ -205,10 +205,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var lastSent = buffer.AddSentSnapshot(snapshot);
-            if (lastSent == snapshot) {
-                // this snapshot is up to date...
-                return null;
-            }
 
             // Update last sent snapshot and the analysis cookie to our
             // current snapshot.
@@ -217,7 +213,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 entry.AnalysisCookie = new SnapshotCookie(snapshot);
             }
 
-            if (lastSent == null || lastSent.TextBuffer != buffer.Buffer) {
+            if (lastSent == null || lastSent == snapshot || lastSent.TextBuffer != buffer.Buffer) {
                 // First time parsing from a live buffer, send the entire
                 // file and set our initial snapshot.  We'll roll forward
                 // to new snapshots when we receive the errors event.  This
@@ -245,7 +241,7 @@ namespace Microsoft.PythonTools.Intellisense {
         [Conditional("DEBUG")]
         private static void ValidateBufferContents(IEnumerable<ITextSnapshot> snapshots, AP.FileUpdateResponse response) {
 #if DEBUG
-            if (response.newCode == null) {
+            if (response?.newCode == null) {
                 return;
             }
 

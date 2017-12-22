@@ -115,28 +115,23 @@ namespace Microsoft.PythonTools {
         public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
         class IndexComparer : IComparer {
-            private readonly ITextSnapshot _snapshot;
+            public static readonly IComparer Instance = new IndexComparer();
 
-            public IndexComparer(ITextSnapshot snapshot) {
-                _snapshot = snapshot;
-            }
+            private IndexComparer() { }
 
             public int Compare(object x, object y) {
-                int xValue = GetStart(x), yValue = GetStart(y);
-
-                return xValue - yValue;
+                return GetStart(x).CompareTo(GetStart(y));
             }
 
-            private int GetStart(object value) {
-                int indexValue;
-
+            private SourceLocation GetStart(object value) {
                 if (value is AP.AnalysisClassification xClass) {
-                    indexValue = new SourceLocation(xClass.startLine, xClass.startColumn).ToSnapshotPoint(_snapshot);
+                    return new SourceLocation(xClass.startLine, xClass.startColumn);
+                } else if (value is SourceLocation s) {
+                    return s;
                 } else {
-                    indexValue = (int)value;
+                    Debug.Fail($"Unexpected value {value ?? "(null)"} ({value?.GetType().FullName ?? "null"})");
+                    throw new InvalidCastException();
                 }
-
-                return indexValue;
             }
         }
 
@@ -175,7 +170,7 @@ namespace Microsoft.PythonTools {
             // starting position in the old buffer)
             var start = bi.LocationTracker.Translate(span.Start.ToSourceLocation(), snapshot.Version.VersionNumber, fromVersion);
             var end = bi.LocationTracker.Translate(span.End.ToSourceLocation(), snapshot.Version.VersionNumber, fromVersion);
-            var startIndex = Array.BinarySearch(spans, start, new IndexComparer(snapshot));
+            var startIndex = Array.BinarySearch(spans, start, IndexComparer.Instance);
             if (startIndex < 0) {
                 startIndex = ~startIndex - 1;
                 if (startIndex < 0) {

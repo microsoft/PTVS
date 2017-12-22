@@ -33,18 +33,16 @@ namespace Microsoft.PythonTools.Intellisense {
         // Compound Statements: if, while, for, try, with, func, class, decorated
         public override bool Walk(IfStatement node) {
             if (node.ElseStatement != null) {
-                AddTagIfNecessary(node.ElseStatement, node.ElseIndex);
+                AddTagIfNecessary(node.ElseIndex, node.ElseStatement.EndIndex);
             }
 
             return base.Walk(node);
         }
 
         public override bool Walk(IfStatementTest node) {
-            if (node.Test != null && node.Body != null) {
-                AddTagIfNecessary(node.Test.StartIndex, node.Body.EndIndex);
-                // Don't walk test condition.
-                node.Body.Walk(this);
-            }
+            AddTagIfNecessary(node.HeaderIndex + 1, node.Body?.EndIndex);
+            // Only walk body, not the condition.
+            node.Body?.Walk(this);
             return false;
         }
 
@@ -53,14 +51,13 @@ namespace Microsoft.PythonTools.Intellisense {
             // This prevents the test from being collapsed ever.
             if (node.Body != null) {
                 AddTagIfNecessary(
-                    node.StartIndex,
-                    node.Body.EndIndex,
-                    _ast.GetLineEndFromPosition(node.StartIndex)
+                    _ast.GetLineEndFromPosition(node.StartIndex),
+                    node.Body.EndIndex
                 );
                 node.Body.Walk(this);
             }
             if (node.ElseStatement != null) {
-                AddTagIfNecessary(node.ElseStatement, node.ElseIndex);
+                AddTagIfNecessary(node.ElseIndex, node.ElseStatement.EndIndex);
                 node.ElseStatement.Walk(this);
             }
             return false;
@@ -69,50 +66,41 @@ namespace Microsoft.PythonTools.Intellisense {
         public override bool Walk(ForStatement node) {
             // Walk for statements manually so we don't traverse the list.  
             // This prevents the list and/or left from being collapsed ever.
-            
+            node.List?.Walk(this);
+
             if (node.Body != null) {
-                AddTagIfNecessary(
-                    node.StartIndex,
-                    node.Body.EndIndex,
-                    _ast.GetLineEndFromPosition(node.StartIndex)
-                );
+                AddTagIfNecessary(node.HeaderIndex + 1, node.Body.EndIndex);
                 node.Body.Walk(this);
             }
             if (node.Else != null) {
-                AddTagIfNecessary(node.Else, node.ElseIndex);
+                AddTagIfNecessary(node.ElseIndex, node.Else.EndIndex);
                 node.Else.Walk(this);
             }
             return false;
         }
 
         public override bool Walk(TryStatement node) {
-            if (node.Body != null) {
-                AddTagIfNecessary(node.StartIndex, node.Body.EndIndex, node.HeaderIndex);
-            }
+            AddTagIfNecessary(node.HeaderIndex, node.Body?.EndIndex);
             if (node.Handlers != null) {
                 foreach (var h in node.Handlers) {
-                    AddTagIfNecessary(h, h.HeaderIndex);
+                    AddTagIfNecessary(h.HeaderIndex, h.EndIndex);
                 }
             }
-            if (node.Finally != null) {
-                AddTagIfNecessary(node.FinallyIndex, node.Finally.EndIndex, node.FinallyIndex);
-            }
-            if (node.Else != null) {
-                AddTagIfNecessary(node.ElseIndex, node.Else.EndIndex, node.ElseIndex);
-            }
+            AddTagIfNecessary(node.FinallyIndex, node.Finally?.EndIndex);
+            AddTagIfNecessary(node.ElseIndex, node.Else?.EndIndex);
 
             return base.Walk(node);
         }
 
         public override bool Walk(WithStatement node) {
-            AddTagIfNecessary(node);
+            AddTagIfNecessary(node.HeaderIndex + 1, node.Body?.EndIndex);
             return base.Walk(node);
         }
 
         public override bool Walk(FunctionDefinition node) {
             // Walk manually so collapsing is not enabled for params.
             if (node.Body != null) {
-                AddTagIfNecessary(node, node.HeaderIndex + 1, node.Decorators);
+                AddTagIfNecessary(node.HeaderIndex + 1, node.EndIndex);
                 node.Body.Walk(this);
             }
 
@@ -120,59 +108,66 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override bool Walk(ClassDefinition node) {
-            AddTagIfNecessary(node, node.HeaderIndex + 1, node.Decorators);
+            AddTagIfNecessary(node.HeaderIndex + 1, node.EndIndex);
 
             return base.Walk(node);
         }
 
         // Not-Compound Statements
         public override bool Walk(CallExpression node) {
-            AddTagIfNecessary(node);
+            AddTagIfNecessary(node.Args?.FirstOrDefault()?.StartIndex, node.Args?.LastOrDefault()?.EndIndex);
             return base.Walk(node);
         }
 
         public override bool Walk(FromImportStatement node) {
-            AddTagIfNecessary(node);
+            if (node.Names != null && node.Names.Any()) {
+                int lastName = node.Names.Count - 1;
+                int? nameEnd = node.Names[lastName]?.EndIndex;
+                if (node.AsNames != null && node.AsNames.Count >= lastName && node.AsNames[lastName] != null) {
+                    nameEnd = node.AsNames[lastName].EndIndex;
+                }
+                AddTagIfNecessary(node.Names[0].StartIndex, nameEnd);
+            }
             return base.Walk(node);
         }
 
         public override bool Walk(ListExpression node) {
-            AddTagIfNecessary(node);
+            AddTagIfNecessary(node.Items?.FirstOrDefault()?.StartIndex, node.Items?.LastOrDefault()?.EndIndex);
             return base.Walk(node);
         }
 
         public override bool Walk(TupleExpression node) {
-            AddTagIfNecessary(node);
+            AddTagIfNecessary(node.Items?.FirstOrDefault()?.StartIndex, node.Items?.LastOrDefault()?.EndIndex);
             return base.Walk(node);
         }
 
         public override bool Walk(DictionaryExpression node) {
-            AddTagIfNecessary(node);
+            AddTagIfNecessary(node.Items?.FirstOrDefault()?.StartIndex, node.Items?.LastOrDefault()?.EndIndex);
             return base.Walk(node);
         }
 
         public override bool Walk(SetExpression node) {
-            AddTagIfNecessary(node);
+            AddTagIfNecessary(node.Items?.FirstOrDefault()?.StartIndex, node.Items?.LastOrDefault()?.EndIndex);
             return base.Walk(node);
         }
 
         public override bool Walk(ParenthesisExpression node) {
-            AddTagIfNecessary(node);
+            AddTagIfNecessary(node.Expression?.StartIndex, node.Expression?.EndIndex);
             return base.Walk(node);
         }
 
         public override bool Walk(ConstantExpression node) {
-            AddTagIfNecessary(node);
+            AddTagIfNecessary(_ast.GetLineEndFromPosition(node.StartIndex), node.EndIndex);
             return base.Walk(node);
         }
 
-        private void AddTagIfNecessary(Node node, int headerIndex = -1, DecoratorStatement decorator = null) {
-            AddTagIfNecessary(node.StartIndex, node.EndIndex, headerIndex, decorator);
-        }
+        private void AddTagIfNecessary(int? startIndex, int? endIndex, int minLinesToCollapse = 3) {
+            if (!startIndex.HasValue || !endIndex.HasValue) {
+                return;
+            }
 
-        private void AddTagIfNecessary(int startIndex, int endIndex, int headerIndex = -1, DecoratorStatement decorator = null, int minLinesToCollapse = 3) {
-            var start = _ast.IndexToLocation(startIndex);
-            var end = _ast.IndexToLocation(endIndex);
+            var start = _ast.IndexToLocation(startIndex.Value);
+            var end = _ast.IndexToLocation(endIndex.Value);
             var lines = end.Line - start.Line + 1;
 
             // Collapse if more than 3 lines.
@@ -180,13 +175,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            if (decorator != null) {
-                // we don't want to collapse the decorators, we like them visible, so
-                // we base our starting position on where the decorators end.
-                startIndex = decorator.EndIndex + 1;
-            }
-
-            var tagSpan = new TaggedSpan(new SourceSpan(start, end), null, headerIndex);
+            var tagSpan = new TaggedSpan(new SourceSpan(start, end), null);
             _tagSpans.Add(tagSpan);
         }
 

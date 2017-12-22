@@ -19,7 +19,7 @@ using System.Diagnostics;
 using System.Globalization;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Parsing {
+namespace Microsoft.PythonTools {
 
     /// <summary>
     /// Stores the location of a span of text in a source file.

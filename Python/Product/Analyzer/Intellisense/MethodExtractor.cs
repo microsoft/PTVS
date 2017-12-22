@@ -182,10 +182,10 @@ namespace Microsoft.PythonTools.Intellisense {
             // get the new method body...
             var newMethod = creator.GetExtractionResult();
 
-            var changes = new List<ChangeInfo>();
+            var changes = new List<DocumentChange>();
 
-            changes.Add(ChangeInfo.Replace(walker.Target.StartIncludingIndentation, walker.Target.End, newMethod.Call));
-            changes.Add(ChangeInfo.Insert(newMethod.Method, walker.Target.InsertLocations[targetScope]));
+            changes.Add(DocumentChange.Replace(walker.Target.StartIncludingIndentation, walker.Target.End, newMethod.Call));
+            changes.Add(DocumentChange.Insert(newMethod.Method, walker.Target.InsertLocations[targetScope]));
 
             List<AP.ScopeInfo> scopes = new List<AP.ScopeInfo>();
             for(int i = 0; i<walker.Target.Parents.Count; i++) {
@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new AP.ExtractMethodResponse() { 
-                changes = changes.Select(AP.ChangeInfo.FromChangeInfo).ToArray(),
+                changes = changes.Select(AP.ChangeInfo.FromDocumentChange).ToArray(),
                 methodBody = newMethod.Method,
                 variables = outputCollector._inputVars.Select(x => x.Name).ToArray(),
                 scopes = scopes.ToArray(),

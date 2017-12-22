@@ -44,12 +44,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return _newCode.Substring(_newLines[line].Start, _newLines[line].Length);
         }
 
-        public static IReadOnlyList<ChangeInfo> Replace(string oldCode, string newCode, string newLine = "\r\n") {
+        public static IReadOnlyList<DocumentChange> Replace(string oldCode, string newCode, string newLine = "\r\n") {
             return new LinePreservingCodeReplacer(oldCode, newCode, newLine).ReplaceCode();
         }
 
-        public IReadOnlyList<ChangeInfo> ReplaceCode() {
-            var edits = new List<ChangeInfo>();
+        public IReadOnlyList<DocumentChange> ReplaceCode() {
+            var edits = new List<DocumentChange>();
             var oldLineMapping = new Dictionary<string, List<int>>();   // line to line #
             for (int i = 0; i < _oldLines.Count; i++) {
                 List<int> lineInfo;
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (curOldLine < _oldLines.Count) {
                 // remove the remaining new lines
                 edits.Add(
-                    ChangeInfo.Delete(new SourceSpan(
+                    DocumentChange.Delete(new SourceSpan(
                         _oldLines[curOldLine].SourceStart,
                         _oldLines[_oldLines.Count - 1].SourceEnd
                     ))
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return edits.ToArray();
         }
 
-        private void ReplaceLines(List<ChangeInfo> edits, int startOldLine, int endOldLine, int startNewLine, int endNewLine) {
+        private void ReplaceLines(List<DocumentChange> edits, int startOldLine, int endOldLine, int startNewLine, int endNewLine) {
             int oldLineCount = endOldLine - startOldLine;
             int newLineCount = endNewLine - startNewLine;
 
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Intellisense {
             int excessNewLineStart = startNewLine - startOldLine;
             for (int i = startOldLine; i < endOldLine && i < (endNewLine - startNewLine + startOldLine); i++) {
                 edits.Add(
-                    ChangeInfo.Replace(
+                    DocumentChange.Replace(
                         _oldLines[i].SourceExtent,
                         GetNewText(startNewLine + i - startOldLine)
                     )
@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (oldLineCount > newLineCount) {
                 // we end up w/ less lines, we need to delete some text
                 edits.Add(
-                    ChangeInfo.Delete(new SourceSpan(
+                    DocumentChange.Delete(new SourceSpan(
                         _oldLines[endOldLine - (oldLineCount - newLineCount)].SourceStart,
                         _oldLines[endOldLine - 1].SourceEndIncludingLineBreak
                     ))
@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } else if (oldLineCount < newLineCount) {
                 // we end up w/ more lines, we need to insert some text
                 edits.Add(
-                    ChangeInfo.Insert(
+                    DocumentChange.Insert(
                         string.Join(
                             _newLine,
                             _newLines.Skip(excessNewLineStart).Take(endNewLine - excessNewLineStart).Select(x => GetNewText(x.LineNo))
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Replaces a range of text with new text attempting only modifying lines which changed 
         /// and doing so in a single edit.
         /// </summary>
-        public static IReadOnlyList<ChangeInfo> ReplaceByLines(this string oldCode, string newCode, string newLine = "\r\n") {
+        public static IReadOnlyList<DocumentChange> ReplaceByLines(this string oldCode, string newCode, string newLine = "\r\n") {
             return LinePreservingCodeReplacer.Replace(oldCode, newCode, newLine);
         }
     }

@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Editor {
             _commentTaskProvider = new Lazy<CommentTaskProvider>(CreateTaskProvider<CommentTaskProvider>);
             _unresolvedImportSquiggleProvider = new Lazy<UnresolvedImportSquiggleProvider>(CreateSquiggleProvider<UnresolvedImportSquiggleProvider>);
             _mismatchedEncodingSquiggleProvider = new Lazy<InvalidEncodingSquiggleProvider>(CreateSquiggleProvider<InvalidEncodingSquiggleProvider>);
+            _previewChangesService = new Lazy<PreviewChangesService>(() => _componentModel.Value.GetService<PreviewChangesService>());
         }
 
         public readonly IServiceProvider Site;
@@ -126,8 +127,9 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         public IIncrementalSearchFactoryService IncrementalSearch = null;
 
-        [Import]
-        public PreviewChangesService PreviewChangesService = null;
+        // Cannot compose this service for mocks, so it's a traditional Lazy
+        private Lazy<PreviewChangesService> _previewChangesService = null;
+        public PreviewChangesService PreviewChangesService => _previewChangesService.Value;
 
         [Import]
         public ITextMarkerProviderFactory TextMarkerProviderFactory = null;
@@ -138,9 +140,11 @@ namespace Microsoft.PythonTools.Editor {
         [Import]
         public IGlyphService GlyphService = null;
 
+#if !USE_15_5
         [Import(AllowDefault = true)]
         private Lazy<IPatternMatcherFactory> _patternMatcherFactory = null;
         public IPatternMatcherFactory PatternMatcherFactory => _patternMatcherFactory.Value;
+#endif
 
         public IVsTextManager2 VsTextManager2 => (IVsTextManager2)Site.GetService(typeof(SVsTextManager));
 

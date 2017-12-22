@@ -657,7 +657,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var remover = new ImportRemover(ast, code, request.allScopes, ast.LocationToIndex(new SourceLocation(request.line, request.column)));
 
             return new AP.RemoveImportsResponse() {
-                changes = remover.RemoveImports().Select(AP.ChangeInfo.FromChangeInfo).ToArray(),
+                changes = remover.RemoveImports().Select(AP.ChangeInfo.FromDocumentChange).ToArray(),
                 version = version
             };
         }
@@ -727,7 +727,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 changes = selectedCode.ReplaceByLines(
                     body.ToCodeString(ast, request.options),
                     request.newLine
-                ).Select(AP.ChangeInfo.FromChangeInfo).ToArray()
+                ).Select(AP.ChangeInfo.FromDocumentChange).ToArray()
             };
         }
 
@@ -842,7 +842,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.AddImportResponse() {
                 changes = new[] {
-                    AP.ChangeInfo.FromChangeInfo(ChangeInfo.Insert(newText, curAst.IndexToLocation(start)))
+                    AP.ChangeInfo.FromDocumentChange(DocumentChange.Insert(newText, curAst.IndexToLocation(start)))
                 },
                 version = version
             };
@@ -882,7 +882,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var span = fromImport.GetSpan(curAst);
             int leadingWhiteSpaceLength = (fromImport.GetLeadingWhiteSpace(curAst) ?? "").Length;
-            return AP.ChangeInfo.FromChangeInfo(ChangeInfo.Replace(
+            return AP.ChangeInfo.FromDocumentChange(DocumentChange.Replace(
                 new SourceSpan(
                     span.Start.AddColumns(-leadingWhiteSpaceLength),
                     span.End
@@ -1051,8 +1051,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     startLine = t.Span.Start.Line,
                     startCol = t.Span.Start.Column,
                     endLine = t.Span.End.Line,
-                    endCol = t.Span.End.Column,
-                    headerOffset = t.HeaderOffset
+                    endCol = t.Span.End.Column
                 }).ToArray(),
                 version = bufferVersion.Version
             };
@@ -1788,36 +1787,48 @@ namespace Microsoft.PythonTools.Intellisense {
 #if DEBUG
             Dictionary<int, string> newCode = new Dictionary<int, string>();
 #endif
+
+            var doc = entry as IDocument;
+            if (doc == null) {
+                return new AP.FileUpdateResponse { failed = true };
+            }
+
             foreach (var update in request.updates) {
                 switch (update.kind) {
                     case AP.FileUpdateKind.changes:
-                        if (entry != null) {
-                            try {
-                                var code = entry.GetCurrentCode(update.bufferId, out _);
-                                code.UpdateCode(
-                                    update.versions.Select(v => v.changes.Select(c => c.ToChangeInfo()).ToArray()).ToArray(),
-                                    update.version
-                                );
+                        try {
+                            int fromVersion = update.version - update.versions.Length;
+                            foreach (var ver in update.versions) {
+                                doc.UpdateDocument(update.bufferId, new DocumentChangeSet(
+                                    fromVersion,
+                                    ++fromVersion,
+                                    ver.changes.Select(c => c.ToDocumentChange())
+                                ));
+                            }
 
+                            int version;
+                            var code = doc.ReadDocument(update.bufferId, out version);
+                            if (code != null) {
                                 codeByBuffer[update.bufferId] = new TextCodeInfo(
                                     update.version,
-                                    new StringReader(code.Text.ToString()),
-                                    entry.FilePath.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase)
+                                    code,
+                                    PathUtils.HasExtension(entry.FilePath, ".pyi")
                                 );
 #if DEBUG
-                                newCode[update.bufferId] = code.Text.ToString();
+                                code = doc.ReadDocument(update.bufferId, out _);
+                                newCode[update.bufferId] = code.ReadToEnd();
 #endif
-                            } catch (InvalidOperationException) {
-                                return new AP.FileUpdateResponse { failed = true };
                             }
+                            } catch (InvalidOperationException) {
+                            return new AP.FileUpdateResponse { failed = true };
                         }
                         break;
                     case AP.FileUpdateKind.reset:
-                        entry.SetCurrentCode(update.content, update.bufferId, update.version);
+                        doc.ResetDocument(update.bufferId, update.version, update.content);
                         codeByBuffer[update.bufferId] = new TextCodeInfo(
                             update.version,
                             new StringReader(update.content),
-                            entry.FilePath.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase)
+                            PathUtils.HasExtension(entry.FilePath, ".pyi")
                         );
 #if DEBUG
                         newCode[update.bufferId] = update.content;
@@ -2288,7 +2299,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             ParseFile(
                                 projEntry,
                                 new Dictionary<int, CodeInfo> {
-                                    { 0, new StreamCodeInfo(0, reader, filename.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase)) }
+                                    { 0, new StreamCodeInfo(0, reader, PathUtils.HasExtension(filename, ".pyi")) }
                                 }
                             );
                             return;

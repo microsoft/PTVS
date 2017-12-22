@@ -127,6 +127,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal int GetLineEndFromPosition(int index) {
             var loc = IndexToLocation(index);
+            if (loc.Line >= _lineLocations.Length) {
+                return index;
+            }
             var res = _lineLocations[loc.Line - 1];
             switch (res.Kind) {
                 case NewLineKind.LineFeed:

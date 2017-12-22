@@ -2330,6 +2330,7 @@ namespace Microsoft.PythonTools.Parsing {
             Statement body = ParseSuite();
 
             WithStatement ret = new WithStatement(items.ToArray(), body, isAsync);
+            ret.HeaderIndex = header;
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, isAsync ? asyncWhiteSpace : withWhiteSpace);
                 AddSecondPreceedingWhiteSpace(ret, isAsync ? withWhiteSpace : null);

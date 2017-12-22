@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _index = index;
         }
 
-        internal IReadOnlyList<ChangeInfo> RemoveImports() {
+        internal IReadOnlyList<DocumentChange> RemoveImports() {
             ScopeStatement targetStmt = null;
             if (!_allScopes) {
                 var enclosingNodeWalker = new EnclosingNodeWalker(_ast, _index, _index);
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var walker = new ImportWalker(targetStmt);
             _ast.Walk(walker);
 
-            var changes = new List<ChangeInfo>();
+            var changes = new List<DocumentChange>();
             foreach (var removeInfo in walker.GetToRemove()) {
                 // see if we're removing some or all of the 
                 //var node = removeInfo.Node;
@@ -74,14 +74,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     int start = _ast.LocationToIndex(span.Start) - proceedingLength;
                     int length = _ast.GetSpanLength(span) + proceedingLength;
 
-                    changes.Add(ChangeInfo.Delete(new SourceSpan(span.Start.AddColumns(-proceedingLength), span.End)));
-                    changes.Add(ChangeInfo.Insert(newCode, span.Start));
+                    changes.Add(DocumentChange.Delete(new SourceSpan(span.Start.AddColumns(-proceedingLength), span.End)));
+                    changes.Add(DocumentChange.Insert(newCode, span.Start));
                 }
             }
             return changes.ToArray();
         }
 
-        private void DeleteStatement(List<ChangeInfo> changes, SourceSpan span, bool insertPass) {
+        private void DeleteStatement(List<DocumentChange> changes, SourceSpan span, bool insertPass) {
             // remove the entire node, leave any trailing whitespace/comments, but include the
             // newline and any indentation.
 
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            changes.Add(ChangeInfo.Replace(
+            changes.Add(DocumentChange.Replace(
                 _ast,
                 start,
                 length,

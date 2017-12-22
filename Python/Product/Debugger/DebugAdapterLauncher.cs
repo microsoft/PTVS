@@ -21,13 +21,18 @@ using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]
     [Guid("C2990BF1-A87B-4459-9478-322482C535D6")]
-    public sealed class DebugAdapterLauncher : IAdapterLauncher {
+    public sealed class DebugAdapterLauncher
+#if !USE_15_5
+        : IAdapterLauncher
+#endif
+{
         public const string DebugAdapterLauncherCLSID = "{C2990BF1-A87B-4459-9478-322482C535D6}";
         public const string VSCodeDebugEngineId = "{86432F39-ADFD-4C56-AA8F-AF8FCDC66039}";
         public static Guid VSCodeDebugEngine = new Guid(VSCodeDebugEngineId);
 
         public DebugAdapterLauncher(){}
 
+#if !USE_15_5
         public void Initialize(IDebugAdapterHostContext context) {
         }
 
@@ -40,5 +45,6 @@ namespace Microsoft.PythonTools.Debugger {
         }
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
         }
+#endif
     }
 }

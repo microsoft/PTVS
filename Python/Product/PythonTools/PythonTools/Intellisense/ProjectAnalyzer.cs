@@ -2308,7 +2308,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 SnapshotSpan span;
 
                 var start = new SourceLocation(tag.startLine, tag.startCol);
-                var header = start.AddColumns(tag.headerOffset < 0 ? int.MaxValue : tag.headerOffset);
                 var end = new SourceLocation(tag.endLine, tag.endCol);
 
                 try {
@@ -2319,11 +2318,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (span.Length > 0) {
-                    yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                        span.Start,
-                        span.End,
-                        header.ToSnapshotPoint(snapshot)
-                    );
+                    yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(span.Start, span.End);
                 }
             }
         }

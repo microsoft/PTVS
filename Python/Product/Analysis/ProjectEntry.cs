@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
@@ -36,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
-    internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry {
+    internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry, IDocument {
         private readonly PythonAnalyzer _projectState;
         private readonly string _moduleName;
         private readonly string _filePath;
@@ -49,6 +50,7 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<object, object> _properties = new Dictionary<object, object>();
         private ManualResetEventSlim _curWaiter;
         private int _updatesPending, _waiters;
+        private readonly Dictionary<int, DocumentBuffer> _buffers;
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
 
         // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
@@ -61,6 +63,7 @@ namespace Microsoft.PythonTools.Analysis {
             _cookie = cookie;
             _myScope = new ModuleInfo(_moduleName, this, state.Interpreter.CreateModuleContext());
             _unit = new AnalysisUnit(_tree, _myScope.Scope);
+            _buffers = new Dictionary<int, DocumentBuffer>();
             AnalysisLog.NewUnit(_unit);
         }
 
@@ -351,6 +354,51 @@ namespace Microsoft.PythonTools.Analysis {
         public void AggregatedInto(AggregateProjectEntry into) {
             _aggregates.Add(into);
         }
+
+        private DocumentBuffer GetBuffer(int buffer) {
+            DocumentBuffer doc;
+            lock (_buffers) {
+                if (_buffers.TryGetValue(buffer, out doc) && doc != null) {
+                    return doc;
+                }
+                if (buffer == 0) {
+                    _buffers[buffer] = doc = new DocumentBuffer();
+                }
+            }
+
+            if (doc != null) {
+                // Was created here, so we want to load file contents
+                if (File.Exists(_filePath)) {
+                    doc.Reset(0, File.ReadAllText(_filePath));
+                } else {
+                    doc.Reset(0, null);
+                }
+            }
+
+            return doc;
+        }
+
+        public TextReader ReadDocument(int buffer, out int version) {
+            var doc = GetBuffer(buffer);
+            if (doc?.Text != null) {
+                version = doc.Version;
+                return new StringReader(doc.Text.ToString());
+            }
+            version = -1;
+            return null;
+        }
+
+        public int GetDocumentVersion(int buffer) {
+            return GetBuffer(buffer)?.Version ?? -1;
+        }
+
+        public void UpdateDocument(int buffer, DocumentChangeSet changes) {
+            GetBuffer(buffer)?.Update(changes);
+        }
+
+        public void ResetDocument(int buffer, int version, string content) {
+            GetBuffer(buffer)?.Reset(version, content);
+        }
     }
 
     /// <summary>
@@ -364,9 +412,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Returns the current analysis version of the project entry.
         /// </summary>
-        int AnalysisVersion {
-            get;
-        }
+        int AnalysisVersion { get; }
     }
 
     /// <summary>
@@ -399,10 +445,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         void RemovedFromProject();
 
-
-        IModuleContext AnalysisContext {
-            get;
-        }
+        IModuleContext AnalysisContext { get; }
     }
 
     /// <summary>
@@ -437,6 +480,15 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public interface IGroupableAnalysisProject {
         void AnalyzeQueuedEntries(CancellationToken cancel);
+    }
+
+    public interface IDocument {
+        TextReader ReadDocument(int buffer, out int version);
+
+        int GetDocumentVersion(int buffer);
+
+        void UpdateDocument(int buffer, DocumentChangeSet changes);
+        void ResetDocument(int buffer, int version, string content);
     }
 
     public interface IPythonProjectEntry : IGroupableAnalysisProjectEntry, IProjectEntry {

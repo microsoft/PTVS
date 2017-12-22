@@ -3,10 +3,6 @@
       <_ProjectSystemFilesLocation Condition="$(_ProjectSystemFilesLocation) == ''">$(BuildRoot)\Common\Product\SharedProject</_ProjectSystemFilesLocation>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(_ProjectSystemFilesLocation)\Navigation\SourceLocation.cs">
-      <Link>SharedProject\Navigation\SourceLocation.cs</Link>
-      <Visible>true</Visible>
-    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\AllFilesProjectElement.cs">
       <Link>SharedProject\AllFilesProjectElement.cs</Link>
       <Visible>true</Visible>
@@ -38,10 +34,6 @@
       <Link>SharedProject\OverwriteFileDialog.xaml</Link>
       <Visible>true</Visible>
     </Page>
-    <Compile Include="$(_ProjectSystemFilesLocation)\Navigation\IScopeNode.cs">
-      <Link>SharedProject\Navigation\IScopeNode.cs</Link>
-      <Visible>true</Visible>
-    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\CommonConstants.cs">
       <Link>SharedProject\CommonConstants.cs</Link>
       <Visible>true</Visible>

@@ -485,7 +485,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public int startLine, startColumn;
             public int endLine, endColumn;
 
-            public static ChangeInfo FromChangeInfo(Intellisense.ChangeInfo c) {
+            public static ChangeInfo FromDocumentChange(DocumentChange c) {
                 return new ChangeInfo {
                     startLine = c.ReplacedSpan.Start.Line,
                     startColumn = c.ReplacedSpan.Start.Column,
@@ -495,8 +495,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
             }
 
-            public Intellisense.ChangeInfo ToChangeInfo() {
-                return new Intellisense.ChangeInfo {
+            public DocumentChange ToDocumentChange() {
+                return new DocumentChange {
                     InsertedText = newText,
                     ReplacedSpan = new SourceSpan(new SourceLocation(startLine, startColumn), new SourceLocation(endLine, endColumn))
                 };
@@ -897,7 +897,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class OutliningTag {
             public int startLine, startCol;
             public int endLine, endCol;
-            public int headerOffset;
         }
 
         public sealed class NavigationRequest : Request<NavigationResponse> {

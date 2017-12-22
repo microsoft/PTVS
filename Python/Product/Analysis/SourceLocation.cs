@@ -18,14 +18,13 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 
-namespace Microsoft.PythonTools.Parsing {
+namespace Microsoft.PythonTools {
     /// <summary>
     /// Represents a location in source code.
     /// </summary>
     [Serializable]
     [DebuggerDisplay("({_line}, {_column})")]
-    public struct SourceLocation {
-        // TODO: remove index
+    public struct SourceLocation : IComparable<SourceLocation>, IEquatable<SourceLocation> {
         private readonly int _index;
 
         private readonly int _line;
@@ -259,6 +258,18 @@ namespace Microsoft.PythonTools.Parsing {
 
         internal string ToDebugString() {
             return String.Format(CultureInfo.CurrentCulture, "({0},{1},{2})", _index, _line, _column);
+        }
+
+        public bool Equals(SourceLocation other) {
+            return other._line == _line && other._column == _column;
+        }
+
+        public int CompareTo(SourceLocation other) {
+            int c = _line.CompareTo(other._line);
+            if (c == 0) {
+                return _column.CompareTo(other._column);
+            }
+            return c;
         }
     }
 }

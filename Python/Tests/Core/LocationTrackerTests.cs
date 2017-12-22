@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using TestUtilities.Mocks;
+using Microsoft.PythonTools;
 
 namespace PythonToolsTests {
     [TestClass]

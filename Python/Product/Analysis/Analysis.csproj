@@ -60,6 +60,7 @@
     <Compile Include="AnalysisLogWriter.cs" />
     <Compile Include="Analyzer\ExpressionEvaluatorAnnotationConverter.cs" />
     <Compile Include="CompletionOptions.cs" />
+    <Compile Include="DocumentBuffer.cs" />
     <Compile Include="ExpressionFinder.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
@@ -73,7 +74,7 @@
     <Compile Include="Intellisense\AnalysisQueue.cs" />
     <Compile Include="Intellisense\AnalysisSynchronizationContext.cs" />
     <Compile Include="Intellisense\AssignmentWalker.cs" />
-    <Compile Include="Intellisense\ChangeInfo.cs" />
+    <Compile Include="DocumentChange.cs" />
     <Compile Include="Intellisense\ClassifierWalker.cs" />
     <Compile Include="Intellisense\DetectSideEffectsWalker.cs" />
     <Compile Include="Intellisense\EnclosingNodeWalker.cs" />
@@ -339,7 +340,7 @@
     <Compile Include="SetOfOneEnumerator.cs" />
     <Compile Include="Parsing\Severity.cs" />
     <Compile Include="Parsing\SourceCodeKind.cs" />
-    <Compile Include="Parsing\SourceSpan.cs" />
+    <Compile Include="SourceSpan.cs" />
     <Compile Include="Parsing\Token.cs" />
     <Compile Include="Parsing\TokenCategory.cs" />
     <Compile Include="Parsing\TokenInfo.cs" />
@@ -350,7 +351,7 @@
     <Compile Include="PythonAnalyzer.cs" />
     <Compile Include="EncodedLocation.cs" />
     <Compile Include="AnalysisUnit.cs" />
-    <Compile Include="Parsing\SourceLocation.cs" />
+    <Compile Include="SourceLocation.cs" />
     <Compile Include="Validation.cs" />
     <Compile Include="Values\ArgumentSet.cs" />
     <Compile Include="Values\BoundBuiltinMethodInfo.cs" />

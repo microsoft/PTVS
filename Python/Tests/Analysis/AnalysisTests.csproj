@@ -66,7 +66,7 @@
     <Compile Include="AnalyzerTests.cs" />
     <Compile Include="AstAnalysisTests.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
-    <Compile Include="CodeBufferTests.cs" />
+    <Compile Include="DocumentBufferTests.cs" />
     <Compile Include="CompletionDBTest.cs" />
     <Compile Include="DatabaseTest.cs" />
     <Compile Include="DeserializationTests.cs" />

@@ -810,5 +810,16 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
             return sb.ToString();
         }
+
+        public static bool HasExtension(string filePath, string ext) {
+            int i = (filePath ?? throw new ArgumentNullException(nameof(filePath))).LastIndexOf('.');
+            if (i < 0) {
+                return string.IsNullOrEmpty(ext);
+            }
+            if (string.IsNullOrEmpty(ext)) {
+                return false;
+            }
+            return string.Compare(filePath, i + 1, ext, (ext[0] == '.' ? 1 : 0), int.MaxValue, StringComparison.OrdinalIgnoreCase) == 0;
+        }
     }
 }

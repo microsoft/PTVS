@@ -65,22 +65,26 @@ namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(AnalysisEntryService))]
     class AnalysisEntryService : IAnalysisEntryService {
         private readonly Lazy<PythonEditorServices> _services;
-        private readonly Lazy<IWpfDifferenceViewerFactoryService> _diffService;
+        private IWpfDifferenceViewerFactoryService _diffService;
 
         private static readonly object _waitForAnalyzerKey = new object();
 
         [ImportingConstructor]
         public AnalysisEntryService([Import] Lazy<PythonEditorServices> services) {
             _services = services;
+        }
 
-            _diffService = new Lazy<IWpfDifferenceViewerFactoryService>(() => {
-                try {
-                    return _services.Value.ComponentModel.GetService<IWpfDifferenceViewerFactoryService>();
-                } catch (CompositionException) {
-                } catch (ImportCardinalityMismatchException) {
+        private IWpfDifferenceViewerFactoryService DifferenceViewerFactory {
+            get {
+                if (_diffService == null) {
+                    try {
+                        _diffService = _services.Value.ComponentModel.GetService<IWpfDifferenceViewerFactoryService>();
+                    } catch (CompositionException) {
+                    } catch (ImportCardinalityMismatchException) {
+                    }
                 }
-                return null;
-            });
+                return _diffService;
+            }
         }
 
         /// <summary>
@@ -106,7 +110,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (textView != null) {
                 // If we have a difference viewer we'll match the LHS w/ the RHS
-                var viewer = _diffService.Value?.TryGetViewerForTextView(textView);
+                var viewer = DifferenceViewerFactory?.TryGetViewerForTextView(textView);
                 if (viewer != null) {
                     if (TryGetAnalysisEntry(viewer.DifferenceBuffer.RightBuffer, out entry)) {
                         return true;
@@ -271,7 +275,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (textView != null) {
                 // If we have a difference viewer we'll match the LHS w/ the RHS
-                var viewer = _diffService.Value?.TryGetViewerForTextView(textView);
+                var viewer = DifferenceViewerFactory?.TryGetViewerForTextView(textView);
                 if (viewer != null) {
                     if (TryGetAnalyzer(viewer.DifferenceBuffer.RightBuffer, out analyzer, out filename)) {
                         return true;
