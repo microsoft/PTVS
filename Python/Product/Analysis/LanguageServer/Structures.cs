@@ -44,10 +44,21 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// line length.
         /// </summary>
         public int character;
+
+        /// <summary>
+        /// Buffer index within a document.
+        /// </summary>
+        public int? _buffer;
+
+        public static implicit operator SourceLocation(Position p) => new SourceLocation(p.line + 1, p.character + 1);
+        public static implicit operator Position(SourceLocation loc) => new Position { line = loc.Line - 1, character = loc.Column - 1 };
     }
 
     public struct Range {
         public Position start, end;
+
+        public static implicit operator SourceSpan(Range r) => new SourceSpan(r.start, r.end);
+        public static implicit operator Range(SourceSpan span) => new Range { start = span.Start, end = span.End };
     }
 
     public struct Location {
@@ -539,6 +550,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public string[] commitCharacters;
         public Command? command;
         public object data;
+
+        public CompletionItemValue[] _values;
+    }
+
+    // Not in LSP spec
+    public struct CompletionItemValue {
+        public string description;
+        public string documentation;
+        public Reference[] references;
     }
 
     public struct CompletionRegistrationOptions : IRegistrationOptions {

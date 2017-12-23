@@ -25,12 +25,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
-        internal PythonAnalyzer _analyzer;
         internal readonly AnalysisQueue _analysisQueue;
         internal readonly ProjectEntryMap _projectFiles;
+
+        internal PythonAnalyzer _analyzer;
+        internal ClientCapabilities? _clientCaps;
 
         public Server() {
             _analysisQueue = new AnalysisQueue();
@@ -45,6 +48,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public async override Task<InitializeResult> Initialize(InitializeParams @params) {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
+
+            _clientCaps = @params.capabilities;
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
@@ -61,16 +66,35 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
-            
         }
 
         public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
-            
         }
 
         public override async Task<CompletionList> Completion(CompletionParams @params) {
-            // TODO: Get completion list items
+            GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+
+            var opts = (GetMemberOptions)0;
+            if (@params.context.HasValue) {
+                var c = @params.context.Value;
+                if (c._intersection) {
+                    opts |= GetMemberOptions.IntersectMultipleResults;
+                }
+                if (c._statementKeywords) {
+                    opts |= GetMemberOptions.IncludeStatementKeywords;
+                }
+                if (c._expressionKeywords) {
+                    opts |= GetMemberOptions.IncludeExpressionKeywords;
+                }
+            }
+
+            var members = entry?.Analysis?.GetAllAvailableMembers(@params.position, opts);
+            if (members == null || !members.Any()) {
+                return new CompletionList { };
+            }
+
             return new CompletionList {
+                items = members.Select(m => ToCompletionItem(m, opts)).ToArray()
             };
         }
 
@@ -80,6 +104,29 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         #endregion
+
+        private IProjectEntry GetEntry(TextDocumentIdentifier document) {
+            if (!_projectFiles.TryGetValue(document.uri, out IProjectEntry entry)) {
+                throw new LanguageServerException(LanguageServerException.UnknownDocument, "unknown document");
+            }
+            return entry;
+        }
+
+        private void GetAnalysis(TextDocumentIdentifier document, Position position, int? expectedVersion, out IPythonProjectEntry entry, out PythonAst tree) {
+            entry = GetEntry(document) as IPythonProjectEntry;
+            if (entry != null) {
+                throw new LanguageServerException(LanguageServerException.UnsupportedDocumentType, "unsupported document");
+            }
+            entry.GetTreeAndCookie(out tree, out var cookie);
+            if (expectedVersion.HasValue && cookie is VersionCookie vc) {
+                if (vc.Buffers.TryGetValue(position._buffer ?? 0, out var buffer) && expectedVersion.Value != buffer.Version) {
+                    throw new LanguageServerException(LanguageServerException.MismatchedVersion, $"buffer {position._buffer ?? 0} is at version {buffer.Version}; expected {expectedVersion.Value}");
+                }
+                if (buffer != null) {
+                    tree = buffer.Ast;
+                }
+            }
+        }
 
         private async Task<PythonAnalyzer> CreateAnalyzer(PythonInitializationOptions.Interpreter interpreter) {
             IPythonInterpreterFactory factory = null;
@@ -114,6 +161,43 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             return await PythonAnalyzer.CreateAsync(factory, interp);
+        }
+
+        private CompletionItem ToCompletionItem(MemberResult m, GetMemberOptions opts) {
+            var res = new CompletionItem {
+                label = m.Name,
+                insertText = m.Completion,
+                documentation = m.Documentation,
+                kind = ToCompletionItemKind(m.MemberType)
+            };
+
+            return res;
+        }
+
+        private CompletionItemKind ToCompletionItemKind(PythonMemberType memberType) {
+            switch (memberType) {
+                case PythonMemberType.Unknown: return CompletionItemKind.None;
+                case PythonMemberType.Class: return CompletionItemKind.Class;
+                case PythonMemberType.Instance: return CompletionItemKind.Value;
+                case PythonMemberType.Delegate: return CompletionItemKind.Class;
+                case PythonMemberType.DelegateInstance: return CompletionItemKind.Function;
+                case PythonMemberType.Enum: return CompletionItemKind.Enum;
+                case PythonMemberType.EnumInstance: return CompletionItemKind.EnumMember;
+                case PythonMemberType.Function: return CompletionItemKind.Function;
+                case PythonMemberType.Method: return CompletionItemKind.Method;
+                case PythonMemberType.Module: return CompletionItemKind.Module;
+                case PythonMemberType.Namespace: return CompletionItemKind.Module;
+                case PythonMemberType.Constant: return CompletionItemKind.Constant;
+                case PythonMemberType.Event: return CompletionItemKind.Event;
+                case PythonMemberType.Field: return CompletionItemKind.Field;
+                case PythonMemberType.Property: return CompletionItemKind.Property;
+                case PythonMemberType.Multiple: return CompletionItemKind.Value;
+                case PythonMemberType.Keyword: return CompletionItemKind.Keyword;
+                case PythonMemberType.CodeSnippet: return CompletionItemKind.Snippet;
+                case PythonMemberType.NamedArgument: return CompletionItemKind.Variable;
+                default:
+                    return CompletionItemKind.None;
+            }
         }
     }
 }

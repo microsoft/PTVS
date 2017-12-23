@@ -19,13 +19,14 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Intellisense {
     sealed class ProjectEntryMap : IEnumerable<KeyValuePair<string, IProjectEntry>> {
         private readonly List<IProjectEntry> _ids = new List<IProjectEntry>();
         private readonly Stack<int> _freedIds = new Stack<int>();
-        private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<Uri, IProjectEntry> _projectFiles = new ConcurrentDictionary<Uri, IProjectEntry>();
         private static object _idKey = new object();
 
         /// <summary>
@@ -47,7 +48,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // ids are 1 based
                 id = _ids.Count;
             }
-            _projectFiles[filename] = node;
+            _projectFiles[new Uri(filename)] = node;
             node.Properties[_idKey] = id;
             return id;
         }
@@ -66,7 +67,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _ids[i] = null;
             _freedIds.Push(i);
             IProjectEntry removed;
-            _projectFiles.TryRemove(node.FilePath, out removed);
+            _projectFiles.TryRemove(new Uri(node.FilePath), out removed);
         }
 
         /// <summary>
@@ -87,11 +88,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public IEnumerator<KeyValuePair<string, IProjectEntry>> GetEnumerator() {
-            return _projectFiles.GetEnumerator();
+            return _projectFiles.Select(kv => new KeyValuePair<string, IProjectEntry>(kv.Key.AbsolutePath.Replace('/', '\\'), kv.Value)).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
-            return _projectFiles.GetEnumerator();
+            return GetEnumerator();
         }
 
         /// <summary>
@@ -120,6 +121,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public bool TryGetValue(string path, out IProjectEntry item) {
+            return _projectFiles.TryGetValue(new Uri(path), out item);
+        }
+
+        public bool TryGetValue(Uri path, out IProjectEntry item) {
             return _projectFiles.TryGetValue(path, out item);
         }
     }

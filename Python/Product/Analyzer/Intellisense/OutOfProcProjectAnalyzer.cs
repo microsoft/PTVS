@@ -36,6 +36,7 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
+    using LS = Microsoft.PythonTools.Analysis.LanguageServer;
 
     /// <summary>
     /// Performs centralized parsing and analysis of Python source code for a remotely running process.
@@ -49,7 +50,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// analysis.
     /// </summary>
     sealed class OutOfProcProjectAnalyzer : IDisposable {
-        private readonly Analysis.LanguageServer.Server _server;
+        private readonly LS.Server _server;
         private readonly Dictionary<string, IAnalysisExtension> _extensions;
         internal int _analysisPending;
 
@@ -63,7 +64,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Connection _connection;
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
-            _server = new Analysis.LanguageServer.Server();
+            _server = new LS.Server();
             _server._analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _server._analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
 
@@ -87,6 +88,11 @@ namespace Microsoft.PythonTools.Intellisense {
         // These will eventually be removed
         private AnalysisQueue _analysisQueue => _server._analysisQueue;
         private ProjectEntryMap _projectFiles => _server._projectFiles;
+
+        private LS.TextDocumentIdentifier GetDocument(int fileId) {
+            var entry = _projectFiles[fileId];
+            return new LS.TextDocumentIdentifier { uri = new Uri(entry.FilePath) };
+        }
 
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
             _connection.Dispose();
@@ -112,10 +118,10 @@ namespace Microsoft.PythonTools.Intellisense {
             // These commands return a response, which we then send.
             switch (command) {
                 case AP.UnloadFileRequest.Command: response = UnloadFile((AP.UnloadFileRequest)request); break;
-                case AP.TopLevelCompletionsRequest.Command: response = GetTopLevelCompletions(request); break;
-                case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
-                case AP.GetAllMembersRequest.Command: response = GetAllMembers(request); break;
-                case AP.GetModulesRequest.Command: response = GetModules(request); break;
+                case AP.TopLevelCompletionsRequest.Command: response = await GetTopLevelCompletions(request); break;
+                case AP.CompletionsRequest.Command: response = await GetCompletions(request); break;
+                case AP.GetAllMembersRequest.Command: response = await GetAllMembers(request); break;
+                case AP.GetModulesRequest.Command: response = await GetModules(request); break;
                 case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
                 case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
@@ -219,9 +225,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task<Response> Initialize(AP.InitializeRequest request) {
             try {
-                await _server.Initialize(new Analysis.LanguageServer.InitializeParams {
-                    initializationOptions = new Analysis.LanguageServer.PythonInitializationOptions {
-                        interpreter = new Analysis.LanguageServer.PythonInitializationOptions.Interpreter {
+                await _server.Initialize(new LS.InitializeParams {
+                    initializationOptions = new LS.PythonInitializationOptions {
+                        interpreter = new LS.PythonInitializationOptions.Interpreter {
                             assembly = request.interpreter?.assembly,
                             typeName = request.interpreter?.typeName,
                             properties = request.interpreter?.properties
@@ -1291,6 +1297,18 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
+        private static string GetVariableType(LS.ReferenceKind? type) {
+            if (!type.HasValue) {
+                return null;
+            }
+            switch (type.Value) {
+                case LS.ReferenceKind.Definition: return "definition";
+                case LS.ReferenceKind.Reference: return "reference";
+                case LS.ReferenceKind.Value: return "value";
+            }
+            return null;
+        }
+
         private Response GetQuickInfo(AP.QuickInfoRequest request) {
             var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
             if (entry == null) {
@@ -1441,32 +1459,33 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private Response GetTopLevelCompletions(Request request) {
+        private async Task<Response> GetTopLevelCompletions(Request request) {
             var topLevelCompletions = (AP.TopLevelCompletionsRequest)request;
 
-            var entry = _projectFiles[topLevelCompletions.fileId] as IPythonProjectEntry;
-            IEnumerable<MemberResult> members;
-            if (entry?.Analysis != null) {
-                members = entry.Analysis.GetAllAvailableMembers(
-                    new SourceLocation(topLevelCompletions.line, topLevelCompletions.column),
-                    topLevelCompletions.options
-                );
-            } else {
-                members = Enumerable.Empty<MemberResult>();
-            }
+            var members = await _server.Completion(new LS.CompletionParams {
+                position = new LS.Position { line = topLevelCompletions.line - 1, character = topLevelCompletions.column - 1 },
+                textDocument = GetDocument(topLevelCompletions.fileId),
+                context = new LS.CompletionContext {
+                    _intersection = topLevelCompletions.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
+                    _statementKeywords = topLevelCompletions.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
+                    _expressionKeywords = topLevelCompletions.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords)
+                }
+            });
+
+
 
             return new AP.CompletionsResponse() {
-                completions = ToCompletions(members.ToArray(), topLevelCompletions.options)
+                completions = await ToCompletions(members.items.ToArray(), topLevelCompletions.options)
             };
         }
 
-        private Response GetModules(Request request) {
+        private async Task<Response> GetModules(Request request) {
             var getModules = (AP.GetModulesRequest)request;
             var prefix = getModules.package == null ? null : string.Join(".", getModules.package);
 
             if (getModules.package == null || getModules.package.Length == 0) {
                 return new AP.CompletionsResponse {
-                    completions = ToCompletions(Analyzer.GetModules(), GetMemberOptions.None)
+                    completions = await ToCompletions(Analyzer.GetModules(), GetMemberOptions.None)
                 };
             }
 
@@ -1476,11 +1495,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new AP.CompletionsResponse {
-                completions = ToCompletions(Analyzer.GetModuleMembers(context, getModules.package), GetMemberOptions.None)
+                completions = await ToCompletions(Analyzer.GetModuleMembers(context, getModules.package), GetMemberOptions.None)
             };
         }
 
-        private Response GetCompletions(Request request) {
+        private async Task<Response> GetCompletions(Request request) {
             var completions = (AP.CompletionsRequest)request;
 
             var entry = _projectFiles.Get<IPythonProjectEntry>(completions.fileId);
@@ -1500,7 +1519,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new AP.CompletionsResponse() {
-                completions = ToCompletions(members.ToArray(), completions.options)
+                completions = await ToCompletions(members.ToArray(), completions.options)
             };
         }
 
@@ -1523,7 +1542,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private Response GetAllMembers(Request request) {
+        private async Task<Response> GetAllMembers(Request request) {
             var req = (AP.GetAllMembersRequest)request;
 
             var members = Enumerable.Empty<MemberResult>();
@@ -1538,7 +1557,7 @@ namespace Microsoft.PythonTools.Intellisense {
             members = members.GroupBy(mr => mr.Name).Select(g => g.First());
 
             return new AP.CompletionsResponse() {
-                completions = ToCompletions(members.ToArray(), opts)
+                completions = await ToCompletions(members.ToArray(), opts)
             };
         }
 
@@ -1561,7 +1580,80 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ToArray();
         }
 
-        private AP.Completion[] ToCompletions(MemberResult[] memberResult, GetMemberOptions options) {
+        private async Task<AP.Completion[]> ToCompletions(IEnumerable<LS.CompletionItem> completions, GetMemberOptions options) {
+            if (completions == null) {
+                return null;
+            }
+
+            var res = new List<AP.Completion>();
+            foreach (var c in completions) {
+                var m = new AP.Completion {
+                    name = c.label,
+                    completion = c.insertText,
+                    doc = c.documentation,
+                    memberType = ToMemberType(c.kind)
+                };
+
+                if (options.HasFlag(GetMemberOptions.DetailedInformation)) {
+                    var c2 = await _server.CompletionItemResolve(c);
+                    var vars = new List<AP.CompletionValue>();
+                    foreach (var v in c2._values.MaybeEnumerate()) {
+                        vars.Add(new AP.CompletionValue {
+                            description = new[] { new AP.DescriptionComponent { kind = null, text = v.description } },
+                            doc = v.documentation,
+                            locations = v.references?.Where(r => r.uri.IsFile).Select(r => new AP.AnalysisReference {
+                                file = r.uri.AbsolutePath,
+                                line = r.range.start.line + 1,
+                                column = r.range.start.character + 1,
+                                definitionStartLine = r.range.start.line + 1,
+                                definitionStartColumn = r.range.start.character + 1,
+                                definitionEndLine = r.range.end.line + 1,
+                                definitionEndColumn = r.range.end.character + 1,
+                                kind = GetVariableType(r._kind)
+                            }).ToArray()
+                        });
+                    }
+                }
+
+                res.Add(m);
+            }
+
+            return res.ToArray();
+        }
+
+        private PythonMemberType ToMemberType(LS.CompletionItemKind kind) {
+            switch (kind) {
+                case LS.CompletionItemKind.None: return PythonMemberType.Unknown;
+                case LS.CompletionItemKind.Text: return PythonMemberType.Constant;
+                case LS.CompletionItemKind.Method: return PythonMemberType.Method;
+                case LS.CompletionItemKind.Function: return PythonMemberType.Function;
+                case LS.CompletionItemKind.Constructor: return PythonMemberType.Function;
+                case LS.CompletionItemKind.Field: return PythonMemberType.Field;
+                case LS.CompletionItemKind.Variable: return PythonMemberType.Instance;
+                case LS.CompletionItemKind.Class: return PythonMemberType.Class;
+                case LS.CompletionItemKind.Interface: return PythonMemberType.Class;
+                case LS.CompletionItemKind.Module: return PythonMemberType.Module;
+                case LS.CompletionItemKind.Property: return PythonMemberType.Property;
+                case LS.CompletionItemKind.Unit: return PythonMemberType.Unknown;
+                case LS.CompletionItemKind.Value: return PythonMemberType.Instance;
+                case LS.CompletionItemKind.Enum: return PythonMemberType.Enum;
+                case LS.CompletionItemKind.Keyword: return PythonMemberType.Keyword;
+                case LS.CompletionItemKind.Snippet: return PythonMemberType.CodeSnippet;
+                case LS.CompletionItemKind.Color: return PythonMemberType.Instance;
+                case LS.CompletionItemKind.File: return PythonMemberType.Module;
+                case LS.CompletionItemKind.Reference: return PythonMemberType.Unknown;
+                case LS.CompletionItemKind.Folder: return PythonMemberType.Module;
+                case LS.CompletionItemKind.EnumMember: return PythonMemberType.EnumInstance;
+                case LS.CompletionItemKind.Constant: return PythonMemberType.Constant;
+                case LS.CompletionItemKind.Struct: return PythonMemberType.Class;
+                case LS.CompletionItemKind.Event: return PythonMemberType.Delegate;
+                case LS.CompletionItemKind.Operator: return PythonMemberType.Unknown;
+                case LS.CompletionItemKind.TypeParameter: return PythonMemberType.Class;
+                default: return PythonMemberType.Unknown;
+            }
+        }
+
+        private async Task<AP.Completion[]> ToCompletions(MemberResult[] memberResult, GetMemberOptions options) {
             AP.Completion[] res = new AP.Completion[memberResult.Length];
             for (int i = 0; i < memberResult.Length; i++) {
                 var member = memberResult[i];
@@ -1950,6 +2042,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (item != null) {
                 fileId = _projectFiles.Add(path, item);
+                _server.DidOpenTextDocument(new LS.DidOpenTextDocumentParams {
+                    textDocument = new LS.TextDocumentItem {
+                        uri = GetDocument(fileId).uri,
+                        languageId = "python",
+                        version = 0
+                    }
+                }).WaitAndUnwrapExceptions();
             } else {
                 fileId = -1;
             }
@@ -2267,6 +2366,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     reanalyzeEntries = Analyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
                 }
 
+                _server.DidCloseTextDocument(new LS.DidCloseTextDocumentParams {
+                    textDocument = GetDocument(ProjectEntryMap.GetId(entry))
+                }).WaitAndUnwrapExceptions();
                 Analyzer.RemoveModule(entry);
                 _projectFiles.Remove(entry);
 

@@ -32,6 +32,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     [Serializable]
     public class LanguageServerException : Exception {
+        public const int UnknownDocument = 1;
+        public const int UnsupportedDocumentType = 2;
+        public const int MismatchedVersion = 3;
+
         public int Code => (int)Data["Code"];
 
         public sealed override System.Collections.IDictionary Data => base.Data;
@@ -184,6 +188,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public struct CompletionContext {
         public CompletionTriggerKind triggerKind;
         public string triggerCharacter;
+
+        public bool _intersection;
+        public bool _statementKeywords;
+        public bool _expressionKeywords;
     }
 
     public struct ReferencesParams {
