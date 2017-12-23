@@ -2344,12 +2344,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
             using (var edit = textBuffer.CreateEdit()) {
                 foreach (var change in changes.MaybeEnumerate()) {
-                    var span = new SourceSpan(
+                    var span = translator.Translate(new SourceSpan(
                         new SourceLocation(change.startLine, change.startColumn),
                         new SourceLocation(change.endLine, change.endColumn)
-                    );
+                    ), atVersion, edit.Snapshot);
 
-                    edit.Replace(translator.Translate(span, atVersion, edit.Snapshot), change.newText);
+                    if (string.IsNullOrEmpty(change.newText)) {
+                        edit.Delete(span);
+                    } else {
+                        edit.Replace(span, change.newText);
+                    }
                 }
                 edit.Apply();
             }

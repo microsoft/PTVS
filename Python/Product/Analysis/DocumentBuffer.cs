@@ -47,26 +47,22 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             int lastStart = -1;
-            int delta = 0;
             var lineLoc = SplitLines(Text.ToString()).ToArray();
 
             foreach (var change in changes.Changes) {
                 int start = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.Start, Text.Length);
-                if (start < lastStart) {
-                    throw new InvalidOperationException("changes must be in order of start location");
+                if (start > lastStart) {
+                    throw new InvalidOperationException("changes must be in reverse order of start location");
                 }
                 lastStart = start;
 
                 int end = NewLineLocation.LocationToIndex(lineLoc, change.ReplacedSpan.End, Text.Length);
                 if (end > start) {
-                    Text.Remove(start + delta, end - start);
+                    Text.Remove(start, end - start);
                 }
                 if (!string.IsNullOrEmpty(change.InsertedText)) {
-                    Text.Insert(start + delta, change.InsertedText);
-                    delta += change.InsertedText.Length;
+                    Text.Insert(start, change.InsertedText);
                 }
-
-                delta -= (end - start);
             }
 
             Version = changes.ToVersion;

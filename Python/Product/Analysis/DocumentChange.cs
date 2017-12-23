@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools {
         public DocumentChangeSet(int fromVersion, int toVersion, IEnumerable<DocumentChange> changes) {
             FromVersion = fromVersion;
             ToVersion = toVersion;
-            Changes = changes.OrderBy(c => c.ReplacedSpan.Start).ToArray();
+            Changes = changes.OrderByDescending(c => c.ReplacedSpan.Start).ToArray();
         }
 
         public int FromVersion { get; }
