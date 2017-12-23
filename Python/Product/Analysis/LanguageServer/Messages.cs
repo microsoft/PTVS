@@ -15,6 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
@@ -27,8 +30,11 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public TraceLevel trace;
     }
 
+    [Serializable]
     public class LanguageServerException : Exception {
         public int Code => (int)Data["Code"];
+
+        public sealed override System.Collections.IDictionary Data => base.Data;
 
         public LanguageServerException(int code, string message) : base(message) {
             Data["Code"] = code;
@@ -69,6 +75,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Registration[] registrations;
     }
 
+    [ComVisible(false)]
     public sealed class RegisterCapabilityEventArgs : CallbackEventArgs<RegistrationParams> {
         internal RegisterCapabilityEventArgs(TaskCompletionSource<object> task) : base(task) { }
     }
@@ -77,6 +84,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Unregistration[] unregistrations;
     }
 
+    [ComVisible(false)]
     public sealed class UnregisterCapabilityEventArgs : CallbackEventArgs<UnregistrationParams> {
         internal UnregisterCapabilityEventArgs(TaskCompletionSource<object> task) : base(task) { }
     }
@@ -112,6 +120,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public bool applied;
     }
 
+    [ComVisible(false)]
     public sealed class ApplyWorkspaceEditEventArgs : CallbackEventArgs<ApplyWorkspaceEditParams, ApplyWorkspaceEditResponse> {
         internal ApplyWorkspaceEditEventArgs(TaskCompletionSource<ApplyWorkspaceEditResponse?> task) : base(task) { }
     }
@@ -141,7 +150,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     public sealed class PublishDiagnosticsEventArgs : EventArgs {
         public Uri uri { get; set; }
-        public Diagnostic[] diagnostics { get; set; }
+        public IReadOnlyList<Diagnostic> diagnostics { get; set; }
 
         /// <summary>
         /// The version the ranges in the diagnostics apply to.
