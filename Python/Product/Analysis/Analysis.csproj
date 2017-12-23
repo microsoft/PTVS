@@ -98,6 +98,7 @@
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
     <Compile Include="LanguageServer\Messages.cs" />
+    <Compile Include="LanguageServer\Server.cs" />
     <Compile Include="LanguageServer\ServerBase.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />

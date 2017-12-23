@@ -49,8 +49,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// analysis.
     /// </summary>
     sealed class OutOfProcProjectAnalyzer : IDisposable {
-        private readonly AnalysisQueue _analysisQueue;
-        private readonly ProjectEntryMap _projectFiles;
+        private readonly Analysis.LanguageServer.Server _server;
         private readonly Dictionary<string, IAnalysisExtension> _extensions;
         internal int _analysisPending;
 
@@ -64,15 +63,14 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Connection _connection;
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
-            _analysisQueue = new AnalysisQueue();
-            _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
-            _analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
+            _server = new Analysis.LanguageServer.Server();
+            _server._analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
+            _server._analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
 
             Options = new AP.AnalysisOptions();
 
             _extensions = new Dictionary<string, IAnalysisExtension>();
 
-            _projectFiles = new ProjectEntryMap();
             _connection = new Connection(
                 writer,
                 true,
@@ -84,6 +82,11 @@ namespace Microsoft.PythonTools.Intellisense {
             );
             _connection.EventReceived += ConectionReceivedEvent;
         }
+
+        // TODO: These are to progressively move functionality to the language server
+        // These will eventually be removed
+        private AnalysisQueue _analysisQueue => _server._analysisQueue;
+        private ProjectEntryMap _projectFiles => _server._projectFiles;
 
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
             _connection.Dispose();
@@ -216,24 +219,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task<Response> Initialize(AP.InitializeRequest request) {
             try {
-                var factory = LoadInterpreterFactory(request.interpreter);
-
-                if (factory == null) {
-                    if (_connection != null) {
-                        await _connection.SendEventAsync(
-                            new AP.AnalyzerWarningEvent("Using default interpreter")
-                        );
+                await _server.Initialize(new Analysis.LanguageServer.InitializeParams {
+                    initializationOptions = new Analysis.LanguageServer.PythonInitializationOptions {
+                        interpreter = new Analysis.LanguageServer.PythonInitializationOptions.Interpreter {
+                            assembly = request.interpreter?.assembly,
+                            typeName = request.interpreter?.typeName,
+                            properties = request.interpreter?.properties
+                        }
                     }
-                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version());
-                }
-
-                InterpreterFactory = factory;
-
-                var interpreter = factory.CreateInterpreter();
-                if (interpreter == null) {
-                    throw new InvalidOperationException("Failed to create interpreter");
-                }
-                Project = await PythonAnalyzer.CreateAsync(factory, interpreter);
+                });
             } catch (Exception ex) {
                 return new AP.InitializeResponse {
                     error = ex.Message,
@@ -2060,7 +2054,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal IPythonInterpreterFactory InterpreterFactory { get; private set; }
+        internal IPythonInterpreterFactory InterpreterFactory => Project?.InterpreterFactory;
 
         internal IPythonInterpreter Interpreter => Project?.Interpreter;
 
@@ -2085,7 +2079,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// This is for public consumption only and should not be used within
         /// <see cref="OutOfProcProjectAnalyzer"/>.
         /// </remarks>
-        public PythonAnalyzer Project { get; private set; }
+        public PythonAnalyzer Project => _server._analyzer;
 
         class ParseResult {
             public readonly PythonAst Ast;
@@ -2358,8 +2352,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _isDisposed = true;
-            _analysisQueue.AnalysisComplete -= AnalysisQueue_Complete;
-            _analysisQueue.Dispose();
+            _server._analysisQueue.AnalysisComplete -= AnalysisQueue_Complete;
             if (Project != null) {
                 Project.Interpreter.ModuleNamesChanged -= OnModulesChanged;
                 Project.Dispose();
@@ -2370,6 +2363,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     (extension as IDisposable)?.Dispose();
                 }
             }
+
+            _server.Dispose();
 
             _connection.Dispose();
         }

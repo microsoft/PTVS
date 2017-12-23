@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public int? processId;
         public string rootPath;
         public Uri rootUri;
-        public object initializationOptions;
+        public PythonInitializationOptions initializationOptions;
         public ClientCapabilities? capabilities;
         public TraceLevel trace;
     }

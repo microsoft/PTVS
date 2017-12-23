@@ -20,18 +20,43 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public abstract class ServerBase {
-        private CancellationTokenSource _cancellationTokenSource;
+        private RequestLock _lock;
 
-        public void BeginRequest() {
-            _cancellationTokenSource = new CancellationTokenSource();
+        private sealed class RequestLock : IDisposable {
+            public readonly ServerBase Owner;
+            public readonly CancellationTokenSource CancellationTokenSource;
+
+            public CancellationToken Token => CancellationTokenSource.Token;
+            public void Cancel() => CancellationTokenSource.Cancel();
+
+            public RequestLock(ServerBase owner, int millisecondsTimeout) {
+                CancellationTokenSource = millisecondsTimeout > 0 ?
+                    new CancellationTokenSource(millisecondsTimeout) :
+                    new CancellationTokenSource();
+
+                Owner = owner;
+                if (Interlocked.CompareExchange(ref Owner._lock, this, null) != null) {
+                    throw new InvalidOperationException("currently processing another request");
+                }
+            }
+
+            public void Dispose() {
+                CancellationTokenSource.Dispose();
+                Interlocked.CompareExchange(ref Owner._lock, null, this);
+            }
         }
 
-        public void EndRequest() {
-            _cancellationTokenSource.Dispose();
-            _cancellationTokenSource = null;
-        }
+        /// <summary>
+        /// Should be used in a using() statement around any requests that support
+        /// cancellation or timeout.
+        /// </summary>
+        public IDisposable AllowRequestCancellation(int millisecondsTimeout = -1) => new RequestLock(this, millisecondsTimeout);
 
-        protected CancellationToken CancellationToken => _cancellationTokenSource.Token;
+        /// <summary>
+        /// Get this token at the start of request processing and abort when it
+        /// is marked as cancelled.
+        /// </summary>
+        protected CancellationToken CancellationToken => Volatile.Read(ref _lock)?.Token ?? CancellationToken.None;
 
         #region Client Requests
 
@@ -44,7 +69,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public virtual async Task Exit() { }
 
         public virtual void CancelRequest() {
-            _cancellationTokenSource.Cancel();
+            Volatile.Read(ref _lock)?.Cancel();
         }
 
         public virtual async Task<MessageActionItem?> ShowMessageRequest(ShowMessageRequestParams @params) {

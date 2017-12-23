@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static object _idKey = new object();
 
         /// <summary>
-        /// Must be called from the UI thread
+        /// Must be called from the owning thread
         /// </summary>
         public int Add(string filename, IProjectEntry node) {
 #if DEBUG
@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
-        /// Must be called from the UI thread
+        /// Must be called from the owning thread
         /// </summary>
         public void Remove(IProjectEntry node) {
             int i = GetId(node) - 1;
@@ -67,6 +67,15 @@ namespace Microsoft.PythonTools.Intellisense {
             _freedIds.Push(i);
             IProjectEntry removed;
             _projectFiles.TryRemove(node.FilePath, out removed);
+        }
+
+        /// <summary>
+        /// Must be called from the owning thread
+        /// </summary>
+        public void Clear() {
+            _ids.Clear();
+            _projectFiles.Clear();
+            _freedIds.Clear();
         }
 
         public static int GetId(IProjectEntry node) {

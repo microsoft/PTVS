@@ -179,6 +179,29 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
 
+    /// <summary>
+    /// Required layout for the initializationOptions member of initializeParams
+    /// </summary>
+    public struct PythonInitializationOptions {
+        public struct Interpreter {
+            /// <summary>
+            /// The serialized info required to restore an interpreter factory
+            /// </summary>
+            public string assembly;
+            public string typeName;
+            public Dictionary<string, object> properties;
+
+            /// <summary>
+            /// The x.y language version of the interpreter in case the factory
+            /// cannot be restored.
+            /// </summary>
+            public string version;
+        }
+        public Interpreter interpreter;
+
+
+    }
+
 
     public struct WorkspaceClientCapabilities {
         public bool applyEdit;
@@ -349,7 +372,13 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     /// This struct is for Python-specific extensions. It is included with
     /// client capabilities following the specification for extra settings.
     /// </summary>
-    public struct PythonClientCapabilities { }
+    public struct PythonClientCapabilities {
+        /// <summary>
+        /// Client expects analysis progress updates, including notifications
+        /// when analysis is complete for a particular buffer/version combination.
+        /// </summary>
+        public bool analysisUpdates;
+    }
 
     public struct ClientCapabilities {
         public WorkspaceClientCapabilities? workspace;
