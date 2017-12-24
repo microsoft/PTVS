@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -74,6 +75,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         public override async Task<CompletionList> Completion(CompletionParams @params) {
             GetAnalysis(@params.textDocument, @params.position, @params._version, out var entry, out var tree);
+            var analysis = entry?.Analysis;
+            if (analysis == null) {
+                return new CompletionList { };
+            }
 
             var opts = (GetMemberOptions)0;
             if (@params.context.HasValue) {
@@ -89,13 +94,23 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
-            var members = entry?.Analysis?.GetAllAvailableMembers(@params.position, opts);
-            if (members == null || !members.Any()) {
-                return new CompletionList { };
+            IEnumerable<MemberResult> members = null;
+            var exprText = @params._expr;
+            Expression expr = null;
+            if (!string.IsNullOrEmpty(@params._expr)) {
+                members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
+            } else {
+                var finder = new ExpressionFinder(entry.Tree, GetExpressionOptions.EvaluateMembers);
+                expr = finder.GetExpression(@params.position) as Expression;
+                if (expr != null) {
+                    members = analysis.GetMembers(expr, @params.position, opts, null);
+                } else {
+                    members = entry.Analysis.GetAllAvailableMembers(@params.position, opts);
+                }
             }
 
             return new CompletionList {
-                items = members.Select(m => ToCompletionItem(m, opts)).ToArray()
+                items = members?.Select(m => ToCompletionItem(m, opts)).ToArray()
             };
         }
 
@@ -184,7 +199,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 label = m.Name,
                 insertText = m.Completion,
                 documentation = m.Documentation,
-                kind = ToCompletionItemKind(m.MemberType)
+                kind = ToCompletionItemKind(m.MemberType),
+                _kind = m.MemberType.ToString().ToLowerInvariant()
             };
 
             return res;
@@ -219,7 +235,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         private SymbolInformation ToSymbolInformation(MemberResult m) {
             var res = new SymbolInformation {
                 name = m.Name,
-                kind = ToSymbolKind(m.MemberType)
+                kind = ToSymbolKind(m.MemberType),
+                _kind = m.MemberType.ToString().ToLowerInvariant()
             };
 
             var loc = m.Locations.FirstOrDefault();

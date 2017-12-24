@@ -1659,30 +1659,31 @@ namespace Microsoft.PythonTools.Intellisense {
         private static CompletionAnalysis GetNormalCompletionContext(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
             var span = applicableSpan.GetSpan(snapshot);
 
-            if (IsSpaceCompletion(snapshot, point) && !session.IsCompleteWordMode()) {
+            if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
+                // Cannot complete a word immediately after a space
+                session.ClearCompleteWordMode();
+            }
+
+            var bi = services.GetBufferInfo(snapshot.TextBuffer);
+            var entry = bi?.AnalysisEntry;
+            if (entry == null) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
 
-            var parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, applicableSpan);
-            if (parser.IsInGrouping()) {
+            if (ReverseExpressionParser.IsInGrouping(snapshot, bi.GetTokensInReverseFromPoint(point.GetPoint(snapshot)))) {
                 options = options.Clone();
                 options.IncludeStatementKeywords = false;
             }
 
-            AnalysisEntry entry;
-            if (services.AnalysisEntryService.TryGetAnalysisEntry(snapshot.TextBuffer, out entry)) {
-                return new NormalCompletionAnalysis(
-                    services,
-                    session,
-                    view,
-                    snapshot,
-                    applicableSpan,
-                    snapshot.TextBuffer,
-                    options
-                );
-            }
-
-            return CompletionAnalysis.EmptyCompletionContext;
+            return new NormalCompletionAnalysis(
+                services,
+                session,
+                view,
+                snapshot,
+                applicableSpan,
+                snapshot.TextBuffer,
+                options
+            );
         }
 
         private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {

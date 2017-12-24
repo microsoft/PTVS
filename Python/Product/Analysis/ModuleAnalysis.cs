@@ -433,6 +433,15 @@ namespace Microsoft.PythonTools.Analysis {
             var ast = GetAstFromText(exprText, privatePrefix).Body;
 
             var expr = Statement.GetExpression(ast);
+            return GetMembers(expr, location, options, scope);
+        }
+
+        internal IEnumerable<MemberResult> GetMembers(
+            Expression expr,
+            SourceLocation location,
+            GetMemberOptions options = GetMemberOptions.IntersectMultipleResults,
+            InterpreterScope scope = null
+        ) {
             if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
                 // no completions on integer ., the user is typing a float
                 return Enumerable.Empty<MemberResult>();
@@ -460,6 +469,10 @@ namespace Microsoft.PythonTools.Analysis {
                 if (!string.IsNullOrEmpty(modName)) {
                     lookup = ResolveModule(expr, _unit.CopyForEval(), modName);
                 }
+            }
+
+            if (scope == null) {
+                scope = FindScope(location);
             }
 
             if (!lookup.Any()) {

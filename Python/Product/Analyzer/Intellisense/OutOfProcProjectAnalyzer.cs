@@ -350,25 +350,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.AddReferenceResponse();
         }
 
-        private static ProjectReference GetAssemblyReference(string kind, string name, string assemblyName) {
-            ProjectReference reference;
-            switch (kind) {
-                case "assembly":
-                    reference = new ProjectAssemblyReference(
-                        new AssemblyName(assemblyName),
-                        name
-                    );
-                    break;
-                case "extension":
-                    reference = new ProjectReference(name, ProjectReferenceKind.ExtensionModule);
-                    break;
-                default:
-                    throw new InvalidOperationException("Unsupported reference type: " + kind);
-            }
-
-            return reference;
-        }
-
         private Response FindMethods(AP.FindMethodsRequest request) {
             var analysis = GetPythonEntry(request.documentUri);
 
@@ -1512,7 +1493,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
                     _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
                     _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords)
-                }
+                },
+                _expr = req.text
             });
 
             return new AP.CompletionsResponse() {
@@ -1560,7 +1542,7 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var s in symbols) {
                 var m = new AP.Completion {
                     name = s.name,
-                    memberType = ToMemberType(s.kind)
+                    memberType = ToMemberType(s._kind, s.kind)
                 };
 
                 if (s.location.uri != null) {
@@ -1595,7 +1577,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     name = c.label,
                     completion = c.insertText,
                     doc = c.documentation,
-                    memberType = ToMemberType(c.kind)
+                    memberType = ToMemberType(c._kind, c.kind)
                 };
 
                 if (options.HasFlag(GetMemberOptions.DetailedInformation)) {
@@ -1625,7 +1607,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return res.ToArray();
         }
 
-        private PythonMemberType ToMemberType(LS.CompletionItemKind kind) {
+        private PythonMemberType ToMemberType(string originalKind, LS.CompletionItemKind kind) {
+            PythonMemberType res;
+            if (!string.IsNullOrEmpty(originalKind) && Enum.TryParse(originalKind, true, out res)) {
+                return res;
+            }
+
             switch (kind) {
                 case LS.CompletionItemKind.None: return PythonMemberType.Unknown;
                 case LS.CompletionItemKind.Text: return PythonMemberType.Constant;
@@ -1657,7 +1644,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private PythonMemberType ToMemberType(LS.SymbolKind kind) {
+        private PythonMemberType ToMemberType(string originalKind, LS.SymbolKind kind) {
+            PythonMemberType res;
+            if (!string.IsNullOrEmpty(originalKind) && Enum.TryParse(originalKind, true, out res)) {
+                return res;
+            }
+
             switch (kind) {
                 case LS.SymbolKind.None: return PythonMemberType.Unknown;                case LS.SymbolKind.File: return PythonMemberType.Module;                case LS.SymbolKind.Module: return PythonMemberType.Module;                case LS.SymbolKind.Namespace: return PythonMemberType.Namespace;                case LS.SymbolKind.Package: return PythonMemberType.Module;                case LS.SymbolKind.Class: return PythonMemberType.Class;                case LS.SymbolKind.Method: return PythonMemberType.Method;                case LS.SymbolKind.Property: return PythonMemberType.Property;                case LS.SymbolKind.Field: return PythonMemberType.Field;                case LS.SymbolKind.Constructor: return PythonMemberType.Method;                case LS.SymbolKind.Enum: return PythonMemberType.Enum;                case LS.SymbolKind.Interface: return PythonMemberType.Class;                case LS.SymbolKind.Function: return PythonMemberType.Function;                case LS.SymbolKind.Variable: return PythonMemberType.Field;                case LS.SymbolKind.Constant: return PythonMemberType.Constant;                case LS.SymbolKind.String: return PythonMemberType.Constant;                case LS.SymbolKind.Number: return PythonMemberType.Constant;                case LS.SymbolKind.Boolean: return PythonMemberType.Constant;                case LS.SymbolKind.Array: return PythonMemberType.Instance;                case LS.SymbolKind.Object: return PythonMemberType.Instance;                case LS.SymbolKind.Key: return PythonMemberType.Unknown;                case LS.SymbolKind.Null: return PythonMemberType.Unknown;                case LS.SymbolKind.EnumMember: return PythonMemberType.EnumInstance;                case LS.SymbolKind.Struct: return PythonMemberType.Class;                case LS.SymbolKind.Event: return PythonMemberType.Event;                case LS.SymbolKind.Operator: return PythonMemberType.Method;                case LS.SymbolKind.TypeParameter: return PythonMemberType.NamedArgument;                default: return PythonMemberType.Unknown;
             }

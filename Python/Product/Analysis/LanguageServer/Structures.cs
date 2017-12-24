@@ -551,6 +551,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Command? command;
         public object data;
 
+        public string _kind;
         public CompletionItemValue[] _values;
     }
 
@@ -638,6 +639,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// The document version that location applies to
         /// </summary>
         public int? _version;
+        public string _kind;
     }
 
     public struct CodeLens {

@@ -449,6 +449,31 @@ namespace Microsoft.PythonTools.Intellisense {
             return ReverseClassificationSpanEnumerator(Classifier, _span.GetSpan(_snapshot).End);
         }
 
+        internal static bool IsInGrouping(ITextSnapshot snapshot, IEnumerable<TrackingTokenInfo> tokensInReverse) {
+            int nesting = 0;
+            foreach (var token in tokensInReverse) {
+                if (token.Category == Parsing.TokenCategory.Grouping) {
+                    var t = token.GetText(snapshot);
+                    if (t.IsCloseGrouping()) {
+                        nesting++;
+                    } else if (t.IsOpenGrouping()) {
+                        if (nesting-- == 0) {
+                            return true;
+                        }
+                    }
+                } else if (token.Category == Parsing.TokenCategory.Delimiter) {
+                    if (nesting == 0 && token.GetText(snapshot) == ",") {
+                        return true;
+                    }
+                } else if (token.Category == Parsing.TokenCategory.Keyword) {
+                    if (PythonKeywords.IsOnlyStatementKeyword(token.GetText(snapshot))) {
+                        return false;
+                    }
+                }
+            }
+            return false;
+        }
+
         internal bool IsInGrouping() {
             // We assume that groupings are correctly matched and keep a simple
             // nesting count.

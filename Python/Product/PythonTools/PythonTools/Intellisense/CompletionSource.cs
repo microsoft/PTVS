@@ -42,6 +42,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public static void SetCompleteWordMode(this IIntellisenseSession session) 
             => session.Properties[CompleteWord] = true;
 
+        public static void ClearCompleteWordMode(this IIntellisenseSession session)
+            => session.Properties.RemoveProperty(CompleteWord);
+
         public static bool IsCompleteWordMode(this IIntellisenseSession session) 
             => session.Properties.TryGetProperty(CompleteWord, out bool prop) && prop;
     }

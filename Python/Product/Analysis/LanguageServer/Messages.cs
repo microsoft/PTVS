@@ -183,6 +183,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// the server cannot map correctly.
         /// </summary>
         public int? _version;
+        /// <summary>
+        /// Expression to complete.
+        /// </summary>
+        public string _expr;
     }
 
     public struct CompletionContext {

@@ -292,20 +292,12 @@ try:
 except (ValueError, |"}) {
                         Console.WriteLine($"{ver}:: {code}");
 
-                        var completionList = GetCompletions(vs, code.IndexOf("|"), code.Replace("|", ""), ver).ToArray();
+                        var completionList = GetCompletions(vs, code.IndexOf("|"), code.Replace("|", ""), ver);
 
-                        AssertUtil.ContainsAtLeast(completionList,
-                            "Exception",
-                            "KeyboardInterrupt",
-                            "GeneratorExit",
-                            "StopIteration",
-                            "SystemExit",
-                            "sys"
+                        AssertUtil.CheckCollection(completionList,
+                            new[] { "Exception", "KeyboardInterrupt", "GeneratorExit", "StopIteration", "SystemExit", "sys" },
+                            new[] { "Warning", "str", "int" }
                         );
-
-                        AssertUtil.DoesntContain(completionList, "Warning");
-                        AssertUtil.DoesntContain(completionList, "str");
-                        AssertUtil.DoesntContain(completionList, "int");
                     }
 
                     foreach (string code in new[] {
@@ -315,18 +307,12 @@ raise (sys.",
 try:
     pass
 except (sys."}) {
-                        var completionList = GetCompletions(vs, code.IndexOfEnd("sys."), code, ver).ToArray();
+                        var completionList = GetCompletions(vs, code.IndexOfEnd("sys."), code, ver);
 
-                        AssertUtil.DoesntContain(completionList, "Exception");
-                        AssertUtil.DoesntContain(completionList, "KeyboardInterrupt");
-                        AssertUtil.DoesntContain(completionList, "GeneratorExit");
-                        AssertUtil.DoesntContain(completionList, "StopIteration");
-                        AssertUtil.DoesntContain(completionList, "SystemExit");
-
-                        AssertUtil.ContainsAtLeast(completionList,
-                            "modules",
-                            "path",
-                            "version"
+                        AssertUtil.CheckCollection(
+                            completionList,
+                            new[] { "modules", "path", "version" },
+                            new[] { "Exception", "KeyboardInterrupt", "GeneratorExit", "StopIteration", "SystemExit" }
                         );
                     }
                 }
@@ -816,57 +802,21 @@ class Baz(Fob, Oar):
             }
         }
 
+        static void AssertOverrideInsertionContains(PythonLanguageVersion version, string bases, string name, params string[] text) {
+            using (var view = new PythonEditor($"class Fob({bases}):\r\n    def \r\n", version: version)) {
+                var comp = view.GetCompletionListAfter("def ").FirstOrDefault(c => c.DisplayText == name);
+                Assert.IsNotNull(comp, $"failed to find {name} in overrides list");
+                AssertUtil.Contains(comp.InsertionText, text);
+            }
+        }
+
         [TestMethod, Priority(0)]
         public void BuiltinOverrideCompletions() {
-            using (var view2 = new PythonEditor(version: PythonLanguageVersion.V27))
-            using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33)) {
-                view2.Text = view3.Text = @"class Fob(str):
-    def 
-";
-                AssertUtil.ContainsAtLeast(
-                    view2.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                @"capitalize(self):
-        return super(Fob, self).capitalize()",
-                @"index(self, v):
-        return super(Fob, self).index(v)"
-                );
-                AssertUtil.ContainsAtLeast(
-                    view3.GetCompletionListAfter("def ").Select(x => x.InsertionText),
-                @"capitalize(self):
-        return super().capitalize()",
-                @"index(self, sub, start, end):
-        return super().index(sub, start, end)"
-                );
+            AssertOverrideInsertionContains(PythonLanguageVersion.V27, "str", "capitalize", "capitalize(self):\r\n        return super(Fob, self).capitalize()");
+            AssertOverrideInsertionContains(PythonLanguageVersion.V33, "str", "capitalize", "capitalize(self):\r\n        return super().capitalize()");
 
-                view2.Text = view3.Text = @"class Fob(str, list):
-    def 
-";
-
-                AssertUtil.Contains(
-                    view2.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, v):
-        return super(Fob, self).index(v)"
-                );
-                AssertUtil.Contains(
-                    view3.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, sub, start, end):
-        return super().index(sub, start, end)"
-                );
-
-                view2.Text = view3.Text = @"class Fob(list, str):
-    def 
-";
-                AssertUtil.Contains(
-                    view2.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, v):
-        return super(Fob, self).index(v)"
-                );
-                AssertUtil.Contains(
-                    view3.GetCompletionListAfter("def ").Select(c => c.InsertionText),
-                    @"index(self, item, start, stop):
-        return super().index(item, start, stop)"
-                );
-            }
+            AssertOverrideInsertionContains(PythonLanguageVersion.V27, "str", "index", "index(self", "):\r\n        return super(Fob, self).index(");
+            AssertOverrideInsertionContains(PythonLanguageVersion.V33, "str", "index", "index(self", "):\r\n        return super().index(");
         }
 
         [TestMethod, Priority(0)]
