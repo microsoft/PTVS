@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ValueDescriptionRequest : Request<ValueDescriptionResponse> {
             public const string Command = "valueDescriptions";
 
-            public int fileId;
+            public string documentUri;
             public string expr;
             public int line, column;
 
@@ -166,7 +166,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class AnalysisClassificationsRequest : Request<AnalysisClassificationsResponse> {
             public const string Command = "analysisClassify";
 
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
             public bool colorNames;
 
             public override string command => Command;
@@ -178,7 +179,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class MethodInsertionLocationRequest : Request<MethodInsertionLocationResponse> {
             public const string Command = "methodInsertion";
 
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
             public string className;
 
             public override string command => Command;
@@ -192,7 +194,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class MethodInfoRequest : Request<MethodInfoResponse> {
             public const string Command = "methodInfo";
 
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
             public string className;
             public string methodName;
 
@@ -208,7 +211,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FindMethodsRequest : Request<FindMethodsResponse> {
             public const string Command = "findMethods";
 
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
             public string className;
 
             /// <summary>
@@ -238,7 +242,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public class QuickInfoRequest : Request<QuickInfoResponse> {
             public const string Command = "quickInfo";
 
-            public int fileId;
+            public string documentUri;
             public string expr;
             public int line, column;
 
@@ -252,7 +256,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public class FileParsedEvent : Event {
             public const string Name = "fileParsed";
 
-            public int fileId;
+            public string documentUri;
             public BufferParseInfo[] buffers;
 
             public override string name => Name;
@@ -276,7 +280,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FormatCodeRequest : Request<FormatCodeResponse> {
             public const string Command = "formatCode";
 
-            public int fileId, bufferId, startIndex, endIndex;
+            public string documentUri;
+            public int bufferId, startIndex, endIndex;
             public string newLine;
             public CodeFormattingOptions options;
 
@@ -316,7 +321,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public class AddFileResponse : Response {
-            public int fileId;
+            public string documentUri;
         }
 
         public class AddBulkFileRequest : Request<AddBulkFileResponse> {
@@ -329,7 +334,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public class AddBulkFileResponse : Response {
-            public int[] fileId;
+            public string[] documentUri;
         }
 
         public sealed class SetSearchPathRequest : Request<Response> {
@@ -342,10 +347,10 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class UnloadFileRequest : Request<Response> {
             public const string Command = "unloadFile";
 
-            public int fileId;
+            public string documentUri;
             public override string command => Command;
 
-            public override string ToString() => "{0}:{1}".FormatUI(command, fileId);
+            public override string ToString() => "{0}:{1}".FormatUI(command, documentUri);
         }
 
 
@@ -353,7 +358,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Name = "directoryFileAdded";
 
             public string filename;
-            public int fileId;
+            public string documentUri;
 
             public override string name => Name;
         }
@@ -361,12 +366,12 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class FileUpdateRequest : Request<FileUpdateResponse> {
             public const string Command = "fileUpdate";
 
-            public int fileId;
+            public string documentUri;
             public FileUpdate[] updates;
 
             public override string command => Command;
 
-            public override string ToString() => "{0}:{1} ({2} updates)".FormatUI(command, fileId, updates.Length);
+            public override string ToString() => "{0}:{1} ({2} updates)".FormatUI(command, documentUri, updates.Length);
         }
 
         public enum FileUpdateKind {
@@ -385,7 +390,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "addImport";
 
             public string fromModule, name, newLine;
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
 
             public override string command => Command;
         }
@@ -399,7 +405,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "isMissingImport";
 
             public string text;
-            public int line, column, fileId, bufferId;
+            public string documentUri;
+            public int line, column, bufferId;
 
             public override string command => Command;
         }
@@ -457,7 +464,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override string command => Command;
 
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
         }
 
         public sealed class UnresolvedImportsResponse : Response {
@@ -506,7 +514,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class LocationNameRequest : Request<LocationNameResponse> {
             public const string Command = "locationName";
 
-            public int fileId, bufferId, line, column;
+            public string documentUri;
+            public int bufferId, line, column;
 
             public override string command => Command;
         }
@@ -520,7 +529,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ProximityExpressionsRequest : Request<ProximityExpressionsResponse> {
             public const string Command = "proximityExpressions";
 
-            public int fileId, bufferId, line, column, lineCount;
+            public string documentUri;
+            public int bufferId, line, column, lineCount;
 
             public override string command => Command;
         }
@@ -532,7 +542,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class OverridesCompletionRequest : Request<OverridesCompletionResponse> {
             public const string Command = "overrides";
 
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
             public int line, column;
             public string indentation;
 
@@ -550,7 +561,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class RemoveImportsRequest : Request<RemoveImportsResponse> {
             public const string Command = "removeImports";
 
-            public int fileId, bufferId, version;
+            public string documentUri;
+            public int bufferId, version;
             public int line, column;
             public bool allScopes;
 
@@ -565,7 +577,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ExtractMethodRequest : Request<ExtractMethodResponse> {
             public const string Command = "extractMethod";
 
-            public int fileId, bufferId, startIndex, endIndex;
+            public string documentUri;
+            public int bufferId, startIndex, endIndex;
             public int indentSize;
             public string name;
             public string[] parameters;
@@ -613,12 +626,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class ModuleInfo {
             public string moduleName;
-            public int fileId;
+            public string documentUri;
             public string filename;
         }
 
         public class EnqueueFileResponse : Response {
-            public int fileId;
+            public string documentUri;
         }
 
         public sealed class ChildFileAnalyzed : Event {
@@ -629,7 +642,7 @@ namespace Microsoft.PythonTools.Intellisense {
             /// </summary>
             public string filename;
 
-            public int fileId;
+            public string documentUri;
 
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             public bool isTemporaryFile, suppressErrorList;
@@ -640,7 +653,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public class TopLevelCompletionsRequest : Request<CompletionsResponse> {
             public const string Command = "topCompletions";
 
-            public int fileId;
+            public string documentUri;
             public int line, column;
             public GetMemberOptions options;
 
@@ -651,7 +664,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Command = "getModules";
 
             [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            public int fileId;
+            public string documentUri;
             public string[] package;
 
             public override string command => Command;
@@ -671,7 +684,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public class CompletionsRequest : Request<CompletionsResponse> {
             public const string Command = "completions";
 
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
             public string text;
             public int line, column;
             public GetMemberOptions options;
@@ -687,7 +701,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public string text;
             public int line, column;
-            public int fileId;
+            public string documentUri;
         }
 
         public sealed class ModulesChangedEvent : Event {
@@ -714,7 +728,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public class FileAnalysisCompleteEvent : Event {
             public const string Name = "fileAnalysisComplete";
-            public int fileId;
+            public string documentUri;
 
             public BufferVersion[] versions;
 
@@ -861,7 +875,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class AnalyzeExpressionRequest : Request<AnalyzeExpressionResponse> {
             public const string Command = "findDefs";
 
-            public int fileId;
+            public string documentUri;
             public string expr;
             public int line, column;
             [Obsolete("only use line and column")]
@@ -884,7 +898,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class OutliningRegionsRequest : Request<OutliningRegionsResponse> {
             public const string Command = "outliningRegions";
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
 
             public override string command => Command;
         }
@@ -901,7 +916,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class NavigationRequest : Request<NavigationResponse> {
             public const string Command = "navigation";
-            public int fileId;
+            public string documentUri;
             public int bufferId;
 
             public override string command => Command;
@@ -957,7 +972,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class ExpressionAtPointRequest : Request<ExpressionAtPointResponse> {
             public const string Command = "exprAtPoint";
 
-            public int fileId, bufferId;
+            public string documentUri;
+            public int bufferId;
             public int line, column;
             public ExpressionAtPointPurpose purpose;
 

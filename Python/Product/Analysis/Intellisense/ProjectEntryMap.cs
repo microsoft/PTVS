@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // ids are 1 based
                 id = _ids.Count;
             }
-            _projectFiles[new Uri(filename)] = node;
+            _projectFiles[new Uri(filename, UriKind.RelativeOrAbsolute)] = node;
             node.Properties[_idKey] = id;
             return id;
         }
@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _ids[i] = null;
             _freedIds.Push(i);
             IProjectEntry removed;
-            _projectFiles.TryRemove(new Uri(node.FilePath), out removed);
+            _projectFiles.TryRemove(new Uri(node.FilePath, UriKind.RelativeOrAbsolute), out removed);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public bool TryGetValue(string path, out IProjectEntry item) {
-            return _projectFiles.TryGetValue(new Uri(path), out item);
+            return _projectFiles.TryGetValue(new Uri(path, UriKind.RelativeOrAbsolute), out item);
         }
 
         public bool TryGetValue(Uri path, out IProjectEntry item) {

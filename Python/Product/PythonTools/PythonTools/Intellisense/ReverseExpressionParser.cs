@@ -464,6 +464,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (nesting-- == 0) {
                         return true;
                     }
+                } else if (token.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma)) {
+                    if (nesting == 0) {
+                        // A preceding comma at our level is only valid in a
+                        // grouping.
+                        return true;
+                    }
                 } else if (token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) &&
                     PythonKeywords.IsOnlyStatementKeyword(token.Span.GetText())) {
                     return false;

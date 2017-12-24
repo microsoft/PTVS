@@ -42,6 +42,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     }
 
     public enum SymbolKind {
+        None = 0,
         File = 1,
         Module = 2,
         Namespace = 3,

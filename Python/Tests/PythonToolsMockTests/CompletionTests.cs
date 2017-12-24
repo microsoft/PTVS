@@ -139,29 +139,27 @@ namespace PythonToolsMockTests {
 
         [TestMethod, Priority(0)]
         public void KeywordCompletions() {
-            using (var view = new PythonEditor(version: PythonLanguageVersion.V35)) {
-                var completionList = new HashSet<string>(view.GetCompletions(0));
+            var code = "def f():\r\n     \r\n    x = abc, oar, \r\n    pass\r\n#2\r\n";
+            using (var view = new PythonEditor(code, version: PythonLanguageVersion.V35)) {
+                var completionList = view.GetCompletions(code.IndexOfEnd("#2\r\n"));
 
                 // not in a function
-                AssertUtil.DoesntContain(completionList, "yield");
-                AssertUtil.DoesntContain(completionList, "return");
-                AssertUtil.DoesntContain(completionList, "await");
+                AssertUtil.CheckCollection(completionList,
+                    new[] { "assert", "and", "async" },
+                    new[] { "await", "return", "yield" }
+                );
 
-                AssertUtil.ContainsAtLeast(completionList, "assert", "and", "async");
+                completionList = view.GetCompletions(code.IndexOf("    \r\n") - 2);
+                AssertUtil.CheckCollection(completionList,
+                    new[] { "assert", "and", "async", "yield", "return" },
+                    Array.Empty<string>()
+                );
 
-                var code = @"def f():
-    |
-    pass";
-
-                view.Text = code.Replace("|", "");
-                AssertUtil.ContainsAtLeast(view.GetCompletions(code.IndexOf("|")), "yield", "return", "async", "await");
-
-
-                view.Text = "x = (abc, oar, )";
-                completionList = new HashSet<string>(view.GetCompletionsAfter("oar, "));
-
-                AssertUtil.ContainsAtLeast(completionList, "and");
-                AssertUtil.DoesntContain(completionList, "def");
+                completionList = view.GetCompletions(code.IndexOfEnd("oar,"));
+                AssertUtil.CheckCollection(completionList,
+                    new[] { "and" },
+                    new[] { "def" }
+                );
             }
         }
 
@@ -247,9 +245,9 @@ print
 
 ";
 
-            using (var vs = new MockVs()) {
-                AssertUtil.ContainsAtLeast(GetCompletions(vs, code.IndexOfEnd("return "), code), "any");
-                AssertUtil.ContainsAtLeast(GetCompletions(vs, code.IndexOfEnd("print "), code), "any");
+            using (var editor = new PythonEditor(code)) {
+                AssertUtil.ContainsAtLeast(editor.GetCompletions(code.IndexOfEnd("return ")), "any");
+                AssertUtil.ContainsAtLeast(editor.GetCompletions(code.IndexOfEnd("print ")), "any");
             }
         }
 

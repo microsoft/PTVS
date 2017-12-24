@@ -87,12 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
         // TODO: These are to progressively move functionality to the language server
         // These will eventually be removed
         private AnalysisQueue _analysisQueue => _server._analysisQueue;
-        private ProjectEntryMap _projectFiles => _server._projectFiles;
-
-        private LS.TextDocumentIdentifier GetDocument(int fileId) {
-            var entry = _projectFiles[fileId];
-            return new LS.TextDocumentIdentifier { uri = new Uri(entry.FilePath) };
-        }
+        private IDictionary<string, IProjectEntry> _projectFiles => _server._projectFiles;
 
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
             _connection.Dispose();
@@ -185,8 +180,8 @@ namespace Microsoft.PythonTools.Intellisense {
             throw new InvalidOperationException("File was not correct type");
         }
 
-        private Response IncorrectBufferId(int fileId) {
-            throw new InvalidOperationException("Buffer was not valid in file " + _projectFiles[fileId]?.FilePath ?? "(null)");
+        private Response IncorrectBufferId(string documentUri) {
+            throw new InvalidOperationException("Buffer was not valid in file " + documentUri ?? "(null)");
         }
 
         private IPythonInterpreterFactory LoadInterpreterFactory(AP.InterpreterInfo info) {
@@ -296,7 +291,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetValueDescriptions(AP.ValueDescriptionRequest request) {
-            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var entry = GetPythonEntry(request.documentUri);
             if (entry == null) {
                 return IncorrectFileType();
             }
@@ -328,7 +323,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 modules = res.Select(entry => new AP.ModuleInfo() {
                     filename = entry.FilePath,
                     moduleName = entry.ModuleName,
-                    fileId = ProjectEntryMap.GetId(entry)
+                    documentUri = new Uri(entry.FilePath).AbsoluteUri
                 }).ToArray()
             };
         }
@@ -375,7 +370,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response FindMethods(AP.FindMethodsRequest request) {
-            var analysis = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var analysis = GetPythonEntry(request.documentUri);
 
             List<string> names = new List<string>();
             if (analysis != null) {
@@ -413,7 +408,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetMethodInsertionLocation(AP.MethodInsertionLocationRequest request) {
-            var analysis = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var analysis = GetPythonEntry(request.documentUri);
             if (analysis == null) {
                 return IncorrectFileType();
             }
@@ -467,7 +462,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetMethodInfo(AP.MethodInfoRequest request) {
-            var analysis = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var analysis = GetPythonEntry(request.documentUri);
 
             if (analysis != null) {
                 int version;
@@ -508,13 +503,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetAnalysisClassifications(AP.AnalysisClassificationsRequest request) {
-            var projEntry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var projEntry = GetPythonEntry(request.documentUri);
 
             if (projEntry == null) {
                 return IncorrectFileType();
             }
 
-            var bufferVersion = GetPythonBufferAndAst(request.fileId, request.bufferId);
+            var bufferVersion = GetPythonBufferAndAst(request.documentUri, request.bufferId);
             if (bufferVersion == null) {
                 return new AP.AnalysisClassificationsResponse();
             }
@@ -537,7 +532,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetProximityExpressions(AP.ProximityExpressionsRequest request) {
-            var projEntry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var projEntry = GetPythonEntry(request.documentUri);
 
             var res = new AP.ProximityExpressionsResponse();
 
@@ -557,7 +552,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetLocationName(AP.LocationNameRequest request) {
-            var projEntry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var projEntry = GetPythonEntry(request.documentUri);
 
             var res = new AP.LocationNameResponse();
 
@@ -617,7 +612,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response ExtractMethod(AP.ExtractMethodRequest request) {
-            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var projectFile = GetPythonEntry(request.documentUri);
             if (projectFile == null) {
                 return IncorrectFileType();
             }
@@ -638,7 +633,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response RemoveImports(AP.RemoveImportsRequest request) {
-            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var projectFile = GetPythonEntry(request.documentUri);
             if (projectFile == null) {
                 return IncorrectFileType();
             }
@@ -663,7 +658,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response FormatCode(AP.FormatCodeRequest request) {
-            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var projectFile = GetPythonEntry(request.documentUri);
             if (projectFile == null) {
                 return IncorrectFileType();
             }
@@ -746,7 +741,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response IsMissingImport(AP.IsMissingImportRequest request) {
-            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var entry = GetPythonEntry(request.documentUri);
             var analysis = entry?.Analysis;
             if (analysis == null) {
                 return new AP.IsMissingImportResponse();
@@ -778,7 +773,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response AddImportRequest(AP.AddImportRequest request) {
-            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var projectFile = GetPythonEntry(request.documentUri);
             if (projectFile == null) {
                 return IncorrectFileType();
             }
@@ -898,14 +893,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetUnresolvedImports(AP.UnresolvedImportsRequest request) {
-            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var entry = GetPythonEntry(request.documentUri);
             if (entry == null) {
                 return IncorrectFileType();
             }
 
-            var bufferVersion = GetPythonBufferAndAst(request.fileId, request.bufferId);
+            var bufferVersion = GetPythonBufferAndAst(request.documentUri, request.bufferId);
             if (bufferVersion == null) {
-                return IncorrectBufferId(request.fileId);
+                return IncorrectBufferId(request.documentUri);
             }
 
             var walker = new ImportStatementWalker(
@@ -922,8 +917,21 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private BufferVersion GetPythonBuffer(int fileId, int bufferId) {
-            var entry = _projectFiles.Get<IPythonProjectEntry>(fileId);
+        private IPythonProjectEntry GetPythonEntry(string documentUri) {
+            if (string.IsNullOrEmpty(documentUri)) {
+                return null;
+            }
+            if (_projectFiles.TryGetValue(documentUri, out var entry)) {
+                return entry as IPythonProjectEntry;
+            }
+            return null;
+        }
+
+        private BufferVersion GetPythonBuffer(string documentUri, int bufferId) {
+            var entry = GetPythonEntry(documentUri);
+            if (entry == null) {
+                return null;
+            }
 
             PythonAst ast;
             IAnalysisCookie cookie;
@@ -937,8 +945,8 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private BufferVersion GetPythonBufferAndAst(int fileId, int bufferId) {
-            var bufferVersion = GetPythonBuffer(fileId, bufferId);
+        private BufferVersion GetPythonBufferAndAst(string documentUri, int bufferId) {
+            var bufferVersion = GetPythonBuffer(documentUri, bufferId);
             if (bufferVersion?.Ast != null) {
                 return bufferVersion;
             }
@@ -1038,9 +1046,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetOutliningRegions(AP.OutliningRegionsRequest request) {
-            var bufferVersion = GetPythonBufferAndAst(request.fileId, request.bufferId);
+            var bufferVersion = GetPythonBufferAndAst(request.documentUri, request.bufferId);
             if (bufferVersion == null) {
-                return IncorrectBufferId(request.fileId);
+                return IncorrectBufferId(request.documentUri);
             }
 
             var walker = new OutliningWalker(bufferVersion.Ast);
@@ -1059,11 +1067,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response GetNavigations(AP.NavigationRequest request) {
             List<AP.Navigation> navs = new List<AP.Navigation>();
-            var bufferVersion = GetPythonBufferAndAst(request.fileId, request.bufferId);
+            var bufferVersion = GetPythonBufferAndAst(request.documentUri, request.bufferId);
 
             var suite = bufferVersion.Ast.Body as SuiteStatement;
             if (suite == null) {
-                return IncorrectBufferId(request.fileId);
+                return IncorrectBufferId(request.documentUri);
             }
 
             foreach (var stmt in suite.Statements) {
@@ -1146,7 +1154,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response ExpressionAtPoint(AP.ExpressionAtPointRequest request) {
-            var buffer = GetPythonBufferAndAst(request.fileId, request.bufferId);
+            var buffer = GetPythonBufferAndAst(request.documentUri, request.bufferId);
 
             var res = new AP.ExpressionAtPointResponse();
             if (!GetExpressionAtPoint(buffer.Ast, request.line, request.column, request.purpose, out SourceSpan span, out res.type)) {
@@ -1202,7 +1210,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response AnalyzeExpression(AP.AnalyzeExpressionRequest request) {
-            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var entry = GetPythonEntry(request.documentUri);
             if (entry == null) {
                 return IncorrectFileType();
             }
@@ -1310,7 +1318,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetQuickInfo(AP.QuickInfoRequest request) {
-            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var entry = GetPythonEntry(request.documentUri);
             if (entry == null) {
                 return IncorrectFileType();
             }
@@ -1441,7 +1449,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetSignatures(AP.SignaturesRequest request) {
-            var entry = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var entry = GetPythonEntry(request.documentUri);
             IEnumerable<IOverloadResult> sigs;
             if (entry.Analysis != null) {
                 using (new DebugTimer("GetSignaturesByIndex")) {
@@ -1460,22 +1468,20 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task<Response> GetTopLevelCompletions(Request request) {
-            var topLevelCompletions = (AP.TopLevelCompletionsRequest)request;
+            var req = (AP.TopLevelCompletionsRequest)request;
 
             var members = await _server.Completion(new LS.CompletionParams {
-                position = new LS.Position { line = topLevelCompletions.line - 1, character = topLevelCompletions.column - 1 },
-                textDocument = GetDocument(topLevelCompletions.fileId),
+                position = new LS.Position { line = req.line - 1, character = req.column - 1 },
+                textDocument = new LS.TextDocumentIdentifier { uri = new Uri(req.documentUri) },
                 context = new LS.CompletionContext {
-                    _intersection = topLevelCompletions.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
-                    _statementKeywords = topLevelCompletions.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
-                    _expressionKeywords = topLevelCompletions.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords)
+                    _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
+                    _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
+                    _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords)
                 }
             });
 
-
-
             return new AP.CompletionsResponse() {
-                completions = await ToCompletions(members.items.ToArray(), topLevelCompletions.options)
+                completions = await ToCompletions(members.items, req.options)
             };
         }
 
@@ -1489,10 +1495,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
             }
 
-            IModuleContext context = null;
-            if (getModules.fileId >= 0) {
-                context = (_projectFiles[getModules.fileId] as IPythonProjectEntry)?.AnalysisContext;
-            }
+            var context = GetPythonEntry(getModules.documentUri)?.AnalysisContext;
 
             return new AP.CompletionsResponse {
                 completions = await ToCompletions(Analyzer.GetModuleMembers(context, getModules.package), GetMemberOptions.None)
@@ -1500,64 +1503,32 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task<Response> GetCompletions(Request request) {
-            var completions = (AP.CompletionsRequest)request;
+            var req = (AP.CompletionsRequest)request;
 
-            var entry = _projectFiles.Get<IPythonProjectEntry>(completions.fileId);
-            if (entry == null) {
-                return IncorrectFileType();
-            }
-
-            IEnumerable<MemberResult> members;
-            if (entry.Analysis != null) {
-                members = entry.Analysis.GetMembers(
-                    completions.text,
-                    new SourceLocation(completions.line, completions.column),
-                    completions.options
-                ).MaybeEnumerate();
-            } else {
-                members = Enumerable.Empty<MemberResult>();
-            }
+            var members = await _server.Completion(new LS.CompletionParams {
+                position = new LS.Position { line = req.line - 1, character = req.column - 1 },
+                textDocument = new LS.TextDocumentIdentifier { uri = new Uri(req.documentUri) },
+                context = new LS.CompletionContext {
+                    _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
+                    _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
+                    _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords)
+                }
+            });
 
             return new AP.CompletionsResponse() {
-                completions = await ToCompletions(members.ToArray(), completions.options)
+                completions = await ToCompletions(members.items, req.options)
             };
-        }
-
-        private static IEnumerable<MemberResult> GetModuleVariables(
-            IPythonProjectEntry entry,
-            GetMemberOptions opts,
-            string prefix
-        ) {
-            var analysis = entry?.Analysis;
-            if (analysis == null) {
-                yield break;
-            }
-
-            foreach (var m in analysis.GetAllAvailableMembers(SourceLocation.None, opts)) {
-                if (m.Values.Any(v => v.DeclaringModule == entry)) {
-                    if (string.IsNullOrEmpty(prefix) || m.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) {
-                        yield return m;
-                    }
-                }
-            }
         }
 
         private async Task<Response> GetAllMembers(Request request) {
             var req = (AP.GetAllMembersRequest)request;
 
-            var members = Enumerable.Empty<MemberResult>();
-            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly | req.options;
-
-            foreach (var entry in _projectFiles) {
-                members = members.Concat(
-                    GetModuleVariables(entry.Value as IPythonProjectEntry, opts, req.prefix)
-                );
-            }
-
-            members = members.GroupBy(mr => mr.Name).Select(g => g.First());
+            var members = await _server.WorkplaceSymbols(new LS.WorkplaceSymbolParams {
+                query = req.prefix
+            }).ConfigureAwait(false);
 
             return new AP.CompletionsResponse() {
-                completions = await ToCompletions(members.ToArray(), opts)
+                completions = await ToCompletions(members)
             };
         }
 
@@ -1579,6 +1550,39 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             ).ToArray();
         }
+
+        private async Task<AP.Completion[]> ToCompletions(IEnumerable<LS.SymbolInformation> symbols) {
+            if (symbols == null) {
+                return null;
+            }
+
+            var res = new List<AP.Completion>();
+            foreach (var s in symbols) {
+                var m = new AP.Completion {
+                    name = s.name,
+                    memberType = ToMemberType(s.kind)
+                };
+
+                if (s.location.uri != null) {
+                    m.detailedValues = new[] {
+                        new AP.CompletionValue {
+                            locations = new [] {
+                                new AP.AnalysisReference {
+                                    file = s.location.uri.AbsolutePath,
+                                    line = s.location.range.start.line + 1,
+                                    column = s.location.range.start.character + 1
+                                }
+                            }
+                        }
+                    };
+                }
+
+                res.Add(m);
+            }
+
+            return res.ToArray();
+        }
+
 
         private async Task<AP.Completion[]> ToCompletions(IEnumerable<LS.CompletionItem> completions, GetMemberOptions options) {
             if (completions == null) {
@@ -1653,6 +1657,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        private PythonMemberType ToMemberType(LS.SymbolKind kind) {
+            switch (kind) {
+                case LS.SymbolKind.None: return PythonMemberType.Unknown;                case LS.SymbolKind.File: return PythonMemberType.Module;                case LS.SymbolKind.Module: return PythonMemberType.Module;                case LS.SymbolKind.Namespace: return PythonMemberType.Namespace;                case LS.SymbolKind.Package: return PythonMemberType.Module;                case LS.SymbolKind.Class: return PythonMemberType.Class;                case LS.SymbolKind.Method: return PythonMemberType.Method;                case LS.SymbolKind.Property: return PythonMemberType.Property;                case LS.SymbolKind.Field: return PythonMemberType.Field;                case LS.SymbolKind.Constructor: return PythonMemberType.Method;                case LS.SymbolKind.Enum: return PythonMemberType.Enum;                case LS.SymbolKind.Interface: return PythonMemberType.Class;                case LS.SymbolKind.Function: return PythonMemberType.Function;                case LS.SymbolKind.Variable: return PythonMemberType.Field;                case LS.SymbolKind.Constant: return PythonMemberType.Constant;                case LS.SymbolKind.String: return PythonMemberType.Constant;                case LS.SymbolKind.Number: return PythonMemberType.Constant;                case LS.SymbolKind.Boolean: return PythonMemberType.Constant;                case LS.SymbolKind.Array: return PythonMemberType.Instance;                case LS.SymbolKind.Object: return PythonMemberType.Instance;                case LS.SymbolKind.Key: return PythonMemberType.Unknown;                case LS.SymbolKind.Null: return PythonMemberType.Unknown;                case LS.SymbolKind.EnumMember: return PythonMemberType.EnumInstance;                case LS.SymbolKind.Struct: return PythonMemberType.Class;                case LS.SymbolKind.Event: return PythonMemberType.Event;                case LS.SymbolKind.Operator: return PythonMemberType.Method;                case LS.SymbolKind.TypeParameter: return PythonMemberType.NamedArgument;                default: return PythonMemberType.Unknown;
+            }
+        }
+
         private async Task<AP.Completion[]> ToCompletions(MemberResult[] memberResult, GetMemberOptions options) {
             AP.Completion[] res = new AP.Completion[memberResult.Length];
             for (int i = 0; i < memberResult.Length; i++) {
@@ -1695,25 +1705,25 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task AnalyzeFileAsync(AP.AddFileRequest request, Func<Response, Task> done) {
-            int fileId;
-            var entry = AddNewFile(request.path, request.addingFromDir, out fileId);
+            string documentUri;
+            var entry = AddNewFile(request.path, request.addingFromDir, out documentUri);
 
-            await done(new AP.AddFileResponse { fileId = fileId });
+            await done(new AP.AddFileResponse { documentUri = documentUri });
 
             if (entry != null) {
-                await BeginAnalyzingFileAsync(entry, fileId, request.isTemporaryFile, request.suppressErrorLists);
+                await BeginAnalyzingFileAsync(entry, documentUri, request.isTemporaryFile, request.suppressErrorLists);
             }
         }
 
         private async Task AnalyzeFileAsync(AP.AddBulkFileRequest request, Func<Response, Task> done) {
             var entries = new IProjectEntry[request.path.Length];
             var response = new AP.AddBulkFileResponse {
-                fileId = Enumerable.Repeat(-1, request.path.Length).ToArray()
+                documentUri = Enumerable.Repeat("", request.path.Length).ToArray()
             };
 
             for(int i = 0; i < request.path.Length; ++i) {
                 if (!string.IsNullOrEmpty(request.path[i])) {
-                    entries[i] = AddNewFile(request.path[i], request.addingFromDir, out response.fileId[i]);
+                    entries[i] = AddNewFile(request.path[i], request.addingFromDir, out response.documentUri[i]);
                 }
             }
 
@@ -1721,13 +1731,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
             for (int i = 0; i < entries.Length; ++i) {
                 if (entries[i] != null) {
-                    await BeginAnalyzingFileAsync(entries[i], response.fileId[i], false, false);
+                    await BeginAnalyzingFileAsync(entries[i], response.documentUri[i], false, false);
                 }
             }
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {
-            UnloadFile(_projectFiles.Get(command.fileId));
+            if (_projectFiles.TryGetValue(command.documentUri, out var entry)) {
+                UnloadFile(entry, command.documentUri);
+            }
             return new Response();
         }
 
@@ -1788,7 +1800,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetOverrides(AP.OverridesCompletionRequest request) {
-            var projectFile = _projectFiles.Get<IPythonProjectEntry>(request.fileId);
+            var projectFile = GetPythonEntry(request.documentUri);
             if (projectFile == null) {
                 return IncorrectFileType();
             }
@@ -1867,7 +1879,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response UpdateContent(AP.FileUpdateRequest request) {
-            var entry = _projectFiles.Get(request.fileId);
+            _projectFiles.TryGetValue(request.documentUri, out var entry);
 
             SortedDictionary<int, CodeInfo> codeByBuffer = new SortedDictionary<int, CodeInfo>();
 #if DEBUG
@@ -1969,10 +1981,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private IProjectEntry AddNewFile(string path, string addingFromDirectory, out int fileId) {
+        private IProjectEntry AddNewFile(string path, string addingFromDirectory, out string documentUri) {
             if (Project == null) {
                 Debug.Fail("AnalyzeNewFile should only be called when _pyAnalyzer exists");
-                fileId = -1;
+                documentUri = null;
                 return null;
             }
 
@@ -1989,7 +2001,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     } catch (ArgumentException) {
                         // Module does not have a valid name, so we can't make
                         // an alias for it.
-                        fileId = -1;
+                        documentUri = null;
                         return null;
                     }
 
@@ -2003,7 +2015,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                fileId = ProjectEntryMap.GetId(item);
+                documentUri = path;
                 return item;
             }
 
@@ -2041,22 +2053,34 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (item != null) {
-                fileId = _projectFiles.Add(path, item);
+                documentUri = GetDocumentUri(path);
+                _projectFiles[documentUri] = item;
                 _server.DidOpenTextDocument(new LS.DidOpenTextDocumentParams {
                     textDocument = new LS.TextDocumentItem {
-                        uri = GetDocument(fileId).uri,
+                        uri = new Uri(documentUri),
                         languageId = "python",
                         version = 0
                     }
                 }).WaitAndUnwrapExceptions();
             } else {
-                fileId = -1;
+                documentUri = null;
             }
 
             return item;
         }
 
-        internal async Task BeginAnalyzingFileAsync(IProjectEntry item, int fileId, bool isTemporaryFile, bool suppressErrorList) {
+        private static string GetDocumentUri(string path) {
+            string documentUri;
+            try {
+                documentUri = new Uri(path).AbsoluteUri;
+            } catch (FormatException) {
+                documentUri = new Uri("local://" + path.Replace('\\', '/')).AbsoluteUri;
+            }
+
+            return documentUri;
+        }
+
+        internal async Task BeginAnalyzingFileAsync(IProjectEntry item, string documentUri, bool isTemporaryFile, bool suppressErrorList) {
             if (Project == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return;
@@ -2066,7 +2090,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // An AnalyzeFile event will send the same details in its
             // response.
             await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                fileId = fileId >= 0 ? fileId : ProjectEntryMap.GetId(item),
+                documentUri = documentUri,
                 filename = item.FilePath,
                 isTemporaryFile = isTemporaryFile,
                 suppressErrorList = suppressErrorList
@@ -2078,7 +2102,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private async void OnNewAnalysis(object sender, EventArgs e) {
             var projEntry = sender as IPythonProjectEntry;
             if (projEntry != null) {
-                var fileId = ProjectEntryMap.GetId(projEntry);
+                var documentUri = GetDocumentUri(projEntry.FilePath);
                 PythonAst dummy;
                 IAnalysisCookie cookieTmp;
                 projEntry.GetTreeAndCookie(out dummy, out cookieTmp);
@@ -2091,7 +2115,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 await _connection.SendEventAsync(
                     new AP.FileAnalysisCompleteEvent() {
-                        fileId = fileId,
+                        documentUri = documentUri,
                         versions = versions
                     }
                 );
@@ -2270,7 +2294,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private async void SendParseComplete(IPythonProjectEntry entry, SortedDictionary<int, ParseResult> parseResults) {
             await _connection.SendEventAsync(
                 new AP.FileParsedEvent() {
-                    fileId = ProjectEntryMap.GetId(entry),
+                    documentUri = GetDocumentUri(entry.FilePath),
                     buffers = parseResults.Select(
                         x => new AP.BufferParseInfo() {
                             bufferId = x.Key,
@@ -2356,7 +2380,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _analysisQueue.Stop();
         }
 
-        internal void UnloadFile(IProjectEntry entry) {
+        internal void UnloadFile(IProjectEntry entry, string documentUri) {
             if (entry != null) {
                 // If we remove a Python module, reanalyze any other modules
                 // that referenced it.
@@ -2367,10 +2391,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 _server.DidCloseTextDocument(new LS.DidCloseTextDocumentParams {
-                    textDocument = GetDocument(ProjectEntryMap.GetId(entry))
+                    textDocument = new LS.TextDocumentIdentifier { uri = new Uri(documentUri) }
                 }).WaitAndUnwrapExceptions();
                 Analyzer.RemoveModule(entry);
-                _projectFiles.Remove(entry);
+                _projectFiles.Remove(documentUri);
 
                 if (reanalyzeEntries != null) {
                     foreach (var existing in reanalyzeEntries) {

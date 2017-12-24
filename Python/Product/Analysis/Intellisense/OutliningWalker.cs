@@ -99,6 +99,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override bool Walk(FunctionDefinition node) {
             // Walk manually so collapsing is not enabled for params.
+            if (node.Parameters != null) {
+                AddTagIfNecessary(node.Parameters.FirstOrDefault()?.StartIndex, node.Parameters.LastOrDefault()?.EndIndex);
+            }
             if (node.Body != null) {
                 AddTagIfNecessary(node.HeaderIndex + 1, node.EndIndex);
                 node.Body.Walk(this);
