@@ -65,8 +65,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
             _server = new LS.Server();
-            _server._analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
-            _server._analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
+            _server._queue.AnalysisComplete += AnalysisQueue_Complete;
+            _server._queue.AnalysisAborted += AnalysisQueue_Aborted;
 
             Options = new AP.AnalysisOptions();
 
@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         // TODO: These are to progressively move functionality to the language server
         // These will eventually be removed
-        private AnalysisQueue _analysisQueue => _server._analysisQueue;
+        private AnalysisQueue _analysisQueue => _server._queue;
         private IDictionary<string, IProjectEntry> _projectFiles => _server._projectFiles;
 
         private void AnalysisQueue_Aborted(object sender, EventArgs e) {
@@ -113,7 +113,6 @@ namespace Microsoft.PythonTools.Intellisense {
             // These commands return a response, which we then send.
             switch (command) {
                 case AP.UnloadFileRequest.Command: response = UnloadFile((AP.UnloadFileRequest)request); break;
-                case AP.TopLevelCompletionsRequest.Command: response = await GetTopLevelCompletions(request); break;
                 case AP.CompletionsRequest.Command: response = await GetCompletions(request); break;
                 case AP.GetAllMembersRequest.Command: response = await GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = await GetModules(request); break;
@@ -221,6 +220,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private async Task<Response> Initialize(AP.InitializeRequest request) {
             try {
                 await _server.Initialize(new LS.InitializeParams {
+                    rootUri = string.IsNullOrEmpty(request.rootUri) ? null : new Uri(request.rootUri),
                     initializationOptions = new LS.PythonInitializationOptions {
                         interpreter = new LS.PythonInitializationOptions.Interpreter {
                             assembly = request.interpreter?.assembly,
@@ -1448,38 +1448,22 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private async Task<Response> GetTopLevelCompletions(Request request) {
-            var req = (AP.TopLevelCompletionsRequest)request;
+        private async Task<Response> GetModules(Request request) {
+            var getModules = (AP.GetModulesRequest)request;
+            var prefix = getModules.package == null ? null : (string.Join(".", getModules.package) + ".");
 
-            var members = await _server.Completion(new LS.CompletionParams {
-                position = new LS.Position { line = req.line - 1, character = req.column - 1 },
-                textDocument = new LS.TextDocumentIdentifier { uri = new Uri(req.documentUri) },
+            var modules = await _server.Completion(new LS.CompletionParams {
+                textDocument = new LS.TextDocumentIdentifier { uri = new Uri(getModules.documentUri) },
+                _expr = prefix,
                 context = new LS.CompletionContext {
-                    _intersection = req.options.HasFlag(GetMemberOptions.IntersectMultipleResults),
-                    _statementKeywords = req.options.HasFlag(GetMemberOptions.IncludeStatementKeywords),
-                    _expressionKeywords = req.options.HasFlag(GetMemberOptions.IncludeExpressionKeywords)
+                    triggerKind = LS.CompletionTriggerKind.Invoked,
+                    _filterKind = LS.CompletionItemKind.Module,
+                    _includeAllModules = true
                 }
             });
 
-            return new AP.CompletionsResponse() {
-                completions = await ToCompletions(members.items, req.options)
-            };
-        }
-
-        private async Task<Response> GetModules(Request request) {
-            var getModules = (AP.GetModulesRequest)request;
-            var prefix = getModules.package == null ? null : string.Join(".", getModules.package);
-
-            if (getModules.package == null || getModules.package.Length == 0) {
-                return new AP.CompletionsResponse {
-                    completions = await ToCompletions(Analyzer.GetModules(), GetMemberOptions.None)
-                };
-            }
-
-            var context = GetPythonEntry(getModules.documentUri)?.AnalysisContext;
-
             return new AP.CompletionsResponse {
-                completions = await ToCompletions(Analyzer.GetModuleMembers(context, getModules.package), GetMemberOptions.None)
+                completions = await ToCompletions(modules.items, GetMemberOptions.None)
             };
         }
 
@@ -1697,10 +1681,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async Task AnalyzeFileAsync(AP.AddFileRequest request, Func<Response, Task> done) {
-            string documentUri;
-            var entry = AddNewFile(request.path, request.addingFromDir, out documentUri);
+            var entry = await AddNewFile(new Uri(request.path), request.addingFromDir);
+            var documentUri = new Uri(entry.FilePath);
 
-            await done(new AP.AddFileResponse { documentUri = documentUri });
+            await done(new AP.AddFileResponse { documentUri = documentUri.AbsoluteUri });
 
             if (entry != null) {
                 await BeginAnalyzingFileAsync(entry, documentUri, request.isTemporaryFile, request.suppressErrorLists);
@@ -1715,7 +1699,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             for(int i = 0; i < request.path.Length; ++i) {
                 if (!string.IsNullOrEmpty(request.path[i])) {
-                    entries[i] = AddNewFile(request.path[i], request.addingFromDir, out response.documentUri[i]);
+                    var documentUri = GetDocumentUri(request.path[i]);
+                    entries[i] = await AddNewFile(documentUri, request.addingFromDir);
+                    response.documentUri[i] = documentUri.AbsoluteUri;
                 }
             }
 
@@ -1723,9 +1709,22 @@ namespace Microsoft.PythonTools.Intellisense {
 
             for (int i = 0; i < entries.Length; ++i) {
                 if (entries[i] != null) {
-                    await BeginAnalyzingFileAsync(entries[i], response.documentUri[i], false, false);
+                    await BeginAnalyzingFileAsync(entries[i], new Uri(response.documentUri[i]), false, false);
                 }
             }
+        }
+
+        private async Task<IProjectEntry> AddNewFile(Uri documentUri, string addingFromDir) {
+            var path = documentUri.LocalPath;
+
+            if (Path.GetExtension(path).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
+                return Project.AddXamlFile(path, null);
+            }
+
+            return _server.AddNewFile(
+                documentUri,
+                string.IsNullOrEmpty(addingFromDir) ? null : new Uri(addingFromDir)
+            );
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {
@@ -1960,119 +1959,18 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async void OnModulesChanged(object sender, EventArgs args) {
-            if (Project == null) {
-                Debug.Fail("Should not have null _pyAnalyzer here");
-                return;
-            }
-
-            await Project.ReloadModulesAsync();
-
-            // re-analyze all of the modules when we get a new set of modules loaded...
-            foreach (var entry in Project.ModulesByFilename) {
-                _analysisQueue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
-            }
+            await _server.DidChangeConfiguration(new LS.DidChangeConfigurationParams { });
         }
 
-        private IProjectEntry AddNewFile(string path, string addingFromDirectory, out string documentUri) {
-            if (Project == null) {
-                Debug.Fail("AnalyzeNewFile should only be called when _pyAnalyzer exists");
-                documentUri = null;
-                return null;
+        private static Uri GetDocumentUri(string path) {
+            if (!Path.IsPathRooted(path)) {
+                return new Uri($"file:///LOCAL-PATH/{path.Replace('\\', '/')}");
             }
 
-            IProjectEntry item = null;
-            IPythonProjectEntry pyItem = null;
-            if (_projectFiles.TryGetValue(path, out item)) {
-                // If the module exists, we may be adding an alias to it.
-                if (addingFromDirectory != null &&
-                    (pyItem = item as IPythonProjectEntry) != null &&
-                    ModulePath.IsPythonSourceFile(path)) {
-                    string modName = null;
-                    try {
-                        modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
-                    } catch (ArgumentException) {
-                        // Module does not have a valid name, so we can't make
-                        // an alias for it.
-                        documentUri = null;
-                        return null;
-                    }
-
-                    if (modName != null && pyItem.ModuleName != modName) {
-                        Project.AddModuleAlias(pyItem.ModuleName, modName);
-
-                        var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
-                        foreach (var entryRef in reanalyzeEntries) {
-                            _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
-                        }
-                    }
-                }
-
-                documentUri = path;
-                return item;
-            }
-
-            if (Path.GetExtension(path).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
-                item = Project.AddXamlFile(path, null);
-
-            } else {
-                // assume it's a Python file...
-                string modName;
-                try {
-                    modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
-                } catch (ArgumentException) {
-                    // File is not a valid module, but we can still add an
-                    // entry for it.
-                    modName = null;
-                }
-
-                IPythonProjectEntry[] reanalyzeEntries = null;
-                if (!string.IsNullOrEmpty(modName)) {
-                    reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
-                }
-
-                pyItem = Project.AddModule(modName, path, null);
-                pyItem.OnNewAnalysis += OnNewAnalysis;
-
-                pyItem.BeginParsingTree();
-
-                if (reanalyzeEntries != null) {
-                    foreach (var entryRef in reanalyzeEntries) {
-                        _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
-                    }
-                }
-
-                item = pyItem;
-            }
-
-            if (item != null) {
-                documentUri = GetDocumentUri(path);
-                _projectFiles[documentUri] = item;
-                _server.DidOpenTextDocument(new LS.DidOpenTextDocumentParams {
-                    textDocument = new LS.TextDocumentItem {
-                        uri = new Uri(documentUri),
-                        languageId = "python",
-                        version = 0
-                    }
-                }).WaitAndUnwrapExceptions();
-            } else {
-                documentUri = null;
-            }
-
-            return item;
+            return new Uri(path);
         }
 
-        private static string GetDocumentUri(string path) {
-            string documentUri;
-            try {
-                documentUri = new Uri(path).AbsoluteUri;
-            } catch (FormatException) {
-                documentUri = new Uri("local://" + path.Replace('\\', '/')).AbsoluteUri;
-            }
-
-            return documentUri;
-        }
-
-        internal async Task BeginAnalyzingFileAsync(IProjectEntry item, string documentUri, bool isTemporaryFile, bool suppressErrorList) {
+        internal async Task BeginAnalyzingFileAsync(IProjectEntry item, Uri documentUri, bool isTemporaryFile, bool suppressErrorList) {
             if (Project == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return;
@@ -2082,7 +1980,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // An AnalyzeFile event will send the same details in its
             // response.
             await _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                documentUri = documentUri,
+                documentUri = documentUri.LocalPath,
                 filename = item.FilePath,
                 isTemporaryFile = isTemporaryFile,
                 suppressErrorList = suppressErrorList
@@ -2107,7 +2005,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 await _connection.SendEventAsync(
                     new AP.FileAnalysisCompleteEvent() {
-                        documentUri = documentUri,
+                        documentUri = documentUri.AbsoluteUri,
                         versions = versions
                     }
                 );
@@ -2286,7 +2184,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private async void SendParseComplete(IPythonProjectEntry entry, SortedDictionary<int, ParseResult> parseResults) {
             await _connection.SendEventAsync(
                 new AP.FileParsedEvent() {
-                    documentUri = GetDocumentUri(entry.FilePath),
+                    documentUri = GetDocumentUri(entry.FilePath).AbsoluteUri,
                     buffers = parseResults.Select(
                         x => new AP.BufferParseInfo() {
                             bufferId = x.Key,
@@ -2374,25 +2272,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void UnloadFile(IProjectEntry entry, string documentUri) {
             if (entry != null) {
-                // If we remove a Python module, reanalyze any other modules
-                // that referenced it.
-                IPythonProjectEntry[] reanalyzeEntries = null;
-                var pyEntry = entry as IPythonProjectEntry;
-                if (pyEntry != null && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
-                    reanalyzeEntries = Analyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
-                }
-
-                _server.DidCloseTextDocument(new LS.DidCloseTextDocumentParams {
-                    textDocument = new LS.TextDocumentIdentifier { uri = new Uri(documentUri) }
-                }).WaitAndUnwrapExceptions();
-                Analyzer.RemoveModule(entry);
-                _projectFiles.Remove(documentUri);
-
-                if (reanalyzeEntries != null) {
-                    foreach (var existing in reanalyzeEntries) {
-                        _analysisQueue.Enqueue(existing, AnalysisPriority.Normal);
-                    }
-                }
             }
         }
 
@@ -2470,7 +2349,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _isDisposed = true;
-            _server._analysisQueue.AnalysisComplete -= AnalysisQueue_Complete;
+            _server._queue.AnalysisComplete -= AnalysisQueue_Complete;
             if (Project != null) {
                 Project.Interpreter.ModuleNamesChanged -= OnModulesChanged;
                 Project.Dispose();

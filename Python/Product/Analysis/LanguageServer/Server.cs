@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -25,25 +26,30 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
-        internal readonly AnalysisQueue _analysisQueue;
+        internal readonly AnalysisQueue _queue;
         internal readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities? _clientCaps;
 
+        // If null, all files must be added manually
+        private Uri _rootDir;
+
         public Server() {
-            _analysisQueue = new AnalysisQueue();
+            _queue = new AnalysisQueue();
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>();
         }
 
         public void Dispose() {
-            _analysisQueue.Dispose();
+            _queue.Dispose();
         }
 
         #region Client message handling
@@ -52,6 +58,20 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             _analyzer = await CreateAnalyzer(@params.initializationOptions.interpreter);
 
             _clientCaps = @params.capabilities;
+            var searchPaths = @params.initializationOptions.searchPaths;
+            if (searchPaths != null) {
+                _analyzer.SetSearchPaths(searchPaths);
+            }
+
+            if (@params.rootUri != null) {
+                _rootDir = @params.rootUri;
+            } else if (!string.IsNullOrEmpty(@params.rootPath)) {
+                _rootDir = new Uri(@params.rootPath);
+            }
+
+            if (_rootDir != null) {
+                LoadFromDirectoryAsync(_rootDir).DoNotWait();
+            }
 
             return new InitializeResult {
                 capabilities = new ServerCapabilities {
@@ -68,9 +88,30 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         public override async Task DidOpenTextDocument(DidOpenTextDocumentParams @params) {
+            var entry = GetEntry(@params.textDocument.uri) as IPythonProjectEntry;
         }
 
         public override async Task DidCloseTextDocument(DidCloseTextDocumentParams @params) {
+            var entry = GetEntry(@params.textDocument.uri);
+            // No need to keep in-memory buffers now
+            (entry as IDocument)?.ResetDocument(-1, -1, null);
+
+            // Pick up any changes on disk that we didn't know about
+            _queue.Enqueue(entry, AnalysisPriority.Low);
+        }
+
+        public override async Task DidChangeConfiguration(DidChangeConfigurationParams @params) {
+            if (_analyzer == null) {
+                LogMessage(new LogMessageEventArgs { type = MessageType.Error, message = "change configuration notification sent to uninitialized server" });
+                return;
+            }
+
+            await _analyzer.ReloadModulesAsync();
+
+            // re-analyze all of the modules when we get a new set of modules loaded...
+            foreach (var entry in _analyzer.ModulesByFilename) {
+                _queue.Enqueue(entry.Value.ProjectEntry, AnalysisPriority.Normal);
+            }
         }
 
         public override async Task<CompletionList> Completion(CompletionParams @params) {
@@ -98,7 +139,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             var exprText = @params._expr;
             Expression expr = null;
             if (!string.IsNullOrEmpty(@params._expr)) {
-                members = entry.Analysis.GetMembers(@params._expr, @params.position, opts);
+                members = entry.Analysis.GetMembers(expr, @params.position, opts);
             } else {
                 var finder = new ExpressionFinder(entry.Tree, GetExpressionOptions.EvaluateMembers);
                 expr = finder.GetExpression(@params.position) as Expression;
@@ -109,8 +150,24 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 }
             }
 
+
+            if (@params.context?._includeAllModules ?? false) {
+                var mods = _analyzer.GetModules();
+                members = members?.Concat(mods) ?? mods;
+            }
+
+            if (members == null) {
+                return new CompletionList { };
+            }
+
+            var filtered = members.Select(m => ToCompletionItem(m, opts));
+            var filterKind = @params.context?._filterKind;
+            if (filterKind.HasValue) {
+                filtered = filtered.Where(m => m.kind == filterKind.Value);
+            }
+
             return new CompletionList {
-                items = members?.Select(m => ToCompletionItem(m, opts)).ToArray()
+                items = filtered.ToArray()
             };
         }
 
@@ -136,8 +193,10 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
         #endregion
 
-        private IProjectEntry GetEntry(TextDocumentIdentifier document) {
-            if (!_projectFiles.TryGetValue(document.uri.AbsoluteUri, out IProjectEntry entry)) {
+        private IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
+
+        private IProjectEntry GetEntry(Uri documentUri) {
+            if (!_projectFiles.TryGetValue(documentUri.AbsoluteUri, out IProjectEntry entry)) {
                 throw new LanguageServerException(LanguageServerException.UnknownDocument, "unknown document");
             }
             return entry;
@@ -193,6 +252,79 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             return await PythonAnalyzer.CreateAsync(factory, interp);
         }
+
+        private IEnumerable<ModulePath> GetImportNames(string filePath) {
+            ModulePath mp;
+            if (ModulePath.FromBasePathAndFile_NoThrow(_rootDir.LocalPath, filePath, out mp)) {
+                yield return mp;
+            }
+
+            foreach (var sp in _analyzer.GetSearchPaths()) {
+                if (ModulePath.FromBasePathAndFile_NoThrow(sp, filePath, out mp)) {
+                    yield return mp;
+                }
+            }
+        }
+
+        internal IProjectEntry AddNewFile(Uri documentUri, Uri addingFromDirectory) {
+            IProjectEntry item = null;
+            IPythonProjectEntry pyItem = null;
+            IPythonProjectEntry[] reanalyzeEntries = null;
+
+            if (_projectFiles.TryGetValue(documentUri.AbsoluteUri, out item)) {
+                return item;
+            }
+
+            List<string> aliases = null;
+
+            if (ModulePath.IsPythonSourceFile(documentUri.LocalPath)) {
+                aliases = GetImportNames(documentUri.LocalPath).Select(mp => mp.ModuleName).ToList();
+            }
+
+            if (aliases.Any()) {
+                reanalyzeEntries = aliases.SelectMany(a => _analyzer.GetEntriesThatImportModule(a, true)).ToArray();
+
+                item = pyItem = _analyzer.AddModule(aliases[0], documentUri.LocalPath, null);
+                foreach (var a in aliases.Skip(1)) {
+                    _analyzer.AddModuleAlias(aliases[0], a);
+                }
+                pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
+
+                pyItem.BeginParsingTree();
+
+                if (reanalyzeEntries != null) {
+                    foreach (var entryRef in reanalyzeEntries) {
+                        _queue.Enqueue(entryRef, AnalysisPriority.Low);
+                    }
+                }
+            }
+
+            return item;
+        }
+
+        private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
+            // TODO: Something useful
+        }
+
+        private async Task LoadFromDirectoryAsync(Uri rootDir, string baseName = null) {
+            foreach (var file in PathUtils.EnumerateFiles(rootDir.LocalPath, recurse: false, fullPaths: false)) {
+                if (!ModulePath.IsPythonSourceFile(file)) {
+                    if (ModulePath.IsPythonFile(file, true, true, true)) {
+                        // TODO: Deal with scrapable files (if we need to do anything?)
+                    }
+                    continue;
+                }
+
+                AddNewFile(new Uri(rootDir, file), null);
+            }
+            foreach (var dir in PathUtils.EnumerateDirectories(rootDir.LocalPath, recurse: false, fullPaths: false)) {
+                if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||
+                    !string.IsNullOrEmpty(ModulePath.GetPackageInitPy(Path.Combine(rootDir.LocalPath, dir)))) {
+                    await LoadFromDirectoryAsync(new Uri(rootDir, dir), dir);
+                }
+            }
+        }
+
 
         private CompletionItem ToCompletionItem(MemberResult m, GetMemberOptions opts) {
             var res = new CompletionItem {

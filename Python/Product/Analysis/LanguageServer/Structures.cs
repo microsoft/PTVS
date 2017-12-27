@@ -210,7 +210,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
         public Interpreter interpreter;
 
-
+        public string[] searchPaths;
     }
 
 

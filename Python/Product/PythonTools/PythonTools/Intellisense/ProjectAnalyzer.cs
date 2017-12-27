@@ -1813,7 +1813,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
-            var members = await SendRequestAsync(new AP.TopLevelCompletionsRequest() {
+            var members = await SendRequestAsync(new AP.CompletionsRequest {
                 documentUri = entry.DocumentUri,
                 options = options,
                 line = location.Line,

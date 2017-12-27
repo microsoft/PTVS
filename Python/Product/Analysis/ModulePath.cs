@@ -422,7 +422,7 @@ namespace Microsoft.PythonTools.Analysis {
         public static bool IsPythonSourceFile(string path) {
             return IsPythonFile(path, false, false, false);
         }
-        
+
         /// <summary>
         /// Returns true if the provided name can be imported in Python code.
         /// </summary>
@@ -670,6 +670,14 @@ namespace Microsoft.PythonTools.Analysis {
             return FromBasePathAndName_NoThrow(basePath, moduleName, null, null, out modulePath, out _, out _, out _);
         }
 
+        internal static bool FromBasePathAndFile_NoThrow(
+            string basePath,
+            string sourceFile,
+            out ModulePath modulePath
+        ) {
+            return FromBasePathAndFile_NoThrow(basePath, sourceFile, null, null, out modulePath, out _, out _);
+        }
+
         private static bool IsModuleNameMatch(Regex regex, string path, string mod) {
             var m = regex.Match(PathUtils.GetFileName(path));
             if (!m.Success) {
@@ -767,6 +775,67 @@ namespace Microsoft.PythonTools.Analysis {
             modulePath = new ModulePath(moduleName, path, basePath);
             return true;
         }
+
+        internal static bool FromBasePathAndFile_NoThrow(
+            string basePath,
+            string sourceFile,
+            Func<string, bool> isPackage,
+            Func<string, string, string> getModule,
+            out ModulePath modulePath,
+            out bool isInvalid,
+            out bool isMissing
+        ) {
+            modulePath = default(ModulePath);
+            isInvalid = false;
+            isMissing = false;
+
+            if (!PathEqualityComparer.Instance.StartsWith(sourceFile, basePath)) {
+                return false;
+            }
+
+            if (isPackage == null) {
+                isPackage = f => !string.IsNullOrEmpty(GetPackageInitPy(f));
+            }
+            if (getModule == null) {
+                getModule = (dir, mod) => {
+                    var pack = GetPackageInitPy(Path.Combine(dir, mod));
+                    if (File.Exists(pack)) {
+                        return pack;
+                    }
+                    var mods = PathUtils.EnumerateFiles(dir, mod + "*", recurse: false).ToArray();
+                    return mods.FirstOrDefault(p => IsModuleNameMatch(PythonStubRegex, p, mod)) ??
+                        mods.FirstOrDefault(p => IsModuleNameMatch(PythonBinaryRegex, p, mod)) ??
+                        mods.FirstOrDefault(p => IsModuleNameMatch(PythonFileRegex, p, mod));
+                };
+            }
+
+            var bits = new List<string>();
+            var path = PathUtils.TrimEndSeparator(Path.GetDirectoryName(sourceFile));
+            while (PathEqualityComparer.Instance.StartsWith(basePath, path)) {
+                if (!isPackage(path)) {
+                    isMissing = true;
+                    return false;
+                }
+                var bit = PathUtils.GetFileName(path);
+                if (!PythonPackageRegex.IsMatch(bit)) {
+                    isInvalid = true;
+                    return false;
+                }
+                bits.Add(PathUtils.GetFileName(path));
+                path = PathUtils.TrimEndSeparator(Path.GetDirectoryName(path));
+            }
+
+            if (!PathEqualityComparer.Instance.Equals(basePath, path)) {
+                isMissing = true;
+                return false;
+            }
+
+            var moduleName = string.Join(".", bits.AsEnumerable().Reverse());
+            modulePath = new ModulePath(moduleName, sourceFile, basePath);
+
+            return true;
+        }
+
 
         internal static IEnumerable<string> GetParents(string name, bool includeFullName = true) {
             if (string.IsNullOrEmpty(name)) {

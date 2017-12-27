@@ -397,6 +397,17 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void ResetDocument(int buffer, int version, string content) {
+            if (content == null) {
+                lock (_buffers) {
+                    if (buffer < 0) {
+                        _buffers.Clear();
+                    } else {
+                        _buffers.Remove(buffer);
+                    }
+                }
+                return;
+            }
+
             GetBuffer(buffer)?.Reset(version, content);
         }
     }

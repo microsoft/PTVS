@@ -52,6 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string command => Command;
 
             public InterpreterInfo interpreter;
+            public string rootUri;
         }
 
         public sealed class InterpreterInfo {
@@ -648,16 +649,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public bool isTemporaryFile, suppressErrorList;
 
             public override string name => Name;
-        }
-
-        public class TopLevelCompletionsRequest : Request<CompletionsResponse> {
-            public const string Command = "topCompletions";
-
-            public string documentUri;
-            public int line, column;
-            public GetMemberOptions options;
-
-            public override string command => Command;
         }
 
         public class GetModulesRequest : Request<CompletionsResponse> {
