@@ -1635,7 +1635,34 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             switch (kind) {
-                case LS.SymbolKind.None: return PythonMemberType.Unknown;                case LS.SymbolKind.File: return PythonMemberType.Module;                case LS.SymbolKind.Module: return PythonMemberType.Module;                case LS.SymbolKind.Namespace: return PythonMemberType.Namespace;                case LS.SymbolKind.Package: return PythonMemberType.Module;                case LS.SymbolKind.Class: return PythonMemberType.Class;                case LS.SymbolKind.Method: return PythonMemberType.Method;                case LS.SymbolKind.Property: return PythonMemberType.Property;                case LS.SymbolKind.Field: return PythonMemberType.Field;                case LS.SymbolKind.Constructor: return PythonMemberType.Method;                case LS.SymbolKind.Enum: return PythonMemberType.Enum;                case LS.SymbolKind.Interface: return PythonMemberType.Class;                case LS.SymbolKind.Function: return PythonMemberType.Function;                case LS.SymbolKind.Variable: return PythonMemberType.Field;                case LS.SymbolKind.Constant: return PythonMemberType.Constant;                case LS.SymbolKind.String: return PythonMemberType.Constant;                case LS.SymbolKind.Number: return PythonMemberType.Constant;                case LS.SymbolKind.Boolean: return PythonMemberType.Constant;                case LS.SymbolKind.Array: return PythonMemberType.Instance;                case LS.SymbolKind.Object: return PythonMemberType.Instance;                case LS.SymbolKind.Key: return PythonMemberType.Unknown;                case LS.SymbolKind.Null: return PythonMemberType.Unknown;                case LS.SymbolKind.EnumMember: return PythonMemberType.EnumInstance;                case LS.SymbolKind.Struct: return PythonMemberType.Class;                case LS.SymbolKind.Event: return PythonMemberType.Event;                case LS.SymbolKind.Operator: return PythonMemberType.Method;                case LS.SymbolKind.TypeParameter: return PythonMemberType.NamedArgument;                default: return PythonMemberType.Unknown;
+                case LS.SymbolKind.None: return PythonMemberType.Unknown;
+                case LS.SymbolKind.File: return PythonMemberType.Module;
+                case LS.SymbolKind.Module: return PythonMemberType.Module;
+                case LS.SymbolKind.Namespace: return PythonMemberType.Namespace;
+                case LS.SymbolKind.Package: return PythonMemberType.Module;
+                case LS.SymbolKind.Class: return PythonMemberType.Class;
+                case LS.SymbolKind.Method: return PythonMemberType.Method;
+                case LS.SymbolKind.Property: return PythonMemberType.Property;
+                case LS.SymbolKind.Field: return PythonMemberType.Field;
+                case LS.SymbolKind.Constructor: return PythonMemberType.Method;
+                case LS.SymbolKind.Enum: return PythonMemberType.Enum;
+                case LS.SymbolKind.Interface: return PythonMemberType.Class;
+                case LS.SymbolKind.Function: return PythonMemberType.Function;
+                case LS.SymbolKind.Variable: return PythonMemberType.Field;
+                case LS.SymbolKind.Constant: return PythonMemberType.Constant;
+                case LS.SymbolKind.String: return PythonMemberType.Constant;
+                case LS.SymbolKind.Number: return PythonMemberType.Constant;
+                case LS.SymbolKind.Boolean: return PythonMemberType.Constant;
+                case LS.SymbolKind.Array: return PythonMemberType.Instance;
+                case LS.SymbolKind.Object: return PythonMemberType.Instance;
+                case LS.SymbolKind.Key: return PythonMemberType.Unknown;
+                case LS.SymbolKind.Null: return PythonMemberType.Unknown;
+                case LS.SymbolKind.EnumMember: return PythonMemberType.EnumInstance;
+                case LS.SymbolKind.Struct: return PythonMemberType.Class;
+                case LS.SymbolKind.Event: return PythonMemberType.Event;
+                case LS.SymbolKind.Operator: return PythonMemberType.Method;
+                case LS.SymbolKind.TypeParameter: return PythonMemberType.NamedArgument;
+                default: return PythonMemberType.Unknown;
             }
         }
 
@@ -1721,10 +1748,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return Project.AddXamlFile(path, null);
             }
 
-            return _server.AddNewFile(
+            return await _server.LoadFileAsync(
                 documentUri,
                 string.IsNullOrEmpty(addingFromDir) ? null : new Uri(addingFromDir)
-            );
+            ).ConfigureAwait(false);
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {

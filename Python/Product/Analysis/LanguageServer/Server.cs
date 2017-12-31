@@ -36,6 +36,9 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public sealed class Server : ServerBase, IDisposable {
         internal readonly AnalysisQueue _queue;
         internal readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
+        private readonly VolatileCounter _parsingInProgress;
+
+        internal Task _loadingFromDirectory;
 
         internal PythonAnalyzer _analyzer;
         internal ClientCapabilities? _clientCaps;
@@ -46,6 +49,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         public Server() {
             _queue = new AnalysisQueue();
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>();
+            _parsingInProgress = new VolatileCounter();
         }
 
         public void Dispose() {
@@ -70,7 +74,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
 
             if (_rootDir != null) {
-                LoadFromDirectoryAsync(_rootDir).DoNotWait();
+                _loadingFromDirectory = LoadFromDirectoryAsync(_rootDir);
             }
 
             return new InitializeResult {
@@ -127,12 +131,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                 if (c._intersection) {
                     opts |= GetMemberOptions.IntersectMultipleResults;
                 }
-                if (c._statementKeywords) {
+                if (c._statementKeywords ?? true) {
                     opts |= GetMemberOptions.IncludeStatementKeywords;
                 }
-                if (c._expressionKeywords) {
+                if (c._expressionKeywords ?? true) {
                     opts |= GetMemberOptions.IncludeExpressionKeywords;
                 }
+            } else {
+                opts = GetMemberOptions.IncludeStatementKeywords | GetMemberOptions.IncludeExpressionKeywords;
             }
 
             IEnumerable<MemberResult> members = null;
@@ -162,7 +168,7 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
             var filtered = members.Select(m => ToCompletionItem(m, opts));
             var filterKind = @params.context?._filterKind;
-            if (filterKind.HasValue) {
+            if (filterKind.HasValue && filterKind != CompletionItemKind.None) {
                 filtered = filtered.Where(m => m.kind == filterKind.Value);
             }
 
@@ -192,6 +198,14 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         }
 
         #endregion
+
+        public Task WaitForDirectoryScanAsync() {
+            var task = _loadingFromDirectory;
+            if (task == null) {
+                return Task.CompletedTask;
+            }
+            return task;
+        }
 
         private IProjectEntry GetEntry(TextDocumentIdentifier document) => GetEntry(document.uri);
 
@@ -266,48 +280,161 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
             }
         }
 
-        internal IProjectEntry AddNewFile(Uri documentUri, Uri addingFromDirectory) {
+        public Task<IProjectEntry> LoadFileAsync(Uri documentUri) {
+            return AddFileAsync(documentUri, null);
+        }
+
+        public Task<IProjectEntry> LoadFileAsync(Uri documentUri, Uri fromSearchPath) {
+            return AddFileAsync(documentUri, fromSearchPath);
+        }
+
+        public Task<bool> UnloadFileAsync(Uri documentUri) {
+            if (_projectFiles.TryRemove(documentUri.AbsoluteUri, out var entry)) {
+                _analyzer.RemoveModule(entry);
+                return Task.FromResult(true);
+            }
+
+            return Task.FromResult(false);
+        }
+
+        private Task<IProjectEntry> AddFileAsync(Uri documentUri, Uri fromSearchPath) {
             IProjectEntry item = null;
-            IPythonProjectEntry pyItem = null;
-            IPythonProjectEntry[] reanalyzeEntries = null;
 
             if (_projectFiles.TryGetValue(documentUri.AbsoluteUri, out item)) {
-                return item;
+                return Task.FromResult(item);
             }
 
             List<string> aliases = null;
 
-            if (ModulePath.IsPythonSourceFile(documentUri.LocalPath)) {
-                aliases = GetImportNames(documentUri.LocalPath).Select(mp => mp.ModuleName).ToList();
-            }
-
-            if (aliases.Any()) {
-                reanalyzeEntries = aliases.SelectMany(a => _analyzer.GetEntriesThatImportModule(a, true)).ToArray();
-
-                item = pyItem = _analyzer.AddModule(aliases[0], documentUri.LocalPath, null);
-                foreach (var a in aliases.Skip(1)) {
-                    _analyzer.AddModuleAlias(aliases[0], a);
-                }
-                pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
-
-                pyItem.BeginParsingTree();
-
-                if (reanalyzeEntries != null) {
-                    foreach (var entryRef in reanalyzeEntries) {
-                        _queue.Enqueue(entryRef, AnalysisPriority.Low);
+            var path = documentUri.LocalPath;
+            if (ModulePath.IsPythonSourceFile(path)) {
+                if (fromSearchPath == null) {
+                    aliases = GetImportNames(path).Select(mp => mp.ModuleName).ToList();
+                } else {
+                    if (ModulePath.FromBasePathAndFile_NoThrow(fromSearchPath.LocalPath, path, out var mp)) {
+                        aliases = new List<string> { mp.ModuleName };
                     }
                 }
             }
 
-            return item;
+            if (!aliases.Any()) {
+                return null;
+            }
+
+            var reanalyzeEntries = aliases.SelectMany(a => _analyzer.GetEntriesThatImportModule(a, true)).ToArray();
+
+            var pyItem = _analyzer.AddModule(aliases[0], path, null);
+            item = pyItem;
+            foreach (var a in aliases.Skip(1)) {
+                _analyzer.AddModuleAlias(aliases[0], a);
+            }
+
+            if (!_projectFiles.TryAdd(documentUri.AbsoluteUri, item)) {
+                if (_projectFiles.TryGetValue(documentUri.AbsoluteUri, out var actualItem)) {
+                    return Task.FromResult(actualItem);
+                }
+                // Fallback if we race with removal - overwrite and continue
+                _projectFiles[documentUri.AbsoluteUri] = item;
+            }
+
+            pyItem.OnNewAnalysis += ProjectEntry_OnNewAnalysis;
+
+            ParseFromDisk(pyItem);
+
+            if (reanalyzeEntries != null) {
+                foreach (var entryRef in reanalyzeEntries) {
+                    _queue.Enqueue(entryRef, AnalysisPriority.Low);
+                }
+            }
+
+            return Task.FromResult(item);
+        }
+
+        private void ParseFromDisk(IPythonProjectEntry entry) {
+            entry.BeginParsingTree();
+            _parsingInProgress.Increment();
+            bool enqueued = false;
+            try {
+                enqueued = ThreadPool.QueueUserWorkItem(ParseFromDiskWorker, entry);
+            } finally {
+                if (!enqueued) {
+                    _parsingInProgress.Decrement();
+                }
+            }
+        }
+
+        private bool CreatePythonParser(Stream stream, out Parser parser, out IReadOnlyList<Diagnostic> diagnostics, ParserOptions options = null) {
+            var diags = new List<Diagnostic>();
+            var opts = options?.Clone() ?? new ParserOptions();
+            if (opts.ErrorSink == null) {
+                opts.ErrorSink = new DiagnosticsErrorSink("Python parser", diags);
+            }
+            opts.BindReferences = true;
+            opts.ProcessComment += new DiagnosticsErrorSink("task comment", diags).ProcessTaskComment;
+
+            parser = Parser.CreateParser(stream, _analyzer.LanguageVersion, opts);
+            diagnostics = diags;
+            return true;
+        }
+
+        private void ParseFromDiskWorker(object state) {
+            try {
+                var entry = state as IProjectEntry;
+                if (entry == null) {
+                    Debug.Fail("invalid type passed to ParseItemWorker");
+                    return;
+                }
+
+                using (var file = PathUtils.OpenWithRetry(entry.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                    if (file == null) {
+                        (entry as IPythonProjectEntry)?.UpdateTree(null, null);
+                    } else if (entry is IExternalProjectEntry extEntry) {
+                        extEntry.ParseContent(new StreamReader(file, Encoding.UTF8, true, 4096, true), null);
+                    } else if (entry is IPythonProjectEntry pyEntry) {
+                        if (CreatePythonParser(file, out var parser, out var diagnostics)) {
+                            var tree = SafeParseFile(parser);
+                            pyEntry.UpdateTree(tree, null);
+                            PublishDiagnostics(new PublishDiagnosticsEventArgs {
+                                diagnostics = diagnostics,
+                                uri = new Uri(entry.FilePath)
+                            });
+                        } else {
+                            pyEntry.UpdateTree(null, null);
+                        }
+                    }
+                }
+                _queue.Enqueue(entry, AnalysisPriority.Normal);
+            } finally {
+                _parsingInProgress.Decrement();
+            }
+        }
+
+        private PythonAst SafeParseFile(Parser parser) {
+            try {
+                return parser.ParseFile();
+            } catch (BadSourceException) {
+                return null;
+            } catch (Exception ex) {
+                LogMessage(new LogMessageEventArgs {
+                    type = MessageType.Error,
+                    message = ex.ToString()
+                });
+                return null;
+            }
+        }
+
+        public async Task WaitForCompleteAnalysisAsync() {
+            // Wait for all current parsing to complete
+            await _parsingInProgress.WaitForZeroAsync();
+            await _queue.WaitForCompleteAsync();
         }
 
         private void ProjectEntry_OnNewAnalysis(object sender, EventArgs e) {
             // TODO: Something useful
         }
 
-        private async Task LoadFromDirectoryAsync(Uri rootDir, string baseName = null) {
-            foreach (var file in PathUtils.EnumerateFiles(rootDir.LocalPath, recurse: false, fullPaths: false)) {
+        private async Task LoadFromDirectoryAsync(Uri rootDir) {
+            foreach (var file in PathUtils.EnumerateFiles(rootDir.LocalPath, recurse: false, fullPaths: true)) {
                 if (!ModulePath.IsPythonSourceFile(file)) {
                     if (ModulePath.IsPythonFile(file, true, true, true)) {
                         // TODO: Deal with scrapable files (if we need to do anything?)
@@ -315,12 +442,12 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
                     continue;
                 }
 
-                AddNewFile(new Uri(rootDir, file), null);
+                await LoadFileAsync(new Uri(file));
             }
-            foreach (var dir in PathUtils.EnumerateDirectories(rootDir.LocalPath, recurse: false, fullPaths: false)) {
+            foreach (var dir in PathUtils.EnumerateDirectories(rootDir.LocalPath, recurse: false, fullPaths: true)) {
                 if (!ModulePath.PythonVersionRequiresInitPyFiles(_analyzer.LanguageVersion.ToVersion()) ||
-                    !string.IsNullOrEmpty(ModulePath.GetPackageInitPy(Path.Combine(rootDir.LocalPath, dir)))) {
-                    await LoadFromDirectoryAsync(new Uri(rootDir, dir), dir);
+                    !string.IsNullOrEmpty(ModulePath.GetPackageInitPy(dir))) {
+                    await LoadFromDirectoryAsync(new Uri(dir));
                 }
             }
         }

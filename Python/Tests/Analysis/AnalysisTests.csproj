@@ -72,6 +72,7 @@
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="ExpressionFinderTests.cs" />
+    <Compile Include="LanguageServerTests.cs" />
     <Compile Include="ModulePathTests.cs" />
     <Compile Include="ModuleTableTests.cs" />
     <Compile Include="ParserEncodingTests.cs" />

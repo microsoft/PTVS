@@ -62,6 +62,30 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        sealed class WaitAnalyzableTask : IAnalyzable {
+            private readonly TaskCompletionSource<object> _tcs;
+
+            public WaitAnalyzableTask() {
+                _tcs = new TaskCompletionSource<object>();
+            }
+
+            public Task Task => _tcs.Task;
+
+            public void Analyze(CancellationToken cancel) {
+                if (cancel.IsCancellationRequested) {
+                    _tcs.TrySetCanceled();
+                } else {
+                    _tcs.TrySetResult(null);
+                }
+            }
+        }
+
+        public Task WaitForCompleteAsync(AnalysisPriority priority = AnalysisPriority.None) {
+            var task = new WaitAnalyzableTask();
+            Enqueue(task, priority);
+            return task.Task;
+        }
+
         public event EventHandler<UnhandledExceptionEventArgs> UnhandledException;
 
         public TaskScheduler Scheduler { get; private set; }

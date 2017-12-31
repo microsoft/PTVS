@@ -264,7 +264,7 @@ namespace TestUtilities
             IEnumerable<T> unexpectedSubset,
             IEqualityComparer<T> comparer = null
         ) {
-            var set = new HashSet<T>(source, comparer);
+            var set = new HashSet<T>(source ?? Enumerable.Empty<T>(), comparer);
             var expected = new HashSet<T>(expectedSubset ?? Enumerable.Empty<T>(), comparer);
 
             var missing = new HashSet<T>(expected, comparer);

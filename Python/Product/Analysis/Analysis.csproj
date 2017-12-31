@@ -96,11 +96,13 @@
     <Compile Include="Interpreter\Ast\AstCachedPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonProperty.cs" />
     <Compile Include="LanguageServer\CallbackEventArgs.cs" />
+    <Compile Include="LanguageServer\DiagnosticsErrorSink.cs" />
     <Compile Include="LanguageServer\Enums.cs" />
     <Compile Include="LanguageServer\Messages.cs" />
     <Compile Include="LanguageServer\Server.cs" />
     <Compile Include="LanguageServer\ServerBase.cs" />
     <Compile Include="LanguageServer\Structures.cs" />
+    <Compile Include="LanguageServer\VolatileCounter.cs" />
     <Compile Include="SmallSetWithExpiry.cs" />
     <Compile Include="ICanExpire.cs" />
     <Compile Include="Interpreter\Ast\AstAnalysisFunctionWalker.cs" />

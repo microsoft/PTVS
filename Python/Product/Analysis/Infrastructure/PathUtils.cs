@@ -318,5 +318,31 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
             // likely nothing we can do.
             return !Directory.Exists(path);
         }
+
+        public static FileStream OpenWithRetry(string file, FileMode mode, FileAccess access, FileShare share) {
+            // Retry for up to one second
+            bool create = mode != FileMode.Open;
+            for (int retries = 100; retries > 0; --retries) {
+                try {
+                    return new FileStream(file, mode, access, share);
+                } catch (FileNotFoundException) when (!create) {
+                    return null;
+                } catch (DirectoryNotFoundException) when (!create) {
+                    return null;
+                } catch (IOException) {
+                    if (create) {
+                        var dir = Path.GetDirectoryName(file);
+                        try {
+                            Directory.CreateDirectory(dir);
+                        } catch (IOException) {
+                            // Cannot create directory for DB, so just bail out
+                            return null;
+                        }
+                    }
+                    Thread.Sleep(10);
+                }
+            }
+            return null;
+        }
     }
 }

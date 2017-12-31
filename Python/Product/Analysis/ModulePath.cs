@@ -809,9 +809,15 @@ namespace Microsoft.PythonTools.Analysis {
                 };
             }
 
-            var bits = new List<string>();
+            var nameMatch = PythonFileRegex.Match(PathUtils.GetFileName(sourceFile));
+            if (!nameMatch.Success) {
+                isInvalid = true;
+                return false;
+            }
+            var bits = new List<string> { nameMatch.Groups["name"].Value };
+
             var path = PathUtils.TrimEndSeparator(Path.GetDirectoryName(sourceFile));
-            while (PathEqualityComparer.Instance.StartsWith(basePath, path)) {
+            while (PathEqualityComparer.Instance.StartsWith(basePath, path, allowFullMatch: false)) {
                 if (!isPackage(path)) {
                     isMissing = true;
                     return false;
