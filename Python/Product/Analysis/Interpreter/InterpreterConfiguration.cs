@@ -16,8 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterConfiguration : IEquatable<InterpreterConfiguration> {
@@ -84,6 +84,14 @@ namespace Microsoft.PythonTools.Interpreter {
                     UIMode |= m;
                 }
             }
+            if (properties.TryGetValue(nameof(SearchPaths), out object o)) {
+                SearchPaths.Clear();
+                if (o is string s) {
+                    SearchPaths.AddRange(s.Split(';'));
+                } else if (o is IEnumerable<string> ss) {
+                    SearchPaths.AddRange(ss);
+                }
+            }
         }
 
         internal void WriteToDictionary(Dictionary<string, object> properties) {
@@ -103,6 +111,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (m.Any()) {
                 properties[nameof(UIMode)] = string.Join("|", m);
             }
+            properties[nameof(SearchPaths)] = SearchPaths.ToArray();
         }
 
         /// <summary>
@@ -144,11 +153,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 // Regular description is sufficient
                 _fullDescription = null;
             } else if (hasVersion) {
-                _fullDescription = "{0} ({1})".FormatUI(_description, Architecture);
+                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1})", _description, Architecture);
             } else if (hasArch) {
-                _fullDescription = "{0} ({1})".FormatUI(_description, Version);
+                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1})", _description, Version);
             } else {
-                _fullDescription = "{0} ({1}, {2})".FormatUI(_description, Version, Architecture);
+                _fullDescription = string.Format(CultureInfo.CurrentUICulture, "{0} ({1}, {2})", _description, Version, Architecture);
             }
         }
 
@@ -194,6 +203,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// New in 2.2
         /// </remarks>
         public InterpreterUIMode UIMode { get; }
+
+        /// <summary>
+        /// The fixed search paths of the interpreter.
+        /// </summary>
+        public List<string> SearchPaths { get; } = new List<string>();
 
         public static bool operator ==(InterpreterConfiguration x, InterpreterConfiguration y)
             => x?.Equals(y) ?? object.ReferenceEquals(y, null);
@@ -245,7 +259,7 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var c in configs) {
                 c._fullDescription = null;
             }
-            foreach (var c in configs.GroupBy(i => i._description ?? "").Where(g => g.Count() > 1).SelectMany()) {
+            foreach (var c in configs.GroupBy(i => i._description ?? "").Where(g => g.Count() > 1).SelectMany(g => g)) {
                 c.SwitchToFullDescription();
             }
         }

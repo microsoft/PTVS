@@ -18,8 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
@@ -95,7 +97,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return functionName;
             }
 
-            string qualName = walker.Name;
+            string qualName = walker.Name.Aggregate((a, n) => string.IsNullOrEmpty(a) ? n : Strings.DebugStackFrameNameInName.FormatUI(a, n));
             if (string.IsNullOrEmpty(qualName)) {
                 return functionName;
             }

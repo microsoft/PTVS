@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var newResult = AnalysisSet.Empty;
             bool anyCustom = false;
             foreach (var newFunc in n) {
-                if (!(newFunc is BuiltinFunctionInfo)) {
+                if (!(newFunc is BuiltinFunctionInfo) && !(newFunc is SpecializedCallable)) {
                     anyCustom = true;
                 }
                 newResult = newResult.Union(newFunc.Call(node, unit, newArgs, keywordArgNames));

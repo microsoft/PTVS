@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public class PackageSpec {
@@ -48,7 +47,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (!string.IsNullOrEmpty(_fullSpec)) {
                     return _fullSpec;
                 }
-                return "{0}{1}".FormatInvariant(Name, Constraint);
+                return $"{Name}{Constraint}";
             }
         }
         public string Name { get; set; }
@@ -61,7 +60,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (ExactVersion.IsEmpty) {
                     return "";
                 }
-                return "=={0}".FormatInvariant(ExactVersion);
+                return $"=={ExactVersion}";
             }
             set { _constraint = value; }
         }

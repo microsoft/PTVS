@@ -145,14 +145,13 @@ namespace TestUtilities.Python {
             if (code != null) {
                 PythonAst ast;
                 errors = new CollectingErrorSink();
-                using (var p = Parser.CreateParser(
+                var p = Parser.CreateParser(
                     new StringReader(code),
                     _analyzer.LanguageVersion,
                     new ParserOptions { BindReferences = true, ErrorSink = errors }
-                )) {
-                    ast = p.ParseFile();
-                    entry.UpdateTree(ast, null);
-                }
+                );
+                ast = p.ParseFile();
+                entry.UpdateTree(ast, null);
                 if (errors.Errors.Any() || errors.Warnings.Any()) {
                     if (AssertOnParseErrors) {
                         var errorMsg = MakeMessage(errors);
@@ -422,7 +421,12 @@ namespace TestUtilities.Python {
         }
 
         public void AssertHasParameters(IPythonProjectEntry module, string expr, int index, params string[] paramNames) {
-            AssertUtil.AreEqual(module.Analysis.GetSignaturesByIndex(expr, index).Single().Parameters.Select(p => p.Name), paramNames);
+            var sigs = module.Analysis.GetSignaturesByIndex(expr, index).ToArray();
+            foreach (var s in sigs) {
+                var parameters = string.Join(", ", s.Parameters.Select(p => $"{p.Name} : {p.Type ?? "(null)"} = {p.DefaultValue ?? "(null)"}"));
+                Trace.WriteLine($"{s.Name}({parameters})");
+            }
+            AssertUtil.AreEqual(sigs.Single().Parameters.Select(p => p.Name), paramNames);
         }
 
         public void AssertIsInstance(string expr) {

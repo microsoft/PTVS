@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
@@ -72,9 +72,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (_ast != node) {
                 throw new InvalidOperationException("walking wrong AST");
             }
-            _scope.PushScope(_members);
 
-            CollectAllClasses((node.Body as SuiteStatement)?.Statements);
+            FirstPassCollectClasses();
+
+            _scope.PushScope(_members);
 
             return base.Walk(node);
         }
@@ -82,11 +83,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public override void PostWalk(PythonAst node) {
             _scope.PopScope();
 
+            base.PostWalk(node);
+        }
+
+        public void Complete() {
             foreach (var walker in _postWalkers) {
                 walker.Walk();
             }
-
-            base.PostWalk(node);
         }
 
         internal LocationInfo GetLoc(ClassDefinition node) {
@@ -229,6 +232,22 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 return false;
             }
 
+            var dec = (node.Decorators?.Decorators).MaybeEnumerate().ToArray();
+            if (dec.OfType<NameExpression>().Any(n => n.Name == "property")) {
+                AddProperty(node);
+                return false;
+            }
+            foreach (var setter in dec.OfType<MemberExpression>().Where(n => n.Name == "setter")) {
+                if (setter.Target is NameExpression src) {
+                    var existingProp = _scope.LookupNameInScopes(src.Name, NameLookupContext.LookupOptions.Local) as AstPythonProperty;
+                    if (existingProp != null) {
+                        // Setter for an existing property, so don't create a function
+                        existingProp.MakeSettable();
+                        return false;
+                    }
+                }
+            }
+
             var existing = _scope.LookupNameInScopes(node.Name, NameLookupContext.LookupOptions.Local) as AstPythonFunction;
 
             if (existing == null) {
@@ -248,6 +267,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return false;
         }
 
+        private void AddProperty(FunctionDefinition node) {
+            var existing = _scope.LookupNameInScopes(node.Name, NameLookupContext.LookupOptions.Local) as AstPythonProperty;
+
+            if (existing == null) {
+                existing = new AstPythonProperty(_ast, node, GetLoc(node));
+                _scope.SetInScope(node.Name, existing);
+            }
+
+            // Treat the rest of the property as a function. "AddOverload" takes the return type
+            // and sets it as the property type.
+            var funcScope = _scope.Clone();
+            if (CreateBuiltinTypes) {
+                funcScope.SuppressBuiltinLookup = true;
+            }
+            var funcWalk = new AstAnalysisFunctionWalker(funcScope, node);
+            _postWalkers.Add(funcWalk);
+            existing.AddOverload(funcWalk.Overload);
+        }
+
         private static string GetDoc(SuiteStatement node) {
             var docExpr = node?.Statements?.FirstOrDefault() as ExpressionStatement;
             var ce = docExpr?.Expression as ConstantExpression;
@@ -265,20 +303,19 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return new AstPythonType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node));
         }
 
-        private void CollectAllClasses(IEnumerable<Statement> stmts) {
-            foreach (var node in stmts.MaybeEnumerate().OfType<ClassDefinition>()) {
-                _scope.SetInScope(node.Name, CreateType(node), false);
+        public void FirstPassCollectClasses() {
+            foreach (var node in (_ast.Body as SuiteStatement).Statements.OfType<ClassDefinition>()) {
+                _members[node.Name] = CreateType(node);
             }
-            foreach (var node in stmts.MaybeEnumerate().OfType<AssignmentStatement>()) {
+            foreach (var node in (_ast.Body as SuiteStatement).Statements.OfType<AssignmentStatement>()) {
                 var rhs = node.Right as NameExpression;
                 if (rhs == null) {
                     continue;
                 }
 
-                var cls = _scope.LookupNameInScopes(rhs.Name, NameLookupContext.LookupOptions.Local) as IPythonType;
-                if (cls != null) {
+                if (_members.TryGetValue(rhs.Name, out var member)) {
                     foreach (var lhs in node.Left.OfType<NameExpression>()) {
-                        _scope.SetInScope(lhs.Name, cls);
+                        _members[lhs.Name] = member;
                     }
                 }
             }

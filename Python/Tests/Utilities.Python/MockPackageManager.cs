@@ -26,6 +26,10 @@ namespace TestUtilities.Python {
 
         public string SearchHelpText => string.Empty;
 
+        public string UniqueKey => "mock";
+
+        public int Priority => 1000;
+
         public string GetInstallCommandDisplayName(string searchQuery) {
             if (string.IsNullOrEmpty(searchQuery)) {
                 return string.Empty;
@@ -99,5 +103,9 @@ namespace TestUtilities.Python {
         public Task<bool> UninstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
             throw new NotImplementedException();
         }
+
+        public void EnableNotifications() { }
+
+        public void DisableNotifications() { }
     }
 }

@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+#if DJANGO_HTML_EDITOR
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +30,7 @@ using Microsoft.PythonTools.Django.TemplateParsing;
 namespace DjangoTests {
     [TestClass]
     public class DjangoTemplateParserTests {
-        #region Filter parser tests
+#region Filter parser tests
 
         [TestMethod, Priority(0)]
         public void FilterRegexTests() {
@@ -100,9 +102,9 @@ namespace DjangoTests {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Block parser tests
+#region Block parser tests
 
         [TestMethod, Priority(0)]
         public void BlockParserTests() {
@@ -524,9 +526,9 @@ namespace DjangoTests {
             _blockValidators[expected.GetType()](expected, got);
         }
 
-        #endregion
+#endregion
 
-        #region Template tokenizer tests
+#region Template tokenizer tests
 
         [TestMethod, Priority(0)]
         public void TestSimpleVariable() {
@@ -771,7 +773,7 @@ namespace DjangoTests {
             }
         }
 
-        #endregion
+#endregion
     }
 
     class TestCompletionContext : IDjangoCompletionContext {
@@ -787,7 +789,7 @@ namespace DjangoTests {
             }
         }
 
-        #region IDjangoCompletionContext Members       
+#region IDjangoCompletionContext Members       
 
         public Dictionary<string, TagInfo> Filters {
             get { return _filters; }
@@ -812,6 +814,8 @@ namespace DjangoTests {
             return new Dictionary<string, PythonMemberType>();
         }
 
-        #endregion
+#endregion
     }
 }
+
+#endif

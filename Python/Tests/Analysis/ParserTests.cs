@@ -39,6 +39,11 @@ namespace AnalysisTests {
             AssertListener.Initialize();
         }
 
+        [TestCleanup]
+        public void TestCleanup() {
+            AssertListener.ThrowUnhandled();
+        }
+
         internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35, PythonLanguageVersion.V36, PythonLanguageVersion.V37 };
         internal static readonly PythonLanguageVersion[] V26AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V26).ToArray();
         internal static readonly PythonLanguageVersion[] V27AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V27).ToArray();
@@ -1083,6 +1088,17 @@ namespace AnalysisTests {
                     )
                 );
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void GroupingRecoveryFailure() {
+            // Align the "pass" keyword on a buffer border to ensure we restore the whitespace
+            ParseString(new string(' ', Tokenizer.DefaultBufferCapacity - 9) + "{\r\n    pass", ErrorSink.Null, PythonLanguageVersion.V36);
+            AssertListener.ThrowUnhandled();
+
+            // Ensure we can restore whitespace that crosses buffer borders
+            ParseString("{\r\n" + new string(' ', Tokenizer.DefaultBufferCapacity * 2 - 9) + "    pass", ErrorSink.Null, PythonLanguageVersion.V36);
+            AssertListener.ThrowUnhandled();
         }
 
         [TestMethod, Priority(0)]
@@ -2866,9 +2882,8 @@ namespace AnalysisTests {
                         break;
                 }
 
-                using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
-                    var ast = parser.ParseFile();
-                }
+                var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink });
+                var ast = parser.ParseFile();
 
                 if (errorSink.Errors.Count != 0) {
                     var fileErrors = errorSink.Errors.ToList();
@@ -2978,6 +2993,13 @@ namespace AnalysisTests {
         private static PythonAst ParseFile(string filename, ErrorSink errorSink, PythonLanguageVersion version, Severity indentationInconsistencySeverity = Severity.Ignore) {
             var src = TestData.GetPath("TestData", "Grammar", filename);
             using (var reader = new StreamReader(src, true)) {
+                var parser = Parser.CreateParser(reader, version, new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationInconsistencySeverity });
+                return parser.ParseFile();
+            }
+        }
+
+        private static PythonAst ParseString(string content, ErrorSink errorSink, PythonLanguageVersion version, Severity indentationInconsistencySeverity = Severity.Ignore) {
+            using (var reader = new StringReader(content)) {
                 var parser = Parser.CreateParser(reader, version, new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationInconsistencySeverity });
                 return parser.ParseFile();
             }

@@ -613,7 +613,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                 var clrType = value.__clrtype__();
 
-                switch (Type.GetTypeCode(value.__clrtype__())) {
+                switch (Type.GetTypeCode(clrType)) {
                     case TypeCode.Boolean: return BuiltinTypeId.Bool;
                     case TypeCode.Int32: return BuiltinTypeId.Int;
                     case TypeCode.String: return BuiltinTypeId.Unicode;
@@ -646,7 +646,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         } else if (clrType == typeof(Bytes)) {
                             return BuiltinTypeId.Bytes;
                         }
-                        break;
+                        return BuiltinTypeId.Type;
                 }
                 return BuiltinTypeId.Unknown;
             }, BuiltinTypeId.Unknown);

@@ -231,19 +231,19 @@ namespace Microsoft.PythonTools.Project {
 
                 if (_active != oldActive) {
                     if (oldActive == null) {
-                        var defaultInterp = InterpreterOptions.DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
+                        var defaultInterp = InterpreterOptions.DefaultInterpreter as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
                         if (defaultInterp != null) {
                             defaultInterp.NewDatabaseAvailable -= OnNewDatabaseAvailable;
                         }
                     } else {
-                        var oldInterpWithDb = oldActive as PythonInterpreterFactoryWithDatabase;
+                        var oldInterpWithDb = oldActive as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
                         if (oldInterpWithDb != null) {
                             oldInterpWithDb.NewDatabaseAvailable -= OnNewDatabaseAvailable;
                         }
                     }
 
                     if (_active != null) {
-                        var newInterpWithDb = _active as PythonInterpreterFactoryWithDatabase;
+                        var newInterpWithDb = _active as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
                         if (newInterpWithDb != null) {
                             newInterpWithDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
                         }
@@ -253,7 +253,7 @@ namespace Microsoft.PythonTools.Project {
                         );
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
-                        var defaultInterp = InterpreterOptions.DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
+                        var defaultInterp = InterpreterOptions.DefaultInterpreter as Interpreter.LegacyDB.PythonInterpreterFactoryWithDatabase;
                         if (defaultInterp != null) {
                             defaultInterp.NewDatabaseAvailable += OnNewDatabaseAvailable;
                         }
@@ -1445,7 +1445,7 @@ namespace Microsoft.PythonTools.Project {
             try {
                 config = GetLaunchConfigurationOrThrow();
             } catch (NoInterpretersException ex) {
-                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                PythonToolsPackage.OpenNoInterpretersHelpPage(Site, ex.HelpPage);
                 return VSConstants.S_OK;
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);
@@ -1532,7 +1532,7 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.InstallRequirementsTxt:
                     case PythonConstants.GenerateRequirementsTxt:
                         factory = GetInterpreterFactory();
-                        if (factory.IsRunnable() && factory.PackageManager != null) {
+                        if (factory.IsRunnable()) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         } else {
                             result |= QueryStatusResult.INVISIBLE;
@@ -1717,7 +1717,9 @@ namespace Microsoft.PythonTools.Project {
 
             // Install into the currently active environment
             TaskDialogButton install = null;
-            if (factory.PackageManager != null) {
+
+            var pm = InterpreterOptions.GetPackageManagers(factory).FirstOrDefault();
+            if (pm != null) {
                 var description = factory.Configuration.Description ?? Strings.CurrentInterpreterDescription;
                 install = new TaskDialogButton(
                     string.Format(Strings.InstallRequirementsIntoCurrentEnv, description),
@@ -2048,7 +2050,8 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
 
-            if (selectedInterpreterFactory?.PackageManager == null) {
+            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault();
+            if (pm == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
                 }
@@ -2060,7 +2063,7 @@ namespace Microsoft.PythonTools.Project {
             if (args != null && args.TryGetValue("p", out name)) {
                 // Don't prompt, just install
                 bool elevated = args.ContainsKey("a");
-                selectedInterpreterFactory.PackageManager.InstallAsync(
+                pm.InstallAsync(
                     PackageSpec.FromArguments(name),
                     new VsPackageManagerUI(Site, elevated),
                     CancellationToken.None
@@ -2090,7 +2093,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private int InstallRequirements(Dictionary<string, string> args, string requirementsPath, IPythonInterpreterFactory selectedInterpreterFactory) {
-            if (selectedInterpreterFactory == null || selectedInterpreterFactory.PackageManager == null) {
+            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault();
+            if (pm == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
                 }
@@ -2109,7 +2113,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            selectedInterpreterFactory.PackageManager.InstallAsync(
+            pm.InstallAsync(
                 PackageSpec.FromArguments(name),
                 new VsPackageManagerUI(Site),
                 CancellationToken.None
@@ -2163,7 +2167,8 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
-            if (selectedInterpreterFactory?.PackageManager == null) {
+            var pm = InterpreterOptions.GetPackageManagers(selectedInterpreterFactory).FirstOrDefault();
+            if (pm == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
                 }
@@ -2171,21 +2176,21 @@ namespace Microsoft.PythonTools.Project {
                 return VSConstants.S_OK;
             }
 
-            GenerateRequirementsTxtAsync(selectedInterpreterFactory)
+            GenerateRequirementsTxtAsync(pm)
                 .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(Site, GetType())
                 .DoNotWait();
             return VSConstants.S_OK;
         }
 
-        private async Task GenerateRequirementsTxtAsync(IPythonInterpreterFactory factory) {
+        private async Task GenerateRequirementsTxtAsync(IPackageManager packageManager) {
             var projectHome = ProjectHome;
             var txt = PathUtils.GetAbsoluteFilePath(projectHome, "requirements.txt");
 
             IList<PackageSpec> items = null;
 
             try {
-                items = await factory.PackageManager.GetInstalledPackagesAsync(CancellationToken.None);
+                items = await packageManager.GetInstalledPackagesAsync(CancellationToken.None);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ex.ReportUnhandledException(Site, GetType(), allowUI: Utilities.IsInAutomationFunction(Site));
                 return;

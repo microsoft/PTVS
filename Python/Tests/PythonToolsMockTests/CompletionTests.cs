@@ -26,7 +26,6 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.Scripting.Hosting;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -54,14 +53,12 @@ namespace PythonToolsMockTests {
         public void OnTestInitialized() {
             MockPythonToolsPackage.SuppressTaskProvider = true;
             GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
-            GlobalInterpreterOptions.SuppressPackageManagers = true;
         }
 
         [TestCleanup]
         public void OnTestCleanup() {
             MockPythonToolsPackage.SuppressTaskProvider = false;
             GlobalInterpreterOptions.SuppressFileSystemWatchers = false;
-            GlobalInterpreterOptions.SuppressPackageManagers = false;
         }
 
         [TestMethod, Priority(0)]

@@ -21,7 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         // paths. Ideally, we'd stop at the first path that's a known
         // search path, except we don't know search paths here.
         private static bool IsPackageCheck(string path) {
-            return ModulePath.IsImportable(PathUtils.GetFileOrDirectoryName(path));
+            return ModulePath.IsImportable(PathUtils.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)));
         }
 
         public static IPythonModule FromStream(
@@ -72,12 +72,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             string moduleFullName
         ) {
             PythonAst ast;
-            using (var parser = Parser.CreateParser(sourceFile, langVersion, new ParserOptions {
+            var parser = Parser.CreateParser(sourceFile, langVersion, new ParserOptions {
                 StubFile = fileName?.EndsWith(".pyi", StringComparison.OrdinalIgnoreCase) ?? false,
                 Verbatim = true
-            })) {
-                ast = parser.ParseFile();
-            }
+            });
+            ast = parser.ParseFile();
 
             return new AstPythonModule(
                 moduleFullName ?? ModulePath.FromFullPath(fileName, isPackage: IsPackageCheck).FullName,
@@ -115,6 +114,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             var walker = new AstAnalysisWalker(interpreter, ast, this, filePath, _members, true, true);
             ast.Walk(walker);
+            walker.Complete();
         }
 
         internal void AddChildModule(string name, IPythonModule module) {
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (interpreter == null || string.IsNullOrEmpty(filePath)) {
                 yield break;
             }
-            var searchPath = PathUtils.GetParent(filePath);
+            var searchPath = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(searchPath)) {
                 yield break;
             }

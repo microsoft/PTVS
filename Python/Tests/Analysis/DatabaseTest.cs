@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -95,7 +96,7 @@ namespace AnalysisTests {
                 Assert.AreSame(ptd2.GetModule("os"), db1.Database.GetModule("os"));
             }
 
-            var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+            var factory = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(new Version(2, 7));
 
             using (var db1 = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "posixpath"))
             using (var db2 = MockCompletionDB.Create(PythonLanguageVersion.V27, "posixpath")) {
@@ -180,7 +181,7 @@ namespace AnalysisTests {
         public async Task GetSearchPaths() {
             Python.AssertInstalled();
 
-            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(Python.InterpreterPath);
+            var paths = await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(Python.InterpreterPath);
             Console.WriteLine("Paths for {0}", Python.InterpreterPath);
             foreach (var path in paths) {
                 Console.WriteLine("{0} {1}", path.Path, path.IsStandardLibrary ? "(stdlib)" : "");
@@ -206,13 +207,13 @@ namespace AnalysisTests {
                 return p1.Path == p2.Path && p1.IsStandardLibrary == p2.IsStandardLibrary;
             });
 
-            var dbPath = TestData.GetTempPath();
-            Assert.IsNull(PythonTypeDatabase.GetCachedDatabaseSearchPaths(dbPath),
+            var dbPath = Path.Combine(TestData.GetTempPath(), "database.path");
+            Assert.IsNull(PythonLibraryPath.GetCachedDatabaseSearchPaths(dbPath),
                 "Should not have found cached paths in an empty directory");
 
-            PythonTypeDatabase.WriteDatabaseSearchPaths(dbPath, paths);
-            Assert.IsTrue(File.Exists(Path.Combine(dbPath, "database.path")));
-            var paths2 = PythonTypeDatabase.GetCachedDatabaseSearchPaths(dbPath);
+            PythonLibraryPath.WriteDatabaseSearchPaths(dbPath, paths);
+            Assert.IsTrue(File.Exists(dbPath));
+            var paths2 = PythonLibraryPath.GetCachedDatabaseSearchPaths(dbPath);
             AssertUtil.ArrayEquals(paths, paths2, (o1, o2) => {
                 PythonLibraryPath p1 = (PythonLibraryPath)o1, p2 = (PythonLibraryPath)o2;
                 return p1.Path == p2.Path && p1.IsStandardLibrary == p2.IsStandardLibrary;
@@ -225,7 +226,7 @@ namespace AnalysisTests {
 
             var db = PythonTypeDatabase.GetDatabaseExpectedModules(
                 Python.Version.ToVersion(),
-                await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(Python.InterpreterPath)
+                await PythonLibraryPath.GetUncachedDatabaseSearchPathsAsync(Python.InterpreterPath)
             ).ToList();
 
             var stdlib = db[0];

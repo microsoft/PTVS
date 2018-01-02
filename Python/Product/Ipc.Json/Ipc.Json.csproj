@@ -54,6 +54,7 @@
     <Compile Include="Connection.cs" />
     <Compile Include="DebugTextWriter.cs" />
     <Compile Include="Event.cs" />
+    <Compile Include="ErrorReceivedEventArgs.cs" />
     <Compile Include="EventReceivedEventArgs.cs" />
     <Compile Include="FailedRequestException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async System.Threading.Tasks.Task RemoveAsync() {
-            var pm = Parent._factory.PackageManager;
+            var pm = Parent._packageManager;
             if (pm == null) {
                 Debug.Fail("Should not be able to remove a package without a package manager");
                 return;

@@ -100,15 +100,15 @@ class Signature(object):
     # They will be used as fallbacks for known protocols
 
     KNOWN_RESTYPES = {
-        "__abs__": "self",
-        "__add__": "self",
-        "__and__": "self",
+        "__abs__": "__T__()",
+        "__add__": "__T__()",
+        "__and__": "__T__()",
         "__annotations__": "{}",
         "__base__": "type",
         "__bases__": "(type,)",
         "__bool__": "False",
         "__call__": "Any",
-        "__ceil__": "self",
+        "__ceil__": "__T__()",
         "__code__": "object()",
         "__contains__": "False",
         "__del__": "None",
@@ -120,14 +120,15 @@ class Signature(object):
         "__eq__": "False",
         "__format__": "''",
         "__float__": "0.0",
-        "__floor__": "self",
+        "__floor__": "__T__()",
         "__floordiv__": "0",
         "__ge__": "False",
-        "__get__": "self",
+        "__get__": "__T__()",
         "__getattribute__": "Any",
         "__getitem__": "Any",
         "__getnewargs__": "()",
         "__getnewargs_ex__": "((), {})",
+        "__getslice__": "__T__()",
         "__globals__": "{}",
         "__gt__": "False",
         "__hash__": "0",
@@ -135,43 +136,42 @@ class Signature(object):
         "__iand__": "None",
         "__imul__": "None",
         "__index__": "0",
-        "__init__": "self",
+        "__init__": "",
         "__init_subclass__": "None",
         "__int__": "0",
-        "__invert__": "self",
+        "__invert__": "__T__()",
         "__ior__": "None",
         "__isub__": "None",
-        "__iter__": "self",
+        "__iter__": "__T__()",
         "__ixor__": "None",
         "__le__": "False",
         "__len__": "0",
         "__length_hint__": "0",
-        "__lshift__": "self",
+        "__lshift__": "__T__()",
         "__lt__": "False",
-        "__mod__": "self",
-        "__mul__": "self",
+        "__mod__": "__T__()",
+        "__mul__": "__T__()",
         "__ne__": "False",
-        "__neg__": "self",
-        "__new__": "cls()",
+        "__neg__": "__T__()",
         "__next__": "Any",
-        "__pos__": "self",
-        "__pow__": "self",
-        "__or__": "self",
-        "__radd__": "self",
-        "__rand__": "self",
+        "__pos__": "__T__()",
+        "__pow__": "__T__()",
+        "__or__": "__T__()",
+        "__radd__": "__T__()",
+        "__rand__": "__T__()",
         "__rdivmod__": "(0, 0)",
-        "__rfloordiv__": "self",
-        "__rlshift__": "self",
-        "__rmod__": "self",
-        "__rmul__": "self",
-        "__ror__": "self",
-        "__round__": "self",
-        "__rpow__": "self",
-        "__rrshift__": "self",
-        "__rshift__": "self",
-        "__rsub__": "self",
-        "__rtruediv__": "self",
-        "__rxor__": "self",
+        "__rfloordiv__": "__T__()",
+        "__rlshift__": "__T__()",
+        "__rmod__": "__T__()",
+        "__rmul__": "__T__()",
+        "__ror__": "__T__()",
+        "__round__": "__T__()",
+        "__rpow__": "__T__()",
+        "__rrshift__": "__T__()",
+        "__rshift__": "__T__()",
+        "__rsub__": "__T__()",
+        "__rtruediv__": "__T__()",
+        "__rxor__": "__T__()",
         "__reduce__": ["''", "()"],
         "__reduce_ex__": ["''", "()"],
         "__repr__": "''",
@@ -181,10 +181,10 @@ class Signature(object):
         "__setstate__": "None",
         "__sizeof__": "0",
         "__str__": "''",
-        "__sub__": "self",
+        "__sub__": "__T__()",
         "__truediv__": "0.0",
-        "__trunc__": "self",
-        "__xor__": "self",
+        "__trunc__": "__T__()",
+        "__xor__": "__T__()",
         "__subclasscheck__": "False",
         "__subclasshook__": "False",
     }
@@ -201,7 +201,6 @@ class Signature(object):
         "__init_subclass__": "(cls)",
         "__instancecheck__": "(self, instance)",
         "__length_hint__": "(self)",
-        "__new__": "(cls, *args, **kwargs)",
         "__prepare__": "(cls, name, bases, **kwds)",
         "__round__": "(self, ndigits=0)",
         "__reduce__": "(self)",
@@ -251,8 +250,8 @@ class Signature(object):
             # Disable fromsignature() because it doesn't work as well as argspec
             #self._init_argspec_fromsignature(self._defaults) or
             self._init_argspec_fromargspec(self._defaults) or
-            self._init_argspec_fromdocstring(self._defaults) or
             self._init_argspec_fromknown(self._defaults, scope_alias) or
+            self._init_argspec_fromdocstring(self._defaults) or
             (self.name + "(" + ", ".join(self._defaults) + ")")
         )
         self.restype = (
@@ -260,6 +259,12 @@ class Signature(object):
             self._init_restype_fromknown(scope_alias) or
             'pass'
         )
+
+        if scope:
+            self.restype = self.restype.replace('__T__', scope)
+
+        if self.restype in ('return Any', 'return Unknown'):
+            self.restype = 'pass'
 
     def __str__(self):
         return self.fullsig
@@ -352,8 +357,17 @@ class Signature(object):
 
         call = self._parse_funcdef(doc, allow_name_mismatch)
         if not call:
+            # Remove optional parameter marks
             doc = re.sub(r'[\[\]]', '', doc)
             call = self._parse_funcdef(doc, allow_name_mismatch)
+        if not call:
+            # Replace "X.y(" with y(self : X,"
+            doc2 = re.sub(r'^(\w+)\.(\w+)\(', r'\2(self : \1, ', doc)
+            call = self._parse_funcdef(doc2, allow_name_mismatch)
+        if not call:
+            # Replace "X.y(" with y(self,"
+            doc2 = re.sub(r'^(\w+)\.(\w+)\(', r'\2(self, ', doc)
+            call = self._parse_funcdef(doc2, allow_name_mismatch)
         if not call:
             doc = re.sub(r'\=.+?([,\)])', r'\1', doc)
             call = self._parse_funcdef(doc, allow_name_mismatch)
@@ -452,6 +466,9 @@ class Signature(object):
                 return '()'
             return '(' + ', '.join(elts) + ')'
 
+        def walk_Dict(self, node):
+            return '{}'
+
         def walk_BinOp(self, node):
             v1 = self.walk(node.left)
             op = self.walk(node.op)
@@ -523,7 +540,7 @@ class Signature(object):
 class MemberInfo(object):
     NO_VALUE = object()
 
-    def __init__(self, name, value, literal=None, scope=None, module=None, alias=None, module_doc=None):
+    def __init__(self, name, value, literal=None, scope=None, module=None, alias=None, module_doc=None, scope_alias=None):
         self.name = name
         self.value = value
         self.literal = literal
@@ -535,6 +552,7 @@ class MemberInfo(object):
         self.bases = ()
         self.signature = None
         self.documentation = getattr(value, '__doc__', None)
+        self.alias = alias
         if not isinstance(self.documentation, str):
             self.documentation = None
 
@@ -570,10 +588,10 @@ class MemberInfo(object):
                     dec += '@staticmethod',
                 elif value_type in CLASSMETHOD_TYPES:
                     dec += '@classmethod',
-            self.signature = Signature(name, value, scope, scope_alias=alias, decorators=dec, module_doc=module_doc)
+            self.signature = Signature(name, value, scope, scope_alias=scope_alias, decorators=dec, module_doc=module_doc)
         elif value is not None:
             if value_type in PROPERTY_TYPES:
-                self.signature = Signature(name, value, scope, scope_alias=alias)
+                self.signature = Signature(name, value, scope, scope_alias=scope_alias)
             if value_type not in SKIP_TYPENAME_FOR_TYPES:
                 self.need_imports, self.type_name = self._get_typename(value_type, module)
             if isinstance(value, float) and repr(value) == 'nan':
@@ -644,7 +662,10 @@ class MemberInfo(object):
         yield 'def ' + str(self.signature) + ':'
         if self.documentation:
             yield '    ' + repr(self.documentation)
-        yield '    pass'
+        if self.signature.restype:
+            yield '    ' + self.signature.restype
+        else:
+            yield '    pass'
         yield ''
 
     def as_str(self, indent=''):
@@ -677,6 +698,7 @@ CLASS_MEMBER_SUBSTITUTE = {
     '__mro__': MemberInfo('__mro__', ()),
     '__dict__': MemberInfo('__dict__', {}),
     '__doc__': None,
+    '__new__': None,
 }
 
 class ScrapeState(object):
@@ -763,7 +785,7 @@ class ScrapeState(object):
             if self._should_collect_members(mi):
                 substitutes = dict(CLASS_MEMBER_SUBSTITUTE)
                 substitutes['__class__'] = MemberInfo('__class__', None, literal=mi.type_name)
-                self._collect_members(mi.value, mi.members, substitutes, mi.scope_name)
+                self._collect_members(mi.value, mi.members, substitutes, mi)
 
                 if mi.scope_name != mi.type_name:
                     # When the scope and type names are different, we have a static
@@ -773,14 +795,22 @@ class ScrapeState(object):
                         if mi2.signature:
                             mi2.signature.decorators += '@staticmethod',
 
-    def _collect_members(self, mod, members, substitutes, scope):
+    def _collect_members(self, mod, members, substitutes, outer_member):
         '''Fills the members attribute with a dictionary containing
         all members from the module.'''
         if not mod:
             raise RuntimeError("failed to import module")
         if mod is MemberInfo.NO_VALUE:
             return
-        
+
+        existing_names = set(m.name for m in members)
+
+        if outer_member:
+            scope = outer_member.scope_name
+            scope_alias = outer_member.alias
+        else:
+            scope, scope_alias = None, None
+
         mod_scope = (self.module_name + '.' + scope) if scope else self.module_name
         mod_doc = getattr(mod, '__doc__', None)
         mro = (getattr(mod, '__mro__', None) or ())[1:]
@@ -802,6 +832,9 @@ class ScrapeState(object):
             except LookupError:
                 pass
 
+            if name in existing_names:
+                continue
+
             try:
                 value = getattr(mod, name)
             except AttributeError:
@@ -813,7 +846,7 @@ class ScrapeState(object):
                     continue
                 if self._mro_contains(mro, name, value):
                     continue
-                members.append(MemberInfo(name, value, scope=scope, module=self.module_name, module_doc=mod_doc))
+                members.append(MemberInfo(name, value, scope=scope, module=self.module_name, module_doc=mod_doc, scope_alias=scope_alias))
 
     def _should_add_value(self, value):
         try:
@@ -869,194 +902,197 @@ class ScrapeState(object):
                 raise
 
 def add_builtin_objects(state):
-    T = "__Type(self)()"
     Signature.KNOWN_RESTYPES.update({
-        "__Type.__call__": "cls()",
-        "__Property.__delete__": "None",
-        "__Float.__getformat__": "''",
-        "__Type.__instancecheck__": "__Bool()",
-        "__Tuple.__iter__": "__TupleIterator()",
-        "__List.__iter__": "__ListIterator()",
-        "__Dict.__iter__": "__DictKeys()",
-        "__Set.__iter__": "__SetIterator()",
-        "__FrozenSet.__iter__": "__SetIterator()",
-        "__Bytes.__iter__": "__BytesIterator()",
-        "__Unicode.__iter__": "__UnicodeIterator()",
-        "__BytesIterator.__next__": "0",
-        "__UnicodeIterator.__next__": "__Unicode()",
-        "__Type.__prepare__": "None",
-        "__List.__reversed__": "__ListIterator()",
-        "__Float.__setformat__": "None",
-        "__Type.__subclasses__": "(cls,)",
-        "__truediv__": "Float()",
-        "__Type.__subclasscheck__": "__Bool()",
-        "__subclasshook__": "__Bool()",
-        "__Set.add": "None",
-        "__List.append": "None",
-        "__Float.as_integer_ratio": "(0, 0)",
-        "__Int.bit_length": "0",
-        "capitalize": T,
-        "casefold": T,
-        "center": T,
+        "__Type__.__call__": "cls()",
+        "__Property__.__delete__": "None",
+        "__Float__.__getformat__": "''",
+        "__Bytes__.__getitem__": "__T__()",
+        "__Unicode__.__getitem__": "__T__()",
+        "__Type__.__instancecheck__": "False",
+        "__Tuple__.__iter__": "__TupleIterator__()",
+        "__List__.__iter__": "__ListIterator__()",
+        "__Dict__.__iter__": "__DictKeys__()",
+        "__Set__.__iter__": "__SetIterator__()",
+        "__FrozenSet__.__iter__": "__SetIterator__()",
+        "__Bytes__.__iter__": "__BytesIterator__()",
+        "__Unicode__.__iter__": "__UnicodeIterator__()",
+        "__BytesIterator__.__next__": "0",
+        "__UnicodeIterator__.__next__": "__Unicode__()",
+        "__Type__.__prepare__": "None",
+        "__List__.__reversed__": "__ListIterator__()",
+        "__Float__.__setformat__": "None",
+        "__Type__.__subclasses__": "(cls,)",
+        "__truediv__": "__Float__()",
+        "__Type__.__subclasscheck__": "False",
+        "__subclasshook__": "False",
+        "__Set__.add": "None",
+        "__List__.append": "None",
+        "__Float__.as_integer_ratio": "(0, 0)",
+        "__Int__.bit_length": "0",
+        "capitalize": "__T__()",
+        "casefold": "__T__()",
+        "center": "__T__()",
         "clear": "None",
-        "__Generator.close": "None",
-        "conjugate": "__Complex()",
-        "copy": T,
+        "__Generator__.close": "None",
+        "conjugate": "__Complex__()",
+        "copy": "__T__()",
         "count": "0",
-        "__Bytes.decode": "''",
-        "__Property.deleter": "func",
-        "__Set.difference": T,
-        "__FrozenSet.difference": T,
-        "__Set.difference_update": "None",
-        "__Set.discard": "None",
-        "__Bytes.encode": "b''",
-        "__Unicode.encode": "b''",
-        "endswith": "__Bool()",
-        "expandtabs": T,
-        "__List.extend": "None",
+        "__Bytes__.decode": "''",
+        "__Property__.deleter": "func",
+        "__Set__.difference": "__T__()",
+        "__FrozenSet__.difference": "__T__()",
+        "__Set__.difference_update": "None",
+        "__Set__.discard": "None",
+        "__Bytes__.encode": "b''",
+        "__Unicode__.encode": "b''",
+        "endswith": "False",
+        "expandtabs": "__T__()",
+        "__List__.extend": "None",
         "find": "0",
-        "__Unicode.format": T,
-        "__Unicode.format_map": T,
-        "__Bool.from_bytes": "__Bool()",
-        "__Int.from_bytes": "0",
-        "__Long.from_bytes": "__Long()",
-        "__Float.fromhex": "0.0",
-        "__Bytes.fromhex": "b''",
-        "__Dict.fromkeys": "{}",
-        "__Dict.get": "self[0]",
-        "__Property.getter": "func",
+        "__Unicode__.format": "__T__()",
+        "__Unicode__.format_map": "__T__()",
+        "__Bool__.from_bytes": "False",
+        "__Int__.from_bytes": "0",
+        "__Long__.from_bytes": "__Long__()",
+        "__Float__.fromhex": "0.0",
+        "__Bytes__.fromhex": "b''",
+        "__Dict__.fromkeys": "{}",
+        "__Dict__.get": "self[0]",
+        "__Property__.getter": "func",
         "hex": "''",
         "index": "0",
-        "__List.insert": "None",
-        "__Set.intersection": T,
-        "__FrozenSet.intersection": T,
-        "__Set.intersection_update": "None",
-        "isalnum": "__Bool()",
-        "isalpha": "__Bool()",
-        "isdecimal": "__Bool()",
-        "isdigit": "__Bool()",
-        "islower": "__Bool()",
-        "isidentifier": "__Bool()",
-        "isnumeric": "__Bool()",
-        "isprintable": "__Bool()",
-        "isspace": "__Bool()",
-        "istitle": "__Bool()",
-        "isupper": "__Bool()",
-        "__Float.is_integer": "__Bool()",
-        "__Set.isdisjoint": "__Bool()",
-        "__FrozenSet.isdisjoint": "__Bool()",
-        "__DictKeys.isdisjoint": "__Bool()",
-        "__DictItems.isdisjoint": "__Bool()",
-        "__Set.issubset": "__Bool()",
-        "__FrozenSet.issubset": "__Bool()",
-        "__Set.issuperset": "__Bool()",
-        "__FrozenSet.issuperset": "__Bool()",
-        "__Dict.items": "__DictItems()",
-        "__Bytes.join": "b''",
-        "__Unicode.join": "''",
-        "__Dict.keys": "__DictKeys()",
-        "lower": T,
-        "ljust": T,
-        "lstrip": T,
-        "__Bytes.maketrans": "b''",
-        "__Unicode.maketrans": "{}",
-        "__Type.mro": "[__Type()]",
-        "partition": "(__Type(self)(), __Type(self)(), __Type(self)())",
-        "__List.pop": "self[0]",
-        "__Dict.pop": "self.keys()[0]",
-        "__Set.pop": "Any",
-        "__Dict.popitem": "self.items()[0]",
+        "__List__.insert": "None",
+        "__Set__.intersection": "__T__()",
+        "__FrozenSet__.intersection": "__T__()",
+        "__Set__.intersection_update": "None",
+        "isalnum": "False",
+        "isalpha": "False",
+        "isdecimal": "False",
+        "isdigit": "False",
+        "islower": "False",
+        "isidentifier": "False",
+        "isnumeric": "False",
+        "isprintable": "False",
+        "isspace": "False",
+        "istitle": "False",
+        "isupper": "False",
+        "__Float__.is_integer": "False",
+        "__Set__.isdisjoint": "False",
+        "__FrozenSet__.isdisjoint": "False",
+        "__DictKeys__.isdisjoint": "False",
+        "__DictItems__.isdisjoint": "False",
+        "__Set__.issubset": "False",
+        "__FrozenSet__.issubset": "False",
+        "__Set__.issuperset": "False",
+        "__FrozenSet__.issuperset": "False",
+        "__Dict__.items": "__DictItems__()",
+        "__Bytes__.join": "b''",
+        "__Unicode__.join": "''",
+        "__Dict__.keys": "__DictKeys__()",
+        "lower": "__T__()",
+        "ljust": "__T__()",
+        "lstrip": "__T__()",
+        "__Bytes__.maketrans": "b''",
+        "__Unicode__.maketrans": "{}",
+        "__Type__.mro": "[__Type__()]",
+        "partition": "(__T__(), __T__(), __T__())",
+        "__List__.pop": "self[0]",
+        "__Dict__.pop": "self.keys()[0]",
+        "__Set__.pop": "Any",
+        "__Dict__.popitem": "self.items()[0]",
         "remove": "None",
-        "replace": T,
+        "replace": "__T__()",
         "rfind": "0",
-        "__List.reverse": "None",
+        "__List__.reverse": "None",
         "rindex": "0",
-        "rjust": T,
-        "rpartition": "(__Type(self)(), __Type(self)(), __Type(self)())",
-        "rsplit": "[__Type(self)()]",
-        "rstrip": T,
-        "__Generator.send": "self.__next__()",
-        "__Dict.setdefault": "self[0]",
-        "__Property.setter": "func",
-        "__List.sort": "None",
-        "split": "[__Type(self)()]",
+        "rjust": "__T__()",
+        "rpartition": "(__T__(), __T__(), __T__())",
+        "rsplit": "[__T__()]",
+        "rstrip": "__T__()",
+        "__Generator__.send": "self.__next__()",
+        "__Dict__.setdefault": "self[0]",
+        "__Property__.setter": "func",
+        "__List__.sort": "None",
+        "split": "[__T__()]",
         "splitlines": "[self()]",
-        "startswith": "__Bool()",
-        "strip": T,
-        "swapcase": T,
-        "__Set.symmetric_difference": T,
-        "__FrozenSet.symmetric_difference": T,
-        "__Set.symmetric_difference_update": "None",
-        "__Bytes.translate": T,
-        "__Unicode.translate": T,
-        "__Generator.throw": "None",
-        "title": T,
+        "startswith": "False",
+        "strip": "__T__()",
+        "swapcase": "__T__()",
+        "__Set__.symmetric_difference": "__T__()",
+        "__FrozenSet__.symmetric_difference": "__T__()",
+        "__Set__.symmetric_difference_update": "None",
+        "__Bytes__.translate": "__T__()",
+        "__Unicode__.translate": "__T__()",
+        "__Generator__.throw": "None",
+        "title": "__T__()",
         "to_bytes": "b''",
-        "__Set.union": T,
-        "__FrozenSet.union": T,
-        "__Dict.update": "None",
-        "__Set.update": "None",
-        "upper": T,
-        "__Dict.values": "__DictValues()",
-        "zfill": T,
+        "__Set__.union": "__T__()",
+        "__FrozenSet__.union": "__T__()",
+        "__Dict__.update": "None",
+        "__Set__.update": "None",
+        "upper": "__T__()",
+        "__Dict__.values": "__DictValues__()",
+        "zfill": "__T__()",
     })
 
     Signature.KNOWN_ARGSPECS.update({
-        "__Type.__call__": "(cls, *args, **kwargs)",
-        "__Int.__ceil__": "(self)",
-        "__Int.__floor__": "(self)",
-        "__Float.__getformat__": "(typestr)",
-        "__Dict.__getitem__": "(self, key)",
-        "__Type.__instancecheck__": "(self, instance)",
-        "__Bool.__init__": "(self, x)",
-        "__Int.__init__": "(self, x=0)",
-        "__Type.__prepare__": "(cls, name, bases, **kwds)",
-        "__Int.__round__": "(self, ndigits=0)",
-        "__Float.__round__": "(self, ndigits=0)",
-        "__List.__reversed__": "(self)",
-        "__Float.__setformat__": "(typestr, fmt)",
-        "__Dict.__setitem__": "(self, key, value)",
-        "__Set.add": "(self, value)",
-        "__List.append": "(self, value)",
-        "__Float.as_integer_ratio": "(self)",
-        "__Int.bit_length": "(self)",
+        "__Type__.__call__": "(cls, *args, **kwargs)",
+        "__Int__.__ceil__": "(self)",
+        "__Int__.__floor__": "(self)",
+        "__Float__.__getformat__": "(typestr)",
+        "__Dict__.__getitem__": "(self, key)",
+        "__Type__.__instancecheck__": "(self, instance)",
+        "__Bool__.__init__": "(self, x)",
+        "__Int__.__init__": "(self, x=0)",
+        "__List__.__init__": "(self, iterable)",
+        "__Tuple__.__init__": "(self, iterable)",
+        "__Type__.__prepare__": "(cls, name, bases, **kwds)",
+        "__Int__.__round__": "(self, ndigits=0)",
+        "__Float__.__round__": "(self, ndigits=0)",
+        "__List__.__reversed__": "(self)",
+        "__Float__.__setformat__": "(typestr, fmt)",
+        "__Dict__.__setitem__": "(self, key, value)",
+        "__Set__.add": "(self, value)",
+        "__List__.append": "(self, value)",
+        "__Float__.as_integer_ratio": "(self)",
+        "__Int__.bit_length": "(self)",
         "capitalize": "(self)",
         "casefold": "(self)",
-        "__Bytes.center": "(self, width, fillbyte=b' ')",
-        "__Unicode.center": "(self, width, fillchar=' ')",
+        "__Bytes__.center": "(self, width, fillbyte=b' ')",
+        "__Unicode__.center": "(self, width, fillchar=' ')",
         "clear": "(self)",
-        "__Generator.close": "(self)",
+        "__Generator__.close": "(self)",
         "conjugate": "(self)",
         "copy": "(self)",
         "count": "(self, x)",
-        "__Bytes.count": "(self, sub, start=0, end=-1)",
-        "__Unicode.count": "(self, sub, start=0, end=-1)",
-        "__Bytes.decode": "(self, encoding='utf-8', errors='strict')",
-        "__Property.deleter": "(self, func)",
-        "__Set.difference": "(self, other)",
-        "__FrozenSet.difference": "(self, other)",
-        "__Set.difference_update": "(self, *others)",
-        "__Set.discard": "(self, elem)",
-        "__Unicode.encode": "(self, encoding='utf-8', errors='strict')",
+        "__Bytes__.count": "(self, sub, start=0, end=-1)",
+        "__Unicode__.count": "(self, sub, start=0, end=-1)",
+        "__Bytes__.decode": "(self, encoding='utf-8', errors='strict')",
+        "__Property__.deleter": "(self, func)",
+        "__Set__.difference": "(self, other)",
+        "__FrozenSet__.difference": "(self, other)",
+        "__Set__.difference_update": "(self, *others)",
+        "__Set__.discard": "(self, elem)",
+        "__Unicode__.encode": "(self, encoding='utf-8', errors='strict')",
         "endswith": "(self, suffix, start=0, end=-1)",
         "expandtabs": "(self, tabsize=8)",
-        "__List.extend": "(self, iterable)",
+        "__List__.extend": "(self, iterable)",
         "find": "(self, sub, start=0, end=-1)",
-        "__Unicode.format": "(self, *args, **kwargs)",
-        "__Unicode.format_map": "(self, mapping)",
-        "__Bool.from_bytes": "(bytes, byteorder, *, signed=False)",
-        "__Int.from_bytes": "(bytes, byteorder, *, signed=False)",
-        "__Float.fromhex": "(string)",
-        "__Dict.get": "(self, key, d=Unknown())",
-        "__Property.getter": "(self, func)",
+        "__Unicode__.format": "(self, *args, **kwargs)",
+        "__Unicode__.format_map": "(self, mapping)",
+        "__Bool__.from_bytes": "(bytes, byteorder, *, signed=False)",
+        "__Int__.from_bytes": "(bytes, byteorder, *, signed=False)",
+        "__Float__.fromhex": "(string)",
+        "__Dict__.get": "(self, key, d=Unknown())",
+        "__Property__.getter": "(self, func)",
         "hex": "(self)",
-        "__List.insert": "(self, index, value)",
+        "__List__.insert": "(self, index, value)",
         "index": "(self, v)",
-        "__Bytes.index": "(self, sub, start=0, end=-1)",
-        "__Unicode.index": "(self, sub, start=0, end=-1)",
-        "__Set.intersection": "(self, other)",
-        "__FrozenSet.intersection": "(self, other)",
-        "__Set.intersection_update": "(self, *others)",
+        "__Bytes__.index": "(self, sub, start=0, end=-1)",
+        "__Unicode__.index": "(self, sub, start=0, end=-1)",
+        "__Set__.intersection": "(self, other)",
+        "__FrozenSet__.intersection": "(self, other)",
+        "__Set__.intersection_update": "(self, *others)",
         "isalnum": "(self)",
         "isalpha": "(self)",
         "isdecimal": "(self)",
@@ -1068,82 +1104,85 @@ def add_builtin_objects(state):
         "isspace": "(self)",
         "istitle": "(self)",
         "isupper": "(self)",
-        "__Float.is_integer": "(self)",
-        "__Set.isdisjoint": "(self, other)",
-        "__FrozenSet.isdisjoint": "(self, other)",
-        "__DictKeys.isdisjoint": "(self, other)",
-        "__DictItems.isdisjoint": "(self, other)",
-        "__Set.issubset": "(self, other)",
-        "__FrozenSet.issubset": "(self, other)",
-        "__Set.issuperset": "(self, other)",
-        "__FrozenSet.issuperset": "(self, other)",
-        "__Dict.items": "(self)",
-        "__Bytes.join": "(self, iterable)",
-        "__Unicode.join": "(self, iterable)",
-        "__Dict.keys": "(self)",
+        "__Float__.is_integer": "(self)",
+        "__Set__.isdisjoint": "(self, other)",
+        "__FrozenSet__.isdisjoint": "(self, other)",
+        "__DictKeys__.isdisjoint": "(self, other)",
+        "__DictItems__.isdisjoint": "(self, other)",
+        "__Set__.issubset": "(self, other)",
+        "__FrozenSet__.issubset": "(self, other)",
+        "__Set__.issuperset": "(self, other)",
+        "__FrozenSet__.issuperset": "(self, other)",
+        "__Dict__.items": "(self)",
+        "__Bytes__.join": "(self, iterable)",
+        "__Unicode__.join": "(self, iterable)",
+        "__Dict__.keys": "(self)",
         "lower": "(self)",
-        "__Bytes.ljust": "(self, width, fillbyte=b' ')",
-        "__Unicode.ljust": "(self, width, fillchar=' ')",
+        "__Bytes__.ljust": "(self, width, fillbyte=b' ')",
+        "__Unicode__.ljust": "(self, width, fillchar=' ')",
         "lstrip": "(self, chars)",
-        "__Bytes.maketrans": "(from_, to)",
-        "__Unicode.maketrans": "(x, y, z)",
-        "__Type.mro": "(cls)",
-        "__Bytes.partition": "(self, sep)",
-        "__Unicode.partition": "(self, sep)",
-        "__List.pop": "(self, index=-1)",
-        "__Dict.pop": "(self, k, d=Unknown())",
-        "__Set.pop": "(self)",
-        "__Dict.popitem": "(self, k, d=Unknown())",
-        "__List.remove": "(self, value)",
-        "__Set.remove": "(self, elem)",
+        "__Bytes__.maketrans": "(from_, to)",
+        "__Unicode__.maketrans": "(x, y, z)",
+        "__Type__.mro": "(cls)",
+        "__Bytes__.partition": "(self, sep)",
+        "__Unicode__.partition": "(self, sep)",
+        "__List__.pop": "(self, index=-1)",
+        "__Dict__.pop": "(self, k, d=Unknown())",
+        "__Set__.pop": "(self)",
+        "__Dict__.popitem": "(self, k, d=Unknown())",
+        "__List__.remove": "(self, value)",
+        "__Set__.remove": "(self, elem)",
         "replace": "(self, old, new, count=-1)",
-        "__List.reverse": "(self)",
+        "__List__.reverse": "(self)",
         "rfind": "(self, sub, start=0, end=-1)",
         "rindex": "(self, sub, start=0, end=-1)",
-        "__Bytes.rjust": "(self, width, fillbyte=b' ')",
-        "__Unicode.rjust": "(self, width, fillchar=' ')",
-        "__Bytes.rpartition": "(self, sep)",
-        "__Unicode.rpartition": "(self, sep)",
+        "__Bytes__.rjust": "(self, width, fillbyte=b' ')",
+        "__Unicode__.rjust": "(self, width, fillchar=' ')",
+        "__Bytes__.rpartition": "(self, sep)",
+        "__Unicode__.rpartition": "(self, sep)",
         "rsplit": "(self, sep=None, maxsplit=-1)",
         "rstrip": "(self, chars=None)",
-        "__Generator.send": "(self, value)",
-        "__Dict.setdefault": "(self, k, d)",
-        "__Property.setter": "(self, func)",
-        "__List.sort": "(self)",
+        "__Generator__.send": "(self, value)",
+        "__Dict__.setdefault": "(self, k, d)",
+        "__Property__.setter": "(self, func)",
+        "__List__.sort": "(self)",
         "split": "(self, sep=None, maxsplit=-1)",
         "splitlines": "(self, keepends=False)",
         "strip": "(self, chars=None)",
         "startswith": "(self, prefix, start=0, end=-1)",
         "swapcase": "(self)",
-        "__Set.symmetric_difference": "(self, other)",
-        "__FrozenSet.symmetric_difference": "(self, other)",
-        "__Set.symmetric_difference_update": "(self, *others)",
-        "__Generator.throw": "(self, type, value=None, traceback=None)",
+        "__Set__.symmetric_difference": "(self, other)",
+        "__FrozenSet__.symmetric_difference": "(self, other)",
+        "__Set__.symmetric_difference_update": "(self, *others)",
+        "__Generator__.throw": "(self, type, value=None, traceback=None)",
         "title": "(self)",
-        "__Int.to_bytes": "(bytes, byteorder, *, signed=False)",
-        "__Bytes.translate": "(self, table, delete=b'')",
-        "__Unicode.translate": "(self, table)",
-        "__Set.union": "(self, *others)",
-        "__FrozenSet.union": "(self, *others)",
-        "__Dict.update": "(self, d)",
-        "__Set.update": "(self, *others)",
+        "__Int__.to_bytes": "(bytes, byteorder, *, signed=False)",
+        "__Bytes__.translate": "(self, table, delete=b'')",
+        "__Unicode__.translate": "(self, table)",
+        "__Set__.union": "(self, *others)",
+        "__FrozenSet__.union": "(self, *others)",
+        "__Dict__.update": "(self, d)",
+        "__Set__.update": "(self, *others)",
         "upper": "(self)",
-        "__Dict.values": "(self)",
+        "__Dict__.values": "(self)",
         "zfill": "(self, width)",
     })
 
     if sys.version[0] == '2':
         Signature.KNOWN_RESTYPES.update({
-            "__BytesIterator.__next__": None,
-            "__BytesIterator.next": "b''",
-            "__UnicodeIterator.__next__": None,
-            "__UnicodeIterator.next": "u''",
-            "__Generator.send": "self.next()",
+            "__BytesIterator__.__next__": None,
+            "__BytesIterator__.next": "b''",
+            "__UnicodeIterator__.__next__": None,
+            "__UnicodeIterator__.next": "u''",
+            "__Generator__.send": "self.next()",
+            "__Function__.func_closure": "()",
+            "__Function__.func_doc": "b''",
+            "__Function__.func_name": "b''",
         })
 
         Signature.KNOWN_ARGSPECS.update({
-            "__BytesIterator.next": "self",
-            "__UnicodeIterator.next": "self",
+            "__BytesIterator__.next": "(self)",
+            "__UnicodeIterator__.next": "(self)",
         })
 
 
@@ -1163,72 +1202,72 @@ def add_builtin_objects(state):
         state.members.append(mi)
         state.members.append(MemberInfo(alias, None, literal=mi.name))
 
-    add_simple('__Unknown', '<unknown type>', MemberInfo("__name__", None, literal='"<unknown type>"'))
-    add_simple('__NoneType', 'the type of the None object', MemberInfo.NO_VALUE)
+    add_simple('__Unknown__', '<unknown>', MemberInfo("__name__", None, literal='"<unknown>"'))
+    add_simple('__NoneType__', 'the type of the None object', MemberInfo.NO_VALUE)
 
     # NoneType and None are explicitly defined to avoid parser errors
     # because of None being a keyword.
-    #add_literal('NoneType', '__NoneType')
-    #add_literal('None', '__NoneType()')
+    #add_literal('NoneType', '__NoneType__')
+    #add_literal('None', '__NoneType__()')
 
-    add_type('__Object', object)
-    add_type('__Type', type)
+    add_type('__Object__', object)
+    add_type('__Type__', type)
     
-    add_type('__Int', int)
+    add_type('__Int__', int)
     if type(bool()) is int:
-        add_literal('__Bool', '__Int')
+        add_literal('__Bool__', '__Int__')
     else:
-        add_type('__Bool', bool)
+        add_type('__Bool__', bool)
 
     try:
         long
     except NameError:
-        add_literal('__Long', '__Int')
+        add_literal('__Long__', '__Int__')
     else:
-        add_type('__Long', long)
+        add_type('__Long__', long)
 
-    add_type("__Float", float)
-    add_type("__Complex", complex)
+    add_type("__Float__", float)
+    add_type("__Complex__", complex)
 
-    add_type("__Tuple", tuple)
-    add_type("__List", list)
-    add_type("__Dict", dict)
-    add_type("__Set", set)
-    add_type("__FrozenSet", frozenset)
+    add_type("__Tuple__", tuple)
+    add_type("__List__", list)
+    add_type("__Dict__", dict)
+    add_type("__Set__", set)
+    add_type("__FrozenSet__", frozenset)
 
     if bytes is not str:
-        add_type("__Bytes", bytes)
-        add_type("__BytesIterator", type(iter(bytes())))
-        add_type("__Unicode", str)
-        add_type("__UnicodeIterator", type(iter(str())))
-        add_literal("__Str", "__Unicode")
-        add_literal("__StrIterator", "__UnicodeIterator")
+        add_type("__Bytes__", bytes)
+        add_type("__BytesIterator__", type(iter(bytes())))
+        add_type("__Unicode__", str)
+        add_type("__UnicodeIterator__", type(iter(str())))
+        add_literal("__Str__", "__Unicode__")
+        add_literal("__StrIterator__", "__UnicodeIterator__")
 
     else:
-        add_type("__Bytes", str)
-        add_type("__BytesIterator", type(iter(str())))
-        add_type("__Unicode", unicode)
-        add_type("__UnicodeIterator", type(iter(unicode())))
-        add_literal("__Str", "__Bytes")
-        add_literal("__StrIterator", "__BytesIterator")
+        add_type("__Bytes__", str)
+        add_type("__BytesIterator__", type(iter(str())))
+        add_type("__Unicode__", unicode)
+        add_type("__UnicodeIterator__", type(iter(unicode())))
+        add_literal("__Str__", "__Bytes__")
+        add_literal("__StrIterator__", "__BytesIterator__")
 
-    add_type("__Module", type(inspect))
-    add_type("__Function", type(add_simple))
+    add_type("__Module__", type(inspect))
+    add_type("__Function__", type(add_simple))
 
-    add_type("__BuiltinMethodDescriptor", type(object.__hash__))
-    add_type("__BuiltinFunction", type(abs))
-    add_type("__Generator", type((_ for _ in [])))
-    add_type("__Property", property)
-    add_type("__ClassMethod", classmethod)
-    add_type("__StaticMethod", staticmethod)
-    add_type("__Ellipsis", type(Ellipsis))
-    add_type("__TupleIterator", type(iter(())))
-    add_type("__ListIterator", type(iter([])))
-    add_type("__DictKeys", type({}.keys()))
-    add_type("__DictValues", type({}.values()))
-    add_type("__DictItems", type({}.items()))
-    add_type("__SetIterator", type(iter(set())))
-    add_type("__CallableIterator", type(iter((lambda: None), None)))
+    add_type("__BuiltinMethodDescriptor__", type(object.__hash__))
+    add_type("__BuiltinFunction__", type(abs))
+    add_type("__Generator__", type((_ for _ in [])))
+    add_type("__Property__", property)
+    add_type("__ClassMethod__", classmethod)
+    add_type("__StaticMethod__", staticmethod)
+    add_type("__Ellipsis__", type(Ellipsis))
+    add_type("__TupleIterator__", type(iter(())))
+    add_type("__ListIterator__", type(iter([])))
+    add_type("__DictKeys__", type({}.keys()))
+    add_type("__DictValues__", type({}.values()))
+    add_type("__DictItems__", type({}.items()))
+    add_type("__SetIterator__", type(iter(set())))
+    add_type("__CallableIterator__", type(iter((lambda: None), None)))
 
     # Also write out the builtin module names here so that we cache them
     try:
@@ -1236,7 +1275,7 @@ def add_builtin_objects(state):
     except AttributeError:
         pass
     else:
-        add_literal('__builtin_module_names', '"' + ','.join(builtin_module_names) + '"')
+        add_literal('__builtin_module_names__', '"' + ','.join(builtin_module_names) + '"')
 
 
 if __name__ == '__main__':

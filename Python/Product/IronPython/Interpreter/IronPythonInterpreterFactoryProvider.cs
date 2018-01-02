@@ -18,10 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Interpreter {
@@ -29,12 +32,24 @@ namespace Microsoft.IronPythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     sealed class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
+        private readonly IServiceProvider _site;
+        private bool _initialized;
         private IPythonInterpreterFactory _interpreter;
         private IPythonInterpreterFactory _interpreterX64;
         private InterpreterConfiguration _config, _configX64;
         const string IronPythonCorePath = "Software\\IronPython";
 
-        public IronPythonInterpreterFactoryProvider() {
+        [ImportingConstructor]
+        public IronPythonInterpreterFactoryProvider([Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null) {
+            _site = site;
+        }
+
+        private void EnsureInitialized() {
+            if (_initialized) {
+                return;
+            }
+
+            _initialized = true;
             DiscoverInterpreterFactories();
             if (_config == null) {
                 StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
@@ -105,6 +120,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IPythonInterpreterProvider Members
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
+            EnsureInitialized();
+
             if (_config != null) {
                 yield return GetInterpreterFactory(_config.Id);
             }
@@ -114,6 +131,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            EnsureInitialized();
+
             if (_config != null) {
                 yield return _config;
             }
@@ -123,6 +142,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            EnsureInitialized();
+
             if (_config != null && id == _config.Id) {
                 EnsureInterpreter();
 
@@ -139,9 +160,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (_interpreterX64 == null) {
                 lock (this) {
                     if (_interpreterX64 == null) {
-                        var fact = new IronPythonInterpreterFactory(_configX64.Architecture);
-                        fact.BeginRefreshIsCurrent();
-                        _interpreterX64 = fact;
+                        var config = GetConfiguration(InterpreterArchitecture.x64);
+                        var opts = GetCreationOptions(_site, config, out var noDb);
+                        _interpreterX64 = noDb ?
+                            (IPythonInterpreterFactory)new IronPythonAstInterpreterFactory(config, opts) :
+                            new IronPythonInterpreterFactory(config, opts);
                     }
                 }
             }
@@ -151,9 +174,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (_interpreter == null) {
                 lock (this) {
                     if (_interpreter == null) {
-                        var fact = new IronPythonInterpreterFactory(_config.Architecture);
-                        fact.BeginRefreshIsCurrent();
-                        _interpreter = fact;
+                        var config = GetConfiguration(InterpreterArchitecture.x86);
+                        var opts = GetCreationOptions(_site, config, out var noDb);
+                        _interpreter = noDb ?
+                            (IPythonInterpreterFactory)new IronPythonAstInterpreterFactory(config, opts) :
+                            new IronPythonInterpreterFactory(config, opts);
                     }
                 }
             }
@@ -161,14 +186,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         private void DiscoverInterpreterFactories() {
             if (_config == null && IronPythonResolver.GetPythonInstallDir() != null) {
-                _config = IronPythonInterpreterFactory.GetConfiguration(InterpreterArchitecture.x86);
+                _config = GetConfiguration(InterpreterArchitecture.x86);
                 if (Environment.Is64BitOperatingSystem) {
-                    _configX64 = IronPythonInterpreterFactory.GetConfiguration(InterpreterArchitecture.x64);
+                    _configX64 = GetConfiguration(InterpreterArchitecture.x64);
                 }
-                var evt = InterpreterFactoriesChanged;
-                if (evt != null) {
-                    evt(this, EventArgs.Empty);
-                }
+                InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -190,5 +212,53 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         #endregion
 
+        internal static string GetInterpreterId(InterpreterArchitecture arch) {
+            if (arch == InterpreterArchitecture.x64) {
+                return "IronPython|2.7-64";
+            } else {
+                return "IronPython|2.7-32";
+            }
+        }
+
+        internal static InterpreterConfiguration GetConfiguration(InterpreterArchitecture arch) {
+            var prefixPath = IronPythonResolver.GetPythonInstallDir();
+            if (string.IsNullOrEmpty(prefixPath)) {
+                return null;
+            }
+
+            // IronPython 2.7.8 changed the executable names for 64-bit vs 32-bit
+            var ipyExe = arch == InterpreterArchitecture.x64 ? "ipy64.exe" : "ipy.exe";
+            var ipywExe = arch == InterpreterArchitecture.x64 ? "ipyw64.exe" : "ipyw.exe";
+            if (File.Exists(Path.Combine(prefixPath, "ipy32.exe"))) {
+                ipyExe = arch == InterpreterArchitecture.x64 ? "ipy.exe" : "ipy32.exe";
+                ipywExe = arch == InterpreterArchitecture.x64 ? "ipyw.exe" : "ipyw32.exe";
+            }
+
+            return new InterpreterConfiguration(
+                GetInterpreterId(arch),
+                string.Format("IronPython 2.7{0: ()}", arch),
+                prefixPath,
+                Path.Combine(prefixPath, ipyExe),
+                Path.Combine(prefixPath, ipywExe),
+                "IRONPYTHONPATH",
+                arch,
+                new Version(2, 7),
+                InterpreterUIMode.SupportsDatabase
+            );
+        }
+
+        internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, InterpreterConfiguration config, out bool noDatabase) {
+            if (ExperimentalOptions.NoDatabaseFactory) {
+                noDatabase = true;
+                return new InterpreterFactoryCreationOptions {
+                    DatabasePath = DatabasePathSelector.CalculateVSLocalDatabasePath(site, config, 1),
+                };
+            } else {
+                noDatabase = false;
+                return new InterpreterFactoryCreationOptions {
+                    DatabasePath = DatabasePathSelector.CalculateGlobalDatabasePath(config, PythonTools.Interpreter.LegacyDB.PythonTypeDatabase.CurrentVersion)
+                };
+            }
+        }
     }
 }

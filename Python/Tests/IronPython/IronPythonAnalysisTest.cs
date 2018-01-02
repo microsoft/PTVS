@@ -54,7 +54,10 @@ namespace IronPythonTests {
             get { return IronPythonModuleContext.DontShowClrInstance;}
         }
 
-        protected override IPythonInterpreterFactory DefaultFactoryV2 => new IronPythonInterpreterFactory(InterpreterArchitecture.x86);
+        private readonly IronPythonInterpreterFactoryProvider _factoryProvider = new IronPythonInterpreterFactoryProvider();
+
+        protected override IPythonInterpreterFactory DefaultFactoryV2 => _factoryProvider.GetInterpreterFactory(IronPythonInterpreterFactoryProvider.GetInterpreterId(InterpreterArchitecture.x64));
+
         protected override IPythonInterpreterFactory DefaultFactoryV3 => null;
 
         protected override PythonAnalysis CreateAnalyzerInternal(IPythonInterpreterFactory factory) {
@@ -487,7 +490,8 @@ from System.Windows.Media import Colors
 
                 xamlEntry.ParseContent(new FileStreamReader(xamlPath), null);
 
-                using (var parser = Parser.CreateParser(new FileStreamReader(pyPath), PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true })) {
+                using (var stream = new FileStreamReader(pyPath)) {
+                    var parser = Parser.CreateParser(stream, PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true });
                     pyEntry.UpdateTree(parser.ParseFile(), null);
                 }
 

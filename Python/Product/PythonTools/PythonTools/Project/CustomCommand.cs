@@ -400,7 +400,8 @@ namespace Microsoft.PythonTools.Project {
             var startInfo = GetStartInfo(project);
 
             var packagesToInstall = new List<string>();
-            var pm = interpFactory.PackageManager;
+            var interpreterOpts = _project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var pm = interpreterOpts?.GetPackageManagers(interpFactory).FirstOrDefault();
             if (pm != null) {
                 foreach (var pkg in startInfo.RequiredPackages) {
                     if (!(await pm.GetInstalledPackageAsync(PackageSpec.FromRequirement(pkg), CancellationToken.None)).IsValid) {

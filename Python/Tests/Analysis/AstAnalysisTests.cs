@@ -313,13 +313,13 @@ R_A3 = R_A1.r_A()");
 
                     interp.ModuleNamesChanged += (s, e) => evt.Set();
 
-                    fact.SetCurrentSearchPaths(new[] { new PythonLibraryPath(TestData.GetPath("TestData\\AstAnalysis"), false, null) });
+                    fact.SetCurrentSearchPaths(new[] { TestData.GetPath("TestData\\AstAnalysis") });
                     Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
                     AssertUtil.ContainsAtLeast(interp.GetModuleNames(), "Values");
                     Assert.IsNotNull(interp.ImportModule("Values"), "Module was not available");
 
                     evt.Reset();
-                    fact.SetCurrentSearchPaths(new PythonLibraryPath[0]);
+                    fact.SetCurrentSearchPaths(new string[0]);
                     Assert.IsTrue(evt.WaitOne(1000), "Timeout waiting for paths to update");
                     AssertUtil.DoesntContain(interp.GetModuleNames(), "Values");
                     Assert.IsNull(interp.ImportModule("Values"), "Module was not removed");
@@ -404,10 +404,13 @@ R_A3 = R_A1.r_A()");
 
         [TestMethod, Priority(0)]
         public void ScrapedSpecialFloats() {
-            using (var analysis = CreateAnalysis()) {
+            using (var analysis = CreateAnalysis(PythonPaths.Versions.LastOrDefault(v => v.Version.Is3x()))) {
                 try {
                     var entry = analysis.AddModule("test-module", "import math; inf = math.inf; nan = math.nan");
                     analysis.WaitForAnalysis(CancellationTokens.After15s);
+
+                    var math = analysis.GetValue<AnalysisValue>("math");
+                    Assert.IsNotNull(math);
 
                     var inf = analysis.GetValue<ConstantInfo>("inf");
                     Assert.AreEqual(BuiltinTypeId.Float, inf.TypeId);

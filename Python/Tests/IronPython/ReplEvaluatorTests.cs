@@ -45,6 +45,7 @@ namespace IronPythonTests {
 
         private PythonInteractiveEvaluator Evaluator {
             get {
+                PythonVersion.AssertInstalled();
                 return new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
                     Configuration = new LaunchConfiguration(PythonVersion.Configuration)
                 };
@@ -79,7 +80,7 @@ namespace IronPythonTests {
                     sigs = replEval.GetSignatureDocumentation("Array[int]");
                 }
                 Assert.IsNotNull(sigs, "GetSignatureDocumentation timed out");
-                Assert.AreEqual(sigs.Length, 1);
+                Assert.AreEqual(1, sigs.Length);
                 Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
             }
         }

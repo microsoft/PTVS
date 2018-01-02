@@ -20,8 +20,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -81,13 +82,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         protected virtual List<string> GetScrapeArguments(IPythonInterpreterFactory factory) {
             var args = new List<string> { "-B", "-E" };
 
-            ModulePath mp = AstPythonInterpreterFactory.FindModule(factory, _filePath);
+            ModulePath mp = AstPythonInterpreterFactory.FindModuleAsync(factory, _filePath)
+                .WaitAndUnwrapExceptions();
             if (string.IsNullOrEmpty(mp.FullName)) {
                 return null;
             }
 
-            var sm = PythonToolsInstallPath.TryGetFile("scrape_module.py", GetType().Assembly);
-            if (!File.Exists(sm)) {
+            if (!InstallPath.TryGetFile("scrape_module.py", out string sm)) {
                 return null;
             }
 
@@ -104,6 +105,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         protected virtual void PostWalk(PythonWalker walker) {
+            (walker as AstAnalysisWalker)?.Complete();
         }
 
         protected virtual Stream LoadCachedCode(AstPythonInterpreter interpreter) {
@@ -139,38 +141,34 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     return;
                 }
 
-                using (var p = ProcessOutput.Run(
-                    fact.Configuration.InterpreterPath,
-                    args.ToArray(),
-                    fact.Configuration.PrefixPath,
-                    null,
-                    visible: false,
-                    redirector: null,
-                    outputEncoding: Encoding.UTF8,
-                    errorEncoding: Encoding.UTF8
-                )) {
-                    p.Wait();
-                    if (p.ExitCode == 0) {
-                        var ms = new MemoryStream();
-                        code = ms;
-                        using (var sw = new StreamWriter(ms, Encoding.UTF8, 4096, true)) {
-                            foreach (var line in p.StandardOutputLines) {
-                                sw.WriteLine(line);
-                            }
-                        }
-                        code.Seek(0, SeekOrigin.Begin);
-                    } else {
-                        fact.Log(TraceLevel.Error, "Scrape", p.Arguments);
-                        foreach (var e in p.StandardErrorLines) {
-                            fact.Log(TraceLevel.Error, "Scrape", Name, e);
-                        }
+                var ms = new MemoryStream();
+                code = ms;
 
-                        var err = new List<string> { $"Error scraping {Name}", p.Arguments };
-                        err.AddRange(p.StandardErrorLines);
-                        Debug.Fail(string.Join(Environment.NewLine, err));
-                        ParseErrors = err;
+                using (var sw = new StreamWriter(ms, Encoding.UTF8, 4096, true))
+                using (var proc = new ProcessHelper(
+                    fact.Configuration.InterpreterPath,
+                    args,
+                    fact.Configuration.PrefixPath
+                )) {
+                    proc.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                    proc.OnOutputLine = sw.WriteLine;
+                    proc.OnErrorLine = s => fact.Log(TraceLevel.Error, "Scrape", s);
+
+                    fact.Log(TraceLevel.Info, "Scrape", proc.FileName, proc.Arguments);
+
+                    proc.Start();
+                    var exitCode = proc.Wait(60000);
+                    
+                    if (exitCode == null) {
+                        proc.Kill();
+                        return;
+                    } else if (exitCode != 0) {
+                        fact.Log(TraceLevel.Error, "Scrape", "ExitCode", exitCode);
+                        return;
                     }
                 }
+
+                code?.Seek(0, SeekOrigin.Begin);
             }
 
             if (code == null) {
@@ -180,8 +178,8 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             PythonAst ast;
             using (code) {
                 var sink = new CollectingErrorSink();
-                using (var sr = new StreamReader(code, Encoding.UTF8, true, 4096, true))
-                using (var parser = Parser.CreateParser(sr, fact.GetLanguageVersion(), new ParserOptions { ErrorSink = sink, StubFile = true })) {
+                using (var sr = new StreamReader(code, Encoding.UTF8, true, 4096, true)) {
+                    var parser = Parser.CreateParser(sr, fact.GetLanguageVersion(), new ParserOptions { ErrorSink = sink, StubFile = true });
                     ast = parser.ParseFile();
                 }
 
@@ -201,9 +199,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
 #if DEBUG
-            var cachePath = fact.GetCacheFilePath(_filePath);
-            if (!string.IsNullOrEmpty(cachePath)) {
-                Locations = new[] { new LocationInfo(cachePath, 1, 1) };
+            if (!string.IsNullOrEmpty(_filePath)) {
+                var cachePath = fact.GetCacheFilePath(_filePath);
+                if (!string.IsNullOrEmpty(cachePath)) {
+                    Locations = new[] { new LocationInfo(cachePath, 1, 1) };
+                }
             }
 #endif
 

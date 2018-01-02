@@ -468,18 +468,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 foreach (var keyValue in references) {
                     yield return new SimpleOverloadResult(
-                        FunctionDefinition.Parameters.Select((p, i) => {
-                            var name = MakeParameterName(p);
-                            var defaultValue = GetDefaultValue(ProjectState, p, DeclaringModule.Tree);
-                            var type = keyValue.Key[i];
-                            var refs = keyValue.Value[i];
-                            return new ParameterResult(name, string.Empty, type, false, refs, defaultValue);
-                        }).ToArray(),
+                        FunctionDefinition.Parameters.Select((p, i) => ToParameterResult(p, keyValue.Key[i], keyValue.Value[i], ProjectState, DeclaringModule.Tree)).ToArray(),
                         FunctionDefinition.Name,
                         Documentation
                     );
                 }
             }
+        }
+
+        internal static ParameterResult ToParameterResult(Parameter p, string type, IEnumerable<AnalysisVariable> refs, PythonAnalyzer state, PythonAst tree) {
+            if (p.IsDictionary) {
+                return new ParameterResult("**" + p.Name ?? "", null, null, false, refs, null);
+            } else if (p.IsList) {
+                return new ParameterResult("*" + p.Name ?? "", null, null, false, refs, null);
+            }
+
+            var name = p.Name ?? "";
+            var defaultValue = GetDefaultValue(state, p, tree);
+            return new ParameterResult(name, null, type, false, refs, defaultValue);
         }
 
         internal static string MakeParameterName(Parameter curParam) {

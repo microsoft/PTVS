@@ -28,6 +28,7 @@ using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -45,17 +46,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
         private PythonAnalyzer _state;
-        private readonly PythonInterpreterFactoryWithDatabase _factory;
+        private readonly IPythonInterpreterFactory _factory;
         private PythonTypeDatabase _typeDb;
 #if DEBUG
         private int _id;
         private static int _interpreterCount;
 #endif
 
-        public IronPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
+        public IronPythonInterpreter(IPythonInterpreterFactory factory) {
 #if DEBUG
             _id = Interlocked.Increment(ref _interpreterCount);
-            Debug.WriteLine(String.Format("IronPython Interpreter Created {0}", _id));
+            Debug.WriteLine(String.Format("IronPython Interpreter {0} created from {1}", _id, factory.GetType().FullName));
             Debug.WriteLine(new StackTrace(true).ToString());
 #endif
 
@@ -74,16 +75,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
             _modules[newMod.Name] = newMod;
 
             _factory = factory;
-            _typeDb = _factory.GetCurrentDatabase().CloneWithNewBuiltins(newMod);
-            _factory.NewDatabaseAvailable += OnNewDatabaseAvailable;
+            if (_factory is PythonInterpreterFactoryWithDatabase withDb) {
+                _typeDb = withDb.GetCurrentDatabase().CloneWithNewBuiltins(newMod);
+                withDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
+            }
 
             LoadModules();
         }
 
         void OnNewDatabaseAvailable(object sender, EventArgs e) {
-            var mod = _modules["__builtin__"] as IBuiltinPythonModule;
-            _typeDb = _factory.GetCurrentDatabase().CloneWithNewBuiltins(mod);
-            RaiseModuleNamesChanged();
+            if (_factory is PythonInterpreterFactoryWithDatabase withDb) {
+                var mod = _modules["__builtin__"] as IBuiltinPythonModule;
+                _typeDb = withDb.GetCurrentDatabase().CloneWithNewBuiltins(mod);
+                RaiseModuleNamesChanged();
+            }
         }
 
         private void InitializeRemoteDomain() {
@@ -577,8 +582,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 evt(this, EventArgs.Empty);
             }
 
-            if (_factory != null) {
-                _factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
+            if (_factory is PythonInterpreterFactoryWithDatabase withDb) {
+                withDb.NewDatabaseAvailable -= OnNewDatabaseAvailable;
             }
             _typeDb = null;
             AppDomain.CurrentDomain.AssemblyResolve -= AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;

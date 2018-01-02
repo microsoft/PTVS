@@ -16,10 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -27,23 +27,96 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly ParameterResult[] _parameters;
         private readonly string _name;
 
-        public OverloadResult(ParameterResult[] parameters, string name) {
+        public OverloadResult(ParameterResult[] parameters, string name, string documentation = null) {
             _parameters = parameters;
             _name = name;
+            Documentation = documentation;
         }
 
         public string Name {
             get { return _name; }
         }
-        public virtual string Documentation {
-            get { return null; }
-        }
+        public virtual string Documentation { get; }
         public virtual ParameterResult[] Parameters {
             get { return _parameters; }
         }
 
         internal virtual OverloadResult WithNewParameters(ParameterResult[] newParameters) {
             return new OverloadResult(newParameters, _name);
+        }
+
+        private static string Longest(string x, string y) {
+            if (x == null) {
+                return y;
+            } else if (y == null) {
+                return x;
+            }
+
+            return x.Length > y.Length ? x : y;
+        }
+
+        private static IEnumerable<string> CommaSplit(string x) {
+            if (string.IsNullOrEmpty(x)) {
+                yield break;
+            }
+
+            var sb = new StringBuilder();
+            int nestCount = 0;
+            foreach (var c in x) {
+                if (c == ',' && nestCount == 0) {
+                    yield return sb.ToString().Trim();
+                    sb.Clear();
+                    continue;
+                }
+
+                if (c == '(' || c == '[' || c == '{') {
+                    nestCount += 1;
+                } else if (c == ')' || c == ']' || c == '}') {
+                    nestCount -= 1;
+                }
+                sb.Append(c);
+            }
+
+            if (sb.Length > 0) {
+                yield return sb.ToString().Trim();
+            }
+        }
+
+        private static string Merge(string x, string y) {
+            return string.Join(", ",
+                CommaSplit(x).Concat(CommaSplit(y)).OrderBy(n => n).Distinct()
+            );
+        }
+
+        public static OverloadResult Merge(IEnumerable<OverloadResult> overloads) {
+            overloads = overloads.ToArray();
+
+            var name = overloads.Select(o => o.Name).OrderByDescending(n => n?.Length ?? 0).FirstOrDefault();
+            var doc = overloads.Select(o => o.Documentation).OrderByDescending(n => n?.Length ?? 0).FirstOrDefault();
+            var parameters = overloads.Select(o => o.Parameters).Aggregate(Array.Empty<ParameterResult>(), (all, pms) => {
+                var res = all.Concat(pms.Skip(all.Length)).ToArray();
+
+                for (int i = 0; i < res.Length; ++i) {
+                    if (res[i] == null) {
+                        res[i] = pms[i];
+                    } else {
+                        var l = res[i];
+                        var r = pms[i];
+                        res[i] = new ParameterResult(
+                            Longest(l.Name, r.Name),
+                            Longest(l.Documentation, r.Documentation),
+                            Merge(l.Type, r.Type),
+                            l.IsOptional || r.IsOptional,
+                            l.Variables?.Concat(r.Variables.MaybeEnumerate()).ToArray() ?? r.Variables,
+                            Longest(l.DefaultValue, r.DefaultValue)
+                        );
+                    }
+                }
+
+                return res;
+            });
+
+            return new OverloadResult(parameters, name, doc);
         }
     }
 
@@ -233,14 +306,21 @@ namespace Microsoft.PythonTools.Analysis {
     }
 
     class OverloadResultComparer : EqualityComparer<OverloadResult> {
-        public static IEqualityComparer<OverloadResult> Instance = new OverloadResultComparer();
+        public static IEqualityComparer<OverloadResult> Instance = new OverloadResultComparer(false);
+        public static IEqualityComparer<OverloadResult> WeakInstance = new OverloadResultComparer(true);
+
+        private readonly bool _weak;
+
+        private OverloadResultComparer(bool weak) {
+            _weak = weak;
+        }
 
         public override bool Equals(OverloadResult x, OverloadResult y) {
             if (x == null | y == null) {
                 return x == null & y == null;
             }
 
-            if (x.Name != y.Name || x.Documentation != y.Documentation) {
+            if (x.Name != y.Name || (!_weak && x.Documentation != y.Documentation)) {
                 return false;
             }
 
@@ -253,8 +333,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             for (int i = 0; i < x.Parameters.Length; ++i) {
-                if (!x.Parameters[i].Equals(y.Parameters[i])) {
-                    return false;
+                if (_weak) {
+                    if (!x.Parameters[i].Name.Equals(y.Parameters[i].Name)) {
+                        return false;
+                    }
+                } else {
+                    if (!x.Parameters[i].Equals(y.Parameters[i])) {
+                        return false;
+                    }
                 }
             }
 
@@ -267,7 +353,7 @@ namespace Microsoft.PythonTools.Analysis {
             int hc = 552127 ^ obj.Name.GetHashCode();
             if (obj.Parameters != null) {
                 foreach (var p in obj.Parameters) {
-                    hc ^= p.GetHashCode();
+                    hc ^= _weak ? p.Name.GetHashCode() : p.GetHashCode();
                 }
             }
             return hc;

@@ -21,7 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>Changed in 2.2 to include .pyc and .pyo files.</remarks>
         public bool IsCompiled {
             get {
-                return PythonCompiledRegex.IsMatch(Path.GetFileName(SourceFile));
+                return PythonCompiledRegex.IsMatch(PathUtils.GetFileName(SourceFile));
             }
         }
 
@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 2.2</remarks>
         public bool IsNativeExtension {
             get {
-                return PythonBinaryRegex.IsMatch(Path.GetFileName(SourceFile));
+                return PythonBinaryRegex.IsMatch(PathUtils.GetFileName(SourceFile));
             }
         }
 
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <remarks>New in 3.2</remarks>
         public bool IsStub {
             get {
-                return PythonStubRegex.IsMatch(Path.GetFileName(SourceFile));
+                return PythonStubRegex.IsMatch(PathUtils.GetFileName(SourceFile));
             }
         }
 
@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (!skipFiles) {
                 foreach (var file in PathUtils.EnumerateFiles(path, recurse: false)) {
-                    var filename = PathUtils.GetFileOrDirectoryName(file);
+                    var filename = PathUtils.GetFileName(file);
                     var match = PythonFileRegex.Match(filename);
                     if (!match.Success) {
                         match = PythonBinaryRegex.Match(filename);
@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             var directories = new List<ModulePath>();
             foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
-                var dirname = PathUtils.GetFileOrDirectoryName(dir);
+                var dirname = PathUtils.GetFileName(dir);
                 var match = PythonPackageRegex.Match(dirname);
                 if (match.Success) {
                     bool hasInitPy = true;
@@ -283,12 +283,12 @@ namespace Microsoft.PythonTools.Analysis {
                             while ((line = reader.ReadLine()) != null) {
                                 line = line.Trim();
                                 if (line.StartsWith("import ", StringComparison.Ordinal) ||
-                                    !PathUtils.IsValidPath(line)) {
+                                    !PathEqualityComparer.IsValidPath(line)) {
                                     continue;
                                 }
                                 line = line.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
                                 if (!Path.IsPathRooted(line)) {
-                                    line = PathUtils.GetAbsoluteDirectoryPath(path, line);
+                                    line = Path.Combine(path, line);
                                 }
                                 if (Directory.Exists(line)) {
                                     yield return line;
@@ -371,7 +371,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // Get directories referenced by pth files
             var modulesInPath = GetModulesInPath(
-                pthDirs.Where(p1 => excludedPthDirs.All(p2 => !PathUtils.IsSameDirectory(p1, p2))),
+                pthDirs.Except(excludedPthDirs, PathEqualityComparer.Instance),
                 true,
                 true,
                 requireInitPy: requireInitPyFiles
@@ -460,7 +460,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             string name;
             try {
-                name = PathUtils.GetFileOrDirectoryName(path);
+                name = PathUtils.GetFileName(path);
             } catch (ArgumentException) {
                 return false;
             }
@@ -498,7 +498,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             try {
-                var name = Path.GetFileName(path);
+                var name = PathUtils.GetFileName(path);
                 return name.Equals("__init__.py", StringComparison.OrdinalIgnoreCase) ||
                     name.Equals("__init__.pyw", StringComparison.OrdinalIgnoreCase) ||
                     name.Equals("__init__.pyi", StringComparison.OrdinalIgnoreCase);
@@ -569,7 +569,7 @@ namespace Microsoft.PythonTools.Analysis {
             string topLevelPath = null,
             Func<string, bool> isPackage = null
         ) {
-            var name = PathUtils.GetFileOrDirectoryName(path);
+            var name = PathUtils.GetFileName(path);
             var nameMatch = PythonFileRegex.Match(name);
             if (nameMatch == null || !nameMatch.Success) {
                 nameMatch = PythonBinaryRegex.Match(name);
@@ -579,7 +579,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var fullName = nameMatch.Groups["name"].Value;
-            var remainder = PathUtils.GetParent(path);
+            var remainder = Path.GetDirectoryName(path);
             if (isPackage == null) {
                 // We know that f will be the result of GetParent() and always
                 // ends with a directory separator, so just concatenate to avoid
@@ -588,14 +588,13 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             while (
-                PathUtils.IsValidPath(remainder) &&
+                PathEqualityComparer.IsValidPath(remainder) &&
                 isPackage(remainder) &&
                 (string.IsNullOrEmpty(topLevelPath) ||
-                 (PathUtils.IsSubpathOf(topLevelPath, remainder) &&
-                  !PathUtils.IsSameDirectory(topLevelPath, remainder)))
+                 PathEqualityComparer.Instance.StartsWith(remainder, topLevelPath, allowFullMatch: false))
             ) {
-                fullName = PathUtils.GetFileOrDirectoryName(remainder) + "." + fullName;
-                remainder = PathUtils.GetParent(remainder);
+                fullName = PathUtils.GetFileName(remainder) + "." + fullName;
+                remainder = Path.GetDirectoryName(remainder);
             }
 
             return new ModulePath(fullName, path, remainder);
@@ -672,7 +671,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static bool IsModuleNameMatch(Regex regex, string path, string mod) {
-            var m = regex.Match(PathUtils.GetFileOrDirectoryName(path));
+            var m = regex.Match(PathUtils.GetFileName(path));
             if (!m.Success) {
                 return false;
             }
@@ -683,15 +682,15 @@ namespace Microsoft.PythonTools.Analysis {
             if (!Directory.Exists(path)) {
                 return null;
             }
-            var package = PathUtils.GetAbsoluteFilePath(path, "__init__.py");
+            var package = Path.Combine(path, "__init__.py");
             if (File.Exists(package)) {
                 return package;
             }
-            package = PathUtils.GetAbsoluteFilePath(path, "__init__.pyw");
+            package = Path.Combine(path, "__init__.pyw");
             if (File.Exists(package)) {
                 return package;
             }
-            package = PathUtils.GetAbsoluteFilePath(path, "__init__.pyi");
+            package = Path.Combine(path, "__init__.pyi");
             if (File.Exists(package)) {
                 return package;
             }
@@ -722,7 +721,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
             if (getModule == null) {
                 getModule = (dir, mod) => {
-                    var pack = GetPackageInitPy(PathUtils.GetAbsoluteDirectoryPath(dir, mod));
+                    var pack = GetPackageInitPy(Path.Combine(dir, mod));
                     if (File.Exists(pack)) {
                         return pack;
                     }
@@ -744,7 +743,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (string.IsNullOrEmpty(path)) {
                     path = bit;
                 } else {
-                    path = PathUtils.GetAbsoluteFilePath(path, bit);
+                    path = Path.Combine(path, bit);
                 }
                 if (!isPackage(path)) {
                     isMissing = true;

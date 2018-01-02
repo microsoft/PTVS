@@ -154,16 +154,17 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private string GetOrCreateFilename() {
+            string path;
             var replEval = Buffer.GetInteractiveWindow()?.Evaluator;
-            if (replEval is PythonCommonInteractiveEvaluator pyEval) {
-                return pyEval.AnalysisFilename;
-            } else if (replEval is SelectableReplEvaluator selectEval) {
-                return selectEval.AnalysisFilename;
+            if (!string.IsNullOrEmpty(path = (replEval as PythonCommonInteractiveEvaluator)?.AnalysisFilename)) {
+                return path;
+            } else if (!string.IsNullOrEmpty(path = (replEval as SelectableReplEvaluator)?.AnalysisFilename)) {
+                return path;
             }
 
-            ITextDocument doc;
-            if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out doc)) {
-                return doc.FilePath;
+            if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out ITextDocument doc) &&
+                !string.IsNullOrEmpty(path = doc.FilePath)) {
+                return path;
             }
 
             return "{0}.py".FormatInvariant(Guid.NewGuid());
@@ -540,9 +541,8 @@ namespace Microsoft.PythonTools.Editor {
             );
 
             PythonAst ast;
-            using (var parser = Parser.CreateParser(sourceSpan, LanguageVersion)) {
-                ast = parser.ParseFile();
-            }
+            var parser = Parser.CreateParser(sourceSpan, LanguageVersion);
+            ast = parser.ParseFile();
 
             var finder = new ExpressionFinder(ast, options);
             var actualExpr = finder.GetExpressionSpan(span.ToSourceSpan());

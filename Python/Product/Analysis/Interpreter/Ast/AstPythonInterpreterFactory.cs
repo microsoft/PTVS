@@ -22,19 +22,20 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
-        private readonly string _databasePath;
+    public class AstPythonInterpreterFactory : IPythonInterpreterFactory, IPythonInterpreterFactoryWithLog, ICustomInterpreterSerialization, IDisposable {
+        private readonly string _databasePath, _searchPathCachePath;
         private readonly object _searchPathsLock = new object();
-        private PythonLibraryPath[] _searchPaths;
+        private IReadOnlyList<string> _searchPaths;
         private IReadOnlyDictionary<string, string> _searchPathPackages;
 
         private bool _disposed;
-        private readonly bool _skipCache;
+        private readonly bool _skipCache, _skipWriteToCache;
 
         private AnalysisLogWriter _log;
         // Available for tests to override
@@ -58,23 +59,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             _databasePath = CreationOptions.DatabasePath;
             if (!string.IsNullOrEmpty(_databasePath)) {
-                _log = new AnalysisLogWriter(PathUtils.GetAbsoluteFilePath(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
+                _searchPathCachePath = Path.Combine(_databasePath, "database.path");
+
+                _log = new AnalysisLogWriter(Path.Combine(_databasePath, "AnalysisLog.txt"), false, LogToConsole, LogCacheSize);
                 _log.Rotate(LogRotationSize);
                 _log.MinimumLevel = CreationOptions.TraceLevel;
-            }
-            _skipCache = !CreationOptions.UseExistingCache;
-
-            if (!GlobalInterpreterOptions.SuppressPackageManagers) {
-                try {
-                    var pm = CreationOptions.PackageManager;
-                    if (pm != null) {
-                        pm.SetInterpreterFactory(this);
-                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                        PackageManager = pm;
-                    }
-                } catch (NotSupportedException) {
+            } else {
+                if (InstallPath.TryGetFile($"DefaultDB\\v{Configuration.Version.Major}\\python.pyi", out string biPath)) {
+                    CreationOptions.DatabasePath = _databasePath = Path.GetDirectoryName(biPath);
+                    _skipWriteToCache = true;
                 }
             }
+            _skipCache = !CreationOptions.UseExistingCache;
         }
 
         public void Dispose() {
@@ -86,7 +82,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             Dispose(false);
         }
 
-        protected void Dispose(bool disposing) {
+        protected virtual void Dispose(bool disposing) {
             if (!_disposed) {
                 _disposed = true;
                 _log?.Flush(synchronous: true);
@@ -94,9 +90,6 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (disposing) {
                     if (_log != null) {
                         _log.Dispose();
-                    }
-                    if (PackageManager != null) {
-                        PackageManager.InstalledPackagesChanged -= PackageManager_InstalledFilesChanged;
                     }
                 }
             }
@@ -119,21 +112,30 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public PythonLanguageVersion LanguageVersion { get; }
 
-        public IPackageManager PackageManager { get; }
-
         public event EventHandler ImportableModulesChanged;
 
-        private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
+        public void NotifyImportNamesChanged() {
             lock (_searchPathsLock) {
                 _searchPaths = null;
                 _searchPathPackages = null;
             }
+
+            if (File.Exists(_searchPathCachePath)) {
+                for (int retries = 5; retries > 0; --retries) {
+                    try {
+                        File.Delete(_searchPathCachePath);
+                        break;
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    }
+                    Thread.Sleep(10);
+                }
+            }
+
             ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public IPythonInterpreter CreateInterpreter() {
-            return new AstPythonInterpreter(this, _log);
-        }
+        public virtual IPythonInterpreter CreateInterpreter() => new AstPythonInterpreter(this, _log);
 
         internal void Log(TraceLevel level, string eventName, params object[] args) {
             _log?.Log(level, eventName, args);
@@ -152,24 +154,31 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
 
         internal string GetCacheFilePath(string filePath) {
-            if (string.IsNullOrEmpty(_databasePath)) {
+            var dbPath = _databasePath;
+            if (!PathEqualityComparer.IsValidPath(dbPath)) {
                 return null;
             }
 
+            var name = PathUtils.GetFileName(filePath);
+            var candidate = Path.ChangeExtension(Path.Combine(dbPath, name), ".pyi");
+            if (File.Exists(candidate)) {
+                return candidate;
+            }
+
             var hash = SHA256.Create();
-            var dir = PathUtils.GetParent(filePath);
+            var dir = Path.GetDirectoryName(filePath);
             var dirHash = Convert.ToBase64String(hash.ComputeHash(new UTF8Encoding(false).GetBytes(dir)))
                 .Replace('/', '_').Replace('+', '-');
 
-            return Path.ChangeExtension(PathUtils.GetAbsoluteFilePath(
+            return Path.ChangeExtension(Path.Combine(
                 _databasePath,
-                Path.Combine(dirHash, PathUtils.GetFileOrDirectoryName(filePath))
+                Path.Combine(dirHash, name)
             ), ".pyi");
         }
 
         #region Cache File Management
 
-        public Stream ReadCachedModule(string filePath) {
+        internal Stream ReadCachedModule(string filePath) {
             if (_skipCache) {
                 return null;
             }
@@ -192,7 +201,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 }
             }
 
-            if (file != null) {
+            if (file != null && !_skipWriteToCache) {
                 bool fileIsOkay = false;
                 try {
                     var cacheTime = File.GetLastWriteTimeUtc(path);
@@ -224,7 +233,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 try {
                     return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
                 } catch (DirectoryNotFoundException) {
-                    var dir = PathUtils.GetParent(path);
+                    var dir = Path.GetDirectoryName(path);
                     if (Directory.Exists(dir)) {
                         break;
                     }
@@ -233,7 +242,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     try {
                         Directory.CreateDirectory(dir);
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
-                        Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                        Debug.Fail(ex.ToString());
                         break;
                     }
                 } catch (UnauthorizedAccessException) {
@@ -246,7 +255,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 } catch (IOException) {
                     break;
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                    Debug.Fail(ex.ToString());
                     break;
                 }
 
@@ -261,13 +270,17 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                     File.SetAttributes(path, FileAttributes.Normal);
                     File.Delete(path);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(AstPythonInterpreterFactory)));
+                    Debug.Fail(ex.ToString());
                     break;
                 }
             }
         }
 
-        public void WriteCachedModule(string filePath, Stream code) {
+        internal void WriteCachedModule(string filePath, Stream code) {
+            if (_skipWriteToCache) {
+                return;
+            }
+
             var cache = GetCacheFilePath(filePath);
             if (string.IsNullOrEmpty(cache)) {
                 return;
@@ -293,26 +306,25 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         #endregion
 
-        public IReadOnlyDictionary<string, string> GetImportableModules() {
+        internal async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync() {
             var spp = _searchPathPackages;
             if (spp != null) {
                 return spp;
             }
-            var sp = GetSearchPaths();
+
+            var sp = await GetSearchPathsAsync();
             if (sp == null) {
                 return null;
             }
 
+            var packageDict = await GetImportableModulesAsync(sp).ConfigureAwait(false);
+            if (!packageDict.Any()) {
+                return null;
+            }
+
             lock (_searchPathsLock) {
-                spp = _searchPathPackages;
-                if (spp != null) {
-                    return spp;
-                }
-
-                var packageDict = GetImportableModules(sp.Select(p => p.Path));
-
-                if (!packageDict.Any()) {
-                    return null;
+                if (_searchPathPackages != null) {
+                    return _searchPathPackages;
                 }
 
                 _searchPathPackages = packageDict;
@@ -320,7 +332,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
         }
 
-        public static IReadOnlyDictionary<string, string> GetImportableModules(IEnumerable<string> searchPaths) {
+        internal static async Task<IReadOnlyDictionary<string, string>> GetImportableModulesAsync(IEnumerable<string> searchPaths) {
             var packageDict = new Dictionary<string, string>();
 
             foreach (var searchPath in searchPaths.MaybeEnumerate()) {
@@ -328,7 +340,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (File.Exists(searchPath)) {
                     packages = GetPackagesFromZipFile(searchPath);
                 } else if (Directory.Exists(searchPath)) {
-                    packages = GetPackagesFromDirectory(searchPath);
+                    packages = await Task.Run(() => GetPackagesFromDirectory(searchPath)).ConfigureAwait(false);
                 }
                 foreach (var package in packages.MaybeEnumerate()) {
                     packageDict[package] = searchPath;
@@ -356,7 +368,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         /// <summary>
         /// For test use only
         /// </summary>
-        internal void SetCurrentSearchPaths(IEnumerable<PythonLibraryPath> paths) {
+        internal void SetCurrentSearchPaths(IEnumerable<string> paths) {
             lock (_searchPathsLock) {
                 _searchPaths = paths.ToArray();
                 _searchPathPackages = null;
@@ -364,42 +376,49 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             ImportableModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private IEnumerable<PythonLibraryPath> GetCurrentSearchPaths() {
-            if (!File.Exists(Configuration?.InterpreterPath)) {
-                return null;
+        protected virtual async Task<IReadOnlyList<string>> GetCurrentSearchPathsAsync() {
+            if (Configuration.SearchPaths.Any()) {
+                return Configuration.SearchPaths;
+            }
+
+            if (!File.Exists(Configuration.InterpreterPath)) {
+                return Array.Empty<string>();
             }
 
             try {
-                return PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(Configuration.InterpreterPath).WaitAndUnwrapExceptions();
+                var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(Configuration, _searchPathCachePath).ConfigureAwait(false);
+                return paths.MaybeEnumerate().Select(p => p.Path).ToArray();
             } catch (InvalidOperationException) {
-                return null;
+                return Array.Empty<string>();
             }
         }
 
-        public IEnumerable<PythonLibraryPath> GetSearchPaths() {
+        public async Task<IReadOnlyList<string>> GetSearchPathsAsync() {
             var sp = _searchPaths;
             if (sp == null) {
+                sp = await GetCurrentSearchPathsAsync().ConfigureAwait(false);
                 lock (_searchPathsLock) {
-                    sp = _searchPaths;
-                    if (sp == null) {
-                        _searchPaths = sp = GetCurrentSearchPaths().MaybeEnumerate().ToArray();
+                    if (_searchPaths == null) {
+                        _searchPaths = sp;
+                    } else {
+                        sp = _searchPaths;
                     }
                 }
                 Debug.Assert(sp != null, "Should have search paths");
-                Log(TraceLevel.Info, "SearchPaths", sp);
+                Log(TraceLevel.Info, "SearchPaths", sp.Cast<object>().ToArray());
             }
             return sp;
         }
 
-        private ModulePath FindModule(string filePath) {
-            var sp = GetSearchPaths();
+        private async Task<ModulePath> FindModuleAsync(string filePath) {
+            var sp = await GetSearchPathsAsync();
 
             string bestLibraryPath = "";
 
             foreach (var p in sp) {
-                if (PathUtils.IsSubpathOf(p.Path, filePath)) {
-                    if (p.Path.Length > bestLibraryPath.Length) {
-                        bestLibraryPath = p.Path;
+                if (PathEqualityComparer.Instance.StartsWith(filePath, p)) {
+                    if (p.Length > bestLibraryPath.Length) {
+                        bestLibraryPath = p;
                     }
                 }
             }
@@ -408,11 +427,11 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return mp;
         }
 
-        public static ModulePath FindModule(IPythonInterpreterFactory factory, string filePath) {
+        public static async Task<ModulePath> FindModuleAsync(IPythonInterpreterFactory factory, string filePath) {
             try {
                 var apif = factory as AstPythonInterpreterFactory;
                 if (apif != null) {
-                    return apif.FindModule(filePath);
+                    return await apif.FindModuleAsync(filePath);
                 }
 
                 return ModulePath.FromFullPath(filePath);
@@ -431,7 +450,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             try {
                 return File.ReadAllText(logfile);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                return ex.ToUnhandledExceptionMessage(GetType());
+                return ex.ToString();
             }
         }
     }

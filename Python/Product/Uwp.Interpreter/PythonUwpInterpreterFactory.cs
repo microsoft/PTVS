@@ -15,19 +15,18 @@
 // permissions and limitations under the License.
 
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using System.Collections.Generic;
 using System.IO;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
     class PythonUwpInterpreterFactory : PythonInterpreterFactoryWithDatabase, ICustomInterpreterSerialization {
         private static readonly InterpreterFactoryCreationOptions DefaultCreationOptions = new InterpreterFactoryCreationOptions {
-            PackageManager = BuiltInPackageManagers.Pip,
             WatchFileSystem = true
         };
 
         public PythonUwpInterpreterFactory(InterpreterConfiguration configuration) 
             : base(configuration, new InterpreterFactoryCreationOptions {
-                PackageManager = BuiltInPackageManagers.Pip,
                 DatabasePath = Path.Combine(configuration.PrefixPath, "completionDB"),
                 WatchFileSystem = true
             }) {

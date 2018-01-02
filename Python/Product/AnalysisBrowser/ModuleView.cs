@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
     class ModuleView : IAnalysisItemView {
@@ -46,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 yield return RawView.FromFile(_idbPath);
             }
 
-            var cpm = _module as CPythonModule;
+            var cpm = _module as Interpreter.LegacyDB.CPythonModule;
             if (cpm != null) {
                 cpm.EnsureLoaded();
             }

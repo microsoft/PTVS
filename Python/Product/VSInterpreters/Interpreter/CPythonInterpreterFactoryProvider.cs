@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
@@ -148,6 +149,19 @@ namespace Microsoft.PythonTools.Interpreter {
 
         #endregion
 
+        public static InterpreterArchitecture ArchitectureFromExe(string path) {
+            try {
+                switch (NativeMethods.GetBinaryType(path)) {
+                    case ProcessorArchitecture.X86:
+                        return InterpreterArchitecture.x86;
+                    case ProcessorArchitecture.Amd64:
+                        return InterpreterArchitecture.x64;
+                }
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(InterpreterArchitecture)));
+            }
+            return InterpreterArchitecture.Unknown;
+        }
 
         internal void DiscoverInterpreterFactories() {
             if (Volatile.Read(ref _ignoreNotifications) > 0) {
@@ -246,15 +260,24 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private IPythonInterpreterFactory CreateFactory(PythonInterpreterInformation info) {
+            if (!ExperimentalOptions.NoDatabaseFactory) {
+                // Use the database-backed factory
+                var fact = new LegacyDB.CPythonInterpreterFactory(
+                    info.Configuration,
+                    new InterpreterFactoryCreationOptions {
+                        WatchFileSystem = true,
+                        DatabasePath = DatabasePathSelector.CalculateGlobalDatabasePath(info.Configuration, LegacyDB.PythonTypeDatabase.FormatVersion)
+                    }
+                );
+                fact.BeginRefreshIsCurrent();
+                return fact;
+            }
+
             return InterpreterFactoryCreator.CreateInterpreterFactory(
                 info.Configuration,
                 new InterpreterFactoryCreationOptions {
-                    PackageManager = CondaUtils.HasConda(info.Configuration.PrefixPath) ? BuiltInPackageManagers.Conda : BuiltInPackageManagers.Pip,
                     WatchFileSystem = true,
-                    NoDatabase = ExperimentalOptions.NoDatabaseFactory,
-                    DatabasePath = ExperimentalOptions.NoDatabaseFactory ?
-                        DatabasePathSelector.CalculateVSLocalDatabasePath(_site, info.Configuration, 1) :
-                        DatabasePathSelector.CalculateGlobalDatabasePath(info.Configuration, PythonTypeDatabase.FormatVersion)
+                    DatabasePath = DatabasePathSelector.CalculateVSLocalDatabasePath(_site, info.Configuration, 1)
                 }
             );
         }

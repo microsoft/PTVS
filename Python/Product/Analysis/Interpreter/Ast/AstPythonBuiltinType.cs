@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public bool IsHidden {
             get {
                 lock (_members) {
-                    return _members.ContainsKey("__hidden");
+                    return _members.ContainsKey("__hidden__");
                 }
             }
         }

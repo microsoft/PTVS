@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -93,7 +94,9 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            if (factory.PackageManager == null) {
+            var interpreterOpts = _project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var pm = interpreterOpts?.GetPackageManagers(factory).FirstOrDefault();
+            if (pm == null) {
                 WriteError(
                     Strings.PackageManagementNotSupported_Package.FormatUI(PathUtils.GetFileOrDirectoryName(txt))
                 );
@@ -103,7 +106,7 @@ namespace Microsoft.PythonTools.Project {
             WriteOutput(Strings.RequirementsTxtInstalling.FormatUI(txt));
             bool success = false;
             try {
-                success = await factory.PackageManager.InstallAsync(
+                success = await pm.InstallAsync(
                     PackageSpec.FromArguments("-r " + ProcessOutput.QuoteSingleArgument(txt)),
                     new VsPackageManagerUI(_project.Site),
                     CancellationToken.None

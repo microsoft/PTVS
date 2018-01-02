@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private const int EOF = -1;
         private const int MaxIndent = 80;
-        private const int DefaultBufferCapacity = 1024;
+        internal const int DefaultBufferCapacity = 1024;
 
         private Dictionary<object, NameToken> _names;
         private static object _currentName = new object();
@@ -225,12 +225,9 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public void Uninitialize() {
-            if (_reader != null) {
-                _reader.Dispose();
-                _reader = null;
-            }
             _start = _end = 0;
             _position = 0;
+            _reader = null;
         }
 
         public TokenInfo ReadToken() {
@@ -346,6 +343,10 @@ namespace Microsoft.PythonTools.Parsing {
                 (_options & TokenizerOptions.GroupingRecovery) != 0 &&
                 _state.GroupingRecovery != null &&
                 _state.GroupingRecovery.TokenStart == _tokenStartIndex) {
+
+                // Pre-validate so that we have the current values on entry
+                Debug.Assert(_start - (_tokenStartIndex - _state.GroupingRecovery.NewlineStart) >= 0,
+                    $"Recovery failed with _start={_start}, _tokenStartIndex={_tokenStartIndex}, NewLineStart={_state.GroupingRecovery.NewlineStart}");
 
                 _state.ParenLevel = _state.BraceLevel = _state.BracketLevel = 0;
 
@@ -2586,12 +2587,14 @@ namespace Microsoft.PythonTools.Parsing {
 
         private void RefillBuffer() {
             if (_end == _buffer.Length) {
-                int new_size = System.Math.Max(System.Math.Max((_end - _start) * 2, _buffer.Length), _position);
-                ResizeInternal(ref _buffer, new_size, _start, _end - _start);
-                _end -= _start;
-                _position -= _start;
+                int ws_start = _tokenStartIndex - _state.GroupingRecovery?.NewlineStart ?? 0;
+                int new_start = _start - ws_start;    // move the buffer to the start of the current whitespace
+                int new_size = Math.Max(Math.Max((_end - new_start) * 2, _buffer.Length), _position);
+                ResizeInternal(ref _buffer, new_size, new_start, _end - new_start);
+                _end -= new_start;
+                _position -= new_start;
                 _tokenEnd = -1;
-                _start = 0;
+                _start = ws_start;   // start this many characters into the buffer
                 _bufferResized = true;
             }
 

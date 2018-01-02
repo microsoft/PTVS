@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             int count = (int)BuiltinTypeIdExtensions.LastTypeId;
             _children = new IAnalysisItemView[count];
             for (int value = 1; value <= count; ++value) {
-                var expectedName = SharedDatabaseState.GetBuiltinTypeName((BuiltinTypeId)value, version);
+                var expectedName = ((BuiltinTypeId)value).GetTypeName(version);
                 string name = string.Format("{0} ({1})",
                     expectedName,
                     Enum.GetName(typeof(BuiltinTypeId), value)

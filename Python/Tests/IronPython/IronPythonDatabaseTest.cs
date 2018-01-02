@@ -42,7 +42,9 @@ namespace IronPythonTests {
 
                 Assert.IsNotNull(ptd.GetModule("__builtin__"));
 
-                var factory = new IronPythonInterpreterFactory(InterpreterArchitecture.x86);
+                var config = IronPythonInterpreterFactoryProvider.GetConfiguration(InterpreterArchitecture.x86);
+                var opts = IronPythonInterpreterFactoryProvider.GetCreationOptions(null, config, out _);
+                var factory = new IronPythonInterpreterFactory(config, opts);
                 // Explicitly create an IronPythonInterpreter from factory that
                 // will use the database in db.Factory.
                 using (var analyzer = PythonAnalyzer.CreateSynchronously(factory, factory.MakeInterpreter(db.Factory))) {

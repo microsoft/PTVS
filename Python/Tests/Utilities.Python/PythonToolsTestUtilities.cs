@@ -86,7 +86,7 @@ namespace TestUtilities.Python {
             var editorServices = CreatePythonEditorServices(serviceProvider, serviceProvider.ComponentModel);
             serviceProvider.ComponentModel.AddExtension(() => editorServices);
 
-            var analysisEntryServiceCreator = new Lazy<AnalysisEntryService>(() => new AnalysisEntryService(editorServices));
+            var analysisEntryServiceCreator = new Lazy<AnalysisEntryService>(() => new AnalysisEntryService(new Lazy<PythonEditorServices>(() => editorServices)));
             serviceProvider.ComponentModel.AddExtension<IAnalysisEntryService>(() => analysisEntryServiceCreator.Value);
             serviceProvider.ComponentModel.AddExtension(() => analysisEntryServiceCreator.Value);
 

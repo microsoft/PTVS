@@ -20,33 +20,31 @@ using System.Runtime.Serialization;
 namespace Microsoft.PythonTools.Interpreter {
     [Serializable]
     public class NoInterpretersException : Exception {
-        private readonly string _helpPage;
-
-        public NoInterpretersException() : this(Strings.NoInterpretersAvailable) { }
+        public NoInterpretersException() : base() { }
         public NoInterpretersException(string message) : base(message) { }
         public NoInterpretersException(string message, Exception inner) : base(message, inner) { }
 
         public NoInterpretersException(string message, string helpPage)
             : base(message) {
-            _helpPage = helpPage;
+            HelpPage = helpPage;
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context) {
             base.GetObjectData(info, context);
-            if (!string.IsNullOrEmpty(_helpPage)) {
+            if (!string.IsNullOrEmpty(HelpPage)) {
                 try {
-                    info.AddValue("HelpPage", _helpPage);
+                    info.AddValue("HelpPage", HelpPage);
                 } catch (SerializationException) {
                 }
             }
         }
 
-        public string HelpPage { get { return _helpPage; } }
+        public string HelpPage { get; }
 
         protected NoInterpretersException(SerializationInfo info, StreamingContext context)
             : base(info, context) {
             try {
-                _helpPage = info.GetString("HelpPage");
+                HelpPage = info.GetString("HelpPage");
             } catch (SerializationException) {
             }
         }

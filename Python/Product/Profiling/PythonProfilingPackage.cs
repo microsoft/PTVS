@@ -245,7 +245,7 @@ namespace Microsoft.PythonTools.Profiling {
             try {
                 config = project?.GetLaunchConfigurationOrThrow();
             } catch (NoInterpretersException ex) {
-                MessageBox.Show(ex.Message, Strings.ProductTitle);
+                PythonToolsPackage.OpenNoInterpretersHelpPage(session._serviceProvider, ex.HelpPage);
                 return;
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);

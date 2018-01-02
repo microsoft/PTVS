@@ -32,18 +32,17 @@ namespace AnalysisTests {
         internal static TypeAnnotation Parse(string expr, PythonLanguageVersion version = PythonLanguageVersion.V36) {
             var errors = new CollectingErrorSink();
             var ops = new ParserOptions { ErrorSink = errors };
-            using (var p = Parser.CreateParser(new StringReader(expr), version, ops)) {
-                var ast = p.ParseTopExpression();
-                if (errors.Errors.Any()) {
-                    foreach (var e in errors.Errors) {
-                        Console.WriteLine(e);
-                    }
-                    Assert.Fail(string.Join("\n", errors.Errors.Select(e => e.ToString())));
-                    return null;
+            var p = Parser.CreateParser(new StringReader(expr), version, ops);
+            var ast = p.ParseTopExpression();
+            if (errors.Errors.Any()) {
+                foreach (var e in errors.Errors) {
+                    Console.WriteLine(e);
                 }
-                var node = Statement.GetExpression(ast.Body);
-                return new TypeAnnotation(version, node);
+                Assert.Fail(string.Join("\n", errors.Errors.Select(e => e.ToString())));
+                return null;
             }
+            var node = Statement.GetExpression(ast.Body);
+            return new TypeAnnotation(version, node);
         }
 
         private static void AssertTransform(string expr, params string[] steps) {
@@ -61,11 +60,11 @@ namespace AnalysisTests {
         public void AnnotationParsing() {
             AssertTransform("List", "NameOp:List");
             AssertTransform("List[Int]", "NameOp:List", "NameOp:Int", "MakeGenericOp");
-            AssertTransform("Dict[Int, Str]", "NameOp:Dict", "StartUnionOp", "NameOp:Int", "NameOp:Str", "MakeGenericOp");
+            AssertTransform("Dict[Int, Str]", "NameOp:Dict", "StartListOp", "NameOp:Int", "NameOp:Str", "MakeGenericOp");
 
             AssertTransform("'List'", "NameOp:List");
             AssertTransform("List['Int']", "NameOp:List", "NameOp:Int", "MakeGenericOp");
-            AssertTransform("Dict['Int, Str']", "NameOp:Dict", "StartUnionOp", "NameOp:Int", "NameOp:Str", "MakeGenericOp");
+            AssertTransform("Dict['Int, Str']", "NameOp:Dict", "StartListOp", "NameOp:Int", "NameOp:Str", "MakeGenericOp");
         }
 
         [TestMethod, Priority(0)]
@@ -117,7 +116,7 @@ namespace AnalysisTests {
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
-                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
             );
             analyzer.AddModule("test-module", @"from typing import *
 
@@ -175,7 +174,7 @@ dctv_s_i_item_1, dctv_s_i_item_2 = next(dctv_s_i_items)
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
-                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
             );
             analyzer.AddModule("test-module", @"from typing import *
 
@@ -209,7 +208,7 @@ call_iis_i_ret = call_iis_i()
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
-                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
             );
             analyzer.AddModule("test-module", @"from typing import *
 
@@ -230,7 +229,7 @@ n1 : NamedTuple('n1', [('x', int), ['y', str]]) = ...
             var python = (PythonPaths.Python36_x64 ?? PythonPaths.Python36);
             python.AssertInstalled();
             var analyzer = CreateAnalyzer(
-                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { PackageManager = null, WatchFileSystem = false })
+                new AstPythonInterpreterFactory(python.Configuration, new InterpreterFactoryCreationOptions { WatchFileSystem = false })
             );
             analyzer.AddModule("test-module", @"from typing import *
 

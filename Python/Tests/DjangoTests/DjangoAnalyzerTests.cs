@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+#if DJANGO_HTML_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +25,7 @@ using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.LegacyDB;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -145,9 +147,8 @@ namespace DjangoTests {
                 "TestData\\DjangoDB needs updating."
             );
 
-            var testFact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+            var testFact = PythonInterpreterFactoryWithDatabase.CreateFromDatabase(
                 new Version(2, 7),
-                "Django Test Interpreter",
                 TestData.GetPath("CompletionDB"),
                 djangoDbPath
             );
@@ -178,3 +179,4 @@ namespace DjangoTests {
         }
     }
 }
+#endif

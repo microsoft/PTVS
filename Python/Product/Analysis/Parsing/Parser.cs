@@ -18,18 +18,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Parsing {
-
-    public class Parser : IDisposable { // TODO: remove IDisposable
+    public class Parser {
         // immutable properties:
         private readonly Tokenizer _tokenizer;
 
@@ -52,7 +50,6 @@ namespace Microsoft.PythonTools.Parsing {
         private bool _parsingStarted, _allowIncomplete;
         private bool _inLoop, _inFinally, _isGenerator;
         private List<IndexSpan> _returnsWithValue;
-        private TextReader _sourceReader;
         private int _errorCode;
         private readonly bool _verbatim;                            // true if we're in verbatim mode and the ASTs can be turned back into source code, preserving white space / comments
         private readonly bool _bindReferences;                      // true if we should bind the references in the ASTs
@@ -118,7 +115,8 @@ namespace Microsoft.PythonTools.Parsing {
                 options.Verbatim,
                 options.BindReferences,
                 options.PrivatePrefix
-            ) { _sourceReader = reader, _stubFile = options.StubFile };
+            ) { _stubFile = options.StubFile };
+
             return parser;
         }
 
@@ -4531,26 +4529,6 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             return new CallExpression(target, args);
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose() {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing) {
-            if (disposing) {
-                if (_sourceReader != null) {
-                    _sourceReader.Close();
-                }
-                if (_tokenizer != null) {
-                    _tokenizer.Uninitialize();
-                }
-            }
         }
 
         #endregion
