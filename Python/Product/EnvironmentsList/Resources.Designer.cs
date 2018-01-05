@@ -583,6 +583,26 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete &apos;{0}&apos;?
+        ///
+        ///The folder will be deleted from disk. This operation cannot be undone..
+        /// </summary>
+        public static string EnvironmentPathsExtensionDeleteConfirmation {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsExtensionDeleteConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete this environment from disk.
+        /// </summary>
+        public static string EnvironmentPathsExtensionDeleteEnvironment {
+            get {
+                return ResourceManager.GetString("EnvironmentPathsExtensionDeleteEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Overview.
         /// </summary>
         public static string EnvironmentPathsExtensionDisplayName {

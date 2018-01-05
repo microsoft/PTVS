@@ -66,6 +66,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 File.Exists(configuration.WindowsInterpreterPath);
         }
 
+        public static bool CanBeDeleted(this IPythonInterpreterFactory factory) {
+            return factory.Configuration.Id.StartsWith(CondaEnvironmentFactoryProvider.EnvironmentCompanyName);
+        }
+
         public static IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories(this IPythonInterpreterFactoryProvider self) {
             return self.GetInterpreterConfigurations().Select(x => self.GetInterpreterFactory(x.Id));
         }

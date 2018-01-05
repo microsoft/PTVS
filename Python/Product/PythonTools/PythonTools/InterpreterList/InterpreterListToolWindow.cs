@@ -21,16 +21,19 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -116,6 +119,11 @@ namespace Microsoft.PythonTools.InterpreterList {
                 EnvironmentPathsExtension.OpenInBrowser,
                 OpenInBrowser_Executed,
                 OpenInBrowser_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.Delete,
+                DeleteEnvironment_Executed,
+                DeleteEnvironment_CanExecute
             ));
 
             Content = list;
@@ -400,6 +408,60 @@ namespace Microsoft.PythonTools.InterpreterList {
             return string.Join(";", PathSuffixes
                 .Select(s => PathUtils.GetAbsoluteDirectoryPath(view.PrefixPath, s))
                 .Where(Directory.Exists));
+        }
+
+        private void DeleteEnvironment_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as EnvironmentView;
+            e.CanExecute = view?.CanBeDeleted == true;
+            e.Handled = true;
+        }
+
+        private void DeleteEnvironment_Executed(object sender, ExecutedRoutedEventArgs e) {
+            // TODO: this is assuming that all environments that CanBeDeleted are conda environments, which may not be true in the future
+            var view = e.Parameter as EnvironmentView;
+            var result = MessageBox.Show(
+                Resources.EnvironmentPathsExtensionDeleteConfirmation.FormatUI(view.Configuration.PrefixPath),
+                Resources.ProductTitle,
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question
+            );
+            if (result != MessageBoxResult.Yes) {
+                return;
+            }
+
+            var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
+            var registry = compModel.GetService<IInterpreterRegistryService>();
+            // TODO: reuse a single conda environment manager between this and
+            // the one in CondaExtension, since it can be slow to create
+            var mgr = CondaEnvironmentManager.Create(registry);
+            mgr.DeleteAsync(
+                view.Configuration.PrefixPath,
+                new CondaEnvironmentManagerUI(_outputWindow),
+                CancellationToken.None
+            ).HandleAllExceptions(_site, GetType()).DoNotWait();
+        }
+
+        class CondaEnvironmentManagerUI : ICondaEnvironmentManagerUI {
+            private readonly Redirector _window;
+
+            public CondaEnvironmentManagerUI(Redirector window) {
+                _window = window;
+            }
+
+            public void OnErrorTextReceived(ICondaEnvironmentManager sender, string text) {
+                _window.WriteErrorLine(text);
+            }
+
+            public void OnOperationFinished(ICondaEnvironmentManager sender, string operation, bool success) {
+            }
+
+            public void OnOperationStarted(ICondaEnvironmentManager sender, string operation) {
+                _window.ShowAndActivate();
+            }
+
+            public void OnOutputTextReceived(ICondaEnvironmentManager sender, string text) {
+                _window.WriteLine(text);
+            }
         }
 
         private void OpenInCommandPrompt_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
