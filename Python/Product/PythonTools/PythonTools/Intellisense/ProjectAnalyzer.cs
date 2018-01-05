@@ -110,12 +110,16 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInterpreterFactory factory,
             bool inProcess = false
         ) {
-            services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
-                InterpreterId = factory.Configuration.Id,
-                Architecture = factory.Configuration.Architecture.ToString(),
-                Version = factory.Configuration.Version.ToString(),
-                Reason = AnalysisInitializeReasons.Default,
-            });
+            try {
+                services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
+                    InterpreterId = factory.Configuration.Id,
+                    Architecture = factory.Configuration.Architecture.ToString(),
+                    Version = factory.Configuration.Version.ToString(),
+                    Reason = AnalysisInitializeReasons.Default,
+                });
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(VsProjectAnalyzer)));
+            }
 
             var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, null, null);
@@ -128,12 +132,16 @@ namespace Microsoft.PythonTools.Intellisense {
             MSBuild.Project project,
             bool inProcess = false
         ) {
-            services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
-                InterpreterId = factory.Configuration.Id,
-                Architecture = factory.Configuration.Architecture.ToString(),
-                Version = factory.Configuration.Version.ToString(),
-                Reason = AnalysisInitializeReasons.Project,
-            });
+            try {
+                services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
+                    InterpreterId = factory.Configuration.Id,
+                    Architecture = factory.Configuration.Architecture.ToString(),
+                    Version = factory.Configuration.Version.ToString(),
+                    Reason = AnalysisInitializeReasons.Project,
+                });
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(VsProjectAnalyzer)));
+            }
 
             var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, project.FullPath, project);
@@ -147,12 +155,16 @@ namespace Microsoft.PythonTools.Intellisense {
             MSBuild.Project project = null,
             bool inProcess = false
         ) {
-            services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
-                InterpreterId = factory.Configuration.Id,
-                Architecture = factory.Configuration.Architecture.ToString(),
-                Version = factory.Configuration.Version.ToString(),
-                Reason = AnalysisInitializeReasons.Interactive,
-            });
+            try {
+                services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
+                    InterpreterId = factory.Configuration.Id,
+                    Architecture = factory.Configuration.Architecture.ToString(),
+                    Version = factory.Configuration.Version.ToString(),
+                    Reason = AnalysisInitializeReasons.Interactive,
+                });
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(VsProjectAnalyzer)));
+            }
 
             var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, $"{displayName} Interactive", project);
