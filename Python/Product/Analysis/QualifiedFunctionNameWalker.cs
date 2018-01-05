@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -51,6 +52,27 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public IEnumerable<string> Name => _names.AsEnumerable().Reverse();
+
+        public static string GetDisplayName(int lineNo, string functionName, PythonAst ast, Func<string, string, string> nameAggregator) {
+            var walker = new QualifiedFunctionNameWalker(ast, lineNo, functionName);
+            try {
+                ast.Walk(walker);
+            } catch (InvalidDataException) {
+                // Walker ran into a mismatch between expected function name and AST, so we cannot
+                // rely on AST to construct an accurate qualified name. Just return what we have.
+                return functionName;
+            }
+
+            var names = walker.Name;
+            if (names.Any()) {
+                string qualName = names.Aggregate(nameAggregator);
+                if (!string.IsNullOrEmpty(qualName)) {
+                    return qualName;
+                }
+            }
+
+            return functionName;
+        }
 
         public override void PostWalk(FunctionDefinition node) {
             int start = node.GetStart(_ast).Line;
