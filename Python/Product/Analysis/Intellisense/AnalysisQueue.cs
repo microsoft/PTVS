@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -76,6 +77,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     _tcs.TrySetCanceled();
                 } else {
                     _tcs.TrySetResult(null);
+                }
+            }
+        }
+
+        public int Count {
+            get {
+                lock (_queueLock) {
+                    return _queue.Sum(q => q.Count);
                 }
             }
         }

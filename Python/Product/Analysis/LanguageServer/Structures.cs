@@ -45,11 +45,6 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
         /// </summary>
         public int character;
 
-        /// <summary>
-        /// Buffer index within a document.
-        /// </summary>
-        public int? _buffer;
-
         public static implicit operator SourceLocation(Position p) => new SourceLocation(p.line + 1, p.character + 1);
         public static implicit operator Position(SourceLocation loc) => new Position { line = loc.Line - 1, character = loc.Column - 1 };
     }
@@ -153,6 +148,8 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
 
     public struct TextDocumentIdentifier {
         public Uri uri;
+
+        public static implicit operator TextDocumentIdentifier(Uri uri) => new TextDocumentIdentifier { uri = uri };
     }
 
     public struct TextDocumentItem {
@@ -386,9 +383,15 @@ namespace Microsoft.PythonTools.Analysis.LanguageServer {
     public struct PythonClientCapabilities {
         /// <summary>
         /// Client expects analysis progress updates, including notifications
-        /// when analysis is complete for a particular buffer/version combination.
+        /// when analysis is complete for a particular document version.
         /// </summary>
-        public bool analysisUpdates;
+        public bool? analysisUpdates;
+
+        /// <summary>
+        /// Number of milliseconds of synchronous wait to allow during request
+        /// for completions.
+        /// </summary>
+        public int? completionsTimeout;
     }
 
     public struct ClientCapabilities {

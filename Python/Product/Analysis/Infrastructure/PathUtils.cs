@@ -340,6 +340,8 @@ namespace Microsoft.PythonTools.Analysis.Infrastructure {
                         }
                     }
                     Thread.Sleep(10);
+                } catch (NotSupportedException) {
+                    return null;
                 }
             }
             return null;

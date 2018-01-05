@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            int lastStart = -1;
+            int lastStart = int.MaxValue;
             var lineLoc = SplitLines(Text.ToString()).ToArray();
 
             foreach (var change in changes.Changes) {

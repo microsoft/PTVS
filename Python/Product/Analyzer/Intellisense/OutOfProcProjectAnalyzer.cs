@@ -52,7 +52,6 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class OutOfProcProjectAnalyzer : IDisposable {
         private readonly LS.Server _server;
         private readonly Dictionary<string, IAnalysisExtension> _extensions;
-        internal int _analysisPending;
 
         private bool _isDisposed;
 
@@ -121,7 +120,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
                 case AP.OutliningRegionsRequest.Command: response = GetOutliningRegions((AP.OutliningRegionsRequest)request); break;
                 case AP.NavigationRequest.Command: response = GetNavigations((AP.NavigationRequest)request); break;
-                case AP.FileUpdateRequest.Command: response = UpdateContent((AP.FileUpdateRequest)request); break;
+                case AP.FileUpdateRequest.Command: response = await UpdateContent((AP.FileUpdateRequest)request); break;
                 case AP.UnresolvedImportsRequest.Command: response = GetUnresolvedImports((AP.UnresolvedImportsRequest)request); break;
                 case AP.AddImportRequest.Command: response = AddImportRequest((AP.AddImportRequest)request); break;
                 case AP.IsMissingImportRequest.Command: response = IsMissingImport((AP.IsMissingImportRequest)request); break;
@@ -359,7 +358,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 string code;
                 var ast = analysis.GetVerbatimAstAndCode(
                     Analyzer.LanguageVersion,
-                    request.bufferId,
                     out version,
                     out code
                 );
@@ -398,7 +396,6 @@ namespace Microsoft.PythonTools.Intellisense {
             string code;
             var ast = analysis.GetVerbatimAstAndCode(
                 Analyzer.LanguageVersion,
-                request.bufferId,
                 out version,
                 out code
             );
@@ -450,7 +447,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 string code;
                 var ast = analysis.GetVerbatimAstAndCode(
                     Project.LanguageVersion,
-                    request.bufferId,
                     out version,
                     out code
                 );
@@ -490,8 +486,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return IncorrectFileType();
             }
 
-            var bufferVersion = GetPythonBufferAndAst(request.documentUri, request.bufferId);
-            if (bufferVersion == null) {
+            var bufferVersion = GetPythonBuffer(request.documentUri);
+            if (bufferVersion.Ast == null) {
                 return new AP.AnalysisClassificationsResponse();
             }
 
@@ -585,10 +581,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
         private Response AnalysisStatus() {
-            _analysisQueue.WaitForActivity(100);
-
             return new AP.AnalysisStatusResponse() {
-                itemsLeft = ParsePending + _analysisQueue.AnalysisPending
+                itemsLeft = _server.EstimateRemainingWork()
             };
         }
 
@@ -602,7 +596,6 @@ namespace Microsoft.PythonTools.Intellisense {
             string code;
             var ast = projectFile.GetVerbatimAstAndCode(
                 Project.LanguageVersion,
-                request.bufferId,
                 out version,
                 out code
             );
@@ -623,7 +616,6 @@ namespace Microsoft.PythonTools.Intellisense {
             string code;
             var ast = projectFile.GetVerbatimAstAndCode(
                 Project.LanguageVersion,
-                request.bufferId,
                 out version,
                 out code
             );
@@ -648,7 +640,6 @@ namespace Microsoft.PythonTools.Intellisense {
             string code;
             var ast = projectFile.GetVerbatimAstAndCode(
                 Project.LanguageVersion,
-                request.bufferId,
                 out version,
                 out code
             );
@@ -763,7 +754,7 @@ namespace Microsoft.PythonTools.Intellisense {
             string fromModule = request.fromModule;
 
             int version;
-            PythonAst curAst = projectFile.GetVerbatimAst(Project.LanguageVersion, request.bufferId, out version);
+            var curAst = projectFile.GetVerbatimAst(Project.LanguageVersion, out version);
             if (curAst == null) {
                 return new AP.AddImportResponse();
             }
@@ -879,8 +870,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return IncorrectFileType();
             }
 
-            var bufferVersion = GetPythonBufferAndAst(request.documentUri, request.bufferId);
-            if (bufferVersion == null) {
+            var bufferVersion = GetPythonBuffer(request.documentUri);
+            if (bufferVersion.Ast == null) {
                 return IncorrectBufferId(request.documentUri);
             }
 
@@ -908,30 +899,23 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private BufferVersion GetPythonBuffer(string documentUri, int bufferId) {
+        private VersionedAst GetPythonBuffer(string documentUri) {
             var entry = GetPythonEntry(documentUri);
             if (entry == null) {
-                return null;
+                return default(VersionedAst);
             }
 
             PythonAst ast;
             IAnalysisCookie cookie;
             entry.GetTreeAndCookie(out ast, out cookie);
 
-            var versions = cookie as VersionCookie;
-            BufferVersion versionInfo;
-            if (versions != null && versions.Buffers.TryGetValue(bufferId, out versionInfo)) {
-                return versionInfo;
-            }
-            return null;
+            var v = cookie as VersionCookie;
+            return new VersionedAst { Ast = ast, Version = v?.Version ?? 0 };
         }
 
-        private BufferVersion GetPythonBufferAndAst(string documentUri, int bufferId) {
-            var bufferVersion = GetPythonBuffer(documentUri, bufferId);
-            if (bufferVersion?.Ast != null) {
-                return bufferVersion;
-            }
-            return null;
+        private struct VersionedAst {
+            public PythonAst Ast;
+            public int Version;
         }
 
         class ImportStatementWalker : PythonWalker {
@@ -1027,8 +1011,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetOutliningRegions(AP.OutliningRegionsRequest request) {
-            var bufferVersion = GetPythonBufferAndAst(request.documentUri, request.bufferId);
-            if (bufferVersion == null) {
+            var bufferVersion = GetPythonBuffer(request.documentUri);
+            if (bufferVersion.Ast == null) {
                 return IncorrectBufferId(request.documentUri);
             }
 
@@ -1048,9 +1032,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response GetNavigations(AP.NavigationRequest request) {
             List<AP.Navigation> navs = new List<AP.Navigation>();
-            var bufferVersion = GetPythonBufferAndAst(request.documentUri, request.bufferId);
+            var bufferVersion = GetPythonBuffer(request.documentUri);
 
-            var suite = bufferVersion.Ast.Body as SuiteStatement;
+            var suite = bufferVersion.Ast?.Body as SuiteStatement;
             if (suite == null) {
                 return IncorrectBufferId(request.documentUri);
             }
@@ -1074,7 +1058,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     navs.Add(new AP.Navigation() {
                         type = "class",
-                        bufferId = bufferVersion.Version,
                         name = classDef.Name,
                         startLine = startLoc.Line,
                         startColumn = startLoc.Column,
@@ -1135,7 +1118,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response ExpressionAtPoint(AP.ExpressionAtPointRequest request) {
-            var buffer = GetPythonBufferAndAst(request.documentUri, request.bufferId);
+            var buffer = GetPythonBuffer(request.documentUri);
+            if (buffer.Ast == null) {
+                return null;
+            }
 
             var res = new AP.ExpressionAtPointResponse();
             if (!GetExpressionAtPoint(buffer.Ast, request.line, request.column, request.purpose, out SourceSpan span, out res.type)) {
@@ -1896,70 +1882,39 @@ namespace Microsoft.PythonTools.Intellisense {
             return sb.ToString();
         }
 
-        private Response UpdateContent(AP.FileUpdateRequest request) {
+        private async Task<Response> UpdateContent(AP.FileUpdateRequest request) {
             _projectFiles.TryGetValue(request.documentUri, out var entry);
 
-            SortedDictionary<int, CodeInfo> codeByBuffer = new SortedDictionary<int, CodeInfo>();
-#if DEBUG
-            Dictionary<int, string> newCode = new Dictionary<int, string>();
-#endif
-
-            var doc = entry as IDocument;
-            if (doc == null) {
-                return new AP.FileUpdateResponse { failed = true };
-            }
-
-            foreach (var update in request.updates) {
-                switch (update.kind) {
-                    case AP.FileUpdateKind.changes:
-                        try {
-                            int fromVersion = update.version - update.versions.Length;
-                            foreach (var ver in update.versions) {
-                                doc.UpdateDocument(update.bufferId, new DocumentChangeSet(
-                                    fromVersion,
-                                    ++fromVersion,
-                                    ver.changes.Select(c => c.ToDocumentChange())
-                                ));
-                            }
-
-                            int version;
-                            var code = doc.ReadDocument(update.bufferId, out version);
-                            if (code != null) {
-                                codeByBuffer[update.bufferId] = new TextCodeInfo(
-                                    update.version,
-                                    code,
-                                    PathUtils.HasExtension(entry.FilePath, ".pyi")
-                                );
-#if DEBUG
-                                code = doc.ReadDocument(update.bufferId, out _);
-                                newCode[update.bufferId] = code.ReadToEnd();
-#endif
-                            }
-                            } catch (InvalidOperationException) {
-                            return new AP.FileUpdateResponse { failed = true };
-                        }
-                        break;
-                    case AP.FileUpdateKind.reset:
-                        doc.ResetDocument(update.bufferId, update.version, update.content);
-                        codeByBuffer[update.bufferId] = new TextCodeInfo(
-                            update.version,
-                            new StringReader(update.content),
-                            PathUtils.HasExtension(entry.FilePath, ".pyi")
-                        );
-#if DEBUG
-                        newCode[update.bufferId] = update.content;
-#endif
-                        break;
-                    default:
-                        throw new InvalidOperationException("unsupported update kind");
+            foreach (var fileChange in request.updates) {
+                var changes = new List<LS.TextDocumentContentChangedEvent>();
+                if (fileChange.kind == AP.FileUpdateKind.none) {
+                    continue;
+                } else if (fileChange.kind == AP.FileUpdateKind.reset) {
+                    changes.Add(new LS.TextDocumentContentChangedEvent {
+                        text = fileChange.content
+                    });
+                } else {
+                    changes.AddRange(fileChange.changes.Select(c => new LS.TextDocumentContentChangedEvent {
+                        range = new SourceSpan(
+                            new SourceLocation(c.startLine, c.startColumn),
+                            new SourceLocation(c.endLine, c.endColumn)
+                        ),
+                        text = c.newText
+                    }));
                 }
+                await _server.DidChangeTextDocument(new LS.DidChangeTextDocumentParams {
+                    textDocument = new LS.VersionedTextDocumentIdentifier {
+                        uri = new Uri(request.documentUri),
+                        version = fileChange.version
+                    },
+                    contentChanges = changes.ToArray()
+                });
+
             }
 
-            EnqueWorker(() => ParseFile(entry, codeByBuffer));
-
-            return new AP.FileUpdateResponse() {
+            return new AP.FileUpdateResponse {
 #if DEBUG
-                newCode = newCode
+                newCode = (entry as IDocument)?.ReadDocument(out _)?.ReadToEnd()
 #endif
             };
         }
@@ -2012,28 +1967,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 isTemporaryFile = isTemporaryFile,
                 suppressErrorList = suppressErrorList
             });
-
-            EnqueueFile(item, item.FilePath);
         }
 
         private async void OnNewAnalysis(object sender, EventArgs e) {
             var projEntry = sender as IPythonProjectEntry;
             if (projEntry != null) {
                 var documentUri = GetDocumentUri(projEntry.FilePath);
-                PythonAst dummy;
-                IAnalysisCookie cookieTmp;
-                projEntry.GetTreeAndCookie(out dummy, out cookieTmp);
+                projEntry.GetTreeAndCookie(out _, out var cookieTmp);
                 var cookie = (VersionCookie)cookieTmp;
-
-                var versions = cookie.Buffers.Select(x => new AP.BufferVersion() {
-                    bufferId = x.Key,
-                    version = x.Value.Version
-                }).ToArray();
 
                 await _connection.SendEventAsync(
                     new AP.FileAnalysisCompleteEvent() {
                         documentUri = documentUri.AbsoluteUri,
-                        versions = versions
+                        version = cookie.Version
                     }
                 );
             }
@@ -2074,25 +2020,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal bool IsAnalyzing {
             get {
-                return IsParsing || _analysisQueue.IsAnalyzing;
+                return !_server.WaitForCompleteAnalysisAsync().Wait(0);
             }
         }
 
-        internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
-            if (IsAnalyzing) {
-                while (IsAnalyzing) {
-                    _analysisQueue.WaitForActivity(100);
-
-                    int itemsLeft = ParsePending + _analysisQueue.AnalysisPending;
-
-                    if (!itemsLeftUpdated(itemsLeft)) {
-                        break;
-                    }
-                }
-            } else {
-                itemsLeftUpdated(0);
-            }
-        }
+        internal Task WaitForCompleteAnalysis() => _server.WaitForCompleteAnalysisAsync();
 
         internal IPythonInterpreterFactory InterpreterFactory => Project?.InterpreterFactory;
 
@@ -2136,92 +2068,66 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
 
-        private void ParseFile(IProjectEntry entry, IDictionary<int, CodeInfo> buffers) {
+        private void ParseFile(IProjectEntry entry, CodeInfo buffer) {
             IPythonProjectEntry pyEntry;
             IExternalProjectEntry externalEntry;
 
-            SortedDictionary<int, ParseResult> parseResults = new SortedDictionary<int, ParseResult>();
-
             if ((pyEntry = entry as IPythonProjectEntry) != null) {
-                foreach (var buffer in buffers) {
-                    var errorSink = new CollectingErrorSink();
-                    var tasks = new List<AP.TaskItem>();
-                    ParserOptions options = MakeParserOptions(errorSink, tasks);
+                var errorSink = new CollectingErrorSink();
+                var tasks = new List<AP.TaskItem>();
+                ParserOptions options = MakeParserOptions(errorSink, tasks);
 
-                    var parser = buffer.Value.CreateParser(Project.LanguageVersion, options);
-                    var ast = ParseOneFile(parser);
-                    parseResults[buffer.Key] = new ParseResult(
-                        ast,
-                        errorSink,
-                        tasks,
-                        buffer.Value.Version
-                    );
-                }
+                var parser = buffer.CreateParser(Project.LanguageVersion, options);
+                var ast = ParseOneFile(parser);
+                var parseResult = new ParseResult(
+                    ast,
+                    errorSink,
+                    tasks,
+                    buffer.Version
+                );
 
                 // Save the single or combined tree into the project entry
-                UpdateAnalysisTree(pyEntry, parseResults);
+                UpdateAnalysisTree(pyEntry, parseResult);
 
                 // update squiggles for the buffer. snapshot may be null if we
                 // are analyzing a file that is not open
-                SendParseComplete(pyEntry, parseResults);
+                SendParseComplete(pyEntry, parseResult);
 
                 // enqueue analysis of the file
-                if (parseResults.Where(x => x.Value.Ast != null).Any()) {
+                if (parseResult.Ast != null) {
                     _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
                 }
             } else if ((externalEntry = entry as IExternalProjectEntry) != null) {
-                foreach (var keyValue in buffers) {
-                    externalEntry.ParseContent(keyValue.Value.GetReader(), null);
-                    _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
-                }
+                externalEntry.ParseContent(buffer.GetReader(), null);
+                _analysisQueue.Enqueue(entry, AnalysisPriority.Normal);
             }
         }
 
-        private static void UpdateAnalysisTree(IPythonProjectEntry entry, SortedDictionary<int, ParseResult> parseResults) {
-            IAnalysisCookie cookie = new VersionCookie(
-                parseResults.ToDictionary(
-                    x => x.Key,
-                    x => new BufferVersion(x.Value.Version, x.Value.Ast)
-                )
-            );
+        private static void UpdateAnalysisTree(IPythonProjectEntry entry, ParseResult parseResult) {
+            IAnalysisCookie cookie = new VersionCookie(parseResult.Version);
 
-            var asts = parseResults.Where(x => x.Value.Ast != null).Select(x => x.Value.Ast).ToArray();
-            PythonAst finalAst;
-            if (asts.Length == 1) {
-                finalAst = asts[0];
-            } else if (asts.Length > 0) {
-                // multiple ASTs, merge them together
-                finalAst = new PythonAst(
-                    new SuiteStatement(
-                        asts.Select(ast => ast.Body).ToArray()
-                    ),
-                    new NewLineLocation[0],
-                    asts[0].LanguageVersion
-                );
-            } else {
+            var ast = parseResult.Ast;
+            if (ast == null) {
                 // we failed to get any sort of AST out, so we can't analyze...
                 // But we need to balance the UpdateTree call, so just fetch the
                 // last valid ast and cookie.
-                entry.GetTreeAndCookie(out finalAst, out cookie);
+                entry.GetTreeAndCookie(out ast, out cookie);
             }
 
-            entry.UpdateTree(finalAst, cookie);
+            entry.UpdateTree(ast, cookie);
         }
 
-        private async void SendParseComplete(IPythonProjectEntry entry, SortedDictionary<int, ParseResult> parseResults) {
+        private async void SendParseComplete(IPythonProjectEntry entry, ParseResult parseResult) {
             await _connection.SendEventAsync(
                 new AP.FileParsedEvent() {
                     documentUri = GetDocumentUri(entry.FilePath).AbsoluteUri,
-                    buffers = parseResults.Select(
-                        x => new AP.BufferParseInfo() {
-                            bufferId = x.Key,
-                            version = x.Value.Version,
-                            errors = x.Value.Errors.Errors.Select(e => MakeError(e, x.Value.Ast)).ToArray(),
-                            warnings = x.Value.Errors.Warnings.Select(e => MakeError(e, x.Value.Ast)).ToArray(),
-                            hasErrors = x.Value.Errors.Errors.Any(),
-                            tasks = x.Value.Tasks.ToArray()
-                        }
-                    ).ToArray()
+                    buffer = new AP.BufferParseInfo() {
+                        version = parseResult.Version,
+                        errors = parseResult.Errors.Errors.Select(e => MakeError(e, parseResult.Ast)).ToArray(),
+                        warnings = parseResult.Errors.Warnings.Select(e => MakeError(e, parseResult.Ast)).ToArray(),
+                        hasErrors = parseResult.Errors.Errors.Any(),
+                        tasks = parseResult.Tasks.ToArray()
+                    }
                 }
             );
         }
@@ -2299,70 +2205,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void UnloadFile(IProjectEntry entry, string documentUri) {
             if (entry != null) {
-            }
-        }
-
-        /// <summary>
-        /// Parses the specified file on disk.
-        /// </summary>
-        /// <param name="filename"></param>
-        public void EnqueueFile(IProjectEntry projEntry, string filename) {
-            EnqueWorker(() => {
-                for (int i = 0; i < 10; i++) {
-                    try {
-                        if (!File.Exists(filename)) {
-                            break;
-                        }
-                        using (var reader = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
-                            ParseFile(
-                                projEntry,
-                                new Dictionary<int, CodeInfo> {
-                                    { 0, new StreamCodeInfo(0, reader, PathUtils.HasExtension(filename, ".pyi")) }
-                                }
-                            );
-                            return;
-                        }
-                    } catch (IOException) {
-                        // file being copied, try again...
-                        Thread.Sleep(100);
-                    } catch (UnauthorizedAccessException) {
-                        // file is inaccessible, try again...
-                        Thread.Sleep(100);
-                    }
-                }
-
-                IPythonProjectEntry entry = projEntry as IPythonProjectEntry;
-                if (entry != null) {
-                    SendParseComplete(entry, new SortedDictionary<int, ParseResult>());
-                    // failed to parse, keep the UpdateTree calls balanced
-                    entry.UpdateTree(null, null);
-                }
-            });
-        }
-
-        private void EnqueWorker(Action parser) {
-            Interlocked.Increment(ref _analysisPending);
-
-            ThreadPool.QueueUserWorkItem(
-                dummy => {
-                    try {
-                        parser();
-                    } finally {
-                        Interlocked.Decrement(ref _analysisPending);
-                    }
-                }
-            );
-        }
-
-        public bool IsParsing {
-            get {
-                return _analysisPending > 0;
-            }
-        }
-
-        public int ParsePending {
-            get {
-                return _analysisPending;
             }
         }
 

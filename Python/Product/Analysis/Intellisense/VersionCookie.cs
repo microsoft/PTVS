@@ -28,10 +28,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Dictionary from buffer ID to VersionInfo.
         /// </summary>
-        public readonly Dictionary<int, BufferVersion> Buffers;
+        public readonly int Version;
 
-        public VersionCookie(Dictionary<int, BufferVersion> versions) {
-            Buffers = versions;
+        public VersionCookie(int version) {
+            Version = version;
         }
     }
 

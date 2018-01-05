@@ -80,7 +80,6 @@ namespace Microsoft.PythonTools.Editor {
 
         private readonly object _lock = new object();
 
-        private int _bufferId;
         private AnalysisEntry _analysisEntry;
 
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
@@ -100,7 +99,6 @@ namespace Microsoft.PythonTools.Editor {
             _eventSinks = new ConcurrentDictionary<object, IPythonTextBufferInfoEventSink>();
             _filename = new Lazy<string>(GetOrCreateFilename);
             _tokenCache = new TokenCache();
-            _bufferId = -1;
             _defaultLanguageVersion = PythonLanguageVersion.None;
 
             ITextDocument doc;
@@ -327,16 +325,6 @@ namespace Microsoft.PythonTools.Editor {
 
                 OnNewAnalysisEntry(null);
             }
-        }
-
-        public int AnalysisBufferId => Volatile.Read(ref _bufferId);
-
-        public bool SetAnalysisBufferId(int id) {
-            if (id < 0) {
-                Volatile.Write(ref _bufferId, -1);
-                return true;
-            }
-            return Interlocked.CompareExchange(ref _bufferId, id, -1) == -1;
         }
 
         private readonly Dictionary<int, ITextSnapshot> _expectParse = new Dictionary<int, ITextSnapshot>();

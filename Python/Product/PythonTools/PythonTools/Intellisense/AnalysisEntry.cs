@@ -105,18 +105,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return AnalysisCookie?.GetLine(line);
         }
 
-        public int GetBufferId(ITextBuffer buffer) {
-            // May get null if there is no analysis entry associated with the file yet.
-            // This can happen when you have a document that is open but hasn't had focus
-            // causing the full load of our intellisense controller.  In that case there
-            // is only a single buffer which is buffer 0.  An easy repro for this is to
-            // open a IronPython WPF project and close it with the XAML file focused and
-            // the .py file still open. Re-open the project, and double click on a button
-            // on the XAML page.  The python file isn't loaded and we have no 
-            // PythonTextBufferInfo associated with it.
-            return PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisBufferId ?? 0;
-        }
-
         public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
             try {
                 var bufferParser = TryGetBufferParser();

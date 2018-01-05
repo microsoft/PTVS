@@ -24,8 +24,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -50,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<object, object> _properties = new Dictionary<object, object>();
         private ManualResetEventSlim _curWaiter;
         private int _updatesPending, _waiters;
-        private readonly Dictionary<int, DocumentBuffer> _buffers;
+        private readonly DocumentBuffer _buffer;
         internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
 
         // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
@@ -63,7 +65,10 @@ namespace Microsoft.PythonTools.Analysis {
             _cookie = cookie;
             _myScope = new ModuleInfo(_moduleName, this, state.Interpreter.CreateModuleContext());
             _unit = new AnalysisUnit(_tree, _myScope.Scope);
-            _buffers = new Dictionary<int, DocumentBuffer>();
+            _buffer = new DocumentBuffer();
+            if (_cookie is InitialContentCookie c) {
+                _buffer.Reset(c.Version, c.Content);
+            }
             AnalysisLog.NewUnit(_unit);
         }
 
@@ -355,61 +360,85 @@ namespace Microsoft.PythonTools.Analysis {
             _aggregates.Add(into);
         }
 
-        private DocumentBuffer GetBuffer(int buffer) {
-            DocumentBuffer doc;
-            lock (_buffers) {
-                if (_buffers.TryGetValue(buffer, out doc) && doc != null) {
-                    return doc;
-                }
-                if (buffer == 0) {
-                    _buffers[buffer] = doc = new DocumentBuffer();
-                }
-            }
-
-            if (doc != null) {
-                // Was created here, so we want to load file contents
-                if (File.Exists(_filePath)) {
-                    doc.Reset(0, File.ReadAllText(_filePath));
+        public Stream ReadDocumentBytes(out int version) {
+            lock (_buffer) {
+                if (_buffer.Version >= 0) {
+                    version = _buffer.Version;
+                    // TODO: Remove chunkSize argument
+                    return EncodeToStream(_buffer.Text, Encoding.UTF8, 16);
                 } else {
-                    doc.Reset(0, null);
+                    var s = PathUtils.OpenWithRetry(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    version = s == null ? -1 : 0;
+                    return s;
                 }
             }
-
-            return doc;
         }
 
-        public TextReader ReadDocument(int buffer, out int version) {
-            var doc = GetBuffer(buffer);
-            if (doc?.Text != null) {
-                version = doc.Version;
-                return new StringReader(doc.Text.ToString());
+        internal static Stream EncodeToStream(StringBuilder text, Encoding encoding, int chunkSize = 4096) {
+            if (text.Length < chunkSize) {
+                return new MemoryStream(encoding.GetBytes(text.ToString()));
             }
-            version = -1;
-            return null;
-        }
 
-        public int GetDocumentVersion(int buffer) {
-            return GetBuffer(buffer)?.Version ?? -1;
-        }
-
-        public void UpdateDocument(int buffer, DocumentChangeSet changes) {
-            GetBuffer(buffer)?.Update(changes);
-        }
-
-        public void ResetDocument(int buffer, int version, string content) {
-            if (content == null) {
-                lock (_buffers) {
-                    if (buffer < 0) {
-                        _buffers.Clear();
-                    } else {
-                        _buffers.Remove(buffer);
-                    }
+            var ms = new MemoryStream(encoding == Encoding.Unicode ? text.Length * 2 : text.Length);
+            var enc = encoding.GetEncoder();
+            var chars = new char[chunkSize];
+            var bytes = new byte[encoding.GetMaxByteCount(chunkSize)];
+            for (int i = 0; i < text.Length;) {
+                bool flush = true;
+                int len = text.Length - i;
+                if (len > chars.Length) {
+                    flush = false;
+                    len = chars.Length;
                 }
-                return;
+                text.CopyTo(i, chars, 0, len);
+                enc.Convert(chars, 0, len, bytes, 0, bytes.Length, flush, out int charCount, out int bytesUsed, out _);
+                i += charCount;
+                ms.Write(bytes, 0, bytesUsed);
             }
-
-            GetBuffer(buffer)?.Reset(version, content);
+            ms.Seek(0, SeekOrigin.Begin);
+            return ms;
         }
+
+        public TextReader ReadDocument(out int version) {
+            var stream = ReadDocumentBytes(out version);
+            if (stream == null) {
+                version = -1;
+                return null;
+            }
+            try {
+                var sr = Parser.ReadStreamWithEncoding(stream, _projectState.LanguageVersion);
+                stream = null;
+                version = 0;
+                return sr;
+            } finally {
+                stream?.Dispose();
+            }
+        }
+
+        public int DocumentVersion {
+            get {
+                lock (_buffer) {
+                    return _buffer.Version;
+                }
+            }
+        }
+
+        public void UpdateDocument(DocumentChangeSet changes) {
+            lock (_buffer) {
+                _buffer.Update(changes);
+            }
+        }
+
+        public void ResetDocument(int version, string content) {
+            lock (_buffer) {
+                _buffer.Reset(version, content);
+            }
+        }
+    }
+
+    class InitialContentCookie : IAnalysisCookie {
+        public string Content { get; set; }
+        public int Version { get; set; }
     }
 
     /// <summary>
@@ -494,12 +523,13 @@ namespace Microsoft.PythonTools.Analysis {
     }
 
     public interface IDocument {
-        TextReader ReadDocument(int buffer, out int version);
+        TextReader ReadDocument(out int version);
+        Stream ReadDocumentBytes(out int version);
 
-        int GetDocumentVersion(int buffer);
+        int DocumentVersion { get; }
 
-        void UpdateDocument(int buffer, DocumentChangeSet changes);
-        void ResetDocument(int buffer, int version, string content);
+        void UpdateDocument(DocumentChangeSet changes);
+        void ResetDocument(int version, string content);
     }
 
     public interface IPythonProjectEntry : IGroupableAnalysisProjectEntry, IProjectEntry {

@@ -29,10 +29,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets the verbatim AST for the current code and returns the current version.
         /// </summary>
-        public static PythonAst GetVerbatimAst(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, int bufferId, out int version) {
+        public static PythonAst GetVerbatimAst(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, out int version) {
             ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
 
-            var code = (projectFile as IDocument).ReadDocument(bufferId, out version);
+            var code = ((ProjectEntry)projectFile).ReadDocumentBytes(out version);
             if (code != null) {
                 var parser = Parser.CreateParser(code, langVersion, options);
                 return parser.ParseFile();
@@ -43,12 +43,13 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets the current AST and the code string for the project entry and returns the current code.
         /// </summary>
-        public static PythonAst GetVerbatimAstAndCode(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, int bufferId, out int version, out string code) {
+        public static PythonAst GetVerbatimAstAndCode(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, out int version, out string code) {
             ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
 
-            var codeReader = (projectFile as IDocument).ReadDocument(bufferId, out version);
+            var codeReader = ((ProjectEntry)projectFile).ReadDocumentBytes(out version);
             if (codeReader != null) {
-                code = codeReader.ReadToEnd();
+                var reader = Parser.ReadStreamWithEncoding(codeReader, projectFile.Analysis?.ProjectState.LanguageVersion ?? PythonLanguageVersion.None);
+                code = reader.ReadToEnd();
                 var parser = Parser.CreateParser(new StringReader(code), langVersion, options);
                 return parser.ParseFile();
             }

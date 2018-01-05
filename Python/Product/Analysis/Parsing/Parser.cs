@@ -4879,6 +4879,11 @@ namespace Microsoft.PythonTools.Parsing {
 
         #region Encoding support (PEP 263)
 
+        public static TextReader ReadStreamWithEncoding(Stream stream, PythonLanguageVersion version) {
+            var defaultEncoding = version.Is3x() ? new UTF8Encoding(false) : DefaultEncoding;
+            return GetStreamReaderWithEncoding(stream, defaultEncoding, null);
+        }
+
         /// <summary>
         /// Returns the Encoding that a Python file is written in.  This inspects the BOM and looks for a #coding line
         /// in the provided stream.
