@@ -110,6 +110,13 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInterpreterFactory factory,
             bool inProcess = false
         ) {
+            services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
+                InterpreterId = factory.Configuration.Id,
+                Architecture = factory.Configuration.Architecture.ToString(),
+                Version = factory.Configuration.Version.ToString(),
+                Reason = AnalysisInitializeReasons.Default,
+            });
+
             var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, null, null);
             return analyzer;
@@ -121,6 +128,13 @@ namespace Microsoft.PythonTools.Intellisense {
             MSBuild.Project project,
             bool inProcess = false
         ) {
+            services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
+                InterpreterId = factory.Configuration.Id,
+                Architecture = factory.Configuration.Architecture.ToString(),
+                Version = factory.Configuration.Version.ToString(),
+                Reason = AnalysisInitializeReasons.Project,
+            });
+
             var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, project.FullPath, project);
             return analyzer;
@@ -133,6 +147,13 @@ namespace Microsoft.PythonTools.Intellisense {
             MSBuild.Project project = null,
             bool inProcess = false
         ) {
+            services.Python?.Logger?.LogEvent(PythonLogEvent.AnalysisInitializing, new AnalysisInitialize() {
+                InterpreterId = factory.Configuration.Id,
+                Architecture = factory.Configuration.Architecture.ToString(),
+                Version = factory.Configuration.Version.ToString(),
+                Reason = AnalysisInitializeReasons.Interactive,
+            });
+
             var analyzer = new VsProjectAnalyzer(services, factory);
             await analyzer.InitializeAsync(!inProcess, $"{displayName} Interactive", project);
             return analyzer;
